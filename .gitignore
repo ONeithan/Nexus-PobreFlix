@@ -18,4 +18,5 @@ publish/
 *.tmp
 *.cache
 build.bat
-dist's/
+dist_release/
+NexusPobreFlix-0.0.1.0.zip

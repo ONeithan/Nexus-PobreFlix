@@ -3,13 +3,13 @@
   "description": "Versão Nexus PobreFlix do motor visual MonWUI.",
   "name": "Nexus PobreFlix",
   "owner": "G-Grbz",
-  "version": "3.0.0.0",
+  "version": "0.0.1.0",
   "status": "Active",
   "autoUpdate": false,
   "targetAbi": "10.11.0.0",
   "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix",
-  "imagePathLinux": "/var/lib/jellyfin/plugins/JMSFusion_3.0.0.0/icon.png",
-  "imagePathWindows": "%ProgramData%/Jellyfin/Server/plugins/JMSFusion_3.0.0.0/icon.png",
-  "timestamp": "2026-05-06T19:15:00.0000000Z",
+  "imagePathLinux": "/var/lib/jellyfin/plugins/NexusPobreFlix_0.0.1.0/icon.png",
+  "imagePathWindows": "%ProgramData%/Jellyfin/Server/plugins/NexusPobreFlix_0.0.1.0/icon.png",
+  "timestamp": "2026-05-06T19:42:00.0000000Z",
   "guid": "c0b4a5e0-2f6a-4e70-9c5f-1e7c2d0b7f12"
 }

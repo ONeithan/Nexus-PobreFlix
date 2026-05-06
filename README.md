@@ -7,7 +7,7 @@
 
   ![Status](https://img.shields.io/badge/Status-Industrial-purple?style=for-the-badge)
   ![Language](https://img.shields.io/badge/Language-PT--BR%20Native-green?style=for-the-badge)
-  ![Version](https://img.shields.io/badge/Version-3.0.0-blue?style=for-the-badge)
+  ![Version](https://img.shields.io/badge/Version-0.0.1-blue?style=for-the-badge)
   ![Fork](https://img.shields.io/badge/Fork%20of-MonWUI%20by%20G--grbz-gray?style=for-the-badge)
 </div>
 
@@ -22,7 +22,7 @@
 ### 🚀 O que é o Nexus PobreFlix Plugin?
 Este é um fork personalizado e de **Grau Industrial** do plugin MonWUI, desenvolvido exclusivamente para o ecossistema **Nexus PobreFlix**. Esta versão foi reconstruída para oferecer máxima performance, estabilidade em sessões de usuário e uma interface 100% traduzida nativamente.
 
-### ✨ Diferenciais da Versão Industrial (v3.0.0)
+### ✨ Diferenciais da Versão Industrial (v0.0.1)
 | Funcionalidade | Descrição |
 |---|---|
 | 🇧🇷 **Tradução Industrial** | Toda a interface (Slider, Studio Hubs, Seletor de Perfil) traduzida no core. Sem atrasos de scripts externos. |
@@ -52,7 +52,7 @@ https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/manifest.json
 ### 🚀 What is Nexus PobreFlix Plugin?
 This is a custom, **Industrial-Grade** fork of the MonWUI plugin, built for the **Nexus PobreFlix** media server. It delivers a performance-optimized, fully localized experience with removed layout restrictions and enhanced session stability.
 
-### ✨ Key Industrial Features (v3.0.0)
+### ✨ Key Industrial Features (v0.0.1)
 - **Native PT-BR Core:** Fully localized interface without external script overhead.
 - **Optimized Profile Chooser:** Faster, non-blocking asynchronous user switching.
 - **Premium Studio Hubs:** Configurable trailer volume and clean metadata rendering.
