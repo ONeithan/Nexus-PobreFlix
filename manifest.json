@@ -9,10 +9,10 @@
     "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png",
     "versions": [
       {
-        "version": "0.0.1.0",
+        "version": "0.0.1",
         "changelog": "v0.0.1 — Initial Industrial Release\n\n- Full PT-BR localization\n- Optimized Profile Chooser\n- Premium Studio Hubs\n- Immersive Full Screen\n- Industrial Build System",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v0.0.1/NexusPobreFlix-0.0.1.0.zip",
+        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v0.0.1/NexusPobreFlix-0.0.1.zip",
         "checksum": "",
         "timestamp": "2026-05-06T19:42:00Z"
       }

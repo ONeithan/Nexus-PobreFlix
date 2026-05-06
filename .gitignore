@@ -1,22 +1,22 @@
-# Pastas geradas pelo compilador C# — nunca subir
+# Pastas de Compilacao e Binarios (NUNCA SUBIR)
 bin/
 obj/
+dist's/
+dist_release/
+temp_build/
+*.zip
 
-# Arquivos de usuário do Visual Studio
+# Scripts de Automacao e Controle Local
+build.bat
+Sync-ProjectVersion.ps1
+version.txt
+
+# Arquivos de usuario e Cache
+.vs/
 *.user
 *.suo
-.vs/
-
-# Logs de build
 *.log
 build.log
-
-# Arquivos de publicação temporários
 publish/
-
-# Debug local e pastas de buildNexus
 *.tmp
 *.cache
-build.bat
-dist_release/
-NexusPobreFlix-0.0.1.0.zip
