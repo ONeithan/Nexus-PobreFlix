@@ -87,5 +87,5 @@ Este software é fornecido "como está". Esta versão não é afiliada oficialme
 <div align="center">
   <img src="img/nexus-pobreflix-logo.png" alt="Nexus PobreFlix" width="300"/>
   <br/>
-  <sub>Feito com 🟣 para o Nexus PobreFlix</sub>
+  <sub>Feito com 💜 para o Nexus PobreFlix</sub>
 </div>
