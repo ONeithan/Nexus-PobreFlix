@@ -298,3 +298,52 @@ export function createSelect(key, label, options, selectedValue) {
 
   return container;
 }
+
+export function createRangeInput(key, label, value, min = 0, max = 100, step = 1, unit = "") {
+  const container = document.createElement("div");
+  container.className = "input-container";
+
+  const labelWrap = document.createElement("div");
+  labelWrap.className = "range-label-wrap";
+  labelWrap.style.display = "flex";
+  labelWrap.style.justifyContent = "space-between";
+  labelWrap.style.alignItems = "center";
+  labelWrap.style.marginBottom = "6px";
+
+  const labelElement = document.createElement("label");
+  labelElement.textContent = label;
+  labelElement.htmlFor = key;
+
+  const valueDisplay = document.createElement("span");
+  valueDisplay.className = "range-value-display";
+  valueDisplay.textContent = `${value}${unit}`;
+  valueDisplay.style.fontWeight = "bold";
+  valueDisplay.style.color = "var(--jms-primary-color, #7B2FBE)";
+
+  labelWrap.append(labelElement, valueDisplay);
+  container.appendChild(labelWrap);
+
+  const input = document.createElement("input");
+  input.type = "range";
+  input.id = key;
+  input.name = key;
+  input.min = String(min);
+  input.max = String(max);
+  input.step = String(step);
+  input.value = String(value);
+  input.style.width = "100%";
+  input.style.cursor = "pointer";
+
+  input.addEventListener("input", (e) => {
+    const v = e.target.value;
+    valueDisplay.textContent = `${v}${unit}`;
+  });
+
+  input.addEventListener("change", (e) => {
+    const v = e.target.value;
+    localStorage.setItem(key, v);
+  });
+
+  container.appendChild(input);
+  return container;
+}

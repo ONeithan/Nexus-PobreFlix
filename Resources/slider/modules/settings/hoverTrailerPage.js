@@ -1,5 +1,5 @@
 import { getConfig } from "../config.js";
-import { createCheckbox, createSection, bindCheckboxKontrol } from "./shared.js";
+import { createCheckbox, createSection, bindCheckboxKontrol, createRangeInput } from "./shared.js";
 import { applySettings } from "./applySettings.js";
 
 const cfg = getConfig();
@@ -9,13 +9,22 @@ export function createHoverTrailerPanel(config, labels) {
   panel.id = 'hover-panel';
   panel.className = 'settings-panel';
 
-  const section = createSection(labels.hoverTrailer || 'HoverTrailer Ayarları');
+  const section = createSection(labels.hoverTrailer || 'HoverTrailer');
   const allPreviewModalCheckbox = createCheckbox(
     'allPreviewModal',
-    labels.allPreviewModal || 'Modalı Jellyfin geneline uygula',
+    labels.allPreviewModal || 'Aplicar modal em todo o Jellyfin',
     config.allPreviewModal
   );
   section.appendChild(allPreviewModalCheckbox);
+
+  const hoverVolumeRange = createRangeInput(
+    'hoverVolume',
+    labels.hoverVolumeLabel || 'Volume do Hover Trailer',
+    config.hoverVolume,
+    0, 100, 1, "%"
+  );
+  hoverVolumeRange.style.marginTop = '12px';
+  section.appendChild(hoverVolumeRange);
 
   const modeWrap = document.createElement('div');
   modeWrap.className = 'field-group';
@@ -23,11 +32,11 @@ export function createHoverTrailerPanel(config, labels) {
 
   const title = document.createElement('div');
   title.className = 'field-label';
-  title.textContent = (labels.globalPreviewMode || 'Global hover tipi');
+  title.textContent = (labels.globalPreviewMode || 'Tipo de hover global');
   modeWrap.appendChild(title);
 
   const modes = [
-    { val: 'modal',      text: (labels.globalPreviewModeModal || 'HoverTrailer')},
+    { val: 'modal',      text: (labels.globalPreviewModeModal || 'HoverTrailer (Padrão)')},
     { val: 'studioMini', text: (labels.globalPreviewModeStudio || 'StudioHubs Mini') }
   ];
   const current = config.globalPreviewMode || 'modal';
@@ -54,7 +63,7 @@ export function createHoverTrailerPanel(config, labels) {
 
   const studioMiniTrailerPopover = createCheckbox(
     'studioMiniTrailerPopover',
-    (labels.studioMiniTrailerPopover || 'Fragman popover etkin'),
+    (labels.studioMiniTrailerPopover || 'Ativar popover de trailer no StudioHubs'),
     !!config.studioMiniTrailerPopover
   );
   studioMiniTrailerPopover.style.margin = '8px 0';
@@ -62,14 +71,14 @@ export function createHoverTrailerPanel(config, labels) {
 
   const preferTrailerCheckbox = createCheckbox(
     'preferTrailersInPreviewModal',
-    labels.preferTrailersInPreviewModal || 'Modalda Fragman > Video',
+    labels.preferTrailersInPreviewModal || 'Preferir Trailer > Vídeo no modal',
     config.preferTrailersInPreviewModal
   );
   section.appendChild(preferTrailerCheckbox);
 
   const onlyTrailerCheckbox = createCheckbox(
     'onlyTrailerInPreviewModal',
-    labels.onlyTrailerInPreviewModal || 'Modalda Sadece Fragman',
+    labels.onlyTrailerInPreviewModal || 'Exibir apenas trailers no modal',
     config.onlyTrailerInPreviewModal
   );
   section.appendChild(onlyTrailerCheckbox);

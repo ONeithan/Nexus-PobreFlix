@@ -1778,7 +1778,9 @@ function installYTPlayer(iframe) {
       try {
         const player = _ytPlayers.get(iframe);
         player?.unMute?.();
-        player?.setVolume?.(100);
+        const currentHoverVolume = parseInt(localStorage.getItem('hoverVolume'), 10);
+        const prefVolume = (!isNaN(currentHoverVolume)) ? currentHoverVolume : 80;
+        player?.setVolume?.(prefVolume);
         player?.playVideo?.();
         if (btn) btn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
       } catch {}
@@ -1810,7 +1812,9 @@ function installYTPlayer(iframe) {
 
             if ((isMobileAppEnv() || !isTouchRuntime()) && modalState._soundOn) {
               ev.target.unMute?.();
-              ev.target.setVolume?.(100);
+              const currentHoverVolume = parseInt(localStorage.getItem('hoverVolume'), 10);
+              const prefVolume = (!isNaN(currentHoverVolume)) ? currentHoverVolume : 80;
+              ev.target.setVolume?.(prefVolume);
               try { ev.target.playVideo?.(); } catch {}
               setTimeout(() => {
                 try {
@@ -1841,7 +1845,9 @@ function installYTPlayer(iframe) {
             try {
      if (isMobileAppEnv() && modalState._soundOn) {
        event.target.unMute?.();
-       event.target.setVolume?.(100);
+       const currentHoverVolume = parseInt(localStorage.getItem('hoverVolume'), 10);
+       const prefVolume = (!isNaN(currentHoverVolume)) ? currentHoverVolume : 80;
+       event.target.setVolume?.(prefVolume);
      }
    } catch {}
           }
@@ -1912,8 +1918,10 @@ export function applyVolumePreference(modal = modalState.videoModal) {
     return;
   }
   if (modalState.modalVideo) {
+    const currentHoverVolume = parseInt(localStorage.getItem('hoverVolume'), 10);
+    const prefVolume = (!isNaN(currentHoverVolume)) ? (currentHoverVolume / 100) : 0.8;
     modalState.modalVideo.muted = !modalState._soundOn;
-    modalState.modalVideo.volume = modalState._soundOn ? 1.0 : 0.0;
+    modalState.modalVideo.volume = modalState._soundOn ? prefVolume : 0.0;
   }
   if (volumeButton) {
     volumeButton.innerHTML = modalState._soundOn
@@ -1934,7 +1942,7 @@ function injectOrUpdateModalStyle() {
       background: rgba(28, 28, 46, 0.97);
       border-radius: 20px;
       box-shadow:
-        0 8px 32px 0 rgba(31, 38, 135, 0.38),
+        0 8px 32px 0 rgba(123, 47, 190, 0.35),
         0 1.5px 4px rgba(0, 0, 0, 0.09);
       z-index: 1000;
       display: none;
@@ -2243,9 +2251,9 @@ function injectOrUpdateModalStyle() {
     }
 
     .video-preview-modal .preview-favorite-button.favorited {
-      background: linear-gradient(80deg, #3fc37d 65%, #158654 100%);
+      background: linear-gradient(80deg, #9D58E2 65%, #7B2FBE 100%);
       color: #fff;
-      border: 1px solid #25e098;
+      border: 1px solid #7B2FBE;
     }
 
     .video-preview-modal .preview-match-button {
