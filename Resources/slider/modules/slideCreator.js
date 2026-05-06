@@ -754,7 +754,16 @@ async function createSlide(item, options = {}) {
   }
 
   function tryDisplayElement(index) {
-    if (index >= order.length) return;
+    if (index >= order.length) {
+      // Se chegamos ao fim da lista e nada foi exibido, forçamos a Logo Nexus PobreFlix
+      const nexusLogo = document.createElement("img");
+      nexusLogo.src = "/Resources/slider/src/images/logo_pobreflix.png";
+      nexusLogo.className = "monwui-nexus-branding-logo";
+      nexusLogo.style.maxHeight = "120px";
+      nexusLogo.style.objectFit = "contain";
+      logoContainer.appendChild(nexusLogo);
+      return;
+    }
     const type = order[index];
     if (type === "logo") {
       const element = createLogoElement(() => {
@@ -812,8 +821,8 @@ async function createSlide(item, options = {}) {
   if (ratingExists) metaContainer.appendChild(ratingContainer);
   if (languageContainer) metaContainer.appendChild(languageContainer);
   const mainContentContainer = createMainContentContainer();
-  mainContentContainer.append(logoContainer, titleContainer, plotContainer, providerContainer);
-  slide.append(metaContainer, mainContentContainer, buttonContainer, actorSlider, infoContainer, directorContainer);
+  mainContentContainer.append(logoContainer, titleContainer, plotContainer, metaContainer, providerContainer);
+  slide.append(mainContentContainer, buttonContainer, actorSlider, infoContainer, directorContainer);
   const frag = document.createDocumentFragment();
   frag.appendChild(slide);
   const slideChildren = Array.from(slidesContainer.children).filter((child) => child.classList?.contains("monwui-slide"));
@@ -895,7 +904,7 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
   logoContainer.style.marginRight = "auto";
 
   const logoImg = document.createElement("img");
-  logoImg.src = logoUrl;
+  logoImg.src = itemId ? logoUrl : "/Resources/slider/src/images/logo_pobreflix.png";
   logoImg.alt = itemName;
   logoImg.style.maxHeight = "100%";
   logoImg.style.maxWidth = "100%";
@@ -903,18 +912,19 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
   logoImg.style.display = "block";
 
   logoImg.onerror = () => {
-    logoContainer.style.display = "none";
+    logoImg.src = "/Resources/slider/src/images/logo_pobreflix.png";
   };
 
   logoContainer.appendChild(logoImg);
 
   const titleElement = document.createElement("h3");
-  const itemDisplayName = itemName ? itemName : 'Bilinmeyen İçerik';
+  const itemDisplayName = itemName ? itemName : 'Conteúdo Desconhecido';
   titleElement.textContent = `${itemDisplayName} - ${config.languageLabels.fragman}`;
   titleElement.style.margin = "0";
   titleElement.style.marginLeft = "15px";
   titleElement.style.flex = "1";
   titleElement.style.textAlign = "center";
+  titleElement.style.color = "var(--monwui-primary, #7B2FBE)";
 
   const closeBtn = document.createElement("button");
   closeBtn.className = "monwui-trailer-modal-close";

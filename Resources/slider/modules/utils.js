@@ -845,6 +845,16 @@ function clearPreviewPlaybackFlag() {
     }
 
     videoElement.src = introUrl;
+    
+    const vol = config.studioHubsVolume;
+    if (vol === 'muted' || vol === 0) {
+      videoElement.muted = true;
+      videoElement.volume = 0;
+    } else {
+      videoElement.muted = false;
+      videoElement.volume = Math.max(0, Math.min(1, vol / 100));
+    }
+
     videoElement.load();
     const onMeta = () => {
       videoElement.removeEventListener("loadedmetadata", onMeta);

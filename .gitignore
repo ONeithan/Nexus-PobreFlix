@@ -1,0 +1,21 @@
+# Pastas geradas pelo compilador C# — nunca subir
+bin/
+obj/
+
+# Arquivos de usuário do Visual Studio
+*.user
+*.suo
+.vs/
+
+# Logs de build
+*.log
+build.log
+
+# Arquivos de publicação temporários
+publish/
+
+# Debug local e pastas de buildNexus
+*.tmp
+*.cache
+build.bat
+dist's/

@@ -3981,7 +3981,7 @@ wireMiniCardDelegation();
           <div class="jmsdm-hero">
             ${heroImageUrl ? `<img src="${heroImageUrl}" alt="">` : ""}
             <div class="jmsdm-topbar">
-              <button class="jmsdm-close" aria-label="${config.languageLabels.closeButton || "Kapat"}">✕</button>
+              <button class="jmsdm-close" aria-label="${labels.kapat || "Fechar"}">✕</button>
             </div>
 
             <div class="jmsdm-heroTitleWrap" aria-hidden="true">
@@ -4005,30 +4005,30 @@ wireMiniCardDelegation();
                 </div>
 
                 <div class="jmsdm-preview-body">
+                  <div class="jmsdm-overview">${overview}</div>
+                  
                   <div class="jmsdm-actions">
                     <button class="jmsdm-btn primary jmsdm-play">
-                      ${icon("M8 5v14l11-7z")} ${config.languageLabels.playNowLabel || "Şimdi Oynat"}
+                      ${icon("M8 5v14l11-7z")} ${labels.playNowLabel || "ASSISTIR AGORA"}
                     </button>
                     <button class="jmsdm-btn jmsdm-openpage">
-                      ${icon("M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z")} ${config.languageLabels.goToPageLabel || "Sayfaya Git"}
+                      ${icon("M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z")} ${labels.goToPageLabel || "Ver Detalhes"}
                     </button>
                     <button class="jmsdm-btn jmsdm-fav" aria-pressed="${isFavorite ? "true" : "false"}">
                       ${icon(isFavorite ? "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" : "M12.1 18.55l-.1.1-.11-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5 18.5 5 20 6.5 20 8.5c0 2.89-3.14 5.74-7.9 10.05z")}
                       ${getWatchlistButtonText(baseItem, isFavorite)}
                     </button>
-                    <button class="jmsdm-btn jmsdm-watchlist-open">
-                      ${icon("M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z")} ${config.languageLabels.watchlistOpen || "İzleme Listesi"}
-                    </button>
                   </div>
 
-                  <div class="jmsdm-overview">${overview}</div>
-                  ${renderPreviewStats(stats)}
-                  ${renderPreviewFieldSection(label("watchlistPreviewMediaSection", "Medya Özeti"), mediaFields)}
-                  ${renderPreviewListSection(label("watchlistPreviewAudioTracks", "Ses Parçaları"), audioTracks)}
-                  ${renderPreviewListSection(label("watchlistPreviewSubtitleTracks", "Altyazılar"), subtitleTracks)}
-                  ${renderPreviewFieldSection(label("watchlistPreviewCredits", "Künye"), creditFields)}
-                  ${renderPreviewTagSection(label("genre", "Tür"), genres)}
-                  ${renderPreviewStudioSection(label("watchlistPreviewStudios", "Stüdyolar"), studioEntries)}
+                  <div class="jmsdm-metadata-section">
+                    ${renderPreviewStats(stats)}
+                    ${renderPreviewFieldSection(labels.watchlistPreviewMediaSection || "Informações da Mídia", mediaFields)}
+                    ${renderPreviewListSection(labels.watchlistPreviewAudioTracks || "Áudio em Português", audioTracks)}
+                    ${renderPreviewListSection(labels.watchlistPreviewSubtitleTracks || "Legendas", subtitleTracks)}
+                    ${renderPreviewFieldSection(labels.watchlistPreviewCredits || "Créditos", creditFields)}
+                    ${renderPreviewTagSection(labels.genre || "Gênero", genres)}
+                    ${renderPreviewStudioSection(labels.watchlistPreviewStudios || "Estúdios", studioEntries)}
+                  </div>
                 </div>
               </div>
 

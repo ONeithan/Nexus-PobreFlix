@@ -3,89 +3,86 @@
 
   # Nexus PobreFlix Plugin
 
-  **A custom fork of MonWUI — the ultimate Jellyfin visual experience for the Brazilian community.**
+  **O motor visual definitivo do Nexus PobreFlix para Jellyfin — Otimizado e em PT-BR.**
 
-  ![Status](https://img.shields.io/badge/Status-Active-purple?style=for-the-badge)
+  ![Status](https://img.shields.io/badge/Status-Industrial-purple?style=for-the-badge)
   ![Language](https://img.shields.io/badge/Language-PT--BR%20Native-green?style=for-the-badge)
-  ![Layout](https://img.shields.io/badge/Layout-Full%20Screen%20Scyfin-blue?style=for-the-badge)
+  ![Version](https://img.shields.io/badge/Version-3.0.0-blue?style=for-the-badge)
   ![Fork](https://img.shields.io/badge/Fork%20of-MonWUI%20by%20G--grbz-gray?style=for-the-badge)
 </div>
 
 ---
 
-> ⚠️ **FORK NOTICE** — This is a personalized fork of [Jellyfin-MonWUI-Plugin](https://github.com/G-grbz/Jellyfin-MonWUI-Plugin) by **G-grbz**.
-> All credits for the core engine, rendering logic, and original architecture belong to **G-grbz**.
-> This fork exists solely to customize the experience for the **Nexus PobreFlix** ecosystem.
-
----
-
-## 🇺🇸 English
-
-### 🚀 What is Nexus PobreFlix Plugin?
-This is a custom, performance-optimized fork of the MonWUI plugin, built for the **Nexus PobreFlix** media server. It removes layout restrictions and delivers a full, immersive cinematic interface fully localized in Brazilian Portuguese.
-
-### ✨ Key Features
-| Feature | Description |
-|---|---|
-| 🇧🇷 **Native PT-BR Translation** | All UI text translated at the core level. No slow external scripts. |
-| 🖥️ **Full Screen Detail View** | Removed the 900px width lock. Details now open in true full-screen (Scyfin-style). |
-| ⚡ **Performance Optimized** | Cleaner CSS rendering for a smooth, fluid 60FPS experience. |
-| 🟣 **Nexus PobreFlix Branding** | Custom identity integrated throughout the plugin. |
-
-### 🛠️ How to Install
-1. Download the latest `NexusPobreFlix.dll` from the [Releases](../../releases) page.
-2. Go to your Jellyfin server's plugin folder (usually `/config/plugins/`).
-3. Replace the original `JMSFusion` DLL with our version.
-4. Restart Jellyfin and do a **Hard Refresh** (`Ctrl + F5`) in your browser.
-
-### 📦 Plugin Repository (Jellyfin Catalog)
-You can add this plugin directly to your Jellyfin catalog by adding the following URL in **Dashboard → Plugins → Repositories**:
-
-```
-https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix-Plugin/main/manifest.json
-```
+> ℹ️ **Note for English Speakers:** The English documentation is available at the [bottom of this page](#english).
 
 ---
 
 ## 🇧🇷 Português (Brasil)
 
 ### 🚀 O que é o Nexus PobreFlix Plugin?
-Este é um fork personalizado e otimizado do plugin MonWUI, construído para o servidor de mídia **Nexus PobreFlix**. Ele remove as restrições de layout e entrega uma interface cinematográfica imersiva, 100% em Português do Brasil.
+Este é um fork personalizado e de **Grau Industrial** do plugin MonWUI, desenvolvido exclusivamente para o ecossistema **Nexus PobreFlix**. Esta versão foi reconstruída para oferecer máxima performance, estabilidade em sessões de usuário e uma interface 100% traduzida nativamente.
 
-### ✨ Principais Modificações
+### ✨ Diferenciais da Versão Industrial (v3.0.0)
 | Funcionalidade | Descrição |
 |---|---|
-| 🇧🇷 **Tradução Nativa (PT-BR)** | Toda a interface traduzida no nível do core. Sem scripts externos lentos. |
-| 🖥️ **Tela Cheia (Scyfin Style)** | A trava de 900px da janela de detalhes foi removida. Agora é tela cheia de verdade. |
-| ⚡ **Performance Otimizada** | Renderização CSS mais limpa para uma experiência fluida de 60FPS. |
-| 🟣 **Identidade Nexus PobreFlix** | Branding personalizado integrado em todo o plugin. |
+| 🇧🇷 **Tradução Industrial** | Toda a interface (Slider, Studio Hubs, Seletor de Perfil) traduzida no core. Sem atrasos de scripts externos. |
+| 👤 **Seletor de Perfil Otimizado** | Sistema de troca de perfis ultra-rápido, assíncrono e com persistência de sessão aprimorada. |
+| 🎬 **Studio Hubs Premium** | Coleções de estúdios com trailers automatizados, controle de volume configurável e interface limpa. |
+| 🖥️ **Full Screen Imersivo** | Removidas as travas de layout para uma experiência cinematográfica real em qualquer resolução. |
+| ⚡ **Limpidez Industrial** | Código otimizado, remoção de bugs visuais e CSS de alto desempenho. |
 
-### 🛠️ Como Instalar
+### 🛠️ Como Instalar (Manual)
 1. Baixe o arquivo `NexusPobreFlix.dll` mais recente na aba [Releases](../../releases).
 2. Acesse a pasta de plugins do seu servidor Jellyfin (geralmente `/config/plugins/`).
-3. Substitua a DLL original do `JMSFusion` pela nossa versão.
-4. Reinicie o Jellyfin e faça um **Hard Refresh** (`Ctrl + F5`) no navegador.
+3. Substitua a DLL original (se houver) pela nossa versão.
+4. Reinicie o Jellyfin e faça um **Hard Refresh** (`Ctrl + F5`) no seu navegador.
 
-### 📦 Repositório do Plugin (Catálogo do Jellyfin)
-Adicione este plugin diretamente no catálogo do seu Jellyfin em **Painel → Plugins → Repositórios**, usando a URL:
+### 📦 Instalação via Repositório (Recomendado)
+Para receber atualizações automáticas e instalar pelo catálogo do Jellyfin, adicione este link em **Painel → Plugins → Repositórios**:
 
 ```
-https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix-Plugin/main/manifest.json
+https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/manifest.json
+```
+
+---
+
+<a name="english"></a>
+## 🇺🇸 English
+
+### 🚀 What is Nexus PobreFlix Plugin?
+This is a custom, **Industrial-Grade** fork of the MonWUI plugin, built for the **Nexus PobreFlix** media server. It delivers a performance-optimized, fully localized experience with removed layout restrictions and enhanced session stability.
+
+### ✨ Key Industrial Features (v3.0.0)
+- **Native PT-BR Core:** Fully localized interface without external script overhead.
+- **Optimized Profile Chooser:** Faster, non-blocking asynchronous user switching.
+- **Premium Studio Hubs:** Configurable trailer volume and clean metadata rendering.
+- **Immersive Full Screen:** True cinematic layout without standard width locks.
+- **Industrial Cleanliness:** Optimized CSS and zero-pollution DOM architecture.
+
+### 🛠️ Manual Installation
+1. Download the latest `NexusPobreFlix.dll` from the [Releases](../../releases) page.
+2. Replace the original DLL in your Jellyfin server's plugin folder.
+3. Restart Jellyfin and perform a **Hard Refresh** (`Ctrl + F5`).
+
+### 📦 Repository Installation
+Add the following URL to your Jellyfin server (**Dashboard → Plugins → Repositories**):
+```
+https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/manifest.json
 ```
 
 ---
 
 ## 🛡️ Créditos / Credits
 
-Este software é fornecido "como está". Esta versão não é afiliada oficialmente ao projeto MonWUI original.
+Este software é um fork personalizado. Todos os créditos do motor original pertencem ao autor original.
 
 - **Motor original / Original Engine:** [G-grbz/Jellyfin-MonWUI-Plugin](https://github.com/G-grbz/Jellyfin-MonWUI-Plugin)
-- **Fork / Customização:** [Nexus PobreFlix](https://github.com/ONeithan)
+- **Desenvolvimento Nexus / Industrialization:** [Nexus PobreFlix](https://github.com/ONeithan)
 
 ---
 
 <div align="center">
   <img src="img/nexus-pobreflix-logo.png" alt="Nexus PobreFlix" width="300"/>
   <br/>
-  <sub>Feito com 💜 para o Nexus PobreFlix</sub>
+  <sub>Desenvolvido com 💜 para a comunidade Nexus PobreFlix</sub>
 </div>

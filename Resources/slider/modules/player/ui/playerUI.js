@@ -115,8 +115,8 @@ export function updateFavoriteButtonState(track = musicPlayerState.playlist?.[mu
     favoriteBtn.classList.remove("hidden");
     favoriteBtn.innerHTML = getFavoriteIconHtml(isShared);
     favoriteBtn.title = isShared
-      ? (config.languageLabels.radioAlreadyShared || "İstasyon zaten paylaşılan radyolarda")
-      : (config.languageLabels.radioShare || "Paylaşılan radyolara ekle");
+      ? (config.languageLabels.radioAlreadyShared || "Estação já está nas rádios compartilhadas")
+      : (config.languageLabels.radioShare || "Adicionar às rádios compartilhadas");
     return;
   }
 
@@ -152,11 +152,11 @@ export function createModernPlayerUI() {
 
   if (config.nextTracksSource === 'playlist') {
     nextTracksName.textContent = musicPlayerState.userSettings.shuffle
-      ? config.languageLabels.rastgele || "Rastgele"
-      : config.languageLabels.sirada || "Sıradakiler";
+      ? config.languageLabels.rastgele || "Aleatório"
+      : config.languageLabels.sirada || "Próximos";
   } else {
     nextTracksName.textContent = getSourceLabel(config.nextTracksSource);
-    nextTracksName.title = config.languageLabels.changeSource || "Kaynağı değiştirmek için tıklayın";
+    nextTracksName.title = config.languageLabels.changeSource || "Clique para mudar a fonte";
     nextTracksName.onclick = async (e) => {
       e.stopPropagation();
       const cfg = getConfig();
@@ -189,22 +189,22 @@ export function createModernPlayerUI() {
     {
       className: "theme-toggle-btn",
       iconClass: config.playerTheme === 'light' ? "fas fa-moon" : "fas fa-sun",
-      title: config.playerTheme === 'light' ? config.languageLabels.darkTheme || 'Karanlık Tema' : config.languageLabels.lightTheme || 'Aydınlık Tema',
+      title: config.playerTheme === 'light' ? config.languageLabels.darkTheme || 'Tema Escuro' : config.languageLabels.lightTheme || 'Tema Claro',
       onClick: toggleTheme
     },
     { className: "playlist-btn", iconClass: "fas fa-list", title: config.languageLabels.playlist, onClick: togglePlaylistModal },
     { className: "jplaylist-btn", iconClass: "fa-solid fa-list-ol", title: config.languageLabels.jellyfinPlaylists || "Jellyfin Oynatma Listesi", onClick: showJellyfinPlaylistsModal },
-    { className: "radio-btn", iconClass: "fas fa-broadcast-tower", title: config.languageLabels.radioStations || "Radyolar", onClick: showRadioModal },
+    { className: "radio-btn", iconClass: "fas fa-broadcast-tower", title: config.languageLabels.radioStations || "Rádios", onClick: showRadioModal },
     {
       className: "settingsLink",
       iconClass: "fas fa-cog",
-      title: config.languageLabels.ayarlar || "Ayarlar",
+      title: config.languageLabels.ayarlar || "Configurações",
       onClick: async (e) => {
         e.preventDefault();
         await openSettings("music");
       }
     },
-    { className: "kapat-btn", iconClass: "fas fa-times", title: config.languageLabels.close || "Close", onClick: togglePlayerVisibility },
+    { className: "kapat-btn", iconClass: "fas fa-times", title: config.languageLabels.close || "Fechar", onClick: togglePlayerVisibility },
   ];
 
   buttonsTop.forEach(btnInfo => {
@@ -223,8 +223,8 @@ export function createModernPlayerUI() {
       themeBtn.innerHTML = `<i class="fas fa-${theme === 'light' ? 'moon' : 'sun'}"></i>`;
       const cfgNow = getConfig();
       themeBtn.title = theme === 'light'
-        ? (cfgNow.languageLabels.darkTheme || 'Karanlık Tema')
-        : (cfgNow.languageLabels.lightTheme || 'Aydınlık Tema');
+        ? (cfgNow.languageLabels.darkTheme || 'Tema Escuro')
+        : (cfgNow.languageLabels.lightTheme || 'Tema Claro');
     }
     updatePlayerBackground();
     initializePlayerStyle();
@@ -307,7 +307,7 @@ export function createModernPlayerUI() {
   const topTracksBtn = createButton({
     className: "top-tracks-btn",
     iconClass: "fas fa-chart-line",
-    title: config.languageLabels.myMusic || "En Çok Dinlenenler",
+    title: config.languageLabels.myMusic || "Mais Ouvidas",
     onClick: () => { showTopTracksModal(); },
   });
 
@@ -319,8 +319,8 @@ export function createModernPlayerUI() {
     className: "remove-on-play-btn",
     iconClass: "fa-solid fa-trash",
     title: musicPlayerState.userSettings.removeOnPlay
-      ? config.languageLabels.removeOnPlayOn || "Çaldıktan sonra sil: Açık"
-      : config.languageLabels.removeOnPlayOff || "Çaldıktan sonra sil: Kapalı",
+      ? config.languageLabels.removeOnPlayOn || "Remover após tocar: Ativado"
+      : config.languageLabels.removeOnPlayOff || "Remover após tocar: Desativado",
     onClick: toggleRemoveOnPlayMode
   });
 
@@ -332,7 +332,7 @@ export function createModernPlayerUI() {
   const genreFilterBtn = createButton({
     className: "genre-filter-btn",
     iconClass: "fas fa-filter",
-    title: config.languageLabels.filterByGenre || "Türe göre filtrele",
+    title: config.languageLabels.filterByGenre || "Filtrar por Gênero",
     onClick: showGenreFilterModal
   });
   const prevBtn = createButton({ iconClass: "fas fa-step-backward", title: config.languageLabels.previousTrack, onClick: playPrevious });
@@ -360,7 +360,7 @@ export function createModernPlayerUI() {
     value: "1",
     title: config.languageLabels.volumeLevel,
   });
-  volumeSlider.setAttribute("aria-label", config.languageLabels.volumeLevel || config.languageLabels.volume || "Ses seviyesi");
+  volumeSlider.setAttribute("aria-label", config.languageLabels.volumeLevel || config.languageLabels.volume || "Volume");
 
   volumeSlider.addEventListener('input', e => {
     const volume = parseFloat(e.target.value);
@@ -389,13 +389,13 @@ export function createModernPlayerUI() {
     topTracksBtn, volumeBtn, createButton({
       className: "fullscreen-btn",
       iconClass: "fa-solid fa-maximize",
-      title: config.languageLabels.fullscreen || "Tam Ekran",
+      title: config.languageLabels.fullscreen || "Tela Cheia",
       onClick: toggleFullscreenMode
     }),
     createButton({
       className: "style-toggle-btn",
       iconClass: "fa-solid fa-up-down",
-      title: config.playerStyle === 'player' ? config.languageLabels.dikeyStil || 'Dikey Stil' : config.languageLabels.yatayStil || 'Yatay Stil',
+      title: config.playerStyle === 'player' ? config.languageLabels.dikeyStil || 'Estilo Vertical' : config.languageLabels.yatayStil || 'Estilo Horizontal',
       onClick: togglePlayerStyle
     }),
   ];

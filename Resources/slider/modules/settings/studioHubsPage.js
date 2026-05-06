@@ -1872,6 +1872,20 @@ export function createStudioHubsPanel(config, labels) {
   );
   section.appendChild(ratingWrap);
 
+  const volumeWrap = createSelect(
+    'studioHubsVolume',
+    labels?.studioHubsVolume || 'Volume dos Trailers (Coleções)',
+    [
+      { value: 'muted', text: labels?.studioHubsMuted || 'Mudo' },
+      { value: '10', text: (labels?.studioHubsVolumeValue || '{value}%').replace('{value}', '10') },
+      { value: '20', text: (labels?.studioHubsVolumeValue || '{value}%').replace('{value}', '20') },
+      { value: '30', text: (labels?.studioHubsVolumeValue || '{value}%').replace('{value}', '30') },
+      { value: '50', text: (labels?.studioHubsVolumeValue || '{value}%').replace('{value}', '50') }
+    ],
+    config.studioHubsVolume || '20'
+  );
+  section.appendChild(volumeWrap);
+
   const personalcountWrap = createNumberInput(
     'personalRecsCardCount',
     labels?.studioHubsCardCount || 'Gösterilecek kart sayısı (Ana ekran)',

@@ -6,8 +6,16 @@
     "overview": "O motor visual oficial do Nexus PobreFlix para Jellyfin.",
     "owner": "G-Grbz",
     "category": "General",
-    "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix-Plugin/main/img/nexus-pobreflix-logo.png",
+    "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png",
     "versions": [
+    {
+        "version": "3.0.0.0",
+        "changelog": "v3.0.0 — Industrial Build\n\nChanges:\n- Full industrial-grade localization (PT-BR) across all modules (Slider, Hubs, Profile Chooser)\n- Optimized session handling and non-blocking profile initialization\n- Standardized genre mapping (Action & Adventure fixed)\n- Industrial cleaner CSS rendering and bug fixes\n- Custom Build system automation\n\nNotes:\n- Dedicated fork for Nexus PobreFlix ecosystem",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v3.0.0/NexusPobreFlix-3.0.0.0.zip",
+        "checksum": "",
+        "timestamp": "2026-05-06T19:15:00Z"
+      },
     {
         "version": "2.8.0.0",
         "changelog": "v2.8.0\n\nChanges:\n- Optimized home page rendering by decoupling heavy item metadata from user-specific data and extending static cache revalidation\n- Improved performance and consistency across different data loading scenarios\n\n- Enhanced slider, studio collections, and managed monwui UI cards to align with native app layout and ordering behavior\n\n- Added optional colorization for studio collection background elements\n- Added optional colorization for slider metadata icons\n\n- Implemented dynamic offset calculation for slider and home sections based on header height\n\n- Introduced mini statistics panel for watchlist items\n\n- Updated runtime, configuration, and watchlist integration pathways for improved consistency and maintainability\n\n- Removed forced CSS overrides for Jellyfin home layout when slider is disabled, allowing native layout behavior\n\nNotes:\n- Restart Jellyfin after update\n- A hard refresh (Ctrl + F5) may be required after updating",

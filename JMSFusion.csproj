@@ -7,7 +7,7 @@
     <AssemblyName>NexusPobreFlix</AssemblyName>
     <RootNamespace>Jellyfin.Plugin.NexusPobreFlix</RootNamespace>
 
-    <Version>2.8.0.0</Version>
+    <Version>3.0.0.0</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
@@ -56,11 +56,15 @@
     </None>
   </ItemGroup>
 
+  <!-- Target bash desativado: não funciona no Windows.
+       O build.bat atualiza o meta.json automaticamente. -->
+  <!--
   <Target Name="UpdateMetaJson"
           BeforeTargets="CopyFilesToOutputDirectory;ComputeFilesToPublish">
     <Message Text="Updating meta.json (timestamp &amp; version &amp; imagePath)..." Importance="high" />
     <Exec Command="bash ./update_meta.sh &quot;$(Version)&quot;"
           WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
+  -->
 
 </Project>

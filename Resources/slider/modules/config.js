@@ -909,6 +909,12 @@ export function getConfig() {
     studioMiniTrailerPopover: (localStorage.getItem("studioMiniTrailerPopover") || "false") === "true",
     studioHubsMinRating: parseFloat(localStorage.getItem('studioHubsMinRating')) || 6.5,
     studioHubsCardCount: parseInt(localStorage.getItem('studioHubsCardCount'), 10) || 10,
+    studioHubsVolume: (() => {
+      const v = localStorage.getItem('studioHubsVolume');
+      if (v === 'muted' || v === '0') return 'muted';
+      const n = parseInt(v, 10);
+      return isNaN(n) ? 20 : n;
+    })(),
     personalRecsCardCount: parseInt(localStorage.getItem('personalRecsCardCount'), 10) || 9,
     studioHubsOrder: (() => {
       try {
