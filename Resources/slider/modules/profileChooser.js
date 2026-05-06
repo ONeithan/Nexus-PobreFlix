@@ -731,12 +731,12 @@ function buildOverlayDom(L) {
   overlay.id = OVERLAY_ID;
   overlay.className = "jf-profile-overlay";
   overlay.innerHTML = `
-    <div class="jf-profile-shell" role="dialog" aria-modal="true" aria-label="${escapeHtml(L("profileChooserAriaLabel", "Profil seçimi"))}">
-      <button class="jf-profile-close" type="button" aria-label="${escapeHtml(L("kapat", "Kapat"))}">✕</button>
-      <button class="jf-profile-settings" type="button" aria-label="${escapeHtml(L("ayarlar", "Ayarlar"))}">⚙</button>
+    <div class="jf-profile-shell" role="dialog" aria-modal="true" aria-label="${escapeHtml(L("profileChooserAriaLabel", "Seleção de Perfil"))}">
+      <button class="jf-profile-close" type="button" aria-label="${escapeHtml(L("kapat", "Fechar"))}">✕</button>
+      <button class="jf-profile-settings" type="button" aria-label="${escapeHtml(L("ayarlar", "Configurações"))}">⚙</button>
 
-      <div class="jf-profile-title">${escapeHtml(L("kimIzliyor", "Kim izliyor?"))}</div>
-      <div class="jf-profile-subtitle">${escapeHtml(L("profilSecAlt", "Devam etmek için profil seç."))}</div>
+      <div class="jf-profile-title">${escapeHtml(L("kimIzliyor", "Quem está assistindo?"))}</div>
+      <div class="jf-profile-subtitle">${escapeHtml(L("profilSecAlt", "Escolha um perfil para continuar."))}</div>
 
       <div class="jf-profile-grid" role="list"></div>
 
@@ -745,12 +745,12 @@ function buildOverlayDom(L) {
           <div class="jf-profile-login-avatar"></div>
           <div class="jf-profile-login-name"></div>
 
-          <label class="jf-profile-login-label">${escapeHtml(L("sifre", "Şifre"))}</label>
+          <label class="jf-profile-login-label">${escapeHtml(L("sifre", "Senha"))}</label>
           <input class="jf-profile-login-input" type="password" autocomplete="current-password" />
 
           <div class="jf-profile-login-actions">
-            <button class="jf-profile-btn secondary" type="button" data-action="back">${escapeHtml(L("geri", "Geri"))}</button>
-            <button class="jf-profile-btn primary" type="button" data-action="login">${escapeHtml(L("devam", "Devam"))}</button>
+            <button class="jf-profile-btn secondary" type="button" data-action="back">${escapeHtml(L("geri", "Voltar"))}</button>
+            <button class="jf-profile-btn primary" type="button" data-action="login">${escapeHtml(L("devam", "Continuar"))}</button>
           </div>
 
           <div class="jf-profile-login-hint"></div>
@@ -758,7 +758,7 @@ function buildOverlayDom(L) {
       </div>
 
       <div class="jf-profile-footer">
-        <button class="jf-profile-footer-btn" type="button" data-action="signout">${escapeHtml(L("cikis", "Çıkış"))}</button>
+        <button class="jf-profile-footer-btn" type="button" data-action="signout">${escapeHtml(L("cikis", "Sair"))}</button>
       </div>
     </div>
   `;
@@ -808,7 +808,7 @@ function installHeaderButton(open, L, { isOverlayOpen } = {}) {
 
   function scheduleWarmupRefreshes() {
     clearWarmupRefreshes();
-    const placeholder = String(L("profil", "Profil") || "Profil").trim();
+    const placeholder = String(L("profil", "Perfil") || "Perfil").trim();
     const delays = [120, 420, 900, 1800, 3600, 7200];
 
     warmupRefreshIds = delays.map((delay) => window.setTimeout(() => {
@@ -876,12 +876,12 @@ function installHeaderButton(open, L, { isOverlayOpen } = {}) {
       const avatarSlot = btn.querySelector(".jf-profile-header-avatar");
       const nameSlot = btn.querySelector(".jf-profile-header-name");
       if (avatarSlot && !hasRenderableAvatarContent(avatarSlot)) {
-        setAvatarFallback(avatarSlot, { Name: L("profil", "Profil") });
+        setAvatarFallback(avatarSlot, { Name: L("profil", "Perfil") });
       }
       if (nameSlot && !String(nameSlot.textContent || "").trim()) {
-        nameSlot.textContent = L("profil", "Profil");
+        nameSlot.textContent = L("profil", "Perfil");
       }
-      btn.setAttribute("aria-label", L("profilDegistir", "Profil değiştir"));
+      btn.setAttribute("aria-label", L("profilDegistir", "Trocar Perfil"));
       btn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -925,7 +925,7 @@ function installHeaderButton(open, L, { isOverlayOpen } = {}) {
     const splashState = isCustomSplashBlockingProfileHeader() ? "splash" : "live";
 
     if (nameSlot) {
-      const next = userName || L("profil", "Profil");
+      const next = userName || L("profil", "Perfil");
       if (nameSlot.textContent !== next) nameSlot.textContent = next;
     }
 
@@ -1048,7 +1048,7 @@ async function authenticateByName(userName, password) {
 
   if (!res.ok) {
     const t = await res.text().catch(() => "");
-    throw new Error(`Login başarısız (${res.status}) ${t}`.trim());
+    throw new Error(`Falha no login (${res.status}) ${t}`.trim());
   }
   return await res.json();
 }
@@ -1316,7 +1316,7 @@ export function initProfileChooser(options = {}) {
       if (!currentList.length && currentUserId) {
         currentList = [{
           Id: currentUserId,
-          Name: currentUserName || L("profil", "Profil"),
+          Name: currentUserName || L("profil", "Perfil"),
           HasPassword: false,
           PrimaryImageTag: "",
         }];
@@ -1411,8 +1411,8 @@ export function initProfileChooser(options = {}) {
               tabindex="0"
               data-action="userprofile"
               data-user-id="${escapeHtml(id)}"
-              aria-label="${escapeHtml(L("profilSayfasi", "Profil sayfası"))}"
-              title="${escapeHtml(L("profilSayfasi", "Profil sayfası"))}"
+              aria-label="${escapeHtml(L("profilSayfasi", "Página de perfil"))}"
+              title="${escapeHtml(L("profilSayfasi", "Página de perfil"))}"
             >⚙</span>
           ` : ``}
           <div class="jf-profile-avatar">${avatarFallbackHtml(name)}</div>
@@ -1423,19 +1423,19 @@ export function initProfileChooser(options = {}) {
             ${isOnline ? `
               <span class="jf-profile-badge-active jfpc-chip">
                 <span class="jf-profile-dot-online" aria-hidden="true"></span>
-                ${escapeHtml(L("cevrimici", "Çevrimiçi"))}
+                ${escapeHtml(L("online", "Online"))}
               </span>
             ` : ``}
             ${remembered ? `
-              <span class="jf-profile-badge jfpc-chip">${escapeHtml(L("hizli", "Hızlı"))}</span>
+              <span class="jf-profile-badge jfpc-chip">${escapeHtml(L("rapido", "Rápido"))}</span>
               <span
                 class="jf-profile-forget jfpc-chip"
                 role="button"
                 tabindex="0"
                 data-action="forget"
                 data-user-id="${escapeHtml(id)}"
-                aria-label="${escapeHtml(L("hizliyiKaldir", "Hızlı girişi kaldır"))}"
-                title="${escapeHtml(L("hizliyiKaldir", "Hızlı girişi kaldır"))}"
+                aria-label="${escapeHtml(L("hizliyiKaldir", "Remover login rápido"))}"
+                title="${escapeHtml(L("hizliyiKaldir", "Remover login rápido"))}"
               >✕ </span>
             ` : ``}
           </div>
@@ -1443,8 +1443,8 @@ export function initProfileChooser(options = {}) {
             <div class="jf-profile-now-playing" title="${escapeHtml(statusTitle || "")}">
               ${escapeHtml(
                 isPaused
-                  ? L("duraklatildi", "Duraklatıldı")
-                  : (isAudio ? L("dinliyor", "Dinliyor") : L("izliyor", "İzliyor"))
+                  ? L("duraklatildi", "Pausado")
+                  : (isAudio ? L("dinliyor", "Ouvindo") : L("izliyor", "Assistindo"))
               )}
               ${statusTitle ? `: ${escapeHtml(statusTitle)}` : ""}
             </div>
@@ -1533,7 +1533,7 @@ export function initProfileChooser(options = {}) {
       const userName = String(u?.Name || user.Name || "").trim();
       const primaryImageTag = u?.PrimaryImageTag || "";
 
-      if (!accessToken || !userId) throw new Error(L("loginEksikYanıt", "Login yanıtı eksik (token/userId)"));
+      if (!accessToken || !userId) throw new Error(L("loginEksikYanıt", "Resposta de login incompleta (token/userId)"));
 
       if (rememberTokens) {
         rememberUserToken({ userId, name: userName, accessToken, primaryImageTag });
@@ -1550,7 +1550,7 @@ export function initProfileChooser(options = {}) {
       close();
       try { location.reload(); } catch {}
     } catch (e) {
-      const msg = String(e?.message || L("loginBasarisiz", "Login başarısız"));
+      const msg = String(e?.message || L("loginBasarisiz", "Falha no login"));
       showLogin(user, { hint: msg });
     } finally {
       try { overlay?.classList.remove("busy"); } catch {}

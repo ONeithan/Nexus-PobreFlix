@@ -559,41 +559,41 @@ function syncCustomSplashProgress(patch = {}) {
   const poolCount = Math.max(0, Number(state.poolCount) || 0);
 
   let progress = 0.06;
-  let stage = splashLabel("customSplashStageLock", "KILIT");
-  let detail = splashLabel("customSplashDetailLock", "Kabuk katmanı sabitleniyor");
+  let stage = splashLabel("customSplashStageLock", "BLOQUEIO");
+  let detail = splashLabel("customSplashDetailLock", "Fixando camada de interface");
 
   if (document.readyState !== "loading") {
     progress = Math.max(progress, 0.12);
-    stage = splashLabel("customSplashStageStructure", "OMURGA");
-    detail = splashLabel("customSplashDetailStructure", "Arayüz omurgası senkrona girdi");
+    stage = splashLabel("customSplashStageStructure", "ESTRUTURA");
+    detail = splashLabel("customSplashDetailStructure", "Estrutura da interface sincronizada");
   }
 
   if (state.authReady) {
     progress = Math.max(progress, 0.24);
-    stage = splashLabel("customSplashStageAuth", "YETKI");
-    detail = splashLabel("customSplashDetailAuth", "Oturum anahtarı doğrulandı");
+    stage = splashLabel("customSplashStageAuth", "AUTENTICAÇÃO");
+    detail = splashLabel("customSplashDetailAuth", "Chave de sessão verificada");
   }
 
   if (state.dataPoolReady) {
     progress = Math.max(progress, 0.38);
-    stage = splashLabel("customSplashStagePool", "HAVUZ");
+    stage = splashLabel("customSplashStagePool", "POOL");
     detail = poolCount > 0
-      ? splashLabel("customSplashDetailPool", "{count} içerik havuza alındı", { count: poolCount })
-      : splashLabel("customSplashDetailPoolEmpty", "İçerik havuzu bağlandı");
+      ? splashLabel("customSplashDetailPool", "{count} itens indexados no pool", { count: poolCount })
+      : splashLabel("customSplashDetailPoolEmpty", "Pool de conteúdo conectado");
   }
 
   if (state.selectionReady) {
     progress = Math.max(progress, 0.48);
-    stage = splashLabel("customSplashStageCompose", "KURGU");
+    stage = splashLabel("customSplashStageCompose", "COMPOSIÇÃO");
     detail = totalSlides > 0
-      ? splashLabel("customSplashDetailSelection", "{count} sahne sıraya alındı", { count: totalSlides })
-      : splashLabel("customSplashDetailSelectionEmpty", "Sahne akışı hazırlandı");
+      ? splashLabel("customSplashDetailSelection", "{count} cenas enfileiradas", { count: totalSlides })
+      : splashLabel("customSplashDetailSelectionEmpty", "Fluxo de cenas preparado");
   }
 
   if (totalSlides > 0) {
     progress = Math.max(progress, 0.48 + (createdSlides / totalSlides) * 0.34);
-    stage = splashLabel("customSplashStageRender", "RENDER");
-    detail = splashLabel("customSplashDetailRender", "{current}/{total} katman örülüyor", {
+    stage = splashLabel("customSplashStageRender", "RENDERIZAÇÃO");
+    detail = splashLabel("customSplashDetailRender", "Tecendo {current}/{total} camadas", {
       current: createdSlides,
       total: totalSlides
     });
@@ -601,25 +601,25 @@ function syncCustomSplashProgress(patch = {}) {
 
   if (state.firstSlideReady) {
     progress = Math.max(progress, 0.9);
-    stage = splashLabel("customSplashStageFrame", "KADRAJ");
+    stage = splashLabel("customSplashStageFrame", "QUADRO");
     detail = totalSlides > 0
-      ? splashLabel("customSplashDetailFrame", "{current}/{total} katman canlı", {
+      ? splashLabel("customSplashDetailFrame", "{current}/{total} camadas ativas", {
         current: createdSlides,
         total: totalSlides
       })
-      : splashLabel("customSplashDetailFrameEmpty", "İlk kadraj ışığa çıktı");
+      : splashLabel("customSplashDetailFrameEmpty", "Primeiro quadro renderizado");
   }
 
   if (state.allSlidesReady) {
     progress = Math.max(progress, 0.96);
-    stage = splashLabel("customSplashStageSurface", "YUZEY");
-    detail = splashLabel("customSplashDetailSurface", "Son katmanlar hizalanıyor");
+    stage = splashLabel("customSplashStageSurface", "SUPERFÍCIE");
+    detail = splashLabel("customSplashDetailSurface", "Alinhando camadas finais");
   }
 
   if (state.uiReady) {
     progress = 1;
-    stage = splashLabel("customSplashStageReady", "HAZIR");
-    detail = splashLabel("customSplashDetailReady", "MonWui çevrimiçi");
+    stage = splashLabel("customSplashStageReady", "PRONTO");
+    detail = splashLabel("customSplashDetailReady", "Nexus PobreFlix Online");
   }
 
   return setCustomSplashProgress(progress, {
@@ -696,6 +696,12 @@ function getCustomSplashGreetingFallback(lang = "tur", part = "Morning") {
       Afternoon: "Добрый день",
       Evening: "Добрый вечер",
       Night: "Здравствуйте"
+    },
+    por: {
+      Morning: "Bom dia",
+      Afternoon: "Boa tarde",
+      Evening: "Boa noite",
+      Night: "Olá"
     }
   };
 
@@ -730,7 +736,7 @@ function getCurrentCustomSplashUserName() {
 }
 
 function getCustomSplashLoadingFallback(title) {
-  const safeTitle = String(title || "MonWui").trim() || "MonWui";
+  const safeTitle = String(title || "Nexus PobreFlix").trim() || "Nexus PobreFlix";
   const lang = (typeof getDefaultLanguage === "function" ? getDefaultLanguage() : null) || "eng";
 
   switch (lang) {
@@ -746,13 +752,15 @@ function getCustomSplashLoadingFallback(title) {
       return `${safeTitle} подготавливается`;
     case "tur":
       return `${safeTitle} hazırlanıyor`;
+    case "por":
+      return `${safeTitle} está iniciando`;
     default:
       return `${safeTitle} is starting`;
   }
 }
 
 function resolveCustomSplashDefaults(labels = {}) {
-  const defaultTitle = String(labels.customSplashTitle || "MonWui").trim() || "MonWui";
+  const defaultTitle = String(labels.customSplashTitle || "Nexus PobreFlix").trim() || "Nexus PobreFlix";
   const fallbackCaption = getCustomSplashLoadingFallback(defaultTitle);
   const defaultCaption = String(labels.customSplashLoadingText || fallbackCaption).trim()
     || fallbackCaption;
@@ -770,8 +778,8 @@ function buildCustomSplashCaption(title, labels = {}) {
   return defaultCaption;
 }
 
-function buildCustomSplashDisplayTitle(title, labels = {}, lang = "tur") {
-  const safeTitle = splashTextValue(title, "MonWui");
+function buildCustomSplashDisplayTitle(title, labels = {}, lang = "por") {
+  const safeTitle = splashTextValue(title, "Nexus PobreFlix");
   const userName = getCurrentCustomSplashUserName();
   if (!userName) return safeTitle;
 
@@ -1162,10 +1170,10 @@ function hideCustomSplash(reason = "ready") {
     return true;
   }
 
-  const readyStage = splashLabel("customSplashStageReady", "HAZIR");
+  const readyStage = splashLabel("customSplashStageReady", "PRONTO");
   const closingDetail = reason === "timeout"
-    ? splashLabel("customSplashDetailForcedExit", "Zorunlu geçiş devreye alınıyor")
-    : splashLabel("customSplashDetailReady", "MonWui çevrimiçi");
+    ? splashLabel("customSplashDetailForcedExit", "Ativando transição forçada")
+    : splashLabel("customSplashDetailReady", "Nexus PobreFlix Online");
 
   syncCustomSplashProgress({
     uiReady: true,

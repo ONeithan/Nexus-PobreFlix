@@ -50,8 +50,8 @@ export function createSettingsModal() {
     const config = getConfig();
     const currentLang = config.defaultLanguage || getDefaultLanguage();
     const labels = getLanguageLabels(currentLang) || {};
-    const monwuiTabLabel = labels.sliderSettings || 'MonWUI Ayarları';
-    const sliderTabLabel = labels.sliderPageLabel || 'Slider Ayarları';
+    const monwuiTabLabel = labels.sliderSettings || 'Configurações Nexus';
+    const sliderTabLabel = labels.sliderPageLabel || 'Configurações do Slider';
 
     const modal = document.createElement('div');
     modal.id = 'settings-modal';
@@ -70,7 +70,7 @@ export function createSettingsModal() {
       wrap.style.marginBottom = "10px";
 
       const lab = document.createElement("label");
-      lab.textContent = labels?.profileTarget || "Ayar Profili";
+      lab.textContent = labels?.profileTarget || "Perfil de Destino";
       lab.style.marginRight = "10px";
       lab.htmlFor = "jmsProfileTarget";
 
@@ -80,8 +80,8 @@ export function createSettingsModal() {
 
       const autoProfile = getDeviceProfileAuto();
       const profileNameMap = {
-        desktop: labels?.profileDesktop || "Masaüstü Profil",
-        mobile: labels?.profileMobile || "Mobil Profil"
+        desktop: labels?.profileDesktop || "Perfil Desktop",
+        mobile: labels?.profileMobile || "Perfil Mobile"
       };
 
       const autoProfileLabel =
@@ -90,10 +90,10 @@ export function createSettingsModal() {
       const opts = [
         {
           v: "auto",
-          t: `${labels?.profileAuto || "Otomatik Seç"} (${autoProfileLabel})`
+          t: `${labels?.profileAuto || "Seleção Automática"} (${autoProfileLabel})`
         },
-        { v: "desktop", t: labels?.profileDesktop || "Masaüstü Profil" },
-        { v: "mobile", t: labels?.profileMobile || "Mobil Profil" }
+        { v: "desktop", t: labels?.profileDesktop || "Perfil Desktop" },
+        { v: "mobile", t: labels?.profileMobile || "Perfil Mobile" }
       ];
 
       opts.forEach(o => {
@@ -109,7 +109,7 @@ export function createSettingsModal() {
         localStorage.setItem("jms:settingsTargetProfile", select.value);
         showNotification(
           `<i class="fas fa-layer-group" style="margin-right:8px;"></i> ${
-            labels?.profileChanged || "Profil seçildi. Kaydettiğinde bu profile publish edilecek."
+            labels?.profileChanged || "Perfil selecionado. Ao salvar, as configurações serão publicadas neste perfil."
           }`,
           2500,
           "info"
@@ -133,7 +133,7 @@ export function createSettingsModal() {
       forcedHint.style.margin = '0 0 12px';
       forcedHint.textContent =
         labels?.forceGlobalAdminHint ||
-        'Genel Kullanıcı Ayarlarını Zorla aktif. Kaydet/Uygula seçili ayar profilini tum kullanicilar icin global publish eder.';
+        'Forçar Configurações Globais está ativo. Salvar/Aplicar publica o perfil de configurações selecionado globalmente para todos os usuários.';
       modalContent.appendChild(forcedHint);
     }
 
@@ -145,24 +145,24 @@ export function createSettingsModal() {
 
     const mainTab = createTab('monwui', 'fa-sliders', monwuiTabLabel, true);
     const sliderTab = createTab('slider', 'fa-gear', sliderTabLabel, false);
-    const queryTab = createTab('query', 'fa-code', labels.queryStringInput || 'Api Sorgu Ayarları');
-    const musicTab = createTab('music', 'fa-music', labels.gmmpSettings || 'GMMP Ayarları');
-    const studioTab = createTab('studio', 'fa-building', labels.studioHubsSettings || 'Stüdyo Koleksiyonları Ayarları');
-    const profileChooserTab = createTab('profile-chooser', 'fa-user-group', labels.profileChooserHeader || 'Kim İzliyor Ayarları');
-    const pauseTab = createTab('pause', 'fa-pause', labels.pauseSettings || 'Duraklatma Ekranı Ayarları');
-    const watchlistSettingsTab = createTab('watchlist-settings', 'fa-bookmark', labels.watchlistSettingsTab || 'İzleme Listesi Ayarları');
-    const hoverTab = createTab('hover', 'fa-play-circle', labels.hoverTrailer || 'HoverTrailer Ayarları');
-    const trailersTab = createTab('trailers', 'fa-video', labels.trailersHeader || 'Fragman İndirme / NFO Ayarları');
-    const notificationsTab = createTab('notifications', 'fa-bell', labels.notificationsSettings || 'Bildirim Ayarları');
-    const detailsModalTab = createTab('details-modal', 'fa-circle-info', labels.detailsModalSettingsTab || 'Detaylar Modülü Ayarları');
-    const avatarTab = createTab('avatar', 'fa-user', labels.avatarCreateInput || 'Avatar Ayarları');
+    const queryTab = createTab('query', 'fa-code', labels.queryStringInput || 'Configurações de Consulta API');
+    const musicTab = createTab('music', 'fa-music', labels.gmmpSettings || 'Configurações GMMP');
+    const studioTab = createTab('studio', 'fa-building', labels.studioHubsSettings || 'Configurações de Coleções de Estúdios');
+    const profileChooserTab = createTab('profile-chooser', 'fa-user-group', labels.profileChooserHeader || 'Configurações de Quem Está Assistindo');
+    const pauseTab = createTab('pause', 'fa-pause', labels.pauseSettings || 'Configurações da Tela de Pausa');
+    const watchlistSettingsTab = createTab('watchlist-settings', 'fa-bookmark', labels.watchlistSettingsTab || 'Configurações da Lista de Desejos');
+    const hoverTab = createTab('hover', 'fa-play-circle', labels.hoverTrailer || 'Configurações HoverTrailer');
+    const trailersTab = createTab('trailers', 'fa-video', labels.trailersHeader || 'Download de Trailers / NFO');
+    const notificationsTab = createTab('notifications', 'fa-bell', labels.notificationsSettings || 'Configurações de Notificação');
+    const detailsModalTab = createTab('details-modal', 'fa-circle-info', labels.detailsModalSettingsTab || 'Configurações do Módulo de Detalhes');
+    const avatarTab = createTab('avatar', 'fa-user', labels.avatarCreateInput || 'Configurações de Avatar');
     const parentalPinTab = config?.currentUserIsAdmin
-      ? createTab('parental-pin', 'fa-key', labels.parentalPinTab || 'PIN Kontrolü Ayarları')
+      ? createTab('parental-pin', 'fa-key', labels.parentalPinTab || 'Configurações de PIN Parental')
       : null;
-    const positionTab = createTab('position', 'fa-arrows-up-down-left-right', labels.positionSettings || 'Konumlandırma Ayarları');
-    const dbManagementTab = createTab('db-management', 'fa-database', labels.dbManagementTab || 'DB Yönetimi');
-    const exporterTab = createTab('exporter', 'fa-download', labels.backupRestore || 'Yedekle ve Geri Yükle');
-    const aboutTab = createTab('about', 'fa-circle-info', labels.aboutHeader || 'Hakkında');
+    const positionTab = createTab('position', 'fa-arrows-up-down-left-right', labels.positionSettings || 'Configurações de Posicionamento');
+    const dbManagementTab = createTab('db-management', 'fa-database', labels.dbManagementTab || 'Gerenciamento de DB');
+    const exporterTab = createTab('exporter', 'fa-download', labels.backupRestore || 'Backup e Restauração');
+    const aboutTab = createTab('about', 'fa-circle-info', labels.aboutHeader || 'Sobre');
 
     const tabs = [
         mainTab, sliderTab, queryTab, musicTab, studioTab, profileChooserTab,
@@ -271,19 +271,19 @@ export function createSettingsModal() {
 
     const saveBtn = document.createElement('button');
     saveBtn.type = 'submit';
-    saveBtn.textContent = labels.saveSettings || 'Kaydet';
+    saveBtn.textContent = labels.saveSettings || 'Salvar';
 
     const applyBtn = document.createElement('button');
     applyBtn.type = 'button';
-    applyBtn.textContent = labels.uygula || 'Uygula';
+    applyBtn.textContent = labels.uygula || 'Aplicar';
 
     const resetBtn = document.createElement('button');
     resetBtn.type = 'button';
-    resetBtn.textContent = labels.resetToDefaults || 'Sıfırla';
+    resetBtn.textContent = labels.resetToDefaults || 'Redefinir';
     resetBtn.className = 'reset-btn';
     resetBtn.onclick = () => {
         createConfirmationModal(
-            labels.resetConfirm || 'Tüm ayarları varsayılan değerlere sıfırlamak istediğinize emin misiniz?',
+            labels.resetConfirm || 'Tem certeza que deseja redefinir todas as configurações para os valores padrão?',
             resetAllSettings,
             labels
         );
@@ -320,8 +320,8 @@ export function createSettingsModal() {
         }
       });
 
-      saveBtn.textContent = isBusy ? (labels?.saving || 'Kaydediliyor...') : saveLabel;
-      applyBtn.textContent = isBusy ? (labels?.applying || 'Uygulaniyor...') : applyLabel;
+      saveBtn.textContent = isBusy ? (labels?.saving || 'Salvando...') : saveLabel;
+      applyBtn.textContent = isBusy ? (labels?.applying || 'Aplicando...') : applyLabel;
       resetBtn.textContent = resetLabel;
     }
 
@@ -342,10 +342,10 @@ export function createSettingsModal() {
         if (result?.forcedAdminPublish && result?.publishResult?.attempted && result?.publishResult?.ok) {
           const profileLabel =
             result?.publishResult?.profile === 'mobile'
-              ? (labels?.profileMobile || 'Mobil Profil')
-              : (labels?.profileDesktop || 'Masaustu Profil');
+              ? (labels?.profileMobile || 'Perfil Mobile')
+              : (labels?.profileDesktop || 'Perfil Desktop');
           showNotification(
-            `<i class="fas fa-globe" style="margin-right: 8px;"></i> ${labels?.forceGlobalPublishOk || `Global ayarlar ${profileLabel} icin yayinlandi.`}`,
+            `<i class="fas fa-globe" style="margin-right: 8px;"></i> ${labels?.forceGlobalPublishOk || `Configurações globais publicadas para o perfil ${profileLabel}.`}`,
             3200,
             'info'
           );
@@ -353,7 +353,7 @@ export function createSettingsModal() {
         }
 
         showNotification(
-          `<i class="fas fa-floppy-disk" style="margin-right: 8px;"></i> ${config.languageLabels.settingsSavedModal || "Ayarlar kaydedildi. Değişikliklerin aktif olması için slider sayfasını yenileyin."}`,
+          `<i class="fas fa-floppy-disk" style="margin-right: 8px;"></i> ${config.languageLabels.settingsSavedModal || "Configurações salvas. Atualize a página do slider para aplicar as alterações."}`,
           3000,
           'info'
         );
@@ -363,7 +363,7 @@ export function createSettingsModal() {
         const errText =
           String(err?.message || '').trim() ||
           labels?.settingsSaveFailed ||
-          'Ayarlar kaydedilemedi.';
+          'Não foi possível salvar as configurações.';
         showNotification(
           `<i class="fas fa-triangle-exclamation" style="margin-right: 8px;"></i> ${errText}`,
           4200,
@@ -385,7 +385,7 @@ export function createSettingsModal() {
         await runSaveAction(false);
     };
 
-    btnDiv.append(saveBtn, applyBtn, resetBtn, );
+    btnDiv.append(saveBtn, applyBtn, resetBtn);
     form.appendChild(btnDiv);
 
     const themeToggleBtn = document.createElement('button');
@@ -399,8 +399,8 @@ function setSettingsThemeToggleVisuals() {
 
   themeToggleBtn.innerHTML = `<i class="fas fa-${cfg.playerTheme === 'light' ? 'moon' : 'sun'}"></i>`;
   themeToggleBtn.title = cfg.playerTheme === 'light'
-    ? (labels.darkTheme || 'Karanlık Tema')
-    : (labels.lightTheme || 'Aydınlık Tema');
+    ? (labels.darkTheme || 'Tema Escuro')
+    : (labels.lightTheme || 'Tema Claro');
 }
 
 themeToggleBtn.onclick = async () => {
@@ -419,8 +419,8 @@ themeToggleBtn.onclick = async () => {
       playerThemeBtn.innerHTML = `<i class="fas fa-${newTheme === 'light' ? 'moon' : 'sun'}"></i>`;
       const labels = cfg.languageLabels || {};
       playerThemeBtn.title = newTheme === 'light'
-        ? (labels.darkTheme || 'Karanlık Tema')
-        : (labels.lightTheme || 'Aydınlık Tema');
+        ? (labels.darkTheme || 'Tema Escuro')
+        : (labels.lightTheme || 'Tema Claro');
     }
 
     setSettingsThemeToggleVisuals();
@@ -429,8 +429,8 @@ themeToggleBtn.onclick = async () => {
       showNotification(
         `<i class="fas fa-${newTheme === 'light' ? 'sun' : 'moon'}"></i> ${
           newTheme === 'light'
-            ? (labels.lightThemeEnabled || 'Aydınlık tema etkin')
-            : (labels.darkThemeEnabled || 'Karanlık tema etkin')
+            ? (labels.lightThemeEnabled || 'Tema claro ativado')
+            : (labels.darkThemeEnabled || 'Tema escuro ativado')
         }`,
         2000,
         'info'
@@ -444,7 +444,7 @@ themeToggleBtn.onclick = async () => {
     const publishResult = await publishAdminSnapshotIfForced();
     if (cfg?.forceGlobalUserSettings && cfg?.currentUserIsAdmin && publishResult?.attempted && !publishResult?.ok) {
       showNotification(
-        `<i class="fas fa-triangle-exclamation" style="margin-right: 8px;"></i> ${labels?.forceGlobalPublishFailed || 'Global kullanıcı ayarları publish edilemedi.'}`,
+        `<i class="fas fa-triangle-exclamation" style="margin-right: 8px;"></i> ${labels?.forceGlobalPublishFailed || 'Não foi possível publicar as configurações globais.'}`,
         4200,
         'error'
       );
@@ -686,7 +686,7 @@ function createConfirmationModal(message, callback, labels) {
 
         const confirmBtn = document.createElement('button');
         confirmBtn.className = 'confirm-btn';
-        confirmBtn.textContent = labels.yes || 'Evet';
+        confirmBtn.textContent = labels.yes || 'Sim';
         confirmBtn.onclick = () => {
             callback();
             modal.remove();
@@ -694,7 +694,7 @@ function createConfirmationModal(message, callback, labels) {
 
         const cancelBtn = document.createElement('button');
         cancelBtn.className = 'cancel-btn';
-        cancelBtn.textContent = labels.no || 'Hayır';
+        cancelBtn.textContent = labels.no || 'Não';
         cancelBtn.onclick = () => modal.remove();
 
         btnContainer.append(confirmBtn, cancelBtn);
@@ -853,12 +853,12 @@ function createLanguagePanel(config, labels) {
     panel.id = 'language-panel';
     panel.className = 'settings-panel';
 
-    const section = createSection(labels.languageInfoHeader || 'Ses ve Altyazı Bilgileri');
-    section.appendChild(createCheckbox('showLanguageInfo', labels.languageInfo || 'Ses ve Altyazı Bilgilerini Göster', config.showLanguageInfo));
+    const section = createSection(labels.languageInfoHeader || 'Informações de Áudio e Legendas');
+    section.appendChild(createCheckbox('showLanguageInfo', labels.languageInfo || 'Mostrar Informações de Áudio e Legendas', config.showLanguageInfo));
 
     const description = document.createElement('div');
     description.className = 'description-text';
-    description.textContent = labels.languageInfoDescription || 'Bu ayar aktifleştirildiğinde seçilen dile ait ses bilgileri içerikte mevcut ise yazdırılır. Dilinize ait ses bulunamazsa altyazı bilgileri aranır. Dilinize ait altyazı mevcut ise bilgi yazdırır.';
+    description.textContent = labels.languageInfoDescription || 'Quando habilitado, informações de áudio para o idioma selecionado serão exibidas se disponíveis. Caso contrário, serão buscadas informações de legendas.';
     section.appendChild(description);
 
     panel.appendChild(section);
@@ -991,7 +991,7 @@ function createExporterPanel(config, labels) {
 
   document.documentElement.style.setProperty(
     '--file-select-text',
-    `"${config.languageLabels.yedekSec || 'Dosya Seç'}"`
+    `"${config.languageLabels.yedekSec || 'Escolher Arquivo'}"`
   );
 
   return panel;
@@ -1052,7 +1052,7 @@ function createSettingsHotkeyField(labels, currentValue) {
 
     const label = document.createElement('label');
     label.htmlFor = 'settingsHotkey';
-    label.textContent = labels.settingsHotkeyLabel || 'Ayarlar kısayol tuşu';
+    label.textContent = labels.settingsHotkeyLabel || 'Atalho para Configurações';
 
     const controls = document.createElement('div');
     controls.style.display = 'flex';
@@ -1099,7 +1099,7 @@ function createSettingsHotkeyField(labels, currentValue) {
     resetButton.type = 'button';
     resetButton.id = 'settingsHotkeyReset';
     resetButton.className = 'reset-button';
-    resetButton.textContent = labels.settingsHotkeyReset || "F2'ye sıfırla";
+    resetButton.textContent = labels.settingsHotkeyReset || "Redefinir para F2";
     resetButton.addEventListener('click', () => {
         input.value = SETTINGS_HOTKEY_DEFAULT;
         localStorage.setItem('settingsHotkey', SETTINGS_HOTKEY_DEFAULT);
@@ -1109,7 +1109,7 @@ function createSettingsHotkeyField(labels, currentValue) {
     help.className = 'description-text';
     help.textContent =
         labels.settingsHotkeyHelp ||
-        'Alana odaklanıp kullanmak istediğiniz tuşa basın. Varsayılan: F2.';
+        'Foque no campo e pressione a tecla que deseja usar. Padrão: F2.';
     help.style.margin = '2px 0 0';
 
     controls.append(input, resetButton);
@@ -1123,9 +1123,9 @@ function createMainSettingsPanel(labels, panels) {
     panel.className = 'settings-panel';
 
     const config = getConfig();
-    const basicsSection = createSection(labels.mainCoreSettings || 'Temel Ayarlar');
-    const enablesSection = createSection(labels.mainEnableSettings || 'Ana Etkinleştirmeler');
-    const hotkeySection = createSection(labels.settingsHotkeySection || 'Ayarlar Kısayolu');
+    const basicsSection = createSection(labels.mainCoreSettings || 'Configurações Básicas');
+    const enablesSection = createSection(labels.mainEnableSettings || 'Habilitações Principais');
+    const hotkeySection = createSection(labels.settingsHotkeySection || 'Atalho de Configurações');
 
     [
         extractContainerBySelect(panels.sliderPanel, 'defaultLanguage', '.setting-item'),
@@ -1138,33 +1138,33 @@ function createMainSettingsPanel(labels, panels) {
 
     const homeSectionsMaster = createCheckbox(
         'enableHomeSectionsMaster',
-        labels.enableHomeSectionsMaster || 'MonWui ui kartlarını etkinleştir',
+        labels.enableHomeSectionsMaster || 'Habilitar cartões da interface Nexus',
         config.enableHomeSectionsMaster !== false
     );
     enablesSection.appendChild(homeSectionsMaster);
 
     const pauseFeaturesMaster = createCheckbox(
         'enablePauseFeaturesMaster',
-        labels.enablePauseFeaturesMaster || 'Duraklatma ekranı özelliklerini etkinleştir',
+        labels.enablePauseFeaturesMaster || 'Habilitar recursos da tela de pausa',
         config.enablePauseFeaturesMaster !== false
     );
     enablesSection.appendChild(pauseFeaturesMaster);
 
     enablesSection.appendChild(createCheckbox(
         'enableSubtitleCustomizerModule',
-        labels.enableSubtitleCustomizerModule || 'Altyazı Özelleştiriciyi etkinleştir',
+        labels.enableSubtitleCustomizerModule || 'Habilitar Customizador de Legendas',
         config.enableSubtitleCustomizerModule !== false
     ));
 
     enablesSection.appendChild(createCheckbox(
         'enableParentalPinModule',
-        labels.enableParentalPinModule || 'Parental PIN modülünü etkinleştir',
+        labels.enableParentalPinModule || 'Habilitar módulo de PIN Parental',
         config.enableParentalPinModule !== false
     ));
 
     enablesSection.appendChild(createCheckbox(
         'enableDetailsModalModule',
-        labels.enableDetailsModalModule || 'Detaylar modülünü etkinleştir',
+        labels.enableDetailsModalModule || 'Habilitar módulo de Detalhes',
         config.enableDetailsModalModule !== false
     ));
 
@@ -1195,19 +1195,19 @@ function createMainSettingsPanel(labels, panels) {
         castAdminHint.className = 'description-text';
         castAdminHint.textContent =
             labels.castModuleAdminOnlySettings ||
-            'Cast modülü ve kullanıcı görünürlüğü ayarları sadece yöneticiler tarafından değiştirilebilir.';
+            'As configurações do módulo Cast e de visibilidade do usuário só podem ser alteradas por administradores.';
         enablesSection.appendChild(castAdminHint);
     }
 
     enablesSection.appendChild(createCheckbox(
         'enableCustomSplashScreen',
-        labels.enableCustomSplashScreen || 'Özel splash ekranını etkinleştir',
+        labels.enableCustomSplashScreen || 'Habilitar tela de carregamento customizada',
         config.enableCustomSplashScreen !== false
     ));
     enablesSection.appendChild(createTextInput(
         'customSplashTitle',
-        labels.customSplashTitleLabel || 'Splash başlığı',
-        config.customSplashTitle || labels.customSplashTitle || 'MonWui'
+        labels.customSplashTitleLabel || 'Título da Tela de Carregamento',
+        config.customSplashTitle || labels.customSplashTitle || 'Nexus PobreFlix'
     ));
 
     [
@@ -1314,35 +1314,35 @@ export function createImageTypeSelect(name, selectedValue, includeExtended = fal
     const options = [
         {
             value: 'none',
-            label: labels.imageTypeNone || 'Hiçbiri'
+            label: labels.imageTypeNone || 'Nenhum'
         },
         {
             value: 'backdropUrl',
-            label: labels.imageTypeBackdrop || 'Backdrop Görseli'
+            label: labels.imageTypeBackdrop || 'Imagem de Fundo (Backdrop)'
         },
         {
             value: 'landscapeUrl',
-            label: labels.imageTypeLandscape || 'Landscape Görseli'
+            label: labels.imageTypeLandscape || 'Imagem de Paisagem (Landscape)'
         },
         {
             value: 'primaryUrl',
-            label: labels.imageTypePoster || 'Poster Görseli'
+            label: labels.imageTypePoster || 'Imagem de Poster'
         },
         {
             value: 'logoUrl',
-            label: labels.imageTypeLogo || 'Logo Görseli'
+            label: labels.imageTypeLogo || 'Imagem de Logo'
         },
         {
             value: 'bannerUrl',
-            label: labels.imageTypeBanner || 'Banner Görseli'
+            label: labels.imageTypeBanner || 'Imagem de Banner'
         },
         {
             value: 'artUrl',
-            label: labels.imageTypeArt || 'Art Görseli'
+            label: labels.imageTypeArt || 'Imagem de Arte'
         },
         {
             value: 'discUrl',
-            label: labels.imageTypeDisc || 'Disk Görseli'
+            label: labels.imageTypeDisc || 'Imagem de Disco'
         }
     ];
 
@@ -1812,7 +1812,7 @@ async function applyGlobalSettingsLockUI({
 
   const lockMsg =
     labels?.forceGlobalLockedTitle ||
-    "Bu sunucuda ayarlar yönetici tarafından global olarak zorlandı.";
+    "As configurações foram impostas globalmente pelo administrador neste servidor.";
 
   [saveBtn, applyBtn, resetBtn].forEach(btn => {
     if (!btn) return;

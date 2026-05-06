@@ -272,7 +272,7 @@ function upsertUpdateNotification({ latest, url }) {
   notifState.list.unshift({
     id,
     itemId: null,
-    title: `${config.languageLabels?.updateAvailable || "Yeni sürüm mevcut"}: ${latest}`,
+    title: `${config.languageLabels?.updateAvailable || "Nova versão disponível"}: ${latest}`,
     timestamp: Date.now(),
     status: "update",
     url,
@@ -294,7 +294,7 @@ function posterImageSrc(it, maxWidth = 80, quality = 80) {
 }
 
 function moreItemsLabel(n) {
-  const tail = (config.languageLabels.moreItems || "içerik daha");
+  const tail = (config.languageLabels.moreItems || "mais itens");
   return `${n} ${tail}`;
 }
 
@@ -654,10 +654,10 @@ function ensureUI() {
         <div class="jf-notif-head">
           <div class="jf-notif-title">${liveConfig.languageLabels.recentNotifications}</div>
           <div class="jf-notif-actions">
-            <button id="jfNotifModeToggle" class="jf-notif-theme-toggle" title="${(liveConfig.languageLabels?.switchToDark)||'Koyu temaya geç'}">
+            <button id="jfNotifModeToggle" class="jf-notif-theme-toggle" title="${(liveConfig.languageLabels?.switchToDark)||'Mudar para tema escuro'}">
               ${faIconHtml("moon", "jf-notif-icon")}
             </button>
-            <button id="jfNotifMarkAllRead" class="jf-notif-markallread" title="${liveConfig.languageLabels.markAllRead || 'Tümünü okundu say'}">
+            <button id="jfNotifMarkAllRead" class="jf-notif-markallread" title="${liveConfig.languageLabels.markAllRead || 'Marcar todas como lidas'}">
               <i class="fa-solid fa-eye"></i>
             </button>
             <button id="jfNotifThemeToggle" class="jf-notif-theme-toggle" title="${liveConfig.languageLabels.themeToggleTooltip}">
@@ -668,8 +668,8 @@ function ensureUI() {
           </div>
         </div>
         <div class="jf-notif-tabs">
-          <button class="jf-notif-tab active" data-tab="new">${liveConfig.languageLabels.newAddedTab || "Yeni Eklenenler"}</button>
-          ${notifState._systemAllowed ? `<button class="jf-notif-tab" data-tab="system">${liveConfig.languageLabels.systemNotifications || "Sistem Bildirimleri"}</button>` : ""}
+          <button class="jf-notif-tab active" data-tab="new">${liveConfig.languageLabels.newAddedTab || "Novos Adicionados"}</button>
+          ${notifState._systemAllowed ? `<button class="jf-notif-tab" data-tab="system">${liveConfig.languageLabels.systemNotifications || "Notificações do Sistema"}</button>` : ""}
         </div>
         <div class="jf-notif-content">
           <div class="jf-notif-tab-content" data-tab="new">
@@ -771,10 +771,10 @@ async function mountCastTabPanel() {
   if (!host) return;
 
   cleanupCastTabMount();
-  host.innerHTML = `<div class="jf-loading">${escapeHtml(getLiveLabels()?.loadingText || "Yukleniyor...")}</div>`;
+  host.innerHTML = `<div class="jf-loading">${escapeHtml(getLiveLabels()?.loadingText || "Carregando...")}</div>`;
   const { mountCastViewerPanel } = await getCastModule();
   __castTabMount = await mountCastViewerPanel(host, { refreshMs: 4000, variant: "notification" }).catch((error) => {
-    host.innerHTML = `<div class="jf-error">${escapeHtml(String(error?.message || getLiveLabels()?.listError || "Liste yuklenemedi."))}</div>`;
+    host.innerHTML = `<div class="jf-error">${escapeHtml(String(error?.message || getLiveLabels()?.listError || "Não foi possível carregar a lista."))}</div>`;
     return null;
   });
 }

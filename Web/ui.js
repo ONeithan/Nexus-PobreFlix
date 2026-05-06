@@ -27,96 +27,96 @@
 
   const fallbackLabels = {
     webConfig: {
-      heroEyebrow: "Plugin Configuration",
-      heroTitle: "JMSFusion Control Center",
-      heroBody: "Manage the <code>/slider</code> asset source, publish global settings, inspect runtime status, and review HTML snippet and web permission details from one screen.",
-      heroLangLabel: "Selected Language",
-      heroRootLabel: "Web UI Root",
+      heroEyebrow: "Configuração do Plugin",
+      heroTitle: "Nexus PobreFlix — Painel de Controle",
+      heroBody: "Gerencie os assets do slider, publique configurações globais, inspecione o status em tempo real e revise detalhes de permissões em uma única tela.",
+      heroLangLabel: "Idioma Selecionado",
+      heroRootLabel: "Raiz da UI Web",
       tabs: {
-        jmsfusion: "JMSFusion",
-        monwuiSettings: "MonWUI Settings",
+        jmsfusion: "Nexus PobreFlix",
+        monwuiSettings: "Configurações MonWUI",
         status: "Status",
-        snippet: "HTML Snippet & Web Path & Permissions"
+        snippet: "HTML Snippet & Permissões"
       },
       sections: {
-        configTitle: "Core Settings",
-        configBody: "Choose where JMSFusion serves slider assets from and how the player module path is resolved.",
-        adminTitle: "Admin Actions",
-        adminBody: "Save plugin settings or publish the current admin snapshot globally for every user profile.",
-        statusTitle: "Runtime Status",
-        statusBody: "Quick verification for configuration state, player path resolution, and embedded asset fallback.",
-        inMemoryTitle: "In-Memory Injection",
-        inMemoryBody: "Checks whether index.html is being rewritten at response time without touching files on disk.",
-        monwuiSettingsTitle: "MonWUI Settings",
+        configTitle: "Configurações Principais",
+        configBody: "Escolha de onde o Nexus PobreFlix serve os assets do slider.",
+        adminTitle: "Ações de Administrador",
+        adminBody: "Salve as configurações ou publique o snapshot global para todos os perfis.",
+        statusTitle: "Status em Tempo Real",
+        statusBody: "Verificação rápida do estado de configuração e fallback de assets.",
+        inMemoryTitle: "Injeção em Memória",
+        inMemoryBody: "Verifica se o index.html está sendo reescrito em tempo de execução sem tocar nos arquivos no disco.",
+        monwuiSettingsTitle: "Configurações MonWUI",
         snippetTitle: "HTML Snippet",
-        snippetBody: "The exact snippet JMSFusion injects into Jellyfin web.",
-        envTitle: "Web Path & Permissions",
-        envBody: "Detected web root, file write permissions, and suggested ACL commands for patching."
+        snippetBody: "O snippet exato que o Nexus PobreFlix injeta no Jellyfin web.",
+        envTitle: "Caminho Web & Permissões",
+        envBody: "Raiz web detectada, permissões de escrita e comandos ACL sugeridos."
       },
       fields: {
-        forceGlobalLabel: "Force global user settings",
-        forceGlobalHint: "Enabled: all users receive the admin snapshot automatically. Disabled: users keep their own local settings.",
-        scriptDirLabel: "Script directory",
-        scriptDirPlaceholder: "/home/gkhng/slider",
-        scriptDirHint: "Leave empty to use embedded <code>/Resources/slider</code> assets.",
-        playerSubLabel: "Player subdirectory",
+        forceGlobalLabel: "Forçar configurações globais",
+        forceGlobalHint: "Ativado: todos os usuários recebem o snapshot do admin automaticamente. Desativado: usuários mantêm suas próprias configurações locais.",
+        scriptDirLabel: "Diretório de scripts",
+        scriptDirPlaceholder: "/home/nexus/slider",
+        scriptDirHint: "Deixe em branco para usar os assets embutidos em <code>/Resources/slider</code>.",
+        playerSubLabel: "Subdiretório do player",
         playerSubPlaceholder: "modules/player"
       },
       actions: {
-        save: "Save",
-        publishGlobal: "Publish admin settings globally",
-        reloadMonwuiSettings: "Reload MonWUI Settings",
-        refreshEnv: "Refresh Web Path & Permissions",
-        copyAcl: "Copy permission commands",
-        patch: "Patch index.html",
-        unpatch: "Unpatch index.html"
+        save: "Salvar",
+        publishGlobal: "Publicar configurações globalmente",
+        reloadMonwuiSettings: "Recarregar Configurações MonWUI",
+        refreshEnv: "Atualizar Caminho Web & Permissões",
+        copyAcl: "Copiar comandos de permissão",
+        patch: "Aplicar patch no index.html",
+        unpatch: "Remover patch do index.html"
       },
       messages: {
-        settingsSaved: "Settings saved.",
-        configLoadFailed: "Configuration could not be loaded.",
-        webPathUpdated: "Web path and permissions updated.",
-        nothingToCopy: "There is nothing to copy.",
-        commandsCopied: "Permission commands copied.",
-        patchDone: "Patch completed.",
-        unpatchDone: "Patch removed.",
-        publishDone: "Global settings published successfully.",
-        physicalPatchFallbackEnabled: "Physical index.html patch fallback enabled.",
-        physicalPatchFallbackDisabled: "Physical index.html patch fallback disabled.",
-        statusPending: "Status has not been loaded yet.",
-        snippetPending: "Snippet has not been loaded yet.",
-        monwuiSettingsLoading: "MonWUI settings are loading...",
-        monwuiSettingsLoadFailed: "MonWUI settings could not be loaded.",
-        inMemoryChecking: "Checking in-memory injection...",
-        envPending: "(not computed yet)"
+        settingsSaved: "Configurações salvas.",
+        configLoadFailed: "Não foi possível carregar as configurações.",
+        webPathUpdated: "Caminho web e permissões atualizados.",
+        nothingToCopy: "Não há nada para copiar.",
+        commandsCopied: "Comandos de permissão copiados.",
+        patchDone: "Patch concluído.",
+        unpatchDone: "Patch removido.",
+        publishDone: "Configurações globais publicadas com sucesso.",
+        physicalPatchFallbackEnabled: "Fallback de patch físico habilitado.",
+        physicalPatchFallbackDisabled: "Fallback de patch físico desabilitado.",
+        statusPending: "O status ainda não foi carregado.",
+        snippetPending: "O snippet ainda não foi carregado.",
+        monwuiSettingsLoading: "Carregando configurações MonWUI...",
+        monwuiSettingsLoadFailed: "Não foi possível carregar as configurações MonWUI.",
+        inMemoryChecking: "Verificando injeção em memória...",
+        envPending: "(ainda não computado)"
       },
       status: {
-        configured: "Configured",
-        directoryExists: "Directory exists",
-        mainJsExists: "Main JS exists",
-        playerJsExists: "Player JS exists",
-        usingEmbedded: "Using embedded assets",
-        playerPath: "Resolved player path",
-        yes: "Yes",
-        no: "No"
+        configured: "Configurado",
+        directoryExists: "Diretório existe",
+        mainJsExists: "Main JS existe",
+        playerJsExists: "Player JS existe",
+        usingEmbedded: "Usando assets embutidos",
+        playerPath: "Caminho do player resolvido",
+        yes: "Sim",
+        no: "Não"
       },
       inMemory: {
-        activeTitle: "In-memory injection is active.",
-        activeHint: "Physical patching is not required while runtime injection is working.",
-        inactiveTitle: "In-memory injection was not detected.",
-        inactiveHint: "Use Patch if you want to persist the snippet into index.html.",
-        fallbackToggleLabel: "Enable physical index.html patch fallback",
-        fallbackToggleHint: "Disabled by default. Enable this only if runtime injection does not work or if you explicitly need disk patching. When enabled, JMSFusion will try to patch index.html during startup and configuration changes."
+        activeTitle: "Injeção em memória está ativa.",
+        activeHint: "O patch físico não é necessário enquanto a injeção em tempo real funcionar.",
+        inactiveTitle: "Injeção em memória não detectada.",
+        inactiveHint: "Use o Patch se quiser persistir o snippet no index.html.",
+        fallbackToggleLabel: "Habilitar patch físico de fallback no index.html",
+        fallbackToggleHint: "Desativado por padrão. Habilite apenas se a injeção em tempo real não funcionar ou se precisar explicitamente do patch no disco."
       },
       env: {
-        runningUser: "Running user",
-        detectedWebRoot: "Detected web root",
-        files: "Files",
-        found: "Found",
-        notFound: "Not found",
-        writable: "Writable",
-        notWritable: "Not writable",
-        suggestedAcl: "Suggested ACL commands",
-        alternativeAcl: "Alternative"
+        runningUser: "Usuário em execução",
+        detectedWebRoot: "Raiz web detectada",
+        files: "Arquivos",
+        found: "Encontrado",
+        notFound: "Não encontrado",
+        writable: "Gravável",
+        notWritable: "Sem permissão de escrita",
+        suggestedAcl: "Comandos ACL sugeridos",
+        alternativeAcl: "Alternativo"
       }
     }
   };
@@ -173,7 +173,8 @@
       deu: "Deutsch",
       fre: "Francais",
       rus: "Русский",
-      spa: "Espanol"
+      spa: "Español",
+      por: "Português (Brasil)"
     };
     return map[code] || String(code || "").toUpperCase() || "Auto";
   }

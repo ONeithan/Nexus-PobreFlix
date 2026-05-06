@@ -56,7 +56,7 @@ namespace Jellyfin.Plugin.JMSFusion
         public string TmdbApiKey { get; set; } = "CHANGE_ME";
 
         [JsonPropertyName("preferredLang")]
-        public string PreferredLang { get; set; } = "tr-TR";
+        public string PreferredLang { get; set; } = "pt-BR";
 
         [JsonPropertyName("fallbackLang")]
         public string FallbackLang { get; set; } = "en-US";

@@ -714,7 +714,7 @@ export function getConfig() {
     historylimit: parseInt(localStorage.getItem('historylimit'), 10) || 10,
     playerTheme: localStorage.getItem('playerTheme') || 'dark',
     playerStyle: localStorage.getItem('playerStyle') || 'player',
-    dateLocale: localStorage.getItem('dateLocale') || 'tr-TR',
+    dateLocale: localStorage.getItem('dateLocale') || 'pt-BR',
     maxExcludeIdsForUri: parseInt(localStorage.getItem('maxExcludeIdsForUri'), 10) || 100,
     nextTrack: parseInt(localStorage.getItem('nextTrack'), 10) || 100,
     topTrack: parseInt(localStorage.getItem('topTrack'), 10) || 30,
@@ -1147,15 +1147,15 @@ export function getConfig() {
     allowedWriters: (() => {
       const defaultWriters = [
         "quentin tarantino",
-        "nuri bilge ceylan",
-        "zeki demirkubuz",
-        "yavuz turgul",
+        "fernando meirelles",
+        "jose padilha",
+        "kleber mendonca filho",
         "stephen king",
         "martin scorsese",
         "j.r.r. tolkien",
         "andrew kevin walker",
         "christopher nolan",
-        "cem yılmaz",
+        "glauber rocha",
         "thomas harris"
       ];
       let storedWriters = [];
