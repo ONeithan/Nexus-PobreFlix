@@ -41,7 +41,7 @@ Este é um fork personalizado e de **Grau Industrial** do plugin MonWUI, desenvo
 Para receber atualizações automáticas e instalar pelo catálogo do Jellyfin, adicione este link em **Painel → Plugins → Repositórios**:
 
 ```
-https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/manifest.json
+https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/refs/heads/main/manifest.json
 ```
 
 ---
@@ -67,7 +67,7 @@ This is a custom, **Industrial-Grade** fork of the MonWUI plugin, built for the 
 ### 📦 Repository Installation
 Add the following URL to your Jellyfin server (**Dashboard → Plugins → Repositories**):
 ```
-https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/manifest.json
+https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/refs/heads/main/manifest.json
 ```
 
 ---
