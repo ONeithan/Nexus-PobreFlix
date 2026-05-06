@@ -1,7 +1,7 @@
 {
   "category": "General",
-  "description": "JMSFusion injects your custom JS modules into the Jellyfin web UI (response rewrite) and serves them from an external directory or embedded /Resources/slider.",
-  "name": "JMSFusion",
+  "description": "Versão Nexus PobreFlix do motor visual MonWUI.",
+  "name": "Nexus PobreFlix",
   "owner": "G-Grbz",
   "version": "2.8.0.0",
   "status": "Active",

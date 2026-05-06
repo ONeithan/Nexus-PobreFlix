@@ -4,8 +4,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
 
-    <AssemblyName>Jellyfin.Plugin.JMSFusion</AssemblyName>
-    <RootNamespace>Jellyfin.Plugin.JMSFusion</RootNamespace>
+    <AssemblyName>NexusPobreFlix</AssemblyName>
+    <RootNamespace>Jellyfin.Plugin.NexusPobreFlix</RootNamespace>
 
     <Version>2.8.0.0</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
@@ -19,12 +19,11 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageId>JMSFusion</PackageId>
-    <Authors>G-Grbz</Authors>
-    <Company>JMS</Company>
+    <PackageId>NexusPobreFlix</PackageId>
+    <Authors>G-Grbz (Core), ONeithan (Nexus PobreFlix Version)</Authors>
+    <Company>Nexus PobreFlix</Company>
     <Description>
-      Inject custom JS into Jellyfin web UI via in-memory transform (no file writes), with FileProvider wrapping;
-      fallback to middleware and optional index.html patch. Serves /slider from external dir or embedded Resources/slider.
+      O motor visual definitivo do Nexus PobreFlix para Jellyfin. Tradução nativa e tela imersiva Scyfin.
     </Description>
   </PropertyGroup>
 

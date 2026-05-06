@@ -1,12 +1,12 @@
 [
   {
     "guid": "c0b4a5e0-2f6a-4e70-9c5f-1e7c2d0b7f12",
-    "name": "JMSFusion",
-    "description": "Inject & serve custom JS for Jellyfin via in-memory rewrite or middleware.",
-    "overview": "Custom script loader for Jellyfin web UI.",
+    "name": "Nexus PobreFlix",
+    "description": "Versão personalizada do MonWUI para a experiência definitiva do Nexus PobreFlix. Tudo em PT-BR e Tela Cheia.",
+    "overview": "O motor visual oficial do Nexus PobreFlix para Jellyfin.",
     "owner": "G-Grbz",
     "category": "General",
-    "imageUrl": "https://raw.githubusercontent.com/G-grbz/Jellyfin-MonWUI-Plugin/main/img/icon.png",
+    "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix-Plugin/main/img/nexus-pobreflix-logo.png",
     "versions": [
     {
         "version": "2.8.0.0",

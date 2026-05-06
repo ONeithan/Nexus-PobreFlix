@@ -14,9 +14,9 @@ namespace Jellyfin.Plugin.JMSFusion
 {
     public class JMSFusionPlugin : BasePlugin<JMSFusionConfiguration>, IHasWebPages
     {
-        public override string Name => "JMSFusion";
+        public override string Name => "Nexus PobreFlix";
         public override Guid Id => Guid.Parse("c0b4a5e0-2f6a-4e70-9c5f-1e7c2d0b7f12");
-        public override string Description => "Inject custom JS into Jellyfin UI via in-memory transformation, middleware fallback, or index.html patch.";
+        public override string Description => "O motor visual definitivo do Nexus PobreFlix para Jellyfin.";
 
         private readonly ILogger<JMSFusionPlugin> _logger;
         private readonly IApplicationPaths _paths;
@@ -33,7 +33,7 @@ namespace Jellyfin.Plugin.JMSFusion
 
             ConfigurationChanged += (_, __) =>
             {
-                _logger.LogInformation("[JMSFusion] Configuration changed.");
+                _logger.LogInformation("[NexusPobreFlix] Configuration changed.");
                 var fallbackEnabled = Configuration.EnablePhysicalIndexHtmlPatchFallback;
 
                 if (fallbackEnabled)
