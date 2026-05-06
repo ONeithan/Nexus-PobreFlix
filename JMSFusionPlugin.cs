@@ -15,7 +15,7 @@ namespace Jellyfin.Plugin.JMSFusion
     public class JMSFusionPlugin : BasePlugin<JMSFusionConfiguration>, IHasWebPages
     {
         public override string Name => "Nexus PobreFlix";
-        public override Guid Id => Guid.Parse("c0b4a5e0-2f6a-4e70-9c5f-1e7c2d0b7f12");
+        public override Guid Id => Guid.Parse("9f8b4a3c-1e2d-4c5b-8a7f-6e5d4c3b2a1f");
         public override string Description => "O motor visual definitivo do Nexus PobreFlix para Jellyfin.";
 
         private readonly ILogger<JMSFusionPlugin> _logger;
