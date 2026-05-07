@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png",
     "versions": [
       {
+        "version": "1.0.0.7",
+        "changelog": "# Nexus PobreFlix v1.0.0.7 — INDUSTRIALIZAÇÃO E VISUAL SUPREMO 💎\n\n- **Localização PT-BR 100%**: Auditoria industrial completa no dicionário `por.js`. Todas as seções (Studio Collections, Top 10, Notificações) agora estão em português perfeito, eliminando resquícios em turco ou inglês.\n- **Netflix-Style Login**: Implementação do novo motor `nexus_login.css` com centralização absoluta, glassmorphism premium e tipografia Sora.\n- **Imersão Scyfin**: Integração de backdrops dinâmicos e remoção de poluição visual (tags de qualidade) via `nexus_patch.css` para um design mais limpo e focado no conteúdo.\n- **Normalização de UI**: Ajustes de alinhamento no Top 10 e seções da Home para evitar elementos espremidos.\n- **Rebranding Final**: Purga completa de referências legadas ao MonWUI em prol da arquitetura nativa Nexus.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.7/NexusPobreFlix-1.0.0.7.zip",
+        "checksum": "d6f6de8f00e3daf176d5b5bac060531e",
+        "timestamp": "2026-05-07T21:07:00Z"
+      },
+      {
         "version": "1.0.0.6",
         "changelog": "# Nexus PobreFlix v1.0.0.6 — CORREÇÃO CRÍTICA DE INTERFACE 🛠️\n\n- **Resgate de Dependências**: Corrigido o erro `ReferenceError: createSelect is not defined` que impedia a renderização de abas complexas (como Coleções de Estúdios). Adicionadas as importações faltantes de helpers de UI no motor de configurações.\n- **Sincronização de Módulos**: Garantido que todos os componentes da interface tenham acesso às ferramentas de criação de elementos (Select, Input, Checkbox) do namespace compartilhado.\n- **Estabilização de Build**: Versão industrial pronta para restaurar a funcionalidade total do painel de controle.",
         "targetAbi": "10.11.0.0",
