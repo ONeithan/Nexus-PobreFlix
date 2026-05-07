@@ -17,7 +17,7 @@
 
   const jfRoot = getJfRootFromLocation();
   const langModuleUrl = `${window.location.origin}${jfRoot}/slider/language/index.js`;
-  const webSettingsModuleUrl = `${window.location.origin}${jfRoot}/Plugins/NexusPobreFlix/assets/WebSettingsJs`;
+  const webSettingsModuleUrl = `${window.location.origin}${jfRoot}/Plugins/NexusPobreFlix/assets/settings.js`;
   const sliderSettingsCssUrl = `${window.location.origin}${jfRoot}/slider/src/settings.css`;
   const TAB_STORAGE_KEY = "NexusPobreFlix-config-active-tab";
   const NEXUS_SUBTAB_STORAGE_KEY = "NexusPobreFlix-requested-subtab";

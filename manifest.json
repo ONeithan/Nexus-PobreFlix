@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png",
     "versions": [
       {
+        "version": "1.0.0.4",
+        "changelog": "# Nexus PobreFlix v1.0.0.4 — Correção de Carregamento de Módulos 🧩\n\n- **Resgate de Módulo**: Corrigida a URL de importação dinâmica do painel de configurações internas (`settings.js`).\n- **Estabilização de Assets**: Sincronizadas as rotas de carregamento de scripts para garantir que todos os componentes do tema Nexus sejam carregados sem erros 404.\n- **Feedback Visual**: Melhoria na transição entre abas para evitar estados de erro durante o carregamento de módulos pesados.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.4/NexusPobreFlix-1.0.0.4.zip",
+        "checksum": "2d962b097f7b4f663918b7855375fe1c",
+        "timestamp": "2026-05-07T14:50:00Z"
+      },
+      {
         "version": "1.0.0.3",
         "changelog": "# Nexus PobreFlix v1.0.0.3 — CORREÇÃO CRÍTICA: Interatividade e Persistência ⚡\n\n- **Resgate de JavaScript**: Corrigido um erro de sintaxe fatal que impedia a inicialização dos eventos no painel de configuração (abas e botões).\n- **Correção de Persistência**: Alinhada a rota de salvamento entre o front-end e o backend, garantindo que as alterações sejam gravadas corretamente no servidor.\n- **Sincronização de Marcadores**: Atualizados os marcadores de injeção para 'NEXUS-INJECT', eliminando conflitos com o sistema legado e garantindo o funcionamento do Patch/Unpatch.\n- **Estabilização de Namespace**: Removidas variáveis residuais com espaços que causavam falhas no carregamento do plugin.\n- **Identidade Visual**: Ajuste fino nas variáveis de CSS do bootstrap para total conformidade com o tema Nexus.",
         "targetAbi": "10.11.0.0",
