@@ -5,15 +5,15 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.JMSFusion;
-using Jellyfin.Plugin.JMSFusion.Core;
+using Jellyfin.Plugin.NexusPobreFlix;
+using Jellyfin.Plugin.NexusPobreFlix.Core;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Jellyfin.Plugin.JMSFusion.Controllers
+namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 {
     [ApiController]
-    [Route("JMSFusion/trailers")]
+    [Route("NexusPobreFlix/trailers")]
     public class TrailersController : ControllerBase
     {
         private const string ApiUserHeaderRequiredCode = "trailers.api.user_header_required";
@@ -168,7 +168,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
         {
             try
             {
-                var cfg = JMSFusionPlugin.Instance?.Configuration;
+                var cfg = NexusPobreFlixPlugin.Instance?.Configuration;
                 if (cfg is null)
                 {
                     return ApiError(
@@ -301,18 +301,18 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                             job.AddLog($"{ts} {prefix} {line}");
                             SetRawLastMessage(job, line);
 
-                            if (line.Contains("JMSF::TOTAL=", StringComparison.Ordinal))
+                            if (line.Contains("NEXUS::TOTAL=", StringComparison.Ordinal))
                             {
-                                var num = line.Replace("JMSF::TOTAL=", string.Empty, StringComparison.Ordinal);
+                                var num = line.Replace("NEXUS::TOTAL=", string.Empty, StringComparison.Ordinal);
                                 if (int.TryParse(num, NumberStyles.Integer, CultureInfo.InvariantCulture, out var total))
                                 {
                                     job.CurrentStepTotal = total;
                                 }
                             }
 
-                            if (line.Contains("JMSF::DONE=", StringComparison.Ordinal))
+                            if (line.Contains("NEXUS::DONE=", StringComparison.Ordinal))
                             {
-                                var num = line.Replace("JMSF::DONE=", string.Empty, StringComparison.Ordinal);
+                                var num = line.Replace("NEXUS::DONE=", string.Empty, StringComparison.Ordinal);
                                 if (int.TryParse(num, NumberStyles.Integer, CultureInfo.InvariantCulture, out var done))
                                 {
                                     job.CurrentStepDone = done;
@@ -401,7 +401,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
 
             try
             {
-                var probePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "jmsf._probe");
+                var probePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "nexus._probe");
                 System.IO.File.WriteAllText(probePath, "ok");
                 System.IO.File.Delete(probePath);
             }

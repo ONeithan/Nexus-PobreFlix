@@ -13,7 +13,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
 {
     [ApiController]
     [Route("JMSFusion/gmmp")]
-    [Route("Plugins/JMSFusion/gmmp")]
+    [Route("Plugins/NexusPobreFlix/gmmp")]
     public class GmmpSyncController : ControllerBase
     {
         private static readonly ConcurrentDictionary<string, GmmpStateRecord> StateRecords =

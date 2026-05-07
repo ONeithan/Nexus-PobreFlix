@@ -8,32 +8,32 @@ using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using Microsoft.Extensions.Logging;
-using Jellyfin.Plugin.JMSFusion.Core;
+using Jellyfin.Plugin.NexusPobreFlix.Core;
 
-namespace Jellyfin.Plugin.JMSFusion
+namespace Jellyfin.Plugin.NexusPobreFlix
 {
-    public class JMSFusionPlugin : BasePlugin<JMSFusionConfiguration>, IHasWebPages
+    public class NexusPobreFlixPlugin : BasePlugin<NexusPobreFlixConfiguration>, IHasWebPages
     {
         public override string Name => "Nexus PobreFlix";
         public override Guid Id => Guid.Parse("9f8b4a3c-1e2d-4c5b-8a7f-6e5d4c3b2a1f");
         public override string Description => "O motor visual definitivo do Nexus PobreFlix para Jellyfin.";
 
-        private readonly ILogger<JMSFusionPlugin> _logger;
+        private readonly ILogger<NexusPobreFlixPlugin> _logger;
         private readonly IApplicationPaths _paths;
         private bool _lastPhysicalPatchFallbackEnabled;
-        public static JMSFusionPlugin Instance { get; private set; } = null!;
+        public static NexusPobreFlixPlugin Instance { get; private set; } = null!;
 
-        public JMSFusionPlugin(IApplicationPaths paths, IXmlSerializer xmlSerializer, ILoggerFactory loggerFactory)
+        public NexusPobreFlixPlugin(IApplicationPaths paths, IXmlSerializer xmlSerializer, ILoggerFactory loggerFactory)
             : base(paths, xmlSerializer)
         {
-            _logger = loggerFactory.CreateLogger<JMSFusionPlugin>();
+            _logger = loggerFactory.CreateLogger<NexusPobreFlixPlugin>();
             _paths = paths;
             Instance = this;
             _lastPhysicalPatchFallbackEnabled = Configuration.EnablePhysicalIndexHtmlPatchFallback;
 
             ConfigurationChanged += (_, __) =>
             {
-                _logger.LogInformation("[NexusPobreFlix] Configuration changed.");
+                _logger.LogInformation("[NexusPobreFlix] Configuração alterada.");
                 var fallbackEnabled = Configuration.EnablePhysicalIndexHtmlPatchFallback;
 
                 if (fallbackEnabled)
@@ -77,11 +77,11 @@ namespace Jellyfin.Plugin.JMSFusion
                             var html = req.Contents ?? string.Empty;
 
                             _logger.LogInformation(
-                                "[JMSFusion][DIAG] Transform hit for {Path} (len={Len})",
+                                "[NexusPobreFlix][DIAG] Transform hit for {Path} (len={Len})",
                                 req.FilePath, html.Length
                             );
 
-                            if (html.IndexOf("<!-- SL-INJECT BEGIN -->", StringComparison.OrdinalIgnoreCase) >= 0)
+                            if (html.IndexOf("<!-- NEXUS-INJECT BEGIN -->", StringComparison.OrdinalIgnoreCase) >= 0)
                                 return html;
 
                             var snippet = BuildScriptsHtml();
@@ -94,22 +94,22 @@ namespace Jellyfin.Plugin.JMSFusion
                             return html + "\n" + snippet + "\n";
                         });
 
-                    _logger.LogInformation("[JMSFusion] Registered in-memory transformation rule for .*index.html(+gz/br)");
+                    _logger.LogInformation("[NexusPobreFlix] Registrada regra de transformação em memória para .*index.html(+gz/br)");
                 }
                 else
                 {
-                    _logger.LogInformation("[JMSFusion] Transform engine disabled by configuration");
+                    _logger.LogInformation("[NexusPobreFlix] Motor de transformação desativado pela configuração");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[JMSFusion] Failed to register in-memory transformation; middleware/patch fallback will be used.");
+                _logger.LogWarning(ex, "[NexusPobreFlix] Falha ao registrar transformação em memória; middleware/patch fallback será utilizado.");
             }
         }
 
         public override void OnUninstalling()
         {
-            _logger.LogInformation("[JMSFusion] Plugin uninstall detected. Cleaning physical index.html patch if present.");
+            _logger.LogInformation("[NexusPobreFlix] Desinstalação detectada. Limpando patch físico do index.html se presente.");
             TryUnpatchIndexHtml();
             base.OnUninstalling();
         }
@@ -123,13 +123,13 @@ namespace Jellyfin.Plugin.JMSFusion
                     Directory.Exists(webPath) &&
                     File.Exists(Path.Combine(webPath, "index.html")))
                 {
-                    _logger.LogInformation("[JMSFusion] Using ApplicationPaths.WebPath as web root: {WebRoot}", webPath);
+                    _logger.LogInformation("[NexusPobreFlix] Usando ApplicationPaths.WebPath como raiz web: {WebRoot}", webPath);
                     return webPath;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[JMSFusion] Failed probing ApplicationPaths.WebPath");
+                _logger.LogWarning(ex, "[NexusPobreFlix] Falha ao sondar ApplicationPaths.WebPath");
             }
 
             var candidates = new[]
@@ -146,21 +146,21 @@ namespace Jellyfin.Plugin.JMSFusion
             {
                 try
                 {
-                    _logger.LogInformation("[JMSFusion] Checking web root candidate: {Candidate}", p);
+                    _logger.LogInformation("[NexusPobreFlix] Verificando candidato de raiz web: {Candidate}", p);
 
                     if (Directory.Exists(p) && File.Exists(Path.Combine(p, "index.html")))
                     {
-                        _logger.LogInformation("[JMSFusion] Found web root: {WebRoot}", p);
+                        _logger.LogInformation("[NexusPobreFlix] Raiz web encontrada: {WebRoot}", p);
                         return p;
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "[JMSFusion] Error checking candidate: {Candidate}", p);
+                    _logger.LogWarning(ex, "[NexusPobreFlix] Erro ao verificar candidato: {Candidate}", p);
                 }
             }
 
-            _logger.LogWarning("[JMSFusion] Web root not found in any candidate location");
+            _logger.LogWarning("[NexusPobreFlix] Raiz web não encontrada em nenhum local candidato");
             return null;
         }
 
@@ -171,16 +171,16 @@ namespace Jellyfin.Plugin.JMSFusion
                 var root = DetectWebRoot();
                 if (string.IsNullOrWhiteSpace(root))
                 {
-                    _logger.LogWarning("[JMSFusion] Web root not found; skipping patch.");
+                    _logger.LogWarning("[NexusPobreFlix] Raiz web não encontrada; pulando patch.");
                     return;
                 }
 
                 var ok = IndexPatcher.EnsurePatched(_logger, root);
-                _logger.LogInformation("[JMSFusion] Patch result: {ok}", ok);
+                _logger.LogInformation("[NexusPobreFlix] Resultado do patch: {ok}", ok);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[JMSFusion] TryPatchIndexHtml failed");
+                _logger.LogError(ex, "[NexusPobreFlix] TryPatchIndexHtml falhou");
             }
         }
 
@@ -191,28 +191,28 @@ namespace Jellyfin.Plugin.JMSFusion
                 var root = DetectWebRoot();
                 if (string.IsNullOrWhiteSpace(root))
                 {
-                    _logger.LogWarning("[JMSFusion] Web root not found; skipping unpatch.");
+                    _logger.LogWarning("[NexusPobreFlix] Raiz web não encontrada; pulando unpatch.");
                     return;
                 }
 
                 var ok = IndexPatcher.EnsureUnpatched(_logger, root);
-                _logger.LogInformation("[JMSFusion] Unpatch result: {ok}", ok);
+                _logger.LogInformation("[NexusPobreFlix] Resultado do unpatch: {ok}", ok);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[JMSFusion] TryUnpatchIndexHtml failed");
+                _logger.LogError(ex, "[NexusPobreFlix] TryUnpatchIndexHtml falhou");
             }
         }
 
         public string BuildScriptsHtml(string? pathBase = null)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("<!-- SL-INJECT BEGIN -->");
+            sb.AppendLine("<!-- NEXUS-INJECT BEGIN -->");
             sb.AppendLine(AssetVersioning.BuildBootstrapScript());
-            sb.AppendLine($@"<script type=""module"" src=""{AssetVersioning.AppendVersionQuery("../Plugins/JMSFusion/runtime/storage-preload.js")}""></script>");
+            sb.AppendLine($@"<script type=""module"" src=""{AssetVersioning.AppendVersionQuery("../Plugins/NexusPobreFlix/assets/storage-preload.js")}""></script>");
             sb.AppendLine($@"<script type=""module"" src=""{AssetVersioning.AppendVersionQuery("../slider/main.js")}""></script>");
             sb.AppendLine($@"<script type=""module"" src=""{AssetVersioning.AppendVersionQuery("../slider/modules/player/main.js")}""></script>");
-            sb.AppendLine("<!-- SL-INJECT END -->");
+            sb.AppendLine("<!-- NEXUS-INJECT END -->");
             return sb.ToString();
         }
 
@@ -222,7 +222,7 @@ namespace Jellyfin.Plugin.JMSFusion
             {
                 new PluginPageInfo
                 {
-                    Name = "JMSFusionConfigPage",
+                    Name = "NexusPobreFlixConfigPage",
                     EmbeddedResourcePath = "Jellyfin.Plugin.NexusPobreFlix.Web.configuration.html",
                     EnableInMainMenu = false
                 }
@@ -238,7 +238,7 @@ namespace Jellyfin.Plugin.JMSFusion
                 Path.GetDirectoryName(ReadPathValue(this, "ConfigurationPath") ?? string.Empty) ??
                 AppContext.BaseDirectory;
 
-            var current = Path.Combine(basePath, "JMSFusion");
+            var current = Path.Combine(basePath, "NexusPobreFlix");
             Directory.CreateDirectory(current);
 
             foreach (var segment in segments ?? Array.Empty<string>())

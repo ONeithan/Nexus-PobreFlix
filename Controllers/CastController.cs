@@ -11,7 +11,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
 {
     [ApiController]
     [Route("JMSFusion/cast")]
-    [Route("Plugins/JMSFusion/cast")]
+    [Route("Plugins/NexusPobreFlix/cast")]
     public class CastController : ControllerBase
     {
         private readonly IUserManager _users;

@@ -8,7 +8,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
 {
     [ApiController]
     [Route("JMSFusion/runtime")]
-    [Route("Plugins/JMSFusion/runtime")]
+    [Route("Plugins/NexusPobreFlix/runtime")]
     public class JMSFusionRuntimeController : ControllerBase
     {
         private static readonly IReadOnlyDictionary<string, string> ScriptResourceMap =

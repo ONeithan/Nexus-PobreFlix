@@ -17,12 +17,12 @@
 
   const jfRoot = getJfRootFromLocation();
   const langModuleUrl = `${window.location.origin}${jfRoot}/slider/language/index.js`;
-  const webSettingsModuleUrl = `${window.location.origin}${jfRoot}/Plugins/JMSFusion/assets/WebSettingsJs`;
+  const webSettingsModuleUrl = `${window.location.origin}${jfRoot}/Plugins/NexusPobreFlix/assets/WebSettingsJs`;
   const sliderSettingsCssUrl = `${window.location.origin}${jfRoot}/slider/src/settings.css`;
-  const TAB_STORAGE_KEY = "jmsfusion-config-active-tab";
-  const MONWUI_SUBTAB_STORAGE_KEY = "jmsfusion-monwui-requested-subtab";
+  const TAB_STORAGE_KEY = "NexusPobreFlix-config-active-tab";
+  const NexusPobreFlix_SUBTAB_STORAGE_KEY = "NexusPobreFlix-requested-subtab";
 
-  const api = (p) => `${jfRoot}/Plugins/JMSFusion/${p}`;
+  const api = (p) => `${jfRoot}/Plugins/NexusPobreFlix/${p}`;
   const esc = (s) => (s ?? "").toString().replace(/[&<>]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[m]));
 
   const fallbackLabels = {
@@ -33,8 +33,8 @@
       heroLangLabel: "Idioma Selecionado",
       heroRootLabel: "Raiz da UI Web",
       tabs: {
-        jmsfusion: "Nexus PobreFlix",
-        monwuiSettings: "Configurações MonWUI",
+        NexusPobreFlix: "Nexus PobreFlix",
+        NexusPobreFlixSettings: "Configurações Nexus PobreFlix",
         status: "Status",
         snippet: "HTML Snippet & Permissões"
       },
@@ -47,7 +47,7 @@
         statusBody: "Verificação rápida do estado de configuração e fallback de assets.",
         inMemoryTitle: "Injeção em Memória",
         inMemoryBody: "Verifica se o index.html está sendo reescrito em tempo de execução sem tocar nos arquivos no disco.",
-        monwuiSettingsTitle: "Configurações MonWUI",
+        NexusPobreFlixSettingsTitle: "Configurações Nexus PobreFlix",
         snippetTitle: "HTML Snippet",
         snippetBody: "O snippet exato que o Nexus PobreFlix injeta no Jellyfin web.",
         envTitle: "Caminho Web & Permissões",
@@ -65,7 +65,7 @@
       actions: {
         save: "Salvar",
         publishGlobal: "Publicar configurações globalmente",
-        reloadMonwuiSettings: "Recarregar Configurações MonWUI",
+        reloadNexusPobreFlixSettings: "Recarregar Configurações Nexus PobreFlix",
         refreshEnv: "Atualizar Caminho Web & Permissões",
         copyAcl: "Copiar comandos de permissão",
         patch: "Aplicar patch no index.html",
@@ -84,8 +84,8 @@
         physicalPatchFallbackDisabled: "Fallback de patch físico desabilitado.",
         statusPending: "O status ainda não foi carregado.",
         snippetPending: "O snippet ainda não foi carregado.",
-        monwuiSettingsLoading: "Carregando configurações MonWUI...",
-        monwuiSettingsLoadFailed: "Não foi possível carregar as configurações MonWUI.",
+        NexusPobreFlixSettingsLoading: "Carregando configurações Nexus PobreFlix...",
+        NexusPobreFlixSettingsLoadFailed: "Não foi possível carregar as configurações Nexus PobreFlix.",
         inMemoryChecking: "Verificando injeção em memória...",
         envPending: "(ainda não computado)"
       },
@@ -153,11 +153,11 @@
   }
 
   function ensureStylesheet(key, href) {
-    let link = document.querySelector(`link[data-jmsfusion-config-css="${key}"]`);
+    let link = document.querySelector(`link[data-NexusPobreFlix-config-css="${key}"]`);
     if (!link) {
       link = document.createElement("link");
       link.rel = "stylesheet";
-      link.setAttribute("data-jmsfusion-config-css", key);
+      link.setAttribute("data-NexusPobreFlix-config-css", key);
       document.head.appendChild(link);
     }
     if (link.href !== href) {
@@ -216,56 +216,56 @@
     }, 3200);
   }
 
-  function renderMonwuiSettingsPlaceholder(view, text, tone = "") {
-    const host = view.querySelector("#monwuiSettingsHost");
+  function renderNexusPobreFlixSettingsPlaceholder(view, text, tone = "") {
+    const host = view.querySelector("#NexusPobreFlixSettingsHost");
     if (!host) return;
 
     const placeholder = document.createElement("div");
-    placeholder.id = "monwuiSettingsPlaceholder";
+    placeholder.id = "NexusPobreFlixSettingsPlaceholder";
     placeholder.className = `jms-empty ${tone ? `jms-empty--${tone}` : ""}`.trim();
     placeholder.textContent = text;
     host.replaceChildren(placeholder);
   }
 
-  function consumeRequestedMonwuiSettingsTab() {
+  function consumeRequestedNexusPobreFlixSettingsTab() {
     let value = "";
     try {
-      value = sessionStorage.getItem(MONWUI_SUBTAB_STORAGE_KEY) || "";
-      if (value) sessionStorage.removeItem(MONWUI_SUBTAB_STORAGE_KEY);
+      value = sessionStorage.getItem(NexusPobreFlix_SUBTAB_STORAGE_KEY) || "";
+      if (value) sessionStorage.removeItem(NexusPobreFlix_SUBTAB_STORAGE_KEY);
     } catch {}
-    return String(value || "").trim() || "monwui";
+    return String(value || "").trim() || "NexusPobreFlix";
   }
 
-  async function ensureMonwuiSettings(view, { force = false } = {}) {
-    const host = view.querySelector("#monwuiSettingsHost");
-    const reloadBtn = view.querySelector("#reloadMonwuiSettingsBtn");
+  async function ensureNexusPobreFlixSettings(view, { force = false } = {}) {
+    const host = view.querySelector("#NexusPobreFlixSettingsHost");
+    const reloadBtn = view.querySelector("#reloadNexusPobreFlixSettingsBtn");
     if (!host) return null;
 
-    const requestedInnerTab = consumeRequestedMonwuiSettingsTab();
+    const requestedInnerTab = consumeRequestedNexusPobreFlixSettingsTab();
 
-    if (!force && host.__jmsMonwuiReady && host.querySelector("#settings-modal")) {
-      const existingApi = host.__jmsMonwuiApi || host.__jmsMonwuiSettingsApi || null;
+    if (!force && host.__jmsNexusPobreFlixReady && host.querySelector("#settings-modal")) {
+      const existingApi = host.__jmsNexusPobreFlixApi || host.__jmsNexusPobreFlixSettingsApi || null;
       existingApi?.open?.(requestedInnerTab);
       return host.querySelector("#settings-modal");
     }
 
-    if (host.__jmsMonwuiPromise) {
-      return host.__jmsMonwuiPromise;
+    if (host.__jmsNexusPobreFlixPromise) {
+      return host.__jmsNexusPobreFlixPromise;
     }
 
-    host.__jmsMonwuiReady = false;
-    renderMonwuiSettingsPlaceholder(
+    host.__jmsNexusPobreFlixReady = false;
+    renderNexusPobreFlixSettingsPlaceholder(
       view,
-      t("webConfig.messages.monwuiSettingsLoading", "MonWUI settings are loading...")
+      t("webConfig.messages.NexusPobreFlixSettingsLoading", "Nexus PobreFlix settings are loading...")
     );
     if (reloadBtn) reloadBtn.disabled = true;
 
-    host.__jmsMonwuiPromise = (async () => {
-      ensureStylesheet("monwui-settings", sliderSettingsCssUrl);
+    host.__jmsNexusPobreFlixPromise = (async () => {
+      ensureStylesheet("NexusPobreFlix-settings", sliderSettingsCssUrl);
 
       const settingsModule = await import(webSettingsModuleUrl);
-      const settingsApi = typeof settingsModule?.mountMonwuiSettingsPage === "function"
-        ? await settingsModule.mountMonwuiSettingsPage(host, {
+      const settingsApi = typeof settingsModule?.mountNexusPobreFlixSettingsPage === "function"
+        ? await settingsModule.mountNexusPobreFlixSettingsPage(host, {
             defaultTab: requestedInnerTab,
             force
           })
@@ -273,26 +273,26 @@
       const modal = settingsApi?.element || host.querySelector("#settings-modal");
 
       if (!modal || !settingsApi) {
-        throw new Error("MonWUI settings page is not available.");
+        throw new Error("Nexus PobreFlix settings page is not available.");
       }
 
-      host.__jmsMonwuiApi = settingsApi;
-      host.__jmsMonwuiReady = true;
-      view.__monwuiSettingsLoaded = true;
+      host.__jmsNexusPobreFlixApi = settingsApi;
+      host.__jmsNexusPobreFlixReady = true;
+      view.__NexusPobreFlixSettingsLoaded = true;
       return modal;
     })()
       .catch((error) => {
-        const fallback = t("webConfig.messages.monwuiSettingsLoadFailed", "MonWUI settings could not be loaded.");
+        const fallback = t("webConfig.messages.NexusPobreFlixSettingsLoadFailed", "Nexus PobreFlix settings could not be loaded.");
         const detail = String(error?.message || "").trim();
-        renderMonwuiSettingsPlaceholder(view, detail ? `${fallback} ${detail}` : fallback, "error");
+        renderNexusPobreFlixSettingsPlaceholder(view, detail ? `${fallback} ${detail}` : fallback, "error");
         throw error;
       })
       .finally(() => {
-        host.__jmsMonwuiPromise = null;
+        host.__jmsNexusPobreFlixPromise = null;
         if (reloadBtn) reloadBtn.disabled = false;
       });
 
-    return host.__jmsMonwuiPromise;
+    return host.__jmsNexusPobreFlixPromise;
   }
 
   function activateTab(view, tabName) {
@@ -312,9 +312,9 @@
       localStorage.setItem(TAB_STORAGE_KEY, tabName);
     } catch {}
 
-    if (tabName === "monwui-settings") {
-      ensureMonwuiSettings(view).catch((error) => {
-        console.error("MonWUI settings load failed:", error);
+    if (tabName === "NexusPobreFlix-settings") {
+      ensureNexusPobreFlixSettings(view).catch((error) => {
+        console.error("Nexus PobreFlix settings load failed:", error);
       });
     }
   }
@@ -324,13 +324,13 @@
     view.__jms_tabs_bound = true;
 
     view.querySelectorAll(".jms-tab").forEach((tab) => {
-      tab.addEventListener("click", () => activateTab(view, tab.dataset.tab || "jmsfusion"));
+      tab.addEventListener("click", () => activateTab(view, tab.dataset.tab || "NexusPobreFlix"));
     });
 
-    let active = "jmsfusion";
+    let active = "NexusPobreFlix";
     try {
       const stored = localStorage.getItem(TAB_STORAGE_KEY);
-      if (stored && ["jmsfusion", "monwui-settings", "status", "snippet"].includes(stored)) {
+      if (stored && ["NexusPobreFlix", "NexusPobreFlix-settings", "status", "snippet"].includes(stored)) {
         active = stored;
       }
     } catch {}
@@ -339,43 +339,43 @@
 
   function applyTranslations(view) {
     setText(view, "#heroEyebrow", t("webConfig.heroEyebrow", "Plugin Configuration"));
-    setText(view, "#pageTitle", t("webConfig.heroTitle", "JMSFusion Control Center"));
+    setText(view, "#pageTitle", t("webConfig.heroTitle", "NexusPobreFlix Control Center"));
     setHtml(view, "#pageIntro", t("webConfig.heroBody", fallbackLabels.webConfig.heroBody));
     setText(view, "#heroLangLabel", t("webConfig.heroLangLabel", "Selected Language"));
     setText(view, "#heroLangValue", getLanguageDisplayName(state.lang));
     setText(view, "#heroRootLabel", t("webConfig.heroRootLabel", "Web UI Root"));
     setText(view, "#heroRootValue", webRootLabel());
 
-    setText(view, "#tabJmsfusion", t("webConfig.tabs.jmsfusion", "JMSFusion"));
-    setText(view, "#tabMonwuiSettings", t("webConfig.tabs.monwuiSettings", "MonWUI Settings"));
+    setText(view, "#tabNexusPobreFlix", t("webConfig.tabs.NexusPobreFlix", "NexusPobreFlix"));
+    setText(view, "#tabNexusPobreFlixSettings", t("webConfig.tabs.NexusPobreFlixSettings", "Configurações Nexus PobreFlix"));
     setText(view, "#tabStatus", t("webConfig.tabs.status", "Status"));
     setText(view, "#tabSnippet", t("webConfig.tabs.snippet", "HTML Snippet & Web Path & Permissions"));
 
     setText(view, "#configCardTitle", t("webConfig.sections.configTitle", "Core Settings"));
-    setText(view, "#configCardBody", t("webConfig.sections.configBody", "Choose where JMSFusion serves slider assets from and how the player module path is resolved."));
+    setText(view, "#configCardBody", t("webConfig.sections.configBody", "Choose where NexusPobreFlix serves slider assets from and how the player module path is resolved."));
     setText(view, "#actionsCardTitle", t("webConfig.sections.adminTitle", "Admin Actions"));
     setText(view, "#actionsCardBody", t("webConfig.sections.adminBody", "Save plugin settings or publish the current admin snapshot globally for every user profile."));
-    setText(view, "#monwuiSettingsCardTitle", t("webConfig.sections.monwuiSettingsTitle", "MonWUI Settings"));
+    setText(view, "#NexusPobreFlixSettingsCardTitle", t("webConfig.sections.NexusPobreFlixSettingsTitle", "Nexus PobreFlix Settings"));
     setText(view, "#statusCardTitle", t("webConfig.sections.statusTitle", "Runtime Status"));
     setText(view, "#statusCardBody", t("webConfig.sections.statusBody", "Quick verification for configuration state, player path resolution, and embedded asset fallback."));
     setText(view, "#inmemCardTitle", t("webConfig.sections.inMemoryTitle", "In-Memory Injection"));
     setText(view, "#inmemCardBody", t("webConfig.sections.inMemoryBody", "Checks whether index.html is being rewritten at response time without touching files on disk."));
     setText(view, "#snippetCardTitle", t("webConfig.sections.snippetTitle", "HTML Snippet"));
-    setText(view, "#snippetCardBody", t("webConfig.sections.snippetBody", "The exact snippet JMSFusion injects into Jellyfin web."));
+    setText(view, "#snippetCardBody", t("webConfig.sections.snippetBody", "The exact snippet NexusPobreFlix injects into Jellyfin web."));
     setText(view, "#envCardTitle", t("webConfig.sections.envTitle", "Web Path & Permissions"));
     setText(view, "#envCardBody", t("webConfig.sections.envBody", "Detected web root, file write permissions, and suggested ACL commands for patching."));
 
     setText(view, "#forceGlobalLabel", t("webConfig.fields.forceGlobalLabel", "Force global user settings"));
     setText(view, "#forceGlobalHint", t("webConfig.fields.forceGlobalHint", "Enabled: all users receive the admin snapshot automatically. Disabled: users keep their own local settings."));
     setText(view, "#scriptDirLabel", t("webConfig.fields.scriptDirLabel", "Script directory"));
-    setPlaceholder(view, "#scriptDir", t("webConfig.fields.scriptDirPlaceholder", "/home/gkhng/slider"));
+    setPlaceholder(view, "#scriptDir", t("webConfig.fields.scriptDirPlaceholder", "/home/nexus/slider"));
     setHtml(view, "#scriptDirHint", t("webConfig.fields.scriptDirHint", "Leave empty to use embedded <code>/Resources/slider</code> assets."));
     setText(view, "#playerSubLabel", t("webConfig.fields.playerSubLabel", "Player subdirectory"));
     setPlaceholder(view, "#playerSub", t("webConfig.fields.playerSubPlaceholder", "modules/player"));
 
     setText(view, "#saveBtn", t("webConfig.actions.save", "Save"));
     setText(view, "#publishGlobalBtn", t("webConfig.actions.publishGlobal", "Publish admin settings globally"));
-    setText(view, "#reloadMonwuiSettingsBtn", t("webConfig.actions.reloadMonwuiSettings", "Reload MonWUI Settings"));
+    setText(view, "#reloadNexusPobreFlixSettingsBtn", t("webConfig.actions.reloadNexusPobreFlixSettings", "Reload Nexus PobreFlix Settings"));
     setText(view, "#refreshEnvBtn", t("webConfig.actions.refreshEnv", "Refresh Web Path & Permissions"));
     setText(view, "#copyAclBtn", t("webConfig.actions.copyAcl", "Copy permission commands"));
     setText(view, "#patchBtn", t("webConfig.actions.patch", "Patch index.html"));
@@ -398,10 +398,10 @@
     if (!view.__envData) {
       setText(view, "#envAcl", t("webConfig.messages.envPending", "(not computed yet)"));
     }
-    if (!view.__monwuiSettingsLoaded && !view.querySelector("#monwuiSettingsHost #settings-modal")) {
-      renderMonwuiSettingsPlaceholder(
+    if (!view.__NexusPobreFlixSettingsLoaded && !view.querySelector("#NexusPobreFlixSettingsHost #settings-modal")) {
+      renderNexusPobreFlixSettingsPlaceholder(
         view,
-        t("webConfig.messages.monwuiSettingsLoading", "MonWUI settings are loading...")
+        t("webConfig.messages.NexusPobreFlixSettingsLoading", "Nexus PobreFlix settings are loading...")
       );
     }
 
@@ -596,7 +596,7 @@
           <input id="physicalPatchFallbackToggle" type="checkbox" ${checked ? "checked" : ""} ${disabled ? "disabled" : ""}>
           <span>${esc(t("webConfig.inMemory.fallbackToggleLabel", "Enable physical index.html patch fallback"))}</span>
         </label>
-        <div class="fieldDescription">${esc(t("webConfig.inMemory.fallbackToggleHint", "Disabled by default. Enable this only if runtime injection does not work or if you explicitly need disk patching. When enabled, JMSFusion will try to patch index.html during startup and configuration changes."))}</div>
+        <div class="fieldDescription">${esc(t("webConfig.inMemory.fallbackToggleHint", "Disabled by default. Enable this only if runtime injection does not work or if you explicitly need disk patching. When enabled, NexusPobreFlix will try to patch index.html during startup and configuration changes."))}</div>
       </div>
     `;
   }
@@ -752,16 +752,16 @@
         });
 
         if (!r.ok) throw new Error("Publish failed");
-        await fetch(`${jfRoot}/Plugins/JMSFusion/UserSettings`, { cache: "no-store" }).catch(() => null);
+        await fetch(`${jfRoot}/Plugins/NexusPobreFlix/UserSettings`, { cache: "no-store" }).catch(() => null);
         showMessage(view, t("webConfig.messages.publishDone", "Global settings published successfully."), "ok");
       } catch (e) {
         showMessage(view, e.message || String(e), "err");
       }
     });
 
-    view.querySelector("#reloadMonwuiSettingsBtn")?.addEventListener("click", async () => {
+    view.querySelector("#reloadNexusPobreFlixSettingsBtn")?.addEventListener("click", async () => {
       try {
-        await ensureMonwuiSettings(view, { force: true });
+        await ensureNexusPobreFlixSettings(view, { force: true });
       } catch (e) {
         showMessage(view, e.message || String(e), "err");
       }
@@ -819,7 +819,7 @@
   }
 
   async function refreshLanguageIfNeeded() {
-    const view = document.getElementById("JMSFusionConfigPage");
+    const view = document.getElementById("NexusPobreFlixConfigPage");
     if (!view) return;
     await loadLanguagePack();
     applyTranslations(view);
@@ -827,8 +827,8 @@
 
   function handlePageEvents(e) {
     const view = e.detail?.view || e.target || null;
-    if (view && (view.id === "JMSFusionConfigPage" || view.querySelector?.("#JMSFusionConfigPage"))) {
-      const page = view.id === "JMSFusionConfigPage" ? view : view.querySelector("#JMSFusionConfigPage");
+    if (view && (view.id === "NexusPobreFlixConfigPage" || view.querySelector?.("#NexusPobreFlixConfigPage"))) {
+      const page = view.id === "NexusPobreFlixConfigPage" ? view : view.querySelector("#NexusPobreFlixConfigPage");
       if (page) setTimeout(() => initView(page), 50);
     }
   }
@@ -842,27 +842,27 @@
   document.addEventListener("viewshow", handlePageEvents);
   document.addEventListener("pageshow", handlePageEvents);
   document.addEventListener("DOMContentLoaded", function () {
-    const existingView = document.getElementById("JMSFusionConfigPage");
+    const existingView = document.getElementById("NexusPobreFlixConfigPage");
     if (existingView) setTimeout(() => initView(existingView), 50);
   });
 
-  window.addEventListener("jmsfusion:plugin-config-open-request", (event) => {
+  window.addEventListener("NexusPobreFlix:plugin-config-open-request", (event) => {
     const detail = event?.detail || {};
-    if (detail.pluginTab === "monwui-settings") {
+    if (detail.pluginTab === "Nexus PobreFlix-settings") {
       try {
-        localStorage.setItem(TAB_STORAGE_KEY, "monwui-settings");
+        localStorage.setItem(TAB_STORAGE_KEY, "Nexus PobreFlix-settings");
       } catch {}
       try {
-        sessionStorage.setItem(MONWUI_SUBTAB_STORAGE_KEY, String(detail.settingsTab || "monwui"));
+        sessionStorage.setItem(Nexus PobreFlix_SUBTAB_STORAGE_KEY, String(detail.settingsTab || "Nexus PobreFlix"));
       } catch {}
     }
 
-    const existingView = document.getElementById("JMSFusionConfigPage");
+    const existingView = document.getElementById("NexusPobreFlixConfigPage");
     if (existingView) {
-      activateTab(existingView, detail.pluginTab || "jmsfusion");
+      activateTab(existingView, detail.pluginTab || "NexusPobreFlix");
     }
   });
 
-  const immediateCheck = document.getElementById("JMSFusionConfigPage");
+  const immediateCheck = document.getElementById("NexusPobreFlixConfigPage");
   if (immediateCheck) setTimeout(() => initView(immediateCheck), 50);
 })();

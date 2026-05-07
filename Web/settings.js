@@ -21,10 +21,10 @@ async function loadSettingsPageModule() {
   return import(settingsPageModuleUrl);
 }
 
-export async function mountMonwuiSettingsPage(host, options = {}) {
+export async function mountNexusPobreFlixSettingsPage(host, options = {}) {
   const mod = await loadSettingsPageModule();
-  if (typeof mod?.mountMonwuiSettingsPage !== "function") {
-    throw new Error("MonWUI settings page module is not available.");
+  if (typeof mod?.mountNexusPobreFlixSettingsPage !== "function") {
+    throw new Error("Nexus PobreFlix settings page module is not available.");
   }
-  return mod.mountMonwuiSettingsPage(host, options);
+  return mod.mountNexusPobreFlixSettingsPage(host, options);
 }

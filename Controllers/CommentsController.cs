@@ -7,7 +7,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
 {
     [ApiController]
     [Route("JMSFusion/comments")]
-    [Route("Plugins/JMSFusion/comments")]
+    [Route("Plugins/NexusPobreFlix/comments")]
     public class CommentsController : ControllerBase
     {
         private static readonly object SyncRoot = new();

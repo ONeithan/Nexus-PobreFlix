@@ -4,20 +4,20 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 
-namespace Jellyfin.Plugin.JMSFusion
+namespace Jellyfin.Plugin.NexusPobreFlix
 {
     public static class IndexPatcher
     {
-        private const string BeginMark = "<!-- SL-INJECT BEGIN -->";
-        private const string EndMark   = "<!-- SL-INJECT END -->";
-        private static string GetBackupPath(string path) => path + ".jmsfusion.bak";
+        private const string BeginMark = "<!-- NEXUS-INJECT BEGIN -->";
+        private const string EndMark   = "<!-- NEXUS-INJECT END -->";
+        private static string GetBackupPath(string path) => path + ".nexus.bak";
 
         private static string BuildBlock(string? pathBase = null)
         {
             var sb = new StringBuilder();
             sb.AppendLine(BeginMark);
             sb.AppendLine(AssetVersioning.BuildBootstrapScript());
-            sb.AppendLine($@"<script type=""module"" src=""{AssetVersioning.AppendVersionQuery("../Plugins/JMSFusion/runtime/storage-preload.js")}""></script>");
+            sb.AppendLine($@"<script type=""module"" src=""{AssetVersioning.AppendVersionQuery("../Plugins/NexusPobreFlix/assets/storage-preload.js")}""></script>");
             sb.AppendLine($@"<script type=""module"" src=""{AssetVersioning.AppendVersionQuery("../slider/main.js")}""></script>");
             sb.AppendLine($@"<script type=""module"" src=""{AssetVersioning.AppendVersionQuery("../slider/modules/player/main.js")}""></script>");
             sb.AppendLine(EndMark);
@@ -49,12 +49,12 @@ namespace Jellyfin.Plugin.JMSFusion
             }
             catch (UnauthorizedAccessException ex)
             {
-                logger.LogWarning(ex, "[JMSFusion] No write permission: {Path}", path);
+                logger.LogWarning(ex, "[NexusPobreFlix] Sem permissão de escrita: {Path}", path);
                 return false;
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "[JMSFusion] Write probe failed: {Path}", path);
+                logger.LogWarning(ex, "[NexusPobreFlix] Falha no teste de escrita: {Path}", path);
                 return false;
             }
         }
@@ -67,12 +67,12 @@ namespace Jellyfin.Plugin.JMSFusion
                 if (!File.Exists(backupPath))
                 {
                     File.Copy(path, backupPath);
-                    logger.LogInformation("[JMSFusion] Backup created: {BackupPath}", backupPath);
+                    logger.LogInformation("[NexusPobreFlix] Backup criado: {BackupPath}", backupPath);
                 }
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "[JMSFusion] Backup creation failed for: {Path}", path);
+                logger.LogWarning(ex, "[NexusPobreFlix] Falha ao criar backup para: {Path}", path);
             }
         }
 
@@ -87,11 +87,11 @@ namespace Jellyfin.Plugin.JMSFusion
                 }
 
                 File.Delete(backupPath);
-                logger.LogInformation("[JMSFusion] Removed backup: {BackupPath}", backupPath);
+                logger.LogInformation("[NexusPobreFlix] Backup removido: {BackupPath}", backupPath);
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "[JMSFusion] Failed removing backup for: {Path}", path);
+                logger.LogWarning(ex, "[NexusPobreFlix] Falha ao remover backup para: {Path}", path);
             }
         }
 
@@ -119,12 +119,12 @@ namespace Jellyfin.Plugin.JMSFusion
                         ms.CopyTo(gzStream);
                     }
                     File.WriteAllBytes(gz, outMs.ToArray());
-                    logger.LogInformation("[JMSFusion] index.html.gz updated");
+                    logger.LogInformation("[NexusPobreFlix] index.html.gz atualizado");
                 }
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "[JMSFusion] Failed updating index.html.gz");
+                logger.LogWarning(ex, "[NexusPobreFlix] Falha ao atualizar index.html.gz");
             }
 
             try
@@ -139,12 +139,12 @@ namespace Jellyfin.Plugin.JMSFusion
                         ms.CopyTo(brStream);
                     }
                     File.WriteAllBytes(br, outMs.ToArray());
-                    logger.LogInformation("[JMSFusion] index.html.br updated");
+                    logger.LogInformation("[NexusPobreFlix] index.html.br atualizado");
                 }
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "[JMSFusion] Failed updating index.html.br");
+                logger.LogWarning(ex, "[NexusPobreFlix] Falha ao atualizar index.html.br");
             }
         }
 
@@ -152,14 +152,14 @@ namespace Jellyfin.Plugin.JMSFusion
         {
             try
             {
-                logger.LogInformation("[JMSFusion] Checking web root: {WebRoot}", webRootPath);
+                logger.LogInformation("[NexusPobreFlix] Verificando raiz da web: {WebRoot}", webRootPath);
 
                 var indexPath = Path.Combine(webRootPath, "index.html");
-                logger.LogInformation("[JMSFusion] Index path: {IndexPath}", indexPath);
+                logger.LogInformation("[NexusPobreFlix] Caminho do index: {IndexPath}", indexPath);
 
                 if (!File.Exists(indexPath))
                 {
-                    logger.LogWarning("[JMSFusion] index.html not found at: {Path}", indexPath);
+                    logger.LogWarning("[NexusPobreFlix] index.html não encontrado em: {Path}", indexPath);
                     return false;
                 }
 
@@ -176,12 +176,12 @@ namespace Jellyfin.Plugin.JMSFusion
                     var desiredBlock = block.Trim();
                     if (string.Equals(currentBlock, desiredBlock, StringComparison.Ordinal))
                     {
-                        logger.LogInformation("[JMSFusion] index.html patch is already up to date");
+                        logger.LogInformation("[NexusPobreFlix] O patch do index.html já está atualizado");
                         return true;
                     }
 
                     html = html.Remove(start, end - start).Insert(start, block);
-                    logger.LogInformation("[JMSFusion] Existing inject block refreshed");
+                    logger.LogInformation("[NexusPobreFlix] Bloco de injeção existente foi atualizado");
                 }
                 else
                 {
@@ -190,7 +190,7 @@ namespace Jellyfin.Plugin.JMSFusion
                     if (headEndPos >= 0)
                     {
                         html = html.Insert(headEndPos, Environment.NewLine + block + Environment.NewLine);
-                        logger.LogInformation("[JMSFusion] Found </head> tag at position: {Position}", headEndPos);
+                        logger.LogInformation("[NexusPobreFlix] Tag </head> encontrada na posição: {Position}", headEndPos);
                     }
                     else
                     {
@@ -198,34 +198,34 @@ namespace Jellyfin.Plugin.JMSFusion
                         if (bodyEndPos >= 0)
                         {
                             html = html.Insert(bodyEndPos, Environment.NewLine + block + Environment.NewLine);
-                            logger.LogInformation("[JMSFusion] Found </body> tag at position: {Position}", bodyEndPos);
+                            logger.LogInformation("[NexusPobreFlix] Tag </body> encontrada na posição: {Position}", bodyEndPos);
                         }
                         else
                         {
                             html += Environment.NewLine + block + Environment.NewLine;
-                            logger.LogWarning("[JMSFusion] Neither </head> nor </body> tag found, appended to end");
+                            logger.LogWarning("[NexusPobreFlix] Nenhuma tag </head> ou </body> encontrada, anexado ao final");
                         }
                     }
                 }
 
                 EnsureBackup(indexPath, logger);
                 File.WriteAllText(indexPath, html, Encoding.UTF8);
-                logger.LogInformation("[JMSFusion] index.html updated successfully");
+                logger.LogInformation("[NexusPobreFlix] index.html atualizado com sucesso");
                 var verify = File.ReadAllText(indexPath, Encoding.UTF8);
                 if (verify.Contains(BeginMark, StringComparison.OrdinalIgnoreCase) &&
                     verify.Contains(EndMark, StringComparison.OrdinalIgnoreCase))
                 {
-                    logger.LogInformation("[JMSFusion] Patch verification successful");
+                    logger.LogInformation("[NexusPobreFlix] Verificação do patch bem-sucedida");
                     WriteCompressedCopiesIfPresent(logger, webRootPath, verify);
                     return true;
                 }
 
-                logger.LogError("[JMSFusion] Patch verification FAILED");
+                logger.LogError("[NexusPobreFlix] Verificação do patch FALHOU");
                 return false;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "[JMSFusion] Failed to patch index.html");
+                logger.LogError(ex, "[NexusPobreFlix] Falha ao aplicar patch no index.html");
                 return false;
             }
         }
@@ -237,7 +237,7 @@ namespace Jellyfin.Plugin.JMSFusion
                 var indexPath = Path.Combine(webRootPath, "index.html");
                 if (!File.Exists(indexPath))
                 {
-                    logger.LogWarning("[JMSFusion] Unpatch: index.html not found: {Path}", indexPath);
+                    logger.LogWarning("[NexusPobreFlix] Unpatch: index.html não encontrado: {Path}", indexPath);
                     return false;
                 }
 
@@ -248,7 +248,7 @@ namespace Jellyfin.Plugin.JMSFusion
 
                 if (!hasInjectBlock)
                 {
-                    logger.LogInformation("[JMSFusion] Unpatch: inject block not found (already clean)");
+                    logger.LogInformation("[NexusPobreFlix] Unpatch: bloco de injeção não encontrado (já está limpo)");
                     if (hasBackup)
                     {
                         if (IsWritable(indexPath, logger))
@@ -268,7 +268,7 @@ namespace Jellyfin.Plugin.JMSFusion
                     try
                     {
                         File.Copy(backupPath, indexPath, overwrite: true);
-                        logger.LogInformation("[JMSFusion] Unpatch: restored from backup: {BackupPath}", backupPath);
+                        logger.LogInformation("[NexusPobreFlix] Unpatch: restaurado do backup: {BackupPath}", backupPath);
                         var restored = File.ReadAllText(indexPath, Encoding.UTF8);
                         WriteCompressedCopiesIfPresent(logger, webRootPath, restored);
                         DeleteBackupsIfPresent(logger, webRootPath);
@@ -276,28 +276,28 @@ namespace Jellyfin.Plugin.JMSFusion
                     }
                     catch (Exception ex)
                     {
-                        logger.LogWarning(ex, "[JMSFusion] Unpatch: failed to restore backup, falling back to inline removal");
+                        logger.LogWarning(ex, "[NexusPobreFlix] Unpatch: falha ao restaurar backup, tentando remoção em linha");
                     }
                 }
 
                 var (s, e) = FindInjectRange(html);
                 if (s < 0 || e < 0)
                 {
-                    logger.LogInformation("[JMSFusion] Unpatch: inject block not found (already clean)");
+                    logger.LogInformation("[NexusPobreFlix] Unpatch: bloco de injeção não encontrado (já está limpo)");
                     DeleteBackupsIfPresent(logger, webRootPath);
                     return true;
                 }
 
                 html = html.Remove(s, e - s);
                 File.WriteAllText(indexPath, html, Encoding.UTF8);
-                logger.LogInformation("[JMSFusion] Unpatch: inject block removed");
+                logger.LogInformation("[NexusPobreFlix] Unpatch: bloco de injeção removido");
                 WriteCompressedCopiesIfPresent(logger, webRootPath, html);
                 DeleteBackupsIfPresent(logger, webRootPath);
                 return true;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "[JMSFusion] EnsureUnpatched failed");
+                logger.LogError(ex, "[NexusPobreFlix] EnsureUnpatched falhou");
                 return false;
             }
         }

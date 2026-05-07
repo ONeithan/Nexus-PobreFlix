@@ -4,7 +4,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers;
 
 [ApiController]
 [Route("JMSFusion/ping")]
-[Route("Plugins/JMSFusion/ping")]
+[Route("Plugins/NexusPobreFlix/ping")]
 public class PingController : ControllerBase
 {
     [HttpGet]

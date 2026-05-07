@@ -545,8 +545,8 @@ export const languageLabels = {
     heroLangLabel: "Idioma Selecionado",
     heroRootLabel: "Raiz da UI Web",
     tabs: {
-      jmsfusion: "Nexus PobreFlix",
-      monwuiSettings: "Configurações MonWUI",
+      NexusPobreFlix: "Nexus PobreFlix",
+      NexusPobreFlixSettings: "Configurações Nexus PobreFlix",
       status: "Status",
       snippet: "HTML Snippet & Permissões"
     },
@@ -572,7 +572,7 @@ export const languageLabels = {
     actions: {
       save: "Salvar",
       publishGlobal: "Publicar configurações globalmente",
-      reloadMonwuiSettings: "Recarregar Configurações MonWUI",
+      reloadNexusPobreFlixSettings: "Recarregar Configurações Nexus PobreFlix",
       refreshEnv: "Atualizar Caminho Web & Permissões",
       copyAcl: "Copiar comandos de permissão",
       patch: "Aplicar patch no index.html",

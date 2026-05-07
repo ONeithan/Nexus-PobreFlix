@@ -1,9 +1,9 @@
-const USER_SETTINGS_URL = "/Plugins/JMSFusion/UserSettings";
-const SAVE_URL = "/Plugins/JMSFusion/UserSettings/Publish";
+const USER_SETTINGS_URL = "/Plugins/NexusPobreFlix/UserSettings";
+const SAVE_URL = "/Plugins/NexusPobreFlix/UserSettings/Publish";
 const SAVE_DEBOUNCE_MS = 500;
 
 const EXPLICIT_KEYS = new Set([
-  "jms:settingsTargetProfile",
+  "nexus:settingsTargetProfile",
   "settings.allowedTabs.v1",
   "lyricsMode",
   "lyricsOverwrite"
@@ -180,7 +180,7 @@ async function persistSnapshot(snapshot, options = {}) {
     bridge.bootstrapOverride = { forceGlobal, global: payload, rev, profile };
     return result;
   }).catch(error => {
-    console.warn("[JMSFusion] Managed storage persist failed:", error);
+    console.warn("[NexusPobreFlix] Falha ao persistir armazenamento gerenciado:", error);
     throw error;
   }).finally(() => {
     savePromise = null;
@@ -271,7 +271,7 @@ async function loadServerSnapshot() {
     applySnapshotToStorage(snapshot);
     bridge.bootstrapOverride = { forceGlobal, global: snapshot, rev, profile };
   } catch (error) {
-    console.warn("[JMSFusion] Managed storage preload failed:", error);
+    console.warn("[NexusPobreFlix] Falha no preload do armazenamento gerenciado:", error);
     bridge.bootstrapOverride = { forceGlobal: false, global: {}, rev: 0, profile };
   } finally {
     snapshotLoaded = true;
@@ -311,7 +311,7 @@ const bridge = {
   }
 };
 
-window.__JMS_MANAGED_STORAGE__ = bridge;
+window.__NEXUS_MANAGED_STORAGE__ = bridge;
 patchLocalStorage();
 window.addEventListener("pagehide", flushPendingSnapshotOnPageLifecycle, { capture: true });
 window.addEventListener("beforeunload", flushPendingSnapshotOnPageLifecycle, { capture: true });

@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace Jellyfin.Plugin.JMSFusion.Controllers
 {
     [ApiController]
-    [Route("Plugins/JMSFusion/UserSettings")]
+    [Route("Plugins/NexusPobreFlix/UserSettings")]
     public class UserSettingsController : ControllerBase
     {
         private void NoCache()

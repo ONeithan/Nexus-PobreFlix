@@ -12,7 +12,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers;
 
 [ApiController]
 [Route("JMSFusion/parental-pin")]
-[Route("Plugins/JMSFusion/parental-pin")]
+[Route("Plugins/NexusPobreFlix/parental-pin")]
 public class ParentalPinController : ControllerBase
 {
     private const int DefaultMaxAttempts = 5;

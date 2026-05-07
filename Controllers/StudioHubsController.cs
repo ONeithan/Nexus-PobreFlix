@@ -16,7 +16,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
 {
     [ApiController]
     [Route("JMSFusion/studio-hubs")]
-    [Route("Plugins/JMSFusion/studio-hubs")]
+    [Route("Plugins/NexusPobreFlix/studio-hubs")]
     public class StudioHubsController : ControllerBase
     {
         private static readonly string[] AllowedVideoExtensions = { ".mp4", ".webm", ".m4v", ".mov" };

@@ -3,20 +3,20 @@ using System.Linq;
 using System.Reflection;
 using System;
 
-namespace Jellyfin.Plugin.JMSFusion
+namespace Jellyfin.Plugin.NexusPobreFlix
 {
     internal static class EmbeddedAssetHelper
     {
         internal static bool Exists(string resourceName)
         {
-            var asm = typeof(JMSFusionPlugin).Assembly;
+            var asm = typeof(NexusPobreFlixPlugin).Assembly;
             return asm.GetManifestResourceNames()
                       .Any(n => n.EndsWith(resourceName, StringComparison.OrdinalIgnoreCase));
         }
 
         internal static byte[]? TryRead(string resourceName)
         {
-            var asm = typeof(JMSFusionPlugin).Assembly;
+            var asm = typeof(NexusPobreFlixPlugin).Assembly;
             var full = asm.GetManifestResourceNames()
                           .FirstOrDefault(n => n.EndsWith(resourceName, StringComparison.OrdinalIgnoreCase));
             if (full == null) return null;

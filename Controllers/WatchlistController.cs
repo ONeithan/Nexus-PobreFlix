@@ -7,7 +7,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
 {
     [ApiController]
     [Route("JMSFusion/watchlist")]
-    [Route("Plugins/JMSFusion/watchlist")]
+    [Route("Plugins/NexusPobreFlix/watchlist")]
     public class WatchlistController : ControllerBase
     {
         private static readonly object SyncRoot = new();

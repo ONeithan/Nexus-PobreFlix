@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using MediaBrowser.Model.Plugins;
 
-namespace Jellyfin.Plugin.JMSFusion
+namespace Jellyfin.Plugin.NexusPobreFlix
 {
     [JsonSourceGenerationOptions(WriteIndented = true)]
-    public class JMSFusionConfiguration : BasePluginConfiguration
+    public class NexusPobreFlixConfiguration : BasePluginConfiguration
     {
         [JsonPropertyName("scriptDirectory")]
         public string ScriptDirectory { get; set; } = string.Empty;

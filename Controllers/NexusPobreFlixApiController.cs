@@ -12,17 +12,17 @@ using System.Text.RegularExpressions;
 using System.IO.Compression;
 using IOFile = System.IO.File;
 
-namespace Jellyfin.Plugin.JMSFusion.Controllers
+namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 {
     [ApiController]
-    [Route("Plugins/JMSFusion")]
-    public class JMSFusionApiController : ControllerBase
+    [Route("Plugins/NexusPobreFlix")]
+    public class NexusPobreFlixApiController : ControllerBase
     {
-        private readonly ILogger<JMSFusionApiController> _logger;
-        public JMSFusionApiController(ILogger<JMSFusionApiController> logger) => _logger = logger;
+        private readonly ILogger<NexusPobreFlixApiController> _logger;
+        public NexusPobreFlixApiController(ILogger<NexusPobreFlixApiController> logger) => _logger = logger;
 
         [HttpGet("Configuration")]
-        public ActionResult<JMSFusionConfiguration> GetConfiguration() => Ok(JMSFusionPlugin.Instance.Configuration);
+        public ActionResult<NexusPobreFlixConfiguration> GetConfiguration() => Ok(NexusPobreFlixPlugin.Instance.Configuration);
 
         public sealed class UpdateRequest
         {
@@ -37,7 +37,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
         {
             try
             {
-                var plugin = JMSFusionPlugin.Instance;
+                var plugin = NexusPobreFlixPlugin.Instance;
                 var cfg = plugin.Configuration;
 
                 if (req.ScriptDirectory != null) cfg.ScriptDirectory = req.ScriptDirectory.Trim();
@@ -48,12 +48,12 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                     cfg.EnablePhysicalIndexHtmlPatchFallback = req.EnablePhysicalIndexHtmlPatchFallback.Value;
 
                 plugin.UpdateConfiguration(cfg);
-                _logger.LogInformation("[JMSFusion] CFG SAVED: dir='{dir}', player='{sub}'", cfg.ScriptDirectory, cfg.PlayerSubdir);
+                _logger.LogInformation("[NexusPobreFlix] CFG SALVA: dir='{dir}', player='{sub}'", cfg.ScriptDirectory, cfg.PlayerSubdir);
                 return Ok(new { success = true });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Configuration update failed");
+                _logger.LogError(ex, "Falha na atualização da configuração");
                 return StatusCode(500, new { success = false, error = ex.Message });
             }
         }
@@ -71,12 +71,12 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
         [HttpGet("Status")]
         public IActionResult GetStatus()
         {
-            var cfg = JMSFusionPlugin.Instance.Configuration;
+            var cfg = NexusPobreFlixPlugin.Instance.Configuration;
             var usingEmbedded = string.IsNullOrWhiteSpace(cfg.ScriptDirectory) || !Directory.Exists(cfg.ScriptDirectory);
 
             var playerDir = string.IsNullOrWhiteSpace(cfg.PlayerSubdir) ? "modules/player" : cfg.PlayerSubdir.Trim().Trim('/');
             var playerPath = usingEmbedded
-                ? $"(embedded)/Resources/slider/{playerDir}/main.js"
+                ? $"(embutido)/Resources/slider/{playerDir}/main.js"
                 : Path.Combine(cfg.ScriptDirectory ?? string.Empty, playerDir, "main.js");
 
             var res = new StatusResponse
@@ -84,9 +84,9 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                 Configured      = !string.IsNullOrWhiteSpace(cfg.ScriptDirectory),
                 DirectoryExists = !string.IsNullOrWhiteSpace(cfg.ScriptDirectory) && Directory.Exists(cfg.ScriptDirectory),
                 MainJsExists    = usingEmbedded ? EmbeddedAssetHelper.Exists("Resources.slider.main.js")
-                                                : IOFile.Exists(Path.Combine(cfg.ScriptDirectory ?? "", "main.js")),
+                                                 : IOFile.Exists(Path.Combine(cfg.ScriptDirectory ?? "", "main.js")),
                 PlayerJsExists  = usingEmbedded ? EmbeddedAssetHelper.Exists($"Resources.slider.{playerDir.Replace('/', '.')}.main.js")
-                                                : IOFile.Exists(playerPath),
+                                                 : IOFile.Exists(playerPath),
                 PlayerPath      = playerPath,
                 UsingEmbedded   = usingEmbedded
             };
@@ -94,12 +94,11 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
             return Ok(res);
         }
 
-
         [HttpGet("Snippet")]
         public ContentResult GetSnippet()
         {
             var pathBase = HttpContext?.Request.PathBase.Value ?? string.Empty;
-            var html = JMSFusionPlugin.Instance.BuildScriptsHtml(pathBase);
+            var html = NexusPobreFlixPlugin.Instance.BuildScriptsHtml(pathBase);
             var safe = System.Net.WebUtility.HtmlEncode(html);
             return Content($"<html><body><pre>{safe}</pre></body></html>", "text/html; charset=utf-8");
         }
@@ -135,7 +134,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                 if (brExists  && brPath  is not null) lines.Add($@"icacls ""{brPath}"" /grant {principal}:(M)");
                 if (lines.Count == 0)
                 {
-                    lines.Add(@"# index.html not found under the detected web root.");
+                    lines.Add(@"# index.html não encontrado na raiz web detectada.");
                 }
                 primaryCmd = string.Join(Environment.NewLine, lines);
                 var alt = new List<string>();
@@ -145,7 +144,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                 if (idxExists && idxPath is not null) alt.Add($@"icacls ""{idxPath}"" /grant {principal}:(M)");
                 if (gzExists  && gzPath  is not null) alt.Add($@"icacls ""{gzPath}"" /grant {principal}:(M)");
                 if (brExists  && brPath  is not null) alt.Add($@"icacls ""{brPath}"" /grant {principal}:(M)");
-                if (alt.Count == 0) alt.Add("# nothing to change");
+                if (alt.Count == 0) alt.Add("# nada para alterar");
                 altCmd = string.Join(Environment.NewLine, alt);
             }
             else
@@ -154,14 +153,14 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                 if (idxExists && idxPath is not null) setfacl.Add($"sudo setfacl -m u:{user}:rw \"{idxPath}\"");
                 if (gzExists  && gzPath  is not null) setfacl.Add($"sudo setfacl -m u:{user}:rw \"{gzPath}\"");
                 if (brExists  && brPath  is not null) setfacl.Add($"sudo setfacl -m u:{user}:rw \"{brPath}\"");
-                if (setfacl.Count == 0) setfacl.Add("# index.html not found in detected web root.");
+                if (setfacl.Count == 0) setfacl.Add("# index.html não encontrado na raiz web detectada.");
                 primaryCmd = string.Join("\n", setfacl);
 
                 var chmod = new List<string>();
                 if (idxExists && idxPath is not null) { chmod.Add($"sudo chgrp {user} \"{idxPath}\""); chmod.Add($"sudo chmod g+rw \"{idxPath}\""); }
                 if (gzExists  && gzPath  is not null) { chmod.Add($"sudo chgrp {user} \"{gzPath}\"");  chmod.Add($"sudo chmod g+rw \"{gzPath}\"");  }
                 if (brExists  && brPath  is not null) { chmod.Add($"sudo chgrp {user} \"{brPath}\"");  chmod.Add($"sudo chmod g+rw \"{brPath}\"");  }
-                if (chmod.Count == 0) chmod.Add("# no files to chmod");
+                if (chmod.Count == 0) chmod.Add("# sem arquivos para chmod");
                 altCmd = string.Join("\n", chmod);
             }
 
@@ -178,7 +177,6 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                 acl = new { primary = primaryCmd, alternative = altCmd }
             });
         }
-
 
         private const string BeginMarker = "<!-- SL-INJECT BEGIN -->";
         private const string EndMarker   = "<!-- SL-INJECT END -->";
@@ -217,7 +215,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                     using var gz = new GZipStream(gzFs, CompressionLevel.SmallestSize, leaveOpen: false);
                     gz.Write(bytes, 0, bytes.Length);
                 }
-                catch (Exception ex) { logger.LogWarning(ex, "Could not write {Gz}", gzPath); }
+                catch (Exception ex) { logger.LogWarning(ex, "Não foi possível gravar {Gz}", gzPath); }
                 var brPath = Path.Combine(Path.GetDirectoryName(indexHtmlPath)!, "index.html.br");
                 try
                 {
@@ -225,11 +223,11 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                     using var br = new BrotliStream(brFs, CompressionLevel.SmallestSize, leaveOpen: false);
                     br.Write(bytes, 0, bytes.Length);
                 }
-                catch (Exception ex) { logger.LogWarning(ex, "Could not write {Br}", brPath); }
+                catch (Exception ex) { logger.LogWarning(ex, "Não foi possível gravar {Br}", brPath); }
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "Compressed copies step failed");
+                logger.LogWarning(ex, "Falha na etapa de cópias comprimidas");
             }
         }
 
@@ -240,16 +238,16 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
             {
                 var webRoot = DetectWebRoot();
                 if (string.IsNullOrWhiteSpace(webRoot))
-                    return NotFound(new { success = false, error = "Web root not detected" });
+                    return NotFound(new { success = false, error = "Raiz web não detectada" });
 
                 var indexPath = Path.Combine(webRoot, "index.html");
                 if (!IOFile.Exists(indexPath))
-                    return NotFound(new { success = false, error = "index.html not found under detected web root" });
+                    return NotFound(new { success = false, error = "index.html não encontrado na raiz web detectada" });
 
                 var html = IOFile.ReadAllText(indexPath, Encoding.UTF8);
 
                 var pathBase = HttpContext?.Request.PathBase.Value ?? string.Empty;
-                var snippet = JMSFusionPlugin.Instance.BuildScriptsHtml(pathBase);
+                var snippet = NexusPobreFlixPlugin.Instance.BuildScriptsHtml(pathBase);
 
                 var newHtml = InjectOrReplace(html, snippet);
 
@@ -257,17 +255,17 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
 
                 TryWriteCompressedCopies(indexPath, newHtml, _logger);
 
-                _logger.LogInformation("[JMSFusion] Patched index.html at {Index}", indexPath);
+                _logger.LogInformation("[NexusPobreFlix] Aplicado patch no index.html em {Index}", indexPath);
                 return Ok(new { success = true, path = indexPath });
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogError(ex, "Patch permission error");
-                return StatusCode(403, new { success = false, error = "Permission denied while writing index.html (see Env > ACL)" });
+                _logger.LogError(ex, "Erro de permissão no patch");
+                return StatusCode(403, new { success = false, error = "Permissão negada ao gravar index.html (veja Env > ACL)" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Patch failed");
+                _logger.LogError(ex, "Falha no patch");
                 return StatusCode(500, new { success = false, error = ex.Message });
             }
         }
@@ -279,11 +277,11 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
             {
                 var webRoot = DetectWebRoot();
                 if (string.IsNullOrWhiteSpace(webRoot))
-                    return NotFound(new { success = false, error = "Web root not detected" });
+                    return NotFound(new { success = false, error = "Raiz web não detectada" });
 
                 var indexPath = Path.Combine(webRoot, "index.html");
                 if (!IOFile.Exists(indexPath))
-                    return NotFound(new { success = false, error = "index.html not found under detected web root" });
+                    return NotFound(new { success = false, error = "index.html não encontrado na raiz web detectada" });
 
                 var html = IOFile.ReadAllText(indexPath, Encoding.UTF8);
                 var newHtml = RemoveBlock(html);
@@ -292,17 +290,17 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
 
                 TryWriteCompressedCopies(indexPath, newHtml, _logger);
 
-                _logger.LogInformation("[JMSFusion] Unpatched index.html at {Index}", indexPath);
+                _logger.LogInformation("[NexusPobreFlix] Removido patch do index.html em {Index}", indexPath);
                 return Ok(new { success = true, path = indexPath });
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogError(ex, "Unpatch permission error");
-                return StatusCode(403, new { success = false, error = "Permission denied while writing index.html (see Env > ACL)" });
+                _logger.LogError(ex, "Erro de permissão no unpatch");
+                return StatusCode(403, new { success = false, error = "Permissão negada ao gravar index.html (veja Env > ACL)" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unpatch failed");
+                _logger.LogError(ex, "Falha no unpatch");
                 return StatusCode(500, new { success = false, error = ex.Message });
             }
         }

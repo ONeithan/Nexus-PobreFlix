@@ -11,12 +11,12 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
-using Jellyfin.Plugin.JMSFusion.Core;
+using Jellyfin.Plugin.NexusPobreFlix.Core;
 using System.Runtime.Versioning;
 
-namespace Jellyfin.Plugin.JMSFusion
+namespace Jellyfin.Plugin.NexusPobreFlix
 {
-    public sealed class JMSStartupFilter : IStartupFilter
+    public sealed class NexusPobreFlixStartupFilter : IStartupFilter
     {
         private static volatile string? s_cachedWebRoot;
 
@@ -24,7 +24,7 @@ namespace Jellyfin.Plugin.JMSFusion
         {
             return app =>
             {
-                var logger = app.ApplicationServices.GetRequiredService<ILogger<JMSStartupFilter>>();
+                var logger = app.ApplicationServices.GetRequiredService<ILogger<NexusPobreFlixStartupFilter>>();
                 var env    = app.ApplicationServices.GetRequiredService<IWebHostEnvironment>();
                 var trailerAutomation = app.ApplicationServices.GetRequiredService<TrailerAutomationService>();
 
@@ -32,7 +32,7 @@ namespace Jellyfin.Plugin.JMSFusion
 
                 app.UseMiddleware<PathRewriteMiddleware>();
 
-                var asm = typeof(JMSStartupFilter).Assembly;
+                var asm = typeof(NexusPobreFlixStartupFilter).Assembly;
                 var embedded = new ManifestEmbeddedFileProvider(asm, "Resources/slider");
                 app.UseStaticFiles(new StaticFileOptions
                 {
@@ -70,7 +70,7 @@ namespace Jellyfin.Plugin.JMSFusion
                         return;
                     }
 
-                    var reqLogger = ctx.RequestServices.GetRequiredService<ILogger<JMSStartupFilter>>();
+                    var reqLogger = ctx.RequestServices.GetRequiredService<ILogger<NexusPobreFlixStartupFilter>>();
                     var originalAcceptEncoding = ctx.Request.Headers["Accept-Encoding"].ToString();
                     ctx.Request.Headers["Accept-Encoding"] = "identity";
 
@@ -114,10 +114,10 @@ namespace Jellyfin.Plugin.JMSFusion
                             html = await reader.ReadToEndAsync();
                         }
 
-                        if (html.IndexOf("<!-- SL-INJECT BEGIN -->", StringComparison.OrdinalIgnoreCase) < 0)
+                        if (html.IndexOf("<!-- NEXUS-INJECT BEGIN -->", StringComparison.OrdinalIgnoreCase) < 0)
                         {
                             var pathBase = ctx.Request.PathBase.HasValue ? ctx.Request.PathBase.Value : null;
-                            var snippet = JMSFusionPlugin.Instance.BuildScriptsHtml(pathBase);
+                            var snippet = NexusPobreFlixPlugin.Instance.BuildScriptsHtml(pathBase);
 
                             var headEnd = html.IndexOf("</head>", StringComparison.OrdinalIgnoreCase);
                             if (headEnd >= 0)
@@ -137,7 +137,7 @@ namespace Jellyfin.Plugin.JMSFusion
                     }
                     catch (Exception ex)
                     {
-                        reqLogger.LogWarning(ex, "[JMSFusion] In-memory index.html injection failed, falling back to original body.");
+                        reqLogger.LogWarning(ex, "[NexusPobreFlix] In-memory index.html injection failed, falling back to original body.");
                         mem.Position = 0;
                         await mem.CopyToAsync(originalBody);
                     }
@@ -226,7 +226,7 @@ namespace Jellyfin.Plugin.JMSFusion
                 }
             }
 
-            var already = html.IndexOf("<!-- SL-INJECT BEGIN -->", StringComparison.OrdinalIgnoreCase) >= 0;
+            var already = html.IndexOf("<!-- NEXUS-INJECT BEGIN -->", StringComparison.OrdinalIgnoreCase) >= 0;
             return (html, enc, src, already);
         }
 

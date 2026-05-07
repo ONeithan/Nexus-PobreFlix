@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace Jellyfin.Plugin.JMSFusion.Core;
+namespace Jellyfin.Plugin.NexusPobreFlix.Core;
 
 public static class EmbeddedScriptRunner
 {
@@ -13,7 +13,7 @@ public static class EmbeddedScriptRunner
             .FirstOrDefault(n => n.EndsWith(resourceName, StringComparison.OrdinalIgnoreCase));
         if (full == null) throw new InvalidOperationException($"Resource not found: {resourceName}");
 
-        var tempDir = Path.Combine(Path.GetTempPath(), "jmsfusion-scripts");
+        var tempDir = Path.Combine(Path.GetTempPath(), "nexus-pobreflix-scripts");
         Directory.CreateDirectory(tempDir);
         var outPath = Path.Combine(tempDir, outFileName);
 

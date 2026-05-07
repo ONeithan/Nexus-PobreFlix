@@ -32,7 +32,7 @@ public class ConfigUpdateDto
 
 [ApiController]
 [Route("JMSFusion/config")]
-[Route("Plugins/JMSFusion/config")]
+[Route("Plugins/NexusPobreFlix/config")]
 public class ConfigController : ControllerBase
 {
     private const int MinTrailerResolution = 640;

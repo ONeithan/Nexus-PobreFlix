@@ -1,17 +1,17 @@
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Plugins;
-using Jellyfin.Plugin.JMSFusion.Core;
+using Jellyfin.Plugin.NexusPobreFlix.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 
-namespace Jellyfin.Plugin.JMSFusion
+namespace Jellyfin.Plugin.NexusPobreFlix
 {
-    public sealed class JMSFusionServiceRegistrator : IPluginServiceRegistrator
+    public sealed class NexusPobreFlixServiceRegistrator : IPluginServiceRegistrator
     {
         public void RegisterServices(IServiceCollection services, IServerApplicationHost applicationHost)
         {
             services.AddSingleton<TrailerAutomationService>();
-            services.AddTransient<IStartupFilter, JMSStartupFilter>();
+            services.AddTransient<IStartupFilter, NexusPobreFlixStartupFilter>();
         }
     }
 }
