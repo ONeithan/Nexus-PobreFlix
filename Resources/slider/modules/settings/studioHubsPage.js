@@ -10,7 +10,7 @@ import {
   getCurrentNativeHomeSectionOrderItems,
   getNativeHomeSectionOrderLabel
 } from "../homeSectionNative.js";
-import { createCheckbox, createSection, createNumberInput } from "./shared.js";
+import { createCheckbox, createSection, createNumberInput, createSelect, createTextInput, createRangeInput } from "./shared.js";
 import { applySettings } from "./applySettings.js";
 import { fetchItemDetails, makeApiRequest } from "../../../Plugins/NexusPobreFlix/runtime/api.js";
 import {
