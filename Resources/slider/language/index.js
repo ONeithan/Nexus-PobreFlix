@@ -29,12 +29,12 @@ export function normalizeLanguageCode(lang) {
   if (raw === 'spa' || base === 'es') return 'spa';
   if (raw === 'por' || base === 'pt') return 'por';
 
-  return 'eng';
+  return 'por';
 }
 
 export function getLanguageLabels(lang) {
   const effective = normalizeLanguageCode(
-    lang || getEffectiveLanguage?.() || detectBrowserLanguage?.() || 'eng'
+    lang || getEffectiveLanguage?.() || detectBrowserLanguage?.() || 'por'
   );
 
   switch (effective) {
@@ -45,7 +45,7 @@ export function getLanguageLabels(lang) {
     case 'spa': return spaLabels;
     case 'tur': return turLabels;
     case 'por': return porLabels;
-    default:    return engLabels;
+    default:    return porLabels;
   }
 }
 
@@ -64,7 +64,7 @@ export function detectBrowserLanguage() {
     if (code.startsWith('es') || base === 'es') return 'spa';
     if (code.startsWith('pt') || base === 'pt') return 'por';
   }
-  return 'eng';
+  return 'por';
 }
 
 export function getStoredLanguagePreference() {

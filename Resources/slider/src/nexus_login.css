@@ -1,0 +1,119 @@
+/* 
+ * NEXUS POBREFLIX - LOGIN SUPREMO (NETFLIX STYLE)
+ * Industrializado para Jellyfin 10.11.x
+ */
+
+/* 1. Fundo Imersivo (Preserva o fundo do usuário, mas adiciona profundidade) */
+#loginPage {
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), var(--nexus-bg-image, url('/web/assets/img/devices.png')) !important;
+    background-size: cover !important;
+    background-position: center !important;
+}
+
+/* 2. Card de Login (Netflix Style) */
+#loginPage .readOnlyContent, 
+#loginPage .visual-card {
+    background-color: rgba(0, 0, 0, 0.75) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-radius: 12px !important;
+    padding: 60px 68px 40px !important;
+    width: 100% !important;
+    max-width: 450px !important;
+    min-height: 550px !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5) !important;
+}
+
+/* Centralizar verticalmente */
+#loginPage .pageContainer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 100vh !important;
+    padding: 0 !important;
+}
+
+/* 3. Tipografia e Títulos */
+#loginPage h1 {
+    font-family: 'Sora', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 32px !important;
+    color: #fff !important;
+    margin-bottom: 28px !important;
+    text-align: left !important;
+}
+
+/* 4. Inputs Estilizados */
+#loginPage .inputContainer {
+    margin-bottom: 16px !important;
+}
+
+#loginPage .emby-input {
+    background: #333 !important;
+    border: none !important;
+    border-radius: 4px !important;
+    color: #fff !important;
+    height: 50px !important;
+    padding: 16px 20px 0 !important;
+    font-size: 16px !important;
+    transition: background 0.2s ease !important;
+}
+
+#loginPage .emby-input:focus {
+    background: #454545 !important;
+    box-shadow: none !important;
+    border-bottom: 2px solid #7b2fbe !important; /* Roxo Nexus */
+}
+
+/* Label Flutuante Simulada (Simples) */
+#loginPage .inputLabel {
+    color: #8c8c8c !important;
+    font-size: 14px !important;
+    margin-bottom: 4px !important;
+}
+
+/* 5. Botão de Login (Nexus Premium) */
+#loginPage .raised.submit.emby-button {
+    background: #7b2fbe !important; /* Roxo Nexus */
+    border-radius: 4px !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    margin: 24px 0 12px !important;
+    padding: 12px !important;
+    width: 100% !important;
+    text-transform: none !important;
+    transition: transform 0.1s ease, background 0.2s ease !important;
+}
+
+#loginPage .raised.submit.emby-button:hover {
+    background: #9d3eff !important;
+    transform: scale(1.02);
+}
+
+#loginPage .raised.submit.emby-button:active {
+    transform: scale(0.98);
+}
+
+/* 6. Links e Extras */
+#loginPage .forgotPassword {
+    color: #b3b3b3 !important;
+    font-size: 13px !important;
+    text-decoration: none !important;
+}
+
+#loginPage .forgotPassword:hover {
+    text-decoration: underline !important;
+}
+
+/* 7. Footer e Outros */
+#loginPage .loginFooter {
+    display: none !important; /* Remove footer genérico */
+}
+
+/* Ajuste de Margem para Logo (se houver) */
+.view-login .mainDrawer {
+    display: none !important;
+}

@@ -461,38 +461,39 @@ export function createAboutPanel(labels) {
   panel.id = 'about-panel';
   panel.className = 'settings-panel';
 
-  const section = createSection('MONWUI');
+  const section = createSection('NEXUS POBREFLIX');
 
   const info = document.createElement('div');
   info.className = 'ggrbz-info';
-  info.textContent = labels.aboutHeader || 'Hakkında';
+  info.textContent = 'Sobre';
   section.appendChild(info);
 
   const aboutContent = document.createElement('div');
   aboutContent.className = 'about-content';
 
   const creatorInfo = document.createElement('p');
-  creatorInfo.textContent = ` G-GRBZ ${labels.aboutCreator || 'Tarafından Hazarlanmıştır'}`;
+  creatorInfo.textContent = `Nexus PobreFlix — Motor Visual Industrial`;
   creatorInfo.style.fontWeight = 'bold';
   creatorInfo.style.marginBottom = '20px';
 
   const supportInfo = document.createElement('p');
-  supportInfo.textContent = labels.aboutSupport || 'Öneri, istek veya sorunlar için:';
+  supportInfo.textContent = 'Desenvolvido por ONeithan. Para suporte e atualizações acesse o repositório:';
   supportInfo.style.marginBottom = '10px';
 
   const githubLink = document.createElement('a');
-  githubLink.href = 'https://github.com/G-grbz/Jellyfin-MonWUI-Plugin';
+  githubLink.href = 'https://github.com/ONeithan/Nexus-PobreFlix';
   githubLink.target = '_blank';
-  githubLink.textContent = labels.aboutGithub || 'GitHub: https://github.com/G-grbz/Jellyfin-MonWUI-Plugin';
+  githubLink.textContent = 'GitHub: ONeithan/Nexus-PobreFlix';
   githubLink.style.display = 'block';
   githubLink.style.marginBottom = '10px';
-  githubLink.style.color = '#00a8ff';
+  githubLink.style.color = '#7B2FBE';
 
   const emailLink = document.createElement('a');
-  emailLink.href = 'mailto:gkhn.gurbuz@hotmail.com';
-  emailLink.innerHTML = `${labels.aboutEmail || 'E Posta:'} gkhn.gurbuz@hotmail.com`;
+  emailLink.href = 'https://github.com/ONeithan';
+  emailLink.target = '_blank';
+  emailLink.innerHTML = `Nexus Codex: @ONeithan`;
   emailLink.style.display = 'block';
-  emailLink.style.color = '#00a8ff';
+  emailLink.style.color = '#7B2FBE';
 
   const updateWrap = document.createElement('div');
   updateWrap.className = 'update-check-wrapper';
