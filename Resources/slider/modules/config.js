@@ -337,7 +337,7 @@ async function __fetchGlobalOverride(force = false) {
   }
   try {
     const profile = getDeviceProfileAuto();
-    const r = await fetch(`/Plugins/JMSFusion/UserSettings?ts=${Date.now()}&profile=${profile}`, {
+    const r = await fetch(`/Plugins/NexusPobreFlix/UserSettings?ts=${Date.now()}&profile=${profile}`, {
     });
     if (!r.ok) throw new Error();
     __globalOverride = await r.json();
@@ -1356,7 +1356,7 @@ export async function publishAdminSnapshotIfForced() {
     }
 
     const targetProfile = getAdminTargetProfile();
-    const r = await fetch(`/Plugins/JMSFusion/UserSettings?ts=${Date.now()}&profile=${targetProfile}`, {
+    const r = await fetch(`/Plugins/NexusPobreFlix/UserSettings?ts=${Date.now()}&profile=${targetProfile}`, {
       cache: "no-store"
     });
     const j = r.ok ? await r.json() : null;
@@ -1371,11 +1371,11 @@ export async function publishAdminSnapshotIfForced() {
       "";
 
     if (!token) {
-      console.warn("[JMSFusion] Auto publish skipped (no token).");
+      console.warn("[NexusPobreFlix] Auto publish skipped (no token).");
       return { attempted: true, forced: true, ok: false, reason: "no-token", profile: targetProfile };
     }
 
-    const pr = await fetch(`/Plugins/JMSFusion/UserSettings/Publish?ts=${Date.now()}&profile=${targetProfile}`, {
+    const pr = await fetch(`/Plugins/NexusPobreFlix/UserSettings/Publish?ts=${Date.now()}&profile=${targetProfile}`, {
       method: "POST",
       cache: "no-store",
       headers: {
@@ -1386,14 +1386,14 @@ export async function publishAdminSnapshotIfForced() {
     });
 
     if (!pr.ok) {
-      console.warn("[JMSFusion] Auto publish failed:", pr.status);
+      console.warn("[NexusPobreFlix] Auto publish failed:", pr.status);
       return { attempted: true, forced: true, ok: false, reason: "http-error", status: pr.status, profile: targetProfile };
     }
 
-    console.log("[JMSFusion] Auto publish success.");
+    console.log("[NexusPobreFlix] Auto publish success.");
     return { attempted: true, forced: true, ok: true, profile: targetProfile };
   } catch (e) {
-    console.warn("[JMSFusion] Auto publish error:", e);
+    console.warn("[NexusPobreFlix] Auto publish error:", e);
     return {
       attempted: true,
       forced: true,
@@ -1454,7 +1454,7 @@ export function buildJfUrl(pathOrUrl) {
 
     if (!data?.forceGlobal) {
       if (!managedStorageActive && _restoreBackupIfAny()) {
-        console.log("[JMSFusion] Restored user settings (global off).");
+        console.log("[NexusPobreFlix] Restored user settings (global off).");
       }
       return;
     }
@@ -1463,7 +1463,7 @@ export function buildJfUrl(pathOrUrl) {
       window.ApiClient?._currentUser?.Policy?.IsAdministrator === true;
 
     if (isAdmin) {
-      console.log("[JMSFusion] Admin user – skipping forced global apply.");
+      console.log("[NexusPobreFlix] Admin user – skipping forced global apply.");
       return;
     }
 
@@ -1478,6 +1478,6 @@ export function buildJfUrl(pathOrUrl) {
     }
 
     __globalApplied = true;
-    console.log("[JMSFusion] Global user settings applied (forced).");
+    console.log("[NexusPobreFlix] Global user settings applied (forced).");
   } catch {}
 })();

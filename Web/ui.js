@@ -20,7 +20,7 @@
   const webSettingsModuleUrl = `${window.location.origin}${jfRoot}/Plugins/NexusPobreFlix/assets/WebSettingsJs`;
   const sliderSettingsCssUrl = `${window.location.origin}${jfRoot}/slider/src/settings.css`;
   const TAB_STORAGE_KEY = "NexusPobreFlix-config-active-tab";
-  const NexusPobreFlix_SUBTAB_STORAGE_KEY = "NexusPobreFlix-requested-subtab";
+  const NEXUS_SUBTAB_STORAGE_KEY = "NexusPobreFlix-requested-subtab";
 
   const api = (p) => `${jfRoot}/Plugins/NexusPobreFlix/${p}`;
   const esc = (s) => (s ?? "").toString().replace(/[&<>]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[m]));
@@ -153,11 +153,11 @@
   }
 
   function ensureStylesheet(key, href) {
-    let link = document.querySelector(`link[data-NexusPobreFlix-config-css="${key}"]`);
+    let link = document.querySelector(`link[data-nexus-config-css="${key}"]`);
     if (!link) {
       link = document.createElement("link");
       link.rel = "stylesheet";
-      link.setAttribute("data-NexusPobreFlix-config-css", key);
+      link.setAttribute("data-nexus-config-css", key);
       document.head.appendChild(link);
     }
     if (link.href !== href) {
@@ -222,7 +222,7 @@
 
     const placeholder = document.createElement("div");
     placeholder.id = "NexusPobreFlixSettingsPlaceholder";
-    placeholder.className = `jms-empty ${tone ? `jms-empty--${tone}` : ""}`.trim();
+    placeholder.className = `nexus-empty ${tone ? `nexus-empty--${tone}` : ""}`.trim();
     placeholder.textContent = text;
     host.replaceChildren(placeholder);
   }
@@ -230,8 +230,8 @@
   function consumeRequestedNexusPobreFlixSettingsTab() {
     let value = "";
     try {
-      value = sessionStorage.getItem(NexusPobreFlix_SUBTAB_STORAGE_KEY) || "";
-      if (value) sessionStorage.removeItem(NexusPobreFlix_SUBTAB_STORAGE_KEY);
+      value = sessionStorage.getItem(NEXUS_SUBTAB_STORAGE_KEY) || "";
+      if (value) sessionStorage.removeItem(NEXUS_SUBTAB_STORAGE_KEY);
     } catch {}
     return String(value || "").trim() || "NexusPobreFlix";
   }
@@ -243,24 +243,24 @@
 
     const requestedInnerTab = consumeRequestedNexusPobreFlixSettingsTab();
 
-    if (!force && host.__jmsNexusPobreFlixReady && host.querySelector("#settings-modal")) {
-      const existingApi = host.__jmsNexusPobreFlixApi || host.__jmsNexusPobreFlixSettingsApi || null;
+    if (!force && host.__nexusReady && host.querySelector("#settings-modal")) {
+      const existingApi = host.__nexusApi || host.__nexusSettingsApi || null;
       existingApi?.open?.(requestedInnerTab);
       return host.querySelector("#settings-modal");
     }
 
-    if (host.__jmsNexusPobreFlixPromise) {
-      return host.__jmsNexusPobreFlixPromise;
+    if (host.__nexusPromise) {
+      return host.__nexusPromise;
     }
 
-    host.__jmsNexusPobreFlixReady = false;
+    host.__nexusReady = false;
     renderNexusPobreFlixSettingsPlaceholder(
       view,
       t("webConfig.messages.NexusPobreFlixSettingsLoading", "Nexus PobreFlix settings are loading...")
     );
     if (reloadBtn) reloadBtn.disabled = true;
 
-    host.__jmsNexusPobreFlixPromise = (async () => {
+    host.__nexusPromise = (async () => {
       ensureStylesheet("NexusPobreFlix-settings", sliderSettingsCssUrl);
 
       const settingsModule = await import(webSettingsModuleUrl);
@@ -276,8 +276,8 @@
         throw new Error("Nexus PobreFlix settings page is not available.");
       }
 
-      host.__jmsNexusPobreFlixApi = settingsApi;
-      host.__jmsNexusPobreFlixReady = true;
+      host.__nexusApi = settingsApi;
+      host.__nexusReady = true;
       view.__NexusPobreFlixSettingsLoaded = true;
       return modal;
     })()
@@ -288,21 +288,21 @@
         throw error;
       })
       .finally(() => {
-        host.__jmsNexusPobreFlixPromise = null;
+        host.__nexusPromise = null;
         if (reloadBtn) reloadBtn.disabled = false;
       });
 
-    return host.__jmsNexusPobreFlixPromise;
+    return host.__nexusPromise;
   }
 
   function activateTab(view, tabName) {
-    view.querySelectorAll(".jms-tab").forEach((tab) => {
+    view.querySelectorAll(".nexus-tab").forEach((tab) => {
       const active = tab.dataset.tab === tabName;
       tab.classList.toggle("is-active", active);
       tab.setAttribute("aria-selected", active ? "true" : "false");
     });
 
-    view.querySelectorAll(".jms-panel").forEach((panel) => {
+    view.querySelectorAll(".nexus-panel").forEach((panel) => {
       const active = panel.dataset.panel === tabName;
       panel.classList.toggle("is-active", active);
       panel.hidden = !active;
@@ -320,10 +320,10 @@
   }
 
   function initTabs(view) {
-    if (view.__jms_tabs_bound) return;
-    view.__jms_tabs_bound = true;
+    if (view.__nexus_tabs_bound) return;
+    view.__nexus_tabs_bound = true;
 
-    view.querySelectorAll(".jms-tab").forEach((tab) => {
+    view.querySelectorAll(".nexus-tab").forEach((tab) => {
       tab.addEventListener("click", () => activateTab(view, tab.dataset.tab || "NexusPobreFlix"));
     });
 
@@ -449,7 +449,7 @@
   }
 
   function statusBadge(text, tone = "is-good") {
-    return `<span class="jms-badge ${tone}">${esc(text)}</span>`;
+    return `<span class="nexus-badge ${tone}">${esc(text)}</span>`;
   }
 
   function yesNo(value) {
@@ -491,9 +491,9 @@
     ];
 
     el.innerHTML = rows.map((row) => `
-      <div class="jms-status-row">
-        <div class="jms-status-label">${esc(row.label)}</div>
-        <div class="jms-status-value">${row.value}</div>
+      <div class="nexus-status-row">
+        <div class="nexus-status-label">${esc(row.label)}</div>
+        <div class="nexus-status-value">${row.value}</div>
       </div>
     `).join("");
   }
@@ -579,7 +579,7 @@
     }
 
     if (snippetGrid) {
-      snippetGrid.classList.toggle("jms-grid--single", shouldHideEnvCard);
+      snippetGrid.classList.toggle("nexus-grid--single", shouldHideEnvCard);
     }
   }
 
@@ -591,7 +591,7 @@
     const disabled = !!view?.__physicalPatchFallbackBusy;
 
     return `
-      <div class="jms-inline-toggle">
+      <div class="nexus-inline-toggle">
         <label class="inputLabel inputLabel--checkbox" for="physicalPatchFallbackToggle">
           <input id="physicalPatchFallbackToggle" type="checkbox" ${checked ? "checked" : ""} ${disabled ? "disabled" : ""}>
           <span>${esc(t("webConfig.inMemory.fallbackToggleLabel", "Enable physical index.html patch fallback"))}</span>
@@ -648,14 +648,14 @@
     if (!el) return;
 
     if (ok) {
-      el.className = "jms-inline-state ok";
+      el.className = "nexus-inline-state ok";
       el.innerHTML = `
         <strong>${esc(t("webConfig.inMemory.activeTitle", "In-memory injection is active."))}</strong><br>
         <span>${esc(t("webConfig.inMemory.activeHint", "Physical patching is not required while runtime injection is working."))}</span>
         ${renderPhysicalPatchFallbackToggle(view)}
       `;
     } else {
-      el.className = "jms-inline-state warn";
+      el.className = "nexus-inline-state warn";
       el.innerHTML = `
         <strong>${esc(t("webConfig.inMemory.inactiveTitle", "In-memory injection was not detected."))}</strong><br>
         <span>${esc(t("webConfig.inMemory.inactiveHint", "Use Patch if you want to persist the snippet into index.html."))}</span>
@@ -676,11 +676,11 @@
 
   async function checkInMemory(view) {
     try {
-      const url = `${jfRoot}/web/?_jms_check=${Date.now()}`;
-      const r = await fetch(url, { cache: "no-store", headers: { "X-JMS-Check": "1" } });
+      const url = `${jfRoot}/web/?_nexus_check=${Date.now()}`;
+      const r = await fetch(url, { cache: "no-store", headers: { "X-Nexus-Check": "1" } });
       if (!r.ok) throw new Error("HTTP " + r.status);
       const txt = await r.text();
-      const ok = /<!--\s*SL-INJECT BEGIN\s*-->/.test(txt);
+      const ok = /<!--\s*NEXUS-INJECT BEGIN\s*-->/.test(txt);
       renderInMem(view, ok);
       return ok;
     } catch {
@@ -718,8 +718,8 @@
   }
 
   async function initView(view) {
-    if (view.__jms_initialized) return;
-    view.__jms_initialized = true;
+    if (view.__nexus_initialized) return;
+    view.__nexus_initialized = true;
 
     await loadLanguagePack();
     applyTranslations(view);
@@ -827,8 +827,10 @@
 
   function handlePageEvents(e) {
     const view = e.detail?.view || e.target || null;
-    if (view && (view.id === "NexusPobreFlixConfigPage" || view.querySelector?.("#NexusPobreFlixConfigPage"))) {
-      const page = view.id === "NexusPobreFlixConfigPage" ? view : view.querySelector("#NexusPobreFlixConfigPage");
+    const pageId = "NexusPobreFlixConfigPage";
+    const legacyId = "NexusPobreFlixConfigPage";
+    if (view && (view.id === pageId || view.id === legacyId || (view.querySelector && (view.querySelector(`#${pageId}`) || view.querySelector(`#${legacyId}`))))) {
+      const page = (view.id === pageId || view.id === legacyId) ? view : (view.querySelector(`#${pageId}`) || view.querySelector(`#${legacyId}`));
       if (page) setTimeout(() => initView(page), 50);
     }
   }

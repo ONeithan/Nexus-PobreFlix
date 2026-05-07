@@ -12,7 +12,7 @@ import {
 } from "../homeSectionNative.js";
 import { createCheckbox, createSection, createNumberInput } from "./shared.js";
 import { applySettings } from "./applySettings.js";
-import { fetchItemDetails, makeApiRequest } from "../../../Plugins/JMSFusion/runtime/api.js";
+import { fetchItemDetails, makeApiRequest } from "../../../Plugins/NexusPobreFlix/runtime/api.js";
 import {
   JMS_STUDIO_HUB_MANUAL_ENTRY_ADDED_EVENT,
   buildStudioHubLogoUrl,

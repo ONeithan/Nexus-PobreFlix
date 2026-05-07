@@ -2132,19 +2132,19 @@ export const languageLabels = {
   },
   webConfig: {
     heroEyebrow: "Plugin-Konfiguration",
-    heroTitle: "JMSFusion Kontrollzentrum",
+    heroTitle: "NexusPobreFlix Kontrollzentrum",
     heroBody: "Verwalte die <code>/slider</code>-Quelle, veröffentliche globale Einstellungen, prüfe den Laufzeitstatus und sieh dir HTML-Snippet- sowie Web-Berechtigungsdetails auf einer Seite an.",
     heroLangLabel: "Ausgewählte Sprache",
     heroRootLabel: "Web-UI-Pfad",
     tabs: {
-      jmsfusion: "JMSFusion",
+      NexusPobreFlix: "NexusPobreFlix",
       monwuiSettings: "MonWUI-Einstellungen",
       status: "Status",
       snippet: "HTML-Snippet, Webpfad & Berechtigungen"
     },
     sections: {
       configTitle: "Grundeinstellungen",
-      configBody: "Lege fest, wo JMSFusion Slider-Assets bereitstellt und wie der Player-Modulpfad aufgelöst wird.",
+      configBody: "Lege fest, wo NexusPobreFlix Slider-Assets bereitstellt und wie der Player-Modulpfad aufgelöst wird.",
       adminTitle: "Admin-Aktionen",
       adminBody: "Speichere Plugin-Einstellungen oder veröffentliche den aktuellen Admin-Snapshot global für alle Benutzerprofile.",
       statusTitle: "Laufzeitstatus",
@@ -2153,7 +2153,7 @@ export const languageLabels = {
       inMemoryBody: "Prüft, ob index.html zur Laufzeit umgeschrieben wird, ohne Dateien auf dem Datenträger zu verändern.",
       monwuiSettingsTitle: "MonWUI-Einstellungen",
       snippetTitle: "HTML-Snippet",
-      snippetBody: "Das genaue Snippet, das JMSFusion in Jellyfin Web einfügt.",
+      snippetBody: "Das genaue Snippet, das NexusPobreFlix in Jellyfin Web einfügt.",
       envTitle: "Webpfad & Berechtigungen",
       envBody: "Erkannter Webpfad, Dateischreibrechte und vorgeschlagene ACL-Befehle für das Patchen."
     },
@@ -2209,7 +2209,7 @@ export const languageLabels = {
       inactiveTitle: "In-Memory-Injektion wurde nicht erkannt.",
       inactiveHint: "Verwende Patch, wenn du das Snippet dauerhaft in index.html speichern willst.",
       fallbackToggleLabel: "Physischen index.html-Patch-Fallback aktivieren",
-      fallbackToggleHint: "Standardmäßig deaktiviert. Aktiviere dies nur, wenn die Laufzeitinjektion nicht funktioniert oder du ausdrücklich einen Patch auf dem Datenträger brauchst. Wenn aktiviert, versucht JMSFusion beim Start und bei Konfigurationsänderungen, index.html zu patchen."
+      fallbackToggleHint: "Standardmäßig deaktiviert. Aktiviere dies nur, wenn die Laufzeitinjektion nicht funktioniert oder du ausdrücklich einen Patch auf dem Datenträger brauchst. Wenn aktiviert, versucht NexusPobreFlix beim Start und bei Konfigurationsänderungen, index.html zu patchen."
     },
     env: {
       runningUser: "Ausführender Benutzer",

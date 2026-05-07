@@ -9,10 +9,10 @@ using Jellyfin.Database.Implementations.Enums;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Jellyfin.Plugin.JMSFusion.Controllers
+namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 {
     [ApiController]
-    [Route("JMSFusion/gmmp")]
+    [Route("NexusPobreFlix/gmmp")]
     [Route("Plugins/NexusPobreFlix/gmmp")]
     public class GmmpSyncController : ControllerBase
     {
@@ -192,7 +192,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
 
             CleanupExpiredEntries();
 
-            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
             var isAdmin = IsAdminUser(userCheck.User);
 

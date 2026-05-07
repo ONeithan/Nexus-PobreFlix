@@ -393,7 +393,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
         [HttpGet("diag")]
         public IActionResult Diag()
         {
-            var cfg = JMSFusionPlugin.Instance?.Configuration;
+            var cfg = NexusPobreFlixPlugin.Instance?.Configuration;
             var hasYtDlp = _trailerService.HasCommand("yt-dlp");
             var hasDeno = _trailerService.HasCommand("deno");
             var hasFfprobe = _trailerService.HasCommand("ffprobe");

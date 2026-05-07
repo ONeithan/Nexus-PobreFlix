@@ -1,4 +1,4 @@
-import { fetchItemDetailsFull, fetchItemsBulk, getEmbyHeaders, getLastPlayNowBlockReason, getSessionInfo, makeApiRequest, playNow, updateFavoriteStatus } from "../../Plugins/JMSFusion/runtime/api.js";
+import { fetchItemDetailsFull, fetchItemsBulk, getEmbyHeaders, getLastPlayNowBlockReason, getSessionInfo, makeApiRequest, playNow, updateFavoriteStatus } from "../../Plugins/NexusPobreFlix/runtime/api.js";
 import { CollectionCacheDB } from "./collectionCacheDb.js";
 import { getConfig } from "./config.js";
 import { withServer } from "./jfUrl.js";
@@ -6,7 +6,7 @@ import { ensureStudioHubLogoFromTmdb, ensureStudioHubManualEntry, JMS_STUDIO_HUB
 import { showNotification } from "./player/ui/notification.js";
 import { closeDetailsModalIfLoaded } from "./detailsModalLoader.js";
 
-const WATCHLIST_ENDPOINT = "/Plugins/jmsFusion/watchlist";
+const WATCHLIST_ENDPOINT = "/Plugins/NexusPobreFlix/watchlist";
 export const WATCHLIST_MODAL_ID = "monwui-watchlist-modal-root";
 const WATCHLIST_STYLE_ID = "monwui-watchlist-modal-style";
 const WATCHLIST_NAV_BUTTON_CLASS = "monwui-watchlist-nav-button";
@@ -875,7 +875,7 @@ function buildWatchlistHeaders(extra = {}) {
   });
 
   if (userId) headers["X-Emby-UserId"] = userId;
-  if (userName) headers["X-jmsFusion-UserName"] = userName;
+  if (userName) headers["X-NexusPobreFlix-UserName"] = userName;
 
   return headers;
 }

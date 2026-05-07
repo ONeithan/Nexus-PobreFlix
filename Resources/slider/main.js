@@ -1,4 +1,4 @@
-import { saveCredentials, saveApiKey, getAuthToken } from "../Plugins/JMSFusion/runtime/auth.js";
+import { saveCredentials, saveApiKey, getAuthToken } from "../Plugins/NexusPobreFlix/runtime/auth.js";
 import {
   getConfig,
   getHomeSectionsRuntimeConfig,
@@ -13,7 +13,7 @@ import { ensureProgressBarExists, resetProgressBar, pauseProgressBar, resumeProg
 import { createSlide } from "./modules/slideCreator.js";
 import { changeSlide, createDotNavigation, enablePeakNeighborActivation, getPeakDisplayOptions, initSwipeEvents, primePeakFirstPaint, syncPeakStructureNow, updatePeakClasses } from "./modules/navigation.js";
 import { attachMouseEvents } from "./modules/events.js";
-import { getSessionInfo, getAuthHeader, waitForAuthReadyStrict, isAuthReadyStrict, AUTH_PROFILE_CHANGED_EVENT, USERDATA_CHANGED_EVENT } from "../Plugins/JMSFusion/runtime/api.js";
+import { getSessionInfo, getAuthHeader, waitForAuthReadyStrict, isAuthReadyStrict, AUTH_PROFILE_CHANGED_EVENT, USERDATA_CHANGED_EVENT } from "../Plugins/NexusPobreFlix/runtime/api.js";
 import { cachedFetchJson, createCachedItemDetailsFetcher, startLibraryDeltaWatcher } from "./modules/sliderCache.js";
 import { forceHomeSectionsTop, forceSkinHeaderPointerEvents } from "./modules/positionOverrides.js";
 import { initAvatarSystem } from "./modules/userAvatar.js";
@@ -46,7 +46,7 @@ const CUSTOM_SPLASH_STORAGE_KEY = "enableCustomSplashScreen";
 const CUSTOM_SPLASH_TITLE_VAR = "--jms-custom-splash-title";
 const CUSTOM_SPLASH_CAPTION_VAR = "--jms-custom-splash-caption";
 const CUSTOM_SPLASH_PROGRESS_KEY = "__JMS_CUSTOM_SPLASH_PROGRESS__";
-const CUSTOM_SPLASH_PING_PATHS = ["/JMSFusion/ping", "/Plugins/JMSFusion/ping"];
+const CUSTOM_SPLASH_PING_PATHS = ["/NexusPobreFlix/ping", "/Plugins/NexusPobreFlix/ping"];
 const CUSTOM_SPLASH_PING_CACHE_MS = 15_000;
 const CUSTOM_SPLASH_TIMEOUT_MS = 12_000;
 const CUSTOM_SPLASH_CLEANUP_MS = 420;

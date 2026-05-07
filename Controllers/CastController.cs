@@ -7,10 +7,10 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Jellyfin.Plugin.JMSFusion.Controllers
+namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 {
     [ApiController]
-    [Route("JMSFusion/cast")]
+    [Route("NexusPobreFlix/cast")]
     [Route("Plugins/NexusPobreFlix/cast")]
     public class CastController : ControllerBase
     {
@@ -52,7 +52,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                 return adminCheck.Result;
             }
 
-            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
 
             if (request?.EnableCastModule.HasValue == true)
@@ -89,7 +89,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                 return userCheck.Result;
             }
 
-            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
             var isAdmin = IsAdminUser(userCheck.User);
 
@@ -149,7 +149,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
 
         private object BuildAccessPayload(User? user)
         {
-            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
             var isAdmin = IsAdminUser(user);
             var moduleEnabled = cfg.EnableCastModule;

@@ -2140,19 +2140,19 @@ export const languageLabels = {
   },
   webConfig: {
     heroEyebrow: "Plugin Configuration",
-    heroTitle: "JMSFusion Control Center",
+    heroTitle: "NexusPobreFlix Control Center",
     heroBody: "Manage the <code>/slider</code> asset source, publish global settings, inspect runtime status, and review HTML snippet and web permission details from one screen.",
     heroLangLabel: "Selected Language",
     heroRootLabel: "Web UI Root",
     tabs: {
-      jmsfusion: "JMSFusion",
+      NexusPobreFlix: "NexusPobreFlix",
       monwuiSettings: "MonWUI Settings",
       status: "Status",
       snippet: "HTML Snippet & Web Path & Permissions"
     },
     sections: {
       configTitle: "Core Settings",
-      configBody: "Choose where JMSFusion serves slider assets from and how the player module path is resolved.",
+      configBody: "Choose where NexusPobreFlix serves slider assets from and how the player module path is resolved.",
       adminTitle: "Admin Actions",
       adminBody: "Save plugin settings or publish the current admin snapshot globally for every user profile.",
       statusTitle: "Runtime Status",
@@ -2161,7 +2161,7 @@ export const languageLabels = {
       inMemoryBody: "Checks whether index.html is being rewritten at response time without touching files on disk.",
       monwuiSettingsTitle: "MonWUI Settings",
       snippetTitle: "HTML Snippet",
-      snippetBody: "The exact snippet JMSFusion injects into Jellyfin web.",
+      snippetBody: "The exact snippet NexusPobreFlix injects into Jellyfin web.",
       envTitle: "Web Path & Permissions",
       envBody: "Detected web root, file write permissions, and suggested ACL commands for patching."
     },
@@ -2217,7 +2217,7 @@ export const languageLabels = {
       inactiveTitle: "In-memory injection was not detected.",
       inactiveHint: "Use Patch if you want to persist the snippet into index.html.",
       fallbackToggleLabel: "Enable physical index.html patch fallback",
-      fallbackToggleHint: "Disabled by default. Enable this only if runtime injection does not work or if you explicitly need disk patching. When enabled, JMSFusion will try to patch index.html during startup and configuration changes."
+      fallbackToggleHint: "Disabled by default. Enable this only if runtime injection does not work or if you explicitly need disk patching. When enabled, NexusPobreFlix will try to patch index.html during startup and configuration changes."
     },
     env: {
       runningUser: "Running user",

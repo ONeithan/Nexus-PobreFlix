@@ -2475,7 +2475,7 @@ public sealed class TrailerAutomationService
     private async Task DownloadToFileAsync(string url, string destinationPath, CancellationToken ct)
     {
         using var req = new HttpRequestMessage(HttpMethod.Get, url);
-        req.Headers.TryAddWithoutValidation("User-Agent", "JMSFusion/2.0");
+        req.Headers.TryAddWithoutValidation("User-Agent", "NexusPobreFlix/2.0");
 
         using var resp = await Http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
         resp.EnsureSuccessStatusCode();

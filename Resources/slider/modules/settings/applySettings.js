@@ -189,7 +189,7 @@ async function updateCastModuleSettings_apply(patch = {}) {
   if (token) headers["X-Emby-Token"] = token;
   if (userId) headers["X-Emby-UserId"] = userId;
 
-  const res = await fetch("/Plugins/JMSFusion/cast/settings", {
+  const res = await fetch("/Plugins/NexusPobreFlix/cast/settings", {
     method: "POST",
     cache: "no-store",
     headers,

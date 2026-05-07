@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Jellyfin.Plugin.JMSFusion.Controllers
+namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 {
     [ApiController]
-    [Route("JMSFusion/comments")]
+    [Route("NexusPobreFlix/comments")]
     [Route("Plugins/NexusPobreFlix/comments")]
     public class CommentsController : ControllerBase
     {
@@ -43,7 +43,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
 
             lock (SyncRoot)
             {
-                var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+                var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
                 var cfg = plugin.Configuration;
                 var changed = NormalizeConfig(cfg);
 
@@ -93,7 +93,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
 
             lock (SyncRoot)
             {
-                var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+                var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
                 var cfg = plugin.Configuration;
                 var changed = NormalizeConfig(cfg);
                 var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -181,7 +181,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
 
             lock (SyncRoot)
             {
-                var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+                var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
                 var cfg = plugin.Configuration;
                 var changed = NormalizeConfig(cfg);
 
@@ -214,7 +214,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
             }
         }
 
-        private static bool NormalizeConfig(JMSFusionConfiguration cfg)
+        private static bool NormalizeConfig(NexusPobreFlixConfiguration cfg)
         {
             var changed = false;
 
@@ -296,7 +296,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
             return source;
         }
 
-        private static bool TrimCommentsForItem(JMSFusionConfiguration cfg, string itemId)
+        private static bool TrimCommentsForItem(NexusPobreFlixConfiguration cfg, string itemId)
         {
             var comments = cfg.ItemComments
                 .Where(comment => Same(comment.ItemId, itemId))
@@ -317,7 +317,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                 removeIds.Contains(Clean(comment.Id))) > 0;
         }
 
-        private static bool TrimTotalComments(JMSFusionConfiguration cfg)
+        private static bool TrimTotalComments(NexusPobreFlixConfiguration cfg)
         {
             var comments = cfg.ItemComments
                 .OrderByDescending(CommentSortTimestamp)
@@ -340,7 +340,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
             return Math.Max(comment?.UpdatedAtUtc ?? 0, comment?.CreatedAtUtc ?? 0);
         }
 
-        private static void TouchRevision(JMSFusionConfiguration cfg)
+        private static void TouchRevision(NexusPobreFlixConfiguration cfg)
         {
             cfg.ItemCommentsRevision = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         }
@@ -353,7 +353,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                 "";
 
             var userName =
-                Request.Headers["X-JMSFusion-UserName"].FirstOrDefault() ??
+                Request.Headers["X-NexusPobreFlix-UserName"].FirstOrDefault() ??
                 Request.Headers["X-Emby-UserName"].FirstOrDefault() ??
                 "";
 

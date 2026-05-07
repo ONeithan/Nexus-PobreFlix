@@ -231,7 +231,7 @@ function openLyricsModal(labels, opts = {}) {
   const { startBtn, cancelBtn, status, progBar, progTxt, logBox } = grabLyricsModalRefs();
   (async () => {
     try {
-      const r = await fetch('/JMSFusion/lyrics/status', { headers: getJFHeaders() });
+      const r = await fetch('/NexusPobreFlix/lyrics/status', { headers: getJFHeaders() });
       const j = await r.json();
 
       if (j?.running) {
@@ -304,7 +304,7 @@ async function startLyricsJob(labels, refs) {
   };
 
   try {
-    const r = await fetch('/JMSFusion/lyrics/run', {
+    const r = await fetch('/NexusPobreFlix/lyrics/run', {
       method: 'POST',
       headers: getJFHeaders(),
       body: JSON.stringify(body)
@@ -328,7 +328,7 @@ async function startLyricsJob(labels, refs) {
 async function cancelLyricsJob(labels) {
   const { startBtn, cancelBtn, status } = grabLyricsModalRefs();
   try {
-    await fetch('/JMSFusion/lyrics/cancel', { method: 'POST', headers: getJFHeaders() });
+    await fetch('/NexusPobreFlix/lyrics/cancel', { method: 'POST', headers: getJFHeaders() });
   } catch {}
   status.textContent = labels.lyricsCancel || 'İptal';
 }
@@ -342,7 +342,7 @@ async function pollLyricsStatus(refs) {
     clearTimeout(lyricsPollTimer);
 
     try {
-        const r = await fetch('/JMSFusion/lyrics/status', { headers: getJFHeaders() });
+        const r = await fetch('/NexusPobreFlix/lyrics/status', { headers: getJFHeaders() });
         const j = await r.json();
         if (!j?.ok) throw new Error('status not ok');
 

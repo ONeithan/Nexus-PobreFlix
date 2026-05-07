@@ -659,7 +659,7 @@ function updateHintText() {
   const labelsMap = labels();
   const info = getRadioPersistenceInfo();
 
-  if (info.mode === "jmsfusion") {
+  if (info.mode === "NexusPobreFlix") {
     modalState.hint.textContent = labelsMap.radioSharedHint || "Kaydedilen istasyonlar herkes tarafindan kullanilabilir";
     return;
   }

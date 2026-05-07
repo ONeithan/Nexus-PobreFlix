@@ -1,4 +1,4 @@
-import { makeApiRequest, fetchItemDetailsFull, getDetailsUrl, playNow, fetchLocalTrailers, pickBestLocalTrailer, getVideoStreamUrl, updateFavoriteStatus, getEmbyHeaders, getSessionInfo } from "../../Plugins/JMSFusion/runtime/api.js";
+import { makeApiRequest, fetchItemDetailsFull, getDetailsUrl, playNow, fetchLocalTrailers, pickBestLocalTrailer, getVideoStreamUrl, updateFavoriteStatus, getEmbyHeaders, getSessionInfo } from "../../Plugins/NexusPobreFlix/runtime/api.js";
 import { withServer } from "./jfUrl.js";
 import { getConfig, getDetailsModalRuntimeConfig } from "./config.js";
 import { getLanguageLabels } from "../language/index.js";
@@ -523,7 +523,7 @@ function ensureLocalCommentStyles() {
 }
 
 const LS_TMDB_LANG = 'jms_tmdb_reviews_lang';
-const LOCAL_COMMENTS_ENDPOINT = "/Plugins/JMSFusion/comments";
+const LOCAL_COMMENTS_ENDPOINT = "/Plugins/NexusPobreFlix/comments";
 const LOCAL_COMMENT_MAX_LENGTH = 2000;
 const LOCAL_COMMENT_STYLE_ID = "jms-details-modal-comments-style";
 
@@ -573,7 +573,7 @@ function buildLocalCommentHeaders(extra = {}) {
   });
 
   if (userId) headers["X-Emby-UserId"] = userId;
-  if (userName) headers["X-JMSFusion-UserName"] = userName;
+  if (userName) headers["X-NexusPobreFlix-UserName"] = userName;
 
   return headers;
 }

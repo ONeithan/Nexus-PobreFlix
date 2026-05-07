@@ -15,10 +15,10 @@ using System.Threading.Tasks;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Jellyfin.Plugin.JMSFusion.Controllers
+namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 {
     [ApiController]
-    [Route("JMSFusion/lyrics")]
+    [Route("NexusPobreFlix/lyrics")]
     public class LyricsController : ControllerBase
     {
         private readonly IUserManager _users;
@@ -136,7 +136,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
         [HttpPost("run")]
         public IActionResult Run([FromBody] RunRequest req, CancellationToken outerCt)
         {
-            var cfg = JMSFusionPlugin.Instance?.Configuration
+            var cfg = NexusPobreFlixPlugin.Instance?.Configuration
                       ?? throw new InvalidOperationException("Plugin configuration not available.");
 
             var token = Request.Headers["X-Emby-Token"].FirstOrDefault();

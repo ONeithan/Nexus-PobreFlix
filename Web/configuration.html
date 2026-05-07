@@ -228,15 +228,14 @@
 
   <style>
 #NexusPobreFlixConfigPage {
-  --nexus-accent: #7B2FBE;
-  --nexus-accent-strong: #9D58E2;
-  --nexus-accent-soft: rgba(123, 47, 190, 0.14);
-  --nexus-gold: #f0b429;
-  --nexus-gold-soft: rgba(240, 180, 41, 0.15);
-  --nexus-danger: #d64550;
-  --nexus-danger-soft: rgba(214, 69, 80, 0.14);
-  --nexus-success: #1f9d68;
-  --nexus-success-soft: rgba(31, 157, 104, 0.14);
+  --nexus-accent: #8A2BE2;
+  --nexus-accent-strong: #BF40BF;
+  --nexus-accent-soft: rgba(138, 43, 226, 0.15);
+  --nexus-purple-glow: rgba(191, 64, 191, 0.4);
+  --nexus-danger: #ff4d4d;
+  --nexus-danger-soft: rgba(255, 77, 77, 0.15);
+  --nexus-success: #00ff88;
+  --nexus-success-soft: rgba(0, 255, 136, 0.15);
   --nexus-border: rgba(127, 140, 141, 0.24);
   --nexus-shadow: 0 24px 48px rgba(7, 14, 24, 0.12);
   --nexus-radius-xl: 24px;
@@ -269,8 +268,8 @@
   gap: 24px;
   padding: 28px;
   background-image:
-    radial-gradient(circle at top right, rgba(123, 47, 190, 0.16), transparent 32%),
-    radial-gradient(circle at left center, rgba(123, 47, 190, 0.15), transparent 38%);
+    radial-gradient(circle at top right, rgba(138, 43, 226, 0.2), transparent 45%),
+    radial-gradient(circle at left bottom, rgba(191, 64, 191, 0.15), transparent 45%);
 }
 
 #NexusPobreFlixConfigPage .nexus-eyebrow {
@@ -289,8 +288,15 @@
   width: 10px;
   height: 10px;
   border-radius: 999px;
-  background: linear-gradient(135deg, var(--nexus-gold), var(--nexus-accent));
-  box-shadow: 0 0 0 6px var(--nexus-accent-soft);
+  background: linear-gradient(135deg, var(--nexus-accent-strong), var(--nexus-accent));
+  box-shadow: 0 0 10px var(--nexus-purple-glow);
+  animation: nexus-pulse 2s infinite;
+}
+
+@keyframes nexus-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 var(--nexus-accent-soft); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 10px transparent; }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
 }
 
 #NexusPobreFlixConfigPage #pageTitle {
@@ -366,14 +372,15 @@
 
 #NexusPobreFlixConfigPage .nexus-tab:hover {
   transform: translateY(-1px);
-  border-color: rgba(123, 47, 190, 0.35);
+  border-color: var(--nexus-accent-strong);
+  background: var(--nexus-accent-soft);
 }
 
 #NexusPobreFlixConfigPage .nexus-tab.is-active {
   color: #ffffff;
   border-color: transparent;
-  background: linear-gradient(135deg, var(--nexus-accent-strong), var(--nexus-accent));
-  box-shadow: 0 14px 30px rgba(123, 47, 190, 0.28);
+  background: linear-gradient(135deg, var(--nexus-accent), var(--nexus-accent-strong));
+  box-shadow: 0 10px 25px rgba(138, 43, 226, 0.4);
 }
 
 #NexusPobreFlixConfigPage .nexus-panel {

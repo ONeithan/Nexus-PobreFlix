@@ -10,7 +10,7 @@ import { togglePlayPause } from "./player/playback.js";
 import { faIconHtml } from "../faIcons.js";
 import { loadCSS } from "../playerStyles.js";
 import { apiUrl } from "./core/auth.js";
-import { getEmbyHeaders, getSessionInfo } from "../../../Plugins/JMSFusion/runtime/api.js";
+import { getEmbyHeaders, getSessionInfo } from "../../../Plugins/NexusPobreFlix/runtime/api.js";
 import { applyHeaderIconButtonMode, findHeaderMountTarget, getHeaderMountWaitSelector } from "../headerCompat.js";
 
 export { isMobileDevice } from "../playerStyles.js";
@@ -182,7 +182,7 @@ async function postRemoteGmmpState(payload, { keepalive = false } = {}) {
   }
 
   try {
-    const response = await fetch(apiUrl("/Plugins/JMSFusion/gmmp/state"), {
+    const response = await fetch(apiUrl("/Plugins/NexusPobreFlix/gmmp/state"), {
       method: "POST",
       headers: buildGmmpSyncHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify(payload),
@@ -327,7 +327,7 @@ async function pollRemoteGmmpCommands() {
 
   gmmpRemoteCommandBusy = true;
   try {
-    const url = new URL(apiUrl("/Plugins/JMSFusion/gmmp/commands"));
+    const url = new URL(apiUrl("/Plugins/NexusPobreFlix/gmmp/commands"));
     if (sessionId) {
       url.searchParams.set("sessionId", sessionId);
     }

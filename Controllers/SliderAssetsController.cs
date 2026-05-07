@@ -4,7 +4,7 @@ using System;
 using System.IO;
 using IOFile = System.IO.File;
 
-namespace Jellyfin.Plugin.JMSFusion.Controllers
+namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 {
     [ApiController]
     [Route("slider")]
@@ -20,7 +20,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
             {
                 path = (path ?? "").Replace('\\', '/').TrimStart('/');
                 if (string.IsNullOrWhiteSpace(path)) path = "index.js";
-                var cfg = JMSFusionPlugin.Instance.Configuration;
+                var cfg = NexusPobreFlixPlugin.Instance.Configuration;
                 if (!string.IsNullOrWhiteSpace(cfg.ScriptDirectory) && Directory.Exists(cfg.ScriptDirectory))
                 {
                     var full = Path.GetFullPath(Path.Combine(cfg.ScriptDirectory, path));

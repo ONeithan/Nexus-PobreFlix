@@ -23,7 +23,7 @@ export function updateConfig(updatedConfig) {
       Object.keys(updatedConfig || {}).every((key) => allowedKeys.has(key));
 
     if (!onlyAllowed) {
-      console.warn("[JMSFusion] Global settings forced - update blocked (non-admin).");
+      console.warn("[NexusPobreFlix] Global settings forced - update blocked (non-admin).");
       return;
     }
   }

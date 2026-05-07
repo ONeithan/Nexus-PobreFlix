@@ -2130,19 +2130,19 @@ export const languageLabels = {
   },
   webConfig: {
     heroEyebrow: "Настройка плагина",
-    heroTitle: "Центр управления JMSFusion",
+    heroTitle: "Центр управления NexusPobreFlix",
     heroBody: "Управляй источником <code>/slider</code>, публикуй глобальные настройки, проверяй состояние выполнения и просматривай HTML snippet и веб-права на одном экране.",
     heroLangLabel: "Выбранный язык",
     heroRootLabel: "Путь Web UI",
     tabs: {
-      jmsfusion: "JMSFusion",
+      NexusPobreFlix: "NexusPobreFlix",
       monwuiSettings: "Настройки MonWUI",
       status: "Статус",
       snippet: "HTML Snippet, веб-путь и права"
     },
     sections: {
       configTitle: "Основные настройки",
-      configBody: "Выбери, откуда JMSFusion отдает ресурсы slider и как определяется путь к модулю player.",
+      configBody: "Выбери, откуда NexusPobreFlix отдает ресурсы slider и как определяется путь к модулю player.",
       adminTitle: "Действия администратора",
       adminBody: "Сохрани настройки плагина или опубликуй текущий снимок администратора глобально для всех профилей пользователей.",
       statusTitle: "Статус выполнения",
@@ -2151,7 +2151,7 @@ export const languageLabels = {
       inMemoryBody: "Проверяет, переписывается ли index.html во время ответа без изменения файлов на диске.",
       monwuiSettingsTitle: "Настройки MonWUI",
       snippetTitle: "HTML Snippet",
-      snippetBody: "Точный snippet, который JMSFusion внедряет в Jellyfin Web.",
+      snippetBody: "Точный snippet, который NexusPobreFlix внедряет в Jellyfin Web.",
       envTitle: "Веб-путь и права",
       envBody: "Обнаруженный web root, права на запись файлов и рекомендуемые ACL-команды для patch."
     },
@@ -2207,7 +2207,7 @@ export const languageLabels = {
       inactiveTitle: "In-memory инъекция не обнаружена.",
       inactiveHint: "Используй Patch, если хочешь сохранить snippet внутри index.html.",
       fallbackToggleLabel: "Включить физический fallback-патч для index.html",
-      fallbackToggleHint: "По умолчанию выключено. Включай это только если runtime-инъекция не работает или тебе явно нужен patch на диске. Когда параметр включен, JMSFusion будет пытаться patchить index.html при запуске и при изменениях конфигурации."
+      fallbackToggleHint: "По умолчанию выключено. Включай это только если runtime-инъекция не работает или тебе явно нужен patch на диске. Когда параметр включен, NexusPobreFlix будет пытаться patchить index.html при запуске и при изменениях конфигурации."
     },
     env: {
       runningUser: "Пользователь процесса",

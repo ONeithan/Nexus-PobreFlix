@@ -2130,19 +2130,19 @@ export const languageLabels = {
   },
   webConfig: {
     heroEyebrow: "Configuration du plugin",
-    heroTitle: "Centre de controle JMSFusion",
+    heroTitle: "Centre de controle NexusPobreFlix",
     heroBody: "Gere la source <code>/slider</code>, publie les parametres globaux, verifie l'etat d'execution et consulte le snippet HTML ainsi que les details des permissions web sur un seul ecran.",
     heroLangLabel: "Langue selectionnee",
     heroRootLabel: "Chemin Web UI",
     tabs: {
-      jmsfusion: "JMSFusion",
+      NexusPobreFlix: "NexusPobreFlix",
       monwuiSettings: "Parametres MonWUI",
       status: "Statut",
       snippet: "HTML Snippet, chemin web et permissions"
     },
     sections: {
       configTitle: "Parametres principaux",
-      configBody: "Choisis d'ou JMSFusion sert les ressources du slider et comment le chemin du module player est resolu.",
+      configBody: "Choisis d'ou NexusPobreFlix sert les ressources du slider et comment le chemin du module player est resolu.",
       adminTitle: "Actions administrateur",
       adminBody: "Enregistre les parametres du plugin ou publie globalement le snapshot administrateur actuel pour tous les profils utilisateur.",
       statusTitle: "Statut d'execution",
@@ -2151,7 +2151,7 @@ export const languageLabels = {
       inMemoryBody: "Verifie si index.html est reecrit a la volee sans modifier les fichiers sur disque.",
       monwuiSettingsTitle: "Parametres MonWUI",
       snippetTitle: "HTML Snippet",
-      snippetBody: "Le snippet exact que JMSFusion injecte dans Jellyfin Web.",
+      snippetBody: "Le snippet exact que NexusPobreFlix injecte dans Jellyfin Web.",
       envTitle: "Chemin web et permissions",
       envBody: "Racine web detectee, permissions d'ecriture et commandes ACL suggerees pour le patch."
     },
@@ -2207,7 +2207,7 @@ export const languageLabels = {
       inactiveTitle: "L'injection en memoire n'a pas ete detectee.",
       inactiveHint: "Utilise Patch si tu veux persister le snippet dans index.html.",
       fallbackToggleLabel: "Activer le fallback de patch physique pour index.html",
-      fallbackToggleHint: "Desactive par defaut. Active-le seulement si l'injection runtime ne fonctionne pas ou si tu as explicitement besoin d'un patch sur disque. Lorsqu'il est active, JMSFusion essaiera de patcher index.html au demarrage et lors des changements de configuration."
+      fallbackToggleHint: "Desactive par defaut. Active-le seulement si l'injection runtime ne fonctionne pas ou si tu as explicitement besoin d'un patch sur disque. Lorsqu'il est active, NexusPobreFlix essaiera de patcher index.html au demarrage et lors des changements de configuration."
     },
     env: {
       runningUser: "Utilisateur d'execution",

@@ -1,4 +1,4 @@
-import { getSessionInfo, getAuthHeader } from "../../Plugins/JMSFusion/runtime/api.js";
+import { getSessionInfo, getAuthHeader } from "../../Plugins/NexusPobreFlix/runtime/api.js";
 import { getConfig, getPauseFeaturesRuntimeConfig } from "./config.js";
 import { getTomatoIconHtml } from "./customIcons.js";
 import { withServer } from "./jfUrl.js";
