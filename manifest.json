@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png",
     "versions": [
       {
+        "version": "1.0.0.5",
+        "changelog": "# Nexus PobreFlix v1.0.0.5 — INTERATIVIDADE TOTAL RESTAURADA 🚀\n\n- **Resgate do Motor de Configurações**: Corrigida a falha crítica 'Nexus PobreFlix settings page module is not available'. Renomeada a função de montagem interna para `mountNexusPobreFlixSettingsPage` no motor de slider, garantindo compatibilidade total com o carregador web.\n- **Fim dos Erros de Clique**: Restaurada a funcionalidade dos botões e abas que estavam inoperantes devido a discrepâncias de exportação de módulos.\n- **Limpeza de Namespace**: Removidas as últimas referências ao namespace legado `MonWUI` dentro dos módulos de lógica, consolidando a arquitetura Nexus native.\n- **Build v1.0.0.5**: Versão industrial finalizada e validada para restaurar 100% da usabilidade no painel do Jellyfin.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.5/NexusPobreFlix-1.0.0.5.zip",
+        "checksum": "76f0c564ac7cd8a251627db1e406bcc8",
+        "timestamp": "2026-05-07T18:35:00Z"
+      },
+      {
         "version": "1.0.0.4",
         "changelog": "# Nexus PobreFlix v1.0.0.4 — Correção de Carregamento de Módulos 🧩\n\n- **Resgate de Módulo**: Corrigida a URL de importação dinâmica do painel de configurações internas (`settings.js`).\n- **Estabilização de Assets**: Sincronizadas as rotas de carregamento de scripts para garantir que todos os componentes do tema Nexus sejam carregados sem erros 404.\n- **Feedback Visual**: Melhoria na transição entre abas para evitar estados de erro durante o carregamento de módulos pesados.",
         "targetAbi": "10.11.0.0",

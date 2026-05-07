@@ -1455,7 +1455,7 @@ export function initSettings(defaultTab = 'monwui') {
     };
 }
 
-export function mountMonwuiSettingsPage(host, { defaultTab = 'monwui', force = false } = {}) {
+export function mountNexusPobreFlixSettingsPage(host, { defaultTab = 'monwui', force = false } = {}) {
     if (!host) return null;
 
     if (force) {
@@ -1482,8 +1482,7 @@ export function mountMonwuiSettingsPage(host, { defaultTab = 'monwui', force = f
         close: () => {}
     };
 
-    host.__jmsMonwuiSettingsApi = api;
-    host.__jmsMonwuiApi = api;
+    host.__nexusPobreFlixSettingsApi = api;
     api.open(defaultTab);
     return api;
 }
