@@ -6,7 +6,7 @@
   "version": "0.0.1",
   "status": "Active",
   "autoUpdate": false,
-  "targetAbi": "10.8.0.0",
+  "targetAbi": "10.11.0.0",
   "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix",
   "imagePathLinux": "/var/lib/jellyfin/plugins/NexusPobreFlix_0.0.1/icon.png",
   "imagePathWindows": "%ProgramData%/Jellyfin/Server/plugins/NexusPobreFlix_0.0.1/icon.png",
