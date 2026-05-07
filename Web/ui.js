@@ -855,7 +855,7 @@
         localStorage.setItem(TAB_STORAGE_KEY, "Nexus PobreFlix-settings");
       } catch {}
       try {
-        sessionStorage.setItem(Nexus PobreFlix_SUBTAB_STORAGE_KEY, String(detail.settingsTab || "Nexus PobreFlix"));
+        sessionStorage.setItem(NEXUS_SUBTAB_STORAGE_KEY, String(detail.settingsTab || "NexusPobreFlix"));
       } catch {}
     }
 

@@ -736,7 +736,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix
       customTitle = nextTitle;
       caption = nextCaption;
       root.setAttribute(CAPTION_ATTR, nextCaption);
-      root.style.setProperty("--jms-custom-splash-caption", toCssContent(nextCaption));
+      root.style.setProperty("--nexus-custom-splash-caption", toCssContent(nextCaption));
       if (nextDisplayTitle) {
         syncDisplayedTitle(nextDisplayTitle, { raw: true });
       } else {

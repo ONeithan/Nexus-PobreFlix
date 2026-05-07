@@ -178,8 +178,8 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             });
         }
 
-        private const string BeginMarker = "<!-- SL-INJECT BEGIN -->";
-        private const string EndMarker   = "<!-- SL-INJECT END -->";
+        private const string BeginMarker = "<!-- NEXUS-INJECT BEGIN -->";
+        private const string EndMarker   = "<!-- NEXUS-INJECT END -->";
 
         private static string InjectOrReplace(string html, string snippet)
         {
