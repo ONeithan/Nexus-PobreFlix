@@ -218,13 +218,12 @@ namespace Jellyfin.Plugin.JMSFusion
 
         public IEnumerable<PluginPageInfo> GetPages()
         {
-            var ns = typeof(JMSFusionPlugin).Namespace;
             return new[]
             {
                 new PluginPageInfo
                 {
                     Name = "JMSFusionConfigPage",
-                    EmbeddedResourcePath = $"{ns}.Web.configuration.html",
+                    EmbeddedResourcePath = "Jellyfin.Plugin.NexusPobreFlix.Web.configuration.html",
                     EnableInMainMenu = false
                 }
             };
