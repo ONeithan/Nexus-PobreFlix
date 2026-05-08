@@ -159,10 +159,10 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
     const typeInfo = typeTranslations[itemType] || { text: itemType, icon: "" };
     let typeText = typeInfo.text;
     if (itemType === "Series" && ChildCount) {
-      typeText += ` (${ChildCount} ${config.languageLabels.sezon})`;
+      typeText += ` (${ChildCount} ${config.languageLabels.season || "Temporadas"})`;
     }
     if (itemType === "BoxSet" && ChildCount) {
-      typeText += ` (${ChildCount} ${config.languageLabels.seri})`;
+      typeText += ` (${ChildCount} ${config.languageLabels.seri || "Séries"})`;
     }
     typeSpan.innerHTML = `${typeInfo.icon}${buildMetaTextSpan(typeText, "monwui-type-text")}`;
     statusContainer.appendChild(typeSpan);
@@ -193,8 +193,8 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
       const hours = Math.floor(totalMinutes / 60);
       const minutes = totalMinutes % 60;
       return hours > 0
-        ? `${hours}${config.languageLabels.sa} ${minutes}${config.languageLabels.dk}`
-        : `${minutes}${config.languageLabels.dk}`;
+        ? `${hours}${config.languageLabels.sa || "h"} ${minutes}${config.languageLabels.dk || "min"}`
+        : `${minutes}${config.languageLabels.dk || "min"}`;
     };
 
     const formatEndTimeLocalized = (ticks) => {
@@ -747,7 +747,7 @@ export function createPlotContainer(config, Overview, UserData, RunTimeTicks) {
     );
     const text = document.createElement("span");
     text.className = "monwui-duration-remaining";
-    text.innerHTML = `<i class="fa-solid fa-hourglass-half"></i> ${remainingMinutes} ${config.languageLabels.dakika} ${config.languageLabels.kaldi}`;
+    text.innerHTML = `<i class="fa-solid fa-hourglass-half"></i> ${remainingMinutes} ${config.languageLabels.minutos || "minutos"} ${config.languageLabels.restantes || "restantes"}`;
 
     barWrapper.appendChild(bar);
     progressContainer.appendChild(barWrapper);
@@ -767,10 +767,12 @@ export function createTitleContainer({ config, Taglines, title, OriginalTitle, T
     const titleSpan = document.createElement("span");
     titleSpan.className = "monwui-baslik";
 
-    if (Type === "Episode" && typeof ParentIndexNumber === "number" && typeof IndexNumber === "number") {
-      titleSpan.textContent = `S${ParentIndexNumber} B${IndexNumber}: ${title}`;
+    if (Type === "Episode") {
+      const s = String(ParentIndexNumber || "0").padStart(2, '0');
+      const e = String(IndexNumber || "0").padStart(2, '0');
+      titleSpan.textContent = `S${s} E${e}: ${title || ""}`;
     } else {
-      titleSpan.textContent = title;
+      titleSpan.textContent = title || "";
     }
 
     container.appendChild(titleSpan);

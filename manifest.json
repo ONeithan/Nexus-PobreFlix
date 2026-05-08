@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png",
     "versions": [
       {
+        "version": "1.0.0.8",
+        "changelog": "# Nexus PobreFlix v1.0.0.8 — EXPERIÊNCIA NETFLIX SUPREMA 🎬\n\n- **Modal Fullscreen Real**: Transformação completa do modal de detalhes em tela cheia absoluta (100vw/100vh), eliminando de vez o comportamento de 'pop-up'.\n- **Trailer Sob Controle**: Removida a reprodução automática de trailers. Adicionado o botão 'Assistir Trailer' com ícone industrial dedicado.\n- **Slider Sem Undefined**: Corrigida a lógica de exibição de nomes no Hero Slider. Agora exibe corretamente o formato 'Sxx Exx' (Ex: S01 E05) eliminando o erro 'undefined'.\n- **Design Clean Absolute**: Removidas tags de qualidade (FHD, 4K, HDR) das miniaturas de episódios e cards para um visual focado apenas na arte.\n- **Login Netflix Imersivo**: Reformulação da `#loginPage` com fundo de pôsteres e card de vidro (glassmorphism).\n- **Purga Total de Turco**: Limpeza definitiva de termos turcos em todos os módulos JS, incluindo utilitários de contêiner e labels de status.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.8/NexusPobreFlix-1.0.0.8.zip",
+        "checksum": "42b146a073e9f89bcd453d10ecc53f9c",
+        "timestamp": "2026-05-07T22:55:00Z"
+      },
+      {
         "version": "1.0.0.7",
         "changelog": "# Nexus PobreFlix v1.0.0.7 — INDUSTRIALIZAÇÃO E VISUAL SUPREMO 💎\n\n- **Localização PT-BR 100%**: Auditoria industrial completa no dicionário `por.js`. Todas as seções (Studio Collections, Top 10, Notificações) agora estão em português perfeito, eliminando resquícios em turco ou inglês.\n- **Netflix-Style Login**: Implementação do novo motor `nexus_login.css` com centralização absoluta, glassmorphism premium e tipografia Sora.\n- **Imersão Scyfin**: Integração de backdrops dinâmicos e remoção de poluição visual (tags de qualidade) via `nexus_patch.css` para um design mais limpo e focado no conteúdo.\n- **Normalização de UI**: Ajustes de alinhamento no Top 10 e seções da Home para evitar elementos espremidos.\n- **Rebranding Final**: Purga completa de referências legadas ao MonWUI em prol da arquitetura nativa Nexus.",
         "targetAbi": "10.11.0.0",

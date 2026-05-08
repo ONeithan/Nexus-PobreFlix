@@ -154,6 +154,8 @@ export const languageLabels = {
   watchlistPreviewCollectionYears: "Anos",
   watchlistPreviewCollectionWatched: "Assistido",
   watchlistPreviewCollectionRating: "Avaliação média",
+  watchlistPreviewDuration: "Duração",
+  watchlistPreviewMinutesSuffix: "min",
   played: "Assistido",
   default: "Padrão",
   external: "Externo",
@@ -242,7 +244,7 @@ export const languageLabels = {
   resimSec: "Escolher Imagem",
   avatarYuklenemedi: "Erro ao carregar avatar",
   ara: "Buscar",
-  playTrailer: "Ver de Novo",
+  playTrailer: "Assistir Trailer",
   showAgeBadge: "Selo de classificação",
   pauseOverlayBadgeDelayMs: "Atraso do selo na pausa",
   ageBadgeSettings: "Selo de Classificação",
@@ -392,7 +394,7 @@ export const languageLabels = {
   requireWebSocket: "Usar apenas WebSocket p/ capturar vídeo",
   pauseOverlayMinVideoMinutes: "Duração mínima p/ ativar pausa (min)",
   genel: "Geral",
-  saved: "salvo",
+  saved: "Salvo",
   processing: "Processando",
   noImage: "Sem Imagem",
   lyricsHeader: "Letras de Música",
@@ -540,6 +542,9 @@ export const languageLabels = {
   enabledGmmp: "Habilitar Nexus Music",
   paused: "Pausado",
   uygun: "Recomendado",
+  ayarlar: "Configurações",
+  kaydet: "Salvar",
+  goster: "Mostrar",
   turler: {
     Action: "Ação",
     Adventure: "Aventura",
@@ -563,6 +568,8 @@ export const languageLabels = {
     News: "Notícias",
     Talk: "Talk Show",
     Soap: "Novela",
-    "TV Movie": "Filme p/ TV"
+    "TV Movie": "Filme p/ TV",
+    Dizi: "Série",
+    Film: "Filme"
   }
 };

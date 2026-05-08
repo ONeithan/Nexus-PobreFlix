@@ -259,11 +259,7 @@ export function annotateDomWithQualityHints(root = document) {
 }
 
 export function addQualityBadge(card, itemId = null) {
-  const host = getBadgeHost(card);
-  if (!host || !host.isConnected) return;
-
-  const kind = getCardKind(host);
-  if (kind === 'nonvideo') return;
+  return; // Desativado para design clean Nexus
 
   itemId = itemId || getItemIdFromCard(host);
   if (!itemId) return;

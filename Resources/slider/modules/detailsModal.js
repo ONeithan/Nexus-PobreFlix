@@ -1940,8 +1940,8 @@ function getResumeTicksFromItem(it) {
 function setPlayButtonLabel(playBtn, isResume) {
   if (!playBtn) return;
   const txt = isResume
-    ? (config?.languageLabels?.devamet || "Devam et")
-    : (config?.languageLabels?.playNowLabel || "Şimdi Oynat");
+    ? (config?.languageLabels?.devamet || config?.languageLabels?.devam || "Continuar")
+    : (config?.languageLabels?.playNowLabel || "Assistir Agora");
 
   playBtn.innerHTML = `${icon("M8 5v14l11-7z")} ${txt}`;
 }
@@ -1999,8 +1999,8 @@ function fmtRuntime(ticks) {
   const totalMin = Math.round((ticks / 10_000_000) / 60);
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
-  if (h <= 0) return `${m} ${config.languageLabels.dk || "dk"}`;
-  return `${h} ${config.languageLabels.sa || "sa"} ${m} ${config.languageLabels.dk || "dk"}`;
+  if (h <= 0) return `${m} ${config.languageLabels.dk || "min"}`;
+  return `${h} ${config.languageLabels.sa || "h"} ${m} ${config.languageLabels.dk || "min"}`;
 }
 
 function localizeItemType(rawType) {
@@ -2699,7 +2699,7 @@ function getAudioImageUrlMini(track, { maxWidth = 260, fallbackAlbumId = "" } = 
 
 function renderMiniCards(items = []) {
   if (!items.length) {
-    return `<div class="jmsdm-empty-state" style="color:rgba(255,255,255,.6);font-size:14px;padding:20px;text-align:center;">${config.languageLabels.contentNotFound || "Henüz benzer içerik bulunamadı."}</div>`;
+    return `<div class="jmsdm-empty-state" style="color:rgba(255,255,255,.6);font-size:14px;padding:20px;text-align:center;">${config.languageLabels.contentNotFound || "Nenhum conteúdo semelhante encontrado."}</div>`;
   }
 
   return `
@@ -2798,7 +2798,7 @@ function renderSkeleton(root) {
         <div class="jmsdm-content">
           <div class="jmsdm-hero">
             <div class="jmsdm-topbar">
-              <button class="jmsdm-close" aria-label="${config.languageLabels.close || "Kapat"}">✕</button>
+              <button class="jmsdm-close" aria-label="${config.languageLabels.close || config.languageLabels.kapat || "Fechar"}">✕</button>
             </div>
           </div>
           <div class="jmsdm-body">
@@ -3810,7 +3810,7 @@ wireMiniCardDelegation();
   function renderEpisodesHtml() {
     const items = pageSlice();
     if (!items.length) {
-      return `<div style="color:rgba(255,255,255,.75);font-size:13px;line-height:1.5;">${config.languageLabels.episodeNotFound || "Bölüm bulunamadı."}</div>`;
+      return `<div style="color:rgba(255,255,255,.75);font-size:13px;line-height:1.5;">${config.languageLabels.episodeNotFound || "Nenhum episódio encontrado."}</div>`;
     }
     return `
       <div class="jmsdm-episodes">
@@ -4011,6 +4011,9 @@ wireMiniCardDelegation();
                     <button class="jmsdm-btn primary jmsdm-play">
                       ${icon("M8 5v14l11-7z")} ${labels.playNowLabel || "ASSISTIR AGORA"}
                     </button>
+                    <button class="jmsdm-btn jmsdm-trailer-btn">
+                      ${icon("M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-10 14.5v-9l6 4.5-6 4.5z")} ${labels.playTrailer || "Assistir Trailer"}
+                    </button>
                     <button class="jmsdm-btn jmsdm-openpage">
                       ${icon("M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z")} ${labels.goToPageLabel || "Ver Detalhes"}
                     </button>
@@ -4059,7 +4062,7 @@ wireMiniCardDelegation();
   }
 
   wireOverviewToggle(root);
-  startHeroTrailer(root, displayItem, { signal: _abort.signal }).catch(() => {});
+  // startHeroTrailer(root, displayItem, { signal: _abort.signal }).catch(() => {}); // Desativado auto-play industrial
   if (supportsLocalComments) {
     loadLocalCommentsInto(root, baseItem, { signal: _abort.signal });
   }
@@ -4127,7 +4130,24 @@ wireMiniCardDelegation();
     }
   };
 
+  const trailerBtn = root.querySelector(".jmsdm-trailer-btn");
+
+  const trailerHandler = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      if (trailerBtn) trailerBtn.disabled = true;
+      await startHeroTrailer(root, displayItem, { signal: _abort.signal });
+    } catch (err) {
+      console.error("Trailer play error:", err);
+      window.showMessage?.("Não foi possível carregar o trailer.", "error");
+    } finally {
+      if (trailerBtn) trailerBtn.disabled = false;
+    }
+  };
+
   addEventListener(playBtn, "click", playHandler);
+  if (trailerBtn) addEventListener(trailerBtn, "click", trailerHandler);
   addEventListener(openBtn, "click", openHandler);
   if (watchlistBtn) {
     addEventListener(watchlistBtn, "click", async (e) => {

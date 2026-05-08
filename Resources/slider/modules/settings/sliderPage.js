@@ -59,7 +59,8 @@ export function createSliderPanel(config, labels) {
   const effective = getDefaultLanguage();
 
   const languages = [
-    { value: 'auto', label: labels.optionAuto || '🌐 Otomatik (Tarayıcı dili)' },
+    { value: 'auto', label: labels.optionAuto || '🌐 Automático (Tarayıcı dili)' },
+    { value: 'por',  label: labels.optionPortuguese || '🇧🇷 Português Brasil' },
     { value: 'tur',  label: labels.optionTurkish || '🇹🇷 Türkçe' },
     { value: 'eng',  label: labels.optionEnglish || '🇬🇧 English' },
     { value: 'spa',  label: labels.optionEspanol || '🇪🇸 Español' },
@@ -132,13 +133,14 @@ export function createSliderPanel(config, labels) {
     labels.tmdbReviewsLang || 'Yorum Dili',
     lsGet(LS_TMDB_LANG, 'tr-TR'),
     [
+      { value: 'pt-BR', label: '🇧🇷 Português (pt-BR)' },
       { value: 'tr-TR', label: '🇹🇷 Türkçe (tr-TR)' },
       { value: 'en-US', label: '🇺🇸 English (en-US)' },
       { value: 'es-ES', label: '🇪🇸 Español (es-ES)' },
       { value: 'de-DE', label: '🇩🇪 Deutsch (de-DE)' },
       { value: 'fr-FR', label: '🇫🇷 Français (fr-FR)' },
       { value: 'ru-RU', label: '🇷🇺 Русский (ru-RU)' },
-      { value: '', label: labels.noParam || '🌐 Otomatik (parametresiz)' },
+      { value: '', label: labels.noParam || '🌐 Automático (parametresiz)' },
     ]
   );
   tmdbLangSelect.sel.addEventListener('change', () => lsSet(LS_TMDB_LANG, tmdbLangSelect.sel.value));

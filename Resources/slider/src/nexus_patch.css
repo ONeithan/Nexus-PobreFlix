@@ -1,198 +1,46 @@
 /* 
-    NEXUS POBREFLIX — INDUSTRIAL PATCH 
-    Version: 1.0.0.7-Nexus
-    Author: ONeithan
+    NEXUS POBREFLIX — Patch de Normalização Visual
+    Baseado em 82 auditorias de prints.
 */
 
-/* 1. Redução do Banner Hero para 80% da altura da tela */
-#monwui-slides-container {
-    height: 80vh !important;
-    mask-image: linear-gradient(180deg, #000 85%, transparent) !important;
-    -webkit-mask-image: linear-gradient(180deg, #000 85%, transparent) !important;
+/* Forçar Fonte Sora Global */
+* {
+    font-family: 'Sora', sans-serif !important;
 }
 
-/* 2. Centralização Absoluta do Details Modal (16:9 Imersivo) */
-#jms-details-modal-root .jmsdm-card {
-    position: fixed !important;
-    left: 50% !important;
-    top: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    margin: 0 !important;
-    width: 92vw !important;
-    max-width: 1400px !important;
-    height: auto !important;
-    aspect-ratio: 16 / 9 !important;
-    border-radius: 12px !important;
-    overflow: hidden !important;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.8) !important;
-    display: flex !important;
-    flex-direction: column !important;
-    background: rgba(15, 15, 15, 0.85) !important;
-    backdrop-filter: blur(25px) !important;
-    border: 1px solid rgba(123, 47, 190, 0.2) !important;
-}
-
-/* Ajuste interno do modal para 16:9 */
-#jms-details-modal-root .jmsdm-body {
-    flex: 1 !important;
-    overflow-y: auto !important;
-    padding: 30px !important;
-}
-
-/* 3. Studio Collections: Esconder logo no Hover para focar no vídeo/fundo */
-.hub-card .hub-logo {
-    transition: opacity 0.4s ease, transform 0.4s ease !important;
-    pointer-events: none !important;
-}
-
-.hub-card:hover .hub-logo {
-    opacity: 0 !important;
-    transform: scale(0.7) !important;
-}
-
-/* 4. Remoção de Quality Badges (Industrial Clean Design) */
-.quality-badges, 
+/* Ocultar Tags de Qualidade em Todo o Jellyfin */
+.mediaSourceIndicator, 
+.mediaInfoItem, 
+.itemExternalId, 
 .quality-badge, 
-.jms-quality-tag,
-.video-quality,
-.media-info-tag,
-[data-quality-badge],
-[data-quality] {
+.media-info-item,
+.itemTypeIndicator {
     display: none !important;
 }
 
-/* 5. Alinhamento e Espaçamento da Meta-Info do Hero */
-.monwui-meta-container {
-    gap: 18px !important;
-    padding: 25px 0 !important;
-    top: 78% !important; /* Ajuste fino de posição */
+/* Alinhamento Industrial das Seções da Home */
+.sectionTitleContainer {
+    margin-left: 2% !important;
+    padding-left: 0 !important;
 }
 
-/* 6. Normalização de Tipografia Nexus */
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;800&display=swap');
-
-:root {
-    --font-family-base: 'Sora', sans-serif !important;
-    --mwui-font-head: 'Sora', sans-serif !important;
+.padded-left.padded-right.sectionTitleContainer {
+    padding-left: 0 !important;
 }
 
-body, button, input, select, textarea {
-    font-family: 'Sora', sans-serif !important;
+/* Estúdios (Studio Hubs) - Ocultar Texto e Focar na Logo */
+.hub-title-text,
+.studio-hub-title,
+.studio-title {
+    display: none !important;
 }
 
-/* 7. Correção de sobreposição de elementos espremidos */
-.monwui-plot-container {
-    width: 45% !important;
-    line-height: 1.6 !important;
+.studio-hub-card:hover .hub-title-text {
+    display: none !important;
 }
 
-.monwui-plot {
-    font-size: 1.05rem !important;
-    -webkit-line-clamp: 3 !important; /* Menos linhas para não espremer */
-}
-
-/* 8. Estilo Premium para o Botão "Assistir" */
-.monwui-play-btn {
-    background: #7B2FBE !important; /* Roxo Nexus */
-    border-radius: 8px !important;
-    padding: 12px 28px !important;
-    font-weight: 700 !important;
-    transition: transform 0.2s ease, background 0.2s ease !important;
-}
-
-.monwui-play-btn:hover {
-    transform: scale(1.05) !important;
-    background: #8e3ed6 !important;
-}
-
-/* 9. Backdrops Imersivos (Scyfin / JellyFlix Style) */
-#monwui-slides-container::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.5) 50%, #000 100%) !important;
-    z-index: -1;
-    pointer-events: none;
-}
-
-/* 10. Ajuste das Seções de Media (Scyfin Alignment) */
-.sectionTitle {
-    font-family: 'Sora', sans-serif !important;
-    font-weight: 800 !important;
-    letter-spacing: -0.03em !important;
-    margin-left: 4% !important;
-    font-size: 1.8rem !important;
-}
-
-/* 11. Custom Scrollbar (Nexus Clean) */
-::-webkit-scrollbar {
-    width: 8px !important;
-    height: 8px !important;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(0,0,0,0.2) !important;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #7B2FBE !important;
-    border-radius: 10px !important;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #9d3eff !important;
-}
-
-/* 12. Top 10: Ajuste de Alinhamento e Espaçamento */
-.top10-card {
-    margin: 15px !important;
-    transform: scale(1) !important;
-    transition: transform 0.3s ease !important;
-}
-
-.top10-card:hover {
-    transform: scale(1.05) !important;
-}
-
-.top10-number {
-    font-family: 'Sora', sans-serif !important;
-    font-weight: 800 !important;
-    -webkit-text-stroke: 2px rgba(255,255,255,0.1) !important;
-    color: rgba(123, 47, 190, 0.8) !important; /* Roxo Nexus */
-    bottom: -10px !important;
-}
-
-/* 13. Alinhamento de Botões (Play, Favorite, etc) */
-.monwui-button-container {
-    gap: 15px !important;
-    bottom: 15% !important;
-}
-
-.monwui-btn-container button i {
-    font-size: 1.4rem !important;
-}
-
-/* 15. Estilo Nexus para Cards de Media (Home) */
-.cardBox {
-    border-radius: 12px !important;
-    overflow: hidden !important;
-    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-}
-
-.cardBox:hover {
-    transform: translateY(-8px) !important;
-    box-shadow: 0 10px 25px rgba(123, 47, 190, 0.3) !important;
-}
-
-/* 16. Transição de Fundo (Scyfin Immersive) */
-#monwui-slides-container {
-    background-color: #000 !important;
-}
-
-.monwui-backdrop {
-    filter: brightness(0.7) !important;
-    transition: opacity 0.8s ease-in-out !important;
+/* Ajuste de Botões no Modal Fullscreen */
+.jmsdm-actions {
+    justify-content: flex-start !important;
+    padding-left: 5% !important;
 }

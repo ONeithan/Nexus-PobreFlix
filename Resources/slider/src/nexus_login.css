@@ -10,21 +10,20 @@
     background-position: center !important;
 }
 
-/* 2. Card de Login (Netflix Style) */
 #loginPage .readOnlyContent, 
 #loginPage .visual-card {
-    background-color: rgba(0, 0, 0, 0.75) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
+    background-color: rgba(0, 0, 0, 0.85) !important;
+    backdrop-filter: blur(25px) !important;
+    -webkit-backdrop-filter: blur(25px) !important;
     border-radius: 12px !important;
     padding: 60px 68px 40px !important;
     width: 100% !important;
     max-width: 450px !important;
-    min-height: 550px !important;
+    min-height: 500px !important;
     box-sizing: border-box !important;
     margin: 0 auto !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8) !important;
 }
 
 /* Centralizar verticalmente */
@@ -53,13 +52,13 @@
 
 #loginPage .emby-input {
     background: #333 !important;
-    border: none !important;
+    border: 1px solid transparent !important;
     border-radius: 4px !important;
     color: #fff !important;
     height: 50px !important;
-    padding: 16px 20px 0 !important;
+    padding: 0 20px !important;
     font-size: 16px !important;
-    transition: background 0.2s ease !important;
+    transition: background 0.2s ease, border-color 0.2s ease !important;
 }
 
 #loginPage .emby-input:focus {
