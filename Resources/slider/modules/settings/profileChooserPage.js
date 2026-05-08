@@ -5,13 +5,13 @@ export function createProfileChooserPanel(config, labels) {
   panel.id = "profile-chooser-panel";
   panel.className = "settings-panel";
 
-  const section = createSection(labels?.profileChooserHeader || "Kim İzliyor Ayarları");
+  const section = createSection(labels?.profileChooserHeader || "Configurações de Quem Está Assistindo");
   const enableRow = document.createElement("div");
   enableRow.className = "fsetting-item";
 
   const enableCb = createCheckbox(
     "enableProfileChooser",
-    labels?.enableProfileChooser || "Profil seçiciyi (Kim izliyor?) etkinleştir",
+    labels?.enableProfileChooser || "Habilitar seletor de perfil (Quem está assistindo?)",
     config.enableProfileChooser
   );
 
@@ -25,7 +25,7 @@ export function createProfileChooserPanel(config, labels) {
 
   const autoCb = createCheckbox(
     "profileChooserAutoOpen",
-    labels?.profileChooserAutoOpen || "Sayfa açılınca otomatik göster",
+    labels?.profileChooserAutoOpen || "Mostrar automaticamente ao abrir a página",
     config.profileChooserAutoOpen
   );
 
@@ -39,7 +39,7 @@ export function createProfileChooserPanel(config, labels) {
 
   const autoRuleCb = createCheckbox(
     "profileChooserAutoOpenRequireQuickLogin",
-    labels?.profileChooserAutoOpenRequireQuickLogin || "En az 1 hızlı giriş varsa otomatik göster",
+    labels?.profileChooserAutoOpenRequireQuickLogin || "Mostrar se houver ao menos 1 login rápido",
     config.profileChooserAutoOpenRequireQuickLogin
   );
 
@@ -51,7 +51,7 @@ export function createProfileChooserPanel(config, labels) {
 
   const rememberCb = createCheckbox(
     "profileChooserRememberTokens",
-    labels?.profileChooserRememberTokens || "Tokenları hatırla (Yerel depolama)",
+    labels?.profileChooserRememberTokens || "Lembrar tokens (Armazenamento local)",
     config.profileChooserRememberTokens
   );
 
@@ -61,7 +61,7 @@ export function createProfileChooserPanel(config, labels) {
   desc.className = "description-text";
   desc.textContent =
     labels?.profileChooserDesc ||
-    "Bu ayar, Jellyfin arayüzünde Netflix benzeri kullanıcı seçme ekranını açar. Otomatik gösterim, hızlı giriş kuralı ve token hatırlama seçenekleri burada yönetilir.";
+    "Esta configuração abre a tela de seleção de usuários estilo Netflix na interface do Jellyfin. A exibição automática, regras de login rápido e opções de lembrança de tokens são gerenciadas aqui.";
 
   subWrap.append(autoRow, autoRuleWrap, rememberRow, desc);
 

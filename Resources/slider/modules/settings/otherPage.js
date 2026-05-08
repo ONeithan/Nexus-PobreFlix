@@ -464,7 +464,7 @@ export function createAboutPanel(labels) {
   const section = createSection('NEXUS POBREFLIX');
 
   const info = document.createElement('div');
-  info.className = 'ggrbz-info';
+  info.className = 'nexus-info';
   info.textContent = 'Sobre';
   section.appendChild(info);
 
@@ -550,7 +550,7 @@ export function createAboutPanel(labels) {
     resultSpan.textContent = '';
 
     try {
-      const { version: latest, html_url } = await fetchLatestGitHubVersion("G-grbz", "Jellyfin-MonWUI-Plugin");
+      const { version: latest, html_url } = await fetchLatestGitHubVersion("ONeithan", "Nexus-PobreFlix");
       if (!latest) {
         statusP.textContent = labels.updateUnknown || 'Não foi possível obter informações da versão.';
       } else {

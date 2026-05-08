@@ -7,7 +7,7 @@
 
   ![Status](https://img.shields.io/badge/Status-Industrial-purple?style=for-the-badge)
   ![Language](https://img.shields.io/badge/Language-PT--BR%20Native-green?style=for-the-badge)
-  ![Version](https://img.shields.io/badge/Version-1.0.0.9-blue?style=for-the-badge)
+  ![Version](https://img.shields.io/badge/Version-1.0.0.10-blue?style=for-the-badge)
   ![Fork](https://img.shields.io/badge/Fork%20of-MonWUI%20by%20G--grbz-gray?style=for-the-badge)
 </div>
 
