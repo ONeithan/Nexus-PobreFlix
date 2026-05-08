@@ -213,16 +213,16 @@ export function createSettingsModal() {
     });
 
     [
-        { panel: infoPanel, title: labels.infoHeader || 'Tür, Yıl ve Ülke Bilgileri' },
-        { panel: buttonsPanel, title: labels.buttons || 'Buton Ayarları' },
-        { panel: logoTitlePanel, title: labels.logoOrTitleHeader || 'Logo / Başlık Ayarları' },
-        { panel: descriptionPanel, title: labels.descriptionsHeader || 'Açıklama Ayarları' },
-        { panel: providerPanel, title: labels.providerHeader || 'Dış Bağlantılar / Sağlayıcı Ayarları' },
-        { panel: languagePanel, title: labels.languageInfoHeader || 'Ses ve Altyazı Bilgileri' },
-        { panel: statusRatingPanel, title: labels.statusRatingInfo || 'Durum, Puanlama ve Kalite Rozeti Ayarları' },
-        { panel: actorPanel, title: labels.actorInfo || 'Aktör Gösterim Ayarları' },
-        { panel: directorPanel, title: labels.directorWriter || 'Yönetmen ve Yazar Ayarları' },
-        { panel: animationPanel, title: labels.animationSettings || 'Animasyon Ayarları' }
+        { panel: infoPanel, title: labels.infoHeader || 'Informações de Gênero, Ano e País' },
+        { panel: buttonsPanel, title: labels.buttons || 'Configurações de Botões' },
+        { panel: logoTitlePanel, title: labels.logoOrTitleHeader || 'Configurações de Logo / Título' },
+        { panel: descriptionPanel, title: labels.descriptionsHeader || 'Configurações de Descrição' },
+        { panel: providerPanel, title: labels.providerHeader || 'Links Externos / Configurações de Provedores' },
+        { panel: languagePanel, title: labels.languageInfoHeader || 'Informações de Áudio e Legendas' },
+        { panel: statusRatingPanel, title: labels.statusRatingInfo || 'Configurações de Status, Avaliação e Qualidade' },
+        { panel: actorPanel, title: labels.actorInfo || 'Configurações de Exibição de Atores' },
+        { panel: directorPanel, title: labels.directorWriter || 'Configurações de Diretor e Escritor' },
+        { panel: animationPanel, title: labels.animationSettings || 'Configurações de Animação' }
     ].forEach(({ panel, title }) => {
         appendMergedPanelToSlider(sliderPanel, panel, title);
     });
@@ -275,7 +275,7 @@ export function createSettingsModal() {
 
     const applyBtn = document.createElement('button');
     applyBtn.type = 'button';
-    applyBtn.textContent = labels.uygula || 'Aplicar';
+    applyBtn.textContent = labels.apply || 'Aplicar';
 
     const resetBtn = document.createElement('button');
     resetBtn.type = 'button';
@@ -991,7 +991,7 @@ function createExporterPanel(config, labels) {
 
   document.documentElement.style.setProperty(
     '--file-select-text',
-    `"${config.languageLabels.yedekSec || 'Escolher Arquivo'}"`
+    `"${config.languageLabels.chooseBackup || 'Escolher Arquivo'}"`
   );
 
   return panel;

@@ -660,13 +660,12 @@ function updateHintText() {
   const info = getRadioPersistenceInfo();
 
   if (info.mode === "NexusPobreFlix") {
-    modalState.hint.textContent = labelsMap.radioSharedHint || "Kaydedilen istasyonlar herkes tarafindan kullanilabilir";
+    modalState.hint.textContent = labelsMap.radioSharedHint || "Estações salvas estão disponíveis para todos";
     return;
   }
 
   modalState.hint.textContent =
-    labelsMap.radioManualModeHint ||
-    "Manuel kurulum modu: eklenen istasyonlar bu tarayicida saklanir. Ortak liste icin radio-stations.json dosyasi kullanilir.";
+    "Modo de configuração manual: as estações adicionadas são armazenadas neste navegador. Para uma lista comum, use o arquivo radio-stations.json.";
 }
 
 function sameStation(a, b) {
@@ -702,16 +701,16 @@ function maybeLoadMoreSearchResults() {
 
 async function shareStation(station) {
   const labelsMap = labels();
-  setStatus(labelsMap.radioAdding || "Istasyon kaydediliyor...");
+  setStatus(labelsMap.radioAdding || "Salvando estação...");
 
   try {
     const merged = await saveSharedRadioStation(station);
     const info = getRadioPersistenceInfo();
     modalState.sharedStations = Array.isArray(merged) ? merged : modalState.sharedStations;
     updateHintText();
-    setStatus(labelsMap.radioReady || "Hazir");
+    setStatus(labelsMap.radioReady || "Pronto");
     showNotification(
-      `<i class="fas fa-check-circle"></i> ${info.supportsServerWrite ? (labelsMap.radioSharedSaved || "Istasyon paylasilan listeye eklendi") : (labelsMap.radioLocalSaved || "Istasyon bu tarayiciya kaydedildi")}`,
+      `<i class="fas fa-check-circle"></i> ${info.supportsServerWrite ? (labelsMap.radioSharedSaved || "Estação adicionada à lista compartilhada") : (labelsMap.radioLocalSaved || "Estação salva neste navegador")}`,
       2200,
       "success"
     );
@@ -719,38 +718,28 @@ async function shareStation(station) {
     submitStationToDirectory(station).catch(() => {});
   } catch (error) {
     console.error("[radio] Paylasilan kayit hatasi:", error);
-    showNotification(
-      `<i class="fas fa-exclamation-circle"></i> ${labelsMap.radioSharedSaveError || "Istasyon paylasilan listeye eklenemedi"}`,
-      3000,
-      "error"
-    );
-    setStatus(labelsMap.radioSharedSaveError || "Istasyon paylasilan listeye eklenemedi");
+    setStatus(labelsMap.radioSharedSaveError || "Não foi possível adicionar a estação à lista compartilhada");
   }
 }
 
 async function unshareStation(station) {
   const labelsMap = labels();
-  setStatus(labelsMap.radioRemoving || "Istasyon kaldiriliyor...");
+  setStatus(labelsMap.radioRemoving || "Removendo estação...");
 
   try {
     const merged = await removeSharedRadioStation(station);
     modalState.sharedStations = Array.isArray(merged) ? merged : modalState.sharedStations;
     updateHintText();
-    setStatus(labelsMap.radioReady || "Hazir");
+    setStatus(labelsMap.radioReady || "Pronto");
     showNotification(
-      `<i class="fas fa-check-circle"></i> ${labelsMap.radioRemoved || "Istasyon paylasilan listeden kaldirildi"}`,
+      `<i class="fas fa-check-circle"></i> ${labelsMap.radioRemoved || "Estação removida da lista compartilhada"}`,
       2200,
       "success"
     );
     renderResults();
   } catch (error) {
     console.error("[radio] silme hatasi:", error);
-    showNotification(
-      `<i class="fas fa-exclamation-circle"></i> ${labelsMap.radioRemoveError || "Istasyon kaldirilamadi"}`,
-      3000,
-      "error"
-    );
-    setStatus(labelsMap.radioRemoveError || "Istasyon kaldirilamadi");
+    setStatus(labelsMap.radioRemoveError || "Não foi possível remover a estação");
   }
 }
 
@@ -791,7 +780,7 @@ async function loadStationArt(art, station) {
 function getStationContributorText(station) {
   const addedBy = text(station?.addedBy || station?.AddedBy);
   if (!addedBy) return "";
-  return `${labels().radioAddedBy || "Ekleyen"}: ${addedBy}`;
+  return `${labels().radioAddedBy || "Adicionado por"}: ${addedBy}`;
 }
 
 function renderStationCard(station, stations, index, { shared = false, onPlay = null } = {}) {
@@ -831,7 +820,7 @@ function renderStationCard(station, stations, index, { shared = false, onPlay = 
 
   const actions = document.createElement("div");
   actions.className = "gmmp-radio-card-actions";
-  actions.appendChild(createCardButton("primary", labelsMap.radioListen || "Dinle", async (_event, btn) => {
+  actions.appendChild(createCardButton("primary", labelsMap.radioListen || "Ouvir", async (_event, btn) => {
     btn.disabled = true;
     try {
       if (typeof onPlay === "function") {
@@ -848,12 +837,12 @@ function renderStationCard(station, stations, index, { shared = false, onPlay = 
     const sharedBtn = document.createElement("button");
     sharedBtn.type = "button";
     sharedBtn.className = "gmmp-radio-linkbtn";
-    sharedBtn.textContent = labelsMap.radioSharedLabel || "Paylasilan";
+    sharedBtn.textContent = labelsMap.radioSharedLabel || "Compartilhada";
     sharedBtn.disabled = true;
     actions.appendChild(sharedBtn);
 
     if (canRemoveSharedRadioStation(station)) {
-      actions.appendChild(createCardButton("danger", labelsMap.radioRemove || "Kaldir", async (_event, btn) => {
+      actions.appendChild(createCardButton("danger", labelsMap.radioRemove || "Remover", async (_event, btn) => {
         btn.disabled = true;
         try {
           await unshareStation(station);
@@ -864,8 +853,8 @@ function renderStationCard(station, stations, index, { shared = false, onPlay = 
     }
   } else {
     const actionLabel = isSharedStation(station)
-      ? labelsMap.radioSharedLabel || "Paylasilan"
-      : labelsMap.radioShare || "Paylas";
+      ? labelsMap.radioSharedLabel || "Compartilhada"
+      : labelsMap.radioShare || "Compartilhar";
     const shareBtn = createCardButton("secondary", actionLabel, async (_event, btn) => {
       if (isSharedStation(station)) return;
       btn.disabled = true;
@@ -914,7 +903,7 @@ function renderSection(title, stations, options = {}) {
   if (!stations.length) {
     const empty = document.createElement("div");
     empty.className = "gmmp-radio-empty";
-    empty.textContent = options.emptyText || (labels().radioNoStations || "Istasyon bulunamadi");
+    empty.textContent = options.emptyText || (labels().radioNoStations || "Nenhuma estação encontrada");
     section.appendChild(empty);
     return section;
   }
@@ -941,9 +930,8 @@ function renderSection(title, stations, options = {}) {
 
 function getSearchStatusText(count) {
   const labelsMap = labels();
-  return count
-    ? `${count} ${labelsMap.radioStationPlural || "istasyon"}`
-    : labelsMap.radioSearchEmpty || "Aramana uygun istasyon bulunamadi";
+    ? `${count} ${labelsMap.radioStationPlural || "estações"}`
+    : labelsMap.radioSearchEmpty || "Nenhuma estação encontrada para sua busca";
 }
 
 async function resolveSearchPlaybackStations(targetStation) {
@@ -962,7 +950,7 @@ async function resolveSearchPlaybackStations(targetStation) {
 
   const labelsMap = labels();
   modalState.searchPlaybackLoading = true;
-  setStatus(labelsMap.radioPreparingPlaylist || "Tum arama sonuclari oynatma listesine hazirlaniyor...");
+  setStatus(labelsMap.radioPreparingPlaylist || "Preparando lista de reprodução com todos os resultados...");
 
   try {
     const allResults = await searchAllRadioStations({ query, order: "clickcount", reverse: true });
@@ -1003,26 +991,26 @@ function renderResults() {
 
   if (modalState.view === "search") {
     modalState.results.appendChild(renderSection(
-      labelsMap.radioSearchResults || "Arama Sonuclari",
+      labelsMap.radioSearchResults || "Resultados da Busca",
       modalState.searchResults,
       {
         note: modalState.searchResults.length
-          ? `${modalState.searchResults.length} ${labelsMap.radioStationPlural || "istasyon"}`
+          ? `${modalState.searchResults.length} ${labelsMap.radioStationPlural || "estações"}`
           : "",
-        emptyText: labelsMap.radioSearchEmpty || "Aramana uygun istasyon bulunamadi",
+        emptyText: labelsMap.radioSearchEmpty || "Nenhuma estação encontrada para sua busca",
         footerText: modalState.searchLoadingMore
-          ? (labelsMap.radioLoadingMore || "Daha fazla istasyon yukleniyor...")
+          ? (labelsMap.radioLoadingMore || "Carregando mais estações...")
           : "",
         onPlay: playSearchResultStation
       }
     ));
     if (modalState.sharedStations.length) {
       modalState.results.appendChild(renderSection(
-        labelsMap.radioSharedStations || "Paylasilan Istasyonlar",
+        labelsMap.radioSharedStations || "Estações Compartilhadas",
         modalState.sharedStations,
         {
           shared: true,
-          note: labelsMap.radioSharedHint || "Kaydedilen istasyonlar herkes tarafindan kullanilabilir"
+          note: labelsMap.radioSharedHint || "Estações salvas estão disponíveis para todos"
         }
       ));
     }
@@ -1032,30 +1020,30 @@ function renderResults() {
 
   if (modalState.sharedStations.length) {
     modalState.results.appendChild(renderSection(
-      labelsMap.radioSharedStations || "Paylasilan Istasyonlar",
+      labelsMap.radioSharedStations || "Estações Compartilhadas",
       modalState.sharedStations,
       {
         shared: true,
         note: getRadioPersistenceInfo().supportsServerWrite
-          ? (labelsMap.radioSharedHint || "Kaydedilen istasyonlar herkes tarafindan kullanilabilir")
-          : (labelsMap.radioManualSharedHint || "Statik dosya ve bu tarayicidaki kayitlar birlikte gosterilir")
+          ? (labelsMap.radioSharedHint || "Estações salvas estão disponíveis para todos")
+          : (labelsMap.radioManualSharedHint || "Arquivos estáticos e salvos neste navegador são mostrados juntos")
       }
     ));
   }
 
   modalState.results.appendChild(renderSection(
-    `${modalState.countryCode} ${labelsMap.radioNearbyStations || "icin on plana cikanlar"}`,
+    `${modalState.countryCode} ${labelsMap.radioNearbyStations || "destaques para"}`,
     modalState.nearbyStations,
     {
-      note: labelsMap.radioAutoDiscoveryHint || "Otomatik istasyon kesfi"
+      note: labelsMap.radioAutoDiscoveryHint || "Descoberta automática de estações"
     }
   ));
 
   modalState.results.appendChild(renderSection(
-    labelsMap.radioPopularStations || "Dunyada populer",
+    labelsMap.radioPopularStations || "Populares no mundo",
     modalState.popularStations,
     {
-      note: labelsMap.radioPopularHint || "Yuksek tik ve oy sayisina gore"
+      note: labelsMap.radioPopularHint || "Por contagem de cliques e votos"
     }
   ));
 }
@@ -1065,7 +1053,7 @@ function setLoading(message = "") {
   modalState.results.innerHTML = "";
   const loading = document.createElement("div");
   loading.className = "gmmp-radio-loading";
-  loading.textContent = message || (labels().loading || "Yukleniyor...");
+  loading.textContent = message || (labels().loading || "Carregando...");
   modalState.results.appendChild(loading);
 }
 
@@ -1080,8 +1068,8 @@ async function loadDiscoverView() {
   modalState.searchPlaybackLoading = false;
   musicPlayerState.radioSearchResults = [];
   updateHintText();
-  setStatus(labelsMap.radioAutoDiscovering || "Istasyonlar otomatik bulunuyor...");
-  setLoading(labelsMap.radioAutoDiscovering || "Istasyonlar otomatik bulunuyor...");
+  setStatus(labelsMap.radioAutoDiscovering || "Buscando estações automaticamente...");
+  setLoading(labelsMap.radioAutoDiscovering || "Buscando estações automaticamente...");
 
   try {
     const data = await getAutoDiscoveredStations({ limit: 18 });
@@ -1092,20 +1080,20 @@ async function loadDiscoverView() {
     modalState.nearbyStations = data.nearby || [];
     modalState.popularStations = data.popular || [];
     updateHintText();
-    setStatus(labelsMap.radioReady || "Hazir");
+    setStatus(labelsMap.radioReady || "Pronto");
     renderResults();
   } catch (error) {
     console.error("[radio] kesif hatasi:", error);
     if (requestId !== modalState.requestId) return;
-    setStatus(labelsMap.radioLoadError || "Istasyonlar yuklenemedi");
-    setLoading(labelsMap.radioLoadError || "Istasyonlar yuklenemedi");
+    setStatus(labelsMap.radioLoadError || "Não foi possível carregar as estações");
+    setLoading(labelsMap.radioLoadError || "Não foi possível carregar as estações");
   }
 }
 
 async function loadMoreSearchResults() {
   if (modalState.searchLoadingMore || modalState.searchPlaybackLoading || !modalState.searchHasMore) return;
   modalState.searchLoadingMore = true;
-  setStatus(labels().radioLoadingMore || "Daha fazla istasyon yukleniyor...");
+  setStatus(labels().radioLoadingMore || "Carregando mais estações...");
   renderResults();
 
   try {
@@ -1159,10 +1147,10 @@ async function runSearch({ force = false, requestedLimit, preserveResults = fals
   }
 
   if (preserveResults) {
-    setStatus(labelsMap.radioLoadingMore || "Daha fazla istasyon yukleniyor...");
+    setStatus(labelsMap.radioLoadingMore || "Carregando mais estações...");
   } else {
-    setStatus(labelsMap.radioSearching || "Istasyon aranıyor...");
-    setLoading(labelsMap.radioSearching || "Istasyon aranıyor...");
+    setStatus(labelsMap.radioSearching || "Buscando estação...");
+    setLoading(labelsMap.radioSearching || "Buscando estação...");
   }
 
   try {
@@ -1183,9 +1171,9 @@ async function runSearch({ force = false, requestedLimit, preserveResults = fals
   } catch (error) {
     console.error("[radio] arama hatasi:", error);
     if (requestId !== modalState.requestId) return;
-    setStatus(labelsMap.radioLoadError || "Istasyonlar yuklenemedi");
+    setStatus(labelsMap.radioLoadError || "Não foi possível carregar as estações");
     if (!preserveResults) {
-      setLoading(labelsMap.radioLoadError || "Istasyonlar yuklenemedi");
+      setLoading(labelsMap.radioLoadError || "Não foi possível carregar as estações");
     }
   }
 }
@@ -1204,7 +1192,7 @@ async function handleAddStation(event) {
 
   if (!url) {
     showNotification(
-      `<i class="fas fa-exclamation-circle"></i> ${labelsMap.radioUrlRequired || "Yayin adresi gerekli"}`,
+      `<i class="fas fa-exclamation-circle"></i> ${labelsMap.radioUrlRequired || "Endereço de transmissão é necessário"}`,
       2200,
       "warning"
     );
@@ -1224,7 +1212,7 @@ async function handleAddStation(event) {
     }, { source: "shared" });
 
     if (!station) {
-      throw new Error(labelsMap.radioInvalidStation || "Gecersiz istasyon");
+      throw new Error(labelsMap.radioInvalidStation || "Estação inválida");
     }
 
     const merged = await saveSharedRadioStation(station);
@@ -1233,7 +1221,7 @@ async function handleAddStation(event) {
     form.reset();
 
     showNotification(
-      `<i class="fas fa-check-circle"></i> ${info.supportsServerWrite ? (labelsMap.radioSharedSaved || "Istasyon paylasilan listeye eklendi") : (labelsMap.radioLocalSaved || "Istasyon bu tarayiciya kaydedildi")}`,
+      `<i class="fas fa-check-circle"></i> ${info.supportsServerWrite ? (labelsMap.radioSharedSaved || "Estação adicionada à lista compartilhada") : (labelsMap.radioLocalSaved || "Estação salva neste navegador")}`,
       2500,
       "success"
     );
@@ -1243,16 +1231,11 @@ async function handleAddStation(event) {
       modalState.view = "discover";
     }
     updateHintText();
-    setStatus(labelsMap.radioReady || "Hazir");
+    setStatus(labelsMap.radioReady || "Pronto");
     renderResults();
   } catch (error) {
     console.error("[radio] ekleme hatasi:", error);
-    showNotification(
-      `<i class="fas fa-exclamation-circle"></i> ${labelsMap.radioSharedSaveError || "Istasyon paylasilan listeye eklenemedi"}`,
-      3200,
-      "error"
-    );
-    setStatus(labelsMap.radioSharedSaveError || "Istasyon paylasilan listeye eklenemedi");
+    setStatus(labelsMap.radioSharedSaveError || "Não foi possível adicionar a estação à lista compartilhada");
   } finally {
     if (modalState.addBtn) modalState.addBtn.disabled = false;
   }
@@ -1279,27 +1262,27 @@ function ensureModal() {
     <div class="gmmp-radio-dialog" role="dialog" aria-modal="true" aria-labelledby="gmmp-radio-title">
       <div class="gmmp-radio-header">
         <div>
-          <h3 id="gmmp-radio-title" class="gmmp-radio-title">${labels().radioStations || "Radyolar"}</h3>
+          <h3 id="gmmp-radio-title" class="gmmp-radio-title">${labels().radioStations || "Rádios"}</h3>
           <p class="gmmp-radio-status"></p>
         </div>
         <div class="gmmp-radio-actions">
-          <button type="button" class="gmmp-radio-btn secondary" data-action="discover">${labels().radioAutoDiscover || "Otomatik Bul"}</button>
-          <button type="button" class="gmmp-radio-iconbtn" data-action="close" aria-label="${labels().close || "Kapat"}">
+          <button type="button" class="gmmp-radio-btn secondary" data-action="discover">${labels().radioAutoDiscover || "Busca Automática"}</button>
+          <button type="button" class="gmmp-radio-iconbtn" data-action="close" aria-label="${labels().close || "Fechar"}">
             <i class="fas fa-times"></i>
           </button>
         </div>
       </div>
       <form class="gmmp-radio-searchrow">
-        <input class="gmmp-radio-input" name="query" placeholder="${labels().radioSearchPlaceholder || "Istasyon, ulke veya tarz ara"}" autocomplete="off" />
-        <button type="submit" class="gmmp-radio-btn primary">${labels().ara || "Ara"}</button>
-        <button type="button" class="gmmp-radio-btn secondary" data-action="reset">${labels().radioResetSearch || "Kesfe Don"}</button>
+        <input class="gmmp-radio-input" name="query" placeholder="${labels().radioSearchPlaceholder || "Buscar estação, país ou estilo"}" autocomplete="off" />
+        <button type="submit" class="gmmp-radio-btn primary">${labels().ara || "Buscar"}</button>
+        <button type="button" class="gmmp-radio-btn secondary" data-action="reset">${labels().radioResetSearch || "Voltar à Descoberta"}</button>
       </form>
-      <div class="gmmp-radio-hint">${labels().radioSharedHint || "Kaydedilen istasyonlar herkes tarafindan kullanilabilir"}</div>
+      <div class="gmmp-radio-hint">${labels().radioSharedHint || "Estações salvas estão disponíveis para todos"}</div>
       <form class="gmmp-radio-addform">
-        <input class="gmmp-radio-input" name="name" placeholder="${labels().radioNameOptional || "Istasyon adi (opsiyonel)"}" autocomplete="off" />
-        <input class="gmmp-radio-input" name="url" placeholder="${labels().radioUrlPlaceholder || "https://ornek.com/stream.mp3"}" autocomplete="off" />
-        <input class="gmmp-radio-input" name="homepage" placeholder="${labels().radioHomepageOptional || "Anasayfa (opsiyonel)"}" autocomplete="off" />
-        <button type="submit" class="gmmp-radio-btn primary">${labels().radioAddUrl || "URL Ekle"}</button>
+        <input class="gmmp-radio-input" name="name" placeholder="${labels().radioNameOptional || "Nome da estação (opcional)"}" autocomplete="off" />
+        <input class="gmmp-radio-input" name="url" placeholder="${labels().radioUrlPlaceholder || "https://exemplo.com/stream.mp3"}" autocomplete="off" />
+        <input class="gmmp-radio-input" name="homepage" placeholder="${labels().radioHomepageOptional || "Página inicial (opcional)"}" autocomplete="off" />
+        <button type="submit" class="gmmp-radio-btn primary">${labels().radioAddUrl || "Adicionar URL"}</button>
       </form>
       <div class="gmmp-radio-results"></div>
     </div>

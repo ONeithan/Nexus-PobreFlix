@@ -52,7 +52,7 @@ function ensureMiniPopover() {
   el.innerHTML = `
     <div class="mini-bg" aria-hidden="true"></div>
     <div class="mini-overlay">
-      <button class="mini-close" type="button" aria-label="Kapat" title="Kapat">✕</button>
+      <button class="mini-close" type="button" aria-label="Fechar" title="Fechar">✕</button>
       <div class="mini-title"></div>
       <div class="mini-meta">
         <div class="mini-topline">
@@ -272,8 +272,8 @@ function ticksToHMin(ticks) {
   const totalMinutes = Math.round(ticks / 600000000);
   const h = Math.floor(totalMinutes / 60);
   const m = totalMinutes % 60;
-  const hLbl = (config?.languageLabels?.sa ?? "h");
-  const mLbl = (config?.languageLabels?.dk ?? "m");
+  const hLbl = (config?.languageLabels?.hourShort ?? "h");
+  const mLbl = (config?.languageLabels?.minuteShort ?? "m");
   if (h > 0) return `${h}${hLbl} ${m}${mLbl}`;
   return `${m}${mLbl}`;
 }
@@ -390,22 +390,22 @@ function getPersonFacts(item) {
   const lines = [];
 
   if (birthStr) {
-    const birthLabel = labels.dogumEtiketi || "Doğum:";
+    const birthLabel = labels.birthLabel || "Nascimento:";
     lines.push(`🎂 ${birthLabel} ${birthStr}${age != null && !deathStr ? ` (${age})` : ""}`);
   }
 
   if (birthPlace) {
-    const placeLabel = labels.yerEtiketi || "Yer:";
+    const placeLabel = labels.placeLabel || "Local:";
     lines.push(`📍 ${placeLabel} ${birthPlace}`);
   }
 
   if (deathStr) {
-    const deathLabel = labels.olumEtiketi || "Ölüm:";
+    const deathLabel = labels.deathLabel || "Falecimento:";
     lines.push(`🕯️ ${deathLabel} ${deathStr}${age != null ? ` (${age})` : ""}`);
   }
 
   if (knownFor) {
-    const knownLabel = labels.bilinenEtiketi || "Bilinen:";
+    const knownLabel = labels.knownLabel || "Conhecido por:";
     lines.push(`🏷️ ${knownLabel} ${knownFor}`);
   }
 

@@ -5,7 +5,7 @@ import { getConfig, getHomeSectionsRuntimeConfig } from "./config.js";
 import { getLanguageLabels } from "../language/index.js";
 import { attachMiniPosterHover } from "./studioHubsUtils.js";
 import { openDirectorExplorer } from "./genreExplorer.js";
-import { REOPEN_COOLDOWN_MS, OPEN_HOVER_DELAY_MS } from "./hoverTrailerModal.js";
+import { REOPEN_COOLDOWN_MS, getOpenHoverDelay } from "./hoverTrailerModal.js";
 import { createTrailerIframe, formatOfficialRatingLabel } from "./utils.js";
 import { openDetailsModal } from "./detailsModalLoader.js";
 import {
@@ -480,7 +480,7 @@ function attachDirectorScrollIdleLoader() {
       'aria-label',
       (labels.loadMoreDirectors ||
         config.languageLabels?.loadMoreDirectors ||
-        'Daha fazla yönetmen göster')
+        'Mostrar mais diretores')
     );
     STATE._loadMoreArrow = arrow;
 
@@ -678,15 +678,15 @@ const COMMON_FIELDS = [
 function getDirectorRowCardTypeBadge(itemType) {
   const ll = config.languageLabels || {};
   if (itemType === "Series") {
-    return { label: ll.dizi || labels.dizi || "Dizi", icon: "tv" };
+    return { label: ll.dizi || labels.dizi || "Série", icon: "tv" };
   }
   if (itemType === "BoxSet") {
     return {
-      label: ll.collectionTitle || ll.boxset || labels.collectionTitle || labels.boxset || "Collection",
+      label: ll.collectionTitle || ll.boxset || labels.collectionTitle || labels.boxset || "Coleção",
       icon: "layerGroup"
     };
   }
-  return { label: ll.film || labels.film || "Film", icon: "film" };
+  return { label: ll.film || labels.film || "Filme", icon: "film" };
 }
 
 function pickBestItemByRating(items) {
@@ -860,16 +860,16 @@ function buildBackdropImageUrl(item) {
 function formatRuntime(ticks) {
   if (!ticks) return null;
   const minutes = Math.floor(ticks / 600000000);
-  if (minutes < 60) return `${minutes}d`;
+  if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
-  return remainingMinutes > 0 ? `${hours}s ${remainingMinutes}d` : `${hours}s`;
+  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
 }
 
 function getRuntimeWithIcons(runtime) {
   if (!runtime) return '';
-  return runtime.replace(/(\d+)s/g, `$1${config.languageLabels?.sa || 'sa'}`)
-               .replace(/(\d+)d/g, `$1${config.languageLabels?.dk || 'dk'}`);
+  return runtime.replace(/(\d+)h/g, `$1${config.languageLabels?.sa || 'h'}`)
+               .replace(/(\d+)m/g, `$1${config.languageLabels?.dk || 'm'}`);
 }
 
 function getDetailsUrl(itemId, serverId) {
@@ -953,7 +953,7 @@ function mountDirectorHero(heroHost, heroItem, serverId, directorName, { aboveFo
   if (same) {
     const label = existing.querySelector('.dir-row-hero-label');
     if (label) {
-      label.textContent = `${(config.languageLabels?.yonetmen || "yönetmen")} ${directorName || ""}`.trim();
+      label.textContent = `${(config.languageLabels?.yonetmen || "diretor")} ${directorName || ""}`.trim();
     }
     try { heroHost.style.visibility = 'visible'; } catch {}
     return { hero: existing, changed: false };
@@ -1000,7 +1000,7 @@ function createRecommendationCard(item, serverId, aboveFold = false) {
     maxTitleLength: 42,
   });
   const progressHtml = (progress > 0.02 && progress < 0.999)
-    ? `<div class="rr-progress-wrap" aria-label="${escapeHtml(config.languageLabels?.progress || "İlerleme")}">
+    ? `<div class="rr-progress-wrap" aria-label="${escapeHtml(config.languageLabels?.progress || "Progresso")}">
          <div class="rr-progress-bar" style="width:${Math.round(progress * 100)}%"></div>
        </div>`
     : "";
@@ -1061,7 +1061,7 @@ function createRecommendationCard(item, serverId, aboveFold = false) {
     noImg.className = 'prc-noimg-label';
     noImg.textContent =
       (config.languageLabels && (config.languageLabels.noImage || config.languageLabels.loadingText))
-      || (labels.noImage || 'Görsel yok');
+      || (labels.noImage || 'Sem imagem');
     noImg.style.minHeight = '100%';
     noImg.style.height = '100%';
     noImg.style.display = 'flex';
@@ -1150,7 +1150,7 @@ function createDirectorHeroCard(item, serverId, directorName, { aboveFold = fals
   const heroProgressPct = Math.round(heroProgress * 100);
   const heroProgressHtml = (heroProgress > 0.02 && heroProgress < 0.999)
     ? `
-      <div class="dir-hero-progress-wrap" aria-label="${escapeHtml(config.languageLabels?.progress || "İlerleme")}">
+      <div class="dir-hero-progress-wrap" aria-label="${escapeHtml(config.languageLabels?.progress || "Progresso")}">
         <div class="dir-hero-progress-bar" style="width:${heroProgressPct}%"></div>
       </div>
       <div class="dir-hero-progress-pct">${heroProgressPct}%</div>
@@ -1169,7 +1169,7 @@ function createDirectorHeroCard(item, serverId, directorName, { aboveFold = fals
     <div class="dir-row-hero-inner">
       <div class="dir-row-hero-meta-container">
         <div class="dir-row-hero-label">
-          ${(config.languageLabels?.yonetmen || "yönetmen")} ${escapeHtml(directorName || "")}
+          ${(config.languageLabels?.yonetmen || "diretor")} ${escapeHtml(directorName || "")}
         </div>
 
         ${logo ? `
@@ -1375,7 +1375,7 @@ function attachHoverTrailer(cardEl, itemLike) {
         __touchLastOpenTS = Date.now();
       }
       if (!isTouch) schedulePostOpenGuard(cardEl, token, 300);
-    }, OPEN_HOVER_DELAY_MS);
+    }, getOpenHoverDelay());
 
     __enterTimers.set(cardEl, timer);
   };
@@ -1715,7 +1715,7 @@ async function fetchItemsByDirector(userId, directorId, limit = getDirectorRowCa
     const NEED = rowCardCount + 1;
     return filterAndTrimByRating(items, MIN_RATING, NEED);
   } catch (e) {
-    dirRowsWarn("directorRows: yönetmen içerik çekilemedi:", e);
+    dirRowsWarn("directorRows: não foi possível carregar conteúdo do diretor:", e);
     return [];
   }
 }
@@ -2626,7 +2626,7 @@ async function initAndRenderFirstBatch(mountState) {
   STATE.maxRenderCount = rowCount;
 
   if (STATE.directors.length < rowCount) {
-    dirRowsWarn(`DirectorRows: sadece ${STATE.directors.length}/${rowCount} yönetmen bulunabildi (kütüphane kısıtlı olabilir).`);
+    dirRowsWarn(`DirectorRows: apenas ${STATE.directors.length}/${rowCount} diretores encontrados (a biblioteca pode estar limitada).`);
   }
 
   STATE.nextIndex = 0;
@@ -2781,15 +2781,15 @@ function renderDirectorSection(dir, { deferContent = false, sectionIndex = 0 } =
   title.innerHTML = `
     <h2 class="sectionTitle sectionTitle-cards dir-row-title">
       <span class="dir-row-title-text" role="button" tabindex="0"
-        aria-label="${(labels.seeAll || config.languageLabels?.seeAll || 'Tümünü gör')}: ${dirTitleText}">
+        aria-label="${(labels.seeAll || config.languageLabels?.seeAll || 'Ver tudo')}: ${dirTitleText}">
         ${dirTitleText}
       </span>
       <div class="dir-row-see-all"
-           aria-label="${(labels.seeAll || config.languageLabels?.seeAll || 'Tümünü gör')}"
-           title="${(labels.seeAll || config.languageLabels?.seeAll || 'Tümünü gör')}">
+           aria-label="${(labels.seeAll || config.languageLabels?.seeAll || 'Ver tudo')}"
+           title="${(labels.seeAll || config.languageLabels?.seeAll || 'Ver tudo')}">
         ${faIconHtml("chevronRight")}
       </div>
-      <span class="dir-row-see-all-tip">${(labels.seeAll || config.languageLabels?.seeAll || 'Tümünü gör')}</span>
+      <span class="dir-row-see-all-tip">${(labels.seeAll || config.languageLabels?.seeAll || 'Ver tudo')}</span>
     </h2>
   `;
 
@@ -2834,7 +2834,7 @@ function renderDirectorSection(dir, { deferContent = false, sectionIndex = 0 } =
 
   const btnL = document.createElement('button');
   btnL.className = 'hub-scroll-btn hub-scroll-left';
-  btnL.setAttribute('aria-label', (config.languageLabels?.scrollLeft) || "Sola kaydır");
+  btnL.setAttribute('aria-label', (config.languageLabels?.scrollLeft) || "Rolar para esquerda");
   btnL.setAttribute('aria-disabled', 'true');
   btnL.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>`;
 
@@ -2844,7 +2844,7 @@ function renderDirectorSection(dir, { deferContent = false, sectionIndex = 0 } =
 
   const btnR = document.createElement('button');
   btnR.className = 'hub-scroll-btn hub-scroll-right';
-  btnR.setAttribute('aria-label', (config.languageLabels?.scrollRight) || "Sağa kaydır");
+  btnR.setAttribute('aria-label', (config.languageLabels?.scrollRight) || "Rolar para direita");
   btnR.setAttribute('aria-disabled', 'true');
   btnR.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>`;
 
@@ -3021,7 +3021,7 @@ async function fillRowWhenReady(row, dir, heroHost){
               itemId: best.Id,
               serverId: STATE.serverId,
               detailsUrl: getDetailsUrl(best.Id, STATE.serverId),
-              detailsText: (config.languageLabels?.details || labels.details || "Ayrıntılar"),
+              detailsText: (config.languageLabels?.details || labels.details || "Detalhes"),
               showDetailsOverlay: false,
             });
           }
@@ -3074,7 +3074,7 @@ async function fillRowWhenReady(row, dir, heroHost){
     return true;
 
   } catch (error) {
-    console.error('Yönetmen içerik yükleme hatası:', error);
+    console.error('Erro ao carregar conteúdo do diretor:', error);
     cleanupDirectorSection(section);
     return false;
   }

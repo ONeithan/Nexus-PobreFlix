@@ -5,12 +5,12 @@ export function createWatchlistPanel(config, labels) {
     panel.id = "watchlist-settings-panel";
     panel.className = "settings-panel";
 
-    const section = createSection(labels.watchlistSettingsTab || "İzleme Listesi Ayarları");
+    const section = createSection(labels.watchlistSettingsTab || "Configurações da Minha Lista");
 
     section.appendChild(
         createCheckbox(
             "watchlistTabsSliderEnabled",
-            labels.watchlistTabsSliderEnabled || "İzleme listesi butonunu .emby-tabs-slider içine ekle",
+            labels.watchlistTabsSliderEnabled || "Mostrar botão na barra de abas superior",
             config.watchlistTabsSliderEnabled
         )
     );
@@ -18,14 +18,14 @@ export function createWatchlistPanel(config, labels) {
     section.appendChild(
         createCheckbox(
             "watchlistAutoRemovePlayed",
-            labels.watchlistAutoRemovePlayed || "İzlenenleri otomatik olarak izleme listesinden kaldır",
+            labels.watchlistAutoRemovePlayed || "Remover automaticamente conteúdos assistidos da lista",
             config.watchlistAutoRemovePlayed
         )
     );
 
     const autoRemoveFavoriteCheckbox = createCheckbox(
         "watchlistAutoRemovePlayedFromFavorites",
-        labels.watchlistAutoRemovePlayedFromFavorites || "Otomatik kaldırırken Jellyfin favorilerinden de çıkar",
+        labels.watchlistAutoRemovePlayedFromFavorites || "Remover também dos favoritos do Jellyfin durante a remoção automática",
         config.watchlistAutoRemovePlayedFromFavorites
     );
     autoRemoveFavoriteCheckbox.classList.add("watchlist-auto-remove-favorite-container");
@@ -33,7 +33,7 @@ export function createWatchlistPanel(config, labels) {
 
     const importFavoritesCheckbox = createCheckbox(
         "watchlistImportFavoritesOnStartup",
-        labels.watchlistImportFavoritesOnStartup || "Açılışta mevcut Jellyfin favorilerini izleme listesine aktar",
+        labels.watchlistImportFavoritesOnStartup || "Importar favoritos do Jellyfin ao iniciar",
         config.watchlistImportFavoritesOnStartup
     );
 
@@ -42,7 +42,7 @@ export function createWatchlistPanel(config, labels) {
     const importFavoritesDescription = document.createElement("div");
     importFavoritesDescription.className = "description-text";
     importFavoritesDescription.textContent = labels.watchlistImportFavoritesOnStartupDescription
-        || "İlk kurulumda veya favorilerinizi içe aktarmak istediğinizde etkinleştirin. İçe aktarma tamamlandıktan sonra açık kalmasına gerek yoktur.";
+        || "Ative isso durante a primeira instalação ou quando quiser importar seus favoritos.";
 
     const importFavoritesWrapper = document.createElement("div");
     importFavoritesWrapper.className = "watchlist-import-wrapper";

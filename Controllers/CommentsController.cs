@@ -88,7 +88,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var content = NormalizeContent(req?.Content);
             if (string.IsNullOrWhiteSpace(content))
             {
-                return BadRequest(new { ok = false, error = "content gerekli" });
+                return BadRequest(new { ok = false, error = "conteúdo obrigatório" });
             }
 
             lock (SyncRoot)
@@ -176,7 +176,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var cleanCommentId = Clean(commentId);
             if (string.IsNullOrWhiteSpace(cleanCommentId))
             {
-                return BadRequest(new { ok = false, error = "commentId gerekli" });
+                return BadRequest(new { ok = false, error = "commentId obrigatório" });
             }
 
             lock (SyncRoot)
@@ -188,7 +188,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 var comment = cfg.ItemComments.FirstOrDefault(entry => Same(entry.Id, cleanCommentId));
                 if (comment is null)
                 {
-                    return NotFound(new { ok = false, error = "yorum bulunamadı" });
+                    return NotFound(new { ok = false, error = "comentário não encontrado" });
                 }
 
                 if (!Same(comment.OwnerUserId, user.UserId))

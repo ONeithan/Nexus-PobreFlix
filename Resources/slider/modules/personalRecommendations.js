@@ -3,7 +3,7 @@ import { getConfig, getHomeSectionsRuntimeConfig, normalizeManagedCardTitleDispl
 import { getLanguageLabels, getDefaultLanguage } from "../language/index.js";
 import { attachMiniPosterHover } from "./studioHubsUtils.js";
 import { openGenreExplorer, openPersonalExplorer } from "./genreExplorer.js";
-import { REOPEN_COOLDOWN_MS, OPEN_HOVER_DELAY_MS } from "./hoverTrailerModal.js";
+import { REOPEN_COOLDOWN_MS, getOpenHoverDelay } from "./hoverTrailerModal.js";
 import { createTrailerIframe, formatOfficialRatingLabel } from "./utils.js";
 import { openDetailsModal } from "./detailsModalLoader.js";
 import {
@@ -284,15 +284,15 @@ function getPrcTypeToken(itemType) {
 function getPrcCardTypeBadge(itemType) {
   const ll = config.languageLabels || {};
   if (itemType === "Series") {
-    return { label: ll.dizi || labels.dizi || "Dizi", icon: "tv" };
+    return { label: ll.dizi || labels.dizi || "Série", icon: "tv" };
   }
   if (itemType === "BoxSet") {
     return {
-      label: ll.collectionTitle || ll.boxset || labels.collectionTitle || labels.boxset || "Collection",
+      label: ll.collectionTitle || ll.boxset || labels.collectionTitle || labels.boxset || "Coleção",
       icon: "layerGroup"
     };
   }
-  return { label: ll.film || labels.film || "Film", icon: "film" };
+  return { label: ll.film || labels.film || "Filme", icon: "film" };
 }
 
 async function maybePurgePrcDb(st) {
@@ -4463,7 +4463,7 @@ function attachHoverTrailer(cardEl, itemLike) {
         __touchLastOpenTS = Date.now();
       }
       if (!isTouch) schedulePostOpenGuard(cardEl, token, 340);
-    }, OPEN_HOVER_DELAY_MS);
+    }, getOpenHoverDelay());
 
     __enterTimers.set(cardEl, timer);
   };

@@ -439,10 +439,10 @@ export function getConfig() {
     return window.__JMS_GLOBAL_CONFIG__;
   }
 
-  function readPeakSlider() {
+  function readShowcaseMode() {
   const variant = (localStorage.getItem('cssVariant') || 'normalslider').toLowerCase();
-  const isPeakLike = ['peak', 'peakslider', 'peak-skin'].includes(variant);
-  if (variant) return isPeakLike;
+  const isShowcaseLike = ['peak', 'showcase', 'peak-skin'].includes(variant);
+  if (variant) return isShowcaseLike;
   const explicit = localStorage.getItem('peakSlider');
   return explicit === 'true';
 }
@@ -504,8 +504,8 @@ export function getConfig() {
   const fallbackShowOsdHeaderCommunityRating = localStorage.getItem('showCommunityRating') !== 'false';
   const fallbackShowOsdHeaderCriticRating = localStorage.getItem('showCriticRating') !== 'false';
   const fallbackShowOsdHeaderOfficialRating = localStorage.getItem('showOfficialRating') !== 'false';
-  const normalizePauseOverlayCssVariant = (value) =>
-    String(value || '').trim() === 'pauseModul2' ? 'pauseModul2' : 'pauseModul';
+  const normalizePauseOverlayCssHref = (value) =>
+    String(value || '').trim() === 'moduloPausa2' ? 'moduloPausa2' : 'moduloPausa';
   const readPauseBool = (obj, key, fallback) =>
     Object.prototype.hasOwnProperty.call(obj || {}, key)
       ? obj[key] !== false
@@ -518,7 +518,7 @@ export function getConfig() {
       const safeMin = Math.max(1, mv);
       const cfg = {
         enabled: j.enabled !== false,
-        cssVariant: normalizePauseOverlayCssVariant(j.cssVariant),
+        cssVariant: normalizePauseOverlayCssHref(j.cssVariant),
         imagePreference: j.imagePreference || 'auto',
         showPlot: j.showPlot !== false,
         debug: j.debug !== false,
@@ -548,7 +548,7 @@ export function getConfig() {
       if (
         safeMin !== mv ||
         missingOsdRatingKeys ||
-        normalizePauseOverlayCssVariant(j.cssVariant) !== String(j.cssVariant || '')
+        normalizePauseOverlayCssHref(j.cssVariant) !== String(j.cssVariant || '')
       ) {
         try { localStorage.setItem('pauseOverlay', JSON.stringify(cfg)); } catch {}
       }
@@ -572,7 +572,7 @@ export function getConfig() {
 
   const legacy = {
     enabled: raw !== 'false',
-    cssVariant: normalizePauseOverlayCssVariant(rawCssVariant),
+    cssVariant: normalizePauseOverlayCssHref(rawCssVariant),
     imagePreference: rawImagePref || 'auto',
     showPlot: rawShowPlot !== 'false',
     debug: rawDebug !== 'false',
@@ -684,7 +684,7 @@ export function getConfig() {
     })(),
     trailerBackgroundImageType: localStorage.getItem('trailerBackgroundImageType') || 'trailerBgImage',
     watchBackgroundImageType: localStorage.getItem('watchBackgroundImageType') || 'watchBgImage',
-    favoriteBackgroundImageType: localStorage.getItem('favoriteBackgroundImageType') || 'favoriBgImage',
+    favoriteBackgroundImageType: localStorage.getItem('favoriteBackgroundImageType') || 'favoriteBgImage',
     playedBackgroundImageType: localStorage.getItem('playedBackgroundImageType') || 'playedBgImage',
     manualListIds: localStorage.getItem('manualListIds') || '',
     useManualList: localStorage.getItem('useManualList') === 'true',
@@ -692,7 +692,7 @@ export function getConfig() {
     useRandomContent: localStorage.getItem('useRandomContent') !== 'false',
     fullscreenMode: localStorage.getItem('fullscreenMode') === 'true' ? true : false,
     listLimit: 20,
-    version: "v0.0.1",
+    version: "v1.0.0.9",
     historySize: 20,
     updateInterval: 300000,
     nextTracksSource: localStorage.getItem('nextTracksSource') || 'playlist',
@@ -700,26 +700,29 @@ export function getConfig() {
     languageLabels: getLanguageLabels(defaultLanguage),
     sliderDuration: parseInt(localStorage.getItem('sliderDuration'), 10) || 15000,
     artistLimit: parseInt(localStorage.getItem('artistLimit'), 10) || 10,
-    gecikmeSure: parseInt(localStorage.getItem('gecikmeSure'), 10) || 500,
+    atrasoTrailer: parseInt(localStorage.getItem('atrasoTrailer'), 10) || 500,
     limit: parseInt(localStorage.getItem('limit'), 10) || 15,
     onlyUnwatchedRandom: localStorage.getItem('onlyUnwatchedRandom') === 'true',
     maxShufflingLimit: parseInt(localStorage.getItem('maxShufflingLimit'), 10) || 10000,
     excludeEpisodesFromPlaying: localStorage.getItem('excludeEpisodesFromPlaying') !== 'false',
     showPlaybackProgress: localStorage.getItem('showPlaybackProgress') !== 'false',
-    muziklimit: parseInt(localStorage.getItem('muziklimit'), 10) || 30,
-    albumlimit: parseInt(localStorage.getItem('albumlimit'), 10) || 20,
-    sarkilimit: parseInt(localStorage.getItem('sarkilimit'), 10) || 200,
-    gruplimit: parseInt(localStorage.getItem('gruplimit'), 10) || 100,
-    id3limit: parseInt(localStorage.getItem('id3limit'), 10) || 5,
-    historylimit: parseInt(localStorage.getItem('historylimit'), 10) || 10,
+    limiteMusica: parseInt(localStorage.getItem('limiteMusica'), 10) || 30,
+    limiteAlbum: parseInt(localStorage.getItem('limiteAlbum'), 10) || 20,
+    limiteFaixa: parseInt(localStorage.getItem('limiteFaixa'), 10) || 200,
+    limiteLote: parseInt(localStorage.getItem('limiteLote'), 10) || 100,
+    limiteId3: parseInt(localStorage.getItem('limiteId3'), 10) || 5,
+    limiteHistorico: parseInt(localStorage.getItem('limiteHistorico'), 10) || 10,
+    limiteCacheTagsId3: parseInt(localStorage.getItem('limiteCacheTagsId3'), 10) || parseInt(localStorage.getItem('id3TagsCacheLimit'), 10) || 500,
+    limiteCacheImagensId3: parseInt(localStorage.getItem('limiteCacheImagensId3'), 10) || parseInt(localStorage.getItem('id3ImagesCacheLimit'), 10) || 200,
+    usarBase64ImagensId3: localStorage.getItem('usarBase64ImagensId3') === 'true' || localStorage.getItem('id3UseBase64Images') === 'true',
     playerTheme: localStorage.getItem('playerTheme') || 'dark',
     playerStyle: localStorage.getItem('playerStyle') || 'player',
     dateLocale: localStorage.getItem('dateLocale') || 'pt-BR',
     maxExcludeIdsForUri: parseInt(localStorage.getItem('maxExcludeIdsForUri'), 10) || 100,
     nextTrack: parseInt(localStorage.getItem('nextTrack'), 10) || 100,
     topTrack: parseInt(localStorage.getItem('topTrack'), 10) || 30,
-    aktifSure: parseInt(localStorage.getItem('aktifSure'), 10) || 5000,
-    girisSure: parseInt(localStorage.getItem('girisSure'), 10) || 1000,
+    tempoAtivo: parseInt(localStorage.getItem('tempoAtivo'), 10) || 5000,
+    tempoEntrada: parseInt(localStorage.getItem('tempoEntrada'), 10) || 1000,
     homeSectionsTop: parseInt(localStorage.getItem('homeSectionsTop'), 10) || 0,
     dotPosterMode: localStorage.getItem('dotPosterMode') === 'true',
     shuffleSeedLimit: parseInt(localStorage.getItem('shuffleSeedLimit'), 10) || 1000,

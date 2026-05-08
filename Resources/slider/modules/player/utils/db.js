@@ -223,7 +223,7 @@ class MusicDB {
         deletedAt: new Date().toISOString(),
         trackData: trackData || {
           Id: trackId,
-          Name: "Bilinmeyen Parca",
+          Name: "Música Desconhecida",
           Artists: [],
           AlbumArtist: "",
         },
@@ -296,7 +296,7 @@ class MusicDB {
             ...entry,
             trackData: entry?.trackData || {
               Id: entry?.trackId,
-              Name: "Bilinmeyen Parca",
+              Name: "Música Desconhecida",
               Artists: [],
               AlbumArtist: "",
               DateCreated: entry?.deletedAt || null,

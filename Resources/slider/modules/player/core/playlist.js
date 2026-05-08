@@ -8,14 +8,19 @@ import { updatePlaylistModal } from "../ui/playlistModal.js";
 import { makeApiRequest } from "../../../../Plugins/NexusPobreFlix/runtime/api.js";
 import { isRadioTrack } from "./radio.js";
 
-const config = getConfig();
-const BATCH_SIZE = config.gruplimit;
-const EXCLUDED_LISTS_HISTORY = config.historylimit;
+const config = new Proxy({}, {
+  get(target, prop) {
+    return getConfig()[prop];
+  }
+});
 
 let excludedTrackHistory = new Set();
 let currentRefreshCtrl = null;
 
 export async function refreshPlaylist() {
+  const BATCH_SIZE = config.limiteLote || 100;
+  const EXCLUDED_LISTS_HISTORY = config.limiteHistorico || 10;
+
   if (currentRefreshCtrl) {
     try { currentRefreshCtrl.abort(); } catch {}
   }
@@ -52,8 +57,8 @@ export async function refreshPlaylist() {
     }
 
     const effectiveLimit = totalItems > 0
-      ? Math.min(config.muziklimit, Math.max(0, totalItems - excludedTrackHistory.size))
-      : config.muziklimit;
+      ? Math.min(config.limiteMusica || 30, Math.max(0, totalItems - excludedTrackHistory.size))
+      : config.limiteMusica || 30;
 
     if (effectiveLimit <= 0) {
       showNotification(

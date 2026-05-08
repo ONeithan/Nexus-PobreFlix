@@ -36,7 +36,6 @@ const labels =
     ? getLanguageLabels(config?.defaultLanguage || config?.language)
     : null) ||
   (config?.languageLabels?.[config?.language] ?? null) ||
-  (config?.languageLabels?.tur ?? null) ||
   config?.languageLabels ||
   {};
 
@@ -67,7 +66,7 @@ const DEFAULT_SETTINGS = Object.freeze({
 const DEFAULT_FONT_STACK = "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif";
 
 const BASE_FONT_OPTIONS = Object.freeze([
-  { value: "default", label: L("subtitleCustomizerFontDefault", "Varsayılan"), jellyfinFont: "" },
+  { value: "default", label: L("subtitleCustomizerFontDefault", "Padrão"), jellyfinFont: "" },
   { value: "Courier New,monospace", label: "Typewriter", jellyfinFont: "typewriter" },
   { value: "Georgia,Times New Roman,Arial,Helvetica,serif", label: "Print", jellyfinFont: "print" },
   { value: "Consolas,Lucida Console,Menlo,Monaco,monospace", label: "Console", jellyfinFont: "console" },
@@ -304,11 +303,11 @@ function formatFontStack(fontStack) {
 }
 
 const SHADOW_OPTIONS = Object.freeze([
-  { value: "", label: L("subtitleCustomizerShadowDefault", "Varsayılan") },
-  { value: "none", label: L("subtitleCustomizerShadowNone", "Yok") },
+  { value: "", label: L("subtitleCustomizerShadowDefault", "Padrão") },
+  { value: "none", label: L("subtitleCustomizerShadowNone", "Nenhum") },
   { value: "uniform", label: L("subtitleCustomizerShadowUniform", "Uniform") },
-  { value: "raised", label: L("subtitleCustomizerShadowRaised", "Kabartmalı") },
-  { value: "depressed", label: L("subtitleCustomizerShadowDepressed", "Çökük") }
+  { value: "raised", label: L("subtitleCustomizerShadowRaised", "Alto relevo") },
+  { value: "depressed", label: L("subtitleCustomizerShadowDepressed", "Baixo relevo") }
 ]);
 
 const POSITION_VALUES = Object.freeze(["bottom", "center", "top"]);
@@ -2267,7 +2266,7 @@ function createDialog(settings, onUpdate, onReset, onClosed) {
   const backgroundOpacityInitialValue = normalizeBackgroundOpacity(settings.backgroundOpacity);
   const backgroundRadiusValue = normalizeBackgroundRadius(settings.backgroundRadiusPx);
   const delaySummaryValue = formatDelayValue(settings.delaySec);
-  const backLabel = L("subtitleCustomizerBack", "Geri");
+  const backLabel = L("subtitleCustomizerBack", "Voltar");
 
   container.innerHTML = `
     <div id="${DIALOG_ID}" class="focuscontainer dialog opened jms-subtitle-dialog" role="dialog" aria-modal="true">
@@ -2276,70 +2275,69 @@ function createDialog(settings, onUpdate, onReset, onClosed) {
           <button type="button" is="paper-icon-button-light" class="btnCancel autoSize" title="${escapeAttr(backLabel)}">
             ${faIconHtml("arrowLeft", "jms-subtitle-icon")}
           </button>
-          <h3 class="formDialogHeaderTitle">${escapeAttr(L("subtitleCustomizerDialogTitle", "Altyazı Ayarları"))}</h3>
+          <h3 class="formDialogHeaderTitle">${escapeAttr(L("subtitleCustomizerDialogTitle", "Configurações de Legendas"))}</h3>
         </div>
         <div class="formDialogContent scrollY jms-subtitle-formContent">
           <div class="dialogContentInner dialog-content-centered jms-subtitle-content">
             <div class="jms-subtitle-previewWrap">
-              <div class="jms-subtitle-previewTitle">${escapeAttr(L("subtitleCustomizerPreviewTitle", "Canlı Önizleme"))}</div>
+              <div class="jms-subtitle-previewTitle">${escapeAttr(L("subtitleCustomizerPreviewTitle", "Prévia em Tempo Real"))}</div>
               <div class="jms-subtitle-previewStage" data-position="${escapeAttr(settings.position)}">
                 <div class="jms-subtitle-previewCaption">
-                  <div class="jms-subtitle-previewText">${escapeAttr(L("subtitleCustomizerPreviewLine1", "Bu bir canlı önizleme satırıdır."))}
-${escapeAttr(L("subtitleCustomizerPreviewLine2", "İkinci satır burada görünür."))}</div>
+                  <div class="jms-subtitle-previewText">${escapeAttr(L("subtitleCustomizerPreviewLine1", "Esta é uma linha de prévia."))}\n${escapeAttr(L("subtitleCustomizerPreviewLine2", "A segunda linha aparece aqui."))}</div>
                 </div>
               </div>
             </div>
 
             <div class="inputContainer">
-              <label for="jms-subtitle-size">${escapeAttr(L("subtitleCustomizerSizeLabel", "Yazı boyutu (%)"))}</label>
+              <label for="jms-subtitle-size">${escapeAttr(L("subtitleCustomizerSizeLabel", "Tamanho da fonte (%)"))}</label>
               <input id="jms-subtitle-size" type="range" min="60" max="220" step="1" value="${settings.sizePercent}" />
               <div class="fieldDescription"><span id="jms-subtitle-size-value">${settings.sizePercent}%</span></div>
             </div>
 
             <div class="inputContainer">
-              <label for="jms-subtitle-color">${escapeAttr(L("subtitleCustomizerColorLabel", "Yazı rengi"))}</label>
+              <label for="jms-subtitle-color">${escapeAttr(L("subtitleCustomizerColorLabel", "Cor da fonte"))}</label>
               <input id="jms-subtitle-color" class="jms-subtitle-colorInput" type="color" value="${settings.color}" />
             </div>
 
             <div class="inputContainer">
-              <label for="jms-subtitle-color-opacity">${escapeAttr(L("subtitleCustomizerColorOpacityLabel", "Yazı opaklığı"))}</label>
+              <label for="jms-subtitle-color-opacity">${escapeAttr(L("subtitleCustomizerColorOpacityLabel", "Opacidade da fonte"))}</label>
               <input id="jms-subtitle-color-opacity" type="range" min="0" max="100" step="1" value="${colorOpacityInitialValue}" />
               <div class="fieldDescription"><span id="jms-subtitle-color-opacity-value">${colorOpacityInitialValue}%</span></div>
             </div>
 
             <div class="selectContainer">
-              <label class="selectLabel" for="jms-subtitle-font">${escapeAttr(L("subtitleCustomizerFontLabel", "Yazı fontu"))}</label>
+              <label class="selectLabel" for="jms-subtitle-font">${escapeAttr(L("subtitleCustomizerFontLabel", "Fonte"))}</label>
               <select id="jms-subtitle-font" is="emby-select" class="emby-select">
                 ${fontOptionsHtml}
               </select>
             </div>
 
             <div class="selectContainer">
-              <label class="selectLabel" for="jms-subtitle-shadow">${escapeAttr(L("subtitleCustomizerShadowLabel", "Gölgelendirme"))}</label>
+              <label class="selectLabel" for="jms-subtitle-shadow">${escapeAttr(L("subtitleCustomizerShadowLabel", "Sombra"))}</label>
               <select id="jms-subtitle-shadow" is="emby-select" class="emby-select">
                 ${shadowOptionsHtml}
               </select>
             </div>
 
             <div class="inputContainer jms-subtitle-colorRow">
-              <label for="jms-subtitle-shadow-color">${escapeAttr(L("subtitleCustomizerShadowColorLabel", "Gölge rengi"))}</label>
+              <label for="jms-subtitle-shadow-color">${escapeAttr(L("subtitleCustomizerShadowColorLabel", "Cor da sombra"))}</label>
               <input id="jms-subtitle-shadow-color" class="jms-subtitle-colorInput" type="color" value="${shadowColorValue}" />
             </div>
 
             <div class="inputContainer">
-              <label for="jms-subtitle-shadow-opacity">${escapeAttr(L("subtitleCustomizerShadowOpacityLabel", "Gölge opaklığı"))}</label>
+              <label for="jms-subtitle-shadow-opacity">${escapeAttr(L("subtitleCustomizerShadowOpacityLabel", "Opacidade da sombra"))}</label>
               <input id="jms-subtitle-shadow-opacity" type="range" min="0" max="100" step="1" value="${shadowOpacityInitialValue}" />
               <div class="fieldDescription"><span id="jms-subtitle-shadow-opacity-value">${shadowOpacityInitialValue}%</span></div>
             </div>
 
             <div class="inputContainer">
-              <label for="jms-subtitle-shadow-size">${escapeAttr(L("subtitleCustomizerShadowSizeLabel", "Gölge boyutu"))}</label>
+              <label for="jms-subtitle-shadow-size">${escapeAttr(L("subtitleCustomizerShadowSizeLabel", "Tamanho da sombra"))}</label>
               <input id="jms-subtitle-shadow-size" type="range" min="0" max="24" step="1" value="${shadowSizeInitialValue}" />
               <div class="fieldDescription"><span id="jms-subtitle-shadow-size-value">${shadowSizeInitialValue}px</span></div>
             </div>
 
             <div class="inputContainer">
-              <label for="jms-subtitle-shadow-direction">${escapeAttr(L("subtitleCustomizerShadowDirectionLabel", "Gölge yönü"))}</label>
+              <label for="jms-subtitle-shadow-direction">${escapeAttr(L("subtitleCustomizerShadowDirectionLabel", "Direção da sombra"))}</label>
               <input id="jms-subtitle-shadow-direction" type="range" min="0" max="360" step="1" value="${shadowDirectionInitialValue}" />
               <div class="fieldDescription"><span id="jms-subtitle-shadow-direction-value">${shadowDirectionInitialValue}°</span></div>
             </div>
@@ -2347,47 +2345,47 @@ ${escapeAttr(L("subtitleCustomizerPreviewLine2", "İkinci satır burada görün�
             <div class="inputContainer jms-subtitle-bgRow">
               <label class="jms-subtitle-inlineLabel" for="jms-subtitle-bg-enabled">
                 <input id="jms-subtitle-bg-enabled" type="checkbox" ${settings.backgroundEnabled ? "checked" : ""} />
-                <span>${escapeAttr(L("subtitleCustomizerBackgroundLabel", "Arkaplan rengi"))}</span>
+                <span>${escapeAttr(L("subtitleCustomizerBackgroundLabel", "Cor do fundo"))}</span>
               </label>
               <input id="jms-subtitle-bg-color" class="jms-subtitle-colorInput" type="color" value="${backgroundColorValue}" ${settings.backgroundEnabled ? "" : "disabled"} />
             </div>
 
             <div class="inputContainer">
-              <label for="jms-subtitle-bg-opacity">${escapeAttr(L("subtitleCustomizerBackgroundOpacityLabel", "Arkaplan opaklığı"))}</label>
+              <label for="jms-subtitle-bg-opacity">${escapeAttr(L("subtitleCustomizerBackgroundOpacityLabel", "Opacidade do fundo"))}</label>
               <input id="jms-subtitle-bg-opacity" type="range" min="0" max="100" step="1" value="${backgroundOpacityInitialValue}" ${settings.backgroundEnabled ? "" : "disabled"} />
               <div class="fieldDescription"><span id="jms-subtitle-bg-opacity-value">${backgroundOpacityInitialValue}%</span></div>
             </div>
 
             <div class="inputContainer">
-              <label for="jms-subtitle-bg-radius">${escapeAttr(L("subtitleCustomizerBackgroundRadiusLabel", "Arkaplan köşe yuvarlama"))}</label>
+              <label for="jms-subtitle-bg-radius">${escapeAttr(L("subtitleCustomizerBackgroundRadiusLabel", "Arredondamento do fundo"))}</label>
               <input id="jms-subtitle-bg-radius" type="range" min="${MIN_BACKGROUND_RADIUS_PX}" max="${MAX_BACKGROUND_RADIUS_PX}" step="1" value="${backgroundRadiusValue}" ${settings.backgroundEnabled ? "" : "disabled"} />
               <div class="fieldDescription"><span id="jms-subtitle-bg-radius-value">${backgroundRadiusValue}px</span></div>
             </div>
 
             <div class="selectContainer">
-              <label class="selectLabel" for="jms-subtitle-position">${escapeAttr(L("subtitleCustomizerPositionLabel", "Konum"))}</label>
+              <label class="selectLabel" for="jms-subtitle-position">${escapeAttr(L("subtitleCustomizerPositionLabel", "Posição"))}</label>
               <select id="jms-subtitle-position" is="emby-select" class="emby-select">
-                <option value="bottom" ${settings.position === "bottom" ? "selected" : ""}>${escapeAttr(L("subtitleCustomizerPositionBottom", "Alt"))}</option>
-                <option value="center" ${settings.position === "center" ? "selected" : ""}>${escapeAttr(L("subtitleCustomizerPositionCenter", "Orta"))}</option>
-                <option value="top" ${settings.position === "top" ? "selected" : ""}>${escapeAttr(L("subtitleCustomizerPositionTop", "Üst"))}</option>
+                <option value="bottom" ${settings.position === "bottom" ? "selected" : ""}>${escapeAttr(L("subtitleCustomizerPositionBottom", "Inferior"))}</option>
+                <option value="center" ${settings.position === "center" ? "selected" : ""}>${escapeAttr(L("subtitleCustomizerPositionCenter", "Central"))}</option>
+                <option value="top" ${settings.position === "top" ? "selected" : ""}>${escapeAttr(L("subtitleCustomizerPositionTop", "Superior"))}</option>
               </select>
             </div>
 
             <div class="inputContainer jms-subtitle-delayLaunch" role="button" tabindex="0" aria-haspopup="dialog" aria-controls="jms-subtitle-delay-focus-panel">
               <div class="jms-subtitle-delayLaunchHead">
-                <label>${escapeAttr(L("subtitleCustomizerDelayLabel", "Gecikme (saniye)"))}</label>
+                <label>${escapeAttr(L("subtitleCustomizerDelayLabel", "Atraso (segundos)"))}</label>
                 <span id="jms-subtitle-delay-summary" class="jms-subtitle-delaySummaryValue">${delaySummaryValue}</span>
               </div>
-              <div class="jms-subtitle-delayLaunchHint">${escapeAttr(L("subtitleCustomizerDelayFocusCta", "Canlı delay çubuğunu aç"))}</div>
+              <div class="jms-subtitle-delayLaunchHint">${escapeAttr(L("subtitleCustomizerDelayFocusCta", "Abrir barra de atraso em tempo real"))}</div>
             </div>
           </div>
         </div>
         <div class="formDialogFooter">
           <button is="emby-button" type="button" class="raised button-cancel formDialogFooterItem jms-subtitle-reset">
-            <span>${escapeAttr(L("subtitleCustomizerResetButton", "Sıfırla"))}</span>
+            <span>${escapeAttr(L("subtitleCustomizerResetButton", "Redefinir"))}</span>
           </button>
           <button is="emby-button" type="button" class="raised button-submit formDialogFooterItem jms-subtitle-close">
-            <span>${escapeAttr(L("subtitleCustomizerCloseButton", "Kapat"))}</span>
+            <span>${escapeAttr(L("subtitleCustomizerCloseButton", "Fechar"))}</span>
           </button>
         </div>
       </div>
@@ -2395,15 +2393,15 @@ ${escapeAttr(L("subtitleCustomizerPreviewLine2", "İkinci satır burada görün�
         <div class="jms-subtitle-delayFocusCard">
           <div class="jms-subtitle-delayFocusHeader">
             <div>
-              <div class="jms-subtitle-delayFocusEyebrow">${escapeAttr(L("subtitleCustomizerDelayLiveTitle", "Canlı Gecikme Ayarı"))}</div>
+              <div class="jms-subtitle-delayFocusEyebrow">${escapeAttr(L("subtitleCustomizerDelayLiveTitle", "Ajuste de Atraso em Tempo Real"))}</div>
               <div id="jms-subtitle-delay-focus-value" class="jms-subtitle-delayFocusValue">${delaySummaryValue}</div>
             </div>
             <div class="jms-subtitle-delayFocusHeaderActions">
               <button is="emby-button" type="button" class="raised button-submit jms-subtitle-delayFocusDone">
-                <span>${escapeAttr(L("subtitleCustomizerDelayFocusDone", "Panele Dön"))}</span>
+                <span>${escapeAttr(L("subtitleCustomizerDelayFocusDone", "Voltar ao Painel"))}</span>
               </button>
               <button is="emby-button" type="button" class="raised button-cancel jms-subtitle-delayFocusClose">
-                <span>${escapeAttr(L("subtitleCustomizerCloseButton", "Kapat"))}</span>
+                <span>${escapeAttr(L("subtitleCustomizerCloseButton", "Fechar"))}</span>
               </button>
             </div>
           </div>
@@ -2415,7 +2413,7 @@ ${escapeAttr(L("subtitleCustomizerPreviewLine2", "İkinci satır burada görün�
           </div>
           <div class="jms-subtitle-delayFocusActions">
             <button is="emby-button" type="button" class="raised button-cancel jms-subtitle-delayFocusReset">
-              <span>${escapeAttr(L("subtitleCustomizerDelayReset", "Delay Sıfırla"))}</span>
+              <span>${escapeAttr(L("subtitleCustomizerDelayReset", "Zerar Atraso"))}</span>
             </button>
           </div>
         </div>
@@ -3067,8 +3065,8 @@ export function initSubtitleCustomizer() {
         btn.classList.remove("btnSubtitles", "hide");
         btn.classList.add(BTN_CLASS, "autoSize");
         btn.setAttribute("is", subtitleBtn?.getAttribute("is") || "paper-icon-button-light");
-        btn.setAttribute("aria-label", L("subtitleCustomizerOpenButton", "Altyazı ayarları"));
-        btn.title = L("subtitleCustomizerOpenButton", "Altyazı ayarları");
+        btn.setAttribute("aria-label", L("subtitleCustomizerOpenButton", "Configurações de legenda"));
+        btn.title = L("subtitleCustomizerOpenButton", "Configurações de legenda");
         btn.innerHTML = faIconHtml("sliders", "xlargePaperIconButton jms-subtitle-icon");
         btn.addEventListener("click", openDialog);
 

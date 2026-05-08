@@ -66,7 +66,7 @@ function notifyVolumeThrottled(volume, isMuted = false) {
   else if (volume < 0.5) icon = '<i class="fas fa-volume-down"></i>';
 
   showNotification(
-    `${icon} ${config.languageLabels.volume || 'Ses seviyesi'}: ${Math.round(volume * 100)}%`,
+    `${icon} ${config.languageLabels.volume || 'Volume'}: ${Math.round(volume * 100)}%`,
     2000,
     'kontrol'
   );
@@ -74,7 +74,7 @@ function notifyVolumeThrottled(volume, isMuted = false) {
 
 function updateVolumeUI(volume, isMuted = false) {
   if (!areVolumeControlsReady()) {
-    console.warn('Ses kontrolleri güncelleme için hazır değil');
+    console.warn('Controles de volume não estão prontos para atualização');
     return;
   }
 
@@ -87,8 +87,8 @@ export function toggleMute() {
   const { audio, volumeBtn, volumeSlider } = musicPlayerState;
 
   if (!audio || !volumeBtn || !volumeSlider) {
-    console.error('Ses kontrolleri başlatılamadı');
-    showNotification('<i class="fas fa-volume-mute crossed-icon"></i> Ses kontrolleri yüklenemedi', 2000, 'error');
+    console.error('Falha ao inicializar controles de volume');
+    showNotification('<i class="fas fa-volume-mute crossed-icon"></i> Não foi possível carregar os controles de volume', 2000, 'error');
     return;
   }
 
@@ -98,7 +98,7 @@ export function toggleMute() {
     volumeSlider.dataset.lastVolume = volumeSlider.value;
     volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
     showNotification(
-      `<i class="fas fa-volume-mute"></i> ${config.languageLabels.volOff || 'Ses kapatıldı'}`,
+      `<i class="fas fa-volume-mute"></i> ${config.languageLabels.volOff || 'Som desativado'}`,
       2000,
       'kontrol'
     );
@@ -114,7 +114,7 @@ export function toggleMute() {
 
 export function changeVolume(delta) {
   if (!areVolumeControlsReady()) {
-    console.error('Ses kontrolleri başlatılamadı');
+    console.error('Controles de volume não puderam ser inicializados');
     return;
   }
 
@@ -139,7 +139,7 @@ export function changeVolume(delta) {
 export function setupVolumeControls() {
   const slider = musicPlayerState.volumeSlider;
   if (!slider) {
-    console.warn('Ses kaydırıcısı bulunamadı');
+    console.warn('Slider de volume não encontrado');
     return;
   }
 
@@ -173,16 +173,16 @@ export function toggleRepeatMode() {
 
   const repeatBtn = document.querySelector('.player-btn.repeat-btn');
   if (!repeatBtn) {
-    console.warn('Tekrar butonu bulunamadı');
+    console.warn('Botão de repetição não encontrado');
     return;
   }
 
   const mode = musicPlayerState.userSettings.repeatMode;
 
   const titles = {
-    'none': config.languageLabels?.repeatModOff || 'Tekrar kapalı',
-    'one': config.languageLabels?.repeatModOne || 'Tek şarkı tekrarı',
-    'all': config.languageLabels?.repeatModAll || 'Tüm liste tekrarı'
+    'none': config.languageLabels?.repeatModOff || 'Repetição desativada',
+    'one': config.languageLabels?.repeatModOne || 'Repetir uma música',
+    'all': config.languageLabels?.repeatModAll || 'Repetir lista'
   };
 
   const isActive = mode !== 'none';
@@ -195,9 +195,9 @@ export function toggleRepeatMode() {
     : '<i class="fas fa-repeat"></i>';
 
   const notificationMessages = {
-    'none': `<i class="fas fa-repeat crossed-icon"></i> ${config.languageLabels?.repeatMod || 'Tekrar modu'}: ${config.languageLabels?.repeatModOff || 'kapalı'}`,
-    'one': `${getRepeatOneIconHtml()} ${config.languageLabels?.repeatMod || 'Tekrar modu'}: ${config.languageLabels?.repeatModOne || 'tek şarkı'}`,
-    'all': `<i class="fas fa-repeat"></i> ${config.languageLabels?.repeatMod || 'Tekrar modu'}: ${config.languageLabels?.repeatModAll || 'tüm liste'}`
+    'none': `<i class="fas fa-repeat crossed-icon"></i> ${config.languageLabels?.repeatMod || 'Modo de repetição'}: ${config.languageLabels?.repeatModOff || 'desativado'}`,
+    'one': `${getRepeatOneIconHtml()} ${config.languageLabels?.repeatMod || 'Modo de repetição'}: ${config.languageLabels?.repeatModOne || 'uma música'}`,
+    'all': `<i class="fas fa-repeat"></i> ${config.languageLabels?.repeatMod || 'Modo de repetição'}: ${config.languageLabels?.repeatModAll || 'toda a lista'}`
   };
 
   showNotification(
@@ -211,7 +211,7 @@ export function toggleRepeatMode() {
 
 export function toggleShuffle() {
   if (!musicPlayerState || !musicPlayerState.userSettings) {
-    console.error('Müzik çalar durumu veya kullanıcı ayarları yüklenmedi');
+    console.error('Estado do player ou configurações de usuário não carregados');
     return;
   }
 
@@ -220,18 +220,18 @@ export function toggleShuffle() {
 
   const shuffleBtn = document.querySelector('.player-btn .fa-random')?.parentElement;
   if (!shuffleBtn) {
-    console.warn('Karıştırma butonu bulunamadı');
+    console.warn('Botão de aleatório não encontrado');
     return;
   }
 
   const titles = {
-    true: config.languageLabels?.shuffleOn || 'Karıştırma açık',
-    false: config.languageLabels?.shuffleOff || 'Karıştırma kapalı'
+    true: config.languageLabels?.shuffleOn || 'Aleatório ativado',
+    false: config.languageLabels?.shuffleOff || 'Aleatório desativado'
   };
 
   const notificationMessages = {
-    true: `${config.languageLabels?.shuffle || 'Karıştırma'}: ${config.languageLabels?.shuffleOn || 'açık'}`,
-    false: `${config.languageLabels?.shuffle || 'Karıştırma'}: ${config.languageLabels?.shuffleOff || 'kapalı'}`
+    true: `${config.languageLabels?.shuffle || 'Aleatório'}: ${config.languageLabels?.shuffleOn || 'ativado'}`,
+    false: `${config.languageLabels?.shuffle || 'Aleatório'}: ${config.languageLabels?.shuffleOff || 'desativado'}`
   };
 
   shuffleBtn.classList.remove('active', 'passive');
@@ -260,18 +260,18 @@ function createKeyboardHelpModal() {
   modal.style.display = 'none';
 
   modal.innerHTML = `
-    <h3 style="margin-top:0;margin-bottom:10px;">🎹 Klavye Kısayolları</h3>
+    <h3 style="margin-top:0;margin-bottom:10px;">🎹 Atalhos de Teclado</h3>
     <ul style="list-style:none;padding-left:0;">
-      <li><b>G</b>: Oynatıcıyı göster/gizle</li>
-      <li><b>↑</b> veya <b>+</b>: Sesi artır</li>
-      <li><b>↓</b> veya <b>-</b>: Sesi azalt</li>
-      <li><b>M</b>: Sesi aç/kapat</li>
-      <li><b>S</b>: Karıştırma modunu değiştir</li>
-      <li><b>R</b>: Tekrar modunu değiştir</li>
-      <li><b>←</b>: Önceki parça</li>
-      <li><b>→</b>: Sonraki parça</li>
-      <li><b>?</b>: Yardımı aç/kapat</li>
-      <li><b>Esc</b>: Yardımı kapat</li>
+      <li><b>G</b>: Mostrar/ocultar player</li>
+      <li><b>↑</b> ou <b>+</b>: Aumentar volume</li>
+      <li><b>↓</b> ou <b>-</b>: Diminuir volume</li>
+      <li><b>M</b>: Ativar/desativar som</li>
+      <li><b>S</b>: Mudar modo aleatório</li>
+      <li><b>R</b>: Mudar modo de repetição</li>
+      <li><b>←</b>: Faixa anterior</li>
+      <li><b>→</b>: Próxima faixa</li>
+      <li><b>?</b>: Abrir/fechar ajuda</li>
+      <li><b>Esc</b>: Fechar ajuda</li>
     </ul>
   `;
   document.body.appendChild(modal);
@@ -364,8 +364,8 @@ export function toggleRemoveOnPlayMode() {
   const btn = document.querySelector('.remove-on-play-btn');
   if (!btn) return;
 
-  const onTitle  = config.languageLabels.removeOnPlayOn  || "Çaldıktan sonra sil: Açık";
-  const offTitle = config.languageLabels.removeOnPlayOff || "Çaldıktan sonra sil: Kapalı";
+  const onTitle  = config.languageLabels.removeOnPlayOn  || "Excluir após tocar: Ativado";
+  const offTitle = config.languageLabels.removeOnPlayOff || "Excluir após tocar: Desativado";
   btn.title = setting ? onTitle : offTitle;
   btn.classList.remove('active', 'passive');
   btn.classList.add(setting ? 'active' : 'passive');
@@ -375,8 +375,8 @@ export function toggleRemoveOnPlayMode() {
     : '<i class="fa-solid fa-trash"></i>';
 
   const message = setting
-    ? `<i class="fa-solid fa-trash"></i> ${config.languageLabels.removeOnPlayOn || "Çaldıktan sonra sil modu açık"}`
-    : `<i class="fa-solid fa-trash crossed-icon"></i> ${config.languageLabels.removeOnPlayOff || "Çaldıktan sonra sil modu kapalı"}`;
+    ? `<i class="fa-solid fa-trash"></i> ${config.languageLabels.removeOnPlayOn || "Modo excluir após tocar ativado"}`
+    : `<i class="fa-solid fa-trash crossed-icon"></i> ${config.languageLabels.removeOnPlayOff || "Modo excluir após tocar desativado"}`;
 
   showNotification(message, 2000, 'kontrol');
 }

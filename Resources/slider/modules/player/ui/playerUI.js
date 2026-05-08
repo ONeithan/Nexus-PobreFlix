@@ -31,7 +31,11 @@ import {
   submitStationToDirectory
 } from "../core/radio.js";
 
-const config = getConfig();
+const config = new Proxy({}, {
+  get(target, prop) {
+    return getConfig()[prop];
+  }
+});
 const DEFAULT_ARTWORK = "./slider/src/images/defaultArt.png";
 const DEFAULT_ARTWORK_CSS = `url('${DEFAULT_ARTWORK}')`;
 
@@ -151,7 +155,7 @@ export function createModernPlayerUI() {
   const { container: nextTracksContainer, name: nextTracksName, list: nextTracksList } = createNextTracksUI();
 
   if (config.nextTracksSource === 'playlist') {
-    nextTracksName.textContent = musicPlayerState.userSettings.shuffle
+    uiElements.name.textContent = userSettings.shuffle
       ? config.languageLabels.rastgele || "Aleatório"
       : config.languageLabels.sirada || "Próximos";
   } else {
@@ -193,7 +197,7 @@ export function createModernPlayerUI() {
       onClick: toggleTheme
     },
     { className: "playlist-btn", iconClass: "fas fa-list", title: config.languageLabels.playlist, onClick: togglePlaylistModal },
-    { className: "jplaylist-btn", iconClass: "fa-solid fa-list-ol", title: config.languageLabels.jellyfinPlaylists || "Jellyfin Oynatma Listesi", onClick: showJellyfinPlaylistsModal },
+    { className: "jplaylist-btn", iconClass: "fa-solid fa-list-ol", title: config.languageLabels.jellyfinPlaylists || "Playlists do Jellyfin", onClick: showJellyfinPlaylistsModal },
     { className: "radio-btn", iconClass: "fas fa-broadcast-tower", title: config.languageLabels.radioStations || "Rádios", onClick: showRadioModal },
     {
       className: "settingsLink",
@@ -569,8 +573,8 @@ export async function updateNextTracks() {
   if (config.nextTracksSource === 'playlist') {
     uiElements.name.style.cursor = 'pointer';
     uiElements.name.textContent = userSettings.shuffle
-      ? config.languageLabels.rastgele || "Rastgele"
-      : config.languageLabels.sirada || "Sıradakiler";
+      ? config.languageLabels.rastgele || "Aleatório"
+      : config.languageLabels.sirada || "Próximos";
   } else {
     return showTopTracksInMainView(config.nextTracksSource);
   }
@@ -665,7 +669,7 @@ async function getTrackImage(track) {
     const tags = await readID3Tags(track.Id);
     if (tags?.pictureUri) return tags.pictureUri;
   } catch (e) {
-    console.warn(`ID3 etiketi okunamadı (ID: ${track.Id})`, e);
+    console.warn(`ID3 etiqueta não pode ser lida (ID: ${track.Id})`, e);
   }
 
   return null;
@@ -680,7 +684,7 @@ async function toggleFavorite() {
     if (isSharedRadioTrack(track)) {
       updateFavoriteButtonState(track);
       showNotification(
-        `<i class="fas fa-info-circle"></i> ${config.languageLabels.radioAlreadyShared || "Istasyon zaten paylasilan radyolarda"}`,
+        `<i class="fas fa-info-circle"></i> ${config.languageLabels.radioAlreadyShared || "Estação já está nas rádios compartilhadas"}`,
         2200,
         "info"
       );
@@ -709,8 +713,8 @@ async function toggleFavorite() {
       updateFavoriteButtonState(track);
       showNotification(
         `<i class="fas fa-check-circle"></i> ${info.supportsServerWrite
-          ? (config.languageLabels.radioSharedSaved || "Istasyon paylasilan listeye eklendi")
-          : (config.languageLabels.radioLocalSaved || "Istasyon bu tarayiciya kaydedildi")}`,
+          ? (config.languageLabels.radioSharedSaved || "Estação adicionada à lista compartilhada")
+          : (config.languageLabels.radioLocalSaved || "Estação salva neste navegador")}`,
         2200,
         "success"
       );
@@ -719,7 +723,7 @@ async function toggleFavorite() {
       console.error("Radyo paylasim islemi hatasi:", error);
       showNotification(
         `<i class="fas fa-exclamation-circle"></i> ${
-          config.languageLabels.radioSharedSaveError || "Istasyon paylasilan listeye eklenemedi"
+          config.languageLabels.radioSharedSaveError || "Não foi possível adicionar a estação à lista compartilhada"
         }`,
         3000,
         "error"
@@ -796,7 +800,7 @@ function toggleTheme() {
   const themeBtn = document.querySelector('.theme-toggle-btn');
   if (themeBtn) {
     themeBtn.innerHTML = `<i class="fas fa-${newTheme === 'light' ? 'moon' : 'sun'}"></i>`;
-    themeBtn.title = newTheme === 'light' ? config.languageLabels.darkTheme || 'Karanlık Tema' : config.languageLabels.lightTheme || 'Aydınlık Tema';
+    themeBtn.title = newTheme === 'light' ? config.languageLabels.darkTheme || 'Tema Escuro' : config.languageLabels.lightTheme || 'Tema Claro';
   }
   loadCSS();
 
@@ -1482,10 +1486,10 @@ function getNextTrackSource(currentSource) {
 }
 
 async function setupImageLoading(trackElements, observer) {
-  const initialBatch = trackElements.slice(0, config.id3limit || 4);
+  const initialBatch = trackElements.slice(0, config.limiteId3 || 4);
   await loadInitialBatch(initialBatch);
 
-  trackElements.slice(config.id3limit || 4).forEach(({ trackElement }) => {
+  trackElements.slice(config.limiteId3 || 4).forEach(({ trackElement }) => {
     trackElement.classList.remove('hidden');
     observer.observe(trackElement);
   });
@@ -1497,7 +1501,7 @@ async function loadInitialBatch(trackElements) {
     return;
   }
 
-  const chunkSize = config.id3limit || 4;
+  const chunkSize = config.limiteId3 || 4;
   for (let i = 0; i < trackElements.length; i += chunkSize) {
     const chunk = trackElements.slice(i, i + chunkSize);
     await Promise.all(chunk.map(async ({ track, trackElement, coverElement }) => {

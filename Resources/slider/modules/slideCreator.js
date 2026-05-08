@@ -382,7 +382,7 @@ async function createSlide(item, options = {}) {
       Name: item.Name
     };
         } catch (err) {
-      console.error("Dizi bilgileri alınamadı:", err);
+      console.error("Não foi possível obter informações da série:", err);
     }
   }
 
@@ -919,7 +919,7 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
 
   const titleElement = document.createElement("h3");
   const itemDisplayName = itemName ? itemName : 'Conteúdo Desconhecido';
-  titleElement.textContent = `${itemDisplayName} - ${config.languageLabels.fragman}`;
+  titleElement.textContent = `${itemDisplayName} - ${config.languageLabels.trailer}`;
   titleElement.style.margin = "0";
   titleElement.style.marginLeft = "15px";
   titleElement.style.flex = "1";
@@ -1000,7 +1000,7 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
       iframe.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[50]}', '*');
       audioUnlocked = true;
     } catch (e) {
-      console.log("Ses açma hatası:", e);
+      console.log("Erro ao abrir áudio:", e);
     }
   };
 
@@ -1035,10 +1035,10 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
   infoContainer.style.gap = "8px";
 
   const itemTitleElement = document.createElement("div");
-  const contentType = itemType === 'Movie' ? config.languageLabels.film :
-                    itemType === 'Series' ? config.languageLabels.dizi :
-                    itemType === 'Episode' ? config.languageLabels.dizi :
-                    "İçerik: ";
+  const contentType = itemType === 'Movie' ? config.languageLabels.movie :
+                    itemType === 'Series' ? config.languageLabels.series :
+                    itemType === 'Episode' ? config.languageLabels.series :
+                    "Conteúdo: ";
   itemTitleElement.textContent = `${contentType}: ${itemDisplayName}`;
   itemTitleElement.style.fontWeight = "bold";
   infoContainer.appendChild(itemTitleElement);
@@ -1146,7 +1146,7 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
         favoriteIcon.style.transform = "scale(1.2)";
         setTimeout(() => (favoriteIcon.style.transform = ""), 200);
       } catch (err) {
-        console.error("Favori durumu güncellenirken hata:", err);
+        console.error("Erro ao atualizar status de favorito:", err);
       }
     });
 

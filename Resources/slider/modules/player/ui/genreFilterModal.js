@@ -35,14 +35,14 @@ export async function showGenreFilterModal() {
       { headers: { "X-Emby-Token": token }, signal: fetchCtrl.signal }
     );
 
-    if (!response.ok) throw new Error("Türler alınamadı");
+    if (!response.ok) throw new Error("Não foi possível obter gêneros");
 
     const data = await response.json();
     const genres = data.Items || [];
 
     if (genres.length === 0) {
       showNotification(
-        `<i class="fas fa-exclamation-circle"></i> ${config.languageLabels?.noGenresFound || "Tür bulunamadı"}`,
+        `<i class="fas fa-exclamation-circle"></i> ${config.languageLabels?.noGenresFound || "Nenhum gênero encontrado"}`,
         2000,
         "error"
       );
@@ -52,9 +52,9 @@ export async function showGenreFilterModal() {
     buildModal(genres, token);
   } catch (err) {
     if (err?.name === "AbortError") return;
-    console.error("Tür filtresi açılırken hata:", err);
+    console.error("Erro ao abrir filtro de gênero:", err);
     showNotification(
-      `<i class="fas fa-exclamation-triangle"></i> ${config.languageLabels?.genreFilterError || "Tür filtresi yüklenemedi"}`,
+      `<i class="fas fa-exclamation-triangle"></i> ${config.languageLabels?.genreFilterError || "Não foi possível carregar o filtro de gênero"}`,
       2000,
       "error"
     );
@@ -80,7 +80,7 @@ function buildModal(genres, token) {
   header.className = "genre-filter-header";
 
   const title = document.createElement("h3");
-  title.innerHTML = `<i class="fas fa-filter"></i> ${config.languageLabels?.filterByGenre || "Türe göre filtrele"}`;
+  title.innerHTML = `<i class="fas fa-filter"></i> ${config.languageLabels?.filterByGenre || "Filtrar por gênero"}`;
   header.appendChild(title);
 
   const closeBtn = document.createElement("button");
@@ -98,7 +98,7 @@ function buildModal(genres, token) {
 
   const searchInput = document.createElement("input");
   searchInput.type = "text";
-  searchInput.placeholder = config.languageLabels?.searchGenres || "Türlerde ara…";
+  searchInput.placeholder = config.languageLabels?.searchGenres || "Buscar em gêneros...";
   searchInput.className = "genre-filter-search";
   searchInput.id = "genre-filter-search";
   searchInput.name = "genre-filter-search";
@@ -116,19 +116,19 @@ function buildModal(genres, token) {
 
   const selectAllBtn = document.createElement("button");
   selectAllBtn.className = "genre-filter-select-all";
-  selectAllBtn.innerHTML = `<i class="fas fa-check-double"></i> ${config.languageLabels?.selectAll || "Tümünü seç"}`;
+  selectAllBtn.innerHTML = `<i class="fas fa-check-double"></i> ${config.languageLabels?.selectAll || "Selecionar tudo"}`;
 
   const selectNoneBtn = document.createElement("button");
   selectNoneBtn.className = "genre-filter-select-none";
-  selectNoneBtn.innerHTML = `<i class="far fa-square"></i> ${config.languageLabels?.selectNone || "Hiçbiri"}`;
+  selectNoneBtn.innerHTML = `<i class="far fa-square"></i> ${config.languageLabels?.selectNone || "Nenhum"}`;
 
   const clearFilterBtn = document.createElement("button");
   clearFilterBtn.className = "genre-filter-clear";
-  clearFilterBtn.innerHTML = `<i class="fas fa-eraser"></i> ${config.languageLabels?.clearFilter || "Filtreyi temizle"}`;
+  clearFilterBtn.innerHTML = `<i class="fas fa-eraser"></i> ${config.languageLabels?.clearFilter || "Limpar filtro"}`;
 
   const applyBtn = document.createElement("button");
   applyBtn.className = "genre-filter-apply primary";
-  applyBtn.innerHTML = `<i class="fas fa-check-circle"></i> ${config.languageLabels?.applyFilter || "Uygula"}`;
+  applyBtn.innerHTML = `<i class="fas fa-check-circle"></i> ${config.languageLabels?.applyFilter || "Aplicar"}`;
 
   actionButtons.append(selectAllBtn, selectNoneBtn, clearFilterBtn, applyBtn);
   const sorted = [...genres].sort((a, b) => (a.Name || "").localeCompare(b.Name || "", "tr", { sensitivity: "base" }));
@@ -189,13 +189,13 @@ function buildModal(genres, token) {
     const { selectedText, total, selected } = getSelectedMeta(modal);
     let text;
     if (selected === 0 && Array.isArray(musicPlayerState.selectedGenres)) {
-      text = `${musicPlayerState.selectedGenres.length} ${config.languageLabels?.genresSelected || "tür seçildi"}`;
+      text = `${musicPlayerState.selectedGenres.length} ${config.languageLabels?.genresSelected || "gêneros selecionados"}`;
     } else if (selected === 0) {
-      text = config.languageLabels?.noGenresSelected || "Seçim yok";
+      text = config.languageLabels?.noGenresSelected || "Nenhuma seleção";
     } else if (selected === total) {
-      text = config.languageLabels?.allGenresSelected || "Tüm türler seçildi";
+      text = config.languageLabels?.allGenresSelected || "Todos os gêneros selecionados";
     } else {
-      text = `${selected} ${config.languageLabels?.genresSelected || "tür seçildi"}`;
+      text = `${selected} ${config.languageLabels?.genresSelected || "gêneros selecionados"}`;
     }
     selectedCount.innerHTML = `<i class="fas fa-music"></i> ${text}`;
   };
@@ -277,7 +277,7 @@ function buildModal(genres, token) {
     });
     updateSelectedCount();
     showNotification(
-      `<i class="fas fa-check-circle"></i> ${cbs.length} ${config.languageLabels?.genresSelected || "tür seçildi"}`,
+      `<i class="fas fa-check-circle"></i> ${cbs.length} ${config.languageLabels?.genresSelected || "gêneros selecionados"}`,
       2000,
       "success"
     );
@@ -287,7 +287,7 @@ function buildModal(genres, token) {
     modal.querySelectorAll(".genre-checkbox").forEach((cb) => (cb.checked = false));
     updateSelectedCount();
     showNotification(
-      `<i class="far fa-square"></i> ${config.languageLabels?.noGenresSelected || "Seçim yok"}`,
+      `<i class="far fa-square"></i> ${config.languageLabels?.noGenresSelected || "Nenhuma seleção"}`,
       2000,
       "info"
     );
@@ -299,7 +299,7 @@ function buildModal(genres, token) {
     refreshPlaylist();
     updateSelectedCount();
     showNotification(
-      `<i class="fas fa-broom"></i> ${config.languageLabels?.filterCleared || "Filtre temizlendi"}`,
+      `<i class="fas fa-broom"></i> ${config.languageLabels?.filterCleared || "Filtro limpo"}`,
       2000,
       "success"
     );

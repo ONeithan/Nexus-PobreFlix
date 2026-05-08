@@ -659,13 +659,19 @@ function resolveCustomSplashGreetingPart(hour = getCustomSplashCurrentHour()) {
   return "Night";
 }
 
-function getCustomSplashGreetingFallback(lang = "tur", part = "Morning") {
+function getCustomSplashGreetingFallback(lang = "por", part = "Morning") {
   const greetings = {
     tur: {
       Morning: "Günaydın",
       Afternoon: "Tünaydın",
       Evening: "İyi akşamlar",
       Night: "İyi geceler"
+    },
+    por: {
+      Morning: "Bom dia",
+      Afternoon: "Boa tarde",
+      Evening: "Boa noite",
+      Night: "Boa noite"
     },
     eng: {
       Morning: "Good morning",
@@ -751,7 +757,7 @@ function getCustomSplashLoadingFallback(title) {
     case "rus":
       return `${safeTitle} подготавливается`;
     case "tur":
-      return `${safeTitle} hazırlanıyor`;
+      return `${safeTitle} está iniciando`;
     case "por":
       return `${safeTitle} está iniciando`;
     default:
@@ -2545,9 +2551,9 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
 
   function getPauseOverlayCssHref(cfg = getLiveConfig()) {
     const variant = String(cfg?.pauseOverlay?.cssVariant || '').trim();
-    return variant === 'pauseModul2'
-      ? '/slider/src/pauseModul2.css'
-      : '/slider/src/pauseModul.css';
+    return variant === 'moduloPausa2'
+      ? '/slider/src/moduloPausa2.css'
+      : '/slider/src/moduloPausa.css';
   }
 
   function applyFeatureCss() {
@@ -2603,7 +2609,7 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
       removeCssByHref(['slider/src/profileChooser.css']);
     }
     if (!pauseFeatureCssEnabled) {
-      removeCssByHref(['slider/src/pauseModul.css', 'slider/src/pauseModul2.css']);
+      removeCssByHref(['slider/src/moduloPausa.css', 'slider/src/moduloPausa2.css']);
     }
     if (!subtitleCustomizerCssEnabled) {
       removeCssByHref(['slider/src/subtitleCustomizer.css']);
@@ -3032,7 +3038,7 @@ window.__slidesInitRunning = window.__slidesInitRunning || false;
 
 async function loadPauseModule() {
   if (!pauseModulePromise) {
-    pauseModulePromise = import("./modules/pauseModul.js");
+    pauseModulePromise = import("./modules/moduloPausa.js");
   }
   return pauseModulePromise;
 }
@@ -4304,7 +4310,7 @@ export async function slidesInit() {
       userId = s.userId;
       accessToken = s.accessToken;
     } catch (e) {
-      console.error("Oturum bilgisi okunamadı:", e);
+      console.error("Não foi possível ler as informações da sessão:", e);
       return;
     }
     if (!isBootActive()) return;
@@ -4504,7 +4510,7 @@ export async function slidesInit() {
               playingItems = fetchedItems.slice(0, playingLimit);
             }
           } catch (err) {
-            console.error("İzlenen içerikler alınırken hata:", err);
+            console.error("Erro ao obter conteúdos assistidos:", err);
           }
         }
 
@@ -4545,7 +4551,7 @@ export async function slidesInit() {
                 }
                 return seasonData;
               } catch (error) {
-                console.error("Season detay alınırken hata:", error);
+                console.error("Erro ao obter detalhes da temporada:", error);
                 return item;
               }
             }
@@ -4675,9 +4681,9 @@ export async function slidesInit() {
               const newHistory = Array.from(new Set([...historyBase, ...pickedIds])).slice(-shuffleSeedLimit);
               try {
                 saveShuffleHistory(userId, newHistory);
-                console.debug("[JMS] shuffle history kaydedildi:", userId, newHistory.length);
+                console.debug("[JMS] histórico de shuffle salvo:", userId, newHistory.length);
               } catch (e) {
-                console.warn("[JMS] shuffle history kaydedilemedi:", e);
+                console.warn("[JMS] não foi possível salvar o histórico de shuffle:", e);
               }
             }
           } else {
@@ -4720,7 +4726,7 @@ export async function slidesInit() {
           .filter((x) => x);
       }
     } catch (err) {
-      console.error("Slide verisi hazırlanırken hata:", err);
+      console.error("Erro ao preparar os dados do slide:", err);
     }
 
     if (!isBootActive()) return;
@@ -4747,7 +4753,7 @@ export async function slidesInit() {
     }
     try { primeQualityFromItems(items); } catch {}
     if (!items.length) {
-    console.warn("Hiçbir slayt verisi elde edilemedi.");
+    console.warn("Nenhum dado de slide obtido.");
     return;
   }
   window.__totalSlidesPlanned = items.length;

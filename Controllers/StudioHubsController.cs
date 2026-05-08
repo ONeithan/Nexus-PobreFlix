@@ -182,7 +182,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var cleanName = NormalizeCollectionName(request?.Name);
             if (string.IsNullOrWhiteSpace(studioId) || string.IsNullOrWhiteSpace(cleanName))
             {
-                return BadRequest(new { ok = false, error = "StudioId ve başlık gerekli." });
+                return BadRequest(new { ok = false, error = "StudioId e título são obrigatórios." });
             }
 
             var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
@@ -250,7 +250,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var cleanStudioId = NormalizeId(studioId);
             if (string.IsNullOrWhiteSpace(cleanStudioId))
             {
-                return BadRequest(new { ok = false, error = "StudioId gerekli." });
+                return BadRequest(new { ok = false, error = "StudioId é obrigatório." });
             }
 
             var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
@@ -261,7 +261,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var existing = cfg.StudioHubManualEntries.FirstOrDefault(entry => IdEquals(entry?.StudioId, cleanStudioId));
             if (existing is null)
             {
-                return NotFound(new { ok = false, error = "Manuel koleksiyon bulunamadı." });
+                return NotFound(new { ok = false, error = "Coleção manual não encontrada." });
             }
 
             var logosDir = plugin.GetStorageDirectory("studio-hub-logos");
@@ -299,18 +299,18 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var cleanStudioId = NormalizeId(studioId);
             if (string.IsNullOrWhiteSpace(cleanStudioId))
             {
-                return BadRequest(new { ok = false, error = "StudioId gerekli." });
+                return BadRequest(new { ok = false, error = "StudioId é obrigatório." });
             }
 
             if (file is null || file.Length <= 0)
             {
-                return BadRequest(new { ok = false, error = "Yüklenecek logo gerekli." });
+                return BadRequest(new { ok = false, error = "O arquivo de logo é obrigatório." });
             }
 
             var ext = Path.GetExtension(file.FileName ?? string.Empty).ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(ext) || !AllowedLogoExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
             {
-                return BadRequest(new { ok = false, error = "Sadece png, webp, svg, jpg veya jpeg logo kabul edilir." });
+                return BadRequest(new { ok = false, error = "Apenas logos em png, webp, svg, jpg ou jpeg são aceitos." });
             }
 
             var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
@@ -320,7 +320,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var entry = cfg.StudioHubManualEntries.FirstOrDefault(item => IdEquals(item?.StudioId, cleanStudioId));
             if (entry is null)
             {
-                return NotFound(new { ok = false, error = "Önce manuel koleksiyonu ekleyin." });
+                return NotFound(new { ok = false, error = "Adicione a coleção manual primeiro." });
             }
 
             var logosDir = plugin.GetStorageDirectory("studio-hub-logos");
@@ -353,7 +353,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var cleanStudioId = NormalizeId(studioId);
             if (string.IsNullOrWhiteSpace(cleanStudioId))
             {
-                return BadRequest(new { ok = false, error = "StudioId gerekli." });
+                return BadRequest(new { ok = false, error = "StudioId é obrigatório." });
             }
 
             var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
@@ -363,7 +363,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var entry = cfg.StudioHubManualEntries.FirstOrDefault(item => IdEquals(item?.StudioId, cleanStudioId));
             if (entry is null)
             {
-                return NotFound(new { ok = false, error = "Manuel koleksiyon bulunamadı." });
+                return NotFound(new { ok = false, error = "Coleção manual não encontrada." });
             }
 
             DeleteLooseFile(plugin.GetStorageDirectory("studio-hub-logos"), entry.LogoFileName);
@@ -410,18 +410,18 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var cleanName = NormalizeCollectionName(name);
             if (string.IsNullOrWhiteSpace(cleanName))
             {
-                return BadRequest(new { ok = false, error = "Koleksiyon adı gerekli." });
+                return BadRequest(new { ok = false, error = "O nome da coleção é obrigatório." });
             }
 
             if (file is null || file.Length <= 0)
             {
-                return BadRequest(new { ok = false, error = "Yüklenecek video gerekli." });
+                return BadRequest(new { ok = false, error = "O arquivo de vídeo é obrigatório." });
             }
 
             var ext = Path.GetExtension(file.FileName ?? string.Empty).ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(ext) || !AllowedVideoExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
             {
-                return BadRequest(new { ok = false, error = "Sadece mp4, webm, m4v veya mov videolar kabul edilir." });
+                return BadRequest(new { ok = false, error = "Apenas vídeos em mp4, webm, m4v ou mov são aceitos." });
             }
 
             var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
@@ -476,7 +476,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var cleanName = NormalizeCollectionName(name);
             if (string.IsNullOrWhiteSpace(cleanName))
             {
-                return BadRequest(new { ok = false, error = "Koleksiyon adı gerekli." });
+                return BadRequest(new { ok = false, error = "O nome da coleção é obrigatório." });
             }
 
             var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
@@ -486,7 +486,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var existing = cfg.StudioHubVideoEntries.FirstOrDefault(entry => NameEquals(entry?.Name, cleanName));
             if (existing is null)
             {
-                return NotFound(new { ok = false, error = "Bu koleksiyon için kayıtlı hover video bulunamadı." });
+                return NotFound(new { ok = false, error = "Nenhum vídeo de hover encontrado para esta coleção." });
             }
 
             var videosDir = plugin.GetStorageDirectory("studio-hub-videos");
@@ -548,7 +548,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 
             if (!IsAdminUser(userCheck.User))
             {
-                return (null, Guid.Empty, StatusCode(403, new { ok = false, error = "Bu işlem sadece admin kullanıcılar içindir." }));
+                return (null, Guid.Empty, StatusCode(403, new { ok = false, error = "Esta operação é restrita a administradores." }));
             }
 
             return userCheck;
@@ -558,13 +558,13 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
         {
             if (!TryGetRequestUserId(out var userId))
             {
-                return (null, Guid.Empty, Unauthorized(new { ok = false, error = "X-Emby-UserId gerekli." }));
+                return (null, Guid.Empty, Unauthorized(new { ok = false, error = "X-Emby-UserId é obrigatório." }));
             }
 
             var user = _users.GetUserById(userId);
             if (user is null)
             {
-                return (null, Guid.Empty, Unauthorized(new { ok = false, error = "Kullanıcı bulunamadı." }));
+                return (null, Guid.Empty, Unauthorized(new { ok = false, error = "Usuário não encontrado." }));
             }
 
             return (user, userId, null);

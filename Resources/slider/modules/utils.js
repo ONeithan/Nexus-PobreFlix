@@ -324,7 +324,7 @@ export function ensureJmsDetailsOverlay({
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "jms-details-btn";
-  btn.setAttribute("aria-label", "Ayrıntılar");
+  btn.setAttribute("aria-label", "Detalhes");
 
   const arrowIcon = document.createElement("span");
   arrowIcon.className = "jms-details-arrow";
@@ -376,7 +376,7 @@ export function ensureJmsDetailsOverlay({
     const playBtn = document.createElement("button");
     playBtn.type = "button";
     playBtn.className = "jms-play-btn";
-    playBtn.setAttribute("aria-label", "Şimdi Oynat");
+    playBtn.setAttribute("aria-label", "Reproduzir Agora");
     playBtn.innerHTML = `
       <span class="jms-play-icon" style="display:flex;align-items:center;justify-content:center;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -442,6 +442,7 @@ export function createTrailerIframe({
   detailsText,
   showDetailsOverlay = true,
 }) {
+  const labels = config?.languageLabels || {};
   const normalizePreviewPlaybackMode = (value) => (
     value === "trailer" ||
     value === "video" ||
@@ -515,7 +516,7 @@ export function createTrailerIframe({
         } catch (err) {
           console.error("PlayNow click error:", err);
           if (typeof window.showMessage === "function") {
-            window.showMessage("PlayNow çalıştırılırken hata oluştu", "error");
+            window.showMessage("Erro ao executar Reproduzir Agora", "error");
           }
         }
       },
@@ -590,7 +591,7 @@ export function createTrailerIframe({
     <div class="jms-audio-preview-overlay__panel">
       <div class="jms-audio-preview-overlay__eyebrow">
         <i class="fa-solid fa-wave-square"></i>
-        <span>${config?.languageLabels?.track || "Parça"}</span>
+        <span>${labels?.track || "Faixa"}</span>
       </div>
       <div class="jms-audio-preview-overlay__title"></div>
       <div class="jms-audio-preview-overlay__subtitle"></div>
@@ -1399,9 +1400,9 @@ async function getImageSizeInBytes(url, { signal } = {}) {
       signal,
     });
     const size = res.headers.get("Content-Length") || res.headers.get("content-length");
-    if (!size) throw new Error("Content-Length yok");
+    if (!size) throw new Error("Content-Length não encontrado");
     const n = parseInt(size, 10);
-    if (!Number.isFinite(n)) throw new Error("Content-Length parse edilemedi");
+    if (!Number.isFinite(n)) throw new Error("Content-Length não pôde ser processado");
     return n;
   } catch {
     return NaN;

@@ -943,7 +943,7 @@ async function safeFetch(url, opts = {}) {
   let token = "";
   try { token = getSessionInfo()?.accessToken || ""; } catch {}
   if (!token && requiresAuth(url)) {
-    const e = new Error("Giriş yapılmadı: access token yok.");
+    const e = new Error("Sessão não iniciada: token de acesso ausente.");
     e.status = 401;
     throw e;
   }
@@ -974,7 +974,7 @@ async function safeFetch(url, opts = {}) {
     try {
       clearPersistedIdentity();
     } catch {}
-    const err = new Error("Oturum geçersiz (401) – kimlik temizlendi, tekrar giriş gerekli.");
+    const err = new Error("Sessão inválida (401) – identidade limpa, novo login necessário.");
     err.status = 401;
     throw err;
   }
@@ -1364,7 +1364,7 @@ async function makeApiRequest(url, options = {}) {
     let token = "";
     try { token = getSessionInfo()?.accessToken || ""; } catch {}
     if (!token && requiresAuth(url)) {
-      const e = new Error("Giriş yapılmadı: access token yok.");
+      const e = new Error("Sessão não iniciada: token de acesso ausente.");
       e.status = 401;
       throw e;
     }
@@ -1442,7 +1442,7 @@ async function makeApiRequest(url, options = {}) {
       throw err;
     }
     if (response.status === 403) {
-      const err = new Error(`Yetki yok (403): ${fullUrl}`);
+      const err = new Error(`Sem autorização (403): ${fullUrl}`);
       err.status = 403;
       throw err;
     }
@@ -1632,7 +1632,7 @@ async function setJellyfinFavoriteStatus(itemId, isFavorite, { signal } = {}) {
 
   const cleanItemId = String(itemId || "").trim();
   if (!cleanItemId) {
-    throw new Error("itemId gerekli");
+    throw new Error("itemId obrigatório");
   }
 
   return makeApiRequest(`/Users/${encodeURIComponent(userId)}/FavoriteItems/${encodeURIComponent(cleanItemId)}`, {
@@ -1645,7 +1645,7 @@ async function setJellyfinFavoriteStatus(itemId, isFavorite, { signal } = {}) {
 export async function updateFavoriteStatus(itemId, isFavorite, options = {}) {
   const watchlistModule = await import("../../../slider/modules/watchlist.js");
   const cleanItemId = String(itemId || "").trim();
-  if (!cleanItemId) throw new Error("itemId gerekli");
+  if (!cleanItemId) throw new Error("itemId obrigatório");
   const localOptions = {
     ...(options || {}),
     __skipNativeFavoriteSync: true
@@ -1966,7 +1966,7 @@ async function tryWebpackShortcutPlaybackStart(itemId, { startPositionTicks = 0,
     const shortcutsMod = req(22832);
     const shortcuts = shortcutsMod?.Ay;
     if (!shortcuts?.onClick) {
-      attempts.push({ target: "webpack", method: "shortcut-module", ok: false, err: "itemShortcuts yok" });
+      attempts.push({ target: "webpack", method: "shortcut-module", ok: false, err: "itemShortcuts ausente" });
       return { tried: true, started: false, attempts };
     }
 
@@ -2056,7 +2056,7 @@ async function tryWebpackPlaybackManagerStart(itemId, { startPositionTicks = 0, 
     }
 
     if (!playbackManager?.play) {
-      attempts.push({ target: "webpack", method: "playbackManager", ok: false, err: "playback manager yok" });
+      attempts.push({ target: "webpack", method: "playbackManager", ok: false, err: "playback manager ausente" });
       return { tried: true, started: false, attempts };
     }
 
@@ -2361,7 +2361,7 @@ export async function playNow(itemId) {
           }
         }
       }
-      console.warn("playNow(music): GMMP handler yok", { type });
+      console.warn("playNow(music): GMMP handler ausente", { type });
       return false;
     }
     if (item.Type === "Series") {
@@ -2372,7 +2372,7 @@ export async function playNow(itemId) {
     }
     if (item.Type === "Season") {
       const best = await getBestEpisodeIdForSeason(item.Id, item.SeriesId, requesterUserId);
-      if (!best) throw new Error("Bu sezonda hiç bölüm yok!");
+      if (!best) throw new Error("Nenhum episódio nesta temporada!");
       itemId = best;
       item = await fetchItemDetails(itemId);
     }
@@ -2538,7 +2538,7 @@ export async function getVideoStreamUrl(
 
     if (item.Type === "Season") {
       const episodes = await makeApiRequest(`/Shows/${item.SeriesId}/Episodes?SeasonId=${itemId}&Fields=Id`);
-      if (!episodes?.Items?.length) throw new Error("Bu sezonda hiç bölüm yok!");
+      if (!episodes?.Items?.length) throw new Error("Nenhum episódio nesta temporada!");
       const episode = episodes.Items[Math.floor(Math.random() * episodes.Items.length)];
       itemId = episode.Id;
       item = await fetchItemDetails(itemId);

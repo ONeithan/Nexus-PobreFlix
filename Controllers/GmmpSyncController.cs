@@ -133,7 +133,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return BadRequest(new
                 {
                     ok = false,
-                    error = "SessionId veya DeviceId gerekli."
+                    error = "SessionId ou DeviceId são obrigatórios."
                 });
             }
 
@@ -202,7 +202,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return StatusCode(403, new
                 {
                     ok = false,
-                    error = "Cast modulu devre disi."
+                    error = "Módulo de transmissão (Cast) desativado."
                 });
             }
 
@@ -261,7 +261,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return BadRequest(new
                 {
                     ok = false,
-                    error = "SessionId/DeviceId ve Name gerekli."
+                    error = "SessionId/DeviceId e Nome são obrigatórios."
                 });
             }
 
@@ -319,7 +319,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return BadRequest(new
                 {
                     ok = false,
-                    error = "SessionId veya DeviceId gerekli."
+                    error = "SessionId ou DeviceId são obrigatórios."
                 });
             }
 
@@ -333,7 +333,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return StatusCode(403, new
                 {
                     ok = false,
-                    error = "Bu GMMP oturumu icin erisim yok."
+                    error = "Sem acesso para esta sessão GMMP."
                 });
             }
 
@@ -522,7 +522,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return (null, Guid.Empty, StatusCode(403, new
                 {
                     ok = false,
-                    error = "Bu islem sadece admin kullanicilar icindir."
+                    error = "Esta operação é restrita a administradores."
                 }));
             }
 
@@ -536,7 +536,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return (null, Guid.Empty, Unauthorized(new
                 {
                     ok = false,
-                    error = "X-Emby-UserId gerekli."
+                    error = "X-Emby-UserId é obrigatório."
                 }));
             }
 
@@ -546,7 +546,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return (null, Guid.Empty, Unauthorized(new
                 {
                     ok = false,
-                    error = "Kullanici bulunamadi."
+                    error = "Usuário não encontrado."
                 }));
             }
 

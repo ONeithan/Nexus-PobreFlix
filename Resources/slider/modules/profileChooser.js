@@ -732,11 +732,11 @@ function buildOverlayDom(L) {
   overlay.className = "jf-profile-overlay";
   overlay.innerHTML = `
     <div class="jf-profile-shell" role="dialog" aria-modal="true" aria-label="${escapeHtml(L("profileChooserAriaLabel", "Seleção de Perfil"))}">
-      <button class="jf-profile-close" type="button" aria-label="${escapeHtml(L("kapat", "Fechar"))}">✕</button>
-      <button class="jf-profile-settings" type="button" aria-label="${escapeHtml(L("ayarlar", "Configurações"))}">⚙</button>
+      <button class="jf-profile-close" type="button" aria-label="${escapeHtml(L("close", "Fechar"))}">✕</button>
+      <button class="jf-profile-settings" type="button" aria-label="${escapeHtml(L("settings", "Configurações"))}">⚙</button>
 
-      <div class="jf-profile-title">${escapeHtml(L("kimIzliyor", "Quem está assistindo?"))}</div>
-      <div class="jf-profile-subtitle">${escapeHtml(L("profilSecAlt", "Escolha um perfil para continuar."))}</div>
+      <div class="jf-profile-title">${escapeHtml(L("whoIsWatching", "Quem está assistindo?"))}</div>
+      <div class="jf-profile-subtitle">${escapeHtml(L("chooseProfileSub", "Escolha um perfil para continuar."))}</div>
 
       <div class="jf-profile-grid" role="list"></div>
 
@@ -745,12 +745,12 @@ function buildOverlayDom(L) {
           <div class="jf-profile-login-avatar"></div>
           <div class="jf-profile-login-name"></div>
 
-          <label class="jf-profile-login-label">${escapeHtml(L("sifre", "Senha"))}</label>
+          <label class="jf-profile-login-label">${escapeHtml(L("password", "Senha"))}</label>
           <input class="jf-profile-login-input" type="password" autocomplete="current-password" />
 
           <div class="jf-profile-login-actions">
-            <button class="jf-profile-btn secondary" type="button" data-action="back">${escapeHtml(L("geri", "Voltar"))}</button>
-            <button class="jf-profile-btn primary" type="button" data-action="login">${escapeHtml(L("devam", "Continuar"))}</button>
+            <button class="jf-profile-btn secondary" type="button" data-action="back">${escapeHtml(L("back", "Voltar"))}</button>
+            <button class="jf-profile-btn primary" type="button" data-action="continue">${escapeHtml(L("continue", "Continuar"))}</button>
           </div>
 
           <div class="jf-profile-login-hint"></div>
@@ -758,7 +758,7 @@ function buildOverlayDom(L) {
       </div>
 
       <div class="jf-profile-footer">
-        <button class="jf-profile-footer-btn" type="button" data-action="signout">${escapeHtml(L("cikis", "Sair"))}</button>
+        <button class="jf-profile-footer-btn" type="button" data-action="signout">${escapeHtml(L("signOut", "Sair"))}</button>
       </div>
     </div>
   `;
@@ -1599,7 +1599,7 @@ export function initProfileChooser(options = {}) {
       return;
     }
 
-    showLogin(user, { hint: L("profilSifreIstiyor", "Bu profil şifre istiyor.") });
+    showLogin(user, { hint: L("profilSifreIstiyor", "Este perfil requer senha.") });
   }
 
   async function submitLogin() {

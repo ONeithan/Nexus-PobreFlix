@@ -1,54 +1,117 @@
 /* Ggrbz css editor | profileChooser.css | 2026-04-04 21:29:48 (Europe/Istanbul) */
 :root {
-    --jfpc-bg: #000;
+    --jfpc-bg: #0a0c14;
     --jfpc-accent: #7B2FBE;
-    --jfpc-text: hsla(0,0%,100%,.92);
-    --jfpc-muted: hsla(0,0%,100%,.66);
-    --jfpc-dim: hsla(0,0%,100%,.42);
-    --jfpc-overlay: rgba(0,0,0,0.9);
-    --jfpc-surface: hsla(0,0%,100%,.06);
-    --jfpc-surface2: hsla(0,0%,100%,.085);
-    --jfpc-border: hsla(0,0%,100%,.14);
-    --jfpc-shadow-lg: 0 30px 90px rgba(0,0,0,.8);
-    --jfpc-shadow-md: 0 18px 50px rgba(0,0,0,.6);
-    --jfpc-r-lg: 8px;
-    --jfpc-r-md: 4px;
-    --jfpc-r-sm: 2px;
-    --jfpc-ease: cubic-bezier(0.2,0.8,0.2,1);
-    --jfpc-fast: 140ms;
-    --jfpc-med: 240ms;
-    --jfpc-slow: 420ms;
+    --jfpc-text: hsla(0,0%,100%,.95);
+    --jfpc-muted: hsla(0,0%,100%,.7);
+    --jfpc-dim: hsla(0,0%,100%,.4);
+    --jfpc-overlay: rgba(0,0,0,0.92);
+    --jfpc-surface: hsla(0,0%,100%,.05);
+    --jfpc-surface2: hsla(0,0%,100%,.08);
+    --jfpc-border: hsla(0,0%,100%,.1);
+    --jfpc-shadow-lg: 0 40px 100px rgba(0,0,0,.9);
+    --jfpc-shadow-md: 0 20px 60px rgba(0,0,0,.7);
+    --jfpc-r-lg: 16px;
+    --jfpc-r-md: 8px;
+    --jfpc-r-sm: 4px;
+    --jfpc-ease: cubic-bezier(0.23, 1, 0.32, 1);
     --jfpc-font: 'Sora', sans-serif;
+}
+
+/* HEADER BUTTON — Corrigindo "Logo Enorme" */
+.jf-profile-header-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid var(--jfpc-border) !important;
+    padding: 6px 12px !important;
+    border-radius: 40px !important;
+    cursor: pointer !important;
+    transition: var(--jfpc-ease) !important;
+    height: 40px !important;
+    margin-right: 10px !important;
+    color: #fff !important;
+    border: none !important;
+}
+
+.jf-profile-header-btn:hover {
+    background: rgba(255,255,255,0.1) !important;
+    box-shadow: 0 0 15px rgba(123, 47, 190, 0.3) !important;
+}
+
+.jf-profile-header-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    background: var(--jfpc-surface) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.jf-profile-header-avatar img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+.jf-profile-header-name {
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    max-width: 120px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.jf-profile-header-caret {
+    font-size: 10px !important;
+    opacity: 0.5 !important;
+}
+
+/* OVERLAY & GRID */
+.jf-profile-overlay {
+    background: var(--jfpc-overlay) !important;
+    backdrop-filter: blur(20px) !important;
 }
 
 .jf-profile-tile {
     background: transparent !important;
     border: none !important;
     padding: 0 !important;
-    transition: transform 0.2s ease !important;
+    transition: var(--jfpc-ease) !important;
+    cursor: pointer !important;
+    position: relative !important;
 }
 
 .jf-profile-tile:hover {
-    transform: scale(1.05) !important;
+    transform: scale(1.1) !important;
 }
 
 .jf-profile-avatar {
-    border-radius: 4px !important;
-    width: 150px !important;
-    height: 150px !important;
-    margin-bottom: 12px !important;
-    border: 3px solid transparent !important;
-    transition: border-color 0.2s ease !important;
+    border-radius: var(--jfpc-r-md) !important;
+    width: 160px !important;
+    height: 160px !important;
+    margin-bottom: 15px !important;
+    border: 4px solid transparent !important;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease !important;
+    box-shadow: var(--jfpc-shadow-md) !important;
+    overflow: hidden !important;
 }
 
 .jf-profile-tile:hover .jf-profile-avatar {
     border-color: #fff !important;
+    box-shadow: 0 0 30px rgba(123, 47, 190, 0.6) !important;
 }
 
 .jf-profile-name {
-    font-size: 1.2rem !important;
+    font-size: 1.4rem !important;
+    font-weight: 700 !important;
     color: var(--jfpc-muted) !important;
     transition: color 0.2s ease !important;
+    text-align: center !important;
 }
 
 .jf-profile-tile:hover .jf-profile-name {
@@ -56,22 +119,33 @@
 }
 
 .jf-profile-shell {
-    background: #000 !important;
+    background: transparent !important;
     box-shadow: none !important;
     border: none !important;
 }
 
 .jf-profile-title {
     text-align: center !important;
-    margin-top: 10vh !important;
+    margin-top: 15vh !important;
     font-size: 3.5rem !important;
+    font-weight: 800 !important;
+    color: #fff !important;
 }
 
 .jf-profile-grid {
     display: flex !important;
     justify-content: center !important;
-    gap: 30px !important;
-    margin-top: 40px !important;
+    gap: 40px !important;
+    margin-top: 60px !important;
+}
+
+/* LOGIN FORM */
+.jf-profile-login-card {
+    background: var(--jfpc-bg) !important;
+    padding: 40px !important;
+    border-radius: var(--jfpc-r-lg) !important;
+    border: 1px solid var(--jfpc-border) !important;
+    box-shadow: var(--jfpc-shadow-lg) !important;
 }
 
 /* end Ggrbz css editor */

@@ -646,7 +646,7 @@ function formatLocalCommentDate(ts) {
 
 function renderLocalCommentsHtml(comments = [], { currentUserId = "", deleteBusyId = "" } = {}) {
   if (!comments.length) {
-    return `<div style="color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;">${config.languageLabels.localCommentsEmpty || "Henüz yerel yorum yok. İlk yorumu sen yaz."}</div>`;
+    return `<div style="color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;">${config.languageLabels.localCommentsEmpty || "Ainda não há comentários locais. Seja o primeiro a comentar."}</div>`;
   }
 
   return `
@@ -654,7 +654,7 @@ function renderLocalCommentsHtml(comments = [], { currentUserId = "", deleteBusy
       ${comments.map((comment) => {
         const commentId = safeText(comment?.Id);
         const reviewKey = `local:${commentId || Math.random().toString(36).slice(2)}`;
-        const author = escapeHtml(safeText(comment?.OwnerUserName, config.languageLabels.localCommentsUserFallback || "Kullanıcı"));
+        const author = escapeHtml(safeText(comment?.OwnerUserName, config.languageLabels.localCommentsUserFallback || "Usuário"));
         const own = normalizeIdentity(comment?.OwnerUserId) === normalizeIdentity(currentUserId);
         const createdAt = Number(comment?.CreatedAtUtc || 0);
         const updatedAt = Number(comment?.UpdatedAtUtc || 0);
@@ -672,21 +672,21 @@ function renderLocalCommentsHtml(comments = [], { currentUserId = "", deleteBusy
             <div class="jmsdm-review-head">
               <div class="jmsdm-review-author">
                 ${author}
-                ${own ? `<span class="jmsdm-local-comment-badge">${config.languageLabels.localCommentsOwnBadge || "Sen"}</span>` : ""}
+                ${own ? `<span class="jmsdm-local-comment-badge">${config.languageLabels.localCommentsOwnBadge || "Você"}</span>` : ""}
               </div>
               <div class="jmsdm-review-meta-row">
-                ${isEdited ? `<span class="jmsdm-local-comment-edited">${config.languageLabels.localCommentsEdited || "Düzenlendi"}</span>` : ""}
+                ${isEdited ? `<span class="jmsdm-local-comment-edited">${config.languageLabels.localCommentsEdited || "Editado"}</span>` : ""}
                 <div class="jmsdm-review-date">${date}</div>
               </div>
             </div>
             <div class="jmsdm-review-body is-collapsed" data-expanded="0">${fullHtml}</div>
             ${(isLong || own) ? `
               <div class="jmsdm-local-comment-toolbar">
-                ${isLong ? `<button class="jmsdm-review-more">${config.languageLabels.more || "Devamı"}</button>` : `<span></span>`}
+                ${isLong ? `<button class="jmsdm-review-more">${config.languageLabels.more || "Ver mais"}</button>` : `<span></span>`}
                 ${own ? `
                   <div class="jmsdm-local-comment-actions">
-                    <button class="jmsdm-comment-action jmsdm-local-comment-edit" data-comment-id="${escapeHtml(commentId)}">${config.languageLabels.localCommentsEdit || "Düzenle"}</button>
-                    <button class="jmsdm-comment-action danger jmsdm-local-comment-delete" data-comment-id="${escapeHtml(commentId)}" ${deleting ? "disabled" : ""}>${deleting ? (config.languageLabels.localCommentsDeleting || "Siliniyor...") : (config.languageLabels.localCommentsDelete || "Sil")}</button>
+                    <button class="jmsdm-comment-action jmsdm-local-comment-edit" data-comment-id="${escapeHtml(commentId)}">${config.languageLabels.localCommentsEdit || "Editar"}</button>
+                    <button class="jmsdm-comment-action danger jmsdm-local-comment-delete" data-comment-id="${escapeHtml(commentId)}" ${deleting ? "disabled" : ""}>${deleting ? (config.languageLabels.localCommentsDeleting || "Excluindo...") : (config.languageLabels.localCommentsDelete || "Excluir")}</button>
                   </div>
                 ` : ``}
               </div>
@@ -704,13 +704,13 @@ async function loadLocalCommentsInto(root, displayItem, { signal } = {}) {
 
   const itemId = safeText(displayItem?.Id);
   if (!itemId) {
-    host.innerHTML = `<div style="color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;">${config.languageLabels.localCommentsUnavailable || "Bu içerik için yorum alanı açılamadı."}</div>`;
+    host.innerHTML = `<div style="color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;">${config.languageLabels.localCommentsUnavailable || "A área de comentários não pôde ser aberta para este conteúdo."}</div>`;
     return;
   }
 
   const user = getCommentsUserContext();
   if (!user.userId) {
-    host.innerHTML = `<div style="color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;">${config.languageLabels.localCommentsAuthMissing || "Yorum yazmak için aktif kullanıcı bilgisi bulunamadı."}</div>`;
+    host.innerHTML = `<div style="color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;">${config.languageLabels.localCommentsAuthMissing || "Informações de usuário ativo não encontradas para postar comentário."}</div>`;
     return;
   }
 
@@ -754,12 +754,12 @@ async function loadLocalCommentsInto(root, displayItem, { signal } = {}) {
           body.innerHTML = st.fullHtml || "";
           body.setAttribute("data-expanded", "1");
           body.classList.remove("is-collapsed");
-          btn.textContent = config.languageLabels.less || "Kısalt";
+          btn.textContent = config.languageLabels.less || "Recolher";
         } else {
           body.innerHTML = st.shortHtml || "";
           body.setAttribute("data-expanded", "0");
           body.classList.add("is-collapsed");
-          btn.textContent = config.languageLabels.more || "Devamı";
+          btn.textContent = config.languageLabels.more || "Ver mais";
         }
       });
     });
@@ -768,19 +768,19 @@ async function loadLocalCommentsInto(root, displayItem, { signal } = {}) {
   function render() {
     const editingComment = getEditingComment();
     const submitLabel = state.saving
-      ? (config.languageLabels.localCommentsSaving || "Kaydediliyor...")
+      ? (config.languageLabels.localCommentsSaving || "Salvando...")
       : (editingComment
-          ? (config.languageLabels.localCommentsUpdate || "Yorumu Güncelle")
-          : (config.languageLabels.localCommentsSubmit || "Yorum Yap"));
+          ? (config.languageLabels.localCommentsUpdate || "Atualizar Comentário")
+          : (config.languageLabels.localCommentsSubmit || "Postar Comentário"));
     const deleteBusyId = state.deletingCommentId;
     const hint = editingComment
-      ? (config.languageLabels.localCommentsEditHint || "Yorumunu düzenliyorsun. Kaydettiğinde mevcut yorumun güncellenir.")
+      ? (config.languageLabels.localCommentsEditHint || "Você está editando seu comentário. Ele será atualizado ao salvar.")
       : "";
     const canSubmit = !!state.draft.trim() && !state.saving && state.draft.length <= LOCAL_COMMENT_MAX_LENGTH;
 
     host.innerHTML = `
       <div class="jmsdm-local-comments-head">
-        <div class="jmsdm-section-title">${escapeHtml(`${config.languageLabels.localCommentsTitle || "Topluluk Yorumları"} (${state.comments.length})`)}</div>
+        <div class="jmsdm-section-title">${escapeHtml(`${config.languageLabels.localCommentsTitle || "Comentários da Comunidade"} (${state.comments.length})`)}</div>
       </div>
 
       <div class="jmsdm-comments-compose">
@@ -788,7 +788,7 @@ async function loadLocalCommentsInto(root, displayItem, { signal } = {}) {
           class="jmsdm-comments-textarea"
           rows="4"
           maxlength="${LOCAL_COMMENT_MAX_LENGTH}"
-          placeholder="${escapeHtml(config.languageLabels.localCommentsPlaceholder || "Bu içerik hakkında ne düşünüyorsun?")}"
+          placeholder="${escapeHtml(config.languageLabels.localCommentsPlaceholder || "O que você achou deste conteúdo?")}"
           ${state.saving ? "disabled" : ""}
         >${escapeHtml(state.draft)}</textarea>
 
@@ -803,7 +803,7 @@ async function loadLocalCommentsInto(root, displayItem, { signal } = {}) {
           </button>
           ${editingComment ? `
             <button class="jmsdm-btn jmsdm-local-comment-cancel" ${state.saving ? "disabled" : ""}>
-              ${escapeHtml(config.languageLabels.localCommentsCancelEdit || "Vazgeç")}
+              ${escapeHtml(config.languageLabels.localCommentsCancelEdit || "Cancelar")}
             </button>
           ` : ``}
         </div>
@@ -846,12 +846,12 @@ async function loadLocalCommentsInto(root, displayItem, { signal } = {}) {
           state.editingCommentId = "";
           state.saving = false;
           render();
-          window.showMessage?.(config.languageLabels.localCommentsSaved || "Yorum kaydedildi.", "success");
+          window.showMessage?.(config.languageLabels.localCommentsSaved || "Comentário salvo.", "success");
         } catch (err) {
           state.saving = false;
           render();
           console.warn("local comments save error:", err);
-          window.showMessage?.(err?.message || config.languageLabels.localCommentsSaveFailed || "Yorum kaydedilemedi.", "error");
+          window.showMessage?.(err?.message || config.languageLabels.localCommentsSaveFailed || "Não foi possível salvar o comentário.", "error");
         }
       });
     }
@@ -902,7 +902,7 @@ async function loadLocalCommentsInto(root, displayItem, { signal } = {}) {
         if (!commentId) return;
 
         const confirmed = window.confirm?.(
-          config.languageLabels.localCommentsDeleteConfirm || "Yorumunu silmek istediğine emin misin?"
+          config.languageLabels.localCommentsDeleteConfirm || "Tem certeza que deseja excluir seu comentário?"
         );
         if (confirmed === false) return;
 
@@ -920,12 +920,12 @@ async function loadLocalCommentsInto(root, displayItem, { signal } = {}) {
           }
           state.deletingCommentId = "";
           render();
-          window.showMessage?.(config.languageLabels.localCommentsDeleted || "Yorum silindi.", "success");
+          window.showMessage?.(config.languageLabels.localCommentsDeleted || "Comentário excluído.", "success");
         } catch (err) {
           state.deletingCommentId = "";
           render();
           console.warn("local comments delete error:", err);
-          window.showMessage?.(err?.message || config.languageLabels.localCommentsDeleteFailed || "Yorum silinemedi.", "error");
+          window.showMessage?.(err?.message || config.languageLabels.localCommentsDeleteFailed || "Não foi possível excluir o comentário.", "error");
         }
       });
     });
@@ -933,7 +933,7 @@ async function loadLocalCommentsInto(root, displayItem, { signal } = {}) {
     wireReviewExpand(host);
   }
 
-  host.innerHTML = `<div class="jmsdm-comments-loading">${config.languageLabels.loading || "Yükleniyor..."}</div>`;
+  host.innerHTML = `<div class="jmsdm-comments-loading">${config.languageLabels.loading || "Carregando..."}</div>`;
 
   try {
     const data = await fetchLocalComments(itemId, { signal });
@@ -943,7 +943,7 @@ async function loadLocalCommentsInto(root, displayItem, { signal } = {}) {
   } catch (err) {
     if (signal?.aborted) return;
     console.warn("local comments load error:", err);
-    host.innerHTML = `<div style="color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;">${escapeHtml(err?.message || config.languageLabels.localCommentsLoadFailed || "Yorumlar yüklenemedi.")}</div>`;
+    host.innerHTML = `<div style="color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;">${escapeHtml(err?.message || config.languageLabels.localCommentsLoadFailed || "Não foi possível carregar os comentários.")}</div>`;
   }
 }
 
@@ -960,7 +960,7 @@ function wireOverviewToggle(root) {
     const btn = document.createElement("button");
     btn.className = "jmsdm-overview-toggle";
     btn.type = "button";
-    btn.textContent = (config.languageLabels.more || "Devamı");
+    btn.textContent = (config.languageLabels.more || "Ver mais");
 
     btn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -968,8 +968,8 @@ function wireOverviewToggle(root) {
 
       const collapsed = over.classList.toggle("is-collapsed");
       btn.textContent = collapsed
-        ? (config.languageLabels.more || "Devamı")
-        : (config.languageLabels.less || "Kısalt");
+        ? (config.languageLabels.more || "Ver mais")
+        : (config.languageLabels.less || "Recolher");
     });
     over.insertAdjacentElement("afterend", btn);
   });
@@ -1173,7 +1173,7 @@ function sanitizeLimitedHtml(inputHtml) {
 
       const spoilerLabel =
         (config?.languageLabels?.spoilerClick || config?.languageLabels?.spoiler || "").toString().trim()
-        || "Spoiler (tap to reveal)";
+        || "Spoiler (toque para revelar)";
       span.setAttribute("data-spoiler-label", spoilerLabel);
       span.setAttribute("role", "button");
       span.setAttribute("tabindex", "0");
@@ -1244,7 +1244,7 @@ function toPlainTextFromHtml(html) {
 
 function renderTmdbReviewsHtml(reviews = [], { showMore = false } = {}) {
   if (!reviews.length) {
-    return `<div style="color:rgba(255,255,255,.7);font-size:13px;line-height:1.5;">${config.languageLabels.noReviews || 'Yorum bulunamadı.'}</div>`;
+    return `<div style="color:rgba(255,255,255,.7);font-size:13px;line-height:1.5;">${config.languageLabels.noReviews || 'Nenhum comentário encontrado.'}</div>`;
   }
   return `
     <div class="jmsdm-reviews">
@@ -1284,14 +1284,14 @@ function renderTmdbReviewsHtml(reviews = [], { showMore = false } = {}) {
             </div>
             <div class="jmsdm-review-body is-collapsed" data-expanded="0">${shortHtml}</div>
 
-            ${isLong ? `<button class="jmsdm-review-more">${config.languageLabels.more || 'Devamı'}</button>` : ''}
+            ${isLong ? `<button class="jmsdm-review-more">${config.languageLabels.more || 'Ver mais'}</button>` : ''}
           </div>
         `;
       }).join('')}
     </div>
     ${showMore ? `
       <div style="margin-top:10px;display:flex;justify-content:center;">
-        <button class="jmsdm-btn jmsdm-reviews-more">${config.languageLabels.loadMore || "Daha fazla yorum"}</button>
+        <button class="jmsdm-btn jmsdm-reviews-more">${config.languageLabels.loadMore || "Mais comentários"}</button>
       </div>
     ` : ``}
   `;
@@ -1304,14 +1304,14 @@ async function loadTmdbReviewsInto(root, displayItem, { signal } = {}) {
     host.innerHTML = `
         <button class="jmsdm-reviews-toggle" data-reviews-expanded="false">
             <span>
-                ${config.languageLabels.reviewsTitle || 'Yorumlar'}
+                ${config.languageLabels.reviewsTitle || 'Comentários'}
                 <span class="jmsdm-tmdb-logo">(TMDb)</span>
                 <span class="jmsdm-reviews-count">...</span>
             </span>
             <span class="toggle-icon">▼</span>
         </button>
         <div class="jmsdm-reviews-container">
-            <div class="jmsdm-reviews-loading">${config.languageLabels.loading || 'Yükleniyor...'}</div>
+            <div class="jmsdm-reviews-loading">${config.languageLabels.loading || 'Carregando...'}</div>
         </div>
     `;
 
@@ -1350,7 +1350,7 @@ async function loadTmdbReviewsInto(root, displayItem, { signal } = {}) {
         try {
             const key = await getTmdbApiKey();
             if (!key) {
-                container.innerHTML = `<div style="color:rgba(255,255,255,.7);font-size:13px;line-height:1.5;">${config.languageLabels.tmdbKeyMissing || 'TMDb API key girilmemiş. Ayarlardan ekleyebilirsin.'}</div>`;
+                container.innerHTML = `<div style="color:rgba(255,255,255,.7);font-size:13px;line-height:1.5;">${config.languageLabels.tmdbKeyMissing || 'API Key do TMDb não configurada. Você pode adicioná-la nas configurações.'}</div>`;
                 return;
             }
 
@@ -1358,7 +1358,7 @@ async function loadTmdbReviewsInto(root, displayItem, { signal } = {}) {
             if (!_open || signal?.aborted) return;
 
             if (!tmdbId || !kind) {
-                container.innerHTML = `<div style="color:rgba(255,255,255,.7);font-size:13px;line-height:1.5;">${config.languageLabels.tmdbIdMissing || 'TMDb ID bulunamadı.'}</div>`;
+                container.innerHTML = `<div style="color:rgba(255,255,255,.7);font-size:13px;line-height:1.5;">${config.languageLabels.tmdbIdMissing || 'ID do TMDb não encontrado.'}</div>`;
                 container.setAttribute('data-loaded', 'true');
                 countSpan.textContent = '0';
                 return;
@@ -1387,7 +1387,7 @@ async function loadTmdbReviewsInto(root, displayItem, { signal } = {}) {
             countSpan.textContent = totalCount.toString();
 
             if (!all.length) {
-                container.innerHTML = `<div style="color:rgba(255,255,255,.7);font-size:13px;line-height:1.5;">${config.languageLabels.noReviews || 'Henüz yorum yok.'}</div>`;
+                container.innerHTML = `<div style="color:rgba(255,255,255,.7);font-size:13px;line-height:1.5;">${config.languageLabels.noReviews || 'Ainda não há comentários.'}</div>`;
                 container.setAttribute('data-loaded', 'true');
                 return;
             }
@@ -1429,12 +1429,12 @@ async function loadTmdbReviewsInto(root, displayItem, { signal } = {}) {
                     wireSpoilers(body);
                     body.setAttribute('data-expanded', '1');
                     body.classList.remove("is-collapsed");
-                    btn.textContent = config.languageLabels.less || 'Kısalt';
+                    btn.textContent = config.languageLabels.less || 'Recolher';
                   } else {
                     body.innerHTML = st.shortHtml || "";
                     body.setAttribute('data-expanded', '0');
                     body.classList.add("is-collapsed");
-                    btn.textContent = config.languageLabels.more || 'Devamı';
+                    btn.textContent = config.languageLabels.more || 'Ver mais';
                   }
                 });
               });
@@ -1450,7 +1450,7 @@ async function loadTmdbReviewsInto(root, displayItem, { signal } = {}) {
                     if (signal?.aborted) return;
                     try {
                         moreBtn.disabled = true;
-                        moreBtn.textContent = config.languageLabels.loading || "Yükleniyor…";
+                        moreBtn.textContent = config.languageLabels.loading || "Carregando…";
                         const want = shown + STEP_TAKE;
                         if (want <= (all?.length || 0)) {
                             shown = want;
@@ -1474,13 +1474,13 @@ async function loadTmdbReviewsInto(root, displayItem, { signal } = {}) {
                     } catch (err) {
                         if (!signal?.aborted) {
                             console.warn("load more reviews error:", err);
-                            window.showMessage?.(config.languageLabels.reviewsFetchFailed || "Yorumlar alınamadı.", "error");
+                            window.showMessage?.(config.languageLabels.reviewsFetchFailed || "Não foi possível obter os comentários.", "error");
                         }
                     } finally {
                         const b = container.querySelector('.jmsdm-reviews-more');
                         if (b) {
                             b.disabled = false;
-                            b.textContent = config.languageLabels.loadMore || "Daha fazla yorum";
+                            b.textContent = config.languageLabels.loadMore || "Mais comentários";
                         }
                     }
                 });
@@ -1490,7 +1490,7 @@ async function loadTmdbReviewsInto(root, displayItem, { signal } = {}) {
         } catch (e) {
             if (!signal?.aborted) {
                 console.warn('TMDb reviews error:', e);
-                container.innerHTML = `<div style="color:rgba(255,255,255,.7);font-size:13px;line-height:1.5;">${config.languageLabels.reviewsFetchFailed || 'Yorumlar alınamadı.'}</div>`;
+                container.innerHTML = `<div style="color:rgba(255,255,255,.7);font-size:13px;line-height:1.5;">${config.languageLabels.reviewsFetchFailed || 'Não foi possível obter os comentários.'}</div>`;
                 container.setAttribute('data-loaded', 'true');
                 countSpan.textContent = '0';
             }
@@ -1561,7 +1561,7 @@ function ensureHeroReplayButton(root, item, { signal } = {}) {
   if (!btn) {
     const label =
       (config?.languageLabels?.replayTrailer || config?.languageLabels?.playTrailer || "").toString().trim()
-      || "Fragmanı tekrar oynat";
+      || "Reproduzir trailer novamente";
 
     btn = document.createElement("button");
     btn.type = "button";
@@ -1999,8 +1999,8 @@ function fmtRuntime(ticks) {
   const totalMin = Math.round((ticks / 10_000_000) / 60);
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
-  if (h <= 0) return `${m} ${config.languageLabels.dk || "min"}`;
-  return `${h} ${config.languageLabels.sa || "h"} ${m} ${config.languageLabels.dk || "min"}`;
+  if (h <= 0) return `${m} ${config.languageLabels.minutos || "min"}`;
+  return `${h} ${config.languageLabels.horas || "h"} ${m} ${config.languageLabels.minutos || "min"}`;
 }
 
 function localizeItemType(rawType) {
@@ -2010,7 +2010,7 @@ function localizeItemType(rawType) {
   const ll = config?.languageLabels || {};
   const map = {
     Movie: ll.film,
-    Series: ll.dizi,
+    Series: ll.series || ll.dizi,
     Episode: ll.episode,
     Season: ll.season,
     BoxSet: ll.boxset || ll.collectionTitle || ll.collection,
@@ -2095,7 +2095,7 @@ function formatDateTime(ts) {
 
   try {
     return new Intl.DateTimeFormat(
-      config?.timeLocale || config?.dateLocale || "tr-TR",
+      config?.timeLocale || config?.dateLocale || "pt-BR",
       sameDay
         ? { hour: "2-digit", minute: "2-digit" }
         : { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }
@@ -2245,8 +2245,8 @@ function formatAudioStream(stream) {
   const bitrate = formatBitrate(stream?.BitRate);
   const tags = [language, codec, channels, bitrate].filter(Boolean);
   const flags = [];
-  if (stream?.IsDefault) flags.push(label("default", "Varsayılan"));
-  if (stream?.IsExternal) flags.push(label("external", "Harici"));
+  if (stream?.IsDefault) flags.push(label("default", "Padrão"));
+  if (stream?.IsExternal) flags.push(label("external", "Externo"));
   if (stream?.Title) flags.push(safeText(stream?.Title));
   return [tags.join(" • "), flags.join(" • ")].filter(Boolean).join(" - ");
 }
@@ -2256,9 +2256,9 @@ function formatSubtitleStream(stream) {
   const codec = safeText(stream?.Codec).toUpperCase();
   const title = safeText(stream?.DisplayTitle || stream?.Title);
   const flags = [];
-  if (stream?.IsDefault) flags.push(label("default", "Varsayılan"));
-  if (stream?.IsForced) flags.push(label("forced", "Zorunlu"));
-  if (stream?.IsExternal) flags.push(label("external", "Harici"));
+  if (stream?.IsDefault) flags.push(label("default", "Padrão"));
+  if (stream?.IsForced) flags.push(label("forced", "Forçado"));
+  if (stream?.IsExternal) flags.push(label("external", "Externo"));
   return [language, codec, title, flags.join(" • ")].filter(Boolean).join(" • ");
 }
 
@@ -2327,7 +2327,7 @@ function renderPreviewChips(chips = []) {
   const visible = (Array.isArray(chips) ? chips : []).filter((chip) => safeText(chip?.text));
   if (!visible.length) return "";
 
-  const openTitle = label("watchlistPreviewStudioAdd", "Stüdyo koleksiyonuna ekle");
+  const openTitle = label("watchlistPreviewStudioAdd", "Adicionar à coleção de estúdio");
 
   return `
     <div class="jmsdm-preview-chips">
@@ -2365,7 +2365,7 @@ function renderPreviewStudioSection(title, studios = []) {
   const visible = (Array.isArray(studios) ? studios : []).filter((studio) => safeText(studio?.name));
   if (!visible.length) return "";
 
-  const openTitle = label("watchlistPreviewStudioAdd", "Stüdyo koleksiyonuna ekle");
+  const openTitle = label("watchlistPreviewStudioAdd", "Adicionar à coleção de estúdio");
 
   return `
     <section class="jmsdm-preview-section">
@@ -3092,7 +3092,7 @@ async function fetchCollectionItems(boxsetId, { signal, limit = 12 } = {}) {
 function renderCollectionHtml({ title = "", items = [] } = {}) {
   if (!items.length) {
     return `<div class="jmsdm-empty-state" style="color:rgba(255,255,255,.6);font-size:14px;padding:16px;text-align:center;">
-      ${config.languageLabels.collectionNotFound || "Koleksiyon bulunamadı."}
+      ${config.languageLabels.collectionNotFound || "Coleção não encontrada."}
     </div>`;
   }
 
@@ -3306,14 +3306,14 @@ async function fetchOtherAlbums(seedItem, { signal, limit = 12 } = {}) {
 
 function renderAudioTracksHtml(items = [], { activeTrackId = "", fallbackAlbumId = "" } = {}) {
   if (!items.length) {
-    return `<div style="color:rgba(255,255,255,.75);font-size:13px;line-height:1.5;">${config.languageLabels.noTracks || "Şarkı bulunamadı."}</div>`;
+    return `<div style="color:rgba(255,255,255,.75);font-size:13px;line-height:1.5;">${config.languageLabels.noTracks || "Nenhuma música encontrada."}</div>`;
   }
 
   return `
     <div class="jmsdm-episodes">
       ${items.map((track, i) => {
         const num = (track?.IndexNumber ?? (i + 1));
-        const trackName = safeText(track?.Name, config.languageLabels.track || "Şarkı");
+        const trackName = safeText(track?.Name, config.languageLabels.track || "Música");
         const trackRuntime = fmtRuntime(track?.RunTimeTicks);
         const img = getAudioImageUrlMini(track, { maxWidth: 260, fallbackAlbumId });
         const activeClass = (activeTrackId && String(track?.Id) === String(activeTrackId)) ? " active" : "";
@@ -3412,7 +3412,7 @@ function startCollectionLoad(root, movieItem, { signal } = {}) {
       const host = root.querySelector(".jmsdm-collection-host");
       if (!host) return;
 
-      const collectionLabel = config.languageLabels.collectionTitle || "Koleksiyon";
+      const collectionLabel = config.languageLabels.collectionTitle || "Coleção";
       const box = await getBoxSetForMovieCached(movieItem.Id, { signal });
       if (!_open || signal?.aborted) return;
 
@@ -3563,8 +3563,8 @@ export async function openDetailsModal({ itemId, serverId = "", preferBackdropIn
     root.innerHTML = `
       <div class="jmsdm-backdrop" role="dialog" aria-modal="true">
         <div class="jmsdm-card" tabindex="-1">
-          <div class="jmsdm-topbar"><button class="jmsdm-close" aria-label="${config.languageLabels.close || "Kapat"}">✕</button></div>
-          <div style="padding:20px;color:rgba(255,255,255,.9);">${config.languageLabels.detailsFetchFailed || "Detaylar alınamadı."}</div>
+          <div class="jmsdm-topbar"><button class="jmsdm-close" aria-label="${config.languageLabels.close || "Fechar"}">✕</button></div>
+          <div style="padding:20px;color:rgba(255,255,255,.9);">${config.languageLabels.detailsFetchFailed || "Não foi possível carregar os detalhes."}</div>
         </div>
       </div>
     `;
@@ -3587,7 +3587,7 @@ export async function openDetailsModal({ itemId, serverId = "", preferBackdropIn
   }
 
   const displayItem = seriesItem || baseItem;
-  const nameBase = safeText(displayItem.Name, config.languageLabels.untitled || "İsimsiz");
+  const nameBase = safeText(displayItem.Name, config.languageLabels.untitled || "Sem título");
 
   try {
     window.__jms_lastDisplayItemName = safeText(displayItem.Name, "");
@@ -3596,7 +3596,7 @@ export async function openDetailsModal({ itemId, serverId = "", preferBackdropIn
   const epName = isEpisode ? safeText(baseItem.Name, "") : "";
   const name = (isEpisode && epName && epName !== nameBase) ? `${nameBase} — ${epName}` : nameBase;
 
-  const overview = safeText(displayItem.Overview, config.languageLabels.noDescription || "Açıklama yok.");
+  const overview = safeText(displayItem.Overview, config.languageLabels.noDescription || "Sem descrição.");
   const year = displayItem.ProductionYear ? String(displayItem.ProductionYear) : "";
   const rating = formatOfficialRatingLabel(displayItem.OfficialRating) || "";
   const community = displayItem.CommunityRating ? String(displayItem.CommunityRating.toFixed?.(1) ?? displayItem.CommunityRating) : "";
@@ -3742,29 +3742,29 @@ export async function openDetailsModal({ itemId, serverId = "", preferBackdropIn
     } : null
   ].filter((chip) => safeText(chip?.text)).slice(0, 4);
   const stats = [
-    { label: label("sure", "Süre"), value: runtime },
-    { label: label("watchlistPreviewRemaining", "Kalan"), value: remaining },
-    { label: label("watchlistPreviewFinishAt", "Bitiş"), value: finishTime },
+    { label: label("duration", "Duração"), value: runtime },
+    { label: label("watchlistPreviewRemaining", "Restante"), value: remaining },
+    { label: label("watchlistPreviewFinishAt", "Termina às"), value: finishTime },
     { label: label("watchlistPreviewVideoQuality", "Video"), value: videoQuality || safeText(baseItem?.MediaType || displayItem?.MediaType) },
-    { label: label("yonetmen", "Yönetmen"), value: directors.join(", ") },
-    { label: label("watchlistPreviewStudio", "Stüdyo"), value: studioNames.join(", ") || albumArtist || albumName }
+    { label: label("director", "Diretor"), value: directors.join(", ") },
+    { label: label("watchlistPreviewStudio", "Estúdio"), value: studioNames.join(", ") || albumArtist || albumName }
   ].filter((entry) => safeText(entry?.value));
   const mediaFields = isBoxSet
     ? []
     : [
         { label: label("watchlistPreviewVideoTrack", "Video"), value: videoQuality },
-        { label: label("watchlistPreviewAudioCount", "Ses"), value: audioTracks.length ? `${audioTracks.length} ${label("watchlistPreviewTrackSuffix", "parça")}` : "" },
-        { label: label("watchlistPreviewSubtitleCount", "Altyazı"), value: subtitleTracks.length ? `${subtitleTracks.length} ${label("watchlistPreviewTrackSuffix", "parça")}` : "" }
+        { label: label("watchlistPreviewAudioCount", "Áudio"), value: audioTracks.length ? `${audioTracks.length} ${label("watchlistPreviewTrackSuffix", "faixas")}` : "" },
+        { label: label("watchlistPreviewSubtitleCount", "Legendas"), value: subtitleTracks.length ? `${subtitleTracks.length} ${label("watchlistPreviewTrackSuffix", "faixas")}` : "" }
       ];
   const creditFields = isBoxSet
     ? []
     : [
-        { label: label("yonetmen", "Yönetmen"), value: directors.join(", ") },
-        { label: label("watchlistPreviewWriter", "Yazar"), value: writers.join(", ") },
-        { label: label("watchlistPreviewActors", "Oyuncular"), value: actors.join(", ") },
-        { label: label("watchlistPreviewArtists", "Sanatçılar"), value: artists.join(", ") },
-        { label: label("watchlistPreviewAlbum", "Albüm"), value: albumName },
-        { label: label("watchlistPreviewAlbumArtist", "Albüm Sanatçısı"), value: albumArtist }
+        { label: label("director", "Diretor"), value: directors.join(", ") },
+        { label: label("watchlistPreviewWriter", "Escritor"), value: writers.join(", ") },
+        { label: label("watchlistPreviewActors", "Elenco"), value: actors.join(", ") },
+        { label: label("watchlistPreviewArtists", "Artistas"), value: artists.join(", ") },
+        { label: label("watchlistPreviewAlbum", "Álbum"), value: albumName },
+        { label: label("watchlistPreviewAlbumArtist", "Artista do Álbum"), value: albumArtist }
       ];
 
   let episodes = [];
@@ -3818,7 +3818,7 @@ wireMiniCardDelegation();
           const s = ep.ParentIndexNumber ?? "";
           const e = ep.IndexNumber ?? "";
           const num = (s !== "" && e !== "") ? `S${s} · E${e}` : String((page - 1) * perPage + i + 1);
-          const epName = safeText(ep.Name, config.languageLabels.episode || "Bölüm");
+          const epName = safeText(ep.Name, config.languageLabels.episode || "Episódio");
           const img = getEpisodeImageUrlMini(ep, { maxWidth: 260 });
           const epOver = safeText(ep.Overview, "");
           return `
@@ -3831,10 +3831,8 @@ wireMiniCardDelegation();
               }
             </div>
 
-            <div class="jmsdm-ep-num">${num}</div>
-
             <div class="jmsdm-ep-main">
-              <div class="jmsdm-ep-name">${epName}</div>
+              <div class="jmsdm-ep-name">${num} — ${epName}</div>
               <div class="jmsdm-ep-over">${epOver}</div>
             </div>
           </div>
@@ -3846,12 +3844,12 @@ wireMiniCardDelegation();
 
   function renderRightPanelHtml() {
     if (isMovie) {
-      const similarTitle = safeText(recos.title, config.languageLabels.similarItems || "Benzer İçerikler");
+      const similarTitle = safeText(recos.title, config.languageLabels.similarItems || "Conteúdos Semelhantes");
 
       const collectionLabel =
         config.languageLabels.collectionTitle ||
         config.languageLabels.collection ||
-        "Koleksiyon";
+        "Coleção";
 
       return `
         <div class="jmsdm-section-title">${similarTitle}</div>
@@ -3882,10 +3880,10 @@ wireMiniCardDelegation();
       const collectionItemsTitle =
         config.languageLabels.collectionItemsTitle ||
         config.languageLabels.collectionTitle ||
-        "Koleksiyon İçeriği";
+        "Conteúdo da Coleção";
       const otherCollectionsTitle =
         config.languageLabels.otherCollectionsTitle ||
-        "Diğer Koleksiyonlar";
+        "Outras Coleções";
 
       return `
         <div class="jmsdm-section-title">${collectionItemsTitle}</div>
@@ -3908,12 +3906,12 @@ wireMiniCardDelegation();
 
     if (isMusicType) {
       const tracksTitle = isAudio
-        ? (config.languageLabels.albumTracksTitle || "Albümdeki Şarkılar")
-        : (config.languageLabels.tracksTitle || "Şarkılar");
+        ? (config.languageLabels.albumTracksTitle || "Músicas no Álbum")
+        : (config.languageLabels.tracksTitle || "Músicas");
       const otherAlbumsTitle =
         isAudio
-          ? (config.languageLabels.artistAlbumsTitle || "Sanatçının Albümleri")
-          : (config.languageLabels.otherAlbumsTitle || "Diğer Albümler");
+          ? (config.languageLabels.artistAlbumsTitle || "Álbuns do Artista")
+          : (config.languageLabels.otherAlbumsTitle || "Outros Álbuns");
 
       return `
         <div class="jmsdm-section-title">${tracksTitle}</div>
@@ -3936,34 +3934,33 @@ wireMiniCardDelegation();
     }
 
     const showSeasonUi = seasons.length > 0;
+    const seasonLabel = config.languageLabels.season || "Temporada";
+
     return `
-      <div class="jmsdm-section-title">${seriesId ? (config.languageLabels.episodesTitle || "Bölümler") : (config.languageLabels.infoTitle || "Bilgi")}</div>
+      <div class="jmsdm-section-title">${seriesId ? (config.languageLabels.episodesTitle || "Episódios") : (config.languageLabels.infoTitle || "Informação")}</div>
 
       ${showSeasonUi ? `
-        <div class="jmsdm-toolbar">
-          <div class="jmsdm-select-wrap">
-            <select class="jmsdm-select" aria-label="${config.languageLabels.seasonSelect || "Sezon Seç"}">
-              ${seasons.map(s => {
-                const n = safeText(s.Name, `${config.languageLabels.season || "Sezon"} ${s.IndexNumber ?? ""}`.trim());
-                const sel = String(s.Id) === String(selectedSeasonId) ? "selected" : "";
-                return `<option value="${s.Id}" ${sel}>${n}</option>`;
-              }).join("")}
-            </select>
-          </div>
+        <div class="jmsdm-season-tabs">
+          ${seasons.map(s => {
+            const n = safeText(s.Name, `${seasonLabel} ${s.IndexNumber ?? ""}`.trim());
+            const isActive = String(s.Id) === String(selectedSeasonId) ? "active" : "";
+            return `<button class="jmsdm-season-tab ${isActive}" data-season-id="${s.Id}">${n}</button>`;
+          }).join("")}
+        </div>
 
+        <div class="jmsdm-toolbar" style="justify-content: flex-end;">
           <div class="jmsdm-pager">
-            <button class="jmsdm-pagebtn jmsdm-prev" ${page <= 1 ? "disabled" : ""}>${config.languageLabels.prevPage || "Önceki"}</button>
+            <button class="jmsdm-pagebtn jmsdm-prev" ${page <= 1 ? "disabled" : ""}>${config.languageLabels.prevPage || "Anterior"}</button>
             <span class="jmsdm-pagelabel">${page} / ${totalPages()}</span>
-            <button class="jmsdm-pagebtn jmsdm-next" ${page >= totalPages() ? "disabled" : ""}>${config.languageLabels.nextPage || "Sonraki"}</button>
+            <button class="jmsdm-pagebtn jmsdm-next" ${page >= totalPages() ? "disabled" : ""}>${config.languageLabels.nextPage || "Próximo"}</button>
           </div>
         </div>
       ` : (seriesId ? `
-        <div class="jmsdm-toolbar">
-          <div></div>
+        <div class="jmsdm-toolbar" style="justify-content: flex-end;">
           <div class="jmsdm-pager">
-            <button class="jmsdm-pagebtn jmsdm-prev" ${page <= 1 ? "disabled" : ""}>${config.languageLabels.prevPage || "Önceki"}</button>
+            <button class="jmsdm-pagebtn jmsdm-prev" ${page <= 1 ? "disabled" : ""}>${config.languageLabels.prevPage || "Anterior"}</button>
             <span class="jmsdm-pagelabel">${page} / ${totalPages()}</span>
-            <button class="jmsdm-pagebtn jmsdm-next" ${page >= totalPages() ? "disabled" : ""}>${config.languageLabels.nextPage || "Sonraki"}</button>
+            <button class="jmsdm-pagebtn jmsdm-next" ${page >= totalPages() ? "disabled" : ""}>${config.languageLabels.nextPage || "Próximo"}</button>
           </div>
         </div>
       ` : "")}
@@ -3980,6 +3977,9 @@ wireMiniCardDelegation();
         <div class="jmsdm-content">
           <div class="jmsdm-hero">
             ${heroImageUrl ? `<img src="${heroImageUrl}" alt="">` : ""}
+            <div class="jmsdm-poster-container">
+               ${primaryImageUrl ? `<img src="${primaryImageUrl}" alt="">` : ""}
+            </div>
             <div class="jmsdm-topbar">
               <button class="jmsdm-close" aria-label="${labels.kapat || "Fechar"}">✕</button>
             </div>
@@ -4113,7 +4113,7 @@ wireMiniCardDelegation();
       notifyDetailsModalPlay(baseItem.Id);
     } catch (err) {
       console.error("Modal play error:", err);
-      window.showMessage?.(config.languageLabels.playStartFailed || "Oynatma başlatılamadı", "error");
+      window.showMessage?.(config.languageLabels.playStartFailed || "Não foi possível iniciar a reprodução", "error");
     } finally {
       playBtn.disabled = false;
     }
@@ -4188,8 +4188,8 @@ wireMiniCardDelegation();
       }, 1400);
     } else {
       const message = studioName
-        ? `${studioName}: ${label("watchlistPreviewStudioCopyFailed", "Studio ID kopyalanamadı.")}`
-        : label("watchlistPreviewStudioCopyFailed", "Studio ID kopyalanamadı.");
+        ? `${studioName}: ${label("watchlistPreviewStudioCopyFailed", "Não foi possível copiar o ID do estúdio.")}`
+        : label("watchlistPreviewStudioCopyFailed", "Não foi possível copiar o ID do estúdio.");
       notifyStudioHubResult(message, "error", "clipboard", 2400);
     }
 
@@ -4200,8 +4200,8 @@ wireMiniCardDelegation();
 
         if (autoAddResult?.attempted && autoAddResult?.added === false && autoAddResult?.existing !== true) {
           const message = studioName
-            ? `${studioName}: ${safeText(autoAddResult?.error?.message, label("watchlistPreviewStudioAutoAddFailed", "Koleksiyon otomatik eklenemedi."))}`
-            : safeText(autoAddResult?.error?.message, label("watchlistPreviewStudioAutoAddFailed", "Koleksiyon otomatik eklenemedi."));
+            ? `${studioName}: ${safeText(autoAddResult?.error?.message, label("watchlistPreviewStudioAutoAddFailed", "A coleção não pôde ser adicionada automaticamente."))}`
+            : safeText(autoAddResult?.error?.message, label("watchlistPreviewStudioAutoAddFailed", "A coleção não pôde ser adicionada automaticamente."));
           notifyStudioHubResult(message, "error", "triangle-exclamation", 3200);
           return;
         }
@@ -4212,40 +4212,40 @@ wireMiniCardDelegation();
 
         if (autoAddResult?.added && logoResult?.uploaded) {
           const message = studioName
-            ? `${studioName}: ${label("watchlistPreviewStudioAutoAdded", "Koleksiyon listesine otomatik kaydedildi.")} ${label("watchlistPreviewStudioTmdbLogoSaved", "TMDb logosu da otomatik kaydedildi.")}`
-            : `${label("watchlistPreviewStudioAutoAdded", "Koleksiyon listesine otomatik kaydedildi.")} ${label("watchlistPreviewStudioTmdbLogoSaved", "TMDb logosu da otomatik kaydedildi.")}`;
+            ? `${studioName}: ${label("watchlistPreviewStudioAutoAdded", "Salvo automaticamente na lista de coleções.")} ${label("watchlistPreviewStudioTmdbLogoSaved", "O logo do TMDb também foi salvo automaticamente.")}`
+            : `${label("watchlistPreviewStudioAutoAdded", "Salvo automaticamente na lista de coleções.")} ${label("watchlistPreviewStudioTmdbLogoSaved", "O logo do TMDb também foi salvo automaticamente.")}`;
           notifyStudioHubResult(message, "success", "building", 3000);
           return;
         }
 
         if (autoAddResult?.existing && logoResult?.uploaded) {
           const message = studioName
-            ? `${studioName}: ${label("manualCollectionDuplicate", "Bu koleksiyon zaten ekli.")} ${label("watchlistPreviewStudioTmdbLogoSavedSingle", "TMDb logosu otomatik kaydedildi.")}`
-            : `${label("manualCollectionDuplicate", "Bu koleksiyon zaten ekli.")} ${label("watchlistPreviewStudioTmdbLogoSavedSingle", "TMDb logosu otomatik kaydedildi.")}`;
+            ? `${studioName}: ${label("manualCollectionDuplicate", "Esta coleção já está adicionada.")} ${label("watchlistPreviewStudioTmdbLogoSavedSingle", "O logo do TMDb foi salvo automaticamente.")}`
+            : `${label("manualCollectionDuplicate", "Esta coleção já está adicionada.")} ${label("watchlistPreviewStudioTmdbLogoSavedSingle", "O logo do TMDb foi salvo automaticamente.")}`;
           notifyStudioHubResult(message, "success", "building", 3000);
           return;
         }
 
         if (autoAddResult?.added) {
           const message = studioName
-            ? `${studioName}: ${label("watchlistPreviewStudioAutoAdded", "Koleksiyon listesine otomatik kaydedildi.")}`
-            : label("watchlistPreviewStudioAutoAdded", "Koleksiyon listesine otomatik kaydedildi.");
+            ? `${studioName}: ${label("watchlistPreviewStudioAutoAdded", "Salvo automaticamente na lista de coleções.")}`
+            : label("watchlistPreviewStudioAutoAdded", "Salvo automaticamente na lista de coleções.");
           notifyStudioHubResult(message, "success", "building", 2600);
           return;
         }
 
         if (autoAddResult?.existing) {
           const message = studioName
-            ? `${studioName}: ${label("manualCollectionDuplicate", "Bu koleksiyon zaten ekli.")}`
-            : label("manualCollectionDuplicate", "Bu koleksiyon zaten ekli.");
+            ? `${studioName}: ${label("manualCollectionDuplicate", "Esta coleção já está adicionada.")}`
+            : label("manualCollectionDuplicate", "Esta coleção já está adicionada.");
           notifyStudioHubResult(message, "success", "building", 2600);
           return;
         }
 
         if (logoResult?.uploaded) {
           const message = studioName
-            ? `${studioName}: ${label("watchlistPreviewStudioTmdbLogoSavedSingle", "TMDb logosu otomatik kaydedildi.")}`
-            : label("watchlistPreviewStudioTmdbLogoSavedSingle", "TMDb logosu otomatik kaydedildi.");
+            ? `${studioName}: ${label("watchlistPreviewStudioTmdbLogoSavedSingle", "O logo do TMDb foi salvo automaticamente.")}`
+            : label("watchlistPreviewStudioTmdbLogoSavedSingle", "O logo do TMDb foi salvo automaticamente.");
           notifyStudioHubResult(message, "success", "image", 2600);
         }
       } finally {
@@ -4283,11 +4283,11 @@ wireMiniCardDelegation();
           updateFavUi();
           window.showMessage?.(getWatchlistToast(baseItem, isFavorite), "success");
         } else {
-          window.showMessage?.(config.languageLabels.favoriteError || "Liste işlemi başarısız", "error");
+          window.showMessage?.(config.languageLabels.favoriteError || "Falha na operação da lista", "error");
         }
       } catch (err) {
         console.warn("fav click error:", err);
-        window.showMessage?.(config.languageLabels.favoriteError || "Liste işlemi başarısız", "error");
+        window.showMessage?.(config.languageLabels.favoriteError || "Falha na operação da lista", "error");
       } finally {
         try { favBtn.disabled = false; } catch {}
       }
@@ -4314,7 +4314,7 @@ wireMiniCardDelegation();
         notifyDetailsModalPlay(epId);
       } catch (err) {
         console.error("Episode play error:", err);
-        window.showMessage?.(config.languageLabels.episodePlayFailed || "Bölüm oynatılamadı", "error");
+        window.showMessage?.(config.languageLabels.episodePlayFailed || "Não foi possível reproduzir o episódio", "error");
       }
     });
   }
@@ -4369,14 +4369,13 @@ wireMiniCardDelegation();
       });
     }
 
-    const sel = right.querySelector(".jmsdm-select");
-    if (sel) {
-      addEventListener(sel, "change", async (e) => {
-        const v = e.target?.value || "";
+    const seasonTabs = right.querySelectorAll(".jmsdm-season-tab");
+    seasonTabs.forEach(tab => {
+      addEventListener(tab, "click", async (e) => {
+        const v = tab.getAttribute("data-season-id");
         if (!v || !seriesId) return;
         selectedSeasonId = v;
         page = 1;
-
         try {
           right.innerHTML = `<div class="jmsdm-skeleton" style="width:40%;height:12px;margin-top:6px;"></div>`;
           episodes = await fetchEpisodesFor(seriesId, selectedSeasonId, { signal: _abort.signal });
@@ -4384,12 +4383,11 @@ wireMiniCardDelegation();
           rerenderRight();
         } catch (err) {
           if (_abort.signal.aborted) return;
-          console.warn("season change episodes error:", err);
           episodes = [];
           rerenderRight();
         }
       });
-    }
+    });
 
     wireEpisodeClicks();
     right.scrollTop = currentScroll;

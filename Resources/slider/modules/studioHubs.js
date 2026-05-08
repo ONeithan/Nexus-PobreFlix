@@ -333,7 +333,7 @@ function setPopoverContent(studioName, items) {
   const body = pop.querySelector('.hub-preview-body');
 
   title.textContent = `${studioName} - ${(config.languageLabels.previewModalTitle || 'Mais Bem Avaliados')}`;
-  pop.querySelector('.hub-preview-close').setAttribute('aria-label', config.languageLabels.closeButton || config.languageLabels.kapat || 'Fechar');
+  pop.querySelector('.hub-preview-close').setAttribute('aria-label', config.languageLabels.closeButton || 'Fechar');
 
   body.innerHTML = '';
   const { serverId } = getSessionInfo();
@@ -343,7 +343,7 @@ function setPopoverContent(studioName, items) {
     itemEl.className = 'hub-preview-item';
     const posterUrl = buildPosterUrl(item, 300, 95);
     let ratingVal = item.CommunityRating || item.CriticRating;
-    let rating = (typeof ratingVal === "number") ? ratingVal.toFixed(1) : (config.languageLabels.noRating || 'S/A');
+    let rating = (typeof ratingVal === "number") ? ratingVal.toFixed(1) : (config.languageLabels.noRating || 'N/A');
     let isFavorite = getCachedWatchlistMembership(item.Id, item.UserData?.IsFavorite);
     item.UserData = item.UserData || {};
     item.UserData.IsFavorite = isFavorite;
@@ -434,7 +434,7 @@ async function toggleFavorite(itemId, isFavorite, buttonElement, item) {
     setTimeout(() => { buttonElement.style.transform = 'scale(1)'; }, 200);
     return true;
   } catch (error) {
-    console.error('Favori işlemi hatası:', error);
+    console.error('Erro na operação de favorito:', error);
     buttonElement.style.animation = 'shake 0.5s';
     setTimeout(() => { buttonElement.style.animation = ''; }, 500);
     return false;
@@ -562,7 +562,7 @@ function createPreviewButton(card, studioName, studioId, userId) {
       const fetched = await fetchStudioItemsViaUsers(studioId, studioName, userId, signal);
       studioItems = selectTopNWithMinRating(fetched, MIN_RATING, 5);
     } catch (err) {
-      console.error('Ön izleme verileri alınamadı:', err);
+      console.error('Não foi possível carregar os dados de pré-visualização:', err);
       studioItems = [];
     } finally {
       isFetching = false;
@@ -761,7 +761,7 @@ async function resolveLogoUrl(name) {
 async function fetchStudios(signal) {
   const url = `/Studios?Limit=300&Recursive=true&SortBy=SortName&SortOrder=Ascending`;
   const res = await fetch(withServer(url), { headers: hJSON(), signal, credentials: 'same-origin' });
-  if (!res.ok) throw new Error("Studios alınamadı");
+  if (!res.ok) throw new Error("Não foi possível carregar os estúdios");
   const data = await res.json();
   const items = Array.isArray(data?.Items) ? data.Items : (Array.isArray(data) ? data : []);
   return items.map(s => ({
@@ -1134,7 +1134,7 @@ export async function renderStudioHubs() {
     }
 
   } catch (e) {
-    console.warn("Studio hubs render hatası:", e);
+    console.warn("Erro na renderização do Studio hubs:", e);
     setStudioHubsReady(true);
   } finally {
     __studioHubBusy = false;
@@ -1185,14 +1185,14 @@ function ensureContainer(indexPage) {
     section.classList.add("homeSection");
     section.innerHTML = `
       <div class="sectionTitleContainer sectionTitleContainer-cards">
-        <h2 class="sectionTitle sectionTitle-cards">${config.languageLabels.studioHubs || 'Studio Collections'}</h2>
+        <h2 class="sectionTitle sectionTitle-cards">${config.languageLabels.studioHubs || 'Coleções de Estúdios'}</h2>
       </div>
       <div class="hub-scroll-wrap">
-        <button class="hub-scroll-btn hub-scroll-left" aria-label="${config.languageLabels.scrollLeft || 'Scroll left'}" aria-disabled="true">
+        <button class="hub-scroll-btn hub-scroll-left" aria-label="${config.languageLabels.scrollLeft || 'Rolar para esquerda'}" aria-disabled="true">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
         </button>
         <div class="itemsContainer hub-row backdrop-mode" role="list"></div>
-        <button class="hub-scroll-btn hub-scroll-right" aria-label="${config.languageLabels.scrollRight || 'Scroll right'}" aria-disabled="true">
+        <button class="hub-scroll-btn hub-scroll-right" aria-label="${config.languageLabels.scrollRight || 'Rolar para direita'}" aria-disabled="true">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
         </button>
       </div>

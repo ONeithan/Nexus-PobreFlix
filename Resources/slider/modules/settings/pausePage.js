@@ -17,13 +17,13 @@ export function createPausePanel(_config, labels) {
   panel.id = 'pause-panel';
   panel.className = 'settings-panel';
 
-  const section = createSection(labels.pauseSettings || 'Duraklatma Ekranı Ayarları');
+  const section = createSection(labels.pauseSettings || 'Configurações da Tela de Pausa');
 
   const pauseCssVariantContainer = document.createElement('div');
   pauseCssVariantContainer.className = 'fsetting-item';
 
   const pauseCssVariantLabel = document.createElement('label');
-  pauseCssVariantLabel.textContent = labels.pauseOverlayCssVariant || 'Duraklatma Ekranı Stili';
+  pauseCssVariantLabel.textContent = labels.pauseOverlayCssVariant || 'Estilo da Tela de Pausa';
   pauseCssVariantLabel.htmlFor = 'pauseOverlayCssVariant';
   pauseCssVariantLabel.className = 'settings-label';
 
@@ -33,13 +33,13 @@ export function createPausePanel(_config, labels) {
   pauseCssVariantSelect.className = 'settings-select';
 
   [
-    ['pauseModul', labels.pauseOverlayCssVariant_pauseModul || 'Stil 1'],
-    ['pauseModul2', labels.pauseOverlayCssVariant_pauseModul2 || 'Stil 2']
+    ['moduloPausa', labels.pauseOverlayCssVariant_pauseModul || 'Stil 1'],
+    ['moduloPausa2', labels.pauseOverlayCssVariant_pauseModul2 || 'Stil 2']
   ].forEach(([value, text]) => {
     const option = document.createElement('option');
     option.value = value;
     option.textContent = text;
-    option.selected = (config.pauseOverlay?.cssVariant || 'pauseModul') === value;
+    option.selected = (config.pauseOverlay?.cssVariant || 'moduloPausa') === value;
     pauseCssVariantSelect.appendChild(option);
   });
 
@@ -51,12 +51,12 @@ export function createPausePanel(_config, labels) {
   pauseCssVariantDescription.className = 'description-text';
   pauseCssVariantDescription.textContent =
     labels.pauseOverlayCssVariantDescription ||
-    'Duraklatma ekranında kullanılacak CSS tasarımını seçin.';
+    'Escolha o design CSS a ser usado na tela de pausa.';
   section.appendChild(pauseCssVariantDescription);
 
   const enableCheckbox = createCheckbox(
     'pauseOverlay',
-    labels.enablePauseOverlay || 'Durdurma Ekranını Etkinleştir',
+    labels.enablePauseOverlay || 'Ativar Tela de Pausa',
     config.pauseOverlay.enabled
   );
   section.appendChild(enableCheckbox);
@@ -64,13 +64,13 @@ export function createPausePanel(_config, labels) {
   const description = document.createElement('div');
   description.className = 'description-text';
   description.textContent = labels.pauseOverlayDescription ||
-      'Bu özellik etkinleştirildiğinde, video duraklatıldığında içerik bilgilerini gösteren bir ekran görüntülenir.';
+      'Quando este recurso está ativado, uma tela exibindo informações do conteúdo será mostrada quando o vídeo for pausado.';
   section.appendChild(description);
   const imagePrefContainer = document.createElement('div');
   imagePrefContainer.className = 'fsetting-item';
 
   const imagePrefLabel = document.createElement('label');
-  imagePrefLabel.textContent = labels.pauseImagePreference || 'Görsel Önceliği';
+  imagePrefLabel.textContent = labels.pauseImagePreference || 'Prioridade de Imagem';
   imagePrefLabel.htmlFor = 'pauseOverlayImagePreference';
   imagePrefLabel.className = 'settings-label';
 
@@ -93,47 +93,47 @@ export function createPausePanel(_config, labels) {
 
   const showPlotCheckbox = createCheckbox(
     'pauseOverlayShowPlot',
-    labels.showPlot || 'Konu Açıklamasını Göster',
+    labels.showPlot || 'Mostrar Sinopse',
     config.pauseOverlay.showPlot !== false
   );
   section.appendChild(showPlotCheckbox);
 
   const showMetadataCheckbox = createCheckbox(
     'pauseOverlayShowMetadata',
-    labels.showMetadata || 'Bilgi Satırlarını Göster',
+    labels.showMetadata || 'Mostrar Linhas de Informação',
     config.pauseOverlay.showMetadata !== false
   );
   section.appendChild(showMetadataCheckbox);
 
   const showLogoCheckbox = createCheckbox(
     'pauseOverlayShowLogo',
-    labels.showLogo || 'Logo/Disk/Yazı Göster',
+    labels.showLogo || 'Mostrar Logo/Disco/Texto',
     config.pauseOverlay.showLogo !== false
   );
   section.appendChild(showLogoCheckbox);
 
   const showBackdropCheckbox = createCheckbox(
     'pauseOverlayShowBackdrop',
-    labels.showBackdrop || 'Arka Plan Görselini Göster',
+    labels.showBackdrop || 'Mostrar Imagem de Fundo',
     config.pauseOverlay.showBackdrop !== false
   );
   section.appendChild(showBackdropCheckbox);
 
   const closeOnMouseMoveCheckbox = createCheckbox(
     'pauseOverlayCloseOnMouseMove',
-    labels.closeOnMouseMove || 'Fare hareketinde duraklatma ekranını kapat',
+    labels.closeOnMouseMove || 'Fechar tela de pausa ao mover o mouse',
     config.pauseOverlay.closeOnMouseMove !== false
   );
   section.appendChild(closeOnMouseMoveCheckbox);
 
   const minDurRow = addNumberRow({
     name: 'pauseOverlayMinVideoMinutes',
-    label: labels.pauseOverlayMinVideoMinutes || 'Minimum video süresi (badge/overlay)',
+    label: labels.pauseOverlayMinVideoMinutes || 'Duração mínima do vídeo (selo/overlay)',
     value: Math.max(1, Number(config.pauseOverlay?.minVideoMinutes ?? 5) || 5),
     min: 1,
     max: 1000,
     step: 1,
-    suffix: labels.dk || 'dk'
+    suffix: labels.dk || 'min'
 });
   section.appendChild(minDurRow);
 
@@ -141,17 +141,17 @@ export function createPausePanel(_config, labels) {
   minDurDesc.className = 'description-text';
   minDurDesc.textContent =
     labels.pauseOverlayMinVideoMinutesDesc
-    || 'Bu değerden kısa (dk) videolarda üst-badge ve duraklatma ekranı gösterilmez.';
+    || 'Selo superior e tela de pausa não serão exibidos em vídeos mais curtos (min) que este valor.';
   section.appendChild(minDurDesc);
 
   const osdHeaderRatingsHeader = document.createElement('h3');
   osdHeaderRatingsHeader.className = 'settings-subheader';
-  osdHeaderRatingsHeader.textContent = labels.osdHeaderRatingsHeader || 'OSD Başlık Puanları';
+  osdHeaderRatingsHeader.textContent = labels.osdHeaderRatingsHeader || 'Avaliações no Cabeçalho OSD';
   section.appendChild(osdHeaderRatingsHeader);
 
   const showOsdHeaderRatingsCheckbox = createCheckbox(
     'pauseOverlayShowOsdHeaderRatings',
-    labels.showOsdHeaderRatings || 'OSD başlığındaki puanları göster',
+    labels.showOsdHeaderRatings || 'Mostrar avaliações no cabeçalho OSD',
     config.pauseOverlay?.showOsdHeaderRatings !== false
   );
   section.appendChild(showOsdHeaderRatingsCheckbox);
@@ -160,17 +160,17 @@ export function createPausePanel(_config, labels) {
   osdHeaderRatingsSubOptions.className = 'sub-options pause-osd-header-rating-sub-options';
   osdHeaderRatingsSubOptions.appendChild(createCheckbox(
     'pauseOverlayShowOsdHeaderCommunityRating',
-    labels.showCommunityRating || 'Topluluk',
+    labels.showCommunityRating || 'Comunidade',
     config.pauseOverlay?.showOsdHeaderCommunityRating !== false
   ));
   osdHeaderRatingsSubOptions.appendChild(createCheckbox(
     'pauseOverlayShowOsdHeaderCriticRating',
-    labels.showCriticRating || 'Rotten Tomato',
+    labels.showCriticRating || 'Rotten Tomatoes',
     config.pauseOverlay?.showOsdHeaderCriticRating !== false
   ));
   osdHeaderRatingsSubOptions.appendChild(createCheckbox(
     'pauseOverlayShowOsdHeaderOfficialRating',
-    labels.showOfficialRating || 'Sertifikasyon',
+    labels.showOfficialRating || 'Certificação',
     config.pauseOverlay?.showOsdHeaderOfficialRating !== false
   ));
   section.appendChild(osdHeaderRatingsSubOptions);
@@ -179,26 +179,26 @@ export function createPausePanel(_config, labels) {
   osdHeaderRatingsDesc.className = 'description-text';
   osdHeaderRatingsDesc.textContent =
     labels.osdHeaderRatingsDescription ||
-    'Oynatma ekranındaki üst başlıkta, içerik adının yanında görünen puanları kontrol eder.';
+    'Controla as avaliações que aparecem ao lado do nome do conteúdo no cabeçalho superior da tela de reprodução.';
   section.appendChild(osdHeaderRatingsDesc);
 
   bindCheckboxKontrol('#pauseOverlayShowOsdHeaderRatings', '.pause-osd-header-rating-sub-options');
 
   const ageBadgeHeader = document.createElement('h3');
   ageBadgeHeader.className = 'settings-subheader';
-  ageBadgeHeader.textContent = labels.ageBadgeSettings || 'Yaş Rozeti Ayarları';
+  ageBadgeHeader.textContent = labels.ageBadgeSettings || 'Configurações de Classificação Etária';
   section.appendChild(ageBadgeHeader);
 
   const showAgeBadgeCheckbox = createCheckbox(
     'pauseOverlayShowAgeBadge',
-    labels.showAgeBadge || 'Yaş rozetini göster',
+    labels.showAgeBadge || 'Mostrar classificação etária',
     (config.pauseOverlay?.showAgeBadge !== false)
   ) ;
   section.appendChild(showAgeBadgeCheckbox);
 
   const minDelayRow = addNumberRow({
     name: 'badgeDelayMs',
-    label: (labels.pauseOverlayBadgeDelayMs || 'Badge Gecikme Süresi'),
+    label: (labels.pauseOverlayBadgeDelayMs || 'Atraso para Exibição do Selo'),
     value: Math.max(1, Math.round((config.pauseOverlay?.badgeDelayMs ?? 5000) / 1000)),
     min: 1,
     max: 3600,
@@ -209,7 +209,7 @@ export function createPausePanel(_config, labels) {
 
   const minDelayResumeRow = addNumberRow({
     name: 'badgeDelayResumeMs',
-    label: (labels.badgeDelayResumeMs || 'Devam Ettirildiğinde Badge Gecikme Süresi'),
+    label: (labels.badgeDelayResumeMs || 'Atraso do Selo ao Retomar'),
     value: Math.max(1, Math.round((config.pauseOverlay?.badgeDelayResumeMs ?? 5000) / 1000)),
     min: 1,
     max: 3600,
@@ -220,7 +220,7 @@ export function createPausePanel(_config, labels) {
 
   const ageBadgeDurationRow = addNumberRow({
     name: 'ageBadgeDurationSec',
-    label: (labels.ageBadgeDurationSec || 'Yaş rozetini gösterme süresi'),
+    label: (labels.ageBadgeDurationSec || 'Duração da exibição da classificação etária'),
     value: Math.max(1, Math.round((config.pauseOverlay?.ageBadgeDurationMs ?? 12000) / 1000)),
     min: 1,
     max: 3600,
@@ -231,7 +231,7 @@ export function createPausePanel(_config, labels) {
 
   const ageBadgeDurationResumeMs = addNumberRow({
     name: 'ageBadgeDurationResumeMs',
-    label: (labels.ageBadgeDurationResumeMs || 'Devam Ettirildiğinde Badge Gösterim Süresi'),
+    label: (labels.ageBadgeDurationResumeMs || 'Duração da Exibição do Selo ao Retomar'),
     value: Math.max(1, Math.round((config.pauseOverlay?.ageBadgeDurationResumeMs ?? 5000) / 1000)),
     min: 1,
     max: 3600,
@@ -242,7 +242,7 @@ export function createPausePanel(_config, labels) {
 
   const ageBadgeLockRow = addNumberRow({
     name: 'ageBadgeLockSec',
-    label: (labels.ageBadgeLockSec || 'Yaş rozetini yeniden gösterme kilidi'),
+    label: (labels.ageBadgeLockSec || 'Bloqueio de reexibição da classificação etária'),
     value: Math.max(0, Math.round((config.pauseOverlay?.ageBadgeLockMs ?? 6000) / 1000)),
     min: 0,
     max: 3600,
@@ -255,13 +255,13 @@ export function createPausePanel(_config, labels) {
   ageBadgeDesc.className = 'description-text';
   ageBadgeDesc.textContent =
     (labels.ageBadgeDesc ||
-     'Rozet gösterim süresi bitince kaybolur. Kilit süresi boyunca rozet tekrar gösterilmez.');
+     'O selo desaparece após o tempo de exibição. O selo não será mostrado novamente durante o tempo de bloqueio.');
   section.appendChild(ageBadgeDesc);
 
-  const sapSec = createSection(labels.smartPauseSettings || 'Akıllı Otomatik Duraklatma');
+  const sapSec = createSection(labels.smartPauseSettings || 'Pausa Automática Inteligente');
   const sapEnableCheckbox = createCheckbox(
     'sapEnabled',
-    labels.smartAutoPauseEnable || 'Akıllı Otomatik Duraklatma Etkin',
+    labels.smartAutoPauseEnable || 'Pausa Automática Inteligente Ativada',
     sap.enabled !== false
   );
   sapSec.appendChild(sapEnableCheckbox);
@@ -270,7 +270,7 @@ export function createPausePanel(_config, labels) {
   sapDesc.className = 'description-text';
   sapDesc.textContent =
     labels.smartAutoPauseDescription ||
-    'Odak kaybı, sekmenin gizlenmesi/minimize ve kullanıcı etkinliği yokluğunda videoyu belirtilen dakikalar sonra durdurur. Ondalıklı değerleri (örn. 0.2 dk) destekler.';
+    'Pausa o vídeo após os minutos especificados em caso de perda de foco, ocultação/minimização da aba ou inatividade do usuário. Suporta valores decimais (ex: 0.2 min).';
   sapSec.appendChild(sapDesc);
 
   function addNumberRow({name, label, value, min=0.1, max=1000, step=0.1, suffix=labels.dk})  {
@@ -306,7 +306,7 @@ export function createPausePanel(_config, labels) {
   sapSec.appendChild(
     addNumberRow({
       name: 'sapBlurMs',
-      label: (labels.smartUnfocusedThreshold || 'Odak dışı bekleme') + ' (ms)',
+      label: (labels.smartUnfocusedThreshold || 'Espera fora de foco') + ' (ms)',
       value: Math.round(sap.blurMinutes * 60000),
       min: 100,
       max: TWO_HOURS_MS,
@@ -318,7 +318,7 @@ export function createPausePanel(_config, labels) {
   sapSec.appendChild(
     addNumberRow({
       name: 'sapHiddenMs',
-      label: (labels.smartOffscreenThreshold || 'Sekme gizli/minimize bekleme') + ' (ms)',
+      label: (labels.smartOffscreenThreshold || 'Espera aba oculta/minimizada') + ' (ms)',
       value: Math.round(sap.hiddenMinutes * 60000),
       min: 100,
       max: TWO_HOURS_MS,
@@ -330,19 +330,19 @@ export function createPausePanel(_config, labels) {
   sapSec.appendChild(
     addNumberRow({
       name: 'sapIdleMinutes',
-      label: labels.smartIdleThreshold || 'Etkinlik yok bekleme',
+      label: labels.smartIdleThreshold || 'Espera sem atividade',
       value: sap.idleMinutes,
       min: 1,
       max: 1000,
       step: 1,
-      suffix: labels.dk || 'dk'
+      suffix: labels.dk || 'min'
     })
   );
 
   const shortWrap = document.createElement('div');
   shortWrap.className = 'fsetting-item';
   const shortLab = document.createElement('label');
-  shortLab.textContent = labels.sapIgnoreShortUnderSec || 'Kısa videolarda devre dışı (saniye altı)';
+  shortLab.textContent = labels.sapIgnoreShortUnderSec || 'Desativar em vídeos curtos (abaixo de segundos)';
   shortLab.className = 'settings-label';
   shortLab.htmlFor = 'sapIgnoreShortUnderSec';
 
@@ -368,13 +368,13 @@ export function createPausePanel(_config, labels) {
 
   const sapIdleDetectCheckbox = createCheckbox(
     'sapUseIdleDetection',
-    labels.smartUseIdleDetection || 'Kullanıcı etkinliği (idle) algılamasını kullan',
+    labels.smartUseIdleDetection || 'Usar detecção de inatividade (idle) do usuário',
     sap.useIdleDetection !== false
   );
   sapSec.appendChild(sapIdleDetectCheckbox);
   const sapRespectPiPCheckbox = createCheckbox(
     'sapRespectPiP',
-    labels.smartRespectPiP || 'Picture-in-Picture (PiP) açıkken durdurma',
+    labels.smartRespectPiP || 'Não pausar enquanto Picture-in-Picture (PiP) estiver aberto',
     sap.respectPiP !== false
   );
   sapSec.appendChild(sapRespectPiPCheckbox);

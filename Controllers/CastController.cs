@@ -99,7 +99,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return StatusCode(403, new
                 {
                     ok = false,
-                    error = "Cast modulu devre disi."
+                    error = "Módulo de transmissão (Cast) desativado."
                 });
             }
 
@@ -180,7 +180,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return (null, Guid.Empty, StatusCode(403, new
                 {
                     ok = false,
-                    error = "Bu islem sadece admin kullanicilar icindir."
+                    error = "Esta operação é restrita a administradores."
                 }));
             }
 
@@ -194,7 +194,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return (null, Guid.Empty, Unauthorized(new
                 {
                     ok = false,
-                    error = "X-Emby-UserId gerekli."
+                    error = "X-Emby-UserId é obrigatório."
                 }));
             }
 
@@ -204,7 +204,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return (null, Guid.Empty, Unauthorized(new
                 {
                     ok = false,
-                    error = "Kullanici bulunamadi."
+                    error = "Usuário não encontrado."
                 }));
             }
 

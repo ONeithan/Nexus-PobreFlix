@@ -2,7 +2,11 @@ import { getConfig } from "../../config.js";
 import { updateVolumeIcon } from "../ui/controls.js";
 import { getRepeatOneIconHtml } from "../../customIcons.js";
 
-const config = getConfig();
+const config = new Proxy({}, {
+  get(target, prop) {
+    return getConfig()[prop];
+  }
+});
 
 export const musicPlayerState = {
   playlist: [],

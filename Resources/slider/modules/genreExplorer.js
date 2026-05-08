@@ -136,17 +136,17 @@ function escapeHtml(s) {
 function formatRuntime(ticks) {
   if (!ticks) return null;
   const minutes = Math.floor(ticks / 600000000);
-  if (minutes < 60) return `${minutes}d`;
+  if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
-  return remainingMinutes > 0 ? `${hours}s ${remainingMinutes}d` : `${hours}s`;
+  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
 }
 function getRuntimeWithIcons(runtime) {
   const cfg = getConfig() || {};
   if (!runtime) return '';
   return runtime
-    .replace(/(\d+)s/g, `$1${cfg.languageLabels?.sa || 'sa'}`)
-    .replace(/(\d+)d/g, `$1${cfg.languageLabels?.dk || 'dk'}`);
+    .replace(/(\d+)h/g, `$1${cfg.languageLabels?.sa || 'h'}`)
+    .replace(/(\d+)m/g, `$1${cfg.languageLabels?.dk || 'm'}`);
 }
 
 const PLACEHOLDER_URL = resolveSliderAssetHref(
@@ -347,16 +347,16 @@ export function openGenreExplorer(genre) {
     <div class="genre-explorer" role="dialog" aria-modal="true" aria-label="Genre Explorer">
       <div class="ge-header">
         <div class="ge-title">
-          ${escapeHtml(__genre)} • ${(getConfig()?.languageLabels?.all) || "Tümü"}
+          ${escapeHtml(__genre)} • ${(getConfig()?.languageLabels?.all) || "Tudo"}
         </div>
         <div class="ge-actions">
-          <button class="ge-close" aria-label="${(getConfig()?.languageLabels?.close) || "Kapat"}">✕</button>
+          <button class="ge-close" aria-label="${(getConfig()?.languageLabels?.close) || "Fechar"}">✕</button>
         </div>
       </div>
       <div class="ge-content">
         <div class="ge-grid" role="list"></div>
         <div class="ge-empty" style="display:none">
-          ${(getConfig()?.languageLabels?.noResults) || "İçerik bulunamadı"}
+          ${(getConfig()?.languageLabels?.noResults) || "Nenhum conteúdo encontrado"}
         </div>
         <div class="ge-sentinel"></div>
       </div>
@@ -483,7 +483,7 @@ async function d_loadMore() {
     __d_startIndex += items.length;
     if (items.length < LIMIT) { try { __d_io?.disconnect(); } catch {} }
   } catch (e) {
-    if (e?.name !== 'AbortError') console.error("Director explorer fetch error:", e);
+    if (e?.name !== 'AbortError') console.error("Erro ao buscar explorador de diretor:", e);
   } finally {
     __d_busy = false;
   }
@@ -503,16 +503,16 @@ export function openDirectorExplorer(person) {
     <div class="genre-explorer" role="dialog" aria-modal="true" aria-label="Director Explorer">
       <div class="ge-header">
         <div class="ge-title">
-          ${escapeHtml(__d_person.Name)} • ${(getConfig()?.languageLabels?.all) || "Tümü"}
+          ${escapeHtml(__d_person.Name)} • ${(getConfig()?.languageLabels?.all) || "Tudo"}
         </div>
         <div class="ge-actions">
-          <button class="ge-close" aria-label="${(getConfig()?.languageLabels?.close) || "Kapat"}">✕</button>
+          <button class="ge-close" aria-label="${(getConfig()?.languageLabels?.close) || "Fechar"}">✕</button>
         </div>
       </div>
       <div class="ge-content">
         <div class="ge-grid" role="list"></div>
         <div class="ge-empty" style="display:none">
-          ${(getConfig()?.languageLabels?.noResults) || "İçerik bulunamadı"}
+          ${(getConfig()?.languageLabels?.noResults) || "Nenhum conteúdo encontrado"}
         </div>
         <div class="ge-sentinel"></div>
       </div>
@@ -685,7 +685,7 @@ async function loadMore() {
     __startIndex += items.length;
     if (items.length < LIMIT) { try { __io?.disconnect(); } catch {} }
   } catch (e) {
-    if (e?.name !== 'AbortError') console.error("Genre explorer fetch error:", e);
+    if (e?.name !== 'AbortError') console.error("Erro ao buscar explorador de gênero:", e);
   } finally {
     __busy = false;
   }
@@ -718,8 +718,8 @@ function createCardFor(item) {
   const isSeries = item.Type === "Series";
   const cfg = getConfig() || {};
   const typeLabel = isSeries
-    ? ((cfg.languageLabels && cfg.languageLabels.dizi) || "Dizi")
-    : ((cfg.languageLabels && cfg.languageLabels.film) || "Film");
+    ? ((cfg.languageLabels && cfg.languageLabels.dizi) || "Série")
+    : ((cfg.languageLabels && cfg.languageLabels.film) || "Filme");
   const typeIcon = isSeries ? 'tv' : 'film';
 
   const ageChip = formatOfficialRatingLabel(item.OfficialRating || "");
@@ -782,7 +782,7 @@ function createCardFor(item) {
     noImg.className = 'prc-noimg-label';
     noImg.textContent =
       (cfg.languageLabels && (cfg.languageLabels.noImage || cfg.languageLabels.loadingText))
-      || 'Görsel yok';
+      || 'Sem imagem';
     noImg.style.minHeight = '220px';
     noImg.style.display = 'flex';
     noImg.style.alignItems = 'center';
@@ -976,13 +976,13 @@ export function openPersonalExplorer() {
           ${(getConfig()?.languageLabels?.personalRecommendations) || "Sana Özel Öneriler"} • ${(getConfig()?.languageLabels?.all) || "Tümü"}
         </div>
         <div class="ge-actions">
-          <button class="ge-close" aria-label="${(getConfig()?.languageLabels?.close) || "Kapat"}">✕</button>
+          <button class="ge-close" aria-label="${(getConfig()?.languageLabels?.close) || "Fechar"}">✕</button>
         </div>
       </div>
       <div class="ge-content">
         <div class="ge-grid" role="list"></div>
         <div class="ge-empty" style="display:none">
-          ${(getConfig()?.languageLabels?.noResults) || "İçerik bulunamadı"}
+          ${(getConfig()?.languageLabels?.noResults) || "Nenhum conteúdo encontrado"}
         </div>
         <div class="ge-sentinel"></div>
       </div>

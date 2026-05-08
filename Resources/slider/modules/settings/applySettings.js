@@ -348,7 +348,7 @@ const USER_ONLY_KEYS = [
             playerTheme: formData.get('playerTheme'),
             playerStyle: formData.get('playerStyle'),
             defaultLanguage: formData.get('defaultLanguage'),
-            dateLocale: formData.get('dateLocale') || 'tr-TR',
+            dateLocale: formData.get('dateLocale') || 'pt-BR',
             sliderDuration: parseInt(formData.get('sliderDuration'), 10),
             limit: parseInt(formData.get('limit'), 10),
             onlyUnwatchedRandom: formData.get('onlyUnwatchedRandom') === 'on',
@@ -356,7 +356,7 @@ const USER_ONLY_KEYS = [
             excludeEpisodesFromPlaying: formData.get('excludeEpisodesFromPlaying') === 'on',
             showPlaybackProgress: formData.get('showPlaybackProgress') === 'on',
             playingLimit: parseFloat(formData.get('playingLimit')),
-            gecikmeSure: parseInt(formData.get('gecikmeSure'), 10),
+            atrasoTrailer: parseInt(formData.get('atrasoTrailer'), 10),
             cssVariant: formData.get('cssVariant'),
             useAlbumArtAsBackground: formData.get('useAlbumArtAsBackground') === 'on',
             albumArtBackgroundBlur: parseInt(formData.get('albumArtBackgroundBlur')),
@@ -671,19 +671,22 @@ const USER_ONLY_KEYS = [
             showDirectorWriter: formData.get('showDirectorWriter') === 'on',
             showDirector: formData.get('showDirector') === 'on',
             showWriter: formData.get('showWriter') === 'on',
-            aktifSure: parseInt(formData.get('aktifSure'), 10),
-            girisSure: parseInt(formData.get('girisSure'), 10),
+            tempoAtivo: parseInt(formData.get('tempoAtivo'), 10),
+            tempoEntrada: parseInt(formData.get('tempoEntrada'), 10),
             allowedWriters: formData.get('allowedWriters') ?
                 formData.get('allowedWriters').split(',').map(w => w.trim()) : [],
 
-            muziklimit: parseInt(formData.get('muziklimit'), 10),
+            limiteMusica: parseInt(formData.get('limiteMusica'), 10),
             nextTrack: parseInt(formData.get('nextTrack'), 10) || 30,
             topTrack: parseInt(formData.get('topTrack'), 10) || 100,
-            sarkilimit: parseInt(formData.get('sarkilimit'), 10),
-            id3limit: parseInt(formData.get('id3limit'), 10),
-            albumlimit: parseInt(formData.get('albumlimit'), 10),
-            gruplimit: parseInt(formData.get('gruplimit'), 10),
-            historylimit: parseInt(formData.get('historylimit'), 10),
+            limiteFaixa: parseInt(formData.get('limiteFaixa'), 10),
+            limiteId3: parseInt(formData.get('limiteId3'), 10),
+            limiteCacheTagsId3: parseInt(formData.get('limiteCacheTagsId3'), 10) || 500,
+            limiteCacheImagensId3: parseInt(formData.get('limiteCacheImagensId3'), 10) || 200,
+            usarBase64ImagensId3: formData.get('usarBase64ImagensId3') === 'on',
+            limiteAlbum: parseInt(formData.get('limiteAlbum'), 10),
+            limiteLote: parseInt(formData.get('limiteLote'), 10),
+            limiteHistorico: parseInt(formData.get('limiteHistorico'), 10),
             maxExcludeIdsForUri: parseInt(formData.get('maxExcludeIdsForUri'), 10),
             notificationsEnabled: formData.get('notificationsEnabled') === 'on',
             nextTracksSource: formData.get('nextTracksSource'),
@@ -910,7 +913,7 @@ const USER_ONLY_KEYS = [
               enabled: formData.get('pauseOverlay') === 'on',
               cssVariant: (() => {
                 const value = String(formData.get('pauseOverlayCssVariant') || '').trim();
-                return value === 'pauseModul2' ? 'pauseModul2' : 'pauseModul';
+                return value === 'moduloPausa2' ? 'moduloPausa2' : 'moduloPausa';
               })(),
               imagePreference: formData.get('pauseOverlayImagePreference') || 'auto',
               showPlot: formData.get('pauseOverlayShowPlot') === 'on',
@@ -1019,7 +1022,7 @@ const USER_ONLY_KEYS = [
 
     if (cfgGuard?.forceGlobalUserSettings && !isAdmin) {
       showNotification(
-        `<i class="fas fa-user" style="margin-right:8px;"></i> ${cfgGuard?.languageLabels?.settingsSavedModal || "Avatar/tema ayarların kullanıcıya özel kaydedildi."}`,
+        `<i class="fas fa-user" style="margin-right:8px;"></i> ${cfgGuard?.languageLabels?.settingsSavedModal || "Suas configurações de avatar/tema foram salvas para este usuário."}`,
         2500,
         "info"
       );
@@ -1038,7 +1041,7 @@ const USER_ONLY_KEYS = [
         config.avatarGradient !== updatedConfig.avatarGradient;
 
     if (avatarSettingsChanged) {
-        console.log("Avatar ayarları değişti, hemen güncelleniyor...");
+        console.log("As configurações de avatar mudaram, atualizando agora...");
         clearAvatarCache();
         updateHeaderUserAvatar();
     } else {
@@ -1071,7 +1074,7 @@ const USER_ONLY_KEYS = [
     if (forcedAdminPublish && publishResult?.attempted && !publishResult.ok) {
       const failText =
         cfgGuard?.languageLabels?.forceGlobalPublishFailed ||
-        "Global kullanıcı ayarları publish edilemedi. Sayfa yenilenmedi.";
+        "Não foi possível publicar as configurações globais de usuário. A página não foi recarregada.";
       showNotification(
         `<i class="fas fa-triangle-exclamation" style="margin-right:8px;"></i> ${failText}`,
         4200,
@@ -1109,7 +1112,7 @@ export function applyRawConfig(config) {
         localStorage.setItem(key, String(value));
       }
     } catch (e) {
-      console.warn(`'${key}' değeri ayarlanamadı:`, e);
+      console.warn(`Não foi possível definir o valor de '${key}':`, e);
     }
   });
 

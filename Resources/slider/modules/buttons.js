@@ -232,8 +232,8 @@ export function createButtons(slide, config, UserData, itemId, RemoteTrailers, u
         "watch",
         '<i class="fa-solid fa-circle-play icon"></i>',
         isResumable
-            ? config.languageLabels.devamet
-            : config.languageLabels.izle,
+            ? config.languageLabels.continuar
+            : config.languageLabels.assistir,
         async (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -257,7 +257,7 @@ export function createButtons(slide, config, UserData, itemId, RemoteTrailers, u
       const trailerBtnContainer = createButtonWithBackground(
         "trailer",
         '<i class="fa-solid fa-film icon"></i>',
-        config.languageLabels.fragman,
+        config.languageLabels.trailer,
         async (e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -309,7 +309,7 @@ export function createButtons(slide, config, UserData, itemId, RemoteTrailers, u
     const playedBtnContainer = createButtonWithBackground(
         "played",
         isPlayed ? '<i class="fa-solid fa-check" style="color: #FFC107;"></i>' : '<i class="fa-regular fa-circle-check"></i>',
-        isPlayed ? config.languageLabels.izlendi : config.languageLabels.izlenmedi,
+        isPlayed ? config.languageLabels.visto : config.languageLabels.naoVisto,
         async (event, buttonElement) => {
             const iconWrapper = buttonElement.querySelector('.monwui-icon-wrapper');
             const textSpan = buttonElement.nextElementSibling;
@@ -326,7 +326,7 @@ export function createButtons(slide, config, UserData, itemId, RemoteTrailers, u
                 if (wasPlayed) {
                     buttonElement.classList.remove("played");
                     iconWrapper.innerHTML = '<i class="fa-regular fa-circle-check"></i>';
-                    textSpan.textContent = config.languageLabels.izlenmedi;
+                    textSpan.textContent = config.languageLabels.naoVisto;
                     if (UserData) {
                         UserData.Played = false;
                         UserData.PlayedPercentage = 0;
@@ -340,7 +340,7 @@ export function createButtons(slide, config, UserData, itemId, RemoteTrailers, u
                 } else {
                     buttonElement.classList.add("played");
                     iconWrapper.innerHTML = '<i class="fa-solid fa-check" style="color: #FFC107;"></i>';
-                    textSpan.textContent = config.languageLabels.izlendi;
+                    textSpan.textContent = config.languageLabels.visto;
                     if (UserData) {
                         UserData.Played = true;
                         UserData.PlayedPercentage = 100;
@@ -356,11 +356,11 @@ export function createButtons(slide, config, UserData, itemId, RemoteTrailers, u
                 if (wasPlayed) {
                     buttonElement.classList.add("played");
                     iconWrapper.innerHTML = '<i class="fa-solid fa-check" style="color: #FFC107;"></i>';
-                    textSpan.textContent = config.languageLabels.izlendi;
+                    textSpan.textContent = config.languageLabels.visto;
                 } else {
                     buttonElement.classList.remove("played");
                     iconWrapper.innerHTML = '<i class="fa-regular fa-circle-check"></i>';
-                    textSpan.textContent = config.languageLabels.izlenmedi;
+                    textSpan.textContent = config.languageLabels.naoVisto;
                 }
 
                 if (UserData && prevUserData) {
@@ -449,12 +449,12 @@ async function castToCurrentDevice(itemId) {
     const config = getConfig();
     const success = await playNow(itemId);
     if (!success) {
-      await castShowNotification(config.languageLabels.casthata, 'error');
+      await castShowNotification(config.languageLabels.erroCast, 'error');
     }
   } catch (error) {
     console.error('Cast işlemi sırasında hata:', error);
     const config = getConfig();
-    await castShowNotification(`${config.languageLabels.casthata}: ${error.message}`, 'error');
+    await castShowNotification(`${config.languageLabels.erroCast}: ${error.message}`, 'error');
   }
 }
 
@@ -469,15 +469,15 @@ async function startNowPlayback(itemId, sessionId) {
     });
 
     if (!response.ok) {
-      throw new Error(`${config.languageLabels.castoynatmahata}: ${response.statusText}`);
+      throw new Error(`${config.languageLabels.erroReproducaoCast}: ${response.statusText}`);
     }
 
-    await castShowNotification(config.languageLabels.castbasarili, 'success');
+    await castShowNotification(config.languageLabels.castSucesso, 'success');
     return true;
   } catch (error) {
     console.error("Oynatma hatası:", error);
     const config = getConfig();
-    await castShowNotification(`${config.languageLabels.castoynatmahata}: ${error.message}`, 'error');
+    await castShowNotification(`${config.languageLabels.erroReproducaoCast}: ${error.message}`, 'error');
     return false;
   }
 }
@@ -510,7 +510,7 @@ export function createProviderContainer({ config, ProviderIds, RemoteTrailers, i
     const trailerLink = document.createElement("span");
     trailerLink.innerHTML = `<i class="fa-brands fa-youtube"></i>`;
     trailerLink.className = "monwui-provider-link youtube";
-    trailerLink.title = `${config.languageLabels.youtubetrailer}`;
+    trailerLink.title = `${config.languageLabels.trailerYoutube}`;
     trailerLink.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -554,7 +554,7 @@ export function createProviderContainer({ config, ProviderIds, RemoteTrailers, i
     const settingsLink = document.createElement("span");
     settingsLink.innerHTML = `<i class="fa-solid fa-gear"></i>`;
     settingsLink.className = "monwui-provider-link settings";
-    settingsLink.title = `${config.languageLabels.settingsLink}`;
+    settingsLink.title = `${config.languageLabels.atalhoConfiguracoes}`;
     settingsLink.addEventListener("click", (e) => {
       e.preventDefault();
       void openSettings("monwui");
@@ -573,7 +573,7 @@ export function createProviderContainer({ config, ProviderIds, RemoteTrailers, i
     const deviceIcon = document.createElement("div");
     deviceIcon.className = "monwui-device-selector-top-icon";
     deviceIcon.innerHTML = `<i class="fa-solid fa-display"></i>`;
-    deviceIcon.title = config.languageLabels.castoynat;
+    deviceIcon.title = config.languageLabels.reproduzirCast;
 
     const deviceDropdown = document.createElement("div");
     deviceDropdown.className = "monwui-device-selector-top-dropdown hide";

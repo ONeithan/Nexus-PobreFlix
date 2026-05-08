@@ -141,11 +141,11 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 
             var token = Request.Headers["X-Emby-Token"].FirstOrDefault();
             if (string.IsNullOrWhiteSpace(token))
-                return Unauthorized(new { ok = false, error = "X-Emby-Token gerekli" });
+                return Unauthorized(new { ok = false, error = "X-Emby-Token obrigatório" });
 
             var uid = ReadUserId();
             if (uid == Guid.Empty)
-                return Unauthorized(new { ok = false, error = "X-Emby-UserId gerekli" });
+                return Unauthorized(new { ok = false, error = "X-Emby-UserId obrigatório" });
 
             var user = _users.GetUserById(uid);
             if (user is null)

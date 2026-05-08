@@ -1559,7 +1559,7 @@ function preserveKnownDeviceStates(state, {
 async function setGmmpPausedState(paused) {
   const bridge = await getGmmpBridge();
   if (!bridge?.setPaused) {
-    throw new Error("GMMP kontrolu hazir degil");
+    throw new Error("Controle GMMP não está pronto");
   }
   return bridge.setPaused(paused);
 }
@@ -1567,7 +1567,7 @@ async function setGmmpPausedState(paused) {
 async function setGmmpMutedState(muted) {
   const bridge = await getGmmpBridge();
   if (!bridge?.setMuted) {
-    throw new Error("GMMP kontrolu hazir degil");
+    throw new Error("Controle GMMP não está pronto");
   }
   return bridge.setMuted(muted);
 }
@@ -1575,7 +1575,7 @@ async function setGmmpMutedState(muted) {
 async function setGmmpVolumeLevel(volumeLevel) {
   const bridge = await getGmmpBridge();
   if (!bridge?.setVolume) {
-    throw new Error("GMMP kontrolu hazir degil");
+    throw new Error("Controle GMMP não está pronto");
   }
   return bridge.setVolume(volumeLevel);
 }
@@ -1583,7 +1583,7 @@ async function setGmmpVolumeLevel(volumeLevel) {
 async function setLocalVideoPausedState(paused) {
   const bridge = getLocalVideoBridge();
   if (!bridge?.setPaused) {
-    throw new Error("Video kontrolu hazir degil");
+    throw new Error("Controle de vídeo não está pronto");
   }
   return bridge.setPaused(paused);
 }
@@ -1591,7 +1591,7 @@ async function setLocalVideoPausedState(paused) {
 function setLocalVideoMutedState(muted) {
   const bridge = getLocalVideoBridge();
   if (!bridge?.setMuted) {
-    throw new Error("Video kontrolu hazir degil");
+    throw new Error("Controle de vídeo não está pronto");
   }
   return bridge.setMuted(muted);
 }
@@ -1599,7 +1599,7 @@ function setLocalVideoMutedState(muted) {
 function setLocalVideoVolumeLevel(volumeLevel) {
   const bridge = getLocalVideoBridge();
   if (!bridge?.setVolume) {
-    throw new Error("Video kontrolu hazir degil");
+    throw new Error("Controle de vídeo não está pronto");
   }
   return bridge.setVolume(volumeLevel);
 }
@@ -1697,14 +1697,14 @@ function renderButtonLabel(iconClass, label, extraClass = "") {
 
 function getPlaybackButtonContent(device) {
   return device.isPaused
-    ? renderButtonLabel("fa-play", t("devamet", "Devam Ettir"))
-    : renderButtonLabel("fa-pause", t("duraklat", "Duraklat"));
+    ? renderButtonLabel("fa-play", t("devamet", "Retomar"))
+    : renderButtonLabel("fa-pause", t("duraklat", "Pausar"));
 }
 
 function getMuteButtonContent(device) {
   return isEffectivelyMuted(device)
-    ? renderButtonLabel("fa-volume-high", t("sesac", "Ses Aç"))
-    : renderButtonLabel("fa-volume-xmark", t("seskapat", "Sesi Kapat"));
+    ? renderButtonLabel("fa-volume-high", t("sesac", "Ativar Som"))
+    : renderButtonLabel("fa-volume-xmark", t("seskapat", "Mudar"));
 }
 
 function getFavoriteButtonContent(device) {
@@ -1798,15 +1798,15 @@ function getHighResImageUrls(item) {
 
 function buildInfoCards(device) {
   const cards = [
-    { label: t("kullanici", "Kullanıcı"), value: device.user },
-    { label: t("cihaz", "Cihaz"), value: device.deviceName },
-    { label: t("istemci", "İstemci"), value: device.client },
-    { label: t("year", "Yıl"), value: device.year },
-    { label: t("yonetmen", "Yönetmen"), value: device.directors },
-    { label: t("sortArtist", "Sanatçı"), value: device.artists },
-    { label: t("sortAlbum", "Albüm"), value: device.album },
-    { label: t("sortAlbumArtist", "Albüm Sanatçısı"), value: device.albumArtist },
-    { label: t("tracknumber", "Parça Numarası"), value: device.trackNumber }
+    { label: t("kullanici", "Usuário"), value: device.user },
+    { label: t("cihaz", "Dispositivo"), value: device.deviceName },
+    { label: t("istemci", "Cliente"), value: device.client },
+    { label: t("year", "Ano"), value: device.year },
+    { label: t("yonetmen", "Diretor"), value: device.directors },
+    { label: t("sortArtist", "Artista"), value: device.artists },
+    { label: t("sortAlbum", "Álbum"), value: device.album },
+    { label: t("sortAlbumArtist", "Artista do Álbum"), value: device.albumArtist },
+    { label: t("tracknumber", "Número da Faixa"), value: device.trackNumber }
   ];
 
   return cards.filter((card) => String(card.value || "").trim());
@@ -1814,9 +1814,9 @@ function buildInfoCards(device) {
 
 function buildTagGroups(device) {
   const groups = [
-    { title: t("etiketler", "Türler"), value: device.genres },
-    { title: t("ses", "Ses"), value: device.audioLanguages },
-    { title: t("altyazi", "Altyazı"), value: device.subtitleLanguages }
+    { title: t("etiketler", "Gêneros"), value: device.genres },
+    { title: t("ses", "Áudio"), value: device.audioLanguages },
+    { title: t("altyazi", "Legenda"), value: device.subtitleLanguages }
   ];
 
   return groups.filter((group) => String(group.value || "").trim());
@@ -1828,7 +1828,7 @@ function buildLinkButtons(device) {
   if (device.itemPageUrl) {
     links.push({
       href: device.itemPageUrl,
-      label: t("yenisekme", "Yeni sekmede aç"),
+      label: t("yenisekme", "Abrir em nova aba"),
       icon: "fa-up-right-from-square"
     });
   }
@@ -1874,13 +1874,13 @@ function buildDeviceModel(session, itemDetails, access = null) {
     session,
     item,
     itemDetails: details,
-    title: details.Name || item.Name || t("castoynatiliyor", "Şu an oynatılıyor"),
+    title: details.Name || item.Name || t("castoynatiliyor", "Reproduzindo agora"),
     mediaIconClass: getMediaIconClass(details),
     mediaTypeText: getMediaTypeText(details),
     posterUrl,
     backdropUrl,
     placeholderUrl,
-    user: session.UserName || t("belirsizkullanici", "Bilinmeyen kullanıcı"),
+    user: session.UserName || t("belirsizkullanici", "Usuário desconhecido"),
     client: clientLabel,
     deviceName: deviceLabel,
     year: details.ProductionYear || "",
@@ -2098,7 +2098,7 @@ function renderServerSection() {
       >
         <span class="jms-cast-server__toggle-label">
           ${renderIcon("fa-server")}
-          <span>${escapeHtml(t("sunucubilgi", "Sunucu Bilgisi"))}</span>
+          <span>${escapeHtml(t("sunucubilgi", "Info do Servidor"))}</span>
         </span>
         ${renderIcon("fa-chevron-down")}
       </button>
@@ -2142,7 +2142,7 @@ function renderSlide(device, index, options = {}) {
 
           <div class="jms-cast-slide__header">
             <div class="jms-cast-slide__eyebrow-row">
-              <span class="jms-cast-slide__eyebrow">${escapeHtml(t("castoynatiliyor", "Şu an oynatılıyor"))}</span>
+              <span class="jms-cast-slide__eyebrow">${escapeHtml(t("castoynatiliyor", "Reproduzindo agora"))}</span>
               ${renderViewerBadge(device.user)}
             </div>
             <h2 class="jms-cast-slide__title">
@@ -2252,7 +2252,7 @@ function renderModalShell(content, { className = "", labelledBy = "" } = {}) {
 
 function renderModalMarkup(devices, activeIndex) {
   const activeDevice = devices[activeIndex] || devices[0];
-  const headerTitle = activeDevice?.deviceName || t("castcihaz", "Bilinmeyen cihaz");
+  const headerTitle = activeDevice?.deviceName || t("castcihaz", "Dispositivo desconhecido");
   const subtitleParts = [activeDevice?.title, activeDevice?.client].filter(Boolean).join(" • ");
 
   return `
@@ -2261,7 +2261,7 @@ function renderModalMarkup(devices, activeIndex) {
       <header class="jms-cast-modal__header">
         <div class="jms-cast-modal__headline">
           <div class="jms-cast-modal__eyebrow-row">
-            <span class="jms-cast-modal__eyebrow">${escapeHtml(t("castoynatiliyor", "Şu an oynatılıyor"))}</span>
+            <span class="jms-cast-modal__eyebrow">${escapeHtml(t("castoynatiliyor", "Reproduzindo agora"))}</span>
             ${renderViewerBadge(activeDevice?.user)}
           </div>
           <h2 id="jms-cast-modal-title" data-role="active-title">${escapeHtml(headerTitle)}</h2>
@@ -2269,9 +2269,9 @@ function renderModalMarkup(devices, activeIndex) {
         </div>
         <div class="jms-cast-modal__toolbar">
           <button type="button" class="jms-cast-toolbar-btn" data-action="refresh">
-            ${renderButtonLabel("fa-rotate-right", t("yenile", "Yenile"), "jms-cast-toolbar-btn__label")}
+            ${renderButtonLabel("fa-rotate-right", t("yenile", "Atualizar"), "jms-cast-toolbar-btn__label")}
           </button>
-          <button type="button" class="jms-cast-toolbar-btn jms-cast-toolbar-btn--close" data-action="close" aria-label="${escapeHtml(t("kapat", "Kapat"))}">
+          <button type="button" class="jms-cast-toolbar-btn jms-cast-toolbar-btn--close" data-action="close" aria-label="${escapeHtml(t("kapat", "Fechar"))}">
             ${renderIcon("fa-xmark")}
           </button>
         </div>
@@ -2296,7 +2296,7 @@ function createLoadingMarkup() {
     ${renderModalShell(`
       <div class="jms-cast-modal__loading">
         <div class="jms-cast-modal__spinner"></div>
-        <p>${escapeHtml(t("castyukleniyor", "Cihazlar aranıyor..."))}</p>
+        <p>${escapeHtml(t("castyukleniyor", "Procurando dispositivos..."))}</p>
       </div>
     `, { className: "jms-cast-modal__shell--loading" })}
   `;
@@ -2558,7 +2558,7 @@ async function hydrateCastModal(state, { preferredSessionId = "" } = {}) {
 
   if (sessions.length === 0) {
     closeCastModal();
-    showNotification(t("castbulunamadi", "Aygıt bulunamadı"), "error");
+    showNotification(t("castbulunamadi", "Nenhum dispositivo encontrado"), "error");
     return;
   }
 
@@ -2639,7 +2639,7 @@ async function syncCastModalState(state) {
     applyAllDevicesToDom(state);
   } catch (error) {
     if (!error?.isAbort) {
-      console.error("Cast modal senkronizasyon hatası:", error);
+      console.error("Erro de sincronização do modal de transmissão:", error);
     }
   } finally {
     state.isSyncing = false;
@@ -2820,13 +2820,13 @@ async function handlePlaybackToggle(state, sessionId) {
     }
 
     showNotification(
-      nextPaused ? t("duraklatildi", "Duraklatıldı") : t("devamettirildi", "Devam ettirildi"),
+      nextPaused ? t("duraklatildi", "Pausado") : t("devamettirildi", "Retomado"),
       "success"
     );
     queueModalSync(state, 350);
   } catch (error) {
     device.isPaused = previousPaused;
-    showNotification(`${t("islemhatasi", "İşlem hatası")}: ${error.message}`, "error");
+    showNotification(`${t("islemhatasi", "Erro de operação")}: ${error.message}`, "error");
   } finally {
     state.pendingSessionActions.delete(sessionId);
     setSessionPending(state, sessionId, false);
@@ -2914,14 +2914,14 @@ async function handleMuteToggle(state, sessionId) {
     }
 
     showNotification(
-      nextMuted ? t("volOff", "Ses kapatıldı") : t("volOn", "Ses açıldı"),
+      nextMuted ? t("volOff", "Mudo ativado") : t("volOn", "Mudo desativado"),
       "success"
     );
     queueModalSync(state, 350);
   } catch (error) {
     device.isMuted = previousMuted;
     device.volumeLevel = previousVolume;
-    showNotification(`${t("seshata", "Ses hatası")}: ${error.message}`, "error");
+    showNotification(`${t("seshata", "Erro de volume")}: ${error.message}`, "error");
   } finally {
     state.pendingSessionActions.delete(sessionId);
     setSessionPending(state, sessionId, false);
@@ -3033,7 +3033,7 @@ async function commitVolume(state, sessionId) {
     device.volumeLevel = device.confirmedVolumeLevel;
     device.isMuted = device.confirmedIsMuted;
     applyDeviceStateToDom(state, device);
-    showNotification(`${t("seshata", "Ses hatası")}: ${error.message}`, "error");
+    showNotification(`${t("seshata", "Erro de volume")}: ${error.message}`, "error");
   }
 }
 
@@ -3075,7 +3075,7 @@ async function handleFavoriteToggle(state, itemId) {
       device.isFavorite = previousValue;
       applyDeviceStateToDom(state, device);
     });
-    showNotification(`${t("favorihata", "Favori işlem hatası")}: ${error.message}`, "error");
+    showNotification(`${t("favorihata", "Erro ao atualizar favorito")}: ${error.message}`, "error");
   } finally {
     state.pendingItemActions.delete(itemId);
     setItemPending(state, itemId, false);
@@ -3084,19 +3084,19 @@ async function handleFavoriteToggle(state, itemId) {
 
 function renderServerInfoMarkup(info = {}) {
   const rows = [
-    { label: t("servername", "Sunucu Adı"), value: info.ServerName },
-    { label: t("surumu", "Sürüm"), value: info.Version },
-    { label: t("productname", "Ürün"), value: info.ProductName },
-    { label: t("isletimsistemi", "İşletim Sistemi"), value: info.OperatingSystemDisplayName || info.OperatingSystem },
-    { label: t("systemarch", "Mimari"), value: info.SystemArchitecture },
-    { label: t("localaddress", "Yerel Adres"), value: info.LocalAddress },
-    { label: t("websocketport", "WebSocket Port"), value: info.WebSocketPortNumber },
+    { label: t("servername", "Nome do Servidor"), value: info.ServerName },
+    { label: t("surumu", "Versão"), value: info.Version },
+    { label: t("productname", "Produto"), value: info.ProductName },
+    { label: t("isletimsistemi", "Sistema Operacional"), value: info.OperatingSystemDisplayName || info.OperatingSystem },
+    { label: t("systemarch", "Arquitetura"), value: info.SystemArchitecture },
+    { label: t("localaddress", "Endereço Local"), value: info.LocalAddress },
+    { label: t("websocketport", "Porta WebSocket"), value: info.WebSocketPortNumber },
     { label: t("encoderlocation", "Encoder"), value: info.EncoderLocation },
-    { label: t("pendingrestart", "Bekleyen Yeniden Başlatma"), value: info.HasPendingRestart ? t("evet", "Evet") : t("hayir", "Hayır") },
-    { label: t("updateavailable", "Güncelleme"), value: info.HasUpdateAvailable ? t("evet", "Evet") : t("hayir", "Hayır") },
-    { label: t("librarymonitor", "Kütüphane İzleme"), value: info.SupportsLibraryMonitor ? t("destekleniyor", "Destekleniyor") : t("desteklenmiyor", "Desteklenmiyor") },
-    { label: t("castreceiverapps", "Cast Receiver Apps"), value: Array.isArray(info.CastReceiverApplications) ? String(info.CastReceiverApplications.length) : "0" },
-    { label: t("localTime", "Yerel Zaman"), value: `<span class="jms-cast-server__local-time">${escapeHtml(new Date().toLocaleString())}</span>`, isHtml: true }
+    { label: t("pendingrestart", "Reinicialização Pendente"), value: info.HasPendingRestart ? t("evet", "Sim") : t("hayir", "Não") },
+    { label: t("updateavailable", "Atualização"), value: info.HasUpdateAvailable ? t("evet", "Sim") : t("hayir", "Não") },
+    { label: t("librarymonitor", "Monitor de Biblioteca"), value: info.SupportsLibraryMonitor ? t("destekleniyor", "Suportado") : t("desteklenmiyor", "Não suportado") },
+    { label: t("castreceiverapps", "Apps Cast Receptor"), value: Array.isArray(info.CastReceiverApplications) ? String(info.CastReceiverApplications.length) : "0" },
+    { label: t("localTime", "Hora Local"), value: `<span class="jms-cast-server__local-time">${escapeHtml(new Date().toLocaleString())}</span>`, isHtml: true }
   ].filter((row) => row.value !== undefined && row.value !== null && row.value !== "");
 
   return `
@@ -3149,7 +3149,7 @@ async function toggleServerPanel(state, toggleButton) {
   }
 
   refs.serverPanel.dataset.loading = "true";
-  refs.serverPanel.innerHTML = `<div class="jms-cast-server__loading">${escapeHtml(t("castyukleniyor", "Yükleniyor..."))}</div>`;
+  refs.serverPanel.innerHTML = `<div class="jms-cast-server__loading">${escapeHtml(t("castyukleniyor", "Carregando..."))}</div>`;
 
   try {
     const info = await getServerInfoOnce({ signal: state.abortController.signal });
@@ -3157,7 +3157,7 @@ async function toggleServerPanel(state, toggleButton) {
     refs.serverPanel.innerHTML = renderServerInfoMarkup(info || {});
     refs.serverPanel.dataset.loaded = "true";
   } catch (error) {
-    refs.serverPanel.innerHTML = `<div class="jms-cast-server__error">${escapeHtml(`${t("sunucubilgihata", "Sunucu bilgisi alınamadı")}: ${error.message}`)}</div>`;
+    refs.serverPanel.innerHTML = `<div class="jms-cast-server__error">${escapeHtml(`${t("sunucubilgihata", "Não foi possível obter informações do servidor")}: ${error.message}`)}</div>`;
   } finally {
     delete refs.serverPanel.dataset.loading;
   }
@@ -3275,7 +3275,7 @@ function renderEmbeddedPanelMarkup(state) {
     return `
       <div class="jms-cast-embed${isNotificationVariant ? " jms-cast-embed--notification" : ""}">
         <div class="jms-cast-embed__empty">
-          ${escapeHtml(t("castbulunamadi", "Aygıt bulunamadı"))}
+          ${escapeHtml(t("castbulunamadi", "Nenhum dispositivo encontrado"))}
         </div>
       </div>
     `;
@@ -3285,7 +3285,7 @@ function renderEmbeddedPanelMarkup(state) {
     ? ""
     : `
       <div class="jms-cast-embed__notice">
-        ${escapeHtml(t("castreadonly", "Bu alanda sadece izleme bilgisi görüntülenebilir."))}
+        ${escapeHtml(t("castreadonly", "Apenas informações de reproducção podem ser exibidas aqui."))}
       </div>
     `;
 

@@ -28,15 +28,15 @@ function formatLabel(template, values = {}) {
 function requestToPromise(req) {
   return new Promise((resolve, reject) => {
     req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error || new Error("IndexedDB isteği başarısız oldu."));
+    req.onerror = () => reject(req.error || new Error("A requisição do IndexedDB falhou."));
   });
 }
 
 function transactionDone(tx) {
   return new Promise((resolve, reject) => {
     tx.oncomplete = () => resolve(true);
-    tx.onabort = () => reject(tx.error || new Error("IndexedDB işlemi iptal edildi."));
-    tx.onerror = () => reject(tx.error || new Error("IndexedDB işlemi başarısız oldu."));
+    tx.onabort = () => reject(tx.error || new Error("A operação do IndexedDB foi cancelada."));
+    tx.onerror = () => reject(tx.error || new Error("A operação do IndexedDB falhou."));
   });
 }
 
@@ -44,7 +44,7 @@ function readFileAsText(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (event) => resolve(String(event?.target?.result || ""));
-    reader.onerror = () => reject(reader.error || new Error("Dosya okunamadı."));
+    reader.onerror = () => reject(reader.error || new Error("Não foi possível ler o arquivo."));
     reader.readAsText(file);
   });
 }
@@ -97,12 +97,12 @@ function downloadJsonFile(filename, payload) {
 function deleteIndexedDatabase(dbName, { timeoutMs = DELETE_TIMEOUT_MS } = {}) {
   return new Promise((resolve, reject) => {
     if (!dbName) {
-      reject(new Error("Silinecek veritabanı adı bulunamadı."));
+      reject(new Error("Nome do banco de dados a ser excluído não encontrado."));
       return;
     }
 
     if (typeof indexedDB === "undefined") {
-      reject(new Error("Bu tarayıcı IndexedDB desteklemiyor."));
+      reject(new Error("Este navegador não suporta IndexedDB."));
       return;
     }
 
@@ -128,7 +128,7 @@ function deleteIndexedDatabase(dbName, { timeoutMs = DELETE_TIMEOUT_MS } = {}) {
 
       req.onerror = () => {
         finish(() => {
-          reject(req.error || new Error(`${dbName} silinemedi.`));
+          reject(req.error || new Error(`Não foi possível excluir ${dbName}.`));
         });
       };
 
@@ -139,9 +139,8 @@ function deleteIndexedDatabase(dbName, { timeoutMs = DELETE_TIMEOUT_MS } = {}) {
       timer = setTimeout(() => {
         finish(() => {
           reject(new Error(
-            blocked
-              ? "Veritabanı şu anda başka bir sekme veya açık bağlantı tarafından kullanılıyor. Sayfayı yenileyip tekrar deneyin."
-              : "Veritabanı silme işlemi zaman aşımına uğradı."
+              ? "O banco de dados está sendo usado por outra aba ou conexão aberta. Recarregue a página e tente novamente."
+              : "A exclusão do banco de dados expirou."
           ));
         });
       }, Math.max(1500, Number(timeoutMs) || DELETE_TIMEOUT_MS));
@@ -153,11 +152,11 @@ function deleteIndexedDatabase(dbName, { timeoutMs = DELETE_TIMEOUT_MS } = {}) {
 
 async function openExistingIndexedDatabase(dbName) {
   if (!dbName) {
-    throw new Error("Veritabanı adı bulunamadı.");
+    throw new Error("Nome do banco de dados não encontrado.");
   }
 
   if (typeof indexedDB === "undefined") {
-    throw new Error("Bu tarayıcı IndexedDB desteklemiyor.");
+    throw new Error("Este navegador não suporta IndexedDB.");
   }
 
   if (typeof indexedDB.databases === "function") {
@@ -180,7 +179,7 @@ async function openExistingIndexedDatabase(dbName) {
       };
 
       req.onerror = () => {
-        reject(req.error || new Error(`${dbName} açılamadı.`));
+        reject(req.error || new Error(`Não foi possível abrir ${dbName}.`));
       };
 
       req.onsuccess = async () => {
@@ -346,12 +345,12 @@ function normalizeIndexedDatabaseBackup(rawBackup, entry, labels) {
       : convertLegacyMusicBackup(rawBackup, entry);
 
   if (!genericBackup) {
-    throw new Error(labels?.dbRestoreInvalidFile || labels?.invalidBackupFile || "Geçersiz yedek dosyası.");
+    throw new Error(labels?.dbRestoreInvalidFile || labels?.invalidBackupFile || "Arquivo de backup inválido.");
   }
 
   const dbName = String(genericBackup?.dbName || "").trim();
   if (!dbName) {
-    throw new Error(labels?.dbRestoreInvalidFile || labels?.invalidBackupFile || "Geçersiz yedek dosyası.");
+    throw new Error(labels?.dbRestoreInvalidFile || labels?.invalidBackupFile || "Arquivo de backup inválido.");
   }
 
   const seenStores = new Set();
@@ -364,7 +363,7 @@ function normalizeIndexedDatabaseBackup(rawBackup, entry, labels) {
     });
 
   if (!stores.length) {
-    throw new Error(labels?.dbRestoreInvalidFile || labels?.invalidBackupFile || "Geçersiz yedek dosyası.");
+    throw new Error(labels?.dbRestoreInvalidFile || labels?.invalidBackupFile || "Arquivo de backup inválido.");
   }
 
   return {
@@ -409,10 +408,10 @@ function ensureStoreIndexes(store, storeDefinition) {
 async function restoreIndexedDatabaseBackup(backup, { onStatus } = {}) {
   const stores = Array.isArray(backup?.stores) ? backup.stores : [];
   if (!backup?.dbName || !stores.length) {
-    throw new Error("Geri yüklenecek geçerli veritabanı bilgisi bulunamadı.");
+    throw new Error("Informações de banco de dados válidas para restauração não encontradas.");
   }
 
-  onStatus?.("Veritabanı şeması oluşturuluyor...");
+  onStatus?.("Criando esquema do banco de dados...");
 
   const db = await new Promise((resolve, reject) => {
     try {
@@ -438,11 +437,11 @@ async function restoreIndexedDatabaseBackup(backup, { onStatus } = {}) {
       };
 
       req.onblocked = () => {
-        reject(new Error("Veritabanı başka bir sekme veya açık bağlantı tarafından kullanılıyor."));
+        reject(new Error("O banco de dados está sendo usado por outra aba ou conexão aberta."));
       };
 
       req.onerror = () => {
-        reject(req.error || new Error(`${backup.dbName} oluşturulamadı.`));
+        reject(req.error || new Error(`Não foi possível criar ${backup.dbName}.`));
       };
 
       req.onsuccess = () => resolve(req.result);
@@ -456,9 +455,7 @@ async function restoreIndexedDatabaseBackup(backup, { onStatus } = {}) {
       const storeDefinition = stores[index];
       const recordCount = Array.isArray(storeDefinition.records) ? storeDefinition.records.length : 0;
 
-      onStatus?.(
-        `"${storeDefinition.name}" geri yükleniyor (${index + 1}/${stores.length}, ${recordCount} kayıt)`
-      );
+        `Restaurando "${storeDefinition.name}" (${index + 1}/${stores.length}, ${recordCount} registros)`
 
       const tx = db.transaction(storeDefinition.name, "readwrite");
       const store = tx.objectStore(storeDefinition.name);
@@ -481,10 +478,8 @@ function getDatabaseEntries(labels) {
     {
       key: "slider-cache",
       dbName: "jms-slider-cache",
-      title: labels?.sliderCacheDbTitle || "Slider genel önbellek DB",
-      description:
-        labels?.sliderCacheDbDescription ||
-        "Genel slider içerik detayları, sorgu sonuçları ve kısa süreli API önbellek kayıtları burada tutulur.",
+      title: labels?.sliderCacheDbTitle || "DB de Cache Geral do Slider",
+        "Detalhes de conteúdo do slider, resultados de consultas e registros de cache de API de curto prazo são mantidos aqui.",
       prepare: async () => {
         const mod = await import("../sliderCache.js");
         await mod.prepareSliderCacheDbForDeletion?.();
@@ -493,10 +488,8 @@ function getDatabaseEntries(labels) {
     {
       key: "recent-rows",
       dbName: "monwui_recent_db",
-      title: labels?.recentRowsDbTitle || "Son eklenen ve devam et kartları DB",
-      description:
-        labels?.recentRowsDbDescription ||
-        "Son eklenenler, son bölümler, müzik satırları ve izlemeye devam kartlarında kullanılan önbellek verileri burada tutulur.",
+      title: labels?.recentRowsDbTitle || "DB de Cartões Recentes e Continuar Assistindo",
+        "Dados de cache usados para adicionados recentemente, últimos episódios, linhas de música e cartões de continuar assistindo são mantidos aqui.",
       prepare: async () => {
         const mod = await import("../recentRowsDb.js");
         await mod.prepareRecentRowsDbForDeletion?.();
@@ -505,10 +498,8 @@ function getDatabaseEntries(labels) {
     {
       key: "director-rows",
       dbName: "jms_dirrows_db",
-      title: labels?.directorRowsDbTitle || "Yönetmen kartları DB",
-      description:
-        labels?.directorRowsDbDescription ||
-        "Yönetmen koleksiyon satırlarında kullanılan yönetmen ve içerik eşleşme verileri burada saklanır.",
+      title: labels?.directorRowsDbTitle || "DB de Cartões de Diretores",
+        "Dados de correspondência de diretores e conteúdo usados nas linhas de coleção de diretores são armazenados aqui.",
       prepare: async () => {
         const mod = await import("../dirRowsDb.js");
         await mod.prepareDirRowsDbForDeletion?.();
@@ -517,10 +508,8 @@ function getDatabaseEntries(labels) {
     {
       key: "personal-recommendations",
       dbName: "jms_prc_db",
-      title: labels?.personalRecommendationsDbTitle || "Kişisel öneriler DB",
-      description:
-        labels?.personalRecommendationsDbDescription ||
-        "\"Sana Özel Öneriler\" ve benzeri kişiselleştirilmiş öneri satırlarında kullanılan önbellek verileri burada tutulur.",
+      title: labels?.personalRecommendationsDbTitle || "DB de Recomendações Pessoais",
+        "Dados de cache usados para \"Recomendações Especiais para Você\" e linhas de recomendações personalizadas similares são mantidos aqui.",
       prepare: async () => {
         const mod = await import("../prcDb.js");
         await mod.preparePrcDbForDeletion?.();
@@ -529,10 +518,8 @@ function getDatabaseEntries(labels) {
     {
       key: "collection-cache",
       dbName: "jms_collection_cache",
-      title: labels?.collectionCacheDbTitle || "Koleksiyon kartları DB",
-      description:
-        labels?.collectionCacheDbDescription ||
-        "Boxset ve koleksiyon kartları ile bu koleksiyonların içerik listeleri için tutulan önbellek burada saklanır.",
+      title: labels?.collectionCacheDbTitle || "DB de Cartões de Coleções",
+        "O cache mantido para boxsets, cartões de coleções e listas de conteúdo dessas coleções é armazenado aqui.",
       prepare: async () => {
         const mod = await import("../collectionCacheDb.js");
         await mod.prepareCollectionCacheDbForDeletion?.();
@@ -541,10 +528,8 @@ function getDatabaseEntries(labels) {
     {
       key: "gmmp-music",
       dbName: "GMMP-MusicDB",
-      title: labels?.gmmpMusicDbTitle || "GMMP müzik DB",
-      description:
-        labels?.gmmpMusicDbDescription ||
-        "GMMP tarafındaki parça arşivi, silinen kayıt geçmişi ve şarkı sözleri bu veritabanında tutulur.",
+      title: labels?.gmmpMusicDbTitle || "DB de Música GMMP",
+        "O arquivo de faixas, histórico de registros excluídos e letras de músicas no lado GMMP são mantidos neste banco de dados.",
       prepare: async () => {
         const mod = await import("../player/utils/db.js");
         await mod.prepareMusicDbForDeletion?.();
@@ -603,9 +588,9 @@ function createDatabaseAction(entry, labels) {
   restoreInput.style.display = "none";
 
   function resetButtonLabels() {
-    backupButton.textContent = labels?.dbBackupButton || labels?.backupDatabase || "Yedeği İndir";
-    restoreButton.textContent = labels?.dbRestoreButton || labels?.restoreDatabase || "Yedeği Geri Yükle";
-    deleteButton.textContent = labels?.dbDeleteButton || "Tarayıcıdan Sil";
+    backupButton.textContent = labels?.dbBackupButton || labels?.backupDatabase || "Baixar Backup";
+    restoreButton.textContent = labels?.dbRestoreButton || labels?.restoreDatabase || "Restaurar Backup";
+    deleteButton.textContent = labels?.dbDeleteButton || "Excluir do Navegador";
   }
 
   function setRowBusy(active) {
@@ -634,16 +619,15 @@ function createDatabaseAction(entry, labels) {
   backupButton.addEventListener("click", async () => {
     await runRowAction(
       backupButton,
-      labels?.dbBackingUpButton || labels?.backupInProgress || "İndiriliyor...",
+      labels?.dbBackingUpButton || labels?.backupInProgress || "Baixando...",
       async () => {
-        setStatus(status, labels?.dbBackupInProgress || "Veritabanı yedeği hazırlanıyor...");
+        setStatus(status, labels?.dbBackupInProgress || "Preparando backup do banco de dados...");
 
         try {
           const backup = await exportIndexedDatabase(entry.dbName);
           if (!backup) {
             throw new Error(
-              labels?.dbBackupMissingDatabase ||
-              "Yedeklenecek bir veritabanı bulunamadı. İlgili modülü önce en az bir kez kullanın."
+                "Banco de dados para backup não encontrado. Use o módulo correspondente pelo menos uma vez primeiro."
             );
           }
 
@@ -651,8 +635,7 @@ function createDatabaseAction(entry, labels) {
 
           const successText =
             formatLabel(
-              labels?.dbBackupSuccessMessage ||
-                "Yedek indirildi. {storeCount} depo ve {recordCount} kayıt dışa aktarıldı.",
+                "Backup baixado. {storeCount} depósitos e {recordCount} registros exportados.",
               {
                 storeCount: backup.stores.length,
                 recordCount: countBackupRecords(backup)
@@ -669,7 +652,7 @@ function createDatabaseAction(entry, labels) {
           const errorText =
             String(error?.message || "").trim() ||
             labels?.dbBackupFailed ||
-            "Veritabanı yedeklenemedi.";
+            "Falha ao fazer backup do banco de dados.";
 
           setStatus(status, errorText);
           showNotification(
@@ -693,13 +676,11 @@ function createDatabaseAction(entry, labels) {
 
     const confirmMessage = [
       formatLabel(
-        labels?.dbRestoreConfirmQuestion ||
-          "Seçilen yedekten {name} veritabanını geri yüklemek istiyor musun?",
+          "Deseja restaurar o banco de dados {name} a partir do backup selecionado?",
         { name: entry.title }
       ),
       `${labels?.dbDeleteConfirmDbLabel || "DB"}: ${entry.dbName}`,
-      labels?.dbRestoreConfirmOverwriteNote ||
-        "Mevcut tarayıcı verisi silinip yedek içeriği ile değiştirilecek."
+        "Os dados atuais do navegador serão excluídos e substituídos pelo conteúdo do backup."
     ].join("\n\n");
 
     const confirmed = window.confirm(confirmMessage);
@@ -710,7 +691,7 @@ function createDatabaseAction(entry, labels) {
 
     await runRowAction(
       restoreButton,
-      labels?.dbRestoringButton || "Yükleniyor...",
+      labels?.dbRestoringButton || "Restaurando...",
       async () => {
         try {
           const fileContent = await readFileAsText(file);
@@ -720,8 +701,7 @@ function createDatabaseAction(entry, labels) {
           if (backup.dbName !== entry.dbName) {
             throw new Error(
               formatLabel(
-                labels?.dbRestoreWrongDatabase ||
-                  "Seçilen yedek {name} veritabanına ait değil.",
+                  "O backup selecionado não pertence ao banco de dados {name}.",
                 { name: entry.title }
               )
             );
@@ -729,8 +709,7 @@ function createDatabaseAction(entry, labels) {
 
           setStatus(
             status,
-            labels?.dbRestorePrepareInProgress ||
-              "Açık bağlantılar kapatılıyor ve veritabanı geri yüklemeye hazırlanıyor..."
+              "Fechando conexões abertas e preparando o banco de dados para restauração..."
           );
 
           await entry.prepare?.();
@@ -740,14 +719,13 @@ function createDatabaseAction(entry, labels) {
 
           await restoreIndexedDatabaseBackup(backup, {
             onStatus: (message) => {
-              setStatus(status, message || labels?.dbRestoreInProgress || "Yedek geri yükleniyor...");
+              setStatus(status, message || labels?.dbRestoreInProgress || "Restaurando backup...");
             }
           });
 
           const successText =
             formatLabel(
-              labels?.dbRestoreSuccessMessage ||
-                "Geri yükleme tamamlandı. {storeCount} depo ve {recordCount} kayıt içeri aktarıldı.",
+                "Restauração concluída. {storeCount} depósitos e {recordCount} registros importados.",
               {
                 storeCount: backup.stores.length,
                 recordCount: countBackupRecords(backup)
@@ -764,7 +742,7 @@ function createDatabaseAction(entry, labels) {
           const errorText =
             String(error?.message || "").trim() ||
             labels?.dbRestoreFailed ||
-            "Veritabanı geri yüklenemedi.";
+            "Falha ao restaurar o banco de dados.";
 
           setStatus(status, errorText);
           showNotification(
@@ -794,11 +772,11 @@ function createDatabaseAction(entry, labels) {
 
     await runRowAction(
       deleteButton,
-      labels?.dbDeletingButton || "Siliniyor...",
+      labels?.dbDeletingButton || "Excluindo...",
       async () => {
         setStatus(
           status,
-          labels?.dbDeleteInProgress || "Açık bağlantılar kapatılıyor ve veritabanı siliniyor..."
+          labels?.dbDeleteInProgress || "Fechando conexões abertas e excluindo o banco de dados..."
         );
 
         try {
@@ -808,11 +786,11 @@ function createDatabaseAction(entry, labels) {
 
           const successText =
             labels?.dbDeleteSuccessMessage ||
-            "Silme tamamlandı. İlgili modül bu veritabanını ihtiyaç olduğunda yeniden oluşturur.";
+            "Exclusão concluída. O módulo correspondente recriará o banco de dados quando necessário.";
           setStatus(status, successText);
 
           showNotification(
-            `<i class="fas fa-database" style="margin-right: 8px;"></i> ${entry.title} silindi.`,
+            `<i class="fas fa-database" style="margin-right: 8px;"></i> ${entry.title} excluído.`,
             3000,
             "success"
           );
@@ -820,7 +798,7 @@ function createDatabaseAction(entry, labels) {
           const errorText =
             String(error?.message || "").trim() ||
             labels?.dbDeleteFailed ||
-            "Veritabanı silinemedi.";
+            "Não foi possível excluir o banco de dados.";
 
           setStatus(status, errorText);
           showNotification(
@@ -846,24 +824,24 @@ export function createDbManagementPanel(config, labels) {
   panel.id = "db-management-panel";
   panel.className = "settings-panel";
 
-  const introSection = createSection(labels?.dbManagementTab || "DB Yönetimi");
+  const introSection = createSection(labels?.dbManagementTab || "Gerenciamento de DB");
 
   const introText = document.createElement("div");
   introText.className = "description-text";
   introText.textContent =
     labels?.dbManagementDescription ||
-    "Buradan tarayıcıdaki IndexedDB veritabanlarını yedekleyebilir, geri yükleyebilir veya silebilirsiniz.";
+    "Aqui você pode fazer backup, restaurar ou excluir os bancos de dados IndexedDB do navegador.";
 
   const blockedHint = document.createElement("div");
   blockedHint.className = "description-text2";
   blockedHint.style.marginTop = "8px";
   blockedHint.textContent =
     labels?.dbManagementBlockedHint ||
-    "İşlem açık bir sekme veya aktif bağlantı yüzünden engellenirse sayfayı yenileyip tekrar deneyin.";
+    "Se a operação for bloqueada por uma aba aberta ou conexão ativa, recarregue a página e tente novamente.";
 
   introSection.append(introText, blockedHint);
 
-  const listSection = createSection(labels?.dbManagementListTitle || "Yönetilebilir Veritabanları");
+  const listSection = createSection(labels?.dbManagementListTitle || "Bancos de Dados Gerenciáveis");
   getDatabaseEntries(labels).forEach((entry) => {
     listSection.appendChild(createDatabaseAction(entry, labels));
   });

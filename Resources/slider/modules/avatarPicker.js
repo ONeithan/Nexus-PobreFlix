@@ -28,22 +28,22 @@ function sleep(ms) {
 async function fromManifest() {
   const url = absUrl(`${AVATAR_DIR}/index.json`);
   const r = await fetch(url, { cache: "no-store" });
-  if (!r.ok) throw new Error("manifest yok");
+  if (!r.ok) throw new Error("manifesto não encontrado");
   const j = await r.json();
   const list = (j.files || []).map(normalizePng).filter(Boolean);
-  if (!list.length) throw new Error("manifest boş");
+  if (!list.length) throw new Error("manifesto vazio");
   return list;
 }
 
 async function fromDirListing() {
   const r = await fetch(absUrl(`${AVATAR_DIR}/`), { cache: "no-store" });
-  if (!r.ok) throw new Error("dir listing yok");
+  if (!r.ok) throw new Error("listagem de diretório não encontrada");
   const html = await r.text();
   const doc = new DOMParser().parseFromString(html, "text/html");
   const files = [...doc.querySelectorAll("a[href]")]
     .map(a => normalizePng(a.getAttribute("href")))
     .filter(Boolean);
-  if (!files.length) throw new Error("png yok");
+  if (!files.length) throw new Error("nenhum arquivo png encontrado");
   return files;
 }
 
@@ -62,7 +62,7 @@ async function fromProbe(max = 2000, stopAfterMiss = 60) {
       if (miss >= stopAfterMiss) break;
     }
   }
-  if (!out.length) throw new Error("probe boş");
+  if (!out.length) throw new Error("resultado vazio");
   return out;
 }
 
@@ -130,7 +130,7 @@ async function uploadViaJellyfinUi(blob) {
 
   if (!input) {
     const btn = document.querySelector("#btnAddImage");
-    if (!btn) throw new Error("btnAddImage yok");
+    if (!btn) throw new Error("botão btnAddImage não encontrado");
     btn.click();
     const t0 = Date.now();
     while (!input && Date.now() - t0 < 1500) {
@@ -139,7 +139,7 @@ async function uploadViaJellyfinUi(blob) {
     }
   }
 
-  if (!input) throw new Error("file input yok");
+  if (!input) throw new Error("entrada de arquivo não encontrada");
 
   const dt = new DataTransfer();
   dt.items.add(file);

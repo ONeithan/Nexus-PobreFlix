@@ -307,46 +307,46 @@ function getManagedHomeSectionOrderLabel(name, config, labels) {
     return (
       labels?.studioHubs ||
       config?.languageLabels?.studioHubs ||
-      "Stüdyo Koleksiyonları"
+      "Coleções de Estúdios"
     );
   }
   if (name === "personalRecommendations") {
     return (
       labels?.personalRecommendations ||
       config?.languageLabels?.personalRecommendations ||
-      "Sana Özel Öneriler"
+      "Sugestões Para Você"
     );
   }
   if (name === "top10SeriesRows") {
-    return labels?.top10Series || "Top 10 Diziler";
+    return labels?.top10Series || "Top 10 Séries";
   }
   if (name === "top10MovieRows") {
-    return labels?.top10Movies || "Top 10 Filmler";
+    return labels?.top10Movies || "Top 10 Filmes";
   }
   if (name === "tmdbTopMoviesRows") {
-    return labels?.tmdbTopMovies || "TMDb En Iyi Filmler";
+    return labels?.tmdbTopMovies || "Melhores Filmes TMDb";
   }
   if (name === "recentRows") {
-    return labels?.managedRecentRowsLabel || "Son Eklenenler";
+    return labels?.managedRecentRowsLabel || "Adicionados Recentemente";
   }
   if (name === "continueRows") {
-    return labels?.managedContinueRowsLabel || "İzlemeye Devam Et";
+    return labels?.managedContinueRowsLabel || "Continuar Assistindo";
   }
   if (name === "nextUpRows") {
-    return labels?.managedNextUpRowsLabel || labels?.nextUpEpisodes || "Sıradaki Bölümler";
+    return labels?.managedNextUpRowsLabel || labels?.nextUpEpisodes || "Próximos Episódios";
   }
   if (name === "becauseYouWatched") {
     return (
       labels?.becauseYouWatched ||
       config?.languageLabels?.becauseYouWatched ||
-      "İzlediğin İçin Öneriler"
+      "Sugestões por você ter assistido"
     );
   }
   if (name === "genreHubs") {
-    return labels?.managedGenreHubsLabel || "Tür Önerileri";
+    return labels?.managedGenreHubsLabel || "Sugestões de Gênero";
   }
   if (name === "directorRows") {
-    return labels?.managedDirectorRowsLabel || "Yönetmen Koleksiyonları";
+    return labels?.managedDirectorRowsLabel || "Coleções de Diretores";
   }
   return name;
 }
@@ -579,13 +579,13 @@ function applyDnDItemState(li, labels, state = {}) {
 
   const toggleBtn = li.querySelector(".dnd-btn-visibility");
   if (toggleBtn) {
-    const showText = labels?.showCollection || "Göster";
-    const hideText = labels?.hideCollection || "Gizle";
+    const showText = labels?.showCollection || "Mostrar";
+    const hideText = labels?.hideCollection || "Ocultar";
     toggleBtn.textContent = hidden ? showText : hideText;
     toggleBtn.disabled = visibilityDisabled;
     toggleBtn.title = visibilityDisabled
-      ? (labels?.showCollectionLockedHint || "Bu ayar global modda sadece admin tarafından değiştirilebilir")
-      : (hidden ? (labels?.showCollectionHint || "Koleksiyonu göster") : (labels?.hideCollectionHint || "Koleksiyonu gizle"));
+      ? (labels?.showCollectionLockedHint || "Esta configuração só pode ser alterada pelo admin no modo global")
+      : (hidden ? (labels?.showCollectionHint || "Mostrar coleção") : (labels?.hideCollectionHint || "Ocultar coleção"));
     toggleBtn.style.opacity = visibilityDisabled ? "0.55" : "";
     toggleBtn.style.cursor = visibilityDisabled ? "not-allowed" : "";
   }
@@ -614,7 +614,7 @@ function applyDnDItemState(li, labels, state = {}) {
   if (deleteVideoBtn) {
     deleteVideoBtn.disabled = !hasSharedVideo;
     deleteVideoBtn.style.display = hasSharedVideo ? "" : "none";
-    deleteVideoBtn.title = labels?.deleteHoverVideo || "Yüklü videoyu sil";
+    deleteVideoBtn.title = labels?.deleteHoverVideo || "Excluir vídeo carregado";
   }
 
   const logoBadge = li.querySelector(".dnd-logo-badge");
@@ -628,7 +628,7 @@ function applyDnDItemState(li, labels, state = {}) {
   if (deleteLogoBtn) {
     deleteLogoBtn.disabled = !hasCustomLogo;
     deleteLogoBtn.style.display = (li.dataset.manual === "1" && hasCustomLogo) ? "" : "none";
-    deleteLogoBtn.title = labels?.deleteLogo || "Yüklü logoyu sil";
+    deleteLogoBtn.title = labels?.deleteLogo || "Excluir logo carregado";
   }
 
   const uploadLogoBtn = li.querySelector(".dnd-btn-upload-logo");
@@ -650,7 +650,7 @@ function createDraggableList(id, items, labels, options = {}) {
   wrap.className = "setting-input setting-dnd";
 
   const lab = document.createElement("div");
-  lab.textContent = options.labelText || labels?.studioHubsOrderLabel || "Sıralama (sürükle-bırak)";
+  lab.textContent = options.labelText || labels?.studioHubsOrderLabel || "Ordenação (arrastar e soltar)";
   lab.style.display = "block";
   lab.style.marginBottom = "6px";
 
@@ -832,7 +832,7 @@ function createDnDItem(name, labels, options = {}) {
     const handle = document.createElement("span");
     handle.className = "dnd-handle";
     handle.textContent = "↕";
-    handle.title = labels?.dragToReorder || "Sürükle-bırak";
+    handle.title = labels?.dragToReorder || "Arrastar e soltar";
     handle.style.cursor = "grab";
     handle.style.userSelect = "none";
     handle.style.fontWeight = "700";
@@ -850,14 +850,14 @@ function createDnDItem(name, labels, options = {}) {
     up.type = "button";
     up.className = "dnd-btn-up";
     up.textContent = "↑";
-    up.title = labels?.moveUp || "Yukarı taşı";
+    up.title = labels?.moveUp || "Mover para cima";
     up.style.minWidth = "28px";
 
     const down = document.createElement("button");
     down.type = "button";
     down.className = "dnd-btn-down";
     down.textContent = "↓";
-    down.title = labels?.moveDown || "Aşağı taşı";
+    down.title = labels?.moveDown || "Mover para baixo";
     down.style.minWidth = "28px";
 
     btns.appendChild(up);
@@ -888,7 +888,7 @@ function createDnDItem(name, labels, options = {}) {
   const handle = document.createElement("span");
   handle.className = "dnd-handle";
   handle.textContent = "↕";
-  handle.title = labels?.dragToReorder || "Sürükle-bırak";
+  handle.title = labels?.dragToReorder || "Arrastar e soltar";
   handle.style.cursor = "grab";
   handle.style.userSelect = "none";
   handle.style.fontWeight = "700";
@@ -920,7 +920,7 @@ function createDnDItem(name, labels, options = {}) {
 
   const manualBadge = document.createElement("span");
   manualBadge.className = "dnd-manual-badge";
-  manualBadge.textContent = labels?.manualCollectionBadge || "Manuel";
+  manualBadge.textContent = labels?.manualCollectionBadge || "Manual";
   manualBadge.style.padding = "2px 6px";
   manualBadge.style.borderRadius = "999px";
   manualBadge.style.background = "rgba(16,185,129,0.18)";
@@ -955,47 +955,47 @@ function createDnDItem(name, labels, options = {}) {
   uploadVideo.type = "button";
   uploadVideo.className = "dnd-btn-upload-video";
   uploadVideo.textContent = labels?.uploadHoverVideo || "Video";
-  uploadVideo.title = labels?.uploadHoverVideoHint || "Hover videosu yükle";
+  uploadVideo.title = labels?.uploadHoverVideoHint || "Carregar vídeo de hover";
   uploadVideo.style.minWidth = "56px";
 
   const uploadLogo = document.createElement("button");
   uploadLogo.type = "button";
   uploadLogo.className = "dnd-btn-upload-logo";
   uploadLogo.textContent = labels?.uploadLogoShort || "Logo";
-  uploadLogo.title = labels?.uploadLogoHint || "Logo yükle";
+  uploadLogo.title = labels?.uploadLogoHint || "Carregar logo";
   uploadLogo.style.minWidth = "56px";
 
   const deleteLogo = document.createElement("button");
   deleteLogo.type = "button";
   deleteLogo.className = "dnd-btn-delete-logo";
-  deleteLogo.textContent = labels?.deleteLogoShort || "Logo Sil";
+  deleteLogo.textContent = labels?.deleteLogoShort || "Excluir Logo";
   deleteLogo.style.minWidth = "72px";
 
   const deleteVideo = document.createElement("button");
   deleteVideo.type = "button";
   deleteVideo.className = "dnd-btn-delete-video";
-  deleteVideo.textContent = labels?.deleteHoverVideoShort || "Sil";
+  deleteVideo.textContent = labels?.deleteHoverVideoShort || "Excluir";
   deleteVideo.style.minWidth = "44px";
 
   const up = document.createElement("button");
   up.type = "button";
   up.className = "dnd-btn-up";
   up.textContent = "↑";
-  up.title = labels?.moveUp || "Yukarı taşı";
+  up.title = labels?.moveUp || "Mover para cima";
   up.style.minWidth = "28px";
 
   const down = document.createElement("button");
   down.type = "button";
   down.className = "dnd-btn-down";
   down.textContent = "↓";
-  down.title = labels?.moveDown || "Aşağı taşı";
+  down.title = labels?.moveDown || "Mover para baixo";
   down.style.minWidth = "28px";
 
   const remove = document.createElement("button");
   remove.type = "button";
   remove.className = "dnd-btn-remove";
-  remove.textContent = labels?.removeCollection || "Kaldır";
-  remove.title = labels?.removeCollectionHint || "Manuel koleksiyonu kaldır";
+  remove.textContent = labels?.removeCollection || "Remover";
+  remove.title = labels?.removeCollectionHint || "Remover coleção manual";
   remove.style.minWidth = "60px";
 
   btns.appendChild(toggleVisibility);
@@ -1030,12 +1030,12 @@ export function createStudioHubsPanel(config, labels) {
   const section = createSection(
     labels?.studioHubsSettings ||
     config.languageLabels.studioHubsSettings ||
-    'Stüdyo Koleksiyonları Ayarları'
+    'Configurações de Coleções de Estúdios'
   );
 
   const enableCheckbox = createCheckbox(
     'enableStudioHubs',
-    labels?.enableStudioHubs || config.languageLabels.enableStudioHubs || 'Stüdyo Koleksiyonlarını Etkinleştir',
+    labels?.enableStudioHubs || config.languageLabels.enableStudioHubs || 'Ativar Coleções de Estúdios',
     config.enableStudioHubs
   );
 
@@ -1043,7 +1043,7 @@ export function createStudioHubsPanel(config, labels) {
 
   const colorizeCheckbox = createCheckbox(
     'studioHubsColorize',
-    labels?.studioHubsColorize || config.languageLabels.studioHubsColorize || 'Renkli Koleksiyonlar',
+    labels?.studioHubsColorize || config.languageLabels.studioHubsColorize || 'Coleções Coloridas',
     config.studioHubsColorize
   );
 
@@ -1051,14 +1051,14 @@ export function createStudioHubsPanel(config, labels) {
 
   const enableHoverVideo = createCheckbox(
     'studioHubsHoverVideo',
-    labels?.studioHubsHoverVideo || 'Hoverda video oynat',
+    labels?.studioHubsHoverVideo || 'Reproduzir vídeo no hover',
     config.studioHubsHoverVideo
   );
   section.appendChild(enableHoverVideo);
 
   const countWrap = createNumberInput(
     'studioHubsCardCount',
-    labels?.studioHubsCardCount || 'Gösterilecek kart sayısı (Ana ekran)',
+    labels?.studioHubsCardCount || 'Número de cards a exibir (Tela principal)',
     Number.isFinite(config.studioHubsCardCount) ? config.studioHubsCardCount : 10,
     1,
     100
@@ -1079,7 +1079,7 @@ export function createStudioHubsPanel(config, labels) {
 
   const autoAddFromWatchlistCopyCheckbox = createCheckbox(
     'studioHubsAutoAddFromWatchlistCopy',
-    labels?.studioHubsAutoAddFromWatchlistCopy || 'Watchlist stüdyo ID kopyasında koleksiyonu otomatik ekle',
+    labels?.studioHubsAutoAddFromWatchlistCopy || 'Adicionar coleção automaticamente ao copiar ID de estúdio da Watchlist',
     config.studioHubsAutoAddFromWatchlistCopy === true
   );
   autoAddFromWatchlistCopyCheckbox.style.display = isAdmin ? '' : 'none';
@@ -1091,7 +1091,7 @@ export function createStudioHubsPanel(config, labels) {
   autoAddFromWatchlistCopyHint.style.display = isAdmin ? "" : "none";
   autoAddFromWatchlistCopyHint.textContent =
     labels?.studioHubsAutoAddFromWatchlistCopyHint ||
-    "Açıkken admin kullanıcı, watchlist önizlemesinde stüdyoya tıklayıp ID kopyaladığında ilgili stüdyo koleksiyonu otomatik oluşturulur veya güncellenir.";
+    "Quando ativado, se o administrador clicar em um estúdio na pré-visualização da watchlist e copiar o ID, a coleção do estúdio correspondente será criada ou atualizada automaticamente.";
   section.appendChild(autoAddFromWatchlistCopyHint);
 
   let manualEntries = [];
@@ -1294,7 +1294,7 @@ export function createStudioHubsPanel(config, labels) {
 
     if (event?.detail?.source === "watchlist-auto-add" && name) {
       setStatus(
-        formatLabel("studioHubAutoAddedFromWatchlist", "{name} koleksiyon listesine eklendi.", {
+        labels.studioHubAutoAddedFromWatchlist || "{name} foi adicionado à lista de coleções.", {
           name
         }),
         "success"
@@ -1317,13 +1317,13 @@ export function createStudioHubsPanel(config, labels) {
   manualAddWrap.style.display = isAdmin ? "" : "none";
 
   const manualAddLabel = document.createElement("div");
-  manualAddLabel.textContent = labels?.addManualCollection || "Yeni koleksiyon ekle";
+  manualAddLabel.textContent = labels?.addManualCollection || "Adicionar nova coleção";
   manualAddWrap.appendChild(manualAddLabel);
 
   const manualAddHint = document.createElement("div");
   manualAddHint.className = "description-text2";
   manualAddHint.style.marginBottom = "8px";
-  manualAddHint.textContent = labels?.manualCollectionStudioIdHint || "Studio ID girin. Başlık otomatik çözülür; logo ve video yükleme opsiyoneldir.";
+  manualAddHint.textContent = labels?.manualCollectionStudioIdHint || "Insira o Studio ID. O título é resolvido automaticamente; carregar logo e vídeo é opcional.";
   manualAddWrap.appendChild(manualAddHint);
 
   const studioIdLabel = document.createElement("label");
@@ -1364,7 +1364,7 @@ export function createStudioHubsPanel(config, labels) {
   manualAddSpinner.style.animation = "jmsStudioHubsSpin 0.7s linear infinite";
 
   const manualAddBtnText = document.createElement("span");
-  manualAddBtnText.textContent = labels?.addCollectionButton || "Ekle";
+  manualAddBtnText.textContent = labels?.addCollectionButton || "Adicionar";
   manualAddBtn.append(manualAddSpinner, manualAddBtnText);
 
   manualAddRow.appendChild(studioIdInput);
@@ -1383,7 +1383,7 @@ export function createStudioHubsPanel(config, labels) {
   manualLogoWrap.style.gap = "6px";
 
   const manualLogoLabel = document.createElement("label");
-  manualLogoLabel.textContent = labels?.optionalLogoTitle || "Opsiyonel logo";
+  manualLogoLabel.textContent = labels?.optionalLogoTitle || "Logo opcional";
   manualLogoLabel.htmlFor = "studioHubsManualLogoInput";
 
   const manualLogoInput = document.createElement("input");
@@ -1391,7 +1391,7 @@ export function createStudioHubsPanel(config, labels) {
   manualLogoInput.id = "studioHubsManualLogoInput";
   manualLogoInput.name = "studioHubsManualLogoInput";
   manualLogoInput.accept = "image/png,image/webp,image/svg+xml,image/jpeg,.png,.webp,.svg,.jpg,.jpeg";
-  manualLogoInput.title = labels?.optionalLogoTitle || "Opsiyonel logo";
+  manualLogoInput.title = labels?.optionalLogoTitle || "Logo opcional";
 
   const manualVideoWrap = document.createElement("div");
   manualVideoWrap.style.display = "flex";
@@ -1399,7 +1399,7 @@ export function createStudioHubsPanel(config, labels) {
   manualVideoWrap.style.gap = "6px";
 
   const manualVideoLabel = document.createElement("label");
-  manualVideoLabel.textContent = labels?.optionalVideoTitle || "Opsiyonel hover video";
+  manualVideoLabel.textContent = labels?.optionalVideoTitle || "Vídeo de hover opcional";
   manualVideoLabel.htmlFor = "studioHubsManualVideoInput";
 
   const manualVideoInput = document.createElement("input");
@@ -1407,7 +1407,7 @@ export function createStudioHubsPanel(config, labels) {
   manualVideoInput.id = "studioHubsManualVideoInput";
   manualVideoInput.name = "studioHubsManualVideoInput";
   manualVideoInput.accept = "video/mp4,video/webm,video/quicktime,.mp4,.webm,.m4v,.mov";
-  manualVideoInput.title = labels?.optionalVideoTitle || "Opsiyonel hover video";
+  manualVideoInput.title = labels?.optionalVideoTitle || "Vídeo de hover opcional";
 
   manualLogoWrap.append(manualLogoLabel, manualLogoInput);
   manualVideoWrap.append(manualVideoLabel, manualVideoInput);
@@ -1418,8 +1418,8 @@ export function createStudioHubsPanel(config, labels) {
   sharedVideoHint.className = "description-text2";
   sharedVideoHint.style.marginBottom = "8px";
   sharedVideoHint.textContent = isAdmin
-    ? (labels?.hoverVideoAdminHint || "Hover videoları anında sunucuya kaydedilir ve tüm kullanıcılar kullanır.")
-    : (labels?.hoverVideoAdminOnlyHint || "Hover video yükleme ve silme sadece admin kullanıcılar içindir.");
+    ? (labels?.hoverVideoAdminHint || "Os vídeos de hover são salvos instantaneamente no servidor e usados por todos os usuários.")
+    : (labels?.hoverVideoAdminOnlyHint || "O carregamento e exclusão de vídeos de hover é permitido apenas para administradores.");
 
   const videoFileInput = document.createElement("input");
   videoFileInput.type = "file";
@@ -1448,8 +1448,8 @@ export function createStudioHubsPanel(config, labels) {
   const setManualAddBusy = (busy) => {
     manualAddBusy = !!busy;
     setButtonBusy(manualAddBtn, manualAddBtnText, manualAddSpinner, manualAddBusy, {
-      idleText: labels?.addCollectionButton || "Ekle",
-      busyText: labels?.addCollectionBusy || "Ekleniyor..."
+      idleText: labels?.addCollectionButton || "Adicionar",
+      busyText: labels?.addCollectionBusy || "Adicionando..."
     });
     studioIdInput.disabled = manualAddBusy;
     manualLogoInput.disabled = manualAddBusy;
@@ -1460,35 +1460,35 @@ export function createStudioHubsPanel(config, labels) {
     if (manualAddBusy) return;
     const studioId = String(studioIdInput.value || "").trim();
     if (!studioId) {
-      setStatus(labels?.manualCollectionEmpty || "Önce Studio ID girin.", "error");
+      setStatus(labels?.manualCollectionEmpty || "Insira primeiro o Studio ID.", "error");
       return;
     }
 
     setManualAddBusy(true);
     try {
-      setStatus(labels?.studioResolving || "Stüdyo çözümleniyor...");
+      setStatus(labels?.studioResolving || "Resolvendo estúdio...");
       const item = await fetchItemDetails(studioId).catch(() => null);
       const resolvedName = String(item?.Name || "").trim();
       if (!resolvedName) {
-        setStatus(labels?.studioResolveFailed || "Bu Studio ID için başlık çözümlenemedi.", "error");
+        setStatus(labels?.studioResolveFailed || "Não foi possível resolver o título para este Studio ID.", "error");
         return;
       }
       const canonicalName = toCanonicalStudioName(resolvedName) || resolvedName;
 
       if (isDefaultStudioHub(canonicalName)) {
-        setStatus(labels?.manualCollectionDuplicate || "Bu koleksiyon zaten ekli.", "error");
+        setStatus(labels?.manualCollectionDuplicate || "Esta coleção já foi adicionada.", "error");
         return;
       }
 
       const existing = findStudioHubManualEntry(manualEntries, studioId) || findStudioHubManualEntry(manualEntries, canonicalName);
       if (existing) {
-        setStatus(labels?.manualCollectionDuplicate || "Bu koleksiyon zaten ekli.", "error");
+        setStatus(labels?.manualCollectionDuplicate || "Esta coleção já foi adicionada.", "error");
         return;
       }
 
       const existingListName = [...list.querySelectorAll(".dnd-item")].some(li => nameKey(li.dataset.name) === nameKey(canonicalName));
       if (existingListName) {
-        setStatus(labels?.manualCollectionDuplicate || "Bu koleksiyon zaten listede var.", "error");
+        setStatus(labels?.manualCollectionDuplicate || "Esta coleção já existe na lista.", "error");
         return;
       }
 
@@ -1502,7 +1502,7 @@ export function createStudioHubsPanel(config, labels) {
         const logoRes = await uploadStudioHubLogo(studioId, logoFile);
         manualEntries = Array.isArray(logoRes?.entries) ? logoRes.entries : manualEntries;
       } else {
-        setStatus(formatLabel("studioHubTmdbLogoSearching", "{name} için TMDB logosu aranıyor...", {
+        setStatus(formatLabel("studioHubTmdbLogoSearching", "Procurando logo no TMDB para {name}...", {
           name: canonicalName
         }));
         const tmdbLogoFile = await resolveTmdbLogoFileForStudio(canonicalName).catch(() => null);
@@ -1525,16 +1525,16 @@ export function createStudioHubsPanel(config, labels) {
       refreshListState();
       setStatus(
         autoLogoUploaded
-          ? formatLabel("studioHubManualCollectionAddedWithTmdbLogo", "{name} eklendi. TMDB logosu otomatik kaydedildi.", {
+          ? formatLabel("studioHubManualCollectionAddedWithTmdbLogo", "{name} adicionado. Logo do TMDB salvo automaticamente.", {
             name: canonicalName
           })
-          : formatLabel("studioHubManualCollectionAdded", "{name} eklendi.", {
+          : formatLabel("studioHubManualCollectionAdded", "{name} adicionado.", {
             name: canonicalName
           }),
         "success"
       );
     } catch (error) {
-      setStatus(error?.message || (labels?.studioHubManualCollectionAddFailed || "Koleksiyon eklenemedi."), "error");
+      setStatus(error?.message || (labels?.studioHubManualCollectionAddFailed || "Não foi possível adicionar a coleção."), "error");
     } finally {
       setManualAddBusy(false);
     }
@@ -1556,18 +1556,18 @@ export function createStudioHubsPanel(config, labels) {
 
     if (!file || !targetName) return;
 
-    setStatus(formatLabel("studioHubHoverVideoUploading", "{name} için video yükleniyor...", {
+    setStatus(formatLabel("studioHubHoverVideoUploading", "Carregando vídeo para {name}...", {
       name: targetName
     }));
     try {
       const result = await uploadStudioHubVideo(targetName, file);
       sharedVideos = Array.isArray(result?.entries) ? result.entries : sharedVideos;
       refreshListState();
-      setStatus(formatLabel("studioHubHoverVideoSaved", "{name} için hover videosu kaydedildi.", {
+      setStatus(formatLabel("studioHubHoverVideoSaved", "Vídeo de hover salvo para {name}.", {
         name: targetName
       }), "success");
     } catch (error) {
-      setStatus(error?.message || (labels?.studioHubHoverVideoUploadFailed || "Hover videosu yüklenemedi."), "error");
+      setStatus(error?.message || (labels?.studioHubHoverVideoUploadFailed || "Não foi possível carregar o vídeo de hover."), "error");
     }
   });
 
@@ -1582,18 +1582,18 @@ export function createStudioHubsPanel(config, labels) {
     const target = findStudioHubManualEntry(manualEntries, studioId);
     const targetName = String(target?.name || target?.Name || studioId);
 
-    setStatus(formatLabel("studioHubLogoUploading", "{name} için logo yükleniyor...", {
+    setStatus(formatLabel("studioHubLogoUploading", "Carregando logo para {name}...", {
       name: targetName
     }));
     try {
       const result = await uploadStudioHubLogo(studioId, file);
       manualEntries = Array.isArray(result?.entries) ? result.entries : manualEntries;
       refreshListState();
-      setStatus(formatLabel("studioHubLogoSaved", "{name} için logo kaydedildi.", {
+      setStatus(formatLabel("studioHubLogoSaved", "Logo salvo para {name}.", {
         name: targetName
       }), "success");
     } catch (error) {
-      setStatus(error?.message || (labels?.studioHubLogoUploadFailed || "Logo yüklenemedi."), "error");
+      setStatus(error?.message || (labels?.studioHubLogoUploadFailed || "Não foi possível carregar o logo."), "error");
     }
   });
 
@@ -1805,7 +1805,7 @@ export function createStudioHubsPanel(config, labels) {
   })();
 
   const subheading = document.createElement('h3');
-  subheading.textContent = labels?.personalRecommendations || 'Kişisel Öneriler';
+  subheading.textContent = labels?.personalRecommendations || 'Para Você';
   section.appendChild(subheading);
 
   const cardTitleModeWrap = document.createElement("div");
@@ -1815,7 +1815,7 @@ export function createStudioHubsPanel(config, labels) {
   cardTitleModeLabel.htmlFor = "managedCardTitleDisplayMode";
   cardTitleModeLabel.textContent =
     labels?.managedCardTitleDisplayMode ||
-    "Normal kart başlık/logo görünümü";
+    "Exibição de Logo/Título nos cards";
   cardTitleModeWrap.appendChild(cardTitleModeLabel);
 
   const cardTitleModeSelect = document.createElement("select");
@@ -1828,19 +1828,19 @@ export function createStudioHubsPanel(config, labels) {
   const cardTitleModeOptions = [
     {
       value: "logo",
-      label: labels?.managedCardTitleDisplayModeLogoOnly || "Sadece logo",
+      label: labels?.managedCardTitleDisplayModeLogoOnly || "Apenas logo",
     },
     {
       value: "title",
-      label: labels?.managedCardTitleDisplayModeTitleOnly || "Sadece başlık",
+      label: labels?.managedCardTitleDisplayModeTitleOnly || "Apenas título",
     },
     {
       value: "logoTitle",
-      label: labels?.managedCardTitleDisplayModeLogoAndTitle || "Logo - başlık",
+      label: labels?.managedCardTitleDisplayModeLogoAndTitle || "Logo e título",
     },
     {
       value: "none",
-      label: labels?.managedCardTitleDisplayModeNone || "Hiçbiri",
+      label: labels?.managedCardTitleDisplayModeNone || "Ocultar ambos",
     },
   ];
 
@@ -1857,14 +1857,14 @@ export function createStudioHubsPanel(config, labels) {
 
   const enableForYouCheckbox = createCheckbox(
     'enablePersonalRecommendations',
-    labels?.enableForYou || config.languageLabels.enableForYou || 'Sana Özel Koleksiyonları Etkinleştir',
+    labels?.enableForYou || 'Habilitar Recomendações \'Para Você\'',
     config.enablePersonalRecommendations
   );
   section.appendChild(enableForYouCheckbox);
 
   const ratingWrap = createNumberInput(
    'studioHubsMinRating',
-   labels?.studioHubsMinRating || 'Minimum Derecelendirme',
+   labels?.studioHubsMinRating || 'Nota Mínima',
    Number.isFinite(config.studioHubsMinRating) ? config.studioHubsMinRating : 6.5,
    1,
    10,
@@ -1888,7 +1888,7 @@ export function createStudioHubsPanel(config, labels) {
 
   const personalcountWrap = createNumberInput(
     'personalRecsCardCount',
-    labels?.studioHubsCardCount || 'Gösterilecek kart sayısı (Ana ekran)',
+    labels?.studioHubsCardCount || 'Número de cards a exibir (Tela principal)',
     Number.isFinite(config.personalRecsCardCount) ? config.personalRecsCardCount : 9,
     1,
     20
@@ -1898,12 +1898,12 @@ export function createStudioHubsPanel(config, labels) {
   const raHeading = document.createElement('h3');
   raHeading.textContent =
     labels?.recentAndContinueHeading ||
-    'Son Eklenenler & İzlemeye Devam Et';
+    'Novidades e Continuar';
   section.appendChild(raHeading);
 
   const enableRecentRows = createCheckbox(
     'enableRecentRows',
-    labels?.enableRecentRows || 'Son eklenenler (master) satırlarını göster',
+    labels?.enableRecentRows || 'Habilitar Seção',
     config.enableRecentRows !== false
   );
   section.appendChild(enableRecentRows);
@@ -1916,42 +1916,42 @@ export function createStudioHubsPanel(config, labels) {
 
   const showRecentRowsHeroCards = createCheckbox(
     'showRecentRowsHeroCards',
-    labels?.showRecentRowsHeroCards || 'Hero kartını göster (Son Eklenenler)',
+    labels?.showRecentRowsHeroCards || 'Mostrar Hero Card (Master)',
     config.showRecentRowsHeroCards !== false
   );
   recentSubWrap.appendChild(showRecentRowsHeroCards);
 
   const enableTop10SeriesRow = createCheckbox(
     'enableTop10SeriesRow',
-    labels?.enableTop10SeriesRow || 'Top 10 dizi satırı',
+    labels?.enableTop10SeriesRow || 'Habilitar Top 10 Séries',
     config.enableTop10SeriesRow !== false
   );
   recentSubWrap.appendChild(enableTop10SeriesRow);
 
   const enableTop10MoviesRow = createCheckbox(
     'enableTop10MoviesRow',
-    labels?.enableTop10MoviesRow || 'Top 10 film satırı',
+    labels?.enableTop10MoviesRow || 'Habilitar Top 10 Filmes',
     config.enableTop10MoviesRow !== false
   );
   recentSubWrap.appendChild(enableTop10MoviesRow);
 
   const enableTmdbTopMoviesRow = createCheckbox(
     'enableTmdbTopMoviesRow',
-    labels?.enableTmdbTopMoviesRow || 'TMDb en iyi filmler satırı',
+    labels?.enableTmdbTopMoviesRow || 'Habilitar Top 10 TMDb',
     config.enableTmdbTopMoviesRow !== false
   );
   recentSubWrap.appendChild(enableTmdbTopMoviesRow);
 
   const enableRecentMoviesRow = createCheckbox(
     'enableRecentMoviesRow',
-    labels?.enableRecentMoviesRow || 'Son eklenen filmler satırı',
+    labels?.enableRecentMoviesRow || 'Habilitar Filmes Recentes',
     config.enableRecentMoviesRow !== false
   );
   recentSubWrap.appendChild(enableRecentMoviesRow);
 
   const showRecentMoviesHeroCards = createCheckbox(
     'showRecentMoviesHeroCards',
-    labels?.showRecentMoviesHeroCards || 'Hero kartını göster (Son Eklenen Filmler)',
+    labels?.showRecentMoviesHeroCards || 'Mostrar Hero Card (Filmes)',
     config.showRecentMoviesHeroCards !== false
   );
   recentSubWrap.appendChild(showRecentMoviesHeroCards);
@@ -1965,7 +1965,7 @@ export function createStudioHubsPanel(config, labels) {
 
   const recentMoviesCountWrap = createNumberInput(
     'recentMoviesCardCount',
-    labels?.recentMoviesCardCount || 'Son eklenen filmler kart sayısı',
+    labels?.recentMoviesCardCount || 'Limite de Filmes Recentes',
     Number.isFinite(config.recentMoviesCardCount) ? config.recentMoviesCardCount : 10,
     1,
     20
@@ -1974,14 +1974,14 @@ export function createStudioHubsPanel(config, labels) {
 
   const enableRecentSeriesRow = createCheckbox(
     'enableRecentSeriesRow',
-    labels?.enableRecentSeriesRow || 'Son eklenen diziler satırı',
+    labels?.enableRecentSeriesRow || 'Habilitar Séries Recentes',
     config.enableRecentSeriesRow !== false
   );
   recentSubWrap.appendChild(enableRecentSeriesRow);
 
   const showRecentSeriesHeroCards = createCheckbox(
     'showRecentSeriesHeroCards',
-    labels?.showRecentSeriesHeroCards || 'Hero kartını göster (Son Eklenen Diziler)',
+    labels?.showRecentSeriesHeroCards || 'Mostrar Hero Card (Séries)',
     config.showRecentSeriesHeroCards !== false
   );
   recentSubWrap.appendChild(showRecentSeriesHeroCards);
@@ -1995,7 +1995,7 @@ export function createStudioHubsPanel(config, labels) {
 
   const recentSeriesCountWrap = createNumberInput(
     'recentSeriesCardCount',
-    labels?.recentSeriesCardCount || 'Son eklenen diziler kart sayısı',
+    labels?.recentSeriesCardCount || 'Limite de Séries Recentes',
     Number.isFinite(config.recentSeriesCardCount) ? config.recentSeriesCardCount : 10,
     1,
     20
@@ -2004,14 +2004,14 @@ export function createStudioHubsPanel(config, labels) {
 
   const enableRecentMusicRow = createCheckbox(
     'enableRecentMusicRow',
-    labels?.enableRecentMusicRow || 'Son eklenen Albüm Bölümü',
+    labels?.enableRecentMusicRow || 'Habilitar Álbuns Recentes',
     config.enableRecentMusicRow !== false
   );
   recentSubWrap.appendChild(enableRecentMusicRow);
 
   const showRecentMusicHeroCards = createCheckbox(
     'showRecentMusicHeroCards',
-    labels?.showRecentMusicHeroCards || 'Hero kartını göster (Son Eklenen Albümler)',
+    labels?.showRecentMusicHeroCards || 'Mostrar Hero Card (Álbuns)',
     config.showRecentMusicHeroCards !== false
   );
   recentSubWrap.appendChild(showRecentMusicHeroCards);
@@ -2025,14 +2025,14 @@ export function createStudioHubsPanel(config, labels) {
 
   const showRecentTracksHeroCards = createCheckbox(
     'showRecentTracksHeroCards',
-    labels?.showRecentTracksHeroCards || 'Hero kartını göster (Son Dinlenen Şarkılar)',
+    labels?.showRecentTracksHeroCards || 'Mostrar Hero Card (Músicas)',
     config.showRecentTracksHeroCards !== false
   );
   recentSubWrap.appendChild(showRecentTracksHeroCards);
 
   const recentMusicCountWrap = createNumberInput(
     'recentMusicCardCount',
-    labels?.recentMusicCardCount || 'Son eklenen müzikler kart sayısı',
+    labels?.recentMusicCardCount || 'Limite de Música Recente',
     Number.isFinite(config.recentMusicCardCount) ? config.recentMusicCardCount : 10,
     1,
     20
@@ -2041,21 +2041,21 @@ export function createStudioHubsPanel(config, labels) {
 
   const enableRecentEpisodesRow = createCheckbox(
     'enableRecentEpisodesRow',
-    labels?.enableRecentEpisodesRow || 'Son eklenen bölümler',
+    labels?.enableRecentEpisodesRow || 'Habilitar Episódios Recentes',
     config.enableRecentEpisodesRow !== false
   );
   recentSubWrap.appendChild(enableRecentEpisodesRow);
 
   const showRecentEpisodesHeroCards = createCheckbox(
     'showRecentEpisodesHeroCards',
-    labels?.showRecentEpisodesHeroCards || 'Hero kartını göster (Son Eklenen Bölümler)',
+    labels?.showRecentEpisodesHeroCards || 'Mostrar Hero Card (Episódios)',
     config.showRecentEpisodesHeroCards !== false
   );
   recentSubWrap.appendChild(showRecentEpisodesHeroCards);
 
   const recentEpisodesCountWrap = createNumberInput(
     'recentEpisodesCardCount',
-    labels?.recentEpisodesCardCount || 'Son eklenen bölümler kart sayısı',
+    labels?.recentEpisodesCardCount || 'Limite de Episódios Recentes',
     Number.isFinite(config.recentEpisodesCardCount) ? config.recentEpisodesCardCount : 10,
     1,
     20
@@ -2064,21 +2064,21 @@ export function createStudioHubsPanel(config, labels) {
 
   const enableNextUpRow = createCheckbox(
     'enableNextUpRow',
-    labels?.enableNextUpRow || 'Sıradaki bölümler kartlarını etkinleştir',
+    labels?.enableNextUpRow || 'Habilitar Próximos Episódios',
     config.enableNextUpRow !== false
   );
   recentSubWrap.appendChild(enableNextUpRow);
 
   const showNextUpHeroCards = createCheckbox(
     'showNextUpHeroCards',
-    labels?.showNextUpHeroCards || 'Hero kartını göster (Sıradaki Bölümler)',
+    labels?.showNextUpHeroCards || 'Mostrar Hero Card (Próximos)',
     config.showNextUpHeroCards !== false
   );
   recentSubWrap.appendChild(showNextUpHeroCards);
 
   const nextUpCountWrap = createNumberInput(
     'nextUpCardCount',
-    labels?.nextUpCardCount || 'Sıradaki bölümler kart sayısı',
+    labels?.nextUpCardCount || 'Limite de Próximos',
     Number.isFinite(config.nextUpCardCount) ? config.nextUpCardCount : 10,
     1,
     20
@@ -2156,21 +2156,21 @@ export function createStudioHubsPanel(config, labels) {
 
   const enableContinueMovies = createCheckbox(
     'enableContinueMovies',
-    labels?.enableContinueMovies || 'İzlemeye devam et (Filmler) satırını göster',
+    labels?.enableContinueMovies || 'Habilitar Continuar Assistindo (Filmes)',
     !!config.enableContinueMovies
   );
   section.appendChild(enableContinueMovies);
 
   const showContinueMoviesHeroCards = createCheckbox(
     'showContinueMoviesHeroCards',
-    labels?.showContinueMoviesHeroCards || 'Hero kartını göster (İzlemeye Devam Et - Filmler)',
+    labels?.showContinueMoviesHeroCards || 'Mostrar Hero Card (Continuar - Filmes)',
     config.showContinueMoviesHeroCards !== false
   );
   section.appendChild(showContinueMoviesHeroCards);
 
   const continueMoviesCountWrap = createNumberInput(
     'continueMoviesCardCount',
-    labels?.continueMoviesCardCount || 'İzlemeye devam et (Filmler) kart sayısı',
+    labels?.continueMoviesCardCount || 'Limite de Continuar (Filmes)',
     Number.isFinite(config.continueMoviesCardCount) ? config.continueMoviesCardCount : 10,
     1,
     20
@@ -2179,21 +2179,21 @@ export function createStudioHubsPanel(config, labels) {
 
   const enableContinueSeries = createCheckbox(
     'enableContinueSeries',
-    labels?.enableContinueSeries || 'İzlemeye devam et (Diziler) satırını göster',
+    labels?.enableContinueSeries || 'Habilitar Continuar Assistindo (Séries)',
     !!config.enableContinueSeries
   );
   section.appendChild(enableContinueSeries);
 
   const showContinueSeriesHeroCards = createCheckbox(
     'showContinueSeriesHeroCards',
-    labels?.showContinueSeriesHeroCards || 'Hero kartını göster (İzlemeye Devam Et - Diziler)',
+    labels?.showContinueSeriesHeroCards || 'Mostrar Hero Card (Continuar - Séries)',
     config.showContinueSeriesHeroCards !== false
   );
   section.appendChild(showContinueSeriesHeroCards);
 
   const continueSeriesCountWrap = createNumberInput(
     'continueSeriesCardCount',
-    labels?.continueSeriesCardCount || 'İzlemeye devam et (Diziler) kart sayısı',
+    labels?.continueSeriesCardCount || 'Limite de Continuar (Séries)',
     Number.isFinite(config.continueSeriesCardCount) ? config.continueSeriesCardCount : 10,
     1,
     20
@@ -2240,7 +2240,7 @@ export function createStudioHubsPanel(config, labels) {
   const movieLibTitle = document.createElement("div");
   movieLibTitle.style.fontWeight = "700";
   movieLibTitle.style.margin = "6px 0";
-  movieLibTitle.textContent = labels?.movieLibSelectHeading || "Gösterilecek Film Kütüphaneleri";
+  movieLibTitle.textContent = labels?.movieLibSelectHeading || "Selecionar Bibliotecas de Filmes";
   movieLibBox.appendChild(movieLibTitle);
 
   const tvLibBox = document.createElement("div");
@@ -2261,7 +2261,7 @@ export function createStudioHubsPanel(config, labels) {
   const tvLibTitle = document.createElement("div");
   tvLibTitle.style.fontWeight = "700";
   tvLibTitle.style.margin = "6px 0";
-  tvLibTitle.textContent = labels?.tvLibSelectHeading || "Gösterilecek Dizi Kütüphaneleri";
+  tvLibTitle.textContent = labels?.tvLibSelectHeading || "Selecionar Bibliotecas de Séries";
   tvLibBox.appendChild(tvLibTitle);
 
   function readJsonArr(k) {
@@ -2297,7 +2297,7 @@ export function createStudioHubsPanel(config, labels) {
   movieLibHint.style.opacity = "0.85";
   movieLibHint.style.fontSize = "0.95em";
   movieLibHint.style.marginBottom = "6px";
-  movieLibHint.textContent = labels?.movieLibSelectHint || "Boş bırakırsan: tüm Film kütüphaneleri aktif sayılır.";
+  movieLibHint.textContent = labels?.movieLibSelectHint || "Se vazio: todas as bibliotecas de Filmes serão incluídas.";
   movieLibBox.appendChild(movieLibHint);
 
   const movieLibGrid = document.createElement("div");
@@ -2310,7 +2310,7 @@ export function createStudioHubsPanel(config, labels) {
   tvLibHint.style.opacity = "0.85";
   tvLibHint.style.fontSize = "0.95em";
   tvLibHint.style.marginBottom = "6px";
-  tvLibHint.textContent = labels?.tvLibSelectHint || "Boş bırakırsan: tüm Dizi kütüphaneleri aktif sayılır.";
+  tvLibHint.textContent = labels?.tvLibSelectHint || "Se vazio: todas as bibliotecas de Séries serão incluídas.";
   tvLibBox.appendChild(tvLibHint);
 
   const tvLibGrid = document.createElement("div");
@@ -2389,7 +2389,7 @@ export function createStudioHubsPanel(config, labels) {
     if (!libs.length) {
       const warn = document.createElement("div");
       warn.style.opacity = "0.85";
-      warn.textContent = labels?.movieLibSelectNoLibs || "Film kütüphanesi bulunamadı.";
+      warn.textContent = labels?.movieLibSelectNoLibs || "Nenhuma biblioteca de filmes encontrada.";
       movieLibGrid.appendChild(warn);
       return;
     }
@@ -2402,7 +2402,7 @@ export function createStudioHubsPanel(config, labels) {
     const h = document.createElement("div");
     h.style.fontWeight = "700";
     h.style.marginBottom = "6px";
-    h.textContent = labels?.movieLibRowRecentMovies || "Görüntülemek istediğiniz son eklenen filmler için kütüphane seçin";
+    h.textContent = labels?.movieLibRowRecentMovies || "Escolha as bibliotecas para a seção de filmes recentes";
     box.appendChild(h);
 
     const selected = new Set(readJsonArr("recentMoviesLibIds"));
@@ -2447,7 +2447,7 @@ export function createStudioHubsPanel(config, labels) {
 
     const btnAll = document.createElement("button");
     btnAll.type = "button";
-    btnAll.textContent = labels?.selectAll || "Hepsini seç";
+    btnAll.textContent = labels?.selectAll || "Selecionar Tudo";
     btnAll.addEventListener("click", () => {
       selected.clear();
       libs.forEach(l => selected.add(l.Id));
@@ -2457,7 +2457,7 @@ export function createStudioHubsPanel(config, labels) {
 
     const btnNone = document.createElement("button");
     btnNone.type = "button";
-    btnNone.textContent = labels?.selectNone || "Hepsini kaldır";
+    btnNone.textContent = labels?.selectNone || "Remover Tudo";
     btnNone.addEventListener("click", () => {
       selected.clear();
       [...list.querySelectorAll("input[type=checkbox]")].forEach(i => i.checked = false);
@@ -2479,7 +2479,7 @@ export function createStudioHubsPanel(config, labels) {
     if (!libs.length) {
       const warn = document.createElement("div");
       warn.style.opacity = "0.85";
-      warn.textContent = labels?.tvLibSelectNoLibs || "Dizi kütüphanesi bulunamadı.";
+      warn.textContent = labels?.tvLibSelectNoLibs || "Nenhuma biblioteca de séries encontrada.";
       tvLibGrid.appendChild(warn);
       return;
     }
@@ -2538,7 +2538,7 @@ export function createStudioHubsPanel(config, labels) {
 
       const btnAll = document.createElement("button");
       btnAll.type = "button";
-      btnAll.textContent = labels?.selectAll || "Hepsini seç";
+      btnAll.textContent = labels?.selectAll || "Selecionar Tudo";
       btnAll.addEventListener("click", () => {
         selected.clear();
         libs.forEach(l => selected.add(l.Id));
@@ -2548,7 +2548,7 @@ export function createStudioHubsPanel(config, labels) {
 
       const btnNone = document.createElement("button");
       btnNone.type = "button";
-      btnNone.textContent = labels?.selectNone || "Hepsini kaldır";
+      btnNone.textContent = labels?.selectNone || "Remover Tudo";
       btnNone.addEventListener("click", () => {
         selected.clear();
         [...list.querySelectorAll("input[type=checkbox]")].forEach(i => i.checked = false);
@@ -2566,17 +2566,17 @@ export function createStudioHubsPanel(config, labels) {
     };
 
     tvLibGrid.appendChild(makeRow(
-      labels?.tvLibRowRecentSeries || "Görüntülemek istediğiniz son eklenen diziler için kütüphane seçin",
+      labels?.tvLibRowRecentSeries || "Escolha as bibliotecas para a seção de séries recentes",
       "recentSeriesTvLibIds",
       hiddenRecentSeries
     ));
     tvLibGrid.appendChild(makeRow(
-      labels?.tvLibRowRecentEpisodes || "Görüntülemek istediğiniz son eklenen bölüm kartları için kütüphane seçin",
+      labels?.tvLibRowRecentEpisodes || "Escolha as bibliotecas para a seção de episódios recentes",
       "recentEpisodesTvLibIds",
       hiddenRecentEpisodes
     ));
     tvLibGrid.appendChild(makeRow(
-      labels?.tvLibRowContinueSeries || "Görüntülemek istediğiniz İzlemeye devam kartları için kütüphane seçin",
+      labels?.tvLibRowContinueSeries || "Escolha as bibliotecas para a seção de continuar assistindo",
       "continueSeriesTvLibIds",
       hiddenContinueSeries
     ));
@@ -2597,7 +2597,7 @@ export function createStudioHubsPanel(config, labels) {
 
   const showOtherLibrariesHeroCards = createCheckbox(
     "showOtherLibrariesHeroCards",
-    labels?.showOtherLibrariesHeroCards || "Hero kartını göster (Diğer Kütüphaneler)",
+    labels?.showOtherLibrariesHeroCards || "Mostrar Hero Card (Outros)",
     config.showOtherLibrariesHeroCards !== false
   );
   section.appendChild(showOtherLibrariesHeroCards);
@@ -2610,7 +2610,7 @@ export function createStudioHubsPanel(config, labels) {
 
   const otherRecentCountWrap = createNumberInput(
     "otherLibrariesRecentCardCount",
-    labels?.otherLibrariesRecentCardCount || "Diğer kütüphaneler • Son eklenen kart sayısı",
+    labels?.otherLibrariesRecentCardCount || "Novidades • Limite de cards",
     Number.isFinite(config.otherLibrariesRecentCardCount) ? config.otherLibrariesRecentCardCount : 10,
     1,
     20
@@ -2619,7 +2619,7 @@ export function createStudioHubsPanel(config, labels) {
 
   const otherContinueCountWrap = createNumberInput(
     "otherLibrariesContinueCardCount",
-    labels?.otherLibrariesContinueCardCount || "Diğer kütüphaneler • İzlemeye devam kart sayısı",
+    labels?.otherLibrariesContinueCardCount || "Continuar Assistindo • Limite de cards",
     Number.isFinite(config.otherLibrariesContinueCardCount) ? config.otherLibrariesContinueCardCount : 10,
     1,
     20
@@ -2628,7 +2628,7 @@ export function createStudioHubsPanel(config, labels) {
 
   const otherEpisodesCountWrap = createNumberInput(
     "otherLibrariesEpisodesCardCount",
-    labels?.otherLibrariesEpisodesCardCount || "Diğer kütüphaneler • Son eklenen bölüm kart sayısı",
+    labels?.otherLibrariesEpisodesCardCount || "Episódios Recentes • Limite de cards",
     Number.isFinite(config.otherLibrariesEpisodesCardCount) ? config.otherLibrariesEpisodesCardCount : 10,
     1,
     20
@@ -2649,7 +2649,7 @@ export function createStudioHubsPanel(config, labels) {
   otherHint.style.opacity = "0.85";
   otherHint.style.fontSize = "0.95em";
   otherHint.style.margin = "6px 0";
-  otherHint.textContent = labels?.otherLibrariesHint || "Boş bırakırsan: tüm diğer kütüphaneler aktif sayılır.";
+  otherHint.textContent = labels?.otherLibrariesHint || "Se vazio: todas as outras bibliotecas serão incluídas.";
   otherLibBox.appendChild(otherHint);
 
   const otherGrid = document.createElement("div");
@@ -2701,7 +2701,7 @@ export function createStudioHubsPanel(config, labels) {
     if (!others.length) {
       const warn = document.createElement("div");
       warn.style.opacity = "0.85";
-      warn.textContent = labels?.otherLibrariesNone || "Diğer kütüphane bulunamadı.";
+      warn.textContent = labels?.otherLibrariesNone || "Nenhuma biblioteca adicional encontrada.";
       otherGrid.appendChild(warn);
       return;
     }
@@ -2757,19 +2757,19 @@ export function createStudioHubsPanel(config, labels) {
   const becauseYouWatchedSection = createSection(
     labels?.becauseYouWatchedSettings ||
     config.languageLabels?.becauseYouWatchedSettings ||
-    'İzlediğin İçin Öneriler'
+    'Recomendações por Histórico'
   );
 
   const enableBecauseYouWatched = createCheckbox(
     'enableBecauseYouWatched',
-    labels?.enableBecauseYouWatched || 'Öneri Bazlı Koleksiyonları Etkinleştir',
+    labels?.enableBecauseYouWatched || 'Ativar Sugestões Baseadas no que Assistiu',
     config.enableBecauseYouWatched !== false
   );
   becauseYouWatchedSection.appendChild(enableBecauseYouWatched);
 
   const showPersonalRecsHeroCards = createCheckbox(
     'showPersonalRecsHeroCards',
-    labels?.showPersonalRecsHeroCards || 'Hero kartını göster (İzlediğin İçin Öneriler)',
+    labels?.showPersonalRecsHeroCards || 'Mostrar Hero Card (Sugeridos)',
     config.showPersonalRecsHeroCards !== false
   );
   becauseYouWatchedSection.appendChild(showPersonalRecsHeroCards);
@@ -2777,7 +2777,7 @@ export function createStudioHubsPanel(config, labels) {
 
   const bywRowCountWrap = createNumberInput(
     'becauseYouWatchedRowCount',
-    labels?.becauseYouWatchedRowCount || 'Ekranda gösterilecek Öneri sırası sayısı',
+    labels?.becauseYouWatchedRowCount || 'Número de fileiras de sugestão',
     Number.isFinite(config.becauseYouWatchedRowCount) ? config.becauseYouWatchedRowCount : 1,
     1,
     50
@@ -2786,7 +2786,7 @@ export function createStudioHubsPanel(config, labels) {
 
   const bywCardCountWrap = createNumberInput(
     'becauseYouWatchedCardCount',
-    labels?.becauseYouWatchedCardCount || 'Her öneri sırası için kart sayısı',
+    labels?.becauseYouWatchedCardCount || 'Cards por fileira',
     Number.isFinite(config.becauseYouWatchedCardCount) ? config.becauseYouWatchedCardCount : 10,
     1,
     20
@@ -2796,26 +2796,26 @@ export function createStudioHubsPanel(config, labels) {
   const genreSection = createSection(
     labels?.genreHubsSettings ||
     config.languageLabels?.genreHubsSettings ||
-    'Tür Bazlı Koleksiyonlar'
+    'Coleções por Gênero'
   );
 
   const enableGenreHubs = createCheckbox(
     'enableGenreHubs',
-    labels?.enableGenreHubs || 'Tür Bazlı Koleksiyonları Etkinleştir',
+    labels?.enableGenreHubs || 'Ativar Coleções por Gênero',
     !!config.enableGenreHubs
   );
   genreSection.appendChild(enableGenreHubs);
 
   const showGenreHubsHeroCards = createCheckbox(
     'showGenreHubsHeroCards',
-    labels?.showGenreHubsHeroCards || 'Hero kartını göster (Tür Bazlı Koleksiyonlar)',
+    labels?.showGenreHubsHeroCards || 'Mostrar Hero Card (Gêneros)',
     config.showGenreHubsHeroCards !== false
   );
   genreSection.appendChild(showGenreHubsHeroCards);
 
   const rowsCountWrap = createNumberInput(
     'studioHubsGenreRowsCount',
-    labels?.studioHubsGenreRowsCount || 'Ekranda gösterilecek Tür sırası sayısı',
+    labels?.studioHubsGenreRowsCount || 'Número de fileiras de gêneros',
     Number.isFinite(config.studioHubsGenreRowsCount) ? config.studioHubsGenreRowsCount : 4,
     1,
     50
@@ -2824,7 +2824,7 @@ export function createStudioHubsPanel(config, labels) {
 
   const perRowCountWrap = createNumberInput(
     'studioHubsGenreCardCount',
-    labels?.studioHubsGenreCardCount || 'Her Tür sırası için kart sayısı',
+    labels?.studioHubsGenreCardCount || 'Cards por fileira',
     Number.isFinite(config.studioHubsGenreCardCount) ? config.studioHubsGenreCardCount : 10,
     1,
     20
@@ -2858,7 +2858,7 @@ export function createStudioHubsPanel(config, labels) {
         genreHidden.value = JSON.stringify(names);
       }
     } catch (e) {
-      console.warn("Tür listesi ayarlara eklenemedi:", e);
+      console.warn("Falha ao carregar lista de gêneros:", e);
     }
   })();
 
@@ -2884,18 +2884,18 @@ export function createStudioHubsPanel(config, labels) {
     if (e.target.closest(".dnd-btn-up") || e.target.closest(".dnd-btn-down")) refreshGenreHidden();
   });
 
-  const dirSection = createSection(labels?.directorRowsSettings || 'Yönetmen Koleksiyon Ayarları');
+  const dirSection = createSection(labels?.directorRowsSettings || 'Coleções por Diretor');
 
   const enableDirectorRows = createCheckbox(
     'enableDirectorRows',
-    labels?.enableDirectorRows || 'Yönetmen Koleksiyonlarını Etkinleştir',
+    labels?.enableDirectorRows || 'Ativar Coleções por Diretor',
     !!config.enableDirectorRows
   );
   dirSection.appendChild(enableDirectorRows);
 
   const showDirectorRowsHeroCards = createCheckbox(
     'showDirectorRowsHeroCards',
-    labels?.showDirectorRowsHeroCards || 'Hero kartını göster (Yönetmen Koleksiyonları)',
+    labels?.showDirectorRowsHeroCards || 'Mostrar Hero Card (Diretores)',
     config.showDirectorRowsHeroCards !== false
   );
   dirSection.appendChild(showDirectorRowsHeroCards);
@@ -2903,14 +2903,14 @@ export function createStudioHubsPanel(config, labels) {
 
   const directorRowsUseTopGenres = createCheckbox(
     'directorRowsUseTopGenres',
-    labels?.directorRowsUseTopGenres || 'En çok izlediğiniz filmlerin yönetmenlerini seç',
+    labels?.directorRowsUseTopGenres || 'Selecionar diretores dos seus gêneros favoritos',
     config.directorRowsUseTopGenres !== false
   );
   dirSection.appendChild(directorRowsUseTopGenres);
 
   const dirCount = createNumberInput(
     'directorRowsCount',
-    labels?.directorRowsCount || 'Yönetmen sayısı',
+    labels?.directorRowsCount || 'Número de diretores',
     Number.isFinite(config.directorRowsCount) ? config.directorRowsCount : 5,
     1, 50
   );
@@ -2918,7 +2918,7 @@ export function createStudioHubsPanel(config, labels) {
 
   const dirPerRow = createNumberInput(
     'directorRowCardCount',
-    labels?.directorRowCardCount || 'Her satırda kart sayısı',
+    labels?.directorRowCardCount || 'Cards por fileira',
     Number.isFinite(config.directorRowCardCount) ? config.directorRowCardCount : 10,
     1, 20
   );
@@ -2926,7 +2926,7 @@ export function createStudioHubsPanel(config, labels) {
 
   const directorRowsMinItemsPerDirector = createNumberInput(
     'directorRowsMinItemsPerDirector',
-    labels?.directorRowsMinItemsPerDirector || 'Minimum Yönetmen İçerik Sayısı',
+    labels?.directorRowsMinItemsPerDirector || 'Mínimo de itens por diretor',
     Number.isFinite(config.directorRowsMinItemsPerDirector) ? config.directorRowsMinItemsPerDirector : 10,
     1, 20
   );
@@ -2935,7 +2935,7 @@ export function createStudioHubsPanel(config, labels) {
   const managedOrderSection = createSection(
     labels?.managedHomeSectionOrderSettings ||
     config.languageLabels?.managedHomeSectionOrderSettings ||
-    'Ana Sayfa Satır Sıralaması'
+    'Ordem das Seções da Home'
   );
 
   const managedOrderHint = document.createElement("div");
@@ -2943,7 +2943,7 @@ export function createStudioHubsPanel(config, labels) {
   managedOrderHint.style.margin = "4px 0 10px";
   managedOrderHint.textContent =
     labels?.managedHomeSectionOrderHint ||
-    "Bu sıra hem satırların fallback yerleşimini hem de birbirini bekleme zincirini belirler.";
+    "Esta ordem define tanto a posição visual quanto a prioridade de carregamento das fileiras.";
   managedOrderSection.appendChild(managedOrderHint);
 
   const currentNativeHomeSectionItems = getCurrentNativeHomeSectionOrderItems();
@@ -2966,7 +2966,7 @@ export function createStudioHubsPanel(config, labels) {
     {
       labelText:
         labels?.managedHomeSectionOrderLabel ||
-        'Ana sayfada görünecek satır sırası'
+        'Ordem das fileiras na tela principal'
     }
   );
   managedOrderSection.appendChild(managedOrderWrap);
@@ -3013,7 +3013,7 @@ async function fetchGenresForSettings(ctrl) {
     }
     return uniqueCaseInsensitive(names);
   } catch (e) {
-    console.warn("fetchGenresForSettings hatası:", e);
+    console.warn("fetchGenresForSettings erro:", e);
     return [];
   }
 }

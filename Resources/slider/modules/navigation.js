@@ -147,22 +147,22 @@ function ensureFlickerFixCSS() {
       transition: none !important;
       will-change: auto !important;
     }
-    html[data-css-variant=peakslider] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) {
+    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) {
       box-shadow: none !important;
       outline: none !important;
     }
-    html[data-css-variant=peakslider] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-button-container,
-    html[data-css-variant=peakslider] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-director-container,
-    html[data-css-variant=peakslider] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-info-container,
-    html[data-css-variant=peakslider] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-language-container,
-    html[data-css-variant=peakslider] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-logo-container,
-    html[data-css-variant=peakslider] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-main-button-container,
-    html[data-css-variant=peakslider] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-meta-container,
-    html[data-css-variant=peakslider] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-plot-container,
-    html[data-css-variant=peakslider] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-provider-container,
-    html[data-css-variant=peakslider] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-slider-wrapper,
-    html[data-css-variant=peakslider] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-status-container,
-    html[data-css-variant=peakslider] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-title-container {
+    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-button-container,
+    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-director-container,
+    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-info-container,
+    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-language-container,
+    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-logo-container,
+    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-main-button-container,
+    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-meta-container,
+    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-plot-container,
+    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-provider-container,
+    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-slider-wrapper,
+    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-status-container,
+    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-title-container {
       opacity: 0 !important;
       pointer-events: none !important;
       transform: translateY(4px) !important;
@@ -180,10 +180,10 @@ function ensureFlickerFixCSS() {
 	      content-visibility: hidden !important;
 	      contain: strict !important;
 	    }
-	    html[data-css-variant=peakslider] #monwui-slides-container.peak-ready .monwui-slide.off-left {
+	    html[data-css-variant=showcase] #monwui-slides-container.peak-ready .monwui-slide.off-left {
 	      transform: translate3d(calc(-50% - 220vw), -50%, 0) scale(.82) !important;
 	    }
-	    html[data-css-variant=peakslider] #monwui-slides-container.peak-ready .monwui-slide.off-right {
+	    html[data-css-variant=showcase] #monwui-slides-container.peak-ready .monwui-slide.off-right {
 	      transform: translate3d(calc(-50% + 220vw), -50%, 0) scale(.82) !important;
 	    }
 	  `;

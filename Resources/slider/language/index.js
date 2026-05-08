@@ -16,7 +16,7 @@ let __autoLanguageReloadScheduled = false;
 
 export function normalizeLanguageCode(lang) {
   const raw = String(lang || '').trim().toLowerCase();
-  if (!raw) return 'eng';
+  if (!raw) return 'por';
   if (raw === 'auto') return detectBrowserLanguage();
 
   const base = raw.split(/[-_]/)[0];

@@ -17,7 +17,7 @@ const REOPEN_BLOCK_MS = 600;
 const HARD_CLOSE_BUFFER_MS = 20;
 export const REOPEN_COOLDOWN_MS    = 400;
 const CROSS_ITEM_SETTLE_MS  = 80;
-export const OPEN_HOVER_DELAY_MS   = 500;
+export const getOpenHoverDelay = () => getConfig().atrasoTrailer || 500;
 const config = getConfig();
 const currentLang = config.defaultLanguage || getDefaultLanguage();
 if (!config.languageLabels) {
@@ -538,7 +538,7 @@ export function createVideoModal({ showButtons = true, context = 'monwui-dot' } 
 
   const playButton = document.createElement('button');
   playButton.className = 'preview-play-button';
-  playButton.innerHTML = `<i class="fa-solid fa-play"></i>${L('izle') ? ' ' + L('izle') : ''}`;
+  playButton.innerHTML = '<i class="fa-solid fa-play"></i> Assistir';
 
   const favoriteButton = document.createElement('button');
   favoriteButton.className = 'preview-favorite-button';
@@ -1445,7 +1445,7 @@ export function scheduleOpenForItem(itemEl, itemId, signal, openFn) {
   const settleLeft = Math.max(0, CROSS_ITEM_SETTLE_MS);
   const closingLeft = getClosingRemaining();
 
-  let delay = Math.max(OPEN_HOVER_DELAY_MS, needCooldown, settleLeft, closingLeft);
+  let delay = Math.max(getOpenHoverDelay(), needCooldown, settleLeft, closingLeft);
 
   const run = async () => {
     if (Date.now() < (modalState.__suppressOpenUntil || 0)) return;
@@ -2947,9 +2947,9 @@ function formatSeasonEpisodeLine(ep) {
 }
 
 export function getPlayButtonText({ isPlayed, hasPartialPlayback, labels }) {
-  if (isPlayed && !hasPartialPlayback) return L('izlendi', 'İzlendi');
-  if (hasPartialPlayback) return L('devamet', 'Devam et');
-  return L('izle', 'İzle');
+  if (isPlayed && !hasPartialPlayback) return L('izlendi', 'Assistido');
+  if (hasPartialPlayback) return L('devamet', 'Continuar');
+  return L('izle', 'Assistir');
 }
 
 function hasPartialPlaybackState({

@@ -195,15 +195,15 @@ function inferNativeHomeSectionKind(el, label) {
   ].join(" ");
   const text = normalizeCompareText(blob);
 
-  if (/live[\s-]*tv|canli[\s-]*tv/.test(text)) return "livetv";
-  if (/smalllibrary|librarytile|my media|benim medyam|kutuphane|kutuphaneler|libraries/.test(text)) {
+  if (/live[\s-]*tv|canli[\s-]*tv|tv[\s-]*ao[\s-]*vivo/.test(text)) return "livetv";
+  if (/smalllibrary|librarytile|my media|benim medyam|kutuphane|kutuphaneler|libraries|minha[\s-]*midia|biblioteca/.test(text)) {
     return "smalllibrarytiles";
   }
-  if (/next[\s-]*up|siradaki|sonraki/.test(text)) return "nextup";
-  if (/resume|continue[\s-]*watching|watching|izlemeye devam|devam ettir/.test(text)) {
+  if (/next[\s-]*up|siradaki|sonraki|proximo/.test(text)) return "nextup";
+  if (/resume|continue[\s-]*watching|watching|izlemeye devam|devam ettir|continuar[\s-]*assistindo/.test(text)) {
     return "resume";
   }
-  if (/latest|recent|recently added|newly added|son eklenen|yeni eklenen/.test(text)) {
+  if (/latest|recent|recently added|newly added|son eklenen|yeni eklenen|recentemente[\s-]*adicionados/.test(text)) {
     return "latestmedia";
   }
   return "";

@@ -2,15 +2,20 @@ import { musicPlayerState } from "../core/state.js";
 import { getAuthToken, apiUrl } from "../core/auth.js";
 import { getConfig } from "../../config.js";
 
-const config = getConfig();
+const config = new Proxy({}, {
+  get(target, prop) {
+    return getConfig()[prop];
+  }
+});
+
 const MAX_QUEUE_LENGTH = 100;
-const MAX_CONCURRENT_READS = Math.max(1, Number(config.id3limit) || 2);
+const getMaxConcurrentReads = () => Math.max(1, Number(config.limiteId3) || 2);
 const FETCH_TIMEOUT_MS = 10_000;
 const TAG_READ_TIMEOUT_MS = 5_000;
 const RANGE_BYTES = 256 * 1024;
-const MAX_TAGS_CACHE = Math.max(50, Number(config.id3TagsCacheLimit) || 200);
-const MAX_IMAGES_CACHE = Math.max(20, Number(config.id3ImagesCacheLimit) || 80);
-const enableBase64Images = Boolean(config.id3UseBase64Images === true);
+const getMaxTagsCache = () => Math.max(50, Number(config.limiteCacheTagsId3) || 200);
+const getMaxImagesCache = () => Math.max(20, Number(config.limiteCacheImagensId3) || 80);
+const getEnableBase64Images = () => Boolean(config.usarBase64ImagensId3 === true);
 
 const id3ReadQueue = [];
 let activeReaders = 0;
@@ -61,13 +66,13 @@ function getImagesCache() {
 }
 
 function trimTagsLRU(cache) {
-  while (cache.size > MAX_TAGS_CACHE) {
+  while (cache.size > getMaxTagsCache()) {
     const oldestKey = cache.keys().next().value;
     cache.delete(oldestKey);
   }
 }
 function trimImagesLRU(cache) {
-  while (cache.size > MAX_IMAGES_CACHE) {
+  while (cache.size > getMaxImagesCache()) {
     const oldestKey = cache.keys().next().value;
     const val = cache.get(oldestKey);
     safeRevoke(val);
@@ -147,7 +152,7 @@ function loadJSMediaTagsOnce() {
 }
 
 function processQueue() {
-  while (activeReaders < MAX_CONCURRENT_READS && id3ReadQueue.length) {
+  while (activeReaders < getMaxConcurrentReads() && id3ReadQueue.length) {
     const job = id3ReadQueue.shift();
     if (!job) break;
     activeReaders++;
@@ -198,7 +203,7 @@ async function processSingle(trackId) {
       let pictureUri = null;
 
       try {
-        if (enableBase64Images) {
+        if (getEnableBase64Images()) {
           const base64 = arrayToBase64(new Uint8Array(data));
           pictureUri = `data:${format || "image/jpeg"};base64,${base64}`;
         } else {

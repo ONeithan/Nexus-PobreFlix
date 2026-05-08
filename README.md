@@ -7,7 +7,7 @@
 
   ![Status](https://img.shields.io/badge/Status-Industrial-purple?style=for-the-badge)
   ![Language](https://img.shields.io/badge/Language-PT--BR%20Native-green?style=for-the-badge)
-  ![Version](https://img.shields.io/badge/Version-1.0.0.8-blue?style=for-the-badge)
+  ![Version](https://img.shields.io/badge/Version-1.0.0.9-blue?style=for-the-badge)
   ![Fork](https://img.shields.io/badge/Fork%20of-MonWUI%20by%20G--grbz-gray?style=for-the-badge)
 </div>
 
@@ -72,12 +72,15 @@ https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/refs/heads/main/manif
 
 ---
 
-## 🛡️ Créditos / Credits
+## 🛡️ Créditos e Licença / Credits and License
 
-Este software é um fork personalizado. Todos os créditos do motor original pertencem ao autor original.
+Este software é um fork personalizado e de grau industrial do projeto MonWUI.
+Todos os direitos da versão original pertencem ao seu autor original.
 
-- **Motor original / Original Engine:** [G-grbz/Jellyfin-MonWUI-Plugin](https://github.com/G-grbz/Jellyfin-MonWUI-Plugin)
-- **Desenvolvimento Nexus / Industrialization:** [Nexus PobreFlix](https://github.com/ONeithan)
+- **Motor original / Original Engine:** [G-grbz/Jellyfin-MonWUI-Plugin](https://github.com/G-grbz/Jellyfin-MonWUI-Plugin) (Créditos totais ao criador original).
+- **Desenvolvimento e Industrialização Nexus:** [Nexus PobreFlix](https://github.com/ONeithan) — Nexus IA.
+
+Este fork é distribuído sob a mesma Licença MIT do projeto original, com as modificações e personalizações exclusivas da equipe Nexus PobreFlix, mantendo a compatibilidade e o respeito ao trabalho base.
 
 ---
 

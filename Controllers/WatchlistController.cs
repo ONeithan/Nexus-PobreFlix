@@ -380,7 +380,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var cleanShareId = Clean(shareId);
             if (string.IsNullOrWhiteSpace(cleanShareId))
             {
-                return BadRequest(new { ok = false, error = "shareId gerekli" });
+                return BadRequest(new { ok = false, error = "shareId obrigatório" });
             }
 
             lock (SyncRoot)

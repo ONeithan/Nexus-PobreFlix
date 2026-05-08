@@ -268,7 +268,7 @@ export function handleSongEnd() {
       return;
     }
     showNotification(
-      config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
+      config.languageLabels.playlistEnded || "Lista de reprodução terminou, atualizando...",
       2000,
       'info'
     );
@@ -345,7 +345,7 @@ export function playPrevious() {
     updatePlaybackUI(false);
     if (musicPlayerState.playlistSource === "radio") return;
     showNotification(
-      config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
+      config.languageLabels.playlistEnded || "Lista de reprodução terminou, atualizando...",
       2000,
       'info'
     );
@@ -371,7 +371,7 @@ export function playPrevious() {
     if (playlist.length === 0) {
       updatePlaybackUI(false);
       showNotification(
-        config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
+        config.languageLabels.playlistEnded || "Lista de reprodução terminou, atualizando...",
         2000,
         'info'
       );
@@ -400,7 +400,7 @@ export function playNext() {
     updatePlaybackUI(false);
     if (musicPlayerState.playlistSource === "radio") return;
     showNotification(
-      config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
+      config.languageLabels.playlistEnded || "Lista de reprodução terminou, atualizando...",
       2000,
       'info'
     );
@@ -412,7 +412,7 @@ export function playNext() {
     updatePlaybackUI(false);
     if (musicPlayerState.playlistSource === "radio") return;
     showNotification(
-      config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
+      config.languageLabels.playlistEnded || "Lista de reprodução terminou, atualizando...",
       2000,
       'info'
     );
@@ -429,7 +429,7 @@ export function playNext() {
     if (playlist.length === 0) {
       updatePlaybackUI(false);
       showNotification(
-        config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
+        config.languageLabels.playlistEnded || "Lista de reprodução terminou, atualizando...",
         2000,
         'info'
       );
@@ -463,7 +463,7 @@ export function playNext() {
         }
         updatePlaybackUI(false);
         showNotification(
-          config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
+          config.languageLabels.playlistEnded || "Lista de reprodução terminou, atualizando...",
           2000,
           'info'
         );

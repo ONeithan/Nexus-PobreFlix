@@ -20,7 +20,7 @@ export function createPositionEditor(config, labels, section) {
     input.name = configKey;
     input.id = inputId;
     input.value = config[configKey] || '';
-    input.placeholder = placeholder || config.languageLabels.placeholderText || 'Değer giriniz';
+    input.placeholder = placeholder || config.languageLabels.placeholderText || 'Insira um valor';
 
     const allowsNegative = ['top', 'left'].includes(cssProperty);
     const isProgressHeight = configKey === 'progressBarHeight';
@@ -35,7 +35,7 @@ export function createPositionEditor(config, labels, section) {
     }
 
     const resetBtn = document.createElement('button');
-    resetBtn.textContent = config.languageLabels.resetButton || 'Sıfırla';
+    resetBtn.textContent = config.languageLabels.resetButton || 'Resetar';
     resetBtn.type = 'button';
     resetBtn.className = 'reset-button';
     resetBtn.addEventListener('click', () => {
@@ -73,7 +73,7 @@ export function createPositionEditor(config, labels, section) {
     container.className = 'global-reset-container';
 
     const resetBtn = document.createElement('button');
-    resetBtn.textContent = config.languageLabels.resetAllButton || 'Tümünü Sıfırla';
+    resetBtn.textContent = config.languageLabels.resetAllButton || 'Resetar Tudo';
     resetBtn.type = 'button';
     resetBtn.className = 'global-reset-button';
     resetBtn.addEventListener('click', resetAllSettings);
@@ -163,7 +163,7 @@ export function createPositionEditor(config, labels, section) {
   const modalInput = document.createElement('input');
   modalInput.type = 'number';
   modalInput.value = inputElement.value;
-  modalInput.placeholder = placeholder || config.languageLabels.placeholderText || 'Değer giriniz';
+  modalInput.placeholder = placeholder || config.languageLabels.placeholderText || 'Insira um valor';
   modalInput.className = 'position-modal-input';
 
   const isProgressHeight = configKey === 'progressBarHeight';
@@ -180,7 +180,7 @@ export function createPositionEditor(config, labels, section) {
   if (configKey === 'homeSectionsTop') {
     const applyBtn = document.createElement('button');
     applyBtn.className = 'position-modal-apply';
-    applyBtn.textContent = config.languageLabels.applyButton || 'Uygula';
+    applyBtn.textContent = config.languageLabels.applyButton || 'Aplicar';
     applyBtn.onclick = () => {
       if (typeof applySettings === 'function') {
         applySettings(false);
@@ -244,7 +244,7 @@ export function createPositionEditor(config, labels, section) {
 
     const emptyOption = document.createElement('option');
     emptyOption.value = '';
-    emptyOption.textContent = config.languageLabels.selectDefault || 'Varsayılan';
+    emptyOption.textContent = config.languageLabels.selectDefault || 'Padrão';
     select.appendChild(emptyOption);
 
     options.forEach(option => {
@@ -258,7 +258,7 @@ export function createPositionEditor(config, labels, section) {
     });
 
     const resetBtn = document.createElement('button');
-    resetBtn.textContent = config.languageLabels.resetButton || 'Sıfırla';
+    resetBtn.textContent = config.languageLabels.resetButton || 'Resetar';
     resetBtn.type = 'button';
     resetBtn.className = 'reset-button';
     resetBtn.addEventListener('click', () => {
@@ -398,16 +398,16 @@ export function createPositionEditor(config, labels, section) {
   function render() {
     section.appendChild(createGlobalResetButton());
     const homeSectionsHeader = document.createElement('h3');
-    homeSectionsHeader.textContent = config.languageLabels.homeSectionsPosition || 'Ana Bölüm Pozisyonu';
+    homeSectionsHeader.textContent = config.languageLabels.homeSectionsPosition || 'Posição das Seções da Home';
     section.appendChild(homeSectionsHeader);
 
     const homeSectionsHeaderNote = document.createElement('h5');
-    homeSectionsHeaderNote.textContent = config.languageLabels.homeSectionsPositionNote || '(Eksi (-) değerler, konumlandırmayı ters yönde değiştirir.)';
+    homeSectionsHeaderNote.textContent = config.languageLabels.homeSectionsPositionNote || '(Valores negativos invertem a direção)';
     section.appendChild(homeSectionsHeaderNote);
 
     section.appendChild(
       createSettingItem(
-        config.languageLabels.containerTop || 'Dikey Konum (vh):',
+        config.languageLabels.containerTop || 'Posição Vertical (vh):',
         'homeSectionsTop',
         'top',
         config.languageLabels.placeholderText,
@@ -416,12 +416,12 @@ export function createPositionEditor(config, labels, section) {
     );
 
     const slidesHeader = document.createElement('h3');
-    slidesHeader.textContent = config.languageLabels.slidesPosition || 'Slayt Konteyner Pozisyonu';
+    slidesHeader.textContent = config.languageLabels.slidesPosition || 'Posição do Contêiner de Slides';
     section.appendChild(slidesHeader);
 
     section.appendChild(
       createSettingItem(
-        config.languageLabels.containerTop ?? 'Dikey Konum (%):',
+        config.languageLabels.containerTop ?? 'Posição Vertical (%):',
         'slideTop',
         'top',
         config.languageLabels.placeholderText
@@ -429,7 +429,7 @@ export function createPositionEditor(config, labels, section) {
     );
     section.appendChild(
       createSettingItem(
-        config.languageLabels.containerLeft ?? 'Yatay Konum (%):',
+        config.languageLabels.containerLeft ?? 'Posição Horizontal (%):',
         'slideLeft',
         'left',
         config.languageLabels.placeholderText
@@ -437,7 +437,7 @@ export function createPositionEditor(config, labels, section) {
     );
     section.appendChild(
       createSettingItem(
-        config.languageLabels.containerWidth ?? 'Genişlik (%):',
+        config.languageLabels.containerWidth ?? 'Largura (%):',
         'slideWidth',
         'width',
         config.languageLabels.placeholderText
@@ -445,7 +445,7 @@ export function createPositionEditor(config, labels, section) {
     );
     section.appendChild(
       createSettingItem(
-        config.languageLabels.containerHeight ?? 'Yükseklik (%):',
+        config.languageLabels.containerHeight ?? 'Altura (%):',
         'slideHeight',
         'height',
         config.languageLabels.placeholderText
@@ -453,18 +453,18 @@ export function createPositionEditor(config, labels, section) {
     );
 
     const containers = [
-      { type: 'logo', label: config.languageLabels.logoContainer || 'Logo Konteyneri', flexSettings: false, positionSettings: true },
-      { type: 'meta', label: config.languageLabels.metaContainer || 'Meta Konteyneri', flexSettings: true, positionSettings: true },
-      { type: 'status', label: config.languageLabels.statusContainer || 'Durum Pozisyonu', flexSettings: true, positionSettings: true },
-      { type: 'rating', label: config.languageLabels.ratingContainer || 'Oylama Pozisyonu', flexSettings: true, positionSettings: true },
-      { type: 'plot', label: config.languageLabels.plotContainer || 'Plot Konteyneri', flexSettings: true, positionSettings: true },
-      { type: 'title', label: config.languageLabels.titleContainer || 'Başlık Konteyneri', flexSettings: true, positionSettings: true },
-      { type: 'director', label: config.languageLabels.directorContainer || 'Yönetmen Konteyneri', flexSettings: true, positionSettings: true },
-      { type: 'info', label: config.languageLabels.infoContainer || 'Bilgi Konteyneri', flexSettings: true, positionSettings: true },
-      { type: 'button', label: config.languageLabels.buttonContainer || 'Buton Konteyneri', flexSettings: true, positionSettings: true },
-      { type: 'existingDot', label: config.languageLabels.dotContainer || 'Dot Konteyneri', flexSettings: true, positionSettings: true },
-      { type: 'provider', label: config.languageLabels.providerContainer || 'Sağlayıcı Konteyneri', flexSettings: true, positionSettings: true },
-      { type: 'providericons', label: config.languageLabels.providericonsContainer || 'Sağlayıcı ikon Pozisyonu', flexSettings: true, positionSettings: false }
+      { type: 'logo', label: config.languageLabels.logoContainer || 'Contêiner da Logo', flexSettings: false, positionSettings: true },
+      { type: 'meta', label: config.languageLabels.metaContainer || 'Contêiner de Metadados', flexSettings: true, positionSettings: true },
+      { type: 'status', label: config.languageLabels.statusContainer || 'Posição do Status', flexSettings: true, positionSettings: true },
+      { type: 'rating', label: config.languageLabels.ratingContainer || 'Posição da Nota', flexSettings: true, positionSettings: true },
+      { type: 'plot', label: config.languageLabels.plotContainer || 'Contêiner da Sinopse', flexSettings: true, positionSettings: true },
+      { type: 'title', label: config.languageLabels.titleContainer || 'Contêiner do Título', flexSettings: true, positionSettings: true },
+      { type: 'director', label: config.languageLabels.directorContainer || 'Contêiner do Diretor', flexSettings: true, positionSettings: true },
+      { type: 'info', label: config.languageLabels.infoContainer || 'Contêiner de Informações', flexSettings: true, positionSettings: true },
+      { type: 'button', label: config.languageLabels.buttonContainer || 'Contêiner de Botões', flexSettings: true, positionSettings: true },
+      { type: 'existingDot', label: config.languageLabels.dotContainer || 'Contêiner de Navegação', flexSettings: true, positionSettings: true },
+      { type: 'provider', label: config.languageLabels.providerContainer || 'Contêiner de Provedores', flexSettings: true, positionSettings: true },
+      { type: 'providericons', label: config.languageLabels.providericonsContainer || 'Posição dos Ícones de Provedores', flexSettings: true, positionSettings: false }
     ];
 
     containers.forEach(({ type, label, flexSettings, positionSettings }) => {
@@ -475,7 +475,7 @@ export function createPositionEditor(config, labels, section) {
       if (positionSettings) {
         section.appendChild(
           createSettingItem(
-            config.languageLabels.containerTop || 'Dikey Konum (%):',
+            config.languageLabels.containerTop || 'Posição Vertical (%):',
             `${type}ContainerTop`,
             'top',
             config.languageLabels.placeholderText,
@@ -485,7 +485,7 @@ export function createPositionEditor(config, labels, section) {
         );
         section.appendChild(
           createSettingItem(
-            config.languageLabels.containerLeft || 'Yatay Konum (%):',
+            config.languageLabels.containerLeft || 'Posição Horizontal (%):',
             `${type}ContainerLeft`,
             'left',
             config.languageLabels.placeholderText,
@@ -495,7 +495,7 @@ export function createPositionEditor(config, labels, section) {
         );
         section.appendChild(
           createSettingItem(
-            config.languageLabels.containerWidth || 'Genişlik (%):',
+            config.languageLabels.containerWidth || 'Largura (%):',
             `${type}ContainerWidth`,
             'width',
             config.languageLabels.placeholderText,
@@ -505,7 +505,7 @@ export function createPositionEditor(config, labels, section) {
         );
         section.appendChild(
           createSettingItem(
-            config.languageLabels.containerHeight || 'Yükseklik (%):',
+            config.languageLabels.containerHeight || 'Altura (%):',
             `${type}ContainerHeight`,
             'height',
             config.languageLabels.placeholderText,
@@ -518,7 +518,7 @@ export function createPositionEditor(config, labels, section) {
       if (flexSettings) {
         section.appendChild(
           createFlexSettingItem(
-            config.languageLabels.flexDisplay || 'Görüntüleme Tipi:',
+            config.languageLabels.flexDisplay || 'Tipo de Exibição:',
             `${type}ContainerDisplay`,
             [
               { value: 'flex', label: config.languageLabels.flex || 'Flex' },
@@ -530,7 +530,7 @@ export function createPositionEditor(config, labels, section) {
 
         section.appendChild(
           createFlexSettingItem(
-            config.languageLabels.flexDirection || 'Flex Direction:',
+            config.languageLabels.flexDirection || 'Direção do Flex:',
             `${type}ContainerFlexDirection`,
             [
               { value: 'row', label: config.languageLabels.row || 'Row' },
@@ -544,7 +544,7 @@ export function createPositionEditor(config, labels, section) {
 
         section.appendChild(
           createFlexSettingItem(
-            config.languageLabels.justifyContent || 'Ana Eksen Hizası:',
+            config.languageLabels.justifyContent || 'Alinhamento do Eixo Principal:',
             `${type}ContainerJustifyContent`,
             [
               { value: 'flex-start', label: config.languageLabels.flexstart || 'Flex Start' },
@@ -560,7 +560,7 @@ export function createPositionEditor(config, labels, section) {
 
         section.appendChild(
           createFlexSettingItem(
-            config.languageLabels.alignItems || 'Çapraz Eksen Hizası:',
+            config.languageLabels.alignItems || 'Alinhamento do Eixo Transversal:',
             `${type}ContainerAlignItems`,
             [
               { value: 'flex-start', label: config.languageLabels.flexstart || 'Flex Start' },
@@ -575,7 +575,7 @@ export function createPositionEditor(config, labels, section) {
 
         section.appendChild(
           createFlexSettingItem(
-            config.languageLabels.flexWrap || 'Sarma Davranışı:',
+            config.languageLabels.flexWrap || 'Comportamento de Quebra:',
             `${type}ContainerFlexWrap`,
             [
               { value: 'nowrap', label: config.languageLabels.nowrap || 'No Wrap' },
@@ -589,12 +589,12 @@ export function createPositionEditor(config, labels, section) {
     });
 
     const sliderWrapperHeader = document.createElement('h3');
-    sliderWrapperHeader.textContent = config.languageLabels.sliderWrapperContainer || 'Slider Wrapper Konteyneri';
+    sliderWrapperHeader.textContent = config.languageLabels.sliderWrapperContainer || 'Contêiner do Wrapper do Slider';
     section.appendChild(sliderWrapperHeader);
 
     section.appendChild(
       createSettingItem(
-        config.languageLabels.containerTop || 'Dikey Konum (%):',
+        config.languageLabels.containerTop || 'Posição Vertical (%):',
         'sliderContainerTop',
         'top',
         config.languageLabels.placeholderText,
@@ -604,7 +604,7 @@ export function createPositionEditor(config, labels, section) {
     );
     section.appendChild(
       createSettingItem(
-        config.languageLabels.containerLeft || 'Yatay Konum (%):',
+        config.languageLabels.containerLeft || 'Posição Horizontal (%):',
         'sliderContainerLeft',
         'left',
         config.languageLabels.placeholderText,
@@ -614,7 +614,7 @@ export function createPositionEditor(config, labels, section) {
     );
     section.appendChild(
       createSettingItem(
-        config.languageLabels.containerWidth || 'Genişlik (%):',
+        config.languageLabels.containerWidth || 'Largura (%):',
         'sliderContainerWidth',
         'width',
         config.languageLabels.placeholderText,
@@ -624,7 +624,7 @@ export function createPositionEditor(config, labels, section) {
     );
     section.appendChild(
       createSettingItem(
-        config.languageLabels.containerHeight || 'Yükseklik (%):',
+        config.languageLabels.containerHeight || 'Altura (%):',
         'sliderContainerHeight',
         'height',
         config.languageLabels.placeholderText,
@@ -635,7 +635,7 @@ export function createPositionEditor(config, labels, section) {
 
     section.appendChild(
       createFlexSettingItem(
-        config.languageLabels.flexDisplay || 'Görüntüleme Tipi:',
+        config.languageLabels.flexDisplay || 'Tipo de Exibição:',
         'sliderContainerDisplay',
         [
           { value: 'flex', label: config.languageLabels.flex || 'Flex' },
@@ -647,7 +647,7 @@ export function createPositionEditor(config, labels, section) {
 
     section.appendChild(
       createFlexSettingItem(
-        config.languageLabels.flexDirection || 'Esnek Yön:',
+        config.languageLabels.flexDirection || 'Direção do Flex:',
         'sliderContainerFlexDirection',
         [
           { value: 'row', label: config.languageLabels.row || 'Row' },
@@ -661,7 +661,7 @@ export function createPositionEditor(config, labels, section) {
 
     section.appendChild(
       createFlexSettingItem(
-        config.languageLabels.justifyContent || 'Ana Eksen Hizası:',
+        config.languageLabels.justifyContent || 'Alinhamento do Eixo Principal:',
         'sliderContainerJustifyContent',
         [
           { value: 'flex-start', label: config.languageLabels.flexstart || 'Flex Start' },
@@ -677,7 +677,7 @@ export function createPositionEditor(config, labels, section) {
 
     section.appendChild(
       createFlexSettingItem(
-        config.languageLabels.alignItems || 'Çapraz Eksen Hizası:',
+        config.languageLabels.alignItems || 'Alinhamento do Eixo Transversal:',
         'sliderContainerAlignItems',
         [
           { value: 'flex-start', label: config.languageLabels.flexstart || 'Flex Start' },
@@ -692,7 +692,7 @@ export function createPositionEditor(config, labels, section) {
 
     section.appendChild(
       createFlexSettingItem(
-        config.languageLabels.flexWrap || 'Sarma Davranışı:',
+        config.languageLabels.flexWrap || 'Comportamento de Quebra:',
         'sliderContainerFlexWrap',
         [
           { value: 'nowrap', label: config.languageLabels.nowrap || 'No Wrap' },
@@ -704,12 +704,12 @@ export function createPositionEditor(config, labels, section) {
     );
 
 const progressSecondsHeader = document.createElement('h3');
-progressSecondsHeader.textContent = config.languageLabels.progressSecondsHeader || 'Progress (Saniye) Konteyneri';
+progressSecondsHeader.textContent = config.languageLabels.progressSecondsHeader || 'Contêiner de Progresso (Segundos)';
 section.appendChild(progressSecondsHeader);
 
 section.appendChild(
   createSettingItem(
-    config.languageLabels.containerTop || 'Dikey Konum (%):',
+    config.languageLabels.containerTop || 'Posição Vertical (%):',
     'progressSecondsTop',
     'top',
     config.languageLabels.placeholderText,
@@ -719,7 +719,7 @@ section.appendChild(
 );
 section.appendChild(
   createSettingItem(
-    config.languageLabels.containerLeft || 'Yatay Konum (%):',
+    config.languageLabels.containerLeft || 'Posição Horizontal (%):',
     'progressSecondsLeft',
     'left',
     config.languageLabels.placeholderText,
@@ -729,12 +729,12 @@ section.appendChild(
 );
 
     const progressBarHeader = document.createElement('h3');
-    progressBarHeader.textContent = config.languageLabels.progressBarHeader || 'Progress Konteyneri';
+    progressBarHeader.textContent = config.languageLabels.progressBarHeader || 'Contêiner de Progresso';
     section.appendChild(progressBarHeader);
 
     section.appendChild(
       createSettingItem(
-        config.languageLabels.containerTop || 'Dikey Konum (%):',
+        config.languageLabels.containerTop || 'Posição Vertical (%):',
         'progressBarTop',
         'top',
         config.languageLabels.placeholderText,
@@ -744,7 +744,7 @@ section.appendChild(
     );
     section.appendChild(
       createSettingItem(
-        config.languageLabels.containerLeft || 'Yatay Konum (%):',
+        config.languageLabels.containerLeft || 'Posição Horizontal (%):',
         'progressBarLeft',
         'left',
         config.languageLabels.placeholderText,
@@ -754,7 +754,7 @@ section.appendChild(
     );
     section.appendChild(
       createSettingItem(
-        config.languageLabels.containerWidth || 'Genişlik (%):',
+        config.languageLabels.containerWidth || 'Largura (%):',
         'progressBarWidth',
         'width',
         config.languageLabels.placeholderText,
@@ -764,7 +764,7 @@ section.appendChild(
     );
     section.appendChild(
       createSettingItem(
-        config.languageLabels.containerHeight || 'Yükseklik (%):',
+        config.languageLabels.containerHeight || 'Altura (%):',
         'progressBarHeight',
         'height',
         config.languageLabels.placeholderText,

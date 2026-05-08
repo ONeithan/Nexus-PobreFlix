@@ -150,11 +150,11 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
     const typeSpan = document.createElement("span");
     typeSpan.className = "type";
     const typeTranslations = {
-      Series: { text: config.languageLabels.dizi, icon: '<i class="fas fa-tv "></i>' },
-      Season: { text: config.languageLabels.season, icon: '<i class="fas fa-tv "></i>' },
-      Episode: { text: config.languageLabels.episode, icon: '<i class="fas fa-tv "></i>' },
-      BoxSet: { text: config.languageLabels.boxset, icon: '<i class="fas fa-film "></i>' },
-      Movie: { text: config.languageLabels.film, icon: '<i class="fas fa-film "></i>' }
+      Series: { text: config.languageLabels.series || "Série", icon: '<i class="fas fa-tv "></i>' },
+      Season: { text: config.languageLabels.season || "Temporada", icon: '<i class="fas fa-tv "></i>' },
+      Episode: { text: config.languageLabels.episode || "Episódio", icon: '<i class="fas fa-tv "></i>' },
+      BoxSet: { text: config.languageLabels.collection || "Coleção", icon: '<i class="fas fa-film "></i>' },
+      Movie: { text: config.languageLabels.movie || "Filme", icon: '<i class="fas fa-film "></i>' }
     };
     const typeInfo = typeTranslations[itemType] || { text: itemType, icon: "" };
     let typeText = typeInfo.text;
@@ -162,7 +162,7 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
       typeText += ` (${ChildCount} ${config.languageLabels.season || "Temporadas"})`;
     }
     if (itemType === "BoxSet" && ChildCount) {
-      typeText += ` (${ChildCount} ${config.languageLabels.seri || "Séries"})`;
+      typeText += ` (${ChildCount} ${config.languageLabels.seriesLabel || "Séries"})`;
     }
     typeSpan.innerHTML = `${typeInfo.icon}${buildMetaTextSpan(typeText, "monwui-type-text")}`;
     statusContainer.appendChild(typeSpan);
@@ -175,8 +175,8 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
       ? `<i class="fa-regular fa-circle-check"></i>`
       : `<i class="fa-regular fa-circle-xmark"></i>`;
     let watchedText = UserData.Played
-      ? config.languageLabels.izlendi
-      : config.languageLabels.izlenmedi;
+      ? config.languageLabels.watched || "Assistido"
+      : config.languageLabels.unwatched || "Não Assistido";
     if (UserData.Played && UserData.PlayCount > 0) {
       watchedText += ` (${UserData.PlayCount})`;
     }
@@ -193,14 +193,14 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
       const hours = Math.floor(totalMinutes / 60);
       const minutes = totalMinutes % 60;
       return hours > 0
-        ? `${hours}${config.languageLabels.sa || "h"} ${minutes}${config.languageLabels.dk || "min"}`
-        : `${minutes}${config.languageLabels.dk || "min"}`;
+        ? `${hours}${config.languageLabels.hourShort || "h"} ${minutes}${config.languageLabels.minuteShort || "min"}`
+        : `${minutes}${config.languageLabels.minuteShort || "min"}`;
     };
 
     const formatEndTimeLocalized = (ticks) => {
       const totalMinutes = Math.floor(ticks / 600000000);
       const end = new Date(Date.now() + totalMinutes * 60 * 1000);
-      const locale = String(config?.languageLabels?.timeLocale || "tr-TR").trim() || "tr-TR";
+      const locale = String(config?.languageLabels?.timeLocale || "pt-BR").trim() || "pt-BR";
 
       try {
         return new Intl.DateTimeFormat(locale, {
@@ -298,7 +298,7 @@ export async function createActorSlider(People, config, item) {
         actualPeople = parent.People;
       }
     } catch (e) {
-      console.warn("Ana dizi bilgileri alınamadı:", e);
+      console.warn("Falha ao obter detalhes da série pai:", e);
     }
   }
 
@@ -390,7 +390,7 @@ export function createInfoContainer({ config, Genres, ProductionYear, Production
   if (Array.isArray(Genres) && Genres.length && config.showGenresInfo) {
     const translated = Genres.map((genre) => {
       const key = normalizeKey(genre);
-      const matchedEntry = Object.entries(config.languageLabels.turler || {}).find(
+      const matchedEntry = Object.entries(config.languageLabels.genres || {}).find(
         ([labelKey]) => normalizeKey(labelKey) === key
       );
       return matchedEntry ? matchedEntry[1] : genre;
@@ -416,7 +416,7 @@ export function createInfoContainer({ config, Genres, ProductionYear, Production
 
     const getCountryInfo = (countryRaw) => {
       const key = normalizeKey(countryRaw);
-      const matchedEntry = Object.entries(config.languageLabels.ulke || {}).find(
+      const matchedEntry = Object.entries(config.languageLabels.country || {}).find(
         ([labelKey]) => normalizeKey(labelKey) === key
       );
       return matchedEntry
@@ -462,7 +462,7 @@ export async function createDirectorContainer({ config, People, item }) {
         actualPeople = parent.People;
       }
     } catch (e) {
-      console.warn("Ana dizi bilgileri alınamadı:", e);
+      console.warn("Falha ao obter detalhes da série pai:", e);
     }
   }
 
@@ -473,7 +473,7 @@ export async function createDirectorContainer({ config, People, item }) {
         const directorNames = directors.map(d => d.Name).join(", ");
         const directorSpan = document.createElement("span");
         directorSpan.className = "monwui-yonetmen";
-        directorSpan.textContent = `${config.languageLabels.yonetmen}: ${directorNames}`;
+        directorSpan.textContent = `${config.languageLabels.director || "Diretor"}: ${directorNames}`;
         container.appendChild(directorSpan);
       }
     }
@@ -490,7 +490,7 @@ export async function createDirectorContainer({ config, People, item }) {
         const writerNames = matchingWriters.map(w => w.Name).join(", ");
         const writerSpan = document.createElement("span");
         writerSpan.className = "writer";
-        writerSpan.textContent = `${writerNames} ${config.languageLabels.yazar} ...`;
+        writerSpan.textContent = `${writerNames} ${config.languageLabels.writer || "Escritor"} ...`;
         container.appendChild(writerSpan);
       }
     }
@@ -770,7 +770,7 @@ export function createTitleContainer({ config, Taglines, title, OriginalTitle, T
     if (Type === "Episode") {
       const s = String(ParentIndexNumber || "0").padStart(2, '0');
       const e = String(IndexNumber || "0").padStart(2, '0');
-      titleSpan.textContent = `S${s} E${e}: ${title || ""}`;
+      titleSpan.textContent = `T${s} E${e}: ${title || ""}`;
     } else {
       titleSpan.textContent = title || "";
     }

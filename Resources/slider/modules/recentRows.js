@@ -2,7 +2,7 @@ import { getSessionInfo, makeApiRequest, playNow, waitForAuthReadyStrict, getCac
 import { getConfig, getHomeSectionsRuntimeConfig, getManagedHomeSectionRuntimeOrder } from "./config.js";
 import { getLanguageLabels } from "../language/index.js";
 import { attachMiniPosterHover } from "./studioHubsUtils.js";
-import { REOPEN_COOLDOWN_MS, OPEN_HOVER_DELAY_MS } from "./hoverTrailerModal.js";
+import { REOPEN_COOLDOWN_MS, getOpenHoverDelay } from "./hoverTrailerModal.js";
 import { createTrailerIframe, formatOfficialRatingLabel } from "./utils.js";
 import {
   cleanupManagedImage,
@@ -600,30 +600,30 @@ function getRecentRowsCardTypeBadge(itemType) {
   const ll = config.languageLabels || {};
   switch (itemType) {
     case "Photo":
-      return { label: ll.photo || labels.photo || "Fotoğraf", icon: "image" };
+      return { label: ll.photo || labels.photo || "Foto", icon: "image" };
     case "PhotoAlbum":
-      return { label: ll.photoAlbum || labels.photoAlbum || "Albüm", icon: "images" };
+      return { label: ll.photoAlbum || labels.photoAlbum || "Álbum", icon: "images" };
     case "Video":
-      return { label: ll.video || labels.video || "Video", icon: "video" };
+      return { label: ll.video || labels.video || "Vídeo", icon: "video" };
     case "Folder":
-      return { label: ll.folder || labels.folder || "Klasör", icon: "folder" };
+      return { label: ll.folder || labels.folder || "Pasta", icon: "folder" };
     case "Episode":
-      return { label: ll.episode || labels.episode || "Bölüm", icon: "tv" };
+      return { label: ll.episode || labels.episode || "Episódio", icon: "tv" };
     case "Season":
-      return { label: ll.season || labels.season || "Sezon", icon: "layerGroup" };
+      return { label: ll.season || labels.season || "Temporada", icon: "layerGroup" };
     case "Series":
-      return { label: ll.dizi || labels.dizi || "Dizi", icon: "tv" };
+      return { label: ll.dizi || labels.dizi || "Série", icon: "tv" };
     case "MusicAlbum":
-      return { label: ll.album || labels.album || "Albüm", icon: "compactDisc" };
+      return { label: ll.album || labels.album || "Álbum", icon: "compactDisc" };
     case "Audio":
-      return { label: ll.track || labels.track || "Parça", icon: "music" };
+      return { label: ll.track || labels.track || "Faixa", icon: "music" };
     case "BoxSet":
       return {
-        label: ll.collectionTitle || ll.boxset || labels.collectionTitle || labels.boxset || "Collection",
+        label: ll.collectionTitle || ll.boxset || labels.collectionTitle || labels.boxset || "Coleção",
         icon: "layerGroup"
       };
     default:
-      return { label: ll.film || labels.film || "Film", icon: "film" };
+      return { label: ll.film || labels.film || "Filme", icon: "film" };
   }
 }
 
@@ -1048,7 +1048,7 @@ function attachHoverTrailer(cardEl, itemLike) {
         __touchLastOpenTS = Date.now();
       }
       if (!isTouch) schedulePostOpenGuard(cardEl, token, 300);
-    }, OPEN_HOVER_DELAY_MS);
+    }, getOpenHoverDelay());
 
     __enterTimers.set(cardEl, timer);
   };
@@ -1976,7 +1976,7 @@ function createRecommendationCard(item, serverId, {
 
   const progress = showProgress ? getPlaybackPercent(item) : 0;
   const progressHtml = (showProgress && progress > 0.02 && progress < 0.999)
-    ? `<div class="rr-progress-wrap" aria-label="${escapeHtml(config.languageLabels.progress || "İlerleme")}">
+    ? `<div class="rr-progress-wrap" aria-label="${escapeHtml(config.languageLabels.progress || "Progresso")}">
          <div class="rr-progress-bar" style="width:${Math.round(progress*100)}%"></div>
        </div>`
     : "";
@@ -2132,7 +2132,7 @@ function createRecommendationCard(item, serverId, {
     try { img.style.display = "none"; } catch {}
     const noImg = document.createElement("div");
     noImg.className = "prc-noimg-label";
-    noImg.textContent = config.languageLabels.noImage || "Görsel yok";
+    noImg.textContent = config.languageLabels.noImage || "Sem imagem";
     noImg.style.minHeight = "100%";
     noImg.style.height = "100%";
     noImg.style.display = "flex";
@@ -2178,7 +2178,7 @@ function formatEpisodeLabel(ep) {
 function formatSeasonLabel(season) {
   if (!season) return "";
   const s = Number(season.IndexNumber);
-  const sTxt = Number.isFinite(s) && s > 0 ? `S${String(s).padStart(2,"0")}` : "";
+  const sTxt = Number.isFinite(s) && s > 0 ? `T${String(s).padStart(2,"0")}` : "";
   const name = season.Name ? clampText(season.Name, 38) : "";
   return sTxt && name ? `${sTxt} • ${name}` : (sTxt || name || "");
 }
@@ -2359,15 +2359,15 @@ async function createRowHeroCard(item, serverId, labelText, { showProgress = fal
     : "";
 
   const typeLabel =
-    isPhoto ? (config.languageLabels.photo || "Fotoğraf") :
-    isPhotoAlbum ? (config.languageLabels.photoAlbum || "Albüm") :
-    isMusicAlbum ? (config.languageLabels.album || "Albüm") :
-    isAudio ? (config.languageLabels.track || "Parça") :
-    isVideo ? (config.languageLabels.video || "Video") :
-    isFolder ? (config.languageLabels.folder || "Klasör") :
-    isEpisode ? (config.languageLabels.episode || "Bölüm") :
-    isSeries ? (config.languageLabels.dizi || "Dizi") :
-    (config.languageLabels.film || "Film");
+    isPhoto ? (config.languageLabels.photo || "Foto") :
+    isPhotoAlbum ? (config.languageLabels.photoAlbum || "Álbum") :
+    isMusicAlbum ? (config.languageLabels.album || "Álbum") :
+    isAudio ? (config.languageLabels.track || "Faixa") :
+    isVideo ? (config.languageLabels.video || "Vídeo") :
+    isFolder ? (config.languageLabels.folder || "Pasta") :
+    isEpisode ? (config.languageLabels.episode || "Episódio") :
+    isSeries ? (config.languageLabels.dizi || "Série") :
+    (config.languageLabels.film || "Filme");
 
   const heroSub = isEpisode ? formatEpisodeLabel(item) : (isSeason ? formatSeasonLabel(item) : "");
   const genres = Array.isArray(posterSource.Genres) ? posterSource.Genres.slice(0, 3).join(", ") : "";
@@ -2474,7 +2474,7 @@ async function createRowHeroCard(item, serverId, labelText, { showProgress = fal
       previewItemId: previewItemId || itemId,
       serverId,
       detailsUrl: itemId ? getDetailsUrl(itemId, serverId) : "#",
-      detailsText: config.languageLabels.details || "Ayrıntılar",
+      detailsText: config.languageLabels.details || "Detalhes",
       showDetailsOverlay: false,
     });
   } catch (err) {
@@ -3782,7 +3782,7 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
     const topSeriesParentIds = getTopSeriesParentIds();
     const topSeriesMetaType = buildTopRowMetaType("Series", topSeriesParentIds);
     pushPlan(top10SeriesPlans, () => buildManagedSection({
-      titleText: config.languageLabels.top10Series || "Top 10 Diziler",
+      titleText: config.languageLabels.top10Series || "Top 10 Séries",
       badgeType: "series",
       heroLabel: "",
       cardCount: TOP10_ROW_CARD_COUNT,
@@ -3809,7 +3809,7 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
     const topMovieParentIds = getTopMovieParentIds();
     const topMovieMetaType = buildTopRowMetaType("Movie", topMovieParentIds);
     pushPlan(top10MoviePlans, () => buildManagedSection({
-      titleText: config.languageLabels.top10Movies || "Top 10 Filmler",
+      titleText: config.languageLabels.top10Movies || "Top 10 Filmes",
       badgeType: "movie",
       heroLabel: "",
       cardCount: TOP10_ROW_CARD_COUNT,
@@ -3842,7 +3842,7 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
       tmdbMovieMetaType,
     });
     pushPlan(tmdbTopMoviePlans, () => buildManagedSection({
-      titleText: config.languageLabels.tmdbTopMovies || "TMDb En Iyi Filmler",
+      titleText: config.languageLabels.tmdbTopMovies || "Melhores Filmes (TMDb)",
       badgeType: "movie",
       heroLabel: "",
       cardCount: TOP10_ROW_CARD_COUNT,
@@ -3868,8 +3868,8 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
           );
           tmdbEmptyMessage =
             result?.reason === "missingKey"
-              ? (config.languageLabels.tmdbKeyMissing || "TMDb API key girilmemis. Ayarlardan ekleyebilirsin.")
-              : (config.languageLabels.tmdbTopMoviesEmpty || "Secili film kutuphanelerinde TMDb top rated eslesmesi bulunamadi.");
+              ? (config.languageLabels.tmdbKeyMissing || "Chave de API TMDb não configurada. Adicione nas configurações.")
+              : (config.languageLabels.tmdbTopMoviesEmpty || "Nenhuma correspondência encontrada nas bibliotecas selecionadas.");
           const items = Array.isArray(result?.items) ? result.items : [];
           recentRowsTrace("tmdb:fetch:done", {
             sectionKey,
@@ -3898,9 +3898,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
 
     if (!split || !movieLibIds.length) {
       pushPlan(recentPlans, () => buildManagedSection({
-        titleText: config.languageLabels.recentMovies || "Son eklenen filmler",
+        titleText: config.languageLabels.recentMovies || "Filmes adicionados recentemente",
         badgeType: "new",
-        heroLabel: config.languageLabels.recentMoviesHero || "Son eklenen film",
+        heroLabel: config.languageLabels.recentMoviesHero || "Filme adicionado recentemente",
         cardCount: runtimeCfg.effectiveRecentMoviesCount,
         showProgress: false,
         hideHero: runtimeCfg.showRecentMoviesHeroCards === false,
@@ -3921,9 +3921,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
       for (const movieLibId of movieLibIds) {
         const libName = (STATE.movieLibs || []).find(x => x.Id === movieLibId)?.Name || "";
         pushPlan(recentPlans, () => buildManagedSection({
-          titleText: (config.languageLabels.recentMovies || "Son eklenen filmler") + (libName ? ` • ${libName}` : ""),
+          titleText: (config.languageLabels.recentMovies || "Filmes adicionados recentemente") + (libName ? ` • ${libName}` : ""),
           badgeType: "new",
-          heroLabel: (config.languageLabels.recentMoviesHero || "Son eklenen film") + (libName ? ` • ${libName}` : ""),
+          heroLabel: (config.languageLabels.recentMoviesHero || "Filme adicionado recentemente") + (libName ? ` • ${libName}` : ""),
           cardCount: runtimeCfg.effectiveRecentMoviesCount,
           showProgress: false,
           hideHero: runtimeCfg.showRecentMoviesHeroCards === false,
@@ -3950,9 +3950,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
 
     if (!split) {
       pushPlan(recentPlans, () => buildManagedSection({
-        titleText: config.languageLabels.recentSeries || "Son eklenen diziler",
+        titleText: config.languageLabels.recentSeries || "Séries adicionadas recentemente",
         badgeType: "new",
-        heroLabel: config.languageLabels.recentSeriesHero || "Son eklenen dizi",
+        heroLabel: config.languageLabels.recentSeriesHero || "Série adicionada recentemente",
         cardCount: runtimeCfg.effectiveRecentSeriesCount,
         showProgress: false,
         hideHero: runtimeCfg.showRecentSeriesHeroCards === false,
@@ -3973,9 +3973,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
       for (const tvLibId of tvIds) {
         const libName = (STATE.tvLibs || []).find(x => x.Id === tvLibId)?.Name || "";
         pushPlan(recentPlans, () => buildManagedSection({
-          titleText: (config.languageLabels.recentSeries || "Son eklenen diziler") + (libName ? ` • ${libName}` : ""),
+          titleText: (config.languageLabels.recentSeries || "Séries adicionadas recentemente") + (libName ? ` • ${libName}` : ""),
           badgeType: "new",
-          heroLabel: (config.languageLabels.recentSeriesHero || "Son eklenen dizi") + (libName ? ` • ${libName}` : ""),
+          heroLabel: (config.languageLabels.recentSeriesHero || "Série adicionada recentemente") + (libName ? ` • ${libName}` : ""),
           cardCount: runtimeCfg.effectiveRecentSeriesCount,
           showProgress: false,
           hideHero: runtimeCfg.showRecentSeriesHeroCards === false,
@@ -4002,9 +4002,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
 
     if (!split) {
       pushPlan(recentPlans, () => buildManagedSection({
-        titleText: config.languageLabels.recentEpisodes || "Son eklenen bölümler",
+        titleText: config.languageLabels.recentEpisodes || "Episódios Recentes",
         badgeType: "new",
-        heroLabel: config.languageLabels.recentEpisodesHero || "Son eklenen bölüm",
+        heroLabel: config.languageLabels.recentEpisodesHero || "Novo Episódio",
         cardCount: runtimeCfg.effectiveRecentEpisodesCount,
         showProgress: false,
         hideHero: runtimeCfg.showRecentEpisodesHeroCards === false,
@@ -4026,9 +4026,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
       for (const tvLibId of tvIds) {
         const libName = (STATE.tvLibs || []).find(x => x.Id === tvLibId)?.Name || "";
         pushPlan(recentPlans, () => buildManagedSection({
-          titleText: (config.languageLabels.recentEpisodes || "Son eklenen bölümler") + (libName ? ` • ${libName}` : ""),
+          titleText: (config.languageLabels.recentEpisodes || "Episódios Recentes") + (libName ? ` • ${libName}` : ""),
           badgeType: "new",
-          heroLabel: (config.languageLabels.recentEpisodesHero || "Son eklenen bölüm") + (libName ? ` • ${libName}` : ""),
+          heroLabel: (config.languageLabels.recentEpisodesHero || "Novo Episódio") + (libName ? ` • ${libName}` : ""),
           cardCount: runtimeCfg.effectiveRecentEpisodesCount,
           showProgress: false,
           hideHero: runtimeCfg.showRecentEpisodesHeroCards === false,
@@ -4052,9 +4052,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
 
   if (runtimeCfg.enableRecentMusic) {
     pushPlan(recentPlans, () => buildManagedSection({
-      titleText: config.languageLabels.recentMusic || "Son eklenen Albüm",
+      titleText: config.languageLabels.recentMusic || "Álbuns Recentes",
       badgeType: "new",
-      heroLabel: config.languageLabels.recentMusicHero || "Son eklenen albüm",
+      heroLabel: config.languageLabels.recentMusicHero || "Novo Álbum",
       cardCount: runtimeCfg.effectiveRecentMusicCount,
       showProgress: false,
       hideHero: runtimeCfg.showRecentMusicHeroCards === false,
@@ -4076,9 +4076,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
 
   if (runtimeCfg.enableContinueMovies) {
     pushPlan(continuePlans, () => buildManagedSection({
-      titleText: config.languageLabels.continueMovies || "Film izlemeye devam et",
+      titleText: config.languageLabels.continueMovies || "Continuar Assistindo (Filmes)",
       badgeType: "continue",
-      heroLabel: config.languageLabels.continueMoviesHero || "İzlemeye devam (Film)",
+      heroLabel: config.languageLabels.continueMoviesHero || "Continuar: Filmes",
       cardCount: runtimeCfg.effectiveContinueMoviesCount,
       showProgress: true,
       hideHero: runtimeCfg.showContinueMoviesHeroCards === false,
@@ -4104,9 +4104,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
 
     if (!split) {
       pushPlan(continuePlans, () => buildManagedSection({
-        titleText: config.languageLabels.continueSeries || "Dizi izlemeye devam et",
+        titleText: config.languageLabels.continueSeries || "Continuar Assistindo (Séries)",
         badgeType: "continue",
-        heroLabel: config.languageLabels.continueSeriesHero || "İzlemeye devam (Dizi)",
+        heroLabel: config.languageLabels.continueSeriesHero || "Continuar: Séries",
         cardCount: runtimeCfg.effectiveContinueSeriesCount,
         showProgress: true,
         hideHero: runtimeCfg.showContinueSeriesHeroCards === false,
@@ -4129,9 +4129,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
       for (const tvLibId of tvIds) {
         const libName = (STATE.tvLibs || []).find(x => x.Id === tvLibId)?.Name || "";
         pushPlan(continuePlans, () => buildManagedSection({
-          titleText: (config.languageLabels.continueSeries || "Dizi izlemeye devam et") + (libName ? ` • ${libName}` : ""),
+          titleText: (config.languageLabels.continueSeries || "Continuar Assistindo (Séries)") + (libName ? ` • ${libName}` : ""),
           badgeType: "continue",
-          heroLabel: (config.languageLabels.continueSeriesHero || "İzlemeye devam (Dizi)") + (libName ? ` • ${libName}` : ""),
+          heroLabel: (config.languageLabels.continueSeriesHero || "Continuar: Séries") + (libName ? ` • ${libName}` : ""),
           cardCount: runtimeCfg.effectiveContinueSeriesCount,
           showProgress: true,
           hideHero: runtimeCfg.showContinueSeriesHeroCards === false,
@@ -4156,9 +4156,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
 
   if (runtimeCfg.enableNextUp) {
     pushPlan(nextUpPlans, () => buildManagedSection({
-      titleText: config.languageLabels.nextUpEpisodes || "Sıradaki Bölümler",
+      titleText: config.languageLabels.nextUpEpisodes || "Próximos Episódios",
       badgeType: "episode",
-      heroLabel: config.languageLabels.nextUpEpisodesHero || "Sıradaki bölüm",
+      heroLabel: config.languageLabels.nextUpEpisodesHero || "Próximo Episódio",
       cardCount: runtimeCfg.effectiveNextUpCount,
       showProgress: true,
       hideHero: runtimeCfg.showNextUpHeroCards === false,
@@ -4191,9 +4191,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
 
     for (const { libId, libName } of otherDefs) {
       pushPlan(recentPlans, () => buildManagedSection({
-        titleText: `${config.languageLabels.otherLibRecent || "Son eklenenler"} • ${libName}`,
+        titleText: `${config.languageLabels.otherLibRecent || "Novidades"} • ${libName}`,
         badgeType: "new",
-        heroLabel: `${config.languageLabels.otherLibRecentHero || "Son eklenen"} • ${libName}`,
+        heroLabel: `${config.languageLabels.otherLibRecentHero || "Novo"} • ${libName}`,
         cardCount: runtimeCfg.effectiveOtherRecentCount,
         showProgress: false,
         hideHero: runtimeCfg.showOtherLibrariesHeroCards === false,
@@ -4215,9 +4215,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
 
     for (const { libId, libName } of otherDefs) {
       pushPlan(continuePlans, () => buildManagedSection({
-        titleText: `${config.languageLabels.otherLibContinue || "İzlemeye devam et"} • ${libName}`,
+        titleText: `${config.languageLabels.otherLibContinue || "Continuar Assistindo"} • ${libName}`,
         badgeType: "continue",
-        heroLabel: `${config.languageLabels.otherLibContinueHero || "Devam"} • ${libName}`,
+        heroLabel: `${config.languageLabels.otherLibContinueHero || "Continuar"} • ${libName}`,
         cardCount: runtimeCfg.effectiveOtherContinueCount,
         showProgress: true,
         hideHero: runtimeCfg.showOtherLibrariesHeroCards === false,
@@ -4240,9 +4240,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
 
     for (const { libId, libName } of otherDefs) {
       pushPlan(episodePlans, () => buildManagedSection({
-        titleText: `${config.languageLabels.recentEpisodes || "Son eklenen bölümler"} • ${libName}`,
+        titleText: `${config.languageLabels.recentEpisodes || "Episódios Recentes"} • ${libName}`,
         badgeType: "episode",
-        heroLabel: `${config.languageLabels.recentEpisodesHero || "Bölüm"} • ${libName}`,
+        heroLabel: `${config.languageLabels.recentEpisodesHero || "Bölum"} • ${libName}`,
         cardCount: runtimeCfg.effectiveOtherEpisodesCount,
         showProgress: false,
         hideHero: runtimeCfg.showOtherLibrariesHeroCards === false,
@@ -4265,9 +4265,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
 
   if (runtimeCfg.enableRecentTracks) {
     pushPlan(continuePlans, () => buildManagedSection({
-      titleText: (config.languageLabels.recentlyPlayedTracks || config.languageLabels.recRecentTracks) || "Son dinlenen parçalar",
+      titleText: (config.languageLabels.recentlyPlayedTracks || config.languageLabels.recRecentTracks) || "Músicas Recentes",
       badgeType: "continue",
-      heroLabel: (config.languageLabels.recentlyPlayedTracksHero || config.languageLabels.recentTracksHero) || "Son dinlenen parça",
+      heroLabel: (config.languageLabels.recentlyPlayedTracksHero || config.languageLabels.recentTracksHero) || "Música Recente",
       cardCount: runtimeCfg.effectiveRecentTracksCount,
       showProgress: false,
       hideHero: runtimeCfg.showRecentTracksHeroCards === false,

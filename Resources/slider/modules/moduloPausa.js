@@ -678,7 +678,7 @@ async function loadCatalogTagsWithCache() {
 }
 
 function normalizeAgeChip(rating) {
-  if (!rating) return labels?.noRating || "Derecelendirme yok";
+  if (!rating) return labels?.noRating || "Sem classificação";
   const r = String(rating).toUpperCase().trim().replace(/\s+/g, "").replace(/-/g, "");
   if (/(18\+|R18|ADULT|NC17|NC\-?17|XRATED|XXX|ADULTSONLY|AO|TR18|DE18|FSK18)/.test(r)) return "18+";
   if (/(17\+|^R$|TVMA|TR17)/.test(r)) return "17+";
@@ -698,17 +698,17 @@ function normalizeAgeChip(rating) {
 }
 
 function normalizeAgeRating(raw) {
-  if (!raw) return labels?.noRating || "Derecelendirme yok";
+  if (!raw) return labels?.noRating || "Sem classificação";
   const s = String(raw).toUpperCase().replace(/\s+/g, "").replace(/-/g, "");
   if (/^TVMA$/.test(s)) return "18+";
   if (/^TV14$/.test(s)) return "14+";
   if (/^TVPG$/.test(s)) return "7+";
-  if (/^TVG$/.test(s)) return labels?.genel;
+  if (/^TVG$/.test(s)) return labels?.livre;
   if (s === "NC17") return "18+";
   if (s === "R") return "18+";
   if (s === "PG13") return "13+";
   if (s === "PG") return "7+";
-  if (s === "G") return labels?.genel;
+  if (s === "G") return labels?.livre;
   if (s === "18") return "18+";
   if (s === "15") return "15+";
   if (s === "12" || s === "12A") return "12+";
@@ -716,7 +716,7 @@ function normalizeAgeRating(raw) {
   if (s === "FSK16") return "16+";
   if (s === "FSK12") return "12+";
   if (s === "FSK6") return "6+";
-  if (s === "FSK0") return labels?.genel;
+  if (s === "FSK0") return labels?.livre;
   const m = s.match(/^(\d{1,2})\+?$/);
   if (m) return `${m[1]}+`;
   return s;
@@ -725,15 +725,12 @@ function normalizeAgeRating(raw) {
 function localizedMaturityHeader() {
   const lang = String(currentLang || "").toLowerCase();
   if (labels.maturityHeader) return labels.maturityHeader;
-  if (lang.startsWith("en")  || lang.startsWith("eng")) return "MATURITY RATING:";
-  if (lang.startsWith("de")  || lang.startsWith("deu")) return "ALTERSFREIGABE:";
-  if (lang.startsWith("fr")  || lang.startsWith("fre")) return "CLASSIFICATION :";
-  if (lang.startsWith("ru")  || lang.startsWith("rus")) return "ВОЗРАСТНОЕ ОГРАНИЧЕНИЕ:";
-  return "YETİŞKİNLİK DÜZEYİ:";
+  if (lang.startsWith("pt")  || lang.startsWith("por")) return "CLASSIFICAÇÃO INDICATIVA:";
+  return "CLASSIFICAÇÃO:";
 }
 function localizedGenres(genres = []) {
   if (!Array.isArray(genres) || !genres.length) return [];
-  const dict = labels?.turler || {};
+  const dict = labels?.generos || {};
   const lc = Object.fromEntries(Object.entries(dict).map(([k, v]) => [k.toLowerCase(), v]));
   return genres.map((g) => dict[g] || lc[String(g).toLowerCase()] || g);
 }
@@ -847,7 +844,7 @@ const BASE_BUCKETS = [
       "sci fi",
       "sci-fi",
       "science-fiction",
-      "bilim kurgu",
+      "ficção científica",
       "naçnaya fantastika",
       "научная фантастика",
       "science-fiction",
@@ -915,6 +912,7 @@ const BASE_BUCKETS = [
       "horror",
       "horreur",
       "ужасы",
+      "terror",
       "korku",
       "slasher",
       "splatter",
@@ -1767,16 +1765,16 @@ function getDescriptorKeywordMap() {
   const k = labels?.descriptorKeywords;
   if (k && typeof k === "object") return k;
   return {
-    violence: ["violence", "violent", "fight", "combat", "assault", "brutal", "blood", "kavga", "şiddet", "savaş", "silah", "dövüş", "gewalt", "kampf", "brutal"],
-    sex: ["sexual", "sex", "erotic", "intimate", "explicit sex", "cinsel", "erotik", "sexuell"],
-    nudity: ["nudity", "nude", "çıplak", "nacktheit"],
-    horror: ["horror", "thriller", "slasher", "gore", "supernatural", "paranormal", "korku", "gerilim", "dehşet", "übernatürlich"],
-    drugs: ["drug", "narcotic", "cocaine", "heroin", "meth", "substance abuse", "uyuşturucu", "esrar", "eroin", "kokain", "drogen", "rauschgift", "alkol abuse"],
-    profanity: ["strong language", "explicit language", "profanity", "swear", "vulgar", "küfür", "argo", "schimpf", "vulgär"],
-    crime: ["crime", "criminal", "mafia", "gang", "heist", "robbery", "suç", "mafya", "soygun", "krimi", "verbrechen"],
-    war: ["war", "battle", "army", "military", "conflict", "front", "savaş", "ordu", "asker", "krieg", "schlacht"],
-    discrimination: ["racism", "sexism", "homophobia", "discrimination", "ayrımcılık", "ırkçılık", "cinsiyetçilik", "diskriminierung"],
-    mature: ["adult themes", "abuse", "suicide", "self harm", "trauma", "domestic violence", "istismar", "intihar", "travma", "missbrauch", "suizid"],
+    violence: ["violence", "violent", "fight", "combat", "assault", "brutal", "blood", "briga", "violência", "guerra", "arma", "luta", "gewalt", "kampf", "brutal"],
+    sex: ["sexual", "sex", "erotic", "intimate", "explicit sex", "sexual", "erótico", "sexuell"],
+    nudity: ["nudity", "nude", "nu", "nacktheit"],
+    horror: ["horror", "thriller", "slasher", "gore", "supernatural", "paranormal", "terror", "suspense", "pavor", "übernatürlich"],
+    drugs: ["drug", "narcotic", "cocaine", "heroin", "meth", "substance abuse", "droga", "maconha", "heroína", "cocaína", "drogen", "rauschgift", "álcool"],
+    profanity: ["strong language", "explicit language", "profanity", "swear", "vulgar", "palavrão", "chulo", "schimpf", "vulgär"],
+    crime: ["crime", "criminal", "mafia", "gang", "heist", "robbery", "crime", "máfia", "assalto", "krimi", "verbrechen"],
+    war: ["war", "battle", "army", "military", "conflict", "front", "guerra", "exército", "soldado", "krieg", "schlacht"],
+    discrimination: ["racism", "sexism", "homophobia", "discrimination", "discriminação", "racismo", "sexismo", "diskriminierung"],
+    mature: ["adult themes", "abuse", "suicide", "self harm", "trauma", "domestic violence", "abuso", "suicídio", "trauma", "missbrauch", "suizid"],
   };
 }
 function deriveKeywordDescriptors(item = {}) {
@@ -1939,7 +1937,7 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
     </div>
   </div>
   <div class="pause-status-bottom-right" id="pause-status-bottom-right" style="display:none;">
-    <span><i class="fa-solid fa-pause"></i> ${labels.paused || "Duraklatıldı"}</span>
+    <span><i class="fa-solid fa-pause"></i> ${labels.paused || "Pausado"}</span>
   </div>`;
     document.body.appendChild(overlay);
 
@@ -2140,11 +2138,9 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
     const hasDur = Number.isFinite(dur) && dur > 0;
 
     const pct = hasDur ? _clamp01(ct / dur) : 0;
-    const rem = hasDur ? Math.max(0, dur - ct) : NaN;
-
     const pctText = hasDur ? `${Math.round(pct * 100)}%` : "";
-    const remLbl = (labels?.remainingTime || "Kalan");
-    const remText = hasDur ? formatTime(rem) : (labels?.sonucyok || "—");
+    const remLbl = (labels?.remainingTime || "Restante");
+    const remText = hasDur ? formatTime(rem) : (labels?.sonucyok || "Indisponível");
 
     const pct10 = Math.round(pct * 1000) / 10;
     const rem10 = Math.max(0, 100 - pct10);
@@ -2282,7 +2278,7 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
 
   const isEp = !!isEpisodeContext;
   const iconClass = isEp ? "fa-solid fa-tv" : "fa-solid fa-thumbs-up";
-  const text = isEp ? (labels.unwatchedEpisodes || "İzlemediğiniz Bölümler") : (labels.youMayAlsoLike || "Bunları da beğenebilirsiniz");
+  const text = isEp ? (labels.unwatchedEpisodes || "Episódios não assistidos") : (labels.youMayAlsoLike || "Você também pode gostar");
 
   if (headerEl) headerEl.innerHTML = `<i class="${iconClass}"></i> ${text}`;
   if (badgeTextEl) badgeTextEl.textContent = text;
@@ -2535,18 +2531,18 @@ function hideOverlay(opts = {}) {
   }
 
   function convertTicks(ticks) {
-    if (!ticks || isNaN(ticks)) return labels.sonucyok;
+    if (!ticks || isNaN(ticks)) return labels.sonucyok || "Indisponível";
     const totalSeconds = ticks / 10000000;
     return formatTime(totalSeconds);
   }
   function formatTime(sec) {
-    if (!sec || isNaN(sec)) return labels.sonucyok;
+    if (!sec || isNaN(sec)) return labels.sonucyok || "Indisponível";
     const t = Math.floor(sec);
     const m = Math.floor(t / 60);
     const h = Math.floor(m / 60);
     const rm = m % 60;
     const rs = t % 60;
-    return h > 0 ? `${h}${labels.sa} ${rm}${labels.dk} ${rs}${labels.sn}` : `${rm}${labels.dk} ${rs}${labels.sn}`;
+    return h > 0 ? `${h}${labels.sa || "h"} ${rm}${labels.dk || "m"} ${rs}${labels.sn || "s"}` : `${rm}${labels.dk || "m"} ${rs}${labels.sn || "s"}`;
   }
   function genRow(label, value) {
     if (!value) return "";
@@ -2587,8 +2583,8 @@ function hideOverlay(opts = {}) {
         genRow("⭐ " + labels.showCommunityRating, communityRatingValue != null ? `${communityRatingValue}/10` : ""),
         genRow("👨‍⚖️ " + labels.showCriticRating, data.CriticRating ? Math.round(data.CriticRating) + "%" : ""),
         genRow("👥 " + labels.voteCount, data.VoteCount),
-        genRow("🔞 " + labels.showOfficialRating, data.OfficialRating || labels.derecelendirmeyok),
-        genRow("🎭 " + labels.showGenresInfo, data.Genres?.slice(0, 3).join(", ") || labels.noGenresFound),
+        genRow("🔞 " + labels.showOfficialRating, data.OfficialRating || labels.derecelendirmeyok || "Sem classificação"),
+        genRow("🎭 " + labels.showGenresInfo, data.Genres?.slice(0, 3).join(", ") || labels.noGenresFound || "Sem gêneros"),
         genRow("⏱️ " + labels.showRuntimeInfo, convertTicks(ep?.RunTimeTicks || data.RunTimeTicks)),
         genRow("▶ " + labels.currentTime, formatTime(activeVideo?.currentTime || 0)),
         genRow("⏳ " + labels.remainingTime, formatTime((activeVideo?.duration || 0) - (activeVideo?.currentTime || 0))),
@@ -2598,7 +2594,7 @@ function hideOverlay(opts = {}) {
       metaEl.innerHTML = "";
     }
 
-    plotEl.textContent = config.pauseOverlay.showPlot ? (ep?.Overview || data.Overview || labels.konu + labels.noData) : "";
+    plotEl.textContent = config.pauseOverlay.showPlot ? (ep?.Overview || data.Overview || (labels.konu || "Sobre: ") + (labels.noData || "Sem dados")) : "";
 
     _setRecoHeaderAndBadge(Boolean(ep));
     try {
@@ -2610,7 +2606,7 @@ function hideOverlay(opts = {}) {
       }
       renderRecommendations(recs);
     } catch (e) {
-      console.warn("duraklatma ekranı tavsiye hatası:", e);
+      console.warn("pause overlay recommendation error:", e);
       _setRecoHeaderAndBadge(Boolean(ep));
       renderRecommendations([]);
     }
@@ -3397,12 +3393,12 @@ function hideOverlay(opts = {}) {
     return h > 0 ? `${h}${labels.sa} ${rm}${labels.dk} ${rs}${labels.sn}` : `${rm}${labels.dk} ${rs}${labels.sn}`;
   }
   function formatSeasonEpisodeLine(ep) {
-    const sWord = labels.season || "Season";
-    const eWord = labels.episode || "Episode";
+    const sWord = labels.season || "Temporada";
+    const eWord = labels.episode || "Episódio";
     const sNum = ep?.ParentIndexNumber;
     const eNum = ep?.IndexNumber;
     const eTitle = ep?.Name ? ` – ${ep.Name}` : "";
-    const numberFirst = new Set(["tur"]);
+    const numberFirst = new Set([]);
 
     let left = "",
       right = "";
@@ -3420,15 +3416,11 @@ function hideOverlay(opts = {}) {
     const eNum = ep?.IndexNumber;
     const titlePart = ep?.Name ? ` - ${ep.Name}` : "";
     const lang = String(currentLang || "").toLowerCase();
-    const fallbackWords = { tur: "bölüm", eng: "Episode", en: "Episode", fra: "Épisode", fr: "Épisode", deu: "Folge", de: "Folge", rus: "серия", ru: "серия" };
-    const rawWord = (labels && typeof labels.episode === "string" && labels.episode.trim()) || fallbackWords[lang] || "Episode";
+    const fallbackWords = { por: "episódio", pt: "episódio", eng: "Episode", en: "Episode", fra: "Épisode", fr: "Épisode", deu: "Folge", de: "Folge", rus: "серия", ru: "серия" };
+    const rawWord = (labels && typeof labels.episode === "string" && labels.episode.trim()) || fallbackWords[lang] || "Episódio";
     const numberFirstOverride = typeof labels?.numberFirstEpisode === "boolean" ? labels.numberFirstEpisode : null;
-    const numberFirst = numberFirstOverride !== null ? numberFirstOverride : lang === "tur" || lang === "ru" || lang === "rus";
+    const numberFirst = numberFirstOverride !== null ? numberFirstOverride : lang === "ru" || lang === "rus";
     if (eNum == null) return `${rawWord}${titlePart}`.trim();
-    if (lang === "tur") {
-      const w = rawWord.toLocaleLowerCase("tr");
-      return `${eNum}.${w}${titlePart}`;
-    }
     if (lang === "ru" || lang === "rus") {
       const w = rawWord.toLocaleLowerCase("ru");
       return `${eNum} ${w}${titlePart}`;
@@ -3863,53 +3855,53 @@ function _descCodesFromItem(item){
   const joined = `${overview} ${tags}`.trim();
 
   const codes = new Set();
-  if (_hasAnyWords(joined, dict.sex)) codes.add("cinsellik");
+  if (_hasAnyWords(joined, dict.sex)) codes.add("sexo");
   if (_hasAnyWords(joined, dict.violence) || _hasAnyWords(joined, dict.war) || _hasAnyWords(joined, dict.crime)) {
-    codes.add("siddet");
+    codes.add("violencia");
   }
-  if (_hasAnyWords(joined, dict.mature)) codes.add("yetiskin");
+  if (_hasAnyWords(joined, dict.mature)) codes.add("adulto");
 
   for (const t of (item?.Tags || [])) {
     const hit = _bucketsForTag(t);
-    if (hit.has("sex")) codes.add("cinsellik");
-    if (hit.has("violence")) codes.add("siddet");
-    if (hit.has("mature")) codes.add("yetiskin");
+    if (hit.has("sex")) codes.add("sexo");
+    if (hit.has("violence")) codes.add("violencia");
+    if (hit.has("mature")) codes.add("adulto");
   }
 
   return Array.from(codes);
 }
 
 const BUCKET_ICON_MAP = {
-  sex: "cinsellik",
-  nudity: "cinsellik",
-  romance_love: "genel",
-  violence: "siddet",
-  war: "siddet",
-  crime: "siddet",
-  action_adventure: "genel",
-  superhero: "siddet",
-  sports: "siddet",
-  mature: "yetiskin",
-  horror: "yetiskin",
-  drugs: "yetiskin",
-  profanity: "yetiskin",
-  discrimination: "yetiskin",
-  political: "yetiskin",
-  religion_myth: "yetiskin",
-  thriller_suspense: "yetiskin",
-  mystery_detective: "yetiskin",
-  documentary_biopic: "genel",
-  music_dance: "genel",
-  animation_kids: "genel",
-  animals_nature: "genel",
-  historical: "genel",
-  fantasy_magic: "genel",
-  supernatural: "genel",
-  fairytale: "genel",
-  travel_road: "genel",
-  period_era: "genel",
-  western: "genel",
-  sci_fi_tech: "genel"
+  sex: "sexo",
+  nudity: "sexo",
+  romance_love: "livre",
+  violence: "violencia",
+  war: "violencia",
+  crime: "violencia",
+  action_adventure: "livre",
+  superhero: "violencia",
+  sports: "violencia",
+  mature: "adulto",
+  horror: "adulto",
+  drugs: "adulto",
+  profanity: "adulto",
+  discrimination: "adulto",
+  political: "adulto",
+  religion_myth: "adulto",
+  thriller_suspense: "adulto",
+  mystery_detective: "adulto",
+  documentary_biopic: "livre",
+  music_dance: "livre",
+  animation_kids: "livre",
+  animals_nature: "livre",
+  historical: "livre",
+  fantasy_magic: "livre",
+  supernatural: "livre",
+  fairytale: "livre",
+  travel_road: "livre",
+  period_era: "livre",
+  western: "livre",
+  sci_fi_tech: "livre"
 };
 
 const BUCKET_ICON_WEIGHT = {
@@ -3946,9 +3938,9 @@ const BUCKET_ICON_WEIGHT = {
 };
 
 const ICON_THRESHOLD = {
-  cinsellik: 2.0,
-  siddet: 2.2,
-  yetiskin: 3.1,
+  sexo: 2.0,
+  violencia: 2.2,
+  adulto: 3.1,
 };
 
 function _bucketScoresFromItem(item) {
@@ -4006,12 +3998,12 @@ function _bucketKeysFromItem(item) {
 }
 
 function buildIconListForItem(item) {
-  const ALLOWED = new Set(["genel", "cinsellik", "siddet", "yetiskin"]);
+  const ALLOWED = new Set(["livre", "sexo", "violencia", "adulto"]);
   const iconScores = {
-    genel: 0,
-    cinsellik: 0,
-    siddet: 0,
-    yetiskin: 0,
+    livre: 0,
+    sexo: 0,
+    violencia: 0,
+    adulto: 0,
   };
 
   const bucketScores = _bucketScoresFromItem(item);
@@ -4023,7 +4015,7 @@ function buildIconListForItem(item) {
 
   const codes = _descCodesFromItem(item);
   for (const c of codes) {
-    if (ALLOWED.has(c) && c !== "genel") iconScores[c] += 1.15;
+    if (ALLOWED.has(c) && c !== "livre") iconScores[c] += 1.15;
   }
 
   const dict = getDescriptorKeywordMap();
@@ -4032,16 +4024,16 @@ function buildIconListForItem(item) {
     (item?.Taglines || []).join(" "),
     (item?.Tags || item?.Keywords || []).join(" "),
   ].join(" ");
-  iconScores.cinsellik += 0.8 * (
+  iconScores.sexo += 0.8 * (
     countMatches(joined, dict?.sex || []) +
     countMatches(joined, dict?.nudity || [])
   );
-  iconScores.siddet += 0.72 * (
+  iconScores.violencia += 0.72 * (
     countMatches(joined, dict?.violence || []) +
     countMatches(joined, dict?.war || []) +
     countMatches(joined, dict?.crime || [])
   );
-  iconScores.yetiskin += 0.85 * (
+  iconScores.adulto += 0.85 * (
     countMatches(joined, dict?.mature || []) +
     countMatches(joined, dict?.drugs || []) +
     countMatches(joined, dict?.profanity || []) +
@@ -4052,25 +4044,25 @@ function buildIconListForItem(item) {
   const norm = String(normalizeAgeRating(raw) || "").toLowerCase();
   const ageNum = parseInt(norm, 10);
   if (Number.isFinite(ageNum)) {
-    if (ageNum >= 18) iconScores.yetiskin += 4.3;
-    else if (ageNum >= 16) iconScores.yetiskin += 2.4;
-    else if (ageNum >= 13) iconScores.siddet += 1.15;
-    else if (ageNum <= 7) iconScores.genel += 1.8;
+    if (ageNum >= 18) iconScores.adulto += 4.3;
+    else if (ageNum >= 16) iconScores.adulto += 2.4;
+    else if (ageNum >= 13) iconScores.violencia += 1.15;
+    else if (ageNum <= 7) iconScores.livre += 1.8;
   }
 
   const isAdult =
     (Number.isFinite(ageNum) && ageNum >= 18) ||
     /(^|\b)(r|nc-?17|tvma|18\+)/i.test(raw);
-  if (isAdult) iconScores.yetiskin += 3.4;
+  if (isAdult) iconScores.adulto += 3.4;
 
-  const genelLbl = String(labels?.genel || "genel").toLowerCase();
+  const genelLbl = String(labels?.livre || "livre").toLowerCase();
   const isGeneral =
-    norm.includes("genel") ||
+    norm.includes("livre") ||
     norm === "7+" ||
     norm === "0+" ||
     norm.includes(genelLbl) ||
     /^g$|^tvg$/i.test(raw);
-  if (isGeneral) iconScores.genel += 1.35;
+  if (isGeneral) iconScores.livre += 1.35;
 
   const hasHardRiskSignal =
     (bucketScores.get("violence") || 0) >= 1.4 ||
@@ -4082,21 +4074,21 @@ function buildIconListForItem(item) {
     (bucketScores.get("nudity") || 0) >= 1.0;
 
   if (Number.isFinite(ageNum) && ageNum <= 7 && !hasHardRiskSignal) {
-    return ["genel"];
+    return ["livre"];
   }
 
   const out = [];
-  if (iconScores.yetiskin >= ICON_THRESHOLD.yetiskin) out.push("yetiskin");
-  if (iconScores.siddet >= ICON_THRESHOLD.siddet) out.push("siddet");
-  if (iconScores.cinsellik >= ICON_THRESHOLD.cinsellik) out.push("cinsellik");
+  if (iconScores.adulto >= ICON_THRESHOLD.adulto) out.push("adulto");
+  if (iconScores.violencia >= ICON_THRESHOLD.violencia) out.push("violencia");
+  if (iconScores.sexo >= ICON_THRESHOLD.sexo) out.push("sexo");
 
   const shouldIncludeGenel =
-    (iconScores.genel >= 1.2 || isGeneral || (Number.isFinite(ageNum) && ageNum <= 7)) &&
-    iconScores.yetiskin < ICON_THRESHOLD.yetiskin;
-  if (shouldIncludeGenel) out.unshift("genel");
+    (iconScores.livre >= 1.2 || isGeneral || (Number.isFinite(ageNum) && ageNum <= 7)) &&
+    iconScores.adulto < ICON_THRESHOLD.adulto;
+  if (shouldIncludeGenel) out.unshift("livre");
 
   let uniq = Array.from(new Set(out)).filter((n) => ALLOWED.has(n));
-  if (!uniq.length) uniq = ["genel"];
+  if (!uniq.length) uniq = ["livre"];
   return uniq;
 }
 
