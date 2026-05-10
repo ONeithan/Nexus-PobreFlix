@@ -239,7 +239,8 @@
     placeholder.id = "NexusPobreFlixSettingsPlaceholder";
     placeholder.className = ("nexus-empty " + (tone ? "nexus-empty--" + String(tone) : "")).trim();
     placeholder.textContent = text;
-    host.replaceChildren(placeholder);
+    host.innerHTML = "";
+    host.appendChild(placeholder);
   }
 
   function consumeRequestedNexusPobreFlixSettingsTab() {
@@ -759,8 +760,8 @@
 
   function authHeaders() {
     try {
-      const apiClient = window.ApiClient;
-      const token = (apiClient && typeof apiClient.accessToken === "function")
+      var apiClient = window.ApiClient;
+      var token = (apiClient && typeof apiClient.accessToken === "function")
         ? apiClient.accessToken()
         : (apiClient ? (apiClient._accessToken || apiClient._authToken) : null);
       if (token) return { "X-Emby-Token": token };

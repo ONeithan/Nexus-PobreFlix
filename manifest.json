@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png",
     "versions": [
       {
+        "version": "1.0.0.13",
+        "changelog": "# Nexus PobreFlix v1.0.0.13 — HOTFIX INDUSTRIAL: RESTAURAÇÃO TOTAL 💎\n\n- **Correção Crítica de Botões**: Resolvido o erro de sintaxe `addEventListenerfunction` e `setTimeoutfunction` que travava todos os botões e abas do painel.\n- **Fim da Barra Cinza**: Removidas restrições de layout que causavam artefatos visuais e quebra de scroll na interface de configuração.\n- **Compatibilidade ES5 Pura**: Validada a execução de 100% dos scripts em motores JS legados sem depender de métodos modernos como `replaceChildren`.\n- **Estabilidade de Navegação**: Restaurada a funcionalidade das abas (Status, Injeção, Configurações) em todos os navegadores modernos e antigos.\n- **Sincronização Industrial**: Garantida a integridade do sistema de salvamento e publicação global.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.13/NexusPobreFlix-1.0.0.13.zip",
+        "checksum": "e70b06018df483b1b4be9cd6b370787c",
+        "timestamp": "2026-05-10T04:00:00Z"
+      },
+      {
         "version": "1.0.0.12",
         "changelog": "# Nexus PobreFlix v1.0.0.12 — INDUSTRIALIZAÇÃO ES5 TOTAL 🛡️\n\n- **Refatoração Industrial ES5 Total**: Conversão completa de todo o motor do Slider e Painel de Configurações para ES5, garantindo compatibilidade absoluta com hardware legado.\n- **Suporte Tizen/WebOS Antigos**: Eliminados todos os `async/await`, `arrow functions`, `template literals` e `optional chaining` em 100% da base de código frontend.\n- **Fim do Erro de Sintaxe**: Resolvido definitivamente o erro 'Unexpected token' que impedia a abertura do painel de configurações em TVs Samsung e LG antigas.\n- **Otimização de Performance**: Migração para fluxos assíncronos baseados em Promises para máxima fluidez em processadores de baixo custo.\n- **Estabilidade v10.11.x**: Versão final validada para produção em ambientes Jellyfin 10.11.x com foco em hardware de TV.",
         "targetAbi": "10.11.0.0",
