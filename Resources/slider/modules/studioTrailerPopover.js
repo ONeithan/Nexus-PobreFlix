@@ -7,42 +7,42 @@ import {
 } from "../../Plugins/NexusPobreFlix/runtime/api.js";
 import { cleanupImageResourceRefs } from "./imageResourceCleanup.js";
 
-let __pop = null;
-let __timer = null;
-let __cleanup = null;
-let __presenceTimer = null;
-let __openSeq = 0;
-let __navSeq  = 0;
-let __tombstoneUntil = 0;
-let __lastItemId = null;
-const TRAILER_LRU_MAX = 200;
-const trailerUrlCache = new Map();
+var __pop = null;
+var __timer = null;
+var __cleanup = null;
+var __presenceTimer = null;
+var __openSeq = 0;
+var __navSeq  = 0;
+var __tombstoneUntil = 0;
+var __lastItemId = null;
+var TRAILER_LRU_MAX = 200;
+var trailerUrlCache = new Map();
 
 function clearPopoverWillChange() {
   try {
-    const pop = document.querySelector('.mini-trailer-popover');
+    var pop = document.querySelector('.mini-trailer-popover');
     if (pop) {
       pop.style.removeProperty('will-change');
-      pop.querySelectorAll('[style*="will-change"]').forEach(el => {
+      pop.querySelectorAll('[style*="will-change"]').forEach(function(el) {
         el.style.removeProperty('will-change');
       });
     }
   } catch {}
 
-  const SELS = [
+  var SELS = [
     '.mini-trailer-popover',
     '.studio-trailer-video',
     '.studio-trailer-iframe'
   ];
   try {
-    for (const sheet of Array.from(document.styleSheets)) {
+    for (var sheet of Array.from(document.styleSheets)) {
       try {
-        const rules = sheet.cssRules || sheet.rules;
+        var rules = sheet.cssRules || sheet.rules;
         if (!rules) continue;
-        for (let i = 0; i < rules.length; i++) {
-          const rule = rules[i];
+        for (var i = 0; i < rules.length; i++) {
+          var rule = rules[i];
           if (!rule || !rule.selectorText || !rule.style) continue;
-          const match = SELS.some(s => rule.selectorText.includes(s));
+          var match = SELS.some(function(s) rule.selectorText.includes(s));
           if (match && rule.style.willChange) {
             rule.style.removeProperty('will-change');
           }
@@ -64,7 +64,7 @@ function isMobileLike() {
 }
 
 function getBaseEl(anchor) {
-  const mini = document.querySelector(".mini-poster-popover.visible");
+  var mini = document.querySelector(".mini-poster-popover.visible");
   if (mini && document.contains(mini)) return mini;
   if (anchor && document.contains(anchor)) return anchor;
   return null;
@@ -73,7 +73,7 @@ function getBaseEl(anchor) {
 function ensureEl() {
   if (__pop) return __pop;
 
-  const el = document.createElement("div");
+  var el = document.createElement("div");
   el.className = "mini-trailer-popover";
   el.style.position = "fixed";
   el.style.zIndex = "10000";
@@ -81,19 +81,15 @@ function ensureEl() {
   el.style.top = "0";
   el.style.display = "none";
   el.style.visibility = "hidden";
-  el.innerHTML = `
-    <div class="mtp-inner">
-      <div class="mtp-player"></div>
-    </div>
-  `;
+  el.innerHTML = "\n    <div class=\"mtp-inner\">\n      <div class=\"mtp-player\"></div>\n    </div>\n  ";
 
   (document.body || document.documentElement).appendChild(el);
-  el.addEventListener("pointerenter", () => {
+  el.addEventListenerfunction("pointerenter", () {
     if (__timer) { clearTimeout(__timer); __timer = null; }
   }, { passive: true });
-  el.addEventListener("pointerleave", (e) => {
-    const to = e?.relatedTarget || null;
-    const intoMini = !!(to && to.closest?.(".mini-poster-popover"));
+  el.addEventListenerfunction("pointerleave", (e) {
+    var to = e.relatedTarget || null;
+    var intoMini = !!(to && to.closest.(".mini-poster-popover"));
     if (intoMini) return;
     hideTrailerPopover(140);
   }, { passive: true });
@@ -106,7 +102,7 @@ function destroyPopover() {
   try {
     stopAndClearMedia();
     cleanupImageResourceRefs(__pop, { revokeDetachedBlobs: true });
-    const host = __pop.querySelector(".mtp-player");
+    var host = __pop.querySelector(".mtp-player");
     if (host) host.innerHTML = "";
     __pop.remove();
   } catch {}
@@ -116,7 +112,7 @@ function destroyPopover() {
 function clearPlayerContainer(container) {
   if (!container) return;
 
-  const vid = container.querySelector("video");
+  var vid = container.querySelector("video");
   if (vid) {
     try {
       vid.pause();
@@ -125,7 +121,7 @@ function clearPlayerContainer(container) {
     } catch {}
   }
 
-  const iframe = container.querySelector("iframe");
+  var iframe = container.querySelector("iframe");
   if (iframe) {
     try { iframe.src = ""; } catch {}
   }
@@ -135,18 +131,18 @@ function clearPlayerContainer(container) {
 }
 
 function measure(pop) {
-  const prevDisplay = pop.style.display;
-  const prevOpacity = pop.style.opacity;
-  const prevVis     = pop.style.visibility;
+  var prevDisplay = pop.style.display;
+  var prevOpacity = pop.style.opacity;
+  var prevVis     = pop.style.visibility;
   pop.style.display = "block";
   pop.style.opacity = "0";
   pop.style.visibility = "hidden";
-  const vw = document.documentElement.clientWidth;
-  const vh = document.documentElement.clientHeight;
-  const mW = Math.min(vw - 16, 720);
-  const mH = Math.round(Math.min( Math.max(vh * 0.35, 220), 420 ));
-  const pw = pop.offsetWidth || (isMobileLike() ? mW : 420);
-  const ph = pop.offsetHeight || (isMobileLike() ? mH : 252);
+  var vw = document.documentElement.clientWidth;
+  var vh = document.documentElement.clientHeight;
+  var mW = Math.min(vw - 16, 720);
+  var mH = Math.round(Math.min( Math.max(vh * 0.35, 220), 420 ));
+  var pw = pop.offsetWidth || (isMobileLike() ? mW : 420);
+  var ph = pop.offsetHeight || (isMobileLike() ? mH : 252);
   pop.style.display = prevDisplay || "";
   pop.style.opacity = prevOpacity || "";
   pop.style.visibility = prevVis || "";
@@ -155,18 +151,18 @@ function measure(pop) {
 
 function placeNear(anchor) {
   if (!__pop) return false;
-  const base = getBaseEl(anchor);
+  var base = getBaseEl(anchor);
   if (!base) return false;
 
-  const r = base.getBoundingClientRect();
-  const { pw, ph } = measure(__pop);
-  const vw = document.documentElement.clientWidth;
-  const vh = document.documentElement.clientHeight;
-  const margin = 8;
-  const vGap = 14;
-  const spaceBottom = (vh - r.bottom) - margin;
-  const spaceTop    = (r.top) - margin;
-  let place;
+  var r = base.getBoundingClientRect();
+  var { pw, ph } = measure(__pop);
+  var vw = document.documentElement.clientWidth;
+  var vh = document.documentElement.clientHeight;
+  var margin = 8;
+  var vGap = 14;
+  var spaceBottom = (vh - r.bottom) - margin;
+  var spaceTop    = (r.top) - margin;
+  var place;
   if (isMobileLike()) {
     place = "mobile-bottom";
   } else if (spaceBottom >= ph) {
@@ -177,16 +173,16 @@ function placeNear(anchor) {
     place = "top";
   }
 
-  let left = r.left + (r.width - pw) / 2;
+  var left = r.left + (r.width - pw) / 2;
   left = Math.max(margin, Math.min(left, vw - pw - margin));
 
-  let top;
+  var top;
   if (place === "mobile-bottom") {
     left = margin;
     top  = vh - ph - margin;
-    __pop.style.width  = `${vw - margin*2}px`;
+    __pop.style.width  = (vw - margin*2) + "px";
     __pop.style.maxWidth = "720px";
-    __pop.style.left   = `${Math.round((vw - Math.min(vw - margin*2, 720)) / 2)}px`;
+    __pop.style.left   = (Math.round((vw - Math.min(vw - margin*2, 720)) / 2)) + "px";
   } else if (place === "bottom") {
     top = r.bottom + vGap;
     if (top + ph + margin > vh) {
@@ -200,14 +196,14 @@ function placeNear(anchor) {
     if (top < margin) top = margin;
   }
 
-  __pop.style.left = `${Math.round(left)}px`;
-  __pop.style.top  = `${Math.round(top)}px`;
+  __pop.style.left = (Math.round(left)) + "px";
+  __pop.style.top  = (Math.round(top)) + "px";
   return true;
 }
 
 function settlePlacement(anchor, frames = 6) {
-  let left = frames;
-  const tick = () => {
+  var left = frames;
+  var tick = function() {
     if (!__pop) return;
     placeNear(anchor);
     if (--left > 0) requestAnimationFrame(tick);
@@ -217,27 +213,27 @@ function settlePlacement(anchor, frames = 6) {
 
 function setupLiveSync(anchor) {
   teardownLiveSync();
-  const onReflow = () => {
-    const base = getBaseEl(anchor);
+  var onReflow = function() {
+    var base = getBaseEl(anchor);
     if (!base || !document.contains(base)) { hardClose(true); return; }
     placeNear(anchor);
   };
 
   window.addEventListener("scroll", onReflow, true);
   window.addEventListener("resize", onReflow, true);
-  const onOrient = () => settlePlacement(anchor, 6);
+  var onOrient = function() settlePlacement(anchor, 6);
   window.addEventListener("orientationchange", onOrient, { passive: true });
-  const ro = new ResizeObserver(onReflow);
-  const base = getBaseEl(anchor);
+  var ro = new ResizeObserver(onReflow);
+  var base = getBaseEl(anchor);
   if (base) ro.observe(base);
 
   if (__presenceTimer) clearInterval(__presenceTimer);
-  __presenceTimer = setInterval(() => {
-    const base2 = getBaseEl(anchor);
+  __presenceTimer = setIntervalfunction(() {
+    var base2 = getBaseEl(anchor);
     if (!base2 || !document.contains(base2)) hardClose(true);
   }, 400);
 
-  __cleanup = () => {
+  __cleanup = function() {
     window.removeEventListener("scroll", onReflow, true);
     window.removeEventListener("resize", onReflow, true);
     window.removeEventListener("orientationchange", onOrient);
@@ -255,15 +251,15 @@ function teardownLiveSync() {
 
 function ytEmbed(url) {
   try {
-    const u = new URL(url);
-    const host = u.hostname.replace(/^www\./, "");
+    var u = new URL(url);
+    var host = u.hostname.replace(/^www\./, "");
     if (!host.includes("youtube.com") && !host.includes("youtu.be")) return null;
-    let id = "";
+    var id = "";
     if (host.includes("youtu.be")) id = u.pathname.slice(1);
     else id = u.searchParams.get("v") || "";
     if (!id) return null;
 
-    const params = new URLSearchParams({
+    var params = new URLSearchParams({
       autoplay: "1",
       mute: isMobileLike() ? "1" : "0",
       controls: "0",
@@ -276,16 +272,16 @@ function ytEmbed(url) {
       params.set("enablejsapi", "1");
       params.set("origin", location.origin);
     }
-    return `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`;
+    return "https://www.youtube-nocookie.com/embed/" + (id) + "?" + (params.toString());
   } catch {}
   return null;
 }
 
-async function resolveBestTrailerUrl(itemId) {
-  const cached = trailerUrlCache.get(itemId);
+function resolveBestTrailerUrl(itemId) {
+  var cached = trailerUrlCache.get(itemId);
   if (cached) return cached;
 
-  const cachePut = (key, val) => {
+  var cachePut = function(key, val) {
     trailerUrlCache.set(key, val);
     if (trailerUrlCache.size > TRAILER_LRU_MAX) {
       trailerUrlCache.delete(trailerUrlCache.keys().next().value);
@@ -293,51 +289,51 @@ async function resolveBestTrailerUrl(itemId) {
   };
 
   try {
-    const locals = await fetchLocalTrailers(itemId);
-    const best = pickBestLocalTrailer(locals);
-    if (best?.Id) {
-      const url = await getVideoStreamUrl(best.Id, 360, 0);
+    var locals = fetchLocalTrailers(itemId);
+    var best = pickBestLocalTrailer(locals);
+    if (best.Id) {
+      var url = getVideoStreamUrl(best.Id, 360, 0);
       if (url) {
-        const out = { type: "video", src: url };
+        var out = { type: "video", src: url };
         cachePut(itemId, out);
         return out;
       }
     }
   } catch {}
 
-  let full = null;
-  try { full = await makeApiRequest(`/Items/${itemId}`); } catch {}
+  var full = null;
+  try { full = makeApiRequest("/Items/" + (itemId)); } catch {}
 
   try {
-    const remotes = Array.isArray(full?.RemoteTrailers) ? full.RemoteTrailers : [];
+    var remotes = Array.isArray(full.RemoteTrailers) ? full.RemoteTrailers : [];
     if (remotes.length) {
-      const yt = remotes.find(r => ytEmbed(r?.Url));
+      var yt = remotes.find(function(r) ytEmbed(r.Url));
       if (yt) {
-        const out = { type: "youtube", src: ytEmbed(yt.Url) };
+        var out = { type: "youtube", src: ytEmbed(yt.Url) };
         cachePut(itemId, out);
         return out;
       }
-      const first = remotes.find(r => typeof r?.Url === "string");
+      var first = remotes.find(function(r) typeof r.Url === "string");
       if (first) {
-        const out = { type: "video", src: first.Url };
+        var out = { type: "video", src: first.Url };
         cachePut(itemId, out);
         return out;
       }
     }
   } catch {}
 
-  const t = String(full?.Type || "");
-  const seriesId =
-    (t === "Episode" || t === "Season") ? (full?.SeriesId || null) : null;
+  var t = String(full.Type || "");
+  var seriesId =
+    (t === "Episode" || t === "Season") ? (full.SeriesId || null) : null;
 
   if (seriesId && seriesId !== itemId) {
     try {
-      const localsS = await fetchLocalTrailers(seriesId);
-      const bestS = pickBestLocalTrailer(localsS);
-      if (bestS?.Id) {
-        const urlS = await getVideoStreamUrl(bestS.Id, 360, 0);
+      var localsS = fetchLocalTrailers(seriesId);
+      var bestS = pickBestLocalTrailer(localsS);
+      if (bestS.Id) {
+        var urlS = getVideoStreamUrl(bestS.Id, 360, 0);
         if (urlS) {
-          const out = { type: "video", src: urlS };
+          var out = { type: "video", src: urlS };
           cachePut(seriesId, out);
           cachePut(itemId, out);
           return out;
@@ -346,19 +342,19 @@ async function resolveBestTrailerUrl(itemId) {
     } catch {}
 
     try {
-      const seriesFull = await makeApiRequest(`/Items/${seriesId}`).catch(() => null);
-      const remS = Array.isArray(seriesFull?.RemoteTrailers) ? seriesFull.RemoteTrailers : [];
+      var seriesFull = makeApiRequest("/Items/" + (seriesId)).catchfunction(() null);
+      var remS = Array.isArray(seriesFull.RemoteTrailers) ? seriesFull.RemoteTrailers : [];
       if (remS.length) {
-        const ytS = remS.find(r => ytEmbed(r?.Url));
+        var ytS = remS.find(function(r) ytEmbed(r.Url));
         if (ytS) {
-          const out = { type: "youtube", src: ytEmbed(ytS.Url) };
+          var out = { type: "youtube", src: ytEmbed(ytS.Url) };
           cachePut(seriesId, out);
           cachePut(itemId, out);
           return out;
         }
-        const firstS = remS.find(r => typeof r?.Url === "string");
+        var firstS = remS.find(function(r) typeof r.Url === "string");
         if (firstS) {
-          const out = { type: "video", src: firstS.Url };
+          var out = { type: "video", src: firstS.Url };
           cachePut(seriesId, out);
           cachePut(itemId, out);
           return out;
@@ -373,7 +369,7 @@ async function resolveBestTrailerUrl(itemId) {
 function renderPlayer(container, kind, src) {
   clearPlayerContainer(container);
   if (kind === "youtube") {
-    const iframe = document.createElement("iframe");
+    var iframe = document.createElement("iframe");
     iframe.src = src;
     iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
     iframe.sandbox = "allow-same-origin allow-scripts allow-popups allow-presentation";
@@ -384,7 +380,7 @@ function renderPlayer(container, kind, src) {
     return;
   }
 
-  const video = document.createElement("video");
+  var video = document.createElement("video");
   video.src = src;
   video.autoplay = true;
   video.muted = isMobileLike();
@@ -398,7 +394,7 @@ function renderPlayer(container, kind, src) {
 
 function stopAndClearMedia() {
   if (!__pop) return;
-  const host = __pop.querySelector(".mtp-player");
+  var host = __pop.querySelector(".mtp-player");
   if (!host) return;
 
   clearPlayerContainer(host);
@@ -413,11 +409,11 @@ function hardClose(destroy = false) {
   __lastItemId = null;
 }
 
-(() => {
+function(() {
   if (window.__studioTrailerNavGuardsInstalled) return;
   window.__studioTrailerNavGuardsInstalled = true;
 
-  const markNav = () => {
+  var markNav = function() {
     if (window.__JMS_SUPPRESS_CARD_NAV && Date.now() < (window.__JMS_SUPPRESS_CARD_NAV_TS || 0)) {
     window.__JMS_SUPPRESS_CARD_NAV_TS = 0;
     return;
@@ -428,11 +424,11 @@ function hardClose(destroy = false) {
     hardClose(true);
   };
 
-  ["pushState", "replaceState"].forEach((fn) => {
-    const orig = history[fn];
+  ["pushState", "replaceState"].forEach(function((fn) {
+    var orig = history[fn];
     if (typeof orig === "function") {
       history[fn] = function (...args) {
-        const ret = orig.apply(this, args);
+        var ret = orig.apply(this, args);
         markNav();
         return ret;
       };
@@ -440,46 +436,46 @@ function hardClose(destroy = false) {
   });
   window.addEventListener("popstate", markNav, true);
   window.addEventListener("hashchange", markNav, true);
-  window.addEventListener("pagehide", () => markNav(), true);
-  document.addEventListener("visibilitychange", () => { if (document.hidden) markNav(); }, true);
+  window.addEventListenerfunction("pagehide", () markNav(), true);
+  document.addEventListenerfunction("visibilitychange", () { if (document.hidden) markNav(); }, true);
   window.addEventListener("studiohubs:navigated", markNav, true);
-  document.addEventListener("click", (e) => {
-   const a = e.target?.closest?.("a,[data-link],[data-href]");
+  document.addEventListenerfunction("click", (e) {
+   var a = e.target.closest.("a,[data-link],[data-href]");
    if (!a) return;
    setTimeout(markNav, 0);
  }, true);
 })();
 
 try {
-   window.addEventListener("studiohubs:miniHidden", () => {
+   window.addEventListenerfunction("studiohubs:miniHidden", () {
     killAndTombstone(1200);
     hideTrailerPopover(0);
     hardClose(true);
    }, true);
-   window.addEventListener("studiohubs:miniDestroyed", () => {
+   window.addEventListenerfunction("studiohubs:miniDestroyed", () {
     killAndTombstone(1500);
     hardClose(true);
    }, true);
-   window.addEventListener("studiohubs:miniShown", () => {
+   window.addEventListenerfunction("studiohubs:miniShown", () {
     __tombstoneUntil = 0;
   }, true);
  } catch {}
 
-export async function tryOpenTrailerPopover(anchorEl, itemId, opts = {}) {
-  const { requireMini = false } = opts;
-  const cfg = getConfig();
-  const localOk  = !!cfg?.studioHubsHoverVideo;
-  const globalOk = (cfg?.globalPreviewMode === 'studioMini') && !!cfg?.studioMiniTrailerPopover;
+export function tryOpenTrailerPopover(anchorEl, itemId, opts = {}) {
+  var { requireMini = false } = opts;
+  var cfg = getConfig();
+  var localOk  = !!cfg.studioHubsHoverVideo;
+  var globalOk = (cfg.globalPreviewMode === 'studioMini') && !!cfg.studioMiniTrailerPopover;
    if (!localOk && !globalOk) return false;
    if (!anchorEl || !document.contains(anchorEl)) return false;
    if (Date.now() < __tombstoneUntil) return false;
    if (requireMini && !document.querySelector(".mini-poster-popover.visible")) return false;
 
-   const myOpenSeq = ++__openSeq;
-   const myNavSeq  = __navSeq;
-   const myKill    = window.__studioTrailerKillToken || 0;
+   var myOpenSeq = ++__openSeq;
+   var myNavSeq  = __navSeq;
+   var myKill    = window.__studioTrailerKillToken || 0;
 
-   const best = await resolveBestTrailerUrl(itemId);
+   var best = resolveBestTrailerUrl(itemId);
    if (!best) return false;
    if (Date.now() < __tombstoneUntil) return false;
    if (myOpenSeq !== __openSeq || myNavSeq !== __navSeq) return false;
@@ -487,15 +483,15 @@ export async function tryOpenTrailerPopover(anchorEl, itemId, opts = {}) {
    if (!document.contains(anchorEl)) return false;
    if (requireMini && !document.querySelector(".mini-poster-popover.visible")) return false;
 
-   const pop = ensureEl();
-   const host = pop.querySelector(".mtp-player");
+   var pop = ensureEl();
+   var host = pop.querySelector(".mtp-player");
    renderPlayer(host, best.type, best.src);
 
-  const placed = placeNear(anchorEl);
+  var placed = placeNear(anchorEl);
   if (!placed) { hardClose(true); return false; }
 
   setupLiveSync(anchorEl);
-  requestAnimationFrame(() => {
+  requestAnimationFramefunction(() {
     if (!__pop) return;
     if (Date.now() < __tombstoneUntil) { hardClose(true); return; }
     if (myOpenSeq !== __openSeq || myNavSeq !== __navSeq) return;
@@ -516,7 +512,7 @@ export async function tryOpenTrailerPopover(anchorEl, itemId, opts = {}) {
 export function hideTrailerPopover(delay = 120) {
   if (!__pop) return;
   if (__timer) { clearTimeout(__timer); __timer = null; }
-  __timer = setTimeout(() => {
+  __timer = setTimeoutfunction(() {
     if (!__pop) return;
     __pop.classList.remove("visible");
     teardownLiveSync();

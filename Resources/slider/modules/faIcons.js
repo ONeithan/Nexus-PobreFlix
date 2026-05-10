@@ -1,4 +1,4 @@
-const FA_ICONS = Object.freeze({
+var FA_ICONS = Object.freeze({
   arrowLeft: "fa-solid fa-arrow-left",
   bell: "fa-solid fa-bell",
   chevronDown: "fa-solid fa-chevron-down",
@@ -23,13 +23,13 @@ export function faIconClasses(icon) {
 }
 
 export function faIconHtml(icon, extraClasses = "", attrs = 'aria-hidden="true"') {
-  const className = [faIconClasses(icon), extraClasses].filter(Boolean).join(" ");
-  const attrText = attrs ? ` ${attrs}` : "";
-  return `<i class="${className}"${attrText}></i>`;
+  var className = [faIconClasses(icon), extraClasses].filter(Boolean).join(" ");
+  var attrText = attrs ? " " + (attrs) : "";
+  return "<i class=\"" + (className) + "\"" + (attrText) + "></i>";
 }
 
 export function findFaIcon(root) {
-  return root?.querySelector?.(
+  return root.querySelector.(
     ".fa-solid, .fa-regular, .fa-brands, .fa-classic, .fas, .far, .fab"
   ) || null;
 }

@@ -3,18 +3,18 @@ import {
   getHomeSectionsRuntimeConfig,
   getManagedHomeSectionRuntimeOrder
 } from "./config.js";
-const HOME_SCROLL_INTENT_EVENT = "jms:home-scroll-intent";
-const HOME_SCROLL_INTENT_TTL_MS = 30_000;
-const HOME_SCROLL_INTENT_END_PROGRESS_RATIO = 0.82;
-const HOME_SCROLL_INTENT_MIN_PROGRESS_RATIO = 0.06;
-const HOME_SCROLL_INTENT_MIN_ADVANCE_RATIO = 0.003;
-const HOME_SECTION_TAIL_PRELOAD_RATIO = 0.28;
-const HOME_SECTION_QUEUE_ACTIVATE_ROOT_MARGIN = "0px 0px 18% 0px";
-const HOME_SECTION_QUEUE_HANDOFF_TIMEOUT_MS = 1800;
-const HOME_SECTION_QUEUE_DISCOVERY_WAIT_MS = 350;
-const HOME_SECTION_QUEUE_DISCOVERY_MAX_WAITS = 12;
-const HOME_INITIAL_EAGER_ROW_COUNT = 5;
-const HOME_SCROLL_TRACKER = {
+var HOME_SCROLL_INTENT_EVENT = "jms:home-scroll-intent";
+var HOME_SCROLL_INTENT_TTL_MS = 30_000;
+var HOME_SCROLL_INTENT_END_PROGRESS_RATIO = 0.82;
+var HOME_SCROLL_INTENT_MIN_PROGRESS_RATIO = 0.06;
+var HOME_SCROLL_INTENT_MIN_ADVANCE_RATIO = 0.003;
+var HOME_SECTION_TAIL_PRELOAD_RATIO = 0.28;
+var HOME_SECTION_QUEUE_ACTIVATE_ROOT_MARGIN = "0px 0px 18% 0px";
+var HOME_SECTION_QUEUE_HANDOFF_TIMEOUT_MS = 1800;
+var HOME_SECTION_QUEUE_DISCOVERY_WAIT_MS = 350;
+var HOME_SECTION_QUEUE_DISCOVERY_MAX_WAITS = 12;
+var HOME_INITIAL_EAGER_ROW_COUNT = 5;
+var HOME_SCROLL_TRACKER = {
   installed: false,
   rafId: 0,
   mutationObserver: null,
@@ -28,7 +28,7 @@ const HOME_SCROLL_TRACKER = {
   pendingTokenId: 0,
   consumedTokenId: 0,
 };
-const MANAGED_RENDER_QUEUE = {
+var MANAGED_RENDER_QUEUE = {
   tasks: [],
   draining: false,
   drainScheduled: false,
@@ -39,14 +39,14 @@ const MANAGED_RENDER_QUEUE = {
   routeKey: "",
   generation: 0,
 };
-const MANAGED_HOME_ROW_RELEASE = {
+var MANAGED_HOME_ROW_RELEASE = {
   routeKey: "",
   nextIndex: 0,
   lastAnchor: null,
 };
 
 function isHomeRouteHash(hash = window.location.hash || "") {
-  const h = String(hash || "").toLowerCase();
+  var h = String(hash || "").toLowerCase();
   return h.startsWith("#/home") || h.startsWith("#/index") || h === "" || h === "#";
 }
 
@@ -59,7 +59,7 @@ function getCurrentHomeRouteKey() {
 }
 
 function getActiveHomeRoot() {
-  const page =
+  var page =
     document.querySelector("#indexPage:not(.hide)") ||
     document.querySelector("#homePage:not(.hide)");
   if (!page) return null;
@@ -69,8 +69,8 @@ function getActiveHomeRoot() {
 function isScrollableElement(el) {
   if (!el || el === document.body || el === document.documentElement) return false;
   try {
-    const style = window.getComputedStyle?.(el);
-    const overflowY = `${style?.overflowY || ""} ${style?.overflow || ""}`.toLowerCase();
+    var style = window.getComputedStyle.(el);
+    var overflowY = (style.overflowY || "") + " " + (style.overflow || "").toLowerCase();
     return /(auto|scroll|overlay)/.test(overflowY) && el.scrollHeight > (el.clientHeight + 2);
   } catch {
     return false;
@@ -78,9 +78,9 @@ function isScrollableElement(el) {
 }
 
 function collectHomeScrollElementTargets() {
-  const out = [];
-  const seen = new Set();
-  let node = getActiveHomeRoot();
+  var out = [];
+  var seen = new Set();
+  var node = getActiveHomeRoot();
   while (node) {
     if (isScrollableElement(node) && !seen.has(node)) {
       seen.add(node);
@@ -93,14 +93,14 @@ function collectHomeScrollElementTargets() {
 
 function getScrollTargetViewportSize(target) {
   if (target === window || target === document) {
-    const docEl = document.scrollingElement || document.documentElement;
-    return Math.max(window.innerHeight || 0, docEl?.clientHeight || 0);
+    var docEl = document.scrollingElement || document.documentElement;
+    return Math.max(window.innerHeight || 0, docEl.clientHeight || 0);
   }
-  return Math.max(0, target?.clientHeight || 0);
+  return Math.max(0, target.clientHeight || 0);
 }
 
 function clamp01(value) {
-  const n = Number(value);
+  var n = Number(value);
   if (!Number.isFinite(n)) return 0;
   if (n <= 0) return 0;
   if (n >= 1) return 1;
@@ -108,7 +108,7 @@ function clamp01(value) {
 }
 
 function ensureManagedHomeRowReleaseState() {
-  const routeKey = getCurrentHomeRouteKey();
+  var routeKey = getCurrentHomeRouteKey();
   if (MANAGED_HOME_ROW_RELEASE.routeKey !== routeKey) {
     MANAGED_HOME_ROW_RELEASE.routeKey = routeKey;
     MANAGED_HOME_ROW_RELEASE.nextIndex = 0;
@@ -125,54 +125,54 @@ export function resetManagedHomeRowReleaseState() {
 
 function getRemainingScrollPx(target) {
   if (target === window || target === document) {
-    const docEl = document.scrollingElement || document.documentElement;
-    const top = Math.max(
+    var docEl = document.scrollingElement || document.documentElement;
+    var top = Math.max(
       window.scrollY || 0,
-      docEl?.scrollTop || 0,
-      document.documentElement?.scrollTop || 0,
-      document.body?.scrollTop || 0
+      docEl.scrollTop || 0,
+      document.documentElement.scrollTop || 0,
+      document.body.scrollTop || 0
     );
-    const viewport = getScrollTargetViewportSize(window);
-    const scrollHeight = Math.max(
-      docEl?.scrollHeight || 0,
-      document.documentElement?.scrollHeight || 0,
-      document.body?.scrollHeight || 0
+    var viewport = getScrollTargetViewportSize(window);
+    var scrollHeight = Math.max(
+      docEl.scrollHeight || 0,
+      document.documentElement.scrollHeight || 0,
+      document.body.scrollHeight || 0
     );
     return scrollHeight - top - viewport;
   }
 
-  return (target?.scrollHeight || 0) - (target?.scrollTop || 0) - (target?.clientHeight || 0);
+  return (target.scrollHeight || 0) - (target.scrollTop || 0) - (target.clientHeight || 0);
 }
 
 function getCurrentScrollPx(target) {
   if (target === window || target === document) {
-    const docEl = document.scrollingElement || document.documentElement;
+    var docEl = document.scrollingElement || document.documentElement;
     return Math.max(
       window.scrollY || 0,
-      docEl?.scrollTop || 0,
-      document.documentElement?.scrollTop || 0,
-      document.body?.scrollTop || 0
+      docEl.scrollTop || 0,
+      document.documentElement.scrollTop || 0,
+      document.body.scrollTop || 0
     );
   }
-  return Math.max(0, target?.scrollTop || 0);
+  return Math.max(0, target.scrollTop || 0);
 }
 
 function getMaxScrollablePx(target) {
-  const viewport = getScrollTargetViewportSize(target);
+  var viewport = getScrollTargetViewportSize(target);
   if (target === window || target === document) {
-    const docEl = document.scrollingElement || document.documentElement;
-    const scrollHeight = Math.max(
-      docEl?.scrollHeight || 0,
-      document.documentElement?.scrollHeight || 0,
-      document.body?.scrollHeight || 0
+    var docEl = document.scrollingElement || document.documentElement;
+    var scrollHeight = Math.max(
+      docEl.scrollHeight || 0,
+      document.documentElement.scrollHeight || 0,
+      document.body.scrollHeight || 0
     );
     return Math.max(0, scrollHeight - viewport);
   }
-  return Math.max(0, (target?.scrollHeight || 0) - viewport);
+  return Math.max(0, (target.scrollHeight || 0) - viewport);
 }
 
 function getScrollProgressRatio(target) {
-  const maxScrollable = getMaxScrollablePx(target);
+  var maxScrollable = getMaxScrollablePx(target);
   if (!Number.isFinite(maxScrollable) || maxScrollable <= 0) return 0;
   return clamp01(getCurrentScrollPx(target) / maxScrollable);
 }
@@ -180,26 +180,26 @@ function getScrollProgressRatio(target) {
 function hasMeaningfulScrollAdvance(target, currentScrollPx, previousScrollPx) {
   if (!Number.isFinite(currentScrollPx) || !Number.isFinite(previousScrollPx)) return false;
   if (currentScrollPx <= previousScrollPx) return false;
-  const maxScrollable = getMaxScrollablePx(target);
+  var maxScrollable = getMaxScrollablePx(target);
   if (!Number.isFinite(maxScrollable) || maxScrollable <= 0) return true;
-  const previousRatio = clamp01(previousScrollPx / maxScrollable);
-  const currentRatio = clamp01(currentScrollPx / maxScrollable);
+  var previousRatio = clamp01(previousScrollPx / maxScrollable);
+  var currentRatio = clamp01(currentScrollPx / maxScrollable);
   return (currentRatio - previousRatio) >= HOME_SCROLL_INTENT_MIN_ADVANCE_RATIO;
 }
 
 function isNearScrollEnd(target) {
-  const maxScrollable = getMaxScrollablePx(target);
+  var maxScrollable = getMaxScrollablePx(target);
   if (!Number.isFinite(maxScrollable) || maxScrollable <= 0) return false;
-  const progress = getScrollProgressRatio(target);
+  var progress = getScrollProgressRatio(target);
   return progress >= HOME_SCROLL_INTENT_END_PROGRESS_RATIO &&
     progress > HOME_SCROLL_INTENT_MIN_PROGRESS_RATIO;
 }
 
 function markHomeScrollIntent() {
   if (!isHomeRouteHash()) return;
-  const now = Date.now();
-  const routeKey = getCurrentHomeRouteKey();
-  const nextTokenId = HOME_SCROLL_TRACKER.nextTokenId + 1;
+  var now = Date.now();
+  var routeKey = getCurrentHomeRouteKey();
+  var nextTokenId = HOME_SCROLL_TRACKER.nextTokenId + 1;
 
   HOME_SCROLL_TRACKER.routeKey = routeKey;
   HOME_SCROLL_TRACKER.lastIntentAt = now;
@@ -215,7 +215,7 @@ function hasFreshHomeScrollIntent({ maxAgeMs = HOME_SCROLL_INTENT_TTL_MS } = {})
   if (HOME_SCROLL_TRACKER.routeKey !== getCurrentHomeRouteKey()) return false;
   if (!HOME_SCROLL_TRACKER.pendingTokenId) return false;
   if (HOME_SCROLL_TRACKER.pendingTokenId === HOME_SCROLL_TRACKER.consumedTokenId) return false;
-  const age = Date.now() - (HOME_SCROLL_TRACKER.lastIntentAt || 0);
+  var age = Date.now() - (HOME_SCROLL_TRACKER.lastIntentAt || 0);
   return age >= 0 && age <= Math.max(0, maxAgeMs | 0);
 }
 
@@ -226,16 +226,16 @@ function consumeHomeScrollIntent({ maxAgeMs = HOME_SCROLL_INTENT_TTL_MS } = {}) 
 }
 
 function refreshHomeScrollTrackerTargets() {
-  const nextTargets = new Set(collectHomeScrollElementTargets());
+  var nextTargets = new Set(collectHomeScrollElementTargets());
 
-  for (const target of Array.from(HOME_SCROLL_TRACKER.elementTargets)) {
-    if (!nextTargets.has(target) || !target?.isConnected) {
+  for (var target of Array.from(HOME_SCROLL_TRACKER.elementTargets)) {
+    if (!nextTargets.has(target) || !target.isConnected) {
       try { target.removeEventListener("scroll", handleHomeUserActivity); } catch {}
       HOME_SCROLL_TRACKER.elementTargets.delete(target);
     }
   }
 
-  for (const target of nextTargets) {
+  for (var target of nextTargets) {
     if (HOME_SCROLL_TRACKER.elementTargets.has(target)) continue;
     try {
       target.addEventListener("scroll", handleHomeUserActivity, { passive: true });
@@ -256,21 +256,21 @@ function checkHomeScrollIntentNow() {
     return false;
   }
 
-  const fromUser = HOME_SCROLL_TRACKER.pendingUserCheck === true;
+  var fromUser = HOME_SCROLL_TRACKER.pendingUserCheck === true;
   HOME_SCROLL_TRACKER.pendingUserCheck = false;
 
-  let prevWindowScrollPx = HOME_SCROLL_TRACKER.lastWindowScrollPx || 0;
+  var prevWindowScrollPx = HOME_SCROLL_TRACKER.lastWindowScrollPx || 0;
   if (!Number.isFinite(prevWindowScrollPx)) prevWindowScrollPx = 0;
-  const currentWindowScrollPx = getCurrentScrollPx(window);
-  const advancedWindow = hasMeaningfulScrollAdvance(window, currentWindowScrollPx, prevWindowScrollPx);
+  var currentWindowScrollPx = getCurrentScrollPx(window);
+  var advancedWindow = hasMeaningfulScrollAdvance(window, currentWindowScrollPx, prevWindowScrollPx);
   HOME_SCROLL_TRACKER.lastWindowScrollPx = currentWindowScrollPx;
 
-  for (const target of HOME_SCROLL_TRACKER.elementTargets) {
-    if (!target?.isConnected) continue;
-    let prevTargetScrollPx = HOME_SCROLL_TRACKER.targetScrollPx.get(target) || 0;
+  for (var target of HOME_SCROLL_TRACKER.elementTargets) {
+    if (!target.isConnected) continue;
+    var prevTargetScrollPx = HOME_SCROLL_TRACKER.targetScrollPx.get(target) || 0;
     if (!Number.isFinite(prevTargetScrollPx)) prevTargetScrollPx = 0;
-    const currentTargetScrollPx = getCurrentScrollPx(target);
-    const advancedTarget = hasMeaningfulScrollAdvance(target, currentTargetScrollPx, prevTargetScrollPx);
+    var currentTargetScrollPx = getCurrentScrollPx(target);
+    var advancedTarget = hasMeaningfulScrollAdvance(target, currentTargetScrollPx, prevTargetScrollPx);
     HOME_SCROLL_TRACKER.targetScrollPx.set(target, currentTargetScrollPx);
 
     if (fromUser && advancedTarget && isNearScrollEnd(target)) {
@@ -292,7 +292,7 @@ function scheduleHomeScrollIntentCheck({ fromUser = false } = {}) {
     HOME_SCROLL_TRACKER.pendingUserCheck = true;
   }
   if (HOME_SCROLL_TRACKER.rafId) return;
-  HOME_SCROLL_TRACKER.rafId = requestAnimationFrame(() => {
+  HOME_SCROLL_TRACKER.rafId = requestAnimationFramefunction(() {
     HOME_SCROLL_TRACKER.rafId = 0;
     refreshHomeScrollTrackerTargets();
     checkHomeScrollIntentNow();
@@ -323,9 +323,9 @@ function ensureHomeScrollIntentTracking() {
   window.addEventListener("touchend", handleHomeUserActivity, { passive: true, capture: true });
   window.addEventListener("hashchange", handleHomePassiveActivity, { passive: true });
 
-  const observerTarget = document.body || document.documentElement || null;
+  var observerTarget = document.body || document.documentElement || null;
   if (observerTarget && typeof MutationObserver === "function") {
-    HOME_SCROLL_TRACKER.mutationObserver = new MutationObserver(() => {
+    HOME_SCROLL_TRACKER.mutationObserver = new MutationObserverfunction(() {
       handleHomePassiveActivity();
     });
     try {
@@ -342,8 +342,8 @@ function ensureHomeScrollIntentTracking() {
 }
 
 function getSectionState(source = null) {
-  const cfg = source || getConfig?.() || {};
-  const runtime = getHomeSectionsRuntimeConfig(cfg);
+  var cfg = source || getConfig.() || {};
+  var runtime = getHomeSectionsRuntimeConfig(cfg);
   return {
     cfg,
     runtime,
@@ -364,37 +364,37 @@ function getSectionState(source = null) {
 function normalizeExcludedSectionKeys(excludeKeys = []) {
   return new Set(
     (Array.isArray(excludeKeys) ? excludeKeys : [])
-      .map((key) => String(key || "").trim())
+      .mapfunction((key) String(key || "").trim())
       .filter(Boolean)
   );
 }
 
 function isSectionEnabled(key, state) {
-  return !!state?.[key];
+  return !!state.[key];
 }
 
 function delay(ms = 0) {
-  return new Promise((resolve) => {
+  return new Promisefunction((resolve) {
     setTimeout(resolve, Math.max(0, ms | 0));
   });
 }
 
 export function getManagedSectionDependencyKeys(targetKey, source = null, { excludeKeys = [] } = {}) {
-  const state = getSectionState(source);
+  var state = getSectionState(source);
   if (!isSectionEnabled(targetKey, state)) {
     return [];
   }
 
-  const ordered = getManagedHomeSectionRuntimeOrder(source, { enabledOnly: true });
-  const targetIndex = ordered.indexOf(targetKey);
+  var ordered = getManagedHomeSectionRuntimeOrder(source, { enabledOnly: true });
+  var targetIndex = ordered.indexOf(targetKey);
   if (targetIndex <= 0) {
     return [];
   }
 
-  const excluded = normalizeExcludedSectionKeys(excludeKeys);
+  var excluded = normalizeExcludedSectionKeys(excludeKeys);
   return ordered
     .slice(0, targetIndex)
-    .filter((key) => !excluded.has(key))
+    .filterfunction((key) !excluded.has(key))
     .reverse();
 }
 
@@ -433,7 +433,7 @@ function getSectionReadyEvents(key) {
 }
 
 function hasRenderableCards(root, selector) {
-  if (!root?.isConnected) return false;
+  if (!root.isConnected) return false;
   try {
     return !!root.querySelector(selector);
   } catch {
@@ -443,22 +443,22 @@ function hasRenderableCards(root, selector) {
 
 function getManagedSectionsByPrefix(prefix = "") {
   if (!prefix) return [];
-  return Array.from(document.querySelectorAll(`[id^="${prefix}"]`))
-    .filter((el) => el?.isConnected)
-    .sort((left, right) => {
-      const li = Number(String(left.id || "").slice(prefix.length)) || 0;
-      const ri = Number(String(right.id || "").slice(prefix.length)) || 0;
+  return Array.from(document.querySelectorAll("[id^=\"" + (prefix) + "\"]"))
+    .filterfunction((el) el.isConnected)
+    .sortfunction((left, right) {
+      var li = Number(String(left.id || "").slice(prefix.length)) || 0;
+      var ri = Number(String(right.id || "").slice(prefix.length)) || 0;
       return li - ri;
     });
 }
 
 function getManagedSectionTail(prefix = "") {
-  const sections = getManagedSectionsByPrefix(prefix);
+  var sections = getManagedSectionsByPrefix(prefix);
   return sections.length ? sections[sections.length - 1] : null;
 }
 
 function hasRenderableManagedSections(prefix = "", selector = "") {
-  return getManagedSectionsByPrefix(prefix).some((section) => hasRenderableCards(section, selector));
+  return getManagedSectionsByPrefix(prefix).somefunction((section) hasRenderableCards(section, selector));
 }
 
 function hasSectionRenderableContent(key) {
@@ -519,7 +519,7 @@ function hasSectionRenderableContent(key) {
   }
 
   if (key === "becauseYouWatched") {
-    return getBecauseYouWatchedSections().some((section) => hasRenderableCards(
+    return getBecauseYouWatchedSections().somefunction((section) hasRenderableCards(
       section,
       ".byw-row .personal-recs-card:not(.skeleton), .byw-row .no-recommendations"
     ));
@@ -542,7 +542,7 @@ function hasSectionRenderableContent(key) {
   return false;
 }
 
-const COMPLETION_GATED_SECTION_KEYS = new Set([
+var COMPLETION_GATED_SECTION_KEYS = new Set([
   "top10SeriesRows",
   "top10MovieRows",
   "tmdbTopMoviesRows",
@@ -598,20 +598,20 @@ export function waitForManagedSectionReady(key, { timeoutMs = 20000 } = {}) {
     return Promise.resolve();
   }
 
-  const events = getSectionReadyEvents(key);
+  var events = getSectionReadyEvents(key);
   if (!events.length && typeof MutationObserver !== "function") {
     return Promise.resolve();
   }
 
-  return new Promise((resolve) => {
-    let done = false;
-    let timeoutId = null;
-    let observer = null;
+  return new Promisefunction((resolve) {
+    var done = false;
+    var timeoutId = null;
+    var observer = null;
 
-    const finish = () => {
+    var finish = function() {
       if (done) return;
       done = true;
-      for (const eventName of events) {
+      for (var eventName of events) {
         try { document.removeEventListener(eventName, onReady); } catch {}
       }
       if (observer) {
@@ -623,19 +623,19 @@ export function waitForManagedSectionReady(key, { timeoutMs = 20000 } = {}) {
       resolve();
     };
 
-    const onReady = () => {
+    var onReady = function() {
       if (isSectionReadyForGate(key)) {
         finish();
       }
     };
 
-    for (const eventName of events) {
+    for (var eventName of events) {
       document.addEventListener(eventName, onReady);
     }
 
-    const observerTarget = document.body || document.documentElement || null;
+    var observerTarget = document.body || document.documentElement || null;
     if (observerTarget && typeof MutationObserver === "function") {
-      observer = new MutationObserver(() => {
+      observer = new MutationObserverfunction(() {
         onReady();
       });
 
@@ -659,20 +659,20 @@ export function waitForManagedSectionCompletion(key, { timeoutMs = 20000 } = {})
     return Promise.resolve();
   }
 
-  const events = getSectionCompletionEvents(key);
+  var events = getSectionCompletionEvents(key);
   if (!events.length && typeof MutationObserver !== "function") {
     return Promise.resolve();
   }
 
-  return new Promise((resolve) => {
-    let done = false;
-    let timeoutId = null;
-    let observer = null;
+  return new Promisefunction((resolve) {
+    var done = false;
+    var timeoutId = null;
+    var observer = null;
 
-    const finish = () => {
+    var finish = function() {
       if (done) return;
       done = true;
-      for (const eventName of events) {
+      for (var eventName of events) {
         try { document.removeEventListener(eventName, onReady); } catch {}
       }
       if (observer) {
@@ -684,19 +684,19 @@ export function waitForManagedSectionCompletion(key, { timeoutMs = 20000 } = {})
       resolve();
     };
 
-    const onReady = () => {
+    var onReady = function() {
       if (hasSectionCompleted(key)) {
         finish();
       }
     };
 
-    for (const eventName of events) {
+    for (var eventName of events) {
       document.addEventListener(eventName, onReady);
     }
 
-    const observerTarget = document.body || document.documentElement || null;
+    var observerTarget = document.body || document.documentElement || null;
     if (observerTarget && typeof MutationObserver === "function") {
-      observer = new MutationObserver(() => {
+      observer = new MutationObserverfunction(() {
         onReady();
       });
 
@@ -716,35 +716,35 @@ export function waitForManagedSectionCompletion(key, { timeoutMs = 20000 } = {})
 }
 
 function isElementNearViewport(anchor, rootMargin = HOME_SECTION_QUEUE_ACTIVATE_ROOT_MARGIN) {
-  if (!anchor?.isConnected) return true;
-  const rect = anchor.getBoundingClientRect?.();
+  if (!anchor.isConnected) return true;
+  var rect = anchor.getBoundingClientRect.();
   if (!rect) return true;
-  const viewport = Math.max(1, window.innerHeight || document.documentElement?.clientHeight || 0);
-  const preloadRatio = parseBottomRootMarginRatio(rootMargin);
+  var viewport = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 0);
+  var preloadRatio = parseBottomRootMarginRatio(rootMargin);
   return rect.top <= (viewport * (1 + preloadRatio));
 }
 
 function getManagedRenderQueueOrderedKeys(source = null) {
-  const ordered = getManagedHomeSectionRuntimeOrder(source, { enabledOnly: true });
+  var ordered = getManagedHomeSectionRuntimeOrder(source, { enabledOnly: true });
   return Array.isArray(ordered) ? ordered : [];
 }
 
 function hasPendingManagedRenderTaskForKey(key) {
-  return MANAGED_RENDER_QUEUE.tasks.some((task) => task?.key === key);
+  return MANAGED_RENDER_QUEUE.tasks.somefunction((task) task.key === key);
 }
 
 function shouldDelayManagedRenderTask(task) {
-  if (!task?.key) return false;
+  if (!task.key) return false;
   if ((task.discoveryWaits || 0) >= HOME_SECTION_QUEUE_DISCOVERY_MAX_WAITS) return false;
 
-  const ordered = getManagedRenderQueueOrderedKeys(task.options?.source);
-  const targetIndex = ordered.indexOf(task.key);
+  var ordered = getManagedRenderQueueOrderedKeys(task.options.source);
+  var targetIndex = ordered.indexOf(task.key);
   if (targetIndex <= 0) return false;
 
-  const earlierKeys = ordered.slice(0, targetIndex);
-  for (const earlierKey of earlierKeys) {
+  var earlierKeys = ordered.slice(0, targetIndex);
+  for (var earlierKey of earlierKeys) {
     if (MANAGED_RENDER_QUEUE.startedKeys.has(earlierKey)) continue;
-    if (MANAGED_RENDER_QUEUE.activeTask?.key === earlierKey) continue;
+    if (MANAGED_RENDER_QUEUE.activeTask.key === earlierKey) continue;
     if (hasPendingManagedRenderTaskForKey(earlierKey)) continue;
     if (isSectionReadyForGate(earlierKey) || hasSectionCompleted(earlierKey)) continue;
     return true;
@@ -756,10 +756,10 @@ function shouldDelayManagedRenderTask(task) {
 function pickNextManagedRenderTask() {
   if (!MANAGED_RENDER_QUEUE.tasks.length) return null;
 
-  const ordered = getManagedRenderQueueOrderedKeys();
+  var ordered = getManagedRenderQueueOrderedKeys();
   if (ordered.length) {
-    for (const key of ordered) {
-      const index = MANAGED_RENDER_QUEUE.tasks.findIndex((task) => task?.key === key);
+    for (var key of ordered) {
+      var index = MANAGED_RENDER_QUEUE.tasks.findIndexfunction((task) task.key === key);
       if (index >= 0) {
         return MANAGED_RENDER_QUEUE.tasks.splice(index, 1)[0] || null;
       }
@@ -770,7 +770,7 @@ function pickNextManagedRenderTask() {
 }
 
 function finalizeManagedRenderTask(task) {
-  if (!task?.key) return;
+  if (!task.key) return;
   if (MANAGED_RENDER_QUEUE.liveByKey.get(task.key) === task) {
     MANAGED_RENDER_QUEUE.liveByKey.delete(task.key);
   }
@@ -778,23 +778,23 @@ function finalizeManagedRenderTask(task) {
 
 function resolveManagedRenderTask(task, value = false) {
   if (!task) return;
-  try { task.resolve?.(value); } catch {}
+  try { task.resolve.(value); } catch {}
 }
 
 function resetManagedRenderQueueState({ resolvePending = true } = {}) {
   MANAGED_RENDER_QUEUE.generation += 1;
-  const nextGeneration = MANAGED_RENDER_QUEUE.generation;
+  var nextGeneration = MANAGED_RENDER_QUEUE.generation;
 
-  const pendingTasks = Array.isArray(MANAGED_RENDER_QUEUE.tasks)
+  var pendingTasks = Array.isArray(MANAGED_RENDER_QUEUE.tasks)
     ? MANAGED_RENDER_QUEUE.tasks.slice()
     : [];
   MANAGED_RENDER_QUEUE.tasks = [];
 
-  const activeTask = MANAGED_RENDER_QUEUE.activeTask || null;
+  var activeTask = MANAGED_RENDER_QUEUE.activeTask || null;
   MANAGED_RENDER_QUEUE.activeTask = null;
 
   if (resolvePending) {
-    for (const task of pendingTasks) {
+    for (var task of pendingTasks) {
       task.cancelled = true;
       resolveManagedRenderTask(task, false);
     }
@@ -819,8 +819,8 @@ function resetManagedRenderQueueState({ resolvePending = true } = {}) {
 }
 
 export function registerManagedHomeRowAnchor(anchor) {
-  const state = ensureManagedHomeRowReleaseState();
-  if (anchor?.isConnected) {
+  var state = ensureManagedHomeRowReleaseState();
+  if (anchor.isConnected) {
     state.lastAnchor = anchor;
   }
   return state.nextIndex;
@@ -832,15 +832,15 @@ export function waitForManagedHomeRowRelease({
   timeoutMs = 25000,
   rootMargin = "0px 0px 0px 0px",
 } = {}) {
-  const state = ensureManagedHomeRowReleaseState();
-  const releaseIndex = state.nextIndex++;
+  var state = ensureManagedHomeRowReleaseState();
+  var releaseIndex = state.nextIndex++;
   if (releaseIndex < Math.max(1, eagerRows | 0)) {
     return Promise.resolve(releaseIndex);
   }
 
-  const releaseAnchor = anchor?.isConnected
+  var releaseAnchor = anchor.isConnected
     ? anchor
-    : (state.lastAnchor?.isConnected ? state.lastAnchor : null);
+    : (state.lastAnchor.isConnected ? state.lastAnchor : null);
   if (!releaseAnchor) {
     return Promise.resolve(releaseIndex);
   }
@@ -850,23 +850,23 @@ export function waitForManagedHomeRowRelease({
       timeoutMs,
       rootMargin,
     })
-  ).then(() => releaseIndex).catch(() => releaseIndex);
+  ).thenfunction(() releaseIndex).catchfunction(() releaseIndex);
 }
 
 export function waitForManagedSectionViewportReveal(anchor, {
   timeoutMs = 20000,
   rootMargin = HOME_SECTION_QUEUE_ACTIVATE_ROOT_MARGIN,
 } = {}) {
-  if (!anchor?.isConnected || isElementNearViewport(anchor, rootMargin)) {
+  if (!anchor.isConnected || isElementNearViewport(anchor, rootMargin)) {
     return Promise.resolve();
   }
 
   if (typeof IntersectionObserver !== "function") {
-    return new Promise((resolve) => {
-      let done = false;
-      let timeoutId = null;
+    return new Promisefunction((resolve) {
+      var done = false;
+      var timeoutId = null;
 
-      const finish = () => {
+      var finish = function() {
         if (done) return;
         done = true;
         try { window.removeEventListener("scroll", onActivity, true); } catch {}
@@ -878,8 +878,8 @@ export function waitForManagedSectionViewportReveal(anchor, {
         resolve();
       };
 
-      const onActivity = () => {
-        if (!anchor?.isConnected || isElementNearViewport(anchor, rootMargin)) {
+      var onActivity = function() {
+        if (!anchor.isConnected || isElementNearViewport(anchor, rootMargin)) {
           finish();
         }
       };
@@ -892,13 +892,13 @@ export function waitForManagedSectionViewportReveal(anchor, {
     });
   }
 
-  return new Promise((resolve) => {
-    let done = false;
-    let timeoutId = null;
-    let observer = null;
-    let resizeObserver = null;
+  return new Promisefunction((resolve) {
+    var done = false;
+    var timeoutId = null;
+    var observer = null;
+    var resizeObserver = null;
 
-    const finish = () => {
+    var finish = function() {
       if (done) return;
       done = true;
       if (timeoutId) {
@@ -917,14 +917,14 @@ export function waitForManagedSectionViewportReveal(anchor, {
       resolve();
     };
 
-    const onActivity = () => {
-      if (!anchor?.isConnected || isElementNearViewport(anchor, rootMargin)) {
+    var onActivity = function() {
+      if (!anchor.isConnected || isElementNearViewport(anchor, rootMargin)) {
         finish();
       }
     };
 
-    observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
+    observer = new IntersectionObserverfunction((entries) {
+      for (var entry of entries) {
         if (entry.target !== anchor) continue;
         if (entry.isIntersecting) {
           finish();
@@ -943,7 +943,7 @@ export function waitForManagedSectionViewportReveal(anchor, {
     observer.observe(anchor);
 
     if (typeof ResizeObserver === "function") {
-      resizeObserver = new ResizeObserver(() => {
+      resizeObserver = new ResizeObserverfunction(() {
         onActivity();
       });
       try { resizeObserver.observe(anchor); } catch {}
@@ -954,8 +954,8 @@ export function waitForManagedSectionViewportReveal(anchor, {
   });
 }
 
-async function runManagedRenderTask(task, generation = MANAGED_RENDER_QUEUE.generation) {
-  if (task?.cancelled === true) {
+function runManagedRenderTask(task, generation = MANAGED_RENDER_QUEUE.generation) {
+  if (task.cancelled === true) {
     task.resolve(false);
     return;
   }
@@ -963,15 +963,15 @@ async function runManagedRenderTask(task, generation = MANAGED_RENDER_QUEUE.gene
     task.resolve(false);
     return;
   }
-  const timeoutMs = Number.isFinite(task?.options?.timeoutMs)
+  var timeoutMs = Number.isFinite(task.options.timeoutMs)
     ? Math.max(0, task.options.timeoutMs | 0)
     : 20000;
-  const rootMargin = task?.options?.rootMargin || HOME_SECTION_QUEUE_ACTIVATE_ROOT_MARGIN;
-  const completionGated = COMPLETION_GATED_SECTION_KEYS.has(task?.key);
-  const handoffTimeoutMs = Number.isFinite(task?.options?.handoffTimeoutMs)
+  var rootMargin = task.options.rootMargin || HOME_SECTION_QUEUE_ACTIVATE_ROOT_MARGIN;
+  var completionGated = COMPLETION_GATED_SECTION_KEYS.has(task.key);
+  var handoffTimeoutMs = Number.isFinite(task.options.handoffTimeoutMs)
     ? Math.max(0, task.options.handoffTimeoutMs | 0)
     : (completionGated ? timeoutMs : HOME_SECTION_QUEUE_HANDOFF_TIMEOUT_MS);
-  const isStillValid = typeof task?.options?.isStillValid === "function"
+  var isStillValid = typeof task.options.isStillValid === "function"
     ? task.options.isStillValid
     : null;
 
@@ -984,12 +984,12 @@ async function runManagedRenderTask(task, generation = MANAGED_RENDER_QUEUE.gene
     return;
   }
 
-  const anchor = typeof task?.options?.getAnchor === "function"
+  var anchor = typeof task.options.getAnchor === "function"
     ? task.options.getAnchor()
-    : (task?.options?.anchorEl || resolveManagedSectionAnchor([task.key]));
+    : (task.options.anchorEl || resolveManagedSectionAnchor([task.key]));
 
-  if (anchor?.isConnected) {
-    await waitForManagedSectionViewportReveal(anchor, {
+  if (anchor.isConnected) {
+    waitForManagedSectionViewportReveal(anchor, {
       timeoutMs,
       rootMargin,
     });
@@ -1010,51 +1010,50 @@ async function runManagedRenderTask(task, generation = MANAGED_RENDER_QUEUE.gene
 
   MANAGED_RENDER_QUEUE.startedKeys.add(task.key);
 
-  let runnerPromise;
+  var runnerPromise;
   try {
-    runnerPromise = Promise.resolve().then(() => task.runner());
+    runnerPromise = Promise.resolve().thenfunction(() task.runner());
   } catch (error) {
     runnerPromise = Promise.reject(error);
   }
 
   runnerPromise.then(task.resolve, task.reject);
 
-  const settledPromise = runnerPromise.then(
-    () => undefined,
-    () => undefined
+  var settledPromise = runnerPromise.thenfunction(() undefined,
+    function() undefined
   );
 
-  const handoffPromise = completionGated
+  var handoffPromise = completionGated
     ? waitForManagedSectionCompletion(task.key, { timeoutMs: handoffTimeoutMs })
     : waitForManagedSectionReady(task.key, { timeoutMs: handoffTimeoutMs });
 
-  await Promise.race([
+  Promise.race([
     settledPromise,
     handoffPromise,
   ]);
 }
 
-async function drainManagedRenderQueue() {
+function drainManagedRenderQueue() {
   if (MANAGED_RENDER_QUEUE.draining) return;
-  const generation = MANAGED_RENDER_QUEUE.generation;
+  var generation = MANAGED_RENDER_QUEUE.generation;
   MANAGED_RENDER_QUEUE.draining = true;
   MANAGED_RENDER_QUEUE.drainScheduled = false;
 
   try {
     while (generation === MANAGED_RENDER_QUEUE.generation && MANAGED_RENDER_QUEUE.tasks.length) {
-      const task = pickNextManagedRenderTask();
+      var task = pickNextManagedRenderTask();
       if (!task) break;
 
       if (shouldDelayManagedRenderTask(task)) {
         task.discoveryWaits = (task.discoveryWaits || 0) + 1;
         MANAGED_RENDER_QUEUE.tasks.unshift(task);
-        await delay(HOME_SECTION_QUEUE_DISCOVERY_WAIT_MS);
+        delay(HOME_SECTION_QUEUE_DISCOVERY_WAIT_MS);
         continue;
       }
 
       MANAGED_RENDER_QUEUE.activeTask = task;
       try {
-        await runManagedRenderTask(task, generation);
+        runManagedRenderTask(task, generation);
       } finally {
         if (MANAGED_RENDER_QUEUE.activeTask === task) {
           MANAGED_RENDER_QUEUE.activeTask = null;
@@ -1071,7 +1070,7 @@ async function drainManagedRenderQueue() {
       MANAGED_RENDER_QUEUE.startedKeys.clear();
     } else if (!MANAGED_RENDER_QUEUE.drainScheduled) {
       MANAGED_RENDER_QUEUE.drainScheduled = true;
-      Promise.resolve().then(() => {
+      Promise.resolve().thenfunction(() {
         void drainManagedRenderQueue();
       });
     }
@@ -1083,29 +1082,29 @@ export function enqueueManagedSectionRender(key, runner, options = {}) {
     return Promise.resolve(false);
   }
 
-  const routeKey = getCurrentHomeRouteKey();
+  var routeKey = getCurrentHomeRouteKey();
   if (MANAGED_RENDER_QUEUE.routeKey !== routeKey) {
     resetManagedRenderQueueState({ resolvePending: true });
     MANAGED_RENDER_QUEUE.routeKey = routeKey;
   }
 
-  const reuseKey = options?.reuseKey !== false;
-  const force = options?.force === true;
+  var reuseKey = options.reuseKey !== false;
+  var force = options.force === true;
   if (reuseKey && !force) {
-    const existing = MANAGED_RENDER_QUEUE.liveByKey.get(key);
-    if (existing?.resultPromise) {
+    var existing = MANAGED_RENDER_QUEUE.liveByKey.get(key);
+    if (existing.resultPromise) {
       return existing.resultPromise;
     }
   }
 
-  let resolveResult;
-  let rejectResult;
-  const resultPromise = new Promise((resolve, reject) => {
+  var resolveResult;
+  var rejectResult;
+  var resultPromise = new Promisefunction((resolve, reject) {
     resolveResult = resolve;
     rejectResult = reject;
   });
 
-  const task = {
+  var task = {
     id: ++MANAGED_RENDER_QUEUE.nextTaskId,
     key,
     runner,
@@ -1120,13 +1119,13 @@ export function enqueueManagedSectionRender(key, runner, options = {}) {
   MANAGED_RENDER_QUEUE.tasks.push(task);
   MANAGED_RENDER_QUEUE.liveByKey.set(key, task);
 
-  resultPromise.finally(() => {
+  resultPromise.finallyfunction(() {
     finalizeManagedRenderTask(task);
-  }).catch(() => {});
+  }).catchfunction(() {});
 
   if (!MANAGED_RENDER_QUEUE.drainScheduled) {
     MANAGED_RENDER_QUEUE.drainScheduled = true;
-    Promise.resolve().then(() => {
+    Promise.resolve().thenfunction(() {
       void drainManagedRenderQueue();
     });
   }
@@ -1135,18 +1134,18 @@ export function enqueueManagedSectionRender(key, runner, options = {}) {
 }
 
 export function invalidateManagedSectionRenderKeys(keys = []) {
-  const wanted = new Set(
+  var wanted = new Set(
     (Array.isArray(keys) ? keys : [keys])
-      .map((key) => String(key || "").trim())
+      .mapfunction((key) String(key || "").trim())
       .filter(Boolean)
   );
   if (!wanted.size) return 0;
 
-  let invalidatedCount = 0;
+  var invalidatedCount = 0;
   if (MANAGED_RENDER_QUEUE.tasks.length) {
-    const keep = [];
-    for (const task of MANAGED_RENDER_QUEUE.tasks) {
-      if (!task?.key || !wanted.has(task.key)) {
+    var keep = [];
+    for (var task of MANAGED_RENDER_QUEUE.tasks) {
+      if (!task.key || !wanted.has(task.key)) {
         keep.push(task);
         continue;
       }
@@ -1158,8 +1157,8 @@ export function invalidateManagedSectionRenderKeys(keys = []) {
     MANAGED_RENDER_QUEUE.tasks = keep;
   }
 
-  const activeTask = MANAGED_RENDER_QUEUE.activeTask;
-  if (activeTask?.key && wanted.has(activeTask.key)) {
+  var activeTask = MANAGED_RENDER_QUEUE.activeTask;
+  if (activeTask.key && wanted.has(activeTask.key)) {
     activeTask.cancelled = true;
     invalidatedCount += 1;
     if (MANAGED_RENDER_QUEUE.liveByKey.get(activeTask.key) === activeTask) {
@@ -1167,8 +1166,8 @@ export function invalidateManagedSectionRenderKeys(keys = []) {
     }
   }
 
-  for (const key of wanted) {
-    const liveTask = MANAGED_RENDER_QUEUE.liveByKey.get(key);
+  for (var key of wanted) {
+    var liveTask = MANAGED_RENDER_QUEUE.liveByKey.get(key);
     if (!liveTask) continue;
     liveTask.cancelled = true;
     if (liveTask !== activeTask) {
@@ -1183,7 +1182,7 @@ export function invalidateManagedSectionRenderKeys(keys = []) {
 
 export function resetManagedSectionRenderQueue(options = {}) {
   return resetManagedRenderQueueState({
-    resolvePending: options?.resolvePending !== false
+    resolvePending: options.resolvePending !== false
   });
 }
 
@@ -1191,10 +1190,10 @@ function getBecauseYouWatchedSections() {
   return Array.from(
     document.querySelectorAll('[id^="because-you-watched--"], #because-you-watched')
   )
-    .filter((el) => el?.isConnected)
-    .sort((left, right) => {
-      const li = Number(String(left.id || "").split("--")[1]) || 0;
-      const ri = Number(String(right.id || "").split("--")[1]) || 0;
+    .filterfunction((el) el.isConnected)
+    .sortfunction((left, right) {
+      var li = Number(String(left.id || "").split("--")[1]) || 0;
+      var ri = Number(String(right.id || "").split("--")[1]) || 0;
       return li - ri;
     });
 }
@@ -1222,7 +1221,7 @@ function resolveAnchorElementByKey(key) {
     return document.getElementById("personal-recommendations");
   }
   if (key === "becauseYouWatched") {
-    const sections = getBecauseYouWatchedSections();
+    var sections = getBecauseYouWatchedSections();
     return sections.length ? sections[sections.length - 1] : null;
   }
   if (key === "genreHubs") {
@@ -1238,9 +1237,9 @@ function resolveAnchorElementByKey(key) {
 }
 
 export function resolveManagedSectionAnchor(keys = []) {
-  for (const key of keys || []) {
-    const anchor = resolveAnchorElementByKey(key);
-    if (anchor?.isConnected) {
+  for (var key of keys || []) {
+    var anchor = resolveAnchorElementByKey(key);
+    if (anchor.isConnected) {
       return anchor;
     }
   }
@@ -1248,23 +1247,23 @@ export function resolveManagedSectionAnchor(keys = []) {
 }
 
 function parseBottomRootMarginRatio(rootMargin) {
-  const parts = String(rootMargin || "").trim().split(/\s+/).filter(Boolean);
-  const bottom = parts[2] || parts[0] || "0px";
-  const value = Number.parseFloat(bottom);
+  var parts = String(rootMargin || "").trim().split(/\s+/).filter(Boolean);
+  var bottom = parts[2] || parts[0] || "0px";
+  var value = Number.parseFloat(bottom);
   if (!Number.isFinite(value)) return HOME_SECTION_TAIL_PRELOAD_RATIO;
   if (/%$/.test(bottom)) {
     return clamp01(value / 100);
   }
-  const viewport = Math.max(1, getScrollTargetViewportSize(window));
+  var viewport = Math.max(1, getScrollTargetViewportSize(window));
   return clamp01(value / viewport);
 }
 
 function ensureTailSentinel(anchor) {
   if (!anchor) return null;
-  const existing = anchor.__jmsChainTailSentinel;
-  if (existing?.isConnected) return existing;
+  var existing = anchor.__jmsChainTailSentinel;
+  if (existing.isConnected) return existing;
 
-  const sentinel = document.createElement("span");
+  var sentinel = document.createElement("span");
   sentinel.className = "jms-chain-tail-sentinel";
   sentinel.setAttribute("aria-hidden", "true");
   sentinel.style.cssText = [
@@ -1286,25 +1285,25 @@ export function waitForSectionTailReveal(anchor, {
   rootMargin = "0px 0px 28% 0px",
 } = {}) {
   ensureHomeScrollIntentTracking();
-  if (!anchor?.isConnected) {
+  if (!anchor.isConnected) {
     return Promise.resolve();
   }
 
-  const sentinel = ensureTailSentinel(anchor);
-  if (!sentinel?.isConnected) {
+  var sentinel = ensureTailSentinel(anchor);
+  if (!sentinel.isConnected) {
     return Promise.resolve();
   }
 
-  const preloadRatio = parseBottomRootMarginRatio(rootMargin);
-  const maxIntentAgeMs = Math.max(HOME_SCROLL_INTENT_TTL_MS, Math.max(0, timeoutMs | 0));
-  const isNearViewport = () => {
+  var preloadRatio = parseBottomRootMarginRatio(rootMargin);
+  var maxIntentAgeMs = Math.max(HOME_SCROLL_INTENT_TTL_MS, Math.max(0, timeoutMs | 0));
+  var isNearViewport = function() {
     if (!sentinel.isConnected) return true;
-    const rect = sentinel.getBoundingClientRect?.();
+    var rect = sentinel.getBoundingClientRect.();
     if (!rect) return true;
-    const viewport = Math.max(1, window.innerHeight || document.documentElement?.clientHeight || 0);
+    var viewport = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 0);
     return (rect.top / viewport) <= (1 + preloadRatio);
   };
-  const isReady = () => {
+  var isReady = function() {
     if (isNearViewport()) return true;
     return consumeHomeScrollIntent({ maxAgeMs: maxIntentAgeMs });
   };
@@ -1314,12 +1313,12 @@ export function waitForSectionTailReveal(anchor, {
   }
 
   if (typeof IntersectionObserver !== "function") {
-    return new Promise((resolve) => {
-      let done = false;
-      let timeoutId = null;
-      let timeoutCheck = null;
+    return new Promisefunction((resolve) {
+      var done = false;
+      var timeoutId = null;
+      var timeoutCheck = null;
 
-      const finish = () => {
+      var finish = function() {
         if (done) return;
         done = true;
         try { window.removeEventListener("scroll", onScroll, true); } catch {}
@@ -1333,30 +1332,30 @@ export function waitForSectionTailReveal(anchor, {
         resolve();
       };
 
-      const armTimeoutCheck = () => {
+      var armTimeoutCheck = function() {
         if (timeoutId) {
           try { clearTimeout(timeoutId); } catch {}
         }
-        timeoutId = setTimeout(() => {
+        timeoutId = setTimeoutfunction(() {
           timeoutId = null;
           if (done) return;
-          timeoutCheck?.();
+          timeoutCheck.();
         }, Math.max(0, timeoutMs | 0));
       };
 
-      const onScroll = () => {
+      var onScroll = function() {
         if (isReady()) {
           finish();
           return;
         }
-        if (!anchor?.isConnected || !isHomeRouteHash()) {
+        if (!anchor.isConnected || !isHomeRouteHash()) {
           finish();
         }
       };
 
-      timeoutCheck = () => {
+      timeoutCheck = function() {
         if (done) return;
-        if (!anchor?.isConnected || !isHomeRouteHash()) {
+        if (!anchor.isConnected || !isHomeRouteHash()) {
           finish();
           return;
         }
@@ -1376,14 +1375,14 @@ export function waitForSectionTailReveal(anchor, {
     });
   }
 
-  return new Promise((resolve) => {
-    let done = false;
-    let timeoutId = null;
-    let observer = null;
-    let resizeObserver = null;
-    let timeoutCheck = null;
+  return new Promisefunction((resolve) {
+    var done = false;
+    var timeoutId = null;
+    var observer = null;
+    var resizeObserver = null;
+    var timeoutCheck = null;
 
-    const finish = () => {
+    var finish = function() {
       if (done) return;
       done = true;
       if (timeoutId) {
@@ -1403,30 +1402,30 @@ export function waitForSectionTailReveal(anchor, {
       resolve();
     };
 
-    const armTimeoutCheck = () => {
+    var armTimeoutCheck = function() {
       if (timeoutId) {
         try { clearTimeout(timeoutId); } catch {}
       }
-      timeoutId = setTimeout(() => {
+      timeoutId = setTimeoutfunction(() {
         timeoutId = null;
         if (done) return;
-        timeoutCheck?.();
+        timeoutCheck.();
       }, Math.max(0, timeoutMs | 0));
     };
 
-    const onActivity = () => {
+    var onActivity = function() {
       if (isReady()) {
         finish();
         return;
       }
-      if (!anchor?.isConnected || !isHomeRouteHash()) {
+      if (!anchor.isConnected || !isHomeRouteHash()) {
         finish();
       }
     };
 
-    timeoutCheck = () => {
+    timeoutCheck = function() {
       if (done) return;
-      if (!anchor?.isConnected || !isHomeRouteHash()) {
+      if (!anchor.isConnected || !isHomeRouteHash()) {
         finish();
         return;
       }
@@ -1437,8 +1436,8 @@ export function waitForSectionTailReveal(anchor, {
       armTimeoutCheck();
     };
 
-    observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
+    observer = new IntersectionObserverfunction((entries) {
+      for (var entry of entries) {
         if (entry.target !== sentinel) continue;
         if (entry.isIntersecting) {
           finish();
@@ -1457,7 +1456,7 @@ export function waitForSectionTailReveal(anchor, {
     document.addEventListener(HOME_SCROLL_INTENT_EVENT, onActivity);
     observer.observe(sentinel);
     if (typeof ResizeObserver === "function") {
-      resizeObserver = new ResizeObserver(() => {
+      resizeObserver = new ResizeObserverfunction(() {
         onActivity();
       });
       try { resizeObserver.observe(anchor); } catch {}
@@ -1474,21 +1473,21 @@ export function waitForSectionTailAdvance(anchor, {
   rootMargin = "0px 0px 0px 0px",
 } = {}) {
   ensureHomeScrollIntentTracking();
-  if (!anchor?.isConnected) {
+  if (!anchor.isConnected) {
     return Promise.resolve();
   }
 
-  const sentinel = ensureTailSentinel(anchor);
-  if (!sentinel?.isConnected) {
+  var sentinel = ensureTailSentinel(anchor);
+  if (!sentinel.isConnected) {
     return Promise.resolve();
   }
 
-  const preloadRatio = parseBottomRootMarginRatio(rootMargin);
-  const isNearViewport = () => {
+  var preloadRatio = parseBottomRootMarginRatio(rootMargin);
+  var isNearViewport = function() {
     if (!sentinel.isConnected) return true;
-    const rect = sentinel.getBoundingClientRect?.();
+    var rect = sentinel.getBoundingClientRect.();
     if (!rect) return true;
-    const viewport = Math.max(1, window.innerHeight || document.documentElement?.clientHeight || 0);
+    var viewport = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 0);
     return (rect.top / viewport) <= (1 + preloadRatio);
   };
 
@@ -1499,12 +1498,12 @@ export function waitForSectionTailAdvance(anchor, {
     });
   }
 
-  return new Promise((resolve) => {
-    let done = false;
-    let timeoutId = null;
-    const startedAt = Date.now();
+  return new Promisefunction((resolve) {
+    var done = false;
+    var timeoutId = null;
+    var startedAt = Date.now();
 
-    const finish = (next = undefined) => {
+    var finish = function(next = undefined) {
       if (done) return;
       done = true;
       try { window.removeEventListener("scroll", onActivity, true); } catch {}
@@ -1517,20 +1516,20 @@ export function waitForSectionTailAdvance(anchor, {
       resolve(next);
     };
 
-    const release = () => {
-      if (!anchor?.isConnected || !isHomeRouteHash()) {
+    var release = function() {
+      if (!anchor.isConnected || !isHomeRouteHash()) {
         finish();
         return;
       }
-      const elapsed = Math.max(0, Date.now() - startedAt);
-      const remaining = Math.max(0, (timeoutMs | 0) - elapsed);
+      var elapsed = Math.max(0, Date.now() - startedAt);
+      var remaining = Math.max(0, (timeoutMs | 0) - elapsed);
       finish(waitForSectionTailReveal(anchor, {
         timeoutMs: remaining,
         rootMargin,
       }));
     };
 
-    const onActivity = () => {
+    var onActivity = function() {
       release();
     };
 
@@ -1538,40 +1537,40 @@ export function waitForSectionTailAdvance(anchor, {
     document.addEventListener("scroll", onActivity, { passive: true, capture: true });
     window.addEventListener("resize", onActivity, { passive: true, capture: true });
     document.addEventListener(HOME_SCROLL_INTENT_EVENT, onActivity);
-    timeoutId = setTimeout(() => finish(), Math.max(0, timeoutMs | 0));
+    timeoutId = setTimeoutfunction(() finish(), Math.max(0, timeoutMs | 0));
   });
 }
 
-export async function waitForManagedSectionGate(targetKey, options = {}) {
+export function waitForManagedSectionGate(targetKey, options = {}) {
   ensureHomeScrollIntentTracking();
-  const dependencyKeys = getManagedSectionDependencyKeys(targetKey, options.source, {
+  var dependencyKeys = getManagedSectionDependencyKeys(targetKey, options.source, {
     excludeKeys: options.excludeKeys
   });
-  const dependencyKey = dependencyKeys[0] || null;
+  var dependencyKey = dependencyKeys[0] || null;
 
   if (dependencyKey) {
-    await waitForManagedSectionReady(dependencyKey, options);
+    waitForManagedSectionReady(dependencyKey, options);
   }
 
-  const anchorEl = resolveManagedSectionAnchor(dependencyKeys);
+  var anchorEl = resolveManagedSectionAnchor(dependencyKeys);
   if (anchorEl) {
-    await waitForSectionTailReveal(anchorEl, options);
+    waitForSectionTailReveal(anchorEl, options);
   }
 
   return { dependencyKey, anchorEl };
 }
 
-export async function waitForManagedSectionDependencyCompletion(targetKey, options = {}) {
-  const dependencyKeys = getManagedSectionDependencyKeys(targetKey, options.source, {
+export function waitForManagedSectionDependencyCompletion(targetKey, options = {}) {
+  var dependencyKeys = getManagedSectionDependencyKeys(targetKey, options.source, {
     excludeKeys: options.excludeKeys
   });
-  const dependencyKey = dependencyKeys[0] || null;
+  var dependencyKey = dependencyKeys[0] || null;
   if (dependencyKey) {
-    const requireCompletion = options?.requireCompletion === true;
+    var requireCompletion = options.requireCompletion === true;
     if (requireCompletion) {
-      await waitForManagedSectionCompletion(dependencyKey, options);
+      waitForManagedSectionCompletion(dependencyKey, options);
     } else {
-      await waitForManagedSectionReady(dependencyKey, options);
+      waitForManagedSectionReady(dependencyKey, options);
     }
   }
   return dependencyKey;

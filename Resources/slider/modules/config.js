@@ -1,12 +1,12 @@
 import { getLanguageLabels, getDefaultLanguage, getStoredLanguagePreference } from '../language/index.js';
 
-let __globalOverride =
+var __globalOverride =
   (typeof window !== "undefined" && window.__JMS_MANAGED_STORAGE__ && window.__JMS_MANAGED_STORAGE__.bootstrapOverride)
     ? window.__JMS_MANAGED_STORAGE__.bootstrapOverride
     : null;
-let __globalApplied = false;
-export const SETTINGS_HOTKEY_DEFAULT = "F2";
-export const DEFAULT_MANAGED_HOME_SECTION_ORDER = Object.freeze([
+var __globalApplied = false;
+export var SETTINGS_HOTKEY_DEFAULT = "F2";
+export var DEFAULT_MANAGED_HOME_SECTION_ORDER = Object.freeze([
   "studioHubs",
   "personalRecommendations",
   "top10SeriesRows",
@@ -19,11 +19,11 @@ export const DEFAULT_MANAGED_HOME_SECTION_ORDER = Object.freeze([
   "genreHubs",
   "directorRows"
 ]);
-export const NATIVE_HOME_SECTION_ORDER_PREFIX = "native:";
+export var NATIVE_HOME_SECTION_ORDER_PREFIX = "native:";
 
-const MANAGED_HOME_SECTION_ORDER_SET = new Set(DEFAULT_MANAGED_HOME_SECTION_ORDER);
+var MANAGED_HOME_SECTION_ORDER_SET = new Set(DEFAULT_MANAGED_HOME_SECTION_ORDER);
 
-const SETTINGS_HOTKEY_ALIASES = new Map([
+var SETTINGS_HOTKEY_ALIASES = new Map([
   [" ", "Space"],
   ["Spacebar", "Space"],
   ["Esc", "Escape"],
@@ -34,7 +34,7 @@ const SETTINGS_HOTKEY_ALIASES = new Map([
   ["Down", "ArrowDown"]
 ]);
 
-const SETTINGS_HOTKEY_ALLOWED_KEYS = new Set([
+var SETTINGS_HOTKEY_ALLOWED_KEYS = new Set([
   "Backspace",
   "Delete",
   "End",
@@ -51,7 +51,7 @@ const SETTINGS_HOTKEY_ALLOWED_KEYS = new Set([
   "ArrowUp"
 ]);
 
-const SETTINGS_HOTKEY_MODIFIER_KEYS = new Set([
+var SETTINGS_HOTKEY_MODIFIER_KEYS = new Set([
   "Alt",
   "AltGraph",
   "CapsLock",
@@ -72,7 +72,7 @@ export function isNativeHomeSectionOrderKey(value) {
 }
 
 export function normalizeManagedCardTitleDisplayMode(value) {
-  const raw = String(value || "").trim().toLowerCase();
+  var raw = String(value || "").trim().toLowerCase();
   switch (raw) {
     case "logo":
     case "logoonly":
@@ -96,7 +96,7 @@ export function normalizeManagedCardTitleDisplayMode(value) {
 }
 
 function isRecognizedManagedHomeSectionOrderKey(value) {
-  const key = String(value || "").trim();
+  var key = String(value || "").trim();
   return !!key && (
     MANAGED_HOME_SECTION_ORDER_SET.has(key) ||
     isNativeHomeSectionOrderKey(key)
@@ -104,25 +104,24 @@ function isRecognizedManagedHomeSectionOrderKey(value) {
 }
 
 export function normalizeManagedHomeSectionOrder(value = null, { nativeEntries } = {}) {
-  const hasNativeEntries = Array.isArray(nativeEntries);
-  const nativeEntryKeys = hasNativeEntries
-    ? new Set(
-        nativeEntries
-          .map((entry) => (
+  var hasNativeEntries = Array.isArray(nativeEntries);
+  var nativeEntryKeys = hasNativeEntries
+    ? new Setfunction(nativeEntries
+          .map((entry) (
             typeof entry === "string"
               ? entry
               : (entry && typeof entry === "object" ? entry.name : "")
           ))
-          .map((entry) => String(entry || "").trim())
-          .filter((entry) => isNativeHomeSectionOrderKey(entry))
+          .mapfunction((entry) String(entry || "").trim())
+          .filterfunction((entry) isNativeHomeSectionOrderKey(entry))
       )
     : null;
-  const out = [];
-  const seen = new Set();
-  const explicit = new Set();
+  var out = [];
+  var seen = new Set();
+  var explicit = new Set();
 
-  const push = (entry, fromExplicit = false) => {
-    const key = String(entry || "").trim();
+  var push = function(entry, fromExplicit = false) {
+    var key = String(entry || "").trim();
     if (
       !key ||
       seen.has(key) ||
@@ -137,23 +136,23 @@ export function normalizeManagedHomeSectionOrder(value = null, { nativeEntries }
   };
 
   if (Array.isArray(value)) {
-    value.forEach((entry) => push(entry, true));
+    value.forEach(function((entry) push(entry, true));
   } else if (typeof value === "string" && value.trim()) {
     try {
-      const parsed = JSON.parse(value);
+      var parsed = JSON.parse(value);
       if (Array.isArray(parsed)) {
-        parsed.forEach((entry) => push(entry, true));
+        parsed.forEach(function((entry) push(entry, true));
       } else {
-        value.split(",").forEach((entry) => push(entry, true));
+        value.split(",").forEach(function((entry) push(entry, true));
       }
     } catch {
-      value.split(",").forEach((entry) => push(entry, true));
+      value.split(",").forEach(function((entry) push(entry, true));
     }
   }
 
   if (hasNativeEntries) {
-    nativeEntries.forEach((entry) => {
-      const key = (typeof entry === "string")
+    nativeEntries.forEach(function((entry) {
+      var key = (typeof entry === "string")
         ? entry
         : (entry && typeof entry === "object" ? entry.name : "");
       push(key, false);
@@ -171,8 +170,8 @@ export function normalizeManagedHomeSectionOrder(value = null, { nativeEntries }
 function isRecentRowsSectionEnabled(cfg, masterEnabled) {
   if (cfg === undefined) cfg = {};
   if (masterEnabled === undefined) masterEnabled = cfg.enableHomeSectionsMaster !== false;
-  const recentMasterEnabled = masterEnabled && cfg?.enableRecentRows !== false;
-  const hasRecentContent =
+  var recentMasterEnabled = masterEnabled && cfg.enableRecentRows !== false;
+  var hasRecentContent =
     recentMasterEnabled &&
     (
       cfg.enableRecentMoviesRow !== false ||
@@ -205,9 +204,9 @@ function isTmdbTopMoviesRowsSectionEnabled(cfg, masterEnabled) {
 function isContinueRowsSectionEnabled(cfg, masterEnabled) {
   if (cfg === undefined) cfg = {};
   if (masterEnabled === undefined) masterEnabled = cfg.enableHomeSectionsMaster !== false;
-  const recentMasterEnabled = masterEnabled && cfg.enableRecentRows !== false;
-  const hasRecentTracks = recentMasterEnabled && cfg.enableRecentMusicTracksRow !== false;
-  const hasContinueContent =
+  var recentMasterEnabled = masterEnabled && cfg.enableRecentRows !== false;
+  var hasRecentTracks = recentMasterEnabled && cfg.enableRecentMusicTracksRow !== false;
+  var hasContinueContent =
     masterEnabled &&
     (
       cfg.enableContinueMovies !== false ||
@@ -220,20 +219,20 @@ function isContinueRowsSectionEnabled(cfg, masterEnabled) {
 function isNextUpRowsSectionEnabled(cfg, masterEnabled) {
   if (cfg === undefined) cfg = {};
   if (masterEnabled === undefined) masterEnabled = cfg.enableHomeSectionsMaster !== false;
-  const recentMasterEnabled = masterEnabled && cfg.enableRecentRows !== false;
+  var recentMasterEnabled = masterEnabled && cfg.enableRecentRows !== false;
   return recentMasterEnabled && cfg.enableNextUpRow !== false;
 }
 
 function ensureImplicitManagedFollowerOrder(out, explicit, anchorKey, followerKey) {
   if (explicit.has(followerKey)) return;
-  const anchorIndex = out.indexOf(anchorKey);
-  const followerIndex = out.indexOf(followerKey);
+  var anchorIndex = out.indexOf(anchorKey);
+  var followerIndex = out.indexOf(followerKey);
   if (anchorIndex < 0 || followerIndex < 0 || followerIndex === (anchorIndex + 1)) {
     return;
   }
 
   out.splice(followerIndex, 1);
-  const nextAnchorIndex = out.indexOf(anchorKey);
+  var nextAnchorIndex = out.indexOf(anchorKey);
   if (nextAnchorIndex < 0) {
     out.push(followerKey);
     return;
@@ -243,7 +242,7 @@ function ensureImplicitManagedFollowerOrder(out, explicit, anchorKey, followerKe
 
 function buildManagedHomeSectionEnabledMap(cfg) {
   if (cfg === undefined) cfg = {};
-  const masterEnabled = cfg.enableHomeSectionsMaster !== false;
+  var masterEnabled = cfg.enableHomeSectionsMaster !== false;
   return {
     studioHubs: masterEnabled && cfg.enableStudioHubs !== false,
     personalRecommendations: masterEnabled && cfg.enablePersonalRecommendations !== false,
@@ -260,15 +259,15 @@ function buildManagedHomeSectionEnabledMap(cfg) {
 }
 
 export function getManagedHomeSectionRuntimeOrder(source, options) {
-  const enabledOnly = (options && options.enabledOnly === true);
-  const cfg = source || getConfig() || {};
-  const order = normalizeManagedHomeSectionOrder(cfg.managedHomeSectionOrder);
+  var enabledOnly = (options && options.enabledOnly === true);
+  var cfg = source || getConfig() || {};
+  var order = normalizeManagedHomeSectionOrder(cfg.managedHomeSectionOrder);
   if (!enabledOnly) {
     return order;
   }
 
-  const enabledMap = buildManagedHomeSectionEnabledMap(cfg);
-  return order.filter((key) => enabledMap[key] === true);
+  var enabledMap = buildManagedHomeSectionEnabledMap(cfg);
+  return order.filterfunction((key) enabledMap[key] === true);
 }
 
 function getManagedStorageBridge() {
@@ -284,7 +283,7 @@ function getManagedStorageBridge() {
 function registerManagedStorageKeys(keys) {
   if (keys === undefined) keys = [];
   try {
-    const bridge = getManagedStorageBridge();
+    var bridge = getManagedStorageBridge();
     if (bridge && typeof bridge.registerKeys === "function") {
       bridge.registerKeys(keys);
     }
@@ -293,7 +292,7 @@ function registerManagedStorageKeys(keys) {
 
 function maybeBootstrapManagedStorage(snapshot) {
   try {
-    const bridge = getManagedStorageBridge();
+    var bridge = getManagedStorageBridge();
     if (bridge && typeof bridge.maybeBootstrapFromLocal === "function") {
       bridge.maybeBootstrapFromLocal(snapshot);
     }
@@ -303,10 +302,10 @@ function maybeBootstrapManagedStorage(snapshot) {
 export function normalizeSettingsHotkey(value, fallback = SETTINGS_HOTKEY_DEFAULT) {
   if (value === " ") return "Space";
 
-  const raw = String((value === null || value === undefined) ? "" : value).trim();
+  var raw = String((value === null || value === undefined) ? "" : value).trim();
   if (!raw) return fallback;
 
-  const aliased = SETTINGS_HOTKEY_ALIASES.get(raw) || raw;
+  var aliased = SETTINGS_HOTKEY_ALIASES.get(raw) || raw;
   if (SETTINGS_HOTKEY_MODIFIER_KEYS.has(aliased)) return fallback;
 
   if (/^F(?:[1-9]|1[0-9]|2[0-4])$/i.test(aliased)) {
@@ -334,10 +333,10 @@ export function getSettingsHotkey() {
 
 export function getDeviceProfileAuto() {
   try {
-    const mm = window.matchMedia;
-    const coarse = (mm && mm("(pointer: coarse)") && mm("(pointer: coarse)").matches === true);
-    const small = (mm && mm("(max-width: 900px)") && mm("(max-width: 900px)").matches === true);
-    const uaMobile = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    var mm = window.matchMedia;
+    var coarse = (mm && mm("(pointer: coarse)") && mm("(pointer: coarse)").matches === true);
+    var small = (mm && mm("(max-width: 900px)") && mm("(max-width: 900px)").matches === true);
+    var uaMobile = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent);
     return (coarse || (small && uaMobile)) ? "mobile" : "desktop";
   } catch {
     return "desktop";
@@ -345,24 +344,24 @@ export function getDeviceProfileAuto() {
 }
 
 export function getAdminTargetProfile() {
-  const v = (localStorage.getItem("jms:settingsTargetProfile") || "auto").toLowerCase();
+  var v = (localStorage.getItem("jms:settingsTargetProfile") || "auto").toLowerCase();
   if (v === "mobile" || v === "desktop") return v;
   return getDeviceProfileAuto();
 }
 
-async function __fetchGlobalOverride(force = false) {
+function __fetchGlobalOverride(force = false) {
   if (!force && __globalOverride !== null) return __globalOverride;
-  const managed = getManagedStorageBridge();
+  var managed = getManagedStorageBridge();
   if (!force && managed && managed.bootstrapOverride) {
     __globalOverride = managed.bootstrapOverride;
     return __globalOverride;
   }
   try {
-    const profile = getDeviceProfileAuto();
-    const r = await fetch(`/Plugins/NexusPobreFlix/UserSettings?ts=${Date.now()}&profile=${profile}`, {
+    var profile = getDeviceProfileAuto();
+    var r = fetch("/Plugins/NexusPobreFlix/UserSettings?ts=" + (Date.now()) + "&profile=" + (profile), {
     });
     if (!r.ok) throw new Error();
-    __globalOverride = await r.json();
+    __globalOverride = r.json();
   } catch {
     __globalOverride = { forceGlobal: false };
   }
@@ -371,10 +370,10 @@ async function __fetchGlobalOverride(force = false) {
 
 function _takeBackupOnce(keys) {
   try {
-    const key = "jf:globalBackup:v2";
+    var key = "jf:globalBackup:v2";
     if (localStorage.getItem(key)) return;
-    const snap = {};
-    (keys || []).forEach(k => {
+    var snap = {};
+    (keys || []).forEach(function(k) {
       snap[k] = localStorage.getItem(k);
     });
     localStorage.setItem(key, JSON.stringify(snap));
@@ -383,12 +382,12 @@ function _takeBackupOnce(keys) {
 
 function _restoreBackupIfAny() {
   try {
-    const key = "jf:globalBackup:v2";
-    const raw = localStorage.getItem(key);
+    var key = "jf:globalBackup:v2";
+    var raw = localStorage.getItem(key);
     if (!raw) return false;
-    const snap = JSON.parse(raw || "{}");
+    var snap = JSON.parse(raw || "{}");
 
-    for (const [k, v] of Object.entries(snap)) {
+    for (var [k, v] of Object.entries(snap)) {
       if (v === null || v === undefined) localStorage.removeItem(k);
       else localStorage.setItem(k, String(v));
     }
@@ -415,15 +414,15 @@ function _setLsSmart(k, v) {
   }
 }
 
-function _num(v, d=0){ const n = Number(v); return Number.isFinite(n) ? n : d; }
+function _num(v, d=0){ var n = Number(v); return Number.isFinite(n) ? n : d; }
 function _bool(v, d=false){ return v === 'true' ? true : (v === 'false' ? false : d); }
 function _trimSlashesEnd(s){ return String(s || '').replace(/\/+$/, ''); }
 
 function readSmartAutoPause() {
-  const raw = localStorage.getItem('smartAutoPause');
+  var raw = localStorage.getItem('smartAutoPause');
   if (raw && raw.trim().startsWith('{') && raw !== '[object Object]') {
     try {
-      const j = JSON.parse(raw);
+      var j = JSON.parse(raw);
       return {
         enabled: j.enabled !== false,
         blurMinutes: _num(j.blurMinutes, 0.5),
@@ -435,14 +434,14 @@ function readSmartAutoPause() {
       };
     } catch {}
   }
-  const idleMs = _num(localStorage.getItem('idleThresholdMs'), 0);
-  const unfocusMs = _num(localStorage.getItem('unfocusedThresholdMs'), 0);
-  const offscreenMs = _num(localStorage.getItem('offscreenThresholdMs'), 0);
-  const useIdle = _bool(localStorage.getItem('useIdleDetection'), true);
-  const respectPiP = _bool(localStorage.getItem('respectPiP'), true);
-  const ignoreShort = _num(localStorage.getItem('ignoreShortUnderSec'), 300);
+  var idleMs = _num(localStorage.getItem('idleThresholdMs'), 0);
+  var unfocusMs = _num(localStorage.getItem('unfocusedThresholdMs'), 0);
+  var offscreenMs = _num(localStorage.getItem('offscreenThresholdMs'), 0);
+  var useIdle = _bool(localStorage.getItem('useIdleDetection'), true);
+  var respectPiP = _bool(localStorage.getItem('respectPiP'), true);
+  var ignoreShort = _num(localStorage.getItem('ignoreShortUnderSec'), 300);
 
-  const sapLegacy = {
+  var sapLegacy = {
     enabled: true,
     blurMinutes: unfocusMs > 0 ? (unfocusMs / 60000) : (500 / 60000),
     hiddenMinutes: offscreenMs > 0 ? (offscreenMs / 60000) : (500 / 60000),
@@ -456,21 +455,21 @@ function readSmartAutoPause() {
 }
 
 export function getConfig() {
-  const forceGlobal = (__globalOverride && __globalOverride.forceGlobal === true);
+  var forceGlobal = (__globalOverride && __globalOverride.forceGlobal === true);
   if (window.__JMS_GLOBAL_CONFIG__) {
     return window.__JMS_GLOBAL_CONFIG__;
   }
 
   function readShowcaseMode() {
-  const variant = (localStorage.getItem('cssVariant') || 'normalslider').toLowerCase();
-  const isShowcaseLike = ['peak', 'showcase', 'peak-skin'].includes(variant);
+  var variant = (localStorage.getItem('cssVariant') || 'normalslider').toLowerCase();
+  var isShowcaseLike = ['peak', 'showcase', 'peak-skin'].includes(variant);
   if (variant) return isShowcaseLike;
-  const explicit = localStorage.getItem('peakSlider');
+  var explicit = localStorage.getItem('peakSlider');
   return explicit === 'true';
 }
   function readDotPreviewMode() {
     try {
-      const v = localStorage.getItem('dotPreviewPlaybackMode');
+      var v = localStorage.getItem('dotPreviewPlaybackMode');
       if (!v || v === '[object Object]') return null;
       if (v === 'trailer' || v === 'video' || v === 'onlyTrailer') return v;
       localStorage.removeItem('dotPreviewPlaybackMode');
@@ -492,14 +491,14 @@ export function getConfig() {
   }
   function readPreviewPlaybackMode() {
     try {
-      const stored = localStorage.getItem('previewPlaybackMode');
-      const normalizedStored = normalizePreviewPlaybackMode(stored);
+      var stored = localStorage.getItem('previewPlaybackMode');
+      var normalizedStored = normalizePreviewPlaybackMode(stored);
       if (normalizedStored) return normalizedStored;
       if (stored && stored !== '[object Object]') {
         localStorage.removeItem('previewPlaybackMode');
       }
 
-      let fallback = null;
+      var fallback = null;
       if (localStorage.getItem('disableAllPlayback') === 'true') {
         fallback = 'none';
       } else if (localStorage.getItem('enableTrailerThenVideo') === 'true') {
@@ -509,12 +508,12 @@ export function getConfig() {
       } else if (localStorage.getItem('enableVideoPlayback') === 'true') {
         fallback = 'video';
       } else {
-        const legacy = localStorage.getItem('previewTrailerEnabled');
+        var legacy = localStorage.getItem('previewTrailerEnabled');
         if (legacy === 'true') fallback = 'trailer';
         else if (legacy === 'false') fallback = 'video';
       }
 
-      const resolved = fallback || 'video';
+      var resolved = fallback || 'video';
       localStorage.setItem('previewPlaybackMode', resolved);
       return resolved;
     } catch {
@@ -522,23 +521,23 @@ export function getConfig() {
     }
   }
   function readPauseOverlay() {
-  const fallbackShowOsdHeaderRatings = localStorage.getItem('showRatingInfo') !== 'false';
-  const fallbackShowOsdHeaderCommunityRating = localStorage.getItem('showCommunityRating') !== 'false';
-  const fallbackShowOsdHeaderCriticRating = localStorage.getItem('showCriticRating') !== 'false';
-  const fallbackShowOsdHeaderOfficialRating = localStorage.getItem('showOfficialRating') !== 'false';
-  const normalizePauseOverlayCssHref = (value) =>
+  var fallbackShowOsdHeaderRatings = localStorage.getItem('showRatingInfo') !== 'false';
+  var fallbackShowOsdHeaderCommunityRating = localStorage.getItem('showCommunityRating') !== 'false';
+  var fallbackShowOsdHeaderCriticRating = localStorage.getItem('showCriticRating') !== 'false';
+  var fallbackShowOsdHeaderOfficialRating = localStorage.getItem('showOfficialRating') !== 'false';
+  var normalizePauseOverlayCssHref = function(value)
     String(value || '').trim() === 'moduloPausa2' ? 'moduloPausa2' : 'moduloPausa';
-  const readPauseBool = (obj, key, fallback) =>
+  var readPauseBool = function(obj, key, fallback)
     Object.prototype.hasOwnProperty.call(obj || {}, key)
       ? obj[key] !== false
       : fallback;
-  const raw = localStorage.getItem('pauseOverlay');
+  var raw = localStorage.getItem('pauseOverlay');
   if (raw && raw.trim().startsWith('{') && raw !== '[object Object]') {
     try {
-      const j = JSON.parse(raw);
-      const mv = _num(j.minVideoMinutes, 5);
-      const safeMin = Math.max(1, mv);
-      const cfg = {
+      var j = JSON.parse(raw);
+      var mv = _num(j.minVideoMinutes, 5);
+      var safeMin = Math.max(1, mv);
+      var cfg = {
         enabled: j.enabled !== false,
         cssVariant: normalizePauseOverlayCssHref(j.cssVariant),
         imagePreference: j.imagePreference || 'auto',
@@ -561,12 +560,12 @@ export function getConfig() {
         badgeDelayResumeMs: _num(j.badgeDelayResumeMs, 2000),
         ageBadgeDurationResumeMs: _num(j.ageBadgeDurationResumeMs, 10000),
       };
-      const missingOsdRatingKeys = [
+      var missingOsdRatingKeys = [
         'showOsdHeaderRatings',
         'showOsdHeaderCommunityRating',
         'showOsdHeaderCriticRating',
         'showOsdHeaderOfficialRating'
-      ].some(key => !Object.prototype.hasOwnProperty.call(j, key));
+      ].some(function(key) !Object.prototype.hasOwnProperty.call(j, key));
       if (
         safeMin !== mv ||
         missingOsdRatingKeys ||
@@ -578,21 +577,21 @@ export function getConfig() {
     } catch {}
   }
 
-  const rawCssVariant = localStorage.getItem('pauseOverlayCssVariant');
-  const rawImagePref = localStorage.getItem('pauseOverlayImagePreference');
-  const rawShowPlot = localStorage.getItem('pauseOverlayShowPlot');
-  const rawShowMeta = localStorage.getItem('pauseOverlayShowMetadata');
-  const rawShowLogo = localStorage.getItem('pauseOverlayShowLogo');
-  const rawDebug = localStorage.getItem('pauseOverlayDebug');
-  const rawShowBackdrop = localStorage.getItem('pauseOverlayShowBackdrop');
-  const rawRequireWebSocket = localStorage.getItem('pauseOverlayRequireWebSocket');
-  const rawMinVideoMin = localStorage.getItem('pauseOverlayMinVideoMinutes');
-  const rawCloseOnMouse = localStorage.getItem('closeOnMouseMove');
+  var rawCssVariant = localStorage.getItem('pauseOverlayCssVariant');
+  var rawImagePref = localStorage.getItem('pauseOverlayImagePreference');
+  var rawShowPlot = localStorage.getItem('pauseOverlayShowPlot');
+  var rawShowMeta = localStorage.getItem('pauseOverlayShowMetadata');
+  var rawShowLogo = localStorage.getItem('pauseOverlayShowLogo');
+  var rawDebug = localStorage.getItem('pauseOverlayDebug');
+  var rawShowBackdrop = localStorage.getItem('pauseOverlayShowBackdrop');
+  var rawRequireWebSocket = localStorage.getItem('pauseOverlayRequireWebSocket');
+  var rawMinVideoMin = localStorage.getItem('pauseOverlayMinVideoMinutes');
+  var rawCloseOnMouse = localStorage.getItem('closeOnMouseMove');
 
-  const mvLegacy = _num(rawMinVideoMin, 5);
-  const safeMinLegacy = Math.max(1, mvLegacy);
+  var mvLegacy = _num(rawMinVideoMin, 5);
+  var safeMinLegacy = Math.max(1, mvLegacy);
 
-  const legacy = {
+  var legacy = {
     enabled: raw !== 'false',
     cssVariant: normalizePauseOverlayCssHref(rawCssVariant),
     imagePreference: rawImagePref || 'auto',
@@ -620,21 +619,21 @@ export function getConfig() {
   return legacy;
 }
 
-  const defaultLanguage = getDefaultLanguage();
-  const previewPlaybackMode = readPreviewPlaybackMode();
-  const disableAllPlayback = previewPlaybackMode === 'none';
-  const enableTrailerPlayback = previewPlaybackMode === 'trailer';
-  const enableVideoPlayback = previewPlaybackMode === 'video';
-  const enableTrailerThenVideo = previewPlaybackMode === 'trailerThenVideo';
+  var defaultLanguage = getDefaultLanguage();
+  var previewPlaybackMode = readPreviewPlaybackMode();
+  var disableAllPlayback = previewPlaybackMode === 'none';
+  var enableTrailerPlayback = previewPlaybackMode === 'trailer';
+  var enableVideoPlayback = previewPlaybackMode === 'video';
+  var enableTrailerThenVideo = previewPlaybackMode === 'trailerThenVideo';
   try { localStorage.removeItem('enableHls'); } catch {}
-  const resolvedConfig = {
+  var resolvedConfig = {
     customQueryString: localStorage.getItem('customQueryString') || 'IncludeItemTypes=Movie,Series&Recursive=true&hasOverview=true&imageTypes=Logo,Backdrop&sortBy=DateCreated&sortOrder=Descending',
-    sortingKeywords: (() => {
-      const raw = localStorage.getItem('sortingKeywords');
+    sortingKeywords: function(() {
+      var raw = localStorage.getItem('sortingKeywords');
       try {
         return raw ? JSON.parse(raw) : ["DateCreated","PremiereDate","ProductionYear","Random"];
       } catch {
-        return raw ? raw.split(',').map(k => k.trim()) : ["DateCreated","PremiereDate","ProductionYear","Random"];
+        return raw ? raw.split(',').map(function(k) k.trim()) : ["DateCreated","PremiereDate","ProductionYear","Random"];
       }
     })(),
     enableSlider: localStorage.getItem('enableSlider') !== 'false',
@@ -699,9 +698,9 @@ export function getConfig() {
     enableTrailerPlayback,
     enableVideoPlayback,
     dotBackgroundImageType: localStorage.getItem('dotBackgroundImageType') || 'none',
-    dotVisibleCount: (() => {
-      const v = localStorage.getItem('dotVisibleCount');
-      const n = parseInt(v, 10);
+    dotVisibleCount: function(() {
+      var v = localStorage.getItem('dotVisibleCount');
+      var n = parseInt(v, 10);
       return Number.isFinite(n) ? Math.max(0, n) : 0;
     })(),
     trailerBackgroundImageType: localStorage.getItem('trailerBackgroundImageType') || 'trailerBgImage',
@@ -774,14 +773,14 @@ export function getConfig() {
     dotPreviewPlaybackMode: readDotPreviewMode(),
     preferTrailersInPreviewModal: localStorage.getItem('preferTrailersInPreviewModal') !== 'false',
     onlyTrailerInPreviewModal: localStorage.getItem('onlyTrailerInPreviewModal') === 'true' ? true : false,
-    hoverVolume: (v => isNaN(v) ? 80 : v)(parseInt(localStorage.getItem('hoverVolume'), 10)),
+    hoverVolume: (function(v) isNaN(v) ? 80 : v)(parseInt(localStorage.getItem('hoverVolume'), 10)),
     enabledGmmp: localStorage.getItem('enabledGmmp') !== 'false',
     enableQualityBadges: localStorage.getItem('enableQualityBadges') !== 'false',
     enableTrailerThenVideo,
     disableAllPlayback,
-    dicebearParams: (() => {
+    dicebearParams: function(() {
   try {
-    const raw = localStorage.getItem('dicebearParams');
+    var raw = localStorage.getItem('dicebearParams');
     if (raw === '[object Object]') {
       localStorage.removeItem('dicebearParams');
       return {};
@@ -851,12 +850,12 @@ export function getConfig() {
     otherLibrariesRecentCardCount: parseInt(localStorage.getItem('otherLibrariesRecentCardCount'), 10) || 10,
     otherLibrariesContinueCardCount: parseInt(localStorage.getItem('otherLibrariesContinueCardCount'), 10) || 10,
     otherLibrariesEpisodesCardCount: parseInt(localStorage.getItem('otherLibrariesEpisodesCardCount'), 10) || 10,
-    otherLibrariesIds: (() => {
+    otherLibrariesIds: function(() {
       try {
-        const raw = localStorage.getItem('otherLibrariesIds');
+        var raw = localStorage.getItem('otherLibrariesIds');
         if (!raw || raw === '[object Object]') return [];
-        const arr = JSON.parse(raw);
-        return Array.isArray(arr) ? arr.map(x=>String(x||'').trim()).filter(Boolean) : [];
+        var arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr.map(function(x)String(x||'').trim()).filter(Boolean) : [];
       } catch { return []; }
     })(),
 
@@ -878,37 +877,37 @@ export function getConfig() {
     recentRowsSplitTvLibs: (localStorage.getItem('recentRowsSplitTvLibs') || 'true') !== 'false',
     recentRowsSplitMovieLibs: localStorage.getItem('recentRowsSplitMovieLibs') === 'true',
 
-    recentMoviesLibIds: (() => {
+    recentMoviesLibIds: function(() {
       try {
-        const raw = localStorage.getItem('recentMoviesLibIds');
+        var raw = localStorage.getItem('recentMoviesLibIds');
         if (!raw || raw === '[object Object]') return [];
-        const arr = JSON.parse(raw);
-        return Array.isArray(arr) ? arr.map(x=>String(x||'').trim()).filter(Boolean) : [];
+        var arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr.map(function(x)String(x||'').trim()).filter(Boolean) : [];
       } catch { return []; }
     })(),
 
-    recentSeriesTvLibIds: (() => {
+    recentSeriesTvLibIds: function(() {
       try {
-        const raw = localStorage.getItem('recentSeriesTvLibIds');
+        var raw = localStorage.getItem('recentSeriesTvLibIds');
         if (!raw || raw === '[object Object]') return [];
-        const arr = JSON.parse(raw);
-        return Array.isArray(arr) ? arr.map(x=>String(x||'').trim()).filter(Boolean) : [];
+        var arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr.map(function(x)String(x||'').trim()).filter(Boolean) : [];
       } catch { return []; }
     })(),
-    recentEpisodesTvLibIds: (() => {
+    recentEpisodesTvLibIds: function(() {
       try {
-        const raw = localStorage.getItem('recentEpisodesTvLibIds');
+        var raw = localStorage.getItem('recentEpisodesTvLibIds');
         if (!raw || raw === '[object Object]') return [];
-        const arr = JSON.parse(raw);
-        return Array.isArray(arr) ? arr.map(x=>String(x||'').trim()).filter(Boolean) : [];
+        var arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr.map(function(x)String(x||'').trim()).filter(Boolean) : [];
       } catch { return []; }
     })(),
-    continueSeriesTvLibIds: (() => {
+    continueSeriesTvLibIds: function(() {
       try {
-        const raw = localStorage.getItem('continueSeriesTvLibIds');
+        var raw = localStorage.getItem('continueSeriesTvLibIds');
         if (!raw || raw === '[object Object]') return [];
-        const arr = JSON.parse(raw);
-        return Array.isArray(arr) ? arr.map(x=>String(x||'').trim()).filter(Boolean) : [];
+        var arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr.map(function(x)String(x||'').trim()).filter(Boolean) : [];
       } catch { return []; }
     })(),
 
@@ -935,18 +934,18 @@ export function getConfig() {
     studioMiniTrailerPopover: (localStorage.getItem("studioMiniTrailerPopover") || "false") === "true",
     studioHubsMinRating: parseFloat(localStorage.getItem('studioHubsMinRating')) || 6.5,
     studioHubsCardCount: parseInt(localStorage.getItem('studioHubsCardCount'), 10) || 10,
-    studioHubsVolume: (() => {
-      const v = localStorage.getItem('studioHubsVolume');
+    studioHubsVolume: function(() {
+      var v = localStorage.getItem('studioHubsVolume');
       if (v === 'muted' || v === '0') return 'muted';
-      const n = parseInt(v, 10);
+      var n = parseInt(v, 10);
       return isNaN(n) ? 20 : n;
     })(),
     personalRecsCardCount: parseInt(localStorage.getItem('personalRecsCardCount'), 10) || 9,
-    studioHubsOrder: (() => {
+    studioHubsOrder: function(() {
       try {
-       const raw = localStorage.getItem('studioHubsOrder');
+       var raw = localStorage.getItem('studioHubsOrder');
         if (raw && raw !== '[object Object]') {
-          const arr = JSON.parse(raw);
+          var arr = JSON.parse(raw);
          if (Array.isArray(arr) && arr.length) return arr;
         }
      } catch {}
@@ -955,21 +954,21 @@ export function getConfig() {
         "Warner Bros. Pictures","Lucasfilm Ltd.","Columbia Pictures","Paramount Pictures","Netflix"
       ];
     })(),
-    studioHubsHidden: (() => {
+    studioHubsHidden: function(() {
       try {
-        const raw = localStorage.getItem('studioHubsHidden');
+        var raw = localStorage.getItem('studioHubsHidden');
         if (!raw || raw === '[object Object]') return [];
-        const arr = JSON.parse(raw);
+        var arr = JSON.parse(raw);
         return Array.isArray(arr)
-          ? arr.map(x => String(x || '').trim()).filter(Boolean)
+          ? arr.map(function(x) String(x || '').trim()).filter(Boolean)
           : [];
       } catch {
         return [];
       }
     })(),
-    managedHomeSectionOrder: (() => {
+    managedHomeSectionOrder: function(() {
       try {
-        const raw = localStorage.getItem('managedHomeSectionOrder');
+        var raw = localStorage.getItem('managedHomeSectionOrder');
         if (raw && raw !== '[object Object]') {
           return normalizeManagedHomeSectionOrder(raw);
         }
@@ -1142,36 +1141,36 @@ export function getConfig() {
 
     notificationsEnabled: localStorage.getItem('notificationsEnabled') !== 'false',
     useAlbumArtAsBackground: localStorage.getItem('useAlbumArtAsBackground') === 'true',
-    buttonBackgroundBlur: (() => {
-      const v = localStorage.getItem('buttonBackgroundBlur');
+    buttonBackgroundBlur: function(() {
+      var v = localStorage.getItem('buttonBackgroundBlur');
       return v !== null ? parseInt(v, 10) : 5;
     })(),
-    buttonBackgroundOpacity: (() => {
-    const v = localStorage.getItem('buttonBackgroundOpacity');
+    buttonBackgroundOpacity: function(() {
+    var v = localStorage.getItem('buttonBackgroundOpacity');
     return v !== null ? parseFloat(v) : 0.5;
 })(),
-    albumArtBackgroundBlur: (() => {
-      const v = localStorage.getItem('albumArtBackgroundBlur');
+    albumArtBackgroundBlur: function(() {
+      var v = localStorage.getItem('albumArtBackgroundBlur');
       return v !== null ? parseInt(v, 10) : 5;
     })(),
-    albumArtBackgroundOpacity: (() => {
-      const v = localStorage.getItem('albumArtBackgroundOpacity');
+    albumArtBackgroundOpacity: function(() {
+      var v = localStorage.getItem('albumArtBackgroundOpacity');
       return v !== null ? parseFloat(v) : 0.5;
     })(),
-    dotBackgroundBlur: (() => {
-      const v = localStorage.getItem('dotBackgroundBlur');
+    dotBackgroundBlur: function(() {
+      var v = localStorage.getItem('dotBackgroundBlur');
       return v !== null ? parseInt(v, 10) : 5;
     })(),
-    dotBackgroundOpacity: (() => {
-    const v = localStorage.getItem('dotBackgroundOpacity');
+    dotBackgroundOpacity: function(() {
+    var v = localStorage.getItem('dotBackgroundOpacity');
     return v !== null ? parseFloat(v) : 0.5;
 })(),
-      playingLimit: (() => {
-      const v = localStorage.getItem('playingLimit');
+      playingLimit: function(() {
+      var v = localStorage.getItem('playingLimit');
       return v !== null ? parseInt(v, 10) : 0;
     })(),
-    allowedWriters: (() => {
-      const defaultWriters = [
+    allowedWriters: function(() {
+      var defaultWriters = [
         "quentin tarantino",
         "fernando meirelles",
         "jose padilha",
@@ -1184,9 +1183,9 @@ export function getConfig() {
         "glauber rocha",
         "thomas harris"
       ];
-      let storedWriters = [];
+      var storedWriters = [];
       try {
-        const stored = localStorage.getItem('allowedWriters');
+        var stored = localStorage.getItem('allowedWriters');
         storedWriters = stored ? JSON.parse(stored) : [];
       } catch (e) {
         storedWriters = [];
@@ -1198,8 +1197,8 @@ export function getConfig() {
     minPixelCount: parseInt(localStorage.getItem("minPixelCount"), 10) || (1920 * 1080),
     cssVariant: localStorage.getItem('cssVariant') || 'normalslider',
     peakSlider: readPeakSlider(),
-    peakDiagonal: (() => {
-      const v = localStorage.getItem('peakDiagonal');
+    peakDiagonal: function(() {
+      var v = localStorage.getItem('peakDiagonal');
       if (v === 'true' || v === 'false') return v === 'true';
       return readPeakSlider();
     })(),
@@ -1216,28 +1215,28 @@ export function getConfig() {
     showGenreHubsHeroCards: (localStorage.getItem('showGenreHubsHeroCards') || 'true') !== 'false',
     studioHubsGenreCardCount: parseInt(localStorage.getItem("studioHubsGenreCardCount"), 10) || 10,
     studioHubsGenreRowsCount: parseInt(localStorage.getItem("studioHubsGenreRowsCount"), 10) || 4,
-    genreHubsOrder: (() => {
+    genreHubsOrder: function(() {
       try {
-        const raw = localStorage.getItem('genreHubsOrder');
+        var raw = localStorage.getItem('genreHubsOrder');
         if (raw && raw !== '[object Object]') {
-          const arr = JSON.parse(raw);
+          var arr = JSON.parse(raw);
           if (Array.isArray(arr) && arr.length) {
-            const blacklist = ['audio','podcast','audiobook','soundtrack','radio','talk','interview','music'];
-            return arr.filter(g => g && !blacklist.includes(String(g).toLowerCase()));
+            var blacklist = ['audio','podcast','audiobook','soundtrack','radio','talk','interview','music'];
+            return arr.filter(function(g) g && !blacklist.includes(String(g).toLowerCase()));
           }
         }
       } catch {}
       return null;
     })(),
 
-    currentUserIsAdmin: (() => {
+    currentUserIsAdmin: function(() {
       try {
-        const apiClient = window.ApiClient;
-        const user = (apiClient && apiClient._currentUser) || null;
-        const pol = (user && (user.Policy || user.UserPolicy)) || null;
+        var apiClient = window.ApiClient;
+        var user = (apiClient && apiClient._currentUser) || null;
+        var pol = (user && (user.Policy || user.UserPolicy)) || null;
 
         if (pol) {
-          const liveAdminFlag = (pol.IsAdministrator !== undefined) ? pol.IsAdministrator :
+          var liveAdminFlag = (pol.IsAdministrator !== undefined) ? pol.IsAdministrator :
                                 (pol.IsAdmin !== undefined) ? pol.IsAdmin :
                                 (pol.IsAdminUser !== undefined) ? pol.IsAdminUser : undefined;
 
@@ -1246,7 +1245,7 @@ export function getConfig() {
           }
         }
 
-        const ls = localStorage.getItem('currentUserIsAdmin');
+        var ls = localStorage.getItem('currentUserIsAdmin');
         if (ls === 'true' || ls === 'false') return ls === 'true';
       } catch (e) {}
       return false;
@@ -1255,7 +1254,7 @@ export function getConfig() {
   };
 
   registerManagedStorageKeys([
-    ...Object.keys(resolvedConfig).filter((key) => key !== "settingsHotkey"),
+    ...Object.keys(resolvedConfig).filterfunction((key) key !== "settingsHotkey"),
     "jms:settingsTargetProfile",
     "settings.allowedTabs.v1",
     "lyricsMode",
@@ -1266,14 +1265,14 @@ export function getConfig() {
 }
 
 export function isHomeSectionsMasterEnabled(source) {
-  const cfg = source || getConfig();
+  var cfg = source || getConfig();
   return (cfg && cfg.enableHomeSectionsMaster !== false);
 }
 
 export function getHomeSectionsRuntimeConfig(source) {
-  const cfg = source || getConfig() || {};
-  const masterEnabled = isHomeSectionsMasterEnabled(cfg);
-  const enabledMap = buildManagedHomeSectionEnabledMap(cfg);
+  var cfg = source || getConfig() || {};
+  var masterEnabled = isHomeSectionsMasterEnabled(cfg);
+  var enabledMap = buildManagedHomeSectionEnabledMap(cfg);
 
   return {
     masterEnabled: masterEnabled,
@@ -1293,20 +1292,20 @@ export function getHomeSectionsRuntimeConfig(source) {
     enableContinueSeries: masterEnabled && cfg.enableContinueSeries !== false,
     enableOtherLibRows: masterEnabled && !!cfg.enableOtherLibRows,
     managedSectionOrder: normalizeManagedHomeSectionOrder(cfg.managedHomeSectionOrder)
-      .filter((key) => enabledMap[key]),
+      .filterfunction((key) enabledMap[key]),
   };
 }
 
 export function isPauseFeaturesMasterEnabled(source) {
-  const cfg = source || getConfig();
+  var cfg = source || getConfig();
   return (cfg && cfg.enablePauseFeaturesMaster !== false);
 }
 
 export function getPauseFeaturesRuntimeConfig(source) {
-  const cfg = source || getConfig() || {};
-  const masterEnabled = isPauseFeaturesMasterEnabled(cfg);
-  const pauseOverlayCfg = cfg.pauseOverlay || {};
-  const smartAutoPauseCfg = cfg.smartAutoPause || {};
+  var cfg = source || getConfig() || {};
+  var masterEnabled = isPauseFeaturesMasterEnabled(cfg);
+  var pauseOverlayCfg = cfg.pauseOverlay || {};
+  var smartAutoPauseCfg = cfg.smartAutoPause || {};
 
   return {
     masterEnabled: masterEnabled,
@@ -1318,23 +1317,23 @@ export function getPauseFeaturesRuntimeConfig(source) {
 }
 
 export function isSubtitleCustomizerModuleEnabled(source) {
-  const cfg = source || getConfig();
+  var cfg = source || getConfig();
   return (cfg && cfg.enableSubtitleCustomizerModule !== false);
 }
 
 export function isParentalPinModuleEnabled(source) {
-  const cfg = source || getConfig();
+  var cfg = source || getConfig();
   return (cfg && cfg.enableParentalPinModule !== false);
 }
 
 export function isDetailsModalModuleEnabled(source) {
-  const cfg = source || getConfig();
+  var cfg = source || getConfig();
   return (cfg && cfg.enableDetailsModalModule !== false);
 }
 
 export function getDetailsModalRuntimeConfig(source) {
-  const cfg = source || getConfig() || {};
-  const enabled = isDetailsModalModuleEnabled(cfg);
+  var cfg = source || getConfig() || {};
+  var enabled = isDetailsModalModuleEnabled(cfg);
 
   return {
     enabled: enabled,
@@ -1344,7 +1343,7 @@ export function getDetailsModalRuntimeConfig(source) {
 }
 
 function pruneGlobalConfig(cfg) {
-  const deny = new Set([
+  var deny = new Set([
     "languageLabels",
     "currentUserIsAdmin",
     "settingsHotkey",
@@ -1354,13 +1353,13 @@ function pruneGlobalConfig(cfg) {
     "listLimit"
   ]);
 
-  const out = {};
-  for (const [k, v] of Object.entries(cfg || {})) {
+  var out = {};
+  for (var [k, v] of Object.entries(cfg || {})) {
     if (deny.has(k)) continue;
     out[k] = v;
   }
 
-  const storedLanguagePreference = getStoredLanguagePreference();
+  var storedLanguagePreference = getStoredLanguagePreference();
   if (storedLanguagePreference !== null && storedLanguagePreference !== undefined) {
     out.defaultLanguage = storedLanguagePreference;
   }
@@ -1368,22 +1367,22 @@ function pruneGlobalConfig(cfg) {
   return out;
 }
 
-export async function publishAdminSnapshotIfForced() {
+export function publishAdminSnapshotIfForced() {
   try {
-    const cfg = getConfig();
+    var cfg = getConfig();
     if (!cfg || !cfg.currentUserIsAdmin) {
       return { attempted: false, forced: false, ok: true, reason: "not-admin" };
     }
 
-    const targetProfile = getAdminTargetProfile();
-    const j = r.ok ? await r.json() : null;
+    var targetProfile = getAdminTargetProfile();
+    var j = r.ok ? r.json() : null;
     if (!j || !j.forceGlobal) {
       return { attempted: false, forced: false, ok: true, reason: "not-forced", profile: targetProfile };
     }
 
-    const globalConfig = pruneGlobalConfig(cfg);
-    const apiClient = window.ApiClient;
-    const token = (apiClient && typeof apiClient.accessToken === "function")
+    var globalConfig = pruneGlobalConfig(cfg);
+    var apiClient = window.ApiClient;
+    var token = (apiClient && typeof apiClient.accessToken === "function")
       ? apiClient.accessToken()
       : (apiClient ? (apiClient._accessToken || "") : "");
 
@@ -1392,7 +1391,7 @@ export async function publishAdminSnapshotIfForced() {
       return { attempted: true, forced: true, ok: false, reason: "no-token", profile: targetProfile };
     }
 
-    const pr = await fetch(`/Plugins/NexusPobreFlix/UserSettings/Publish?ts=${Date.now()}&profile=${targetProfile}`, {
+    var pr = fetch("/Plugins/NexusPobreFlix/UserSettings/Publish?ts=" + (Date.now()) + "&profile=" + (targetProfile), {
       method: "POST",
       cache: "no-store",
       headers: {
@@ -1422,8 +1421,8 @@ export async function publishAdminSnapshotIfForced() {
 }
 
 export function getServerAddress() {
-  let raw =
-    (window.serverConfig?.address) ||
+  var raw =
+    (window.serverConfig.address) ||
     (sessionStorage.getItem('serverAddress')) ||
     (localStorage.getItem('serverAddress')) ||
     '';
@@ -1442,32 +1441,32 @@ export function getServerAddress() {
 
   if (!raw) return _trimSlashesEnd(window.location.origin);
 
-  const s = String(raw).trim();
+  var s = String(raw).trim();
   if (!s) return _trimSlashesEnd(window.location.origin);
   if (/^https?:\/\//i.test(s)) return _trimSlashesEnd(s);
-  if (s.startsWith('//')) return _trimSlashesEnd(`${window.location.protocol}${s}`);
+  if (s.startsWith('//')) return _trimSlashesEnd((window.location.protocol) + (s));
   if (s.startsWith('/')) {
-    return _trimSlashesEnd(`${window.location.origin}${s}`);
+    return _trimSlashesEnd((window.location.origin) + (s));
   }
-  return _trimSlashesEnd(`${window.location.protocol}//${s}`);
+  return _trimSlashesEnd((window.location.protocol) + "//" + (s));
  }
 
 export function buildJfUrl(pathOrUrl) {
-  const base = getServerAddress();
-  const p = String(pathOrUrl || '').trim();
+  var base = getServerAddress();
+  var p = String(pathOrUrl || '').trim();
   if (!p) return base;
   if (/^https?:\/\//i.test(p)) return p;
-  if (p.startsWith('//')) return `${window.location.protocol}${p}`;
-  if (p.startsWith('/')) return `${base}${p}`;
-  return `${base}/${p}`;
+  if (p.startsWith('//')) return (window.location.protocol) + (p);
+  if (p.startsWith('/')) return (base) + (p);
+  return (base) + "/" + (p);
 }
 
-(async () => {
+function(() {
   try {
-    const data = await __fetchGlobalOverride(true);
+    var data = __fetchGlobalOverride(true);
     window.__JMS_GLOBAL_OVERRIDE__ = data;
     maybeBootstrapManagedStorage(pruneGlobalConfig(getConfig()));
-    const managedStorageActive = !!getManagedStorageBridge();
+    var managedStorageActive = !!getManagedStorageBridge();
 
     if (!data || !data.forceGlobal) {
       if (!managedStorageActive && _restoreBackupIfAny()) {
@@ -1476,21 +1475,21 @@ export function buildJfUrl(pathOrUrl) {
       return;
     }
 
-    const isAdmin =
-      window.ApiClient?._currentUser?.Policy?.IsAdministrator === true;
+    var isAdmin =
+      window.ApiClient._currentUser.Policy.IsAdministrator === true;
 
     if (isAdmin) {
       console.log("[NexusPobreFlix] Admin user – skipping forced global apply.");
       return;
     }
 
-    if (!data?.global || __globalApplied) return;
+    if (!data.global || __globalApplied) return;
 
-    const g = data.global;
-    const keys = Object.keys(g || {});
+    var g = data.global;
+    var keys = Object.keys(g || {});
     _takeBackupOnce(keys);
 
-    for (const k of keys) {
+    for (var k of keys) {
       _setLsSmart(k, g[k]);
     }
 

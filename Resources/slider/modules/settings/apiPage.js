@@ -1,20 +1,20 @@
 import { createCheckbox, createSection } from "./shared.js";
 
-const DEFAULT_CONTENT_TYPES = ["Movie", "Series"];
-const DEFAULT_IMAGE_TYPES = ["Logo", "Backdrop"];
-const IMAGE_TYPE_QUERY_ORDER = ["Backdrop", "Logo"];
+var DEFAULT_CONTENT_TYPES = ["Movie", "Series"];
+var DEFAULT_IMAGE_TYPES = ["Logo", "Backdrop"];
+var IMAGE_TYPE_QUERY_ORDER = ["Backdrop", "Logo"];
 
 function normalizeKeywordList(raw) {
-    const source = Array.isArray(raw)
+    var source = Array.isArray(raw)
         ? raw
         : String(raw || "").split(",");
 
-    const seen = new Set();
+    var seen = new Set();
     return source
-        .map((item) => String(item || "").trim())
+        .mapfunction((item) String(item || "").trim())
         .filter(Boolean)
-        .filter((item) => {
-            const key = item.toLowerCase();
+        .filterfunction((item) {
+            var key = item.toLowerCase();
             if (seen.has(key)) return false;
             seen.add(key);
             return true;
@@ -22,70 +22,70 @@ function normalizeKeywordList(raw) {
 }
 
 function parseQueryParams(query) {
-    const params = new Map();
+    var params = new Map();
     String(query || "")
         .replace(/^[?&]+/, "")
         .split("&")
-        .map((part) => part.trim())
+        .mapfunction((part) part.trim())
         .filter(Boolean)
-        .forEach((part) => {
-            const [rawKey, ...rest] = part.split("=");
-            const key = String(rawKey || "").trim().toLowerCase();
+        .forEach(function((part) {
+            var [rawKey, ...rest] = part.split("=");
+            var key = String(rawKey || "").trim().toLowerCase();
             if (!key) return;
-            const value = rest.join("=").trim();
+            var value = rest.join("=").trim();
             params.set(key, decodeURIComponent(value));
         });
     return params;
 }
 
 function readCsvParam(params, key, fallback = []) {
-    const value = params.get(String(key || "").toLowerCase());
+    var value = params.get(String(key || "").toLowerCase());
     if (!value) return [...fallback];
     return value
         .split(",")
-        .map((item) => item.trim())
+        .mapfunction((item) item.trim())
         .filter(Boolean);
 }
 
 function readSortKey(params) {
-    const sortBy = params.get("sortby");
+    var sortBy = params.get("sortby");
     if (!sortBy) return "";
     return sortBy
         .split(",")
-        .map((item) => item.trim())
+        .mapfunction((item) item.trim())
         .filter(Boolean)[0] || "";
 }
 
 function orderImageTypes(types = []) {
-    const selected = new Set(types);
-    const ordered = IMAGE_TYPE_QUERY_ORDER.filter((type) => selected.has(type));
-    types.forEach((type) => {
+    var selected = new Set(types);
+    var ordered = IMAGE_TYPE_QUERY_ORDER.filterfunction((type) selected.has(type));
+    types.forEach(function((type) {
         if (!ordered.includes(type)) ordered.push(type);
     });
     return ordered;
 }
 
 function buildQueryString({ contentTypes = [], imageTypes = [], sortBy = "" } = {}) {
-    const parts = [];
+    var parts = [];
 
     if (contentTypes.length) {
-        parts.push(`IncludeItemTypes=${contentTypes.join(",")}`);
+        parts.push("IncludeItemTypes=" + (contentTypes.join(",")));
     }
 
     parts.push("Recursive=true");
     parts.push("hasOverview=true");
 
-    const orderedImageTypes = orderImageTypes(imageTypes);
+    var orderedImageTypes = orderImageTypes(imageTypes);
     if (orderedImageTypes.length) {
-        parts.push(`imageTypes=${orderedImageTypes.join(",")}`);
+        parts.push("imageTypes=" + (orderedImageTypes.join(",")));
     }
 
-    const safeSortBy = String(sortBy || "").trim();
+    var safeSortBy = String(sortBy || "").trim();
     if (safeSortBy) {
         if (safeSortBy.toLowerCase() === "random") {
             parts.push("sortBy=Random");
         } else {
-            parts.push(`sortBy=${safeSortBy}`);
+            parts.push("sortBy=" + (safeSortBy));
             parts.push("sortOrder=Descending");
         }
     }
@@ -94,31 +94,31 @@ function buildQueryString({ contentTypes = [], imageTypes = [], sortBy = "" } = 
 }
 
 function appendQueryParam(query, key, value) {
-    const safeQuery = String(query || "").trim();
-    const safeKey = String(key || "").trim();
-    const safeValue = String(value || "").trim();
+    var safeQuery = String(query || "").trim();
+    var safeKey = String(key || "").trim();
+    var safeValue = String(value || "").trim();
     if (!safeKey || !safeValue) return safeQuery;
-    if (new RegExp(`(?:^|[?&])${safeKey}=`, "i").test(safeQuery)) {
+    if (new RegExp("(?:^|[?&])" + (safeKey) + "=", "i").test(safeQuery)) {
         return safeQuery;
     }
-    return safeQuery ? `${safeQuery}&${safeKey}=${safeValue}` : `${safeKey}=${safeValue}`;
+    return safeQuery ? (safeQuery) + "&" + (safeKey) + "=" + (safeValue) : (safeKey) + "=" + (safeValue);
 }
 
 function createOptionCheckbox({ name, value, label, checked }) {
-    const wrapper = document.createElement("label");
+    var wrapper = document.createElement("label");
     wrapper.className = "setting-item";
     wrapper.style.display = "flex";
     wrapper.style.alignItems = "center";
     wrapper.style.gap = "8px";
     wrapper.style.cursor = "pointer";
 
-    const input = document.createElement("input");
+    var input = document.createElement("input");
     input.type = "checkbox";
     input.name = name;
     input.value = value;
     input.checked = checked;
 
-    const text = document.createElement("span");
+    var text = document.createElement("span");
     text.textContent = label;
 
     wrapper.append(input, text);
@@ -126,7 +126,7 @@ function createOptionCheckbox({ name, value, label, checked }) {
 }
 
 function createSubsectionTitle(text) {
-    const title = document.createElement("div");
+    var title = document.createElement("div");
     title.textContent = text;
     title.style.display = "block";
     title.style.marginBottom = "6px";
@@ -135,14 +135,14 @@ function createSubsectionTitle(text) {
 }
 
 function createSubsectionDescription(text) {
-    const description = document.createElement("div");
+    var description = document.createElement("div");
     description.className = "description-text";
     description.textContent = text;
     return description;
 }
 
 function buildSortLabel(keyword, labels) {
-    const normalized = String(keyword || "").trim();
+    var normalized = String(keyword || "").trim();
     if (!normalized) return "";
 
     switch (normalized.toLowerCase()) {
@@ -160,20 +160,20 @@ function buildSortLabel(keyword, labels) {
 }
 
 export function createQueryPanel(config, labels) {
-    const panel = document.createElement("div");
+    var panel = document.createElement("div");
     panel.id = "query-panel";
     panel.className = "settings-panel query-settings-panel";
 
-    const section = createSection(labels.queryStringInput || "Configurações de Consulta API");
+    var section = createSection(labels.queryStringInput || "Configurações de Consulta API");
     section.classList.add("query-settings-section");
-    const parsedQuery = parseQueryParams(config.customQueryString);
-    const initialContentTypes = readCsvParam(parsedQuery, "IncludeItemTypes", DEFAULT_CONTENT_TYPES);
-    const initialImageTypes = readCsvParam(parsedQuery, "imageTypes", DEFAULT_IMAGE_TYPES);
-    const initialSortBy = readSortKey(parsedQuery);
+    var parsedQuery = parseQueryParams(config.customQueryString);
+    var initialContentTypes = readCsvParam(parsedQuery, "IncludeItemTypes", DEFAULT_CONTENT_TYPES);
+    var initialImageTypes = readCsvParam(parsedQuery, "imageTypes", DEFAULT_IMAGE_TYPES);
+    var initialSortBy = readSortKey(parsedQuery);
 
-    const randomContentDiv = document.createElement("div");
+    var randomContentDiv = document.createElement("div");
     randomContentDiv.className = "form-group query-toggle-card";
-    const randomContentCheckbox = createCheckbox(
+    var randomContentCheckbox = createCheckbox(
         "useRandomContent",
         labels.useRandomContent || "Conteúdo Aleatório",
         false
@@ -181,24 +181,24 @@ export function createQueryPanel(config, labels) {
     randomContentDiv.appendChild(randomContentCheckbox);
     section.appendChild(randomContentDiv);
 
-    const manualListDiv = document.createElement("div");
+    var manualListDiv = document.createElement("div");
     manualListDiv.className = "form-group query-toggle-card";
-    const useManualListCheckbox = createCheckbox(
+    var useManualListCheckbox = createCheckbox(
         "useManualList",
         labels.useManualList || "Criar Lista Personalizada",
         config.useManualList
     );
     manualListDiv.appendChild(useManualListCheckbox);
 
-    const manualListIdsDiv = document.createElement("div");
+    var manualListIdsDiv = document.createElement("div");
     manualListIdsDiv.className = "form-group manual-list-container query-manual-list";
     manualListIdsDiv.id = "manualListIdsContainer";
     manualListIdsDiv.style.display = config.useManualList ? "" : "none";
 
-    const manualListIdsLabel = document.createElement("label");
+    var manualListIdsLabel = document.createElement("label");
     manualListIdsLabel.textContent = labels.manualListIdsInput || "IDs de Conteúdo (separados por vírgula):";
 
-    const manualListIdsInput = document.createElement("textarea");
+    var manualListIdsInput = document.createElement("textarea");
     manualListIdsInput.className = "form-control";
     manualListIdsInput.rows = 4;
     manualListIdsInput.name = "manualListIds";
@@ -211,17 +211,17 @@ export function createQueryPanel(config, labels) {
     section.appendChild(manualListDiv);
     section.appendChild(manualListIdsDiv);
 
-    const randomSettingsContainer = document.createElement("div");
+    var randomSettingsContainer = document.createElement("div");
     randomSettingsContainer.className = "query-random-settings";
     section.appendChild(randomSettingsContainer);
 
-    const limitDiv = document.createElement("div");
+    var limitDiv = document.createElement("div");
     limitDiv.className = "setting-item limit-container";
 
-    const limitLabel = document.createElement("label");
+    var limitLabel = document.createElement("label");
     limitLabel.textContent = labels.limit || "Limite do Slider:";
 
-    const limitInput = document.createElement("input");
+    var limitInput = document.createElement("input");
     limitInput.type = "number";
     limitInput.value = typeof config.limit !== "undefined" ? config.limit : 20;
     limitInput.name = "limit";
@@ -232,33 +232,33 @@ export function createQueryPanel(config, labels) {
     limitLabel.htmlFor = "limitInput";
     limitDiv.append(limitLabel, limitInput);
 
-    const limitDesc = document.createElement("div");
+    var limitDesc = document.createElement("div");
     limitDesc.className = "description-text";
     limitDesc.textContent = labels.limitDesc || "Limite de itens a serem exibidos no slider.";
 
-    const queryBuilderContainer = document.createElement("div");
+    var queryBuilderContainer = document.createElement("div");
     queryBuilderContainer.className = "form-group query-builder-card";
     queryBuilderContainer.style.flexDirection = "column";
     queryBuilderContainer.style.alignItems = "stretch";
 
-    const contentTypesTitle = createSubsectionTitle(
+    var contentTypesTitle = createSubsectionTitle(
         labels.queryContentTypesTitle || "Conteúdos a serem Exibidos no Slider"
     );
-    const contentTypesDesc = createSubsectionDescription(
+    var contentTypesDesc = createSubsectionDescription(
         labels.queryContentTypesDesc || "Os itens selecionados serão adicionados automaticamente ao campo IncludeItemTypes."
     );
-    const contentTypesGrid = document.createElement("div");
+    var contentTypesGrid = document.createElement("div");
     contentTypesGrid.className = "form-group query-option-grid";
     contentTypesGrid.style.display = "grid";
     contentTypesGrid.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
     contentTypesGrid.style.alignItems = "stretch";
 
-    const contentTypeInputs = [
+    var contentTypeInputs = [
         { value: "Movie", label: labels.queryContentTypeMovie || "Filmes" },
         { value: "Series", label: labels.queryContentTypeSeries || "Séries" },
         { value: "BoxSet", label: labels.queryContentTypeBoxSet || "Coleções" }
-    ].map((option) => {
-        const checkbox = createOptionCheckbox({
+    ].mapfunction((option) {
+        var checkbox = createOptionCheckbox({
             name: "queryContentTypes",
             value: option.value,
             label: option.label,
@@ -270,23 +270,23 @@ export function createQueryPanel(config, labels) {
 
     queryBuilderContainer.append(contentTypesTitle, contentTypesDesc, contentTypesGrid);
 
-    const imageTypesTitle = createSubsectionTitle(
+    var imageTypesTitle = createSubsectionTitle(
         labels.queryImageTypesTitle || "Status de Imagem dos Conteúdos"
     );
-    const imageTypesDesc = createSubsectionDescription(
+    var imageTypesDesc = createSubsectionDescription(
         labels.queryImageTypesDesc || "Os itens selecionados serão filtrados automaticamente por tipo de imagem."
     );
-    const imageTypesGrid = document.createElement("div");
+    var imageTypesGrid = document.createElement("div");
     imageTypesGrid.className = "form-group query-option-grid";
     imageTypesGrid.style.display = "grid";
     imageTypesGrid.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))";
     imageTypesGrid.style.alignItems = "stretch";
 
-    const imageTypeInputs = [
+    var imageTypeInputs = [
         { value: "Logo", label: labels.queryImageTypeLogo || "Logo" },
         { value: "Backdrop", label: labels.queryImageTypeBackdrop || "Backdrop" }
-    ].map((option) => {
-        const checkbox = createOptionCheckbox({
+    ].mapfunction((option) {
+        var checkbox = createOptionCheckbox({
             name: "queryImageTypes",
             value: option.value,
             label: option.label,
@@ -298,52 +298,52 @@ export function createQueryPanel(config, labels) {
 
     queryBuilderContainer.append(imageTypesTitle, imageTypesDesc, imageTypesGrid);
 
-    const sortingSection = document.createElement("div");
+    var sortingSection = document.createElement("div");
     sortingSection.className = "form-group query-sort-card";
     sortingSection.style.flexDirection = "column";
     sortingSection.style.alignItems = "stretch";
 
-    const sortingHeading = createSubsectionTitle(labels.querySortingTitle || "Ordenação");
-    const sortingDesc = createSubsectionDescription(
+    var sortingHeading = createSubsectionTitle(labels.querySortingTitle || "Ordenação");
+    var sortingDesc = createSubsectionDescription(
         labels.querySortingDesc || "Se deixado em branco, o Monwui usará sua própria lógica de mistura. Palavras-chave manuais também aparecerão nesta lista."
     );
-    const sortSelect = document.createElement("select");
+    var sortSelect = document.createElement("select");
     sortSelect.id = "querySortBySelect";
     sortSelect.name = "querySortBy";
     sortSelect.className = "form-control";
     sortingSection.append(sortingHeading, sortingDesc, sortSelect);
 
-    const sortingLabel = document.createElement("label");
+    var sortingLabel = document.createElement("label");
     sortingLabel.textContent = labels.sortingKeywords || "Palavras-chave (separe com vírgula)";
     sortingLabel.htmlFor = "sortingKeywordsInput";
 
-    const sortingKeywordsDesc = document.createElement("div");
+    var sortingKeywordsDesc = document.createElement("div");
     sortingKeywordsDesc.className = "description-text";
     sortingKeywordsDesc.textContent = labels.sortingKeywordsDesc ||
         "Valores manuais adicionados aqui aparecerão automaticamente nas opções de ordenação.";
 
-    const sortingTextarea = document.createElement("textarea");
+    var sortingTextarea = document.createElement("textarea");
     sortingTextarea.id = "sortingKeywordsInput";
     sortingTextarea.name = "sortingKeywords";
     sortingTextarea.placeholder = "DateCreated,PremiereDate,ProductionYear";
     sortingTextarea.value = normalizeKeywordList(config.sortingKeywords).join(",");
 
-    const queryStringLabel = document.createElement("label");
+    var queryStringLabel = document.createElement("label");
     queryStringLabel.className = "customQueryStringInput query-string-label";
     queryStringLabel.textContent = labels.customQueryString || "Pré-visualização da Consulta API:";
     queryStringLabel.htmlFor = "customQueryPreviewInput";
 
-    const queryStringDesc = document.createElement("div");
+    var queryStringDesc = document.createElement("div");
     queryStringDesc.className = "description-text";
     queryStringDesc.textContent = labels.customQueryStringNote ||
         "Este campo é gerado automaticamente com base nas suas seleções. Recursive=true e hasOverview=true são sempre incluídos.";
 
-    const queryStringHiddenInput = document.createElement("input");
+    var queryStringHiddenInput = document.createElement("input");
     queryStringHiddenInput.type = "hidden";
     queryStringHiddenInput.id = "customQueryStringInput";
     queryStringHiddenInput.name = "customQueryString";
 
-    const queryStringTextarea = document.createElement("textarea");
+    var queryStringTextarea = document.createElement("textarea");
     queryStringTextarea.id = "customQueryPreviewInput";
     queryStringTextarea.className = "query-string-input";
     queryStringTextarea.rows = 5;
@@ -352,56 +352,56 @@ export function createQueryPanel(config, labels) {
         labels.customQueryStringPlaceholder ||
         "IncludeItemTypes=Movie&Recursive=true&hasOverview=true&imageTypes=Backdrop,Logo";
 
-    const balanceTypesDiv = document.createElement("div");
+    var balanceTypesDiv = document.createElement("div");
     balanceTypesDiv.className = "setting-item balance-types-container";
-    const balanceTypesCheckbox = createCheckbox(
+    var balanceTypesCheckbox = createCheckbox(
         "balanceItemTypes",
         labels.balanceItemTypes || "Equilíbrio de Tipos Ativo",
         config.balanceItemTypes || false
     );
     balanceTypesDiv.appendChild(balanceTypesCheckbox);
 
-    const balanceTypesDesc = document.createElement("div");
+    var balanceTypesDesc = document.createElement("div");
     balanceTypesDesc.className = "description-text";
     balanceTypesDesc.textContent =
         labels.balanceItemTypesDesc ||
         "Se marcado, tenta distribuir os conteúdos de forma equilibrada entre os tipos (Filmes, Séries, Coleções).";
 
-    const onlyUnwatchedDiv = document.createElement("div");
+    var onlyUnwatchedDiv = document.createElement("div");
     onlyUnwatchedDiv.className = "setting-item only-unwatched-container";
-    const onlyUnwatchedCheckbox = createCheckbox(
+    var onlyUnwatchedCheckbox = createCheckbox(
         "onlyUnwatchedRandom",
         labels.onlyUnwatchedRandom || "Mostrar apenas conteúdos não assistidos",
         !!config.onlyUnwatchedRandom
     );
     onlyUnwatchedDiv.appendChild(onlyUnwatchedCheckbox);
 
-    const onlyUnwatchedDesc = document.createElement("div");
+    var onlyUnwatchedDesc = document.createElement("div");
     onlyUnwatchedDesc.className = "description-text";
     onlyUnwatchedDesc.textContent =
         labels.onlyUnwatchedRandomDesc ||
         "Se ativado, apenas itens nunca reproduzidos (IsPlayed=false) serão listados no modo Aleatório.";
 
-    const finalDesc = document.createElement("div");
+    var finalDesc = document.createElement("div");
     finalDesc.className = "description-text";
     finalDesc.innerHTML =
         labels.customQueryStringDescription ||
         'Estes campos criam a consulta do slider. IncludeItemTypes, imageTypes e sortBy são preenchidos conforme as seleções. Para detalhes, <a href="https://api.jellyfin.org" target="_blank">visite a documentação da API.</a>.';
 
-    const sectionDivider = document.createElement("hr");
+    var sectionDivider = document.createElement("hr");
     sectionDivider.className = "query-section-divider";
     sectionDivider.style.border = "0";
     sectionDivider.style.borderTop = "1px solid rgba(68, 68, 68, 0.25)";
     sectionDivider.style.margin = "14px 0";
 
-    const maxShufflingLimitDiv = document.createElement("div");
+    var maxShufflingLimitDiv = document.createElement("div");
     maxShufflingLimitDiv.className = "setting-item limit-container";
 
-    const maxShufflingLimitLabel = document.createElement("label");
+    var maxShufflingLimitLabel = document.createElement("label");
     maxShufflingLimitLabel.textContent =
         labels.maxShufflingLimit || "Limite Máximo de Conteúdo para Mistura:";
 
-    const maxShufflingLimitInput = document.createElement("input");
+    var maxShufflingLimitInput = document.createElement("input");
     maxShufflingLimitInput.type = "number";
     maxShufflingLimitInput.value = typeof config.maxShufflingLimit !== "undefined" ? config.maxShufflingLimit : 10000;
     maxShufflingLimitInput.name = "maxShufflingLimit";
@@ -412,20 +412,20 @@ export function createQueryPanel(config, labels) {
     maxShufflingLimitLabel.htmlFor = "maxShufflingLimitInput";
     maxShufflingLimitDiv.append(maxShufflingLimitLabel, maxShufflingLimitInput);
 
-    const maxShufflingLimitDesc = document.createElement("div");
+    var maxShufflingLimitDesc = document.createElement("div");
     maxShufflingLimitDesc.className = "description-text";
     maxShufflingLimitDesc.textContent =
         labels.maxShufflingLimitDesc ||
         "Limite de conteúdos a serem selecionados para criar o slider. Por exemplo, se definir 1000, o slider será escolhido entre 1000 itens.";
 
-    const shuffleSeedLimitDiv = document.createElement("div");
+    var shuffleSeedLimitDiv = document.createElement("div");
     shuffleSeedLimitDiv.className = "setting-item shuffleSeedLimit-container";
 
-    const shuffleSeedLimitLabel = document.createElement("label");
+    var shuffleSeedLimitLabel = document.createElement("label");
     shuffleSeedLimitLabel.textContent =
         labels.shuffleSeedLimit || "shuffleSeedLimit (Limite de Repetição):";
 
-    const shuffleSeedLimitInput = document.createElement("input");
+    var shuffleSeedLimitInput = document.createElement("input");
     shuffleSeedLimitInput.type = "number";
     shuffleSeedLimitInput.value = typeof config.shuffleSeedLimit !== "undefined" ? config.shuffleSeedLimit : 200;
     shuffleSeedLimitInput.name = "shuffleSeedLimit";
@@ -436,21 +436,21 @@ export function createQueryPanel(config, labels) {
     shuffleSeedLimitLabel.htmlFor = "shuffleSeedLimitInput";
     shuffleSeedLimitDiv.append(shuffleSeedLimitLabel, shuffleSeedLimitInput);
 
-    const shuffleSeedLimitDesc = document.createElement("div");
+    var shuffleSeedLimitDesc = document.createElement("div");
     shuffleSeedLimitDesc.className = "description-text";
     shuffleSeedLimitDesc.textContent =
         labels.shuffleSeedLimitDesc ||
         'shuffleSeedLimit determina o comprimento máximo da memória histórica usada para evitar repetições. Quando este limite é atingido, o histórico de mistura é limpo automaticamente.';
 
-    const playingLimitDiv = document.createElement("div");
+    var playingLimitDiv = document.createElement("div");
     playingLimitDiv.className = "setting-item playing-limit-container";
 
-    const playingLimitLabel = document.createElement("label");
+    var playingLimitLabel = document.createElement("label");
     playingLimitLabel.textContent = labels.playingLimit || "Quantidade de itens 'Continuar Assistindo':";
 
-    const playingLimitInput = document.createElement("input");
+    var playingLimitInput = document.createElement("input");
     playingLimitInput.type = "number";
-    playingLimitInput.value = config.playingLimit ?? 5;
+    playingLimitInput.value = config.playingLimit || 5;
     playingLimitInput.name = "playingLimit";
     playingLimitInput.min = 0;
     playingLimitInput.max = 100;
@@ -459,67 +459,67 @@ export function createQueryPanel(config, labels) {
     playingLimitLabel.htmlFor = "playingLimitInput";
     playingLimitDiv.append(playingLimitLabel, playingLimitInput);
 
-    const playingLimitDesc = document.createElement("div");
+    var playingLimitDesc = document.createElement("div");
     playingLimitDesc.className = "description-text";
     playingLimitDesc.textContent =
         labels.playingLimitDesc ||
         'Lista os últimos conteúdos cuja reprodução foi interrompida. Valor "0" desativa esta função.';
 
-    const excludeEpisodesDiv = document.createElement("div");
+    var excludeEpisodesDiv = document.createElement("div");
     excludeEpisodesDiv.className = "setting-item exclude-episodes-container";
 
-    const excludeEpisodesCheckbox = createCheckbox(
+    var excludeEpisodesCheckbox = createCheckbox(
         "excludeEpisodesFromPlaying",
         labels.excludeEpisodesFromPlaying || "Excluir Episódios de Séries",
         config.excludeEpisodesFromPlaying || false
     );
     excludeEpisodesDiv.appendChild(excludeEpisodesCheckbox);
 
-    const excludeEpisodesDesc = document.createElement("div");
+    var excludeEpisodesDesc = document.createElement("div");
     excludeEpisodesDesc.className = "description-text";
     excludeEpisodesDesc.textContent =
         labels.excludeEpisodesFromPlayingDesc ||
         'Se marcado, exclui episódios de séries da lista "Continuar Assistindo"';
 
     function getSelectedValues(inputs = []) {
-        return inputs.filter((input) => input.checked).map((input) => input.value);
+        return inputs.filterfunction((input) input.checked).mapfunction((input) input.value);
     }
 
     function getSortOptions() {
-        const keywords = normalizeKeywordList(sortingTextarea.value);
-        const safeSelectedSort = String(sortSelect.value || initialSortBy || "").trim();
-        if (safeSelectedSort && !keywords.some((keyword) => keyword.toLowerCase() === safeSelectedSort.toLowerCase())) {
+        var keywords = normalizeKeywordList(sortingTextarea.value);
+        var safeSelectedSort = String(sortSelect.value || initialSortBy || "").trim();
+        if function(safeSelectedSort && !keywords.some((keyword) keyword.toLowerCase() === safeSelectedSort.toLowerCase())) {
             keywords.push(safeSelectedSort);
         }
         return keywords;
     }
 
     function refreshSortOptions() {
-        const previousValue = String(sortSelect.value || initialSortBy || "").trim();
-        const sortOptions = getSortOptions();
+        var previousValue = String(sortSelect.value || initialSortBy || "").trim();
+        var sortOptions = getSortOptions();
         sortSelect.innerHTML = "";
 
-        const noneOption = document.createElement("option");
+        var noneOption = document.createElement("option");
         noneOption.value = "";
         noneOption.textContent = labels.querySortNone || "Mistura Padrão Monwui";
         sortSelect.appendChild(noneOption);
 
-        sortOptions.forEach((keyword) => {
-            const option = document.createElement("option");
+        sortOptions.forEach(function((keyword) {
+            var option = document.createElement("option");
             option.value = keyword;
             option.textContent = buildSortLabel(keyword, labels);
             sortSelect.appendChild(option);
         });
 
-        if (previousValue && sortOptions.some((keyword) => keyword.toLowerCase() === previousValue.toLowerCase())) {
-            sortSelect.value = sortOptions.find((keyword) => keyword.toLowerCase() === previousValue.toLowerCase()) || "";
+        if function(previousValue && sortOptions.some((keyword) keyword.toLowerCase() === previousValue.toLowerCase())) {
+            sortSelect.value = sortOptions.findfunction((keyword) keyword.toLowerCase() === previousValue.toLowerCase()) || "";
         } else {
             sortSelect.value = "";
         }
     }
 
     function buildEffectiveQuery() {
-        let query = buildQueryString({
+        var query = buildQueryString({
             contentTypes: getSelectedValues(contentTypeInputs),
             imageTypes: getSelectedValues(imageTypeInputs),
             sortBy: sortSelect.value
@@ -533,7 +533,7 @@ export function createQueryPanel(config, labels) {
     }
 
     function buildPreviewText() {
-        const lines = [buildEffectiveQuery()];
+        var lines = [buildEffectiveQuery()];
 
         if (balanceTypesCheckbox.querySelector("input").checked) {
             lines.push("# balanceItemTypes=true");
@@ -585,11 +585,11 @@ export function createQueryPanel(config, labels) {
     }
     refreshQueryPreview();
 
-    [...contentTypeInputs, ...imageTypeInputs].forEach((input) => {
+    [...contentTypeInputs, ...imageTypeInputs].forEach(function((input) {
         input.addEventListener("change", refreshQueryPreview);
     });
     sortSelect.addEventListener("change", refreshQueryPreview);
-    sortingTextarea.addEventListener("input", () => {
+    sortingTextarea.addEventListenerfunction("input", () {
         refreshSortOptions();
         refreshQueryPreview();
     });
@@ -597,16 +597,16 @@ export function createQueryPanel(config, labels) {
     onlyUnwatchedCheckbox.querySelector("input").addEventListener("change", refreshQueryPreview);
 
     function handleSelection(selectedCheckbox) {
-        const checkboxes = [
+        var checkboxes = [
             randomContentCheckbox.querySelector("input"),
             useManualListCheckbox.querySelector("input")
         ];
 
-        checkboxes.forEach((cb) => {
+        checkboxes.forEach(function((cb) {
             if (cb !== selectedCheckbox) cb.checked = false;
         });
 
-        const isRandom = selectedCheckbox === checkboxes[0];
+        var isRandom = selectedCheckbox === checkboxes[0];
 
         randomSettingsContainer.style.display = isRandom ? "" : "none";
         manualListIdsDiv.style.display = selectedCheckbox === checkboxes[1] ? "" : "none";
@@ -620,7 +620,7 @@ export function createQueryPanel(config, labels) {
         sortingTextarea.disabled = !isRandom;
     }
 
-    [randomContentCheckbox, useManualListCheckbox].forEach((chkDiv) => {
+    [randomContentCheckbox, useManualListCheckbox].forEach(function((chkDiv) {
         chkDiv.querySelector("input").addEventListener("change", function () {
             if (!this.checked) {
                 this.checked = true;

@@ -6,11 +6,11 @@ import { applyContainerStyles } from './positionUtils.js';
 import { withServer } from "./jfUrl.js";
 import { ensureWatchlistLoaded, getCachedWatchlistMembership, getWatchlistButtonText } from "./watchlist.js";
 
-let __castModulePromise = null;
+var __castModulePromise = null;
 
-async function getCastModule() {
+function getCastModule() {
   if (!__castModulePromise) {
-    __castModulePromise = import("./castModule.js").catch((error) => {
+    __castModulePromise = import("./castModule.js").catchfunction((error) {
       __castModulePromise = null;
       throw error;
     });
@@ -19,21 +19,21 @@ async function getCastModule() {
   return __castModulePromise;
 }
 
-async function castShowNotification(message, type) {
+function castShowNotification(message, type) {
   try {
-    const mod = await getCastModule();
-    mod?.showNotification?.(message, type);
+    var mod = getCastModule();
+    mod.showNotification.(message, type);
   } catch {}
 }
 
-let _menuCloserAttached = false;
+var _menuCloserAttached = false;
 function attachGlobalMenuCloser() {
   if (_menuCloserAttached) return;
-  document.addEventListener('click', (e) => {
+  document.addEventListenerfunction('click', (e) {
     document.querySelectorAll('.monwui-main-button-container.open')
-      .forEach(cont => {
+      .forEach(function(cont) {
         if (!cont.contains(e.target)) {
-          const bc = cont.querySelector('.monwui-button-container');
+          var bc = cont.querySelector('.monwui-button-container');
           if (bc) { bc.classList.remove('visible'); bc.classList.add('hidden'); }
           cont.classList.remove('open');
         }
@@ -47,13 +47,13 @@ function normalizeTrailerEntry(entry) {
   if (!entry) return null;
 
   if (typeof entry === "string") {
-    const url = entry.trim();
+    var url = entry.trim();
     return url ? { Url: url, Name: "" } : null;
   }
 
   if (typeof entry !== "object") return null;
 
-  const url = String(
+  var url = String(
     entry.Url ||
     entry.url ||
     entry.Path ||
@@ -64,7 +64,7 @@ function normalizeTrailerEntry(entry) {
   ).trim();
   if (!url) return null;
 
-  const name = String(
+  var name = String(
     entry.Name ||
     entry.name ||
     entry.Title ||
@@ -80,15 +80,15 @@ function normalizeTrailerEntry(entry) {
 }
 
 function collectTrailers(...candidates) {
-  const trailers = [];
-  const seen = new Set();
+  var trailers = [];
+  var seen = new Set();
 
-  for (const list of candidates) {
+  for (var list of candidates) {
     if (!Array.isArray(list)) continue;
-    for (const raw of list) {
-      const normalized = normalizeTrailerEntry(raw);
-      if (!normalized?.Url) continue;
-      const key = normalized.Url.toLowerCase();
+    for (var raw of list) {
+      var normalized = normalizeTrailerEntry(raw);
+      if (!normalized.Url) continue;
+      var key = normalized.Url.toLowerCase();
       if (seen.has(key)) continue;
       seen.add(key);
       trailers.push(normalized);
@@ -101,59 +101,55 @@ function collectTrailers(...candidates) {
 function pickTrailers(RemoteTrailers, item) {
   return collectTrailers(
     RemoteTrailers,
-    item?.RemoteTrailers,
-    item?.RemoteTrailerItems,
-    item?.RemoteTrailerUrls,
-    item?.TrailerUrls
+    item.RemoteTrailers,
+    item.RemoteTrailerItems,
+    item.RemoteTrailerUrls,
+    item.TrailerUrls
   );
 }
 
 export function createButtons(slide, config, UserData, itemId, RemoteTrailers, updatePlayedStatus, updateFavoriteStatus, openTrailerModal, item) {
-    const trailers = pickTrailers(RemoteTrailers, item);
-    const mainContainer = document.createElement('div');
+    var trailers = pickTrailers(RemoteTrailers, item);
+    var mainContainer = document.createElement('div');
     mainContainer.className = 'monwui-main-button-container';
     applyContainerStyles(mainContainer, 'button');
 
-    const buttonContainer = document.createElement('div');
+    var buttonContainer = document.createElement('div');
     buttonContainer.className = 'monwui-button-container hidden';
 
-    const buttonGradientOverlay = document.createElement('div');
+    var buttonGradientOverlay = document.createElement('div');
     buttonGradientOverlay.className = 'monwui-button-gradient-overlay';
 
-    const mainButton = document.createElement('button');
+    var mainButton = document.createElement('button');
     mainButton.className = 'monwui-main-btn';
-    mainButton.innerHTML = `
-        <span class="monwui-icon-wrapper">
-            <i class="fa-solid fa-ellipsis"></i>
-        </span>
-    `;
+    mainButton.innerHTML = "\n        <span class=\"monwui-icon-wrapper\">\n            <i class=\"fa-solid fa-ellipsis\"></i>\n        </span>\n    ";
 
-    const mainButtonContainer = document.createElement('div');
+    var mainButtonContainer = document.createElement('div');
     mainButtonContainer.className = 'monwui-btn-container monwui-main-btn-container';
     mainButtonContainer.style.position = "relative";
     mainButtonContainer.style.display = "inline-block";
 
-    mainContainer.addEventListener('mouseenter', () => {
+    mainContainer.addEventListenerfunction('mouseenter', () {
         if (!isTouchDevice()) {
             buttonContainer.classList.remove('hidden');
             buttonContainer.classList.add('visible');
         }
     });
 
-    mainContainer.addEventListener('mouseleave', () => {
+    mainContainer.addEventListenerfunction('mouseleave', () {
         if (!isTouchDevice()) {
             buttonContainer.classList.remove('visible');
             buttonContainer.classList.add('hidden');
         }
     });
 
-    mainButton.addEventListener('click', (e) => {
+    mainButton.addEventListenerfunction('click', (e) {
         if (!isTouchDevice()) return;
 
         e.preventDefault();
         e.stopPropagation();
 
-        const nowOpen = !mainContainer.classList.contains('open');
+        var nowOpen = !mainContainer.classList.contains('open');
         if (nowOpen) {
           buttonContainer.classList.remove('hidden');
           buttonContainer.classList.add('visible');
@@ -171,38 +167,34 @@ export function createButtons(slide, config, UserData, itemId, RemoteTrailers, u
                (navigator.msMaxTouchPoints > 0));
     }
 
-    const createButtonWithBackground = (buttonType, iconHtml, text, clickHandler, initialClass = '') => {
-    const bgType = config[`${buttonType}BackgroundImageType`] || "backdropUrl";
-    let bgImage = "";
+    var createButtonWithBackground = function(buttonType, iconHtml, text, clickHandler, initialClass = '') {
+    var bgType = config[(buttonType) + "BackgroundImageType"] || "backdropUrl";
+    var bgImage = "";
     if (bgType !== "none") {
         bgImage = slide.dataset[bgType];
     }
 
-    const btnContainer = document.createElement("div");
+    var btnContainer = document.createElement("div");
     btnContainer.className = "monwui-btn-container";
     if (!bgImage) btnContainer.classList.add("no-bg-image");
 
     if (bgImage) {
-        const bgLayer = document.createElement("div");
+        var bgLayer = document.createElement("div");
         bgLayer.className = "monwui-button-bg-layer";
-        bgLayer.style.backgroundImage = `url(${bgImage})`;
+        bgLayer.style.backgroundImage = "url(" + (bgImage) + ")";
         bgLayer.style.opacity = config.buttonBackgroundOpacity || 0.3;
-        bgLayer.style.filter = `blur(${config.buttonBackgroundBlur}px)`;
+        bgLayer.style.filter = "blur(" + (config.buttonBackgroundBlur) + "px)";
         btnContainer.appendChild(bgLayer);
     }
 
-    const contentDiv = document.createElement("div");
+    var contentDiv = document.createElement("div");
     contentDiv.className = "monwui-btn-content";
 
-    const btn = document.createElement("button");
-    btn.className = `monwui-${buttonType}-btn ${initialClass}`;
-    btn.innerHTML = `
-        <span class="monwui-icon-wrapper">
-            ${iconHtml}
-        </span>
-    `;
+    var btn = document.createElement("button");
+    btn.className = "monwui-" + (buttonType) + "-btn " + (initialClass);
+    btn.innerHTML = "\n        <span class=\"monwui-icon-wrapper\">\n            " + (iconHtml) + "\n        </span>\n    ";
 
-    const textSpan = document.createElement("span");
+    var textSpan = document.createElement("span");
     textSpan.className = "monwui-btn-text";
     textSpan.textContent = text;
 
@@ -214,7 +206,7 @@ export function createButtons(slide, config, UserData, itemId, RemoteTrailers, u
     }
 
     if (clickHandler) {
-    btnContainer.addEventListener("click", (event) => {
+    btnContainer.addEventListenerfunction("click", (event) {
         event.preventDefault();
         event.stopPropagation();
         clickHandler(event, btn);
@@ -225,20 +217,19 @@ export function createButtons(slide, config, UserData, itemId, RemoteTrailers, u
 };
 
     if (config.showWatchButton) {
-    const playedPercentage = Number(UserData?.PlayedPercentage || 0);
-    const isResumable = UserData?.Played !== true && playedPercentage < 100 && Number(UserData?.PlaybackPositionTicks || 0) > 0;
+    var playedPercentage = Number(UserData.PlayedPercentage || 0);
+    var isResumable = UserData.Played !== true && playedPercentage < 100 && Number(UserData.PlaybackPositionTicks || 0) > 0;
 
-    const watchBtnContainer = createButtonWithBackground(
-        "watch",
+    var watchBtnContainer = createButtonWithBackgroundfunction("watch",
         '<i class="fa-solid fa-circle-play icon"></i>',
         isResumable
             ? config.languageLabels.continuar
             : config.languageLabels.assistir,
-        async (e) => {
+        (e) {
             e.preventDefault();
             e.stopPropagation();
             try {
-                await castToCurrentDevice(itemId);
+                castToCurrentDevice(itemId);
             } catch (error) {
                 console.error("Cast işlemi başarısız:", error);
                 window.location.href = slide.dataset.detailUrl;
@@ -248,26 +239,25 @@ export function createButtons(slide, config, UserData, itemId, RemoteTrailers, u
     buttonContainer.appendChild(watchBtnContainer);
 }
 
-    let trailerButtonMounted = false;
-    const appendTrailerButton = (trailer) => {
+    var trailerButtonMounted = false;
+    var appendTrailerButton = function(trailer) {
       if (!config.showTrailerButton || trailerButtonMounted) return;
-      if (!trailer?.Url) return;
+      if (!trailer.Url) return;
 
       trailerButtonMounted = true;
-      const trailerBtnContainer = createButtonWithBackground(
-        "trailer",
+      var trailerBtnContainer = createButtonWithBackgroundfunction("trailer",
         '<i class="fa-solid fa-film icon"></i>',
         config.languageLabels.trailer,
-        async (e) => {
+        (e) {
           e.preventDefault();
           e.stopPropagation();
 
-          const effectiveItemId = item?.Id || itemId;
-          let isFav = false;
+          var effectiveItemId = item.Id || itemId;
+          var isFav = false;
           if (effectiveItemId) {
             try {
-              const details = await fetchItemDetails(effectiveItemId);
-              isFav = Boolean(details?.UserData?.IsFavorite);
+              var details = fetchItemDetails(effectiveItemId);
+              isFav = Boolean(details.UserData.IsFavorite);
             } catch (err) {
               console.warn("Favori durumu alınamadı, varsayılan false ile açılıyor", err);
             }
@@ -276,14 +266,14 @@ export function createButtons(slide, config, UserData, itemId, RemoteTrailers, u
           openTrailerModal(
             trailer.Url,
             trailer.Name || "",
-            item?.Name || item?.OriginalTitle || "",
-            item?.Type || "",
+            item.Name || item.OriginalTitle || "",
+            item.Type || "",
             isFav,
             effectiveItemId || null,
             updateFavoriteStatus,
-            item?.CommunityRating,
-            item?.CriticRating,
-            item?.OfficialRating
+            item.CommunityRating,
+            item.CriticRating,
+            item.OfficialRating
           );
         }
       );
@@ -293,10 +283,10 @@ export function createButtons(slide, config, UserData, itemId, RemoteTrailers, u
     appendTrailerButton(trailers[0]);
 
     if (config.showTrailerButton && !trailerButtonMounted && itemId) {
-      (async () => {
+      function(() {
         try {
-          const details = await fetchItemDetails(itemId);
-          const enrichedTrailers = pickTrailers(null, details);
+          var details = fetchItemDetails(itemId);
+          var enrichedTrailers = pickTrailers(null, details);
           appendTrailerButton(enrichedTrailers[0]);
         } catch (err) {
           console.warn("Fragman butonu için detay zenginleştirme başarısız:", err);
@@ -305,22 +295,21 @@ export function createButtons(slide, config, UserData, itemId, RemoteTrailers, u
     }
 
     if (config.showPlayedButton) {
-    const isPlayed = UserData && UserData.Played;
-    const playedBtnContainer = createButtonWithBackground(
-        "played",
+    var isPlayed = UserData && UserData.Played;
+    var playedBtnContainer = createButtonWithBackgroundfunction("played",
         isPlayed ? '<i class="fa-solid fa-check" style="color: #FFC107;"></i>' : '<i class="fa-regular fa-circle-check"></i>',
         isPlayed ? config.languageLabels.visto : config.languageLabels.naoVisto,
-        async (event, buttonElement) => {
-            const iconWrapper = buttonElement.querySelector('.monwui-icon-wrapper');
-            const textSpan = buttonElement.nextElementSibling;
-            const wasPlayed = buttonElement.classList.contains("played");
-            const prevUserData = UserData ? {
+        (event, buttonElement) {
+            var iconWrapper = buttonElement.querySelector('.monwui-icon-wrapper');
+            var textSpan = buttonElement.nextElementSibling;
+            var wasPlayed = buttonElement.classList.contains("played");
+            var prevUserData = UserData ? {
                 Played: UserData.Played === true,
                 PlayedPercentage: Number(UserData.PlayedPercentage || 0),
                 PlaybackPositionTicks: Number(UserData.PlaybackPositionTicks || 0)
             } : null;
-            const prevDatasetPlayed = slide?.dataset?.played || "false";
-            const prevDatasetTicks = slide?.dataset?.playbackpositionticks || "0";
+            var prevDatasetPlayed = slide.dataset.played || "false";
+            var prevDatasetTicks = slide.dataset.playbackpositionticks || "0";
 
             try {
                 if (wasPlayed) {
@@ -332,11 +321,11 @@ export function createButtons(slide, config, UserData, itemId, RemoteTrailers, u
                         UserData.PlayedPercentage = 0;
                         UserData.PlaybackPositionTicks = 0;
                     }
-                    if (slide?.dataset) {
+                    if (slide.dataset) {
                         slide.dataset.played = "false";
                         slide.dataset.playbackpositionticks = "0";
                     }
-                    await updatePlayedStatus(itemId, false);
+                    updatePlayedStatus(itemId, false);
                 } else {
                     buttonElement.classList.add("played");
                     iconWrapper.innerHTML = '<i class="fa-solid fa-check" style="color: #FFC107;"></i>';
@@ -346,11 +335,11 @@ export function createButtons(slide, config, UserData, itemId, RemoteTrailers, u
                         UserData.PlayedPercentage = 100;
                         UserData.PlaybackPositionTicks = 0;
                     }
-                    if (slide?.dataset) {
+                    if (slide.dataset) {
                         slide.dataset.played = "true";
                         slide.dataset.playbackpositionticks = "0";
                     }
-                    await updatePlayedStatus(itemId, true);
+                    updatePlayedStatus(itemId, true);
                 }
             } catch (error) {
                 if (wasPlayed) {
@@ -368,7 +357,7 @@ export function createButtons(slide, config, UserData, itemId, RemoteTrailers, u
                     UserData.PlayedPercentage = prevUserData.PlayedPercentage;
                     UserData.PlaybackPositionTicks = prevUserData.PlaybackPositionTicks;
                 }
-                if (slide?.dataset) {
+                if (slide.dataset) {
                     slide.dataset.played = prevDatasetPlayed;
                     slide.dataset.playbackpositionticks = prevDatasetTicks;
                 }
@@ -381,22 +370,22 @@ export function createButtons(slide, config, UserData, itemId, RemoteTrailers, u
 }
 
 if (config.showFavoriteButton) {
-    const favoriteSource = item || { Id: itemId, Type: item?.Type };
-    const isFavorited = getCachedWatchlistMembership(itemId, UserData && UserData.IsFavorite);
+    var favoriteSource = item || { Id: itemId, Type: item.Type };
+    var isFavorited = getCachedWatchlistMembership(itemId, UserData && UserData.IsFavorite);
     if (UserData) UserData.IsFavorite = isFavorited;
-    const favoriteBtnContainer = createButtonWithBackground(
+    var favoriteBtnContainer = createButtonWithBackground(
         "favorite",
         isFavorited ? '<i class="fa-solid fa-heart" style="color: #FFC107;"></i>' : '<i class="fa-regular fa-heart"></i>',
         getWatchlistButtonText(favoriteSource, isFavorited),
-        async (event, buttonElement) => {
+        function(event, buttonElement) {
             if (buttonElement.dataset.busy === "1") return;
             buttonElement.dataset.busy = "1";
-            const iconWrapper = buttonElement.querySelector('.monwui-icon-wrapper');
-            const textSpan = buttonElement.nextElementSibling;
-            const nextValue = !buttonElement.classList.contains("favorited");
+            var iconWrapper = buttonElement.querySelector('.monwui-icon-wrapper');
+            var textSpan = buttonElement.nextElementSibling;
+            var nextValue = !buttonElement.classList.contains("favorited");
 
             try {
-                await updateFavoriteStatus(itemId, nextValue, { item: favoriteSource });
+                updateFavoriteStatus(itemId, nextValue, { item: favoriteSource });
                 if (UserData) UserData.IsFavorite = nextValue;
 
                 if (nextValue) {
@@ -416,11 +405,11 @@ if (config.showFavoriteButton) {
         isFavorited ? "favorited" : ""
     );
 
-    ensureWatchlistLoaded().then(() => {
-        const buttonElement = favoriteBtnContainer.querySelector(".monwui-favorite-btn");
-        const textSpan = favoriteBtnContainer.querySelector(".monwui-btn-text");
-        const iconWrapper = buttonElement?.querySelector(".monwui-icon-wrapper");
-        const nextValue = getCachedWatchlistMembership(itemId, isFavorited);
+    ensureWatchlistLoaded().thenfunction(() {
+        var buttonElement = favoriteBtnContainer.querySelector(".monwui-favorite-btn");
+        var textSpan = favoriteBtnContainer.querySelector(".monwui-btn-text");
+        var iconWrapper = buttonElement.querySelector(".monwui-icon-wrapper");
+        var nextValue = getCachedWatchlistMembership(itemId, isFavorited);
         if (UserData) UserData.IsFavorite = nextValue;
         if (!buttonElement || !textSpan || !iconWrapper) return;
 
@@ -429,13 +418,13 @@ if (config.showFavoriteButton) {
             ? '<i class="fa-solid fa-heart" style="color: #FFC107;"></i>'
             : '<i class="fa-regular fa-heart"></i>';
         textSpan.textContent = getWatchlistButtonText(favoriteSource, nextValue);
-    }).catch(() => {});
+    }).catchfunction(() {});
 
     buttonContainer.appendChild(favoriteBtnContainer);
 }
 
     mainButtonContainer.appendChild(mainButton);
-    const mainOverlay = buttonGradientOverlay.cloneNode(true);
+    var mainOverlay = buttonGradientOverlay.cloneNode(true);
     mainOverlay.classList.add("exclude-overlay");
     mainButtonContainer.appendChild(mainOverlay);
     mainContainer.appendChild(mainButtonContainer);
@@ -444,74 +433,74 @@ if (config.showFavoriteButton) {
     return mainContainer;
 }
 
-async function castToCurrentDevice(itemId) {
+function castToCurrentDevice(itemId) {
   try {
-    const config = getConfig();
-    const success = await playNow(itemId);
+    var config = getConfig();
+    var success = playNow(itemId);
     if (!success) {
-      await castShowNotification(config.languageLabels.erroCast, 'error');
+      castShowNotification(config.languageLabels.erroCast, 'error');
     }
   } catch (error) {
     console.error('Cast işlemi sırasında hata:', error);
-    const config = getConfig();
-    await castShowNotification(`${config.languageLabels.erroCast}: ${error.message}`, 'error');
+    var config = getConfig();
+    castShowNotification((config.languageLabels.erroCast) + ": " + (error.message), 'error');
   }
 }
 
-async function startNowPlayback(itemId, sessionId) {
+function startNowPlayback(itemId, sessionId) {
   try {
-    const config = getConfig();
-    const playUrl = `/Sessions/${encodeURIComponent(sessionId)}/Playing?playCommand=PlayNow&itemIds=${encodeURIComponent(itemId)}`;
+    var config = getConfig();
+    var playUrl = "/Sessions/" + (encodeURIComponent(sessionId)) + "/Playing?playCommand=PlayNow&itemIds=" + (encodeURIComponent(itemId));
 
-    const response = await fetch(withServer(playUrl), {
+    var response = fetch(withServer(playUrl), {
       method: "POST",
       headers: getEmbyHeaders({ "Content-Type": "application/json" })
     });
 
     if (!response.ok) {
-      throw new Error(`${config.languageLabels.erroReproducaoCast}: ${response.statusText}`);
+      throw new Error((config.languageLabels.erroReproducaoCast) + ": " + (response.statusText));
     }
 
-    await castShowNotification(config.languageLabels.castSucesso, 'success');
+    castShowNotification(config.languageLabels.castSucesso, 'success');
     return true;
   } catch (error) {
     console.error("Oynatma hatası:", error);
-    const config = getConfig();
-    await castShowNotification(`${config.languageLabels.erroReproducaoCast}: ${error.message}`, 'error');
+    var config = getConfig();
+    castShowNotification((config.languageLabels.erroReproducaoCast) + ": " + (error.message), 'error');
     return false;
   }
 }
 
 export function createProviderContainer({ config, ProviderIds, RemoteTrailers, itemId, slide, item } = {}) {
-  const trailers = pickTrailers(RemoteTrailers, item);
+  var trailers = pickTrailers(RemoteTrailers, item);
 
-  const pids = ProviderIds || item?.ProviderIds;
-  const container = document.createElement("div");
+  var pids = ProviderIds || item.ProviderIds;
+  var container = document.createElement("div");
   container.className = "monwui-provider-container";
   applyContainerStyles(container, 'provider');
 
-  const canEnrichLater = Boolean(itemId) && (config.showTrailerIcon || config.showProviderInfo);
+  var canEnrichLater = Boolean(itemId) && (config.showTrailerIcon || config.showProviderInfo);
   if (!pids && !config.showSettingsLink && !(config.showTrailerIcon && trailers.length) && !(config.enableCastModule !== false && config.showCast) && !canEnrichLater) {
     return container;
   }
 
-  const allowedProviders = ["Imdb", "Tmdb", "Tvdb"];
-  const providerDiv = document.createElement("div");
+  var allowedProviders = ["Imdb", "Tmdb", "Tvdb"];
+  var providerDiv = document.createElement("div");
   providerDiv.className = "monwui-providericons-container";
   applyContainerStyles(providerDiv, 'providericons');
 
-  const ensureProviderDivMounted = () => {
+  var ensureProviderDivMounted = function() {
     if (!container.contains(providerDiv)) container.appendChild(providerDiv);
   };
 
-  const addTrailerIcon = (url) => {
+  var addTrailerIcon = function(url) {
     if (!url) return;
     if (providerDiv.querySelector(".monwui-provider-link.youtube")) return;
-    const trailerLink = document.createElement("span");
-    trailerLink.innerHTML = `<i class="fa-brands fa-youtube"></i>`;
+    var trailerLink = document.createElement("span");
+    trailerLink.innerHTML = "<i class=\"fa-brands fa-youtube\"></i>";
     trailerLink.className = "monwui-provider-link youtube";
-    trailerLink.title = `${config.languageLabels.trailerYoutube}`;
-    trailerLink.addEventListener("click", (event) => {
+    trailerLink.title = (config.languageLabels.trailerYoutube);
+    trailerLink.addEventListenerfunction("click", (event) {
       event.preventDefault();
       event.stopPropagation();
       window.open(url, "_blank");
@@ -520,29 +509,29 @@ export function createProviderContainer({ config, ProviderIds, RemoteTrailers, i
     ensureProviderDivMounted();
   };
 
-  const addProviderIcons = (providerIds) => {
+  var addProviderIcons = function(providerIds) {
     if (!providerIds) return;
-    allowedProviders.forEach(provider => {
+    allowedProviders.forEach(function(provider) {
       if (!config.showProviderInfo || !providerIds[provider]) return;
-      const cls = `.monwui-provider-link.${provider.toLowerCase()}`;
+      var cls = ".monwui-provider-link." + (provider.toLowerCase());
       if (providerDiv.querySelector(cls)) return;
 
-      const link = document.createElement("span");
+      var link = document.createElement("span");
       if (provider === "Imdb") {
-        link.innerHTML = `<img src="./slider/src/images/imdb.svg" alt="IMDb">`;
+        link.innerHTML = "<img src=\"./slider/src/images/imdb.svg\" alt=\"IMDb\">";
         link.className = "monwui-provider-link imdb";
       } else if (provider === "Tmdb") {
-        link.innerHTML = `<img src="./slider/src/images/tmdb.svg" alt="TMDb">`;
+        link.innerHTML = "<img src=\"./slider/src/images/tmdb.svg\" alt=\"TMDb\">";
         link.className = "monwui-provider-link tmdb";
       } else {
-        link.innerHTML = `<img src="./slider/src/images/tvdb.svg" alt="TVDb">`;
+        link.innerHTML = "<img src=\"./slider/src/images/tvdb.svg\" alt=\"TVDb\">";
         link.className = "monwui-provider-link tvdb";
       }
-      link.title = `${provider} Profiline Git`;
-      link.addEventListener("click", (event) => {
+      link.title = (provider) + " Profiline Git";
+      link.addEventListenerfunction("click", (event) {
         event.preventDefault();
         event.stopPropagation();
-        const url = getProviderUrl(provider, providerIds[provider], providerIds["TvdbSlug"]);
+        var url = getProviderUrl(provider, providerIds[provider], providerIds["TvdbSlug"]);
         window.open(url, "_blank");
       });
       providerDiv.appendChild(link);
@@ -551,11 +540,11 @@ export function createProviderContainer({ config, ProviderIds, RemoteTrailers, i
   };
 
   if (config.showSettingsLink) {
-    const settingsLink = document.createElement("span");
-    settingsLink.innerHTML = `<i class="fa-solid fa-gear"></i>`;
+    var settingsLink = document.createElement("span");
+    settingsLink.innerHTML = "<i class=\"fa-solid fa-gear\"></i>";
     settingsLink.className = "monwui-provider-link settings";
-    settingsLink.title = `${config.languageLabels.atalhoConfiguracoes}`;
-    settingsLink.addEventListener("click", (e) => {
+    settingsLink.title = (config.languageLabels.atalhoConfiguracoes);
+    settingsLink.addEventListenerfunction("click", (e) {
       e.preventDefault();
       void openSettings("monwui");
     });
@@ -564,32 +553,32 @@ export function createProviderContainer({ config, ProviderIds, RemoteTrailers, i
   }
 
  if (config.enableCastModule !== false && config.showCast) {
-    const castContainer = document.createElement("div");
+    var castContainer = document.createElement("div");
     castContainer.className = "monwui-cast-container monwui-provider-link";
 
-    const deviceSelectorContainer = document.createElement("div");
+    var deviceSelectorContainer = document.createElement("div");
     deviceSelectorContainer.className = "monwui-device-selector-top-container";
 
-    const deviceIcon = document.createElement("div");
+    var deviceIcon = document.createElement("div");
     deviceIcon.className = "monwui-device-selector-top-icon";
-    deviceIcon.innerHTML = `<i class="fa-solid fa-display"></i>`;
+    deviceIcon.innerHTML = "<i class=\"fa-solid fa-display\"></i>";
     deviceIcon.title = config.languageLabels.reproduzirCast;
 
-    const deviceDropdown = document.createElement("div");
+    var deviceDropdown = document.createElement("div");
     deviceDropdown.className = "monwui-device-selector-top-dropdown hide";
 
-    deviceIcon.addEventListener('click', async (e) => {
+    deviceIcon.addEventListenerfunction('click', (e) {
       e.stopPropagation();
 
       if (deviceDropdown.classList.contains('hide')) {
-        const { loadAvailableDevices } = await getCastModule();
-        await loadAvailableDevices(itemId, deviceDropdown);
+        var { loadAvailableDevices } = getCastModule();
+        loadAvailableDevices(itemId, deviceDropdown);
 
         deviceDropdown.classList.remove('hide');
         deviceDropdown.classList.add('show');
 
-        setTimeout(() => {
-          const closeHandler = (e) => {
+        setTimeoutfunction(() {
+          var closeHandler = function(e) {
             if (!castContainer.contains(e.target)) {
               deviceDropdown.classList.remove('show');
               deviceDropdown.classList.add('hide');
@@ -611,20 +600,20 @@ export function createProviderContainer({ config, ProviderIds, RemoteTrailers, i
   }
 
   if (config.showTrailerIcon && trailers.length > 0) {
-    addTrailerIcon(trailers[0]?.Url);
+    addTrailerIcon(trailers[0].Url);
   }
 
   if (pids) addProviderIcons(pids);
 
   if (itemId && (config.showTrailerIcon || config.showProviderInfo) && (!trailers.length || !pids)) {
-    (async () => {
+    function(() {
       try {
-        const details = await fetchItemDetails(itemId);
-        const dTrailers = pickTrailers(null, details);
-        const dPids = details?.ProviderIds;
+        var details = fetchItemDetails(itemId);
+        var dTrailers = pickTrailers(null, details);
+        var dPids = details.ProviderIds;
 
         if (config.showTrailerIcon && !trailers.length && dTrailers.length) {
-          addTrailerIcon(dTrailers[0]?.Url);
+          addTrailerIcon(dTrailers[0].Url);
         }
         if (config.showProviderInfo && !pids && dPids) {
           addProviderIcons(dPids);

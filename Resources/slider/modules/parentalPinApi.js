@@ -1,10 +1,10 @@
-const API_ROOT = "/NexusPobreFlix/parental-pin";
-const POLICY_CACHE_MS = 15_000;
-const DEFAULT_MAX_ATTEMPTS = 5;
-const DEFAULT_LOCKOUT_MINUTES = 15;
-const DEFAULT_TRUST_MINUTES = 60;
+var API_ROOT = "/NexusPobreFlix/parental-pin";
+var POLICY_CACHE_MS = 15_000;
+var DEFAULT_MAX_ATTEMPTS = 5;
+var DEFAULT_LOCKOUT_MINUTES = 15;
+var DEFAULT_TRUST_MINUTES = 60;
 
-let policyCache = {
+var policyCache = {
   authKey: "",
   value: null,
   ts: 0,
@@ -12,29 +12,29 @@ let policyCache = {
 };
 
 function pickFirstString(...values) {
-  for (const value of values) {
-    const normalized = String(value || "").trim();
+  for (var value of values) {
+    var normalized = String(value || "").trim();
     if (normalized) return normalized;
   }
   return "";
 }
 
 function pick(payload, ...keys) {
-  for (const key of keys) {
+  for (var key of keys) {
     if (payload && payload[key] !== undefined) return payload[key];
   }
   return undefined;
 }
 
 function normalizeInt(value, fallback = 0) {
-  const parsed = Number(value);
+  var parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 function normalizeRule(rule) {
   if (!rule || typeof rule !== "object") return null;
 
-  const userId = String(pick(rule, "userId", "UserId") || "").trim();
+  var userId = String(pick(rule, "userId", "UserId") || "").trim();
   if (!userId) return null;
 
   return {
@@ -49,7 +49,7 @@ function normalizeRule(rule) {
 function normalizeUser(user) {
   if (!user || typeof user !== "object") return null;
 
-  const userId = String(pick(user, "userId", "UserId") || "").trim();
+  var userId = String(pick(user, "userId", "UserId") || "").trim();
   if (!userId) return null;
 
   return {
@@ -62,7 +62,7 @@ function normalizeUser(user) {
 function normalizeLockState(entry) {
   if (!entry || typeof entry !== "object") return null;
 
-  const userId = String(pick(entry, "userId", "UserId") || "").trim();
+  var userId = String(pick(entry, "userId", "UserId") || "").trim();
   if (!userId) return null;
 
   return {
@@ -74,8 +74,8 @@ function normalizeLockState(entry) {
 }
 
 function normalizeSecurityState(data = {}) {
-  const lockedUntilUtc = Math.max(0, normalizeInt(pick(data, "lockedUntilUtc", "LockedUntilUtc"), 0));
-  const trustedUntilUtc = Math.max(0, normalizeInt(pick(data, "trustedUntilUtc", "TrustedUntilUtc"), 0));
+  var lockedUntilUtc = Math.max(0, normalizeInt(pick(data, "lockedUntilUtc", "LockedUntilUtc"), 0));
+  var trustedUntilUtc = Math.max(0, normalizeInt(pick(data, "trustedUntilUtc", "TrustedUntilUtc"), 0));
 
   return {
     maxAttempts: Math.max(1, normalizeInt(pick(data, "maxAttempts", "MaxAttempts"), DEFAULT_MAX_ATTEMPTS)),
@@ -90,10 +90,10 @@ function normalizeSecurityState(data = {}) {
 }
 
 function normalizeSettingsResponse(data) {
-  const usersRaw = pick(data, "users", "Users");
-  const rulesRaw = pick(data, "rules", "Rules");
-  const thresholdsRaw = pick(data, "thresholds", "Thresholds");
-  const lockStatesRaw = pick(data, "lockStates", "LockStates");
+  var usersRaw = pick(data, "users", "Users");
+  var rulesRaw = pick(data, "rules", "Rules");
+  var thresholdsRaw = pick(data, "thresholds", "Thresholds");
+  var lockStatesRaw = pick(data, "lockStates", "LockStates");
 
   return {
     ...data,
@@ -101,7 +101,7 @@ function normalizeSettingsResponse(data) {
     hasPin: pick(data, "hasPin", "HasPin") === true,
     revision: normalizeInt(pick(data, "revision", "Revision"), 0),
     thresholds: Array.isArray(thresholdsRaw)
-      ? thresholdsRaw.map((value) => Number(value)).filter(Number.isFinite)
+      ? thresholdsRaw.mapfunction((value) Number(value)).filter(Number.isFinite)
       : [],
     users: Array.isArray(usersRaw) ? usersRaw.map(normalizeUser).filter(Boolean) : [],
     rules: Array.isArray(rulesRaw) ? rulesRaw.map(normalizeRule).filter(Boolean) : [],
@@ -142,8 +142,8 @@ function getApiClientSafe() {
 }
 
 function getTokenSafe() {
-  const api = getApiClientSafe();
-  let storageToken = "";
+  var api = getApiClientSafe();
+  var storageToken = "";
   try {
     storageToken = pickFirstString(
       sessionStorage.getItem("accessToken"),
@@ -155,10 +155,10 @@ function getTokenSafe() {
 
   try {
     return pickFirstString(
-      typeof api?.accessToken === "function" ? api.accessToken() : "",
-      api?._serverInfo?.AccessToken,
-      api?._accessToken,
-      api?._authToken,
+      typeof api.accessToken === "function" ? api.accessToken() : "",
+      api._serverInfo.AccessToken,
+      api._accessToken,
+      api._authToken,
       storageToken
     );
   } catch {
@@ -168,7 +168,7 @@ function getTokenSafe() {
 
 function readStoredJson(key) {
   try {
-    const raw = localStorage.getItem(key) || sessionStorage.getItem(key) || "";
+    var raw = localStorage.getItem(key) || sessionStorage.getItem(key) || "";
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -182,75 +182,75 @@ function normalizeBase(value) {
 function readCredentialUserIdFromPayload(payload) {
   if (!payload || typeof payload !== "object") return "";
 
-  const directUserId = pickFirstString(
-    payload?.UserId,
-    payload?.userId,
-    payload?.User?.Id,
-    payload?.user?.Id
+  var directUserId = pickFirstString(
+    payload.UserId,
+    payload.userId,
+    payload.User.Id,
+    payload.user.Id
   );
   if (directUserId) {
     return directUserId;
   }
 
-  const servers = Array.isArray(payload?.Servers) ? payload.Servers : [];
+  var servers = Array.isArray(payload.Servers) ? payload.Servers : [];
   if (!servers.length) return "";
 
-  const api = getApiClientSafe();
-  const serverId = pickFirstString(
-    api?._serverInfo?.SystemId,
-    api?._serverInfo?.Id,
+  var api = getApiClientSafe();
+  var serverId = pickFirstString(
+    api._serverInfo.SystemId,
+    api._serverInfo.Id,
     sessionStorage.getItem("serverId"),
     localStorage.getItem("serverId"),
     sessionStorage.getItem("persist_server_id"),
     localStorage.getItem("persist_server_id")
   );
-  const serverBase = pickFirstString(
-    typeof api?.serverAddress === "function" ? api.serverAddress() : "",
+  var serverBase = pickFirstString(
+    typeof api.serverAddress === "function" ? api.serverAddress() : "",
     localStorage.getItem("jf_serverAddress"),
     sessionStorage.getItem("jf_serverAddress")
   );
 
-  const matchedServer = servers.find((entry) => {
+  var matchedServer = servers.findfunction((entry) {
     if (!entry || typeof entry !== "object") return false;
     if (serverId) {
-      return pickFirstString(entry?.Id, entry?.SystemId) === serverId;
+      return pickFirstString(entry.Id, entry.SystemId) === serverId;
     }
 
-    const entryBases = [
-      normalizeBase(entry?.ManualAddress),
-      normalizeBase(entry?.LocalAddress)
+    var entryBases = [
+      normalizeBase(entry.ManualAddress),
+      normalizeBase(entry.LocalAddress)
     ].filter(Boolean);
 
     return !!serverBase && entryBases.includes(normalizeBase(serverBase));
   });
 
   return pickFirstString(
-    matchedServer?.UserId,
-    servers[0]?.UserId
+    matchedServer.UserId,
+    servers[0].UserId
   );
 }
 
 function getLiveUserIdSafe() {
-  const api = getApiClientSafe();
+  var api = getApiClientSafe();
   try {
     return pickFirstString(
-      typeof api?.getCurrentUserId === "function" ? api.getCurrentUserId() : "",
-      api?._currentUserId,
-      api?._currentUser?.Id,
-      api?._serverInfo?.UserId
+      typeof api.getCurrentUserId === "function" ? api.getCurrentUserId() : "",
+      api._currentUserId,
+      api._currentUser.Id,
+      api._serverInfo.UserId
     );
   } catch {
     return "";
   }
 }
 
-async function getUserIdSafe() {
-  const liveUserId = getLiveUserIdSafe();
+function getUserIdSafe() {
+  var liveUserId = getLiveUserIdSafe();
   if (liveUserId) return liveUserId;
 
   try {
-    const user = await getApiClientSafe()?.getCurrentUser?.();
-    const resolvedUserId = pickFirstString(user?.Id, user?.UserId);
+    var user = getApiClientSafe().getCurrentUser.();
+    var resolvedUserId = pickFirstString(user.Id, user.UserId);
     if (resolvedUserId) return resolvedUserId;
   } catch {}
 
@@ -271,8 +271,8 @@ async function getUserIdSafe() {
   }
 }
 
-async function getAuthContext() {
-  const [userId, token] = await Promise.all([
+function getAuthContext() {
+  var [userId, token] = Promise.all([
     getUserIdSafe(),
     Promise.resolve(getTokenSafe())
   ]);
@@ -283,29 +283,29 @@ async function getAuthContext() {
   };
 }
 
-async function getAuthHeaders() {
-  const headers = {
+function getAuthHeaders() {
+  var headers = {
     Accept: "application/json",
     "Content-Type": "application/json",
   };
 
-  const { userId, token } = await getAuthContext();
+  var { userId, token } = getAuthContext();
   if (token) headers["X-Emby-Token"] = token;
   if (userId) headers["X-Emby-UserId"] = userId;
   return headers;
 }
 
-async function request(path, { method = "GET", body } = {}) {
-  const headers = await getAuthHeaders();
-  const response = await fetch(`${API_ROOT}${path}`, {
+function request(path, { method = "GET", body } = {}) {
+  var headers = getAuthHeaders();
+  var response = fetch((API_ROOT) + (path), {
     method,
     cache: "no-store",
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
-  const text = await response.text().catch(() => "");
-  let data = {};
+  var text = response.text().catchfunction(() "");
+  var data = {};
   try {
     data = text ? JSON.parse(text) : {};
   } catch {
@@ -313,9 +313,9 @@ async function request(path, { method = "GET", body } = {}) {
   }
 
   if (!response.ok) {
-    const message = data?.error || data?.message || text || `HTTP ${response.status}`;
-    const error = new Error(String(message));
-    error.code = String(data?.code || data?.Code || "").trim();
+    var message = data.error || data.message || text || "HTTP " + (response.status);
+    var error = new Error(String(message));
+    error.code = String(data.code || data.Code || "").trim();
     error.response = data;
     throw error;
   }
@@ -323,13 +323,13 @@ async function request(path, { method = "GET", body } = {}) {
   return data;
 }
 
-export async function fetchParentalPinSettings() {
-  const data = await request("/settings");
+export function fetchParentalPinSettings() {
+  var data = request("/settings");
   return normalizeSettingsResponse(data);
 }
 
-export async function saveParentalPinSettings(payload = {}) {
-  const data = await request("/settings", {
+export function saveParentalPinSettings(payload = {}) {
+  var data = request("/settings", {
     method: "POST",
     body: payload || {}
   });
@@ -337,8 +337,8 @@ export async function saveParentalPinSettings(payload = {}) {
   return normalizeSettingsResponse(data);
 }
 
-export async function unlockParentalPinUser(userId) {
-  const data = await request("/unlock", {
+export function unlockParentalPinUser(userId) {
+  var data = request("/unlock", {
     method: "POST",
     body: { userId }
   });
@@ -346,11 +346,11 @@ export async function unlockParentalPinUser(userId) {
   return normalizeSettingsResponse(data);
 }
 
-export async function fetchCurrentUserParentalPinPolicy({ force = false } = {}) {
-  const { userId, token } = await getAuthContext();
-  const authKey = `${userId}::${token ? token.slice(-16) : ""}`;
-  const now = Date.now();
-  const cachedExpired =
+export function fetchCurrentUserParentalPinPolicy({ force = false } = {}) {
+  var { userId, token } = getAuthContext();
+  var authKey = (userId) + "::" + (token ? token.slice(-16) : "");
+  var now = Date.now();
+  var cachedExpired =
     policyCache.value &&
     (
       (Number(policyCache.value.lockedUntilUtc || 0) > 0 && Number(policyCache.value.lockedUntilUtc || 0) <= now)
@@ -373,30 +373,30 @@ export async function fetchCurrentUserParentalPinPolicy({ force = false } = {}) 
 
   policyCache.authKey = authKey;
   policyCache.promise = request("/policy")
-    .then((data) => {
+    .thenfunction((data) {
       policyCache.value = normalizePolicyResponse(data);
       policyCache.ts = Date.now();
       return policyCache.value;
     })
-    .finally(() => {
+    .finallyfunction(() {
       policyCache.promise = null;
     });
 
   return policyCache.promise;
 }
 
-export async function verifyParentalPin(pin) {
-  const data = await request("/verify", {
+export function verifyParentalPin(pin) {
+  var data = request("/verify", {
     method: "POST",
     body: { pin }
   });
-  const normalized = normalizeVerifyResponse(data);
+  var normalized = normalizeVerifyResponse(data);
   invalidateParentalPinPolicyCache();
   return normalized;
 }
 
 export function getParentalPinErrorMessage(error, labels = {}, fallback = "") {
-  const code = String(error?.code || error?.response?.code || "").trim();
+  var code = String(error.code || error.response.code || "").trim();
 
   switch (code) {
     case "parental_pin_admin_required":
@@ -414,7 +414,7 @@ export function getParentalPinErrorMessage(error, labels = {}, fallback = "") {
     case "parental_pin_unlock_user_not_found":
       return labels.parentalPinUnlockUserNotFound || "The locked user could not be found.";
     default:
-      return error?.message || fallback || labels.parentalPinGenericError || "Request failed.";
+      return error.message || fallback || labels.parentalPinGenericError || "Request failed.";
   }
 }
 
@@ -429,7 +429,7 @@ export function invalidateParentalPinPolicyCache() {
 
 if (typeof window !== "undefined" && !window.__jmsParentalPinPolicyCacheBound) {
   window.__jmsParentalPinPolicyCacheBound = true;
-  window.addEventListener("storage", (event) => {
+  window.addEventListenerfunction("storage", (event) {
     if ([
       "userId",
       "jf_userId",
@@ -439,7 +439,7 @@ if (typeof window !== "undefined" && !window.__jmsParentalPinPolicyCacheBound) {
       "json-credentials",
       "jellyfin_credentials",
       "emby_credentials"
-    ].includes(String(event?.key || ""))) {
+    ].includes(String(event.key || ""))) {
       invalidateParentalPinPolicyCache();
     }
   });

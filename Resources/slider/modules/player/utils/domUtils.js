@@ -1,39 +1,39 @@
 import { makeCleanupBag, addEvent } from "./cleanup.js";
 
 export function shuffleArray(array) {
-  const result = [...array];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+  var result = [...array];
+  for (var i = result.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
     [result[i], result[j]] = [result[j], result[i]];
   }
   return result;
 }
 
 export function setupMobileTouchControls() {
-  const controls = document.querySelector('.player-controls');
+  var controls = document.querySelector('.player-controls');
   if (!controls) return;
-  const bag = makeCleanupBag(controls);
+  var bag = makeCleanupBag(controls);
 
-  let startX, scrollLeft;
-  let isDragging = false;
+  var startX, scrollLeft;
+  var isDragging = false;
 
-  const onTouchStart = (e) => {
+  var onTouchStart = function(e) {
     isDragging = true;
-    const rect = controls.getBoundingClientRect();
+    var rect = controls.getBoundingClientRect();
     startX = e.touches[0].clientX - rect.left;
     scrollLeft = controls.scrollLeft;
   };
 
-  const onTouchMove = (e) => {
+  var onTouchMove = function(e) {
     if (!isDragging) return;
     e.preventDefault();
-    const rect = controls.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left;
-    const walk = (x - startX) * 2;
+    var rect = controls.getBoundingClientRect();
+    var x = e.touches[0].clientX - rect.left;
+    var walk = (x - startX) * 2;
     controls.scrollLeft = scrollLeft - walk;
   };
 
-  const onTouchEnd = () => {
+  var onTouchEnd = function() {
     isDragging = false;
   };
 
@@ -41,22 +41,22 @@ export function setupMobileTouchControls() {
   addEvent(bag, controls, 'touchmove',  onTouchMove,  { passive: false });
   addEvent(bag, controls, 'touchend',   onTouchEnd);
 
-  const onMouseDown = (e) => {
+  var onMouseDown = function(e) {
     isDragging = true;
-    const rect = controls.getBoundingClientRect();
+    var rect = controls.getBoundingClientRect();
     startX = e.clientX - rect.left;
     scrollLeft = controls.scrollLeft;
     controls.classList.add('dragging');
   };
-  const onMouseMove = (e) => {
+  var onMouseMove = function(e) {
     if (!isDragging) return;
     e.preventDefault();
-    const rect = controls.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const walk = (x - startX) * 2;
+    var rect = controls.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    var walk = (x - startX) * 2;
     controls.scrollLeft = scrollLeft - walk;
   };
-  const onMouseUp = () => {
+  var onMouseUp = function() {
     isDragging = false;
     controls.classList.remove('dragging');
   };

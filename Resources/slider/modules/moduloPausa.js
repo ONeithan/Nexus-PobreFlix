@@ -5,18 +5,18 @@ import { withServer } from "./jfUrl.js";
 import { GENERATED_BUCKET_APPENDS, GENERATED_NEW_BUCKETS } from "./generatedTagBuckets.js";
 
 function _numFinite(v, fallback) {
-  const n = Number(v);
+  var n = Number(v);
   return Number.isFinite(n) ? n : fallback;
 }
 
 function _msFromConfig(pathValue, fallbackMs) {
-  const n = _numFinite(pathValue, fallbackMs);
+  var n = _numFinite(pathValue, fallbackMs);
   return Math.max(0, n);
 }
 
 function getCommunityRatingValue(communityRating) {
-  const raw = Array.isArray(communityRating)
-    ? communityRating.reduce((sum, value) => sum + Number(value || 0), 0) /
+  var raw = Array.isArray(communityRating)
+    ? communityRating.reducefunction((sum, value) sum + Number(value || 0), 0) /
       Math.max(1, communityRating.length)
     : Number(communityRating);
 
@@ -24,82 +24,82 @@ function getCommunityRatingValue(communityRating) {
   return Math.round(raw * 10) / 10;
 }
 
-const DEBUG_PO = !!(getConfig()?.pauseOverlay?.debug);
+var DEBUG_PO = !!(getConfig().pauseOverlay.debug);
 function dlog(...args) { if (DEBUG_PO) console.log(...args); }
 function ddbg(...args) { if (DEBUG_PO) console.debug(...args); }
 
-const config = getConfig();
-const currentLang = config.defaultLanguage || getDefaultLanguage();
-const labels = getLanguageLabels(currentLang) || {};
-const imageBlobCache = new Map();
-const TAG_MEM_TTL_MS = Math.max(
+var config = getConfig();
+var currentLang = config.defaultLanguage || getDefaultLanguage();
+var labels = getLanguageLabels(currentLang) || {};
+var imageBlobCache = new Map();
+var TAG_MEM_TTL_MS = Math.max(
   0,
-  Number(getConfig()?.pauseOverlay?.tagsCacheTtlMs ?? 6 * 60 * 60 * 1000)
+  Number(getConfig().pauseOverlay.tagsCacheTtlMs || 6 * 60 * 60 * 1000)
 );
 
-const SHOW_AGE_BADGE  = getConfig()?.pauseOverlay?.showAgeBadge !== false;
-const BADGE_DELAY_MS = Math.max(0, Number(getConfig()?.pauseOverlay?.badgeDelayMs ?? 4500));
-const BADGE_DELAY_RESUME_MS = Math.max(
+var SHOW_AGE_BADGE  = getConfig().pauseOverlay.showAgeBadge !== false;
+var BADGE_DELAY_MS = Math.max(0, Number(getConfig().pauseOverlay.badgeDelayMs || 4500));
+var BADGE_DELAY_RESUME_MS = Math.max(
   0,
-  Number(getConfig()?.pauseOverlay?.badgeDelayResumeMs ?? BADGE_DELAY_MS)
+  Number(getConfig().pauseOverlay.badgeDelayResumeMs || BADGE_DELAY_MS)
 );
 
-const AGE_BADGE_DEFAULT_MS = _msFromConfig(
-  getConfig()?.pauseOverlay?.ageBadgeDurationMs,
+var AGE_BADGE_DEFAULT_MS = _msFromConfig(
+  getConfig().pauseOverlay.ageBadgeDurationMs,
   15000
 );
 
-const AGE_BADGE_RESUME_MS = _msFromConfig(
-  getConfig()?.pauseOverlay?.ageBadgeDurationResumeMs,
+var AGE_BADGE_RESUME_MS = _msFromConfig(
+  getConfig().pauseOverlay.ageBadgeDurationResumeMs,
   AGE_BADGE_DEFAULT_MS
 );
 
-const BADGE_LOCK_MS = Math.max(0, Number(getConfig()?.pauseOverlay?.ageBadgeLockMs ?? 4000));
-const _detailsLRU = new Map();
-const DETAILS_TTL = 90_000;
-const DETAILS_MAX = 120;
+var BADGE_LOCK_MS = Math.max(0, Number(getConfig().pauseOverlay.ageBadgeLockMs || 4000));
+var _detailsLRU = new Map();
+var DETAILS_TTL = 90_000;
+var DETAILS_MAX = 120;
 
-const _maturityLRU = new Map();
-const MAT_TTL = _msFromConfig(getConfig()?.pauseOverlay?.maturityCacheTtlMs, 10 * 60 * 1000);
-const MAT_MAX = 200;
+var _maturityLRU = new Map();
+var MAT_TTL = _msFromConfig(getConfig().pauseOverlay.maturityCacheTtlMs, 10 * 60 * 1000);
+var MAT_MAX = 200;
 
 function _maturitySig(d){
-  const id = d?.Id || "";
-  const r  = String(d?.OfficialRating || "");
-  const g  = Array.isArray(d?.Genres) ? d.Genres.join("|") : "";
-  const t  = Array.isArray(d?.Tags) ? d.Tags.join("|")
-           : Array.isArray(d?.Keywords) ? d.Keywords.join("|") : "";
-  return `${id}::${r}::${g}::${t}`;
+  var id = d.Id || "";
+  var r  = String(d.OfficialRating || "");
+  var g  = Array.isArray(d.Genres) ? d.Genres.join("|") : "";
+  var t  = Array.isArray(d.Tags) ? d.Tags.join("|")
+           : Array.isArray(d.Keywords) ? d.Keywords.join("|") : "";
+  return (id) + "::" + (r) + "::" + (g) + "::" + (t);
 }
 
 function _computeMaturityUi(data){
-  const age = normalizeAgeChip(data?.OfficialRating);
+  var age = normalizeAgeChip(data.OfficialRating);
 
-  const locGenres = localizedGenres(data?.Genres || []).filter(Boolean);
-  locGenres.sort((a,b)=>String(a).localeCompare(String(b), undefined, { sensitivity:"base" }));
+  var locGenres = localizedGenres(data.Genres || []).filter(Boolean);
+  locGenres.sortfunction((a,b)String(a).localeCompare(String(b), undefined, { sensitivity:"base" }));
 
-  const descFromTags = deriveTagDescriptors(data);
-  const descFromHeur = (!descFromTags.length && !locGenres.length) ? deriveKeywordDescriptors(data) : [];
+  var descFromTags = deriveTagDescriptors(data);
+  var descFromHeur = (!descFromTags.length && !locGenres.length) ? deriveKeywordDescriptors(data) : [];
 
-  const line2Arr = descFromTags.length
+  var line2Arr = descFromTags.length
     ? descFromTags.slice(0,2)
     : locGenres.length
       ? locGenres.slice(0,2)
       : descFromHeur.slice(0,2);
 
-  const icons = buildIconListForItem(data);
+  var icons = buildIconListForItem(data);
   return { age, line2Arr, icons };
 }
 
 function getMaturityUiCached(data){
-  const sig = _maturitySig(data);
-  const now = Date.now();
-  const rec = _maturityLRU.get(sig);
+  var sig = _maturitySig(data);
+  var now = Date.now();
+  var rec = _maturityLRU.get(sig);
   if (rec && (now - rec.t) < MAT_TTL) return rec.v;
-  const v = _computeMaturityUi(data);
+  var v = _computeMaturityUi(data);
   _maturityLRU.set(sig, { v, t: now });
   if (_maturityLRU.size > MAT_MAX) {
-    const first = _maturityLRU.keys().next().value;
+    var first = _maturityLRU.keys().next().value;
     _maturityLRU.delete(first);
   }
   return v;
@@ -113,56 +113,56 @@ function _badgeDurationFor(ctx){
   return (ctx === "resume") ? AGE_BADGE_RESUME_MS : AGE_BADGE_DEFAULT_MS;
 }
 
-async function fetchItemDetailsCached(id, { signal } = {}) {
+function fetchItemDetailsCached(id, { signal } = {}) {
   if (!id) return null;
-  const rec = _detailsLRU.get(id);
-  const now = Date.now();
+  var rec = _detailsLRU.get(id);
+  var now = Date.now();
   if (rec && now - rec.t < DETAILS_TTL) return rec.v;
-  const v = await fetchItemDetails(id, signal ? { signal } : undefined);
+  var v = fetchItemDetails(id, signal ? { signal } : undefined);
   _detailsLRU.set(id, { v, t: now });
   if (_detailsLRU.size > DETAILS_MAX) {
-    const first = _detailsLRU.keys().next().value;
+    var first = _detailsLRU.keys().next().value;
     _detailsLRU.delete(first);
   }
   return v;
 }
 
-let _tagsMemCache = { stamp: null, savedAt: 0, tags: null };
-let ratingGenreTimeout = null;
-let _badgeShownAt = 0;
-let ratingGenreElement = null;
-let currentMediaData = null;
-let activeVideo = null;
-let currentMediaId = null;
-let removeHandlers = null;
-let removeHandlersToken = null;
-let overlayVisible = false;
-let pauseTimeout = null;
-let lastActivityAt = Date.now();
-let blurAt = null;
-let hiddenAt = null;
-let lastPauseReason = null;
-let lastPauseAt = 0;
-let _cpiLastRawId = null;
-let _cpiChangeAt = 0;
-let _playStartAt = 0;
-let _scanDepth = 8;
-let _recoItemsCache = [];
-let _recoBadgeEl = null;
-let _recoPanelEl = null;
-let _recoListEl = null;
-let _recoToggleEl = null;
-let _recoPanelOpen = false;
-let _overlayIdleTimer = null;
-let _mouseIdleTimer = null;
-let _iconEl = null;
-let _iconTimeout = null;
-let _playEventAt = 0;
-let _sessRawLast = null;
-let _sessChangeAt = 0;
-const SESSION_FETCH_TTL_MS = 500;
-const SESSION_FETCH_EMPTY_TTL_MS = 150;
-let _sessSnapshotCache = {
+var _tagsMemCache = { stamp: null, savedAt: 0, tags: null };
+var ratingGenreTimeout = null;
+var _badgeShownAt = 0;
+var ratingGenreElement = null;
+var currentMediaData = null;
+var activeVideo = null;
+var currentMediaId = null;
+var removeHandlers = null;
+var removeHandlersToken = null;
+var overlayVisible = false;
+var pauseTimeout = null;
+var lastActivityAt = Date.now();
+var blurAt = null;
+var hiddenAt = null;
+var lastPauseReason = null;
+var lastPauseAt = 0;
+var _cpiLastRawId = null;
+var _cpiChangeAt = 0;
+var _playStartAt = 0;
+var _scanDepth = 8;
+var _recoItemsCache = [];
+var _recoBadgeEl = null;
+var _recoPanelEl = null;
+var _recoListEl = null;
+var _recoToggleEl = null;
+var _recoPanelOpen = false;
+var _overlayIdleTimer = null;
+var _mouseIdleTimer = null;
+var _iconEl = null;
+var _iconTimeout = null;
+var _playEventAt = 0;
+var _sessRawLast = null;
+var _sessChangeAt = 0;
+var SESSION_FETCH_TTL_MS = 500;
+var SESSION_FETCH_EMPTY_TTL_MS = 150;
+var _sessSnapshotCache = {
   at: 0,
   value: { itemId: null, isPaused: null, sessionId: null, deviceId: null },
   promise: null,
@@ -179,50 +179,50 @@ function normalizeSessionIdentity(value) {
 }
 
 function addSessionIdentity(set, value) {
-  const normalized = normalizeSessionIdentity(value);
+  var normalized = normalizeSessionIdentity(value);
   if (!normalized) return;
   set.add(normalized);
 }
 
 function buildPauseOverlaySessionIdentity() {
-  const info = getSessionInfo?.() || {};
-  const userIds = new Set();
-  const sessionIds = new Set();
-  const deviceIds = new Set();
-  const deviceNames = new Set();
-  const itemIds = new Set();
-  const clientHints = [];
+  var info = getSessionInfo.() || {};
+  var userIds = new Set();
+  var sessionIds = new Set();
+  var deviceIds = new Set();
+  var deviceNames = new Set();
+  var itemIds = new Set();
+  var clientHints = [];
 
-  addSessionIdentity(userIds, info?.userId);
-  addSessionIdentity(userIds, getUserIdSafe?.());
+  addSessionIdentity(userIds, info.userId);
+  addSessionIdentity(userIds, getUserIdSafe.());
 
-  addSessionIdentity(sessionIds, info?.sessionId);
-  try { addSessionIdentity(sessionIds, window.ApiClient?._sessionId); } catch {}
+  addSessionIdentity(sessionIds, info.sessionId);
+  try { addSessionIdentity(sessionIds, window.ApiClient._sessionId); } catch {}
 
-  addSessionIdentity(deviceIds, info?.deviceId);
+  addSessionIdentity(deviceIds, info.deviceId);
   try {
-    const api = window.ApiClient || null;
-    const apiDeviceId =
-      typeof api?.deviceId === "function"
+    var api = window.ApiClient || null;
+    var apiDeviceId =
+      typeof api.deviceId === "function"
         ? api.deviceId()
-        : (api?.getDeviceId?.() || api?.deviceId || api?._deviceId || null);
+        : (api.getDeviceId.() || api.deviceId || api._deviceId || null);
     addSessionIdentity(deviceIds, apiDeviceId);
   } catch {}
 
-  addSessionIdentity(deviceNames, info?.deviceName);
-  try { addSessionIdentity(deviceNames, window.ApiClient?._deviceName); } catch {}
+  addSessionIdentity(deviceNames, info.deviceName);
+  try { addSessionIdentity(deviceNames, window.ApiClient._deviceName); } catch {}
 
   addSessionIdentity(itemIds, activeVideo ? parsePlayableIdFromVideo(activeVideo) : null);
   addSessionIdentity(itemIds, getItemIdFromDom());
   addSessionIdentity(itemIds, getRecentPlayNowTargetId());
 
   [
-    info?.clientName,
+    info.clientName,
     "Jellyfin Web Client",
   ]
-    .map((value) => String(value || "").trim().toLowerCase())
+    .mapfunction((value) String(value || "").trim().toLowerCase())
     .filter(Boolean)
-    .forEach((value) => clientHints.push(value));
+    .forEach(function((value) clientHints.push(value));
 
   return {
     userIds,
@@ -235,49 +235,49 @@ function buildPauseOverlaySessionIdentity() {
 }
 
 function scorePauseOverlaySessionCandidate(session, identity) {
-  let score = 0;
-  const sessionId = normalizeSessionIdentity(session?.Id);
-  const deviceId = normalizeSessionIdentity(session?.DeviceId);
-  const deviceName = normalizeSessionIdentity(session?.DeviceName);
-  const userId = normalizeSessionIdentity(session?.UserId);
-  const itemId = normalizeSessionIdentity(session?.NowPlayingItem?.Id);
-  const clientName = String(session?.Client || "").trim().toLowerCase();
+  var score = 0;
+  var sessionId = normalizeSessionIdentity(session.Id);
+  var deviceId = normalizeSessionIdentity(session.DeviceId);
+  var deviceName = normalizeSessionIdentity(session.DeviceName);
+  var userId = normalizeSessionIdentity(session.UserId);
+  var itemId = normalizeSessionIdentity(session.NowPlayingItem.Id);
+  var clientName = String(session.Client || "").trim().toLowerCase();
 
   if (sessionId && identity.sessionIds.has(sessionId)) score += 1200;
   if (deviceId && identity.deviceIds.has(deviceId)) score += 1000;
   if (deviceName && identity.deviceNames.has(deviceName)) score += 600;
   if (userId && identity.userIds.has(userId)) score += 220;
   if (itemId && identity.itemIds.has(itemId)) score += 180;
-  if (clientName && identity.clientHints.some((hint) => clientName.includes(hint))) score += 20;
-  if (session?.NowPlayingItem?.Id) score += 8;
+  if function(clientName && identity.clientHints.some((hint) clientName.includes(hint))) score += 20;
+  if (session.NowPlayingItem.Id) score += 8;
 
-  const last = session?.LastActivityDate ? new Date(session.LastActivityDate).getTime() : 0;
+  var last = session.LastActivityDate ? new Date(session.LastActivityDate).getTime() : 0;
   if (last && Date.now() - last < 2 * 60 * 1000) score += 10;
 
   return score;
 }
 
 function selectPauseOverlaySession(sessions) {
-  const identity = buildPauseOverlaySessionIdentity();
-  const all = Array.isArray(sessions) ? sessions : [];
-  const mine = all.filter((session) => {
-    const userId = normalizeSessionIdentity(session?.UserId);
+  var identity = buildPauseOverlaySessionIdentity();
+  var all = Array.isArray(sessions) ? sessions : [];
+  var mine = all.filterfunction((session) {
+    var userId = normalizeSessionIdentity(session.UserId);
     return !!userId && identity.userIds.has(userId);
   });
 
   if (!mine.length) return null;
 
-  const ranked = mine
-    .map((session) => ({
+  var ranked = mine
+    .mapfunction((session) ({
       session,
       score: scorePauseOverlaySessionCandidate(session, identity),
     }))
-    .sort((a, b) => b.score - a.score);
+    .sortfunction((a, b) b.score - a.score);
 
-  const hardMatch = ranked.find(({ session }) => {
-    const sessionId = normalizeSessionIdentity(session?.Id);
-    const deviceId = normalizeSessionIdentity(session?.DeviceId);
-    const deviceName = normalizeSessionIdentity(session?.DeviceName);
+  var hardMatch = ranked.findfunction(({ session }) {
+    var sessionId = normalizeSessionIdentity(session.Id);
+    var deviceId = normalizeSessionIdentity(session.DeviceId);
+    var deviceName = normalizeSessionIdentity(session.DeviceName);
     return (
       (sessionId && identity.sessionIds.has(sessionId)) ||
       (deviceId && identity.deviceIds.has(deviceId)) ||
@@ -286,43 +286,43 @@ function selectPauseOverlaySession(sessions) {
   });
   if (hardMatch) return hardMatch.session;
 
-  const hintedItemMatch = ranked.find(({ session }) => {
-    const itemId = normalizeSessionIdentity(session?.NowPlayingItem?.Id);
+  var hintedItemMatch = ranked.findfunction(({ session }) {
+    var itemId = normalizeSessionIdentity(session.NowPlayingItem.Id);
     return !!itemId && identity.itemIds.has(itemId);
   });
   if (hintedItemMatch) return hintedItemMatch.session;
 
-  const nowPlayingMine = mine.filter((session) => session?.NowPlayingItem?.Id);
+  var nowPlayingMine = mine.filterfunction((session) session.NowPlayingItem.Id);
   if (nowPlayingMine.length === 1) return nowPlayingMine[0];
   if (mine.length === 1) return mine[0];
 
   return null;
 }
 
-async function fetchNowPlayingFromSessions({ force = false } = {}){
+function fetchNowPlayingFromSessions({ force = false } = {}){
   if (!force && _sessSnapshotCache.promise) {
     return _sessSnapshotCache.promise;
   }
-  const cacheTtl = _sessSnapshotCache.value?.itemId
+  var cacheTtl = _sessSnapshotCache.value.itemId
     ? SESSION_FETCH_TTL_MS
     : SESSION_FETCH_EMPTY_TTL_MS;
   if (!force && (Date.now() - _sessSnapshotCache.at) < cacheTtl) {
     return _sessSnapshotCache.value;
   }
 
-  const request = (async () => {
+  var request = function(() {
     try {
-      const uid = getUserIdSafe();
+      var uid = getUserIdSafe();
       if (!uid) return _cacheSessionSnapshot({ itemId:null,isPaused:null, sessionId:null, deviceId:null });
 
-      const sessions = await makeApiRequest(withServer(`/Sessions?ActiveWithinSeconds=30`));
-      const list = Array.isArray(sessions)?sessions:[];
-      const active = selectPauseOverlaySession(list);
+      var sessions = makeApiRequest(withServer("/Sessions?ActiveWithinSeconds=30"));
+      var list = Array.isArray(sessions)?sessions:[];
+      var active = selectPauseOverlaySession(list);
       if (!active) return _cacheSessionSnapshot({ itemId:null,isPaused:null, sessionId:null, deviceId:null });
 
-      const r = {
-        itemId: active.NowPlayingItem?.Id || null,
-        isPaused: active.PlayState?.IsPaused ?? null,
+      var r = {
+        itemId: active.NowPlayingItem.Id || null,
+        isPaused: active.PlayState.IsPaused || null,
         sessionId: active.Id || null,
         deviceId: active.DeviceId || null,
       };
@@ -340,7 +340,7 @@ async function fetchNowPlayingFromSessions({ force = false } = {}){
 }
 
 function getItemIdFromDom() {
-  const selectors = [
+  var selectors = [
     '.videoOsdBottom-hidden > div:nth-child(1) > div:nth-child(4) > button:nth-child(3)',
     'div.page:nth-child(3) > div:nth-child(3) > div:nth-child(1) > div:nth-child(4) > button:nth-child(3)',
     '.btnUserRating',
@@ -348,9 +348,9 @@ function getItemIdFromDom() {
     '.btnUserRating[data-id]',
   ];
 
-  for (const sel of selectors) {
-    const el = document.querySelector(sel);
-    const id = el?.getAttribute?.('data-id');
+  for (var sel of selectors) {
+    var el = document.querySelector(sel);
+    var id = el.getAttribute.('data-id');
     if (id) return id;
   }
   return null;
@@ -358,10 +358,10 @@ function getItemIdFromDom() {
 
 function getRecentPlayNowTargetId(maxAgeMs = 30_000) {
   try {
-    const dbg = window.__jmsLastPlayNowTargetDebug || null;
-    const id = String(dbg?.itemId || "").trim();
-    const stage = String(dbg?.stage || "").trim().toLowerCase();
-    const at = Number(dbg?.at || 0);
+    var dbg = window.__jmsLastPlayNowTargetDebug || null;
+    var id = String(dbg.itemId || "").trim();
+    var stage = String(dbg.stage || "").trim().toLowerCase();
+    var at = Number(dbg.at || 0);
     if (!id || stage === "error" || !Number.isFinite(at) || at <= 0) return null;
     if ((Date.now() - at) > maxAgeMs) return null;
     return id;
@@ -371,21 +371,21 @@ function getRecentPlayNowTargetId(maxAgeMs = 30_000) {
 }
 
 function getStableItemIdDomFirst() {
-  const domId = getItemIdFromDom();
+  var domId = getItemIdFromDom();
   if (domId) return domId;
 
   if (activeVideo) {
-    const srcId = parsePlayableIdFromVideo(activeVideo);
+    var srcId = parsePlayableIdFromVideo(activeVideo);
     if (srcId) return srcId;
   }
 
   return null;
 }
 
-async function getStableItemIdViaSessions(minStableMs=350){
-  const r = await fetchNowPlayingFromSessions();
-  const now = Date.now();
-  const raw = r.itemId;
+function getStableItemIdViaSessions(minStableMs=350){
+  var r = fetchNowPlayingFromSessions();
+  var now = Date.now();
+  var raw = r.itemId;
 
   if (raw !== _sessRawLast){
     _sessRawLast = raw;
@@ -398,11 +398,11 @@ async function getStableItemIdViaSessions(minStableMs=350){
 }
 
 function getMinVideoDurationSec() {
-   const po = config?.pauseOverlay || {};
+   var po = config.pauseOverlay || {};
    if (po.minVideoDurationSec != null) return Math.max(0, Number(po.minVideoDurationSec));
    if (po.minVideoMinutes != null)    return Math.max(0, Number(po.minVideoMinutes)) * 60;
-   const raw = localStorage.getItem('pauseOverlayMinVideoMinutes');
-   const mins = Number(raw);
+   var raw = localStorage.getItem('pauseOverlayMinVideoMinutes');
+   var mins = Number(raw);
    return (Number.isFinite(mins) && mins > 0) ? mins * 60 : 300;
  }
 
@@ -410,14 +410,14 @@ function relaxScanDepth() { _scanDepth = 4; }
 
 function parsePlayableIdFromVideo(videoEl) {
   try {
-    const rawSrc = String(videoEl?.currentSrc || videoEl?.src || "").trim();
+    var rawSrc = String(videoEl.currentSrc || videoEl.src || "").trim();
     if (!rawSrc) return null;
 
-    const u = new URL(rawSrc, location.href);
-    const itemId = u.searchParams.get("ItemId") || u.searchParams.get("itemId");
+    var u = new URL(rawSrc, location.href);
+    var itemId = u.searchParams.get("ItemId") || u.searchParams.get("itemId");
     if (itemId) return itemId;
 
-    const pathId = u.pathname.match(/\/(?:Videos|Audio)\/([^/?#]+)/i)?.[1];
+    var pathId = u.pathname.match(/\/(?:Videos|Audio)\/([^/?#]+)/i).[1];
     if (pathId) return decodeURIComponent(pathId);
 
     return null;
@@ -428,10 +428,10 @@ function parsePlayableIdFromVideo(videoEl) {
 
 function parseMediaSourceIdFromVideo(videoEl) {
   try {
-    const rawSrc = String(videoEl?.currentSrc || videoEl?.src || "").trim();
+    var rawSrc = String(videoEl.currentSrc || videoEl.src || "").trim();
     if (!rawSrc) return null;
 
-    const u = new URL(rawSrc, location.href);
+    var u = new URL(rawSrc, location.href);
     return (
       u.searchParams.get("MediaSourceId") ||
       u.searchParams.get("mediaSourceId") ||
@@ -453,7 +453,7 @@ if (!window.__jmsPauseOverlay) {
 }
 
 function _mkLifecycle() {
-  const lc = {
+  var lc = {
     abort: new AbortController(),
     timers: new Set(),
     rafId: null,
@@ -462,56 +462,56 @@ function _mkLifecycle() {
     cleanTokens: new Map(),
     lastToken: 0,
   };
-  const { signal } = lc.abort;
-  lc.addTimeout = (fn, ms) => {
-    const id = setTimeout(fn, ms);
+  var { signal } = lc.abort;
+  lc.addTimeout = function(fn, ms) {
+    var id = setTimeout(fn, ms);
     lc.timers.add({ id, t: "t" });
     return id;
   };
-  lc.addInterval = (fn, ms) => {
-    const id = setInterval(fn, ms);
+  lc.addInterval = function(fn, ms) {
+    var id = setInterval(fn, ms);
     lc.timers.add({ id, t: "i" });
     return id;
   };
-  lc.addRaf = (fn) => {
+  lc.addRaf = function(fn) {
     if (lc.rafId != null) cancelAnimationFrame(lc.rafId);
     lc.rafId = requestAnimationFrame(fn);
     return lc.rafId;
   };
-  lc.trackMo = (mo) => {
+  lc.trackMo = function(mo) {
     lc.observers.add(mo);
     return mo;
   };
-  lc.trackClean = (fn) => {
+  lc.trackClean = function(fn) {
     if (typeof fn !== "function") return null;
-    const token = ++lc.lastToken;
+    var token = ++lc.lastToken;
     lc.cleans.add(fn);
     lc.cleanTokens.set(token, fn);
     return token;
   };
-  lc.untrackClean = (token) => {
-    const fn = lc.cleanTokens.get(token);
+  lc.untrackClean = function(token) {
+    var fn = lc.cleanTokens.get(token);
     if (!fn) return;
     lc.cleans.delete(fn);
     lc.cleanTokens.delete(token);
   };
-  lc.cleanupAll = () => {
+  lc.cleanupAll = function() {
     try {
       lc.abort.abort();
     } catch {}
-    for (const x of lc.timers) (x.t === "i" ? clearInterval : clearTimeout)(x.id);
+    for (var x of lc.timers) (x.t === "i" ? clearInterval : clearTimeout)(x.id);
     lc.timers.clear();
     if (lc.rafId != null) {
       cancelAnimationFrame(lc.rafId);
       lc.rafId = null;
     }
-    for (const mo of lc.observers) {
+    for (var mo of lc.observers) {
       try {
         mo.disconnect();
       } catch {}
     }
     lc.observers.clear();
-    for (const fn of lc.cleans) {
+    for (var fn of lc.cleans) {
       try {
         fn();
       } catch {}
@@ -537,12 +537,12 @@ function wipeBadgeStateAndDom() {
 }
 
 function hideRatingGenre(reason) {
-  if (DEBUG_PO) console.log("[badge] hideRatingGenre", reason, new Error().stack?.split("\n")[2]);
+  if (DEBUG_PO) console.log("[badge] hideRatingGenre", reason, new Error().stack.split("\n")[2]);
   if (!ratingGenreElement) return;
   ratingGenreElement.classList.remove("visible");
   if (reason === "auto" || reason === "finished") {
     try { if (ratingGenreTimeout) clearTimeout(ratingGenreTimeout); } catch {}
-    ratingGenreTimeout = setTimeout(() => {
+    ratingGenreTimeout = setTimeoutfunction(() {
       wipeBadgeStateAndDom();
     }, 360);
   }
@@ -551,7 +551,7 @@ function hideRatingGenre(reason) {
 
 function srcLooksLikeThemeVideo(videoEl) {
   try {
-    const s = String(videoEl?.currentSrc || videoEl?.src || "");
+    var s = String(videoEl.currentSrc || videoEl.src || "");
     if (!s) return false;
     return /(?:^|[\/_\-\?&=])theme(?:[\/_\-\.=&]|$)/i.test(s);
   } catch {
@@ -560,7 +560,7 @@ function srcLooksLikeThemeVideo(videoEl) {
 }
 function isThemeItemName(item) {
   if (!item) return false;
-  const name = String(item.Name || item.OriginalTitle || "").toLowerCase();
+  var name = String(item.Name || item.OriginalTitle || "").toLowerCase();
   return name.includes("theme");
 }
 function shouldIgnoreTheme({ video = null, item = null } = {}) {
@@ -576,40 +576,40 @@ function getApiClientSafe() {
 }
 
 function getApiBase() {
-  const api = getApiClientSafe();
+  var api = getApiClientSafe();
   return withServer('');
 }
 
 function getUserIdSafe() {
-  const api = getApiClientSafe();
+  var api = getApiClientSafe();
   return (api && typeof api.getCurrentUserId === 'function' && api.getCurrentUserId())
-    || getConfig()?.userId
+    || getConfig().userId
     || null;
 }
 
-async function getStableItemIdFromSessionsStable(minStableMs = 350){
-  return await getStableItemIdViaSessions(minStableMs);
+function getStableItemIdFromSessionsStable(minStableMs = 350){
+  return getStableItemIdViaSessions(minStableMs);
 }
 
-async function resolvePlaybackItemId({ minStableMs = 350 } = {}) {
-  const domId = getItemIdFromDom();
-  const videoId = activeVideo ? parsePlayableIdFromVideo(activeVideo) : null;
+function resolvePlaybackItemId({ minStableMs = 350 } = {}) {
+  var domId = getItemIdFromDom();
+  var videoId = activeVideo ? parsePlayableIdFromVideo(activeVideo) : null;
   if (videoId) return videoId;
 
-  const playNowId = getRecentPlayNowTargetId();
-  let stableSessionId = null;
-  let rawSessionId = null;
+  var playNowId = getRecentPlayNowTargetId();
+  var stableSessionId = null;
+  var rawSessionId = null;
 
   try {
-    stableSessionId = await getStableItemIdFromSessionsStable(minStableMs);
+    stableSessionId = getStableItemIdFromSessionsStable(minStableMs);
   } catch {}
 
   try {
-    const snap = await fetchNowPlayingFromSessions();
-    rawSessionId = snap?.itemId || null;
+    var snap = fetchNowPlayingFromSessions();
+    rawSessionId = snap.itemId || null;
   } catch {}
 
-  const effectiveSessionId = stableSessionId || rawSessionId || null;
+  var effectiveSessionId = stableSessionId || rawSessionId || null;
 
   if (playNowId && playNowId !== domId) {
     if (effectiveSessionId && effectiveSessionId !== domId && effectiveSessionId !== playNowId) {
@@ -624,24 +624,24 @@ async function resolvePlaybackItemId({ minStableMs = 350 } = {}) {
   if (stableSessionId) return stableSessionId;
   if (rawSessionId) return rawSessionId;
 
-  const domFirstId = getStableItemIdDomFirst();
+  var domFirstId = getStableItemIdDomFirst();
   if (domFirstId) return domFirstId;
 
   if (activeVideo) return parseMediaSourceIdFromVideo(activeVideo);
   return null;
 }
 
-async function fetchFiltersFor(type) {
-  const qs = new URLSearchParams({
+function fetchFiltersFor(type) {
+  var qs = new URLSearchParams({
     IncludeItemTypes: type,
     Recursive: "true",
   });
   try {
     if (typeof isAuthReadyStrict === "function" && !isAuthReadyStrict()) return {};
-    const res = await makeApiRequest(withServer(`/Items/Filters?${qs.toString()}`));
+    var res = makeApiRequest(withServer("/Items/Filters?" + (qs.toString())));
     return res || {};
   } catch (e) {
-    if (e?.status === 401 || e?.status === 403 || e?.status === 0 || e?.isAbort) return {};
+    if (e.status === 401 || e.status === 403 || e.status === 0 || e.isAbort) return {};
     throw e;
   }
 }
@@ -649,9 +649,9 @@ function _computeStamp() {
   return [withServer(''), getUserIdSafe() || ''].join('|');
 }
 
-async function loadCatalogTagsWithCache() {
-  const stamp = _computeStamp();
-  const now = Date.now();
+function loadCatalogTagsWithCache() {
+  var stamp = _computeStamp();
+  var now = Date.now();
   if (
     _tagsMemCache.tags &&
     _tagsMemCache.stamp === stamp &&
@@ -662,15 +662,15 @@ async function loadCatalogTagsWithCache() {
   if (typeof isAuthReadyStrict === "function" && !isAuthReadyStrict()) {
     return new Set();
   }
-  const [movie, series] = await Promise.all([
+  var [movie, series] = Promise.all([
     fetchFiltersFor("Movie"),
     fetchFiltersFor("Series"),
   ]);
-  const allTagsArr = [
-    ...(movie?.Tags || []),
-    ...(series?.Tags || []),
+  var allTagsArr = [
+    ...(movie.Tags || []),
+    ...(series.Tags || []),
   ];
-  const allTags = new Set(allTagsArr);
+  var allTags = new Set(allTagsArr);
   if (allTags.size > 0) {
     _tagsMemCache = { stamp, savedAt: now, tags: allTags };
   }
@@ -678,8 +678,8 @@ async function loadCatalogTagsWithCache() {
 }
 
 function normalizeAgeChip(rating) {
-  if (!rating) return labels?.noRating || "Sem classificação";
-  const r = String(rating).toUpperCase().trim().replace(/\s+/g, "").replace(/-/g, "");
+  if (!rating) return labels.noRating || "Sem classificação";
+  var r = String(rating).toUpperCase().trim().replace(/\s+/g, "").replace(/-/g, "");
   if (/(18\+|R18|ADULT|NC17|NC\-?17|XRATED|XXX|ADULTSONLY|AO|TR18|DE18|FSK18)/.test(r)) return "18+";
   if (/(17\+|^R$|TVMA|TR17)/.test(r)) return "17+";
   if (/(16\+|R16|^M$|MATURE|TR16|DE16|FSK16)/.test(r)) return "16+";
@@ -692,23 +692,23 @@ function normalizeAgeChip(rating) {
   if (/(7\+|TVY7|E10\+?|TR7|DE6|FSK6)/.test(r)) return "7+";
   if (/(G|^PG$|TVG|TVPG|E$|EVERYONE|U$|UC|UNIVERSAL|TR6|DE0|FSK0)/.test(r)) return "7+";
   if (/(ALLYEARS|ALLAGES|ALL|TVY|KIDS|^Y$|0\+|TR0)/.test(r)) return "0+";
-  const m = r.match(/^(\d{1,2})\+?$/);
-  if (m) return `${m[1]}+`;
+  var m = r.match(/^(\d{1,2})\+?$/);
+  if (m) return (m[1]) + "+";
   return r;
 }
 
 function normalizeAgeRating(raw) {
-  if (!raw) return labels?.noRating || "Sem classificação";
-  const s = String(raw).toUpperCase().replace(/\s+/g, "").replace(/-/g, "");
+  if (!raw) return labels.noRating || "Sem classificação";
+  var s = String(raw).toUpperCase().replace(/\s+/g, "").replace(/-/g, "");
   if (/^TVMA$/.test(s)) return "18+";
   if (/^TV14$/.test(s)) return "14+";
   if (/^TVPG$/.test(s)) return "7+";
-  if (/^TVG$/.test(s)) return labels?.livre;
+  if (/^TVG$/.test(s)) return labels.livre;
   if (s === "NC17") return "18+";
   if (s === "R") return "18+";
   if (s === "PG13") return "13+";
   if (s === "PG") return "7+";
-  if (s === "G") return labels?.livre;
+  if (s === "G") return labels.livre;
   if (s === "18") return "18+";
   if (s === "15") return "15+";
   if (s === "12" || s === "12A") return "12+";
@@ -716,27 +716,27 @@ function normalizeAgeRating(raw) {
   if (s === "FSK16") return "16+";
   if (s === "FSK12") return "12+";
   if (s === "FSK6") return "6+";
-  if (s === "FSK0") return labels?.livre;
-  const m = s.match(/^(\d{1,2})\+?$/);
-  if (m) return `${m[1]}+`;
+  if (s === "FSK0") return labels.livre;
+  var m = s.match(/^(\d{1,2})\+?$/);
+  if (m) return (m[1]) + "+";
   return s;
 }
 
 function localizedMaturityHeader() {
-  const lang = String(currentLang || "").toLowerCase();
+  var lang = String(currentLang || "").toLowerCase();
   if (labels.maturityHeader) return labels.maturityHeader;
   if (lang.startsWith("pt")  || lang.startsWith("por")) return "CLASSIFICAÇÃO INDICATIVA:";
   return "CLASSIFICAÇÃO:";
 }
 function localizedGenres(genres = []) {
   if (!Array.isArray(genres) || !genres.length) return [];
-  const dict = labels?.generos || {};
-  const lc = Object.fromEntries(Object.entries(dict).map(([k, v]) => [k.toLowerCase(), v]));
-  return genres.map((g) => dict[g] || lc[String(g).toLowerCase()] || g);
+  var dict = labels.generos || {};
+  var lc = Object.fromEntries(Object.entries(dict).mapfunction(([k, v]) [k.toLowerCase(), v]));
+  return genres.mapfunction((g) dict[g] || lc[String(g).toLowerCase()] || g);
 }
 function descriptorLabel(code) {
-  const dict = labels?.descriptors || {};
-  const fallback = {
+  var dict = labels.descriptors || {};
+  var fallback = {
     violence: "violence",
     sex: "sexual content",
     nudity: "nudity",
@@ -753,14 +753,14 @@ function descriptorLabel(code) {
 function _escapeRe(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
-const _WORD_RX_CACHE = new Map();
+var _WORD_RX_CACHE = new Map();
 function _getWordRxCached(words) {
   if (!Array.isArray(words) || !words.length) return null;
-  const key = words.join('|');
-  let rx = _WORD_RX_CACHE.get(key);
+  var key = words.join('|');
+  var rx = _WORD_RX_CACHE.get(key);
   if (!rx) {
-    const pat = words.map((w) => _escapeRe(String(w.trim()))).join("|");
-    rx = new RegExp(`(?:^|[^\\p{L}\\p{N}_])(?:${pat})(?=$|[^\\p{L}\\p{N}_])`, "iu");
+    var pat = words.mapfunction((w) _escapeRe(String(w.trim()))).join("|");
+    rx = new RegExp("(?:^|[^\\\\p{L}\\\\p{N}_])(?:" + (pat) + ")(?=$|[^\\\\p{L}\\\\p{N}_])", "iu");
     if (_WORD_RX_CACHE.size > 64) _WORD_RX_CACHE.clear();
     _WORD_RX_CACHE.set(key, rx);
   }
@@ -772,14 +772,14 @@ function _buildWordRx(words) {
 }
 function tokenIncludes(text, needles) {
   if (!text) return false;
-  const rx = _getWordRxCached(needles);
+  var rx = _getWordRxCached(needles);
   return !!(rx && rx.test(String(text)));
 }
 function countMatches(text, words) {
-  if (!text || !words?.length) return 0;
-  const rx = _buildWordRx(words);
+  if (!text || !words.length) return 0;
+  var rx = _buildWordRx(words);
   if (!rx) return 0;
-  let s = String(text),
+  var s = String(text),
     c = 0,
     m;
   while ((m = rx.exec(s))) {
@@ -789,7 +789,7 @@ function countMatches(text, words) {
   return c;
 }
 
-const BASE_BUCKETS = [
+var BASE_BUCKETS = [
   {
     key: "superhero",
     needles: [
@@ -1510,68 +1510,68 @@ const BASE_BUCKETS = [
   },
 ];
 
-const BUCKETS = (() => {
-  const mergeNeedles = (base, extra) => {
-    const set = new Set();
-    for (const n of base || []) {
-      const v = String(n || "").trim().toLowerCase();
+var BUCKETS = function(() {
+  var mergeNeedles = function(base, extra) {
+    var set = new Set();
+    for (var n of base || []) {
+      var v = String(n || "").trim().toLowerCase();
       if (v) set.add(v);
     }
-    for (const n of extra || []) {
-      const v = String(n || "").trim().toLowerCase();
+    for (var n of extra || []) {
+      var v = String(n || "").trim().toLowerCase();
       if (v) set.add(v);
     }
     return [...set];
   };
 
-  const merged = BASE_BUCKETS.map((b) => ({
+  var merged = BASE_BUCKETS.mapfunction((b) ({
     ...b,
-    needles: mergeNeedles(b.needles, GENERATED_BUCKET_APPENDS?.[b.key] || []),
+    needles: mergeNeedles(b.needles, GENERATED_BUCKET_APPENDS.[b.key] || []),
   }));
 
-  for (const extra of GENERATED_NEW_BUCKETS || []) {
-    const key = String(extra?.key || "").trim();
+  for (var extra of GENERATED_NEW_BUCKETS || []) {
+    var key = String(extra.key || "").trim();
     if (!key) continue;
     merged.push({
       key,
-      needles: mergeNeedles([], extra?.needles || []),
+      needles: mergeNeedles([], extra.needles || []),
     });
   }
   return merged;
 })();
 
-const _NEEDLE_INDEX = (() => {
-  const idx = new Map();
-  const add = (k, bucket) => {
+var _NEEDLE_INDEX = function(() {
+  var idx = new Map();
+  var add = function(k, bucket) {
     if (!k) return;
-    let set = idx.get(k);
+    var set = idx.get(k);
     if (!set) idx.set(k, (set = new Set()));
     set.add(bucket);
     };
 
-   for (const b of BUCKETS) {
-     for (const raw of b.needles) {
-      const full = String(raw).toLowerCase().trim();
+   for (var b of BUCKETS) {
+     for (var raw of b.needles) {
+      var full = String(raw).toLowerCase().trim();
       if (!full) continue;
       add(full, b.key);
-      const toks = full.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
-      for (const tk of toks) add(tk, b.key);
+      var toks = full.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+      for (var tk of toks) add(tk, b.key);
      }
    }
    return idx;
  })();
 
-const _BUCKET_META = BUCKETS.map((b) => {
-  const fullNeedles = new Set();
-  const tokenNeedles = new Set();
-  const singleNeedles = new Set();
-  const phraseNeedles = [];
-  for (const raw of b.needles || []) {
-    const norm = String(raw || "").toLowerCase().trim();
+var _BUCKET_META = BUCKETS.mapfunction((b) {
+  var fullNeedles = new Set();
+  var tokenNeedles = new Set();
+  var singleNeedles = new Set();
+  var phraseNeedles = [];
+  for (var raw of b.needles || []) {
+    var norm = String(raw || "").toLowerCase().trim();
     if (!norm) continue;
     fullNeedles.add(norm);
-    const toks = norm.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
-    for (const tk of toks) tokenNeedles.add(tk);
+    var toks = norm.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+    for (var tk of toks) tokenNeedles.add(tk);
     if (toks.length === 1) singleNeedles.add(toks[0]);
     if (toks.length > 1 && norm.length >= 5) phraseNeedles.push(norm);
   }
@@ -1583,7 +1583,7 @@ const _BUCKET_META = BUCKETS.map((b) => {
     phraseNeedles,
   };
 });
-const _BUCKET_META_BY_KEY = new Map(_BUCKET_META.map((m) => [m.key, m]));
+var _BUCKET_META_BY_KEY = new Mapfunction(_BUCKET_META.map((m) [m.key, m]));
 
 function _tokenizeTag(s) {
   return String(s || "")
@@ -1593,40 +1593,40 @@ function _tokenizeTag(s) {
 }
 
 function _bucketScoresForTag(tag) {
-  const norm = _normTag(tag);
+  var norm = _normTag(tag);
   if (!norm) return new Map();
-  const tokens = _tokenizeTag(norm);
+  var tokens = _tokenizeTag(norm);
   if (!tokens.length) return new Map();
 
-  const scored = new Map();
-  const candidates = new Set();
-  const addScore = (k, v) => {
+  var scored = new Map();
+  var candidates = new Set();
+  var addScore = function(k, v) {
     if (!k || !Number.isFinite(v) || v <= 0) return;
     scored.set(k, (scored.get(k) || 0) + v);
     candidates.add(k);
   };
 
-  const direct = _NEEDLE_INDEX.get(norm);
-  if (direct) for (const k of direct) addScore(k, 2.8);
+  var direct = _NEEDLE_INDEX.get(norm);
+  if (direct) for (var k of direct) addScore(k, 2.8);
 
-  for (const tk of tokens) {
-    const set = _NEEDLE_INDEX.get(tk);
+  for (var tk of tokens) {
+    var set = _NEEDLE_INDEX.get(tk);
     if (!set) continue;
-    for (const k of set) {
+    for (var k of set) {
       candidates.add(k);
-      const meta = _BUCKET_META_BY_KEY.get(k);
-      if (meta?.singleNeedles?.has(tk)) addScore(k, 0.95);
+      var meta = _BUCKET_META_BY_KEY.get(k);
+      if (meta.singleNeedles.has(tk)) addScore(k, 0.95);
     }
   }
 
-  for (const key of candidates) {
-    const meta = _BUCKET_META_BY_KEY.get(key);
+  for (var key of candidates) {
+    var meta = _BUCKET_META_BY_KEY.get(key);
     if (!meta) continue;
-    let s = scored.get(meta.key) || 0;
+    var s = scored.get(meta.key) || 0;
 
-    let singleHits = 0;
-    let phraseHits = 0;
-    for (const tk of tokens) {
+    var singleHits = 0;
+    var phraseHits = 0;
+    for (var tk of tokens) {
       if (meta.singleNeedles.has(tk)) {
         singleHits++;
       } else if (meta.tokenNeedles.has(tk)) {
@@ -1634,15 +1634,15 @@ function _bucketScoresForTag(tag) {
       }
     }
     if (singleHits > 0) {
-      const density = singleHits / Math.max(1, tokens.length);
+      var density = singleHits / Math.max(1, tokens.length);
       s += singleHits * 0.55 + density * 0.9;
     } else if (phraseHits >= 2) {
-      const density = phraseHits / Math.max(1, tokens.length);
+      var density = phraseHits / Math.max(1, tokens.length);
       s += phraseHits * 0.55 + density * 0.75;
     }
 
     if (!meta.fullNeedles.has(norm) && norm.length >= 6) {
-      for (const phrase of meta.phraseNeedles) {
+      for (var phrase of meta.phraseNeedles) {
         if (norm.includes(phrase) || phrase.includes(norm)) {
           s += 1.2;
           break;
@@ -1650,24 +1650,24 @@ function _bucketScoresForTag(tag) {
       }
     }
 
-    const neg = NEGATIVE_WORDS[meta.key] || [];
+    var neg = NEGATIVE_WORDS[meta.key] || [];
     if (neg.length) s -= 0.8 * countMatches(norm, neg);
 
     if (s > 0) scored.set(meta.key, s);
   }
 
-  const threshold = tokens.length <= 1 ? 2.45 : 1.6;
-  const filtered = [...scored.entries()]
-    .filter(([, s]) => s >= threshold)
-    .sort((a, b) => {
+  var threshold = tokens.length <= 1 ? 2.45 : 1.6;
+  var filtered = [...scored.entries()]
+    .filterfunction(([, s]) s >= threshold)
+    .sortfunction((a, b) {
       if (b[1] !== a[1]) return b[1] - a[1];
       return _bucketPriorityRank(a[0]) - _bucketPriorityRank(b[0]);
     });
 
   if (!filtered.length) return new Map();
-  const top = filtered[0][1];
-  const out = new Map();
-  for (const [k, s] of filtered) {
+  var top = filtered[0][1];
+  var out = new Map();
+  for (var [k, s] of filtered) {
     if (s >= Math.max(threshold, top * 0.62)) out.set(k, s);
   }
   return out;
@@ -1677,7 +1677,7 @@ function _bucketsForTag(tag) {
   return new Set(_bucketScoresForTag(tag).keys());
 }
 
-const NEGATIVE_WORDS = {
+var NEGATIVE_WORDS = {
   fairytale: ['war','battle','soldier','army','frontline','sniper','bomb','grenade','blood','gore','massacre'],
   romance_love: ['battlefield','massacre','genocide'],
   animation_kids: ['explicit','gore','slasher','torture'],
@@ -1685,7 +1685,7 @@ const NEGATIVE_WORDS = {
   documentary_biopic: ['space battle','wizard','dragon'],
 };
 
-const BUCKET_PRIORITY = [
+var BUCKET_PRIORITY = [
   'war','crime','violence','horror','thriller_suspense','mystery_detective',
   'sci_fi_tech','fantasy_magic','supernatural',
   'historical','political','survival_disaster',
@@ -1696,27 +1696,27 @@ const BUCKET_PRIORITY = [
 ];
 
 function _bucketPriorityRank(code) {
-  const idx = BUCKET_PRIORITY.indexOf(code);
+  var idx = BUCKET_PRIORITY.indexOf(code);
   return idx === -1 ? 999 : idx;
 }
 
 function buildAutoDescriptorTagMap(catalogTags) {
-   const map = {};
-   for (const b of BUCKETS) map[b.key] = [];
-   for (const t of catalogTags) {
-     const scored = _bucketScoresForTag(t);
+   var map = {};
+   for (var b of BUCKETS) map[b.key] = [];
+   for (var t of catalogTags) {
+     var scored = _bucketScoresForTag(t);
      if (!scored.size) continue;
-     for (const [k] of scored) map[k].push(t);
+     for (var [k] of scored) map[k].push(t);
    }
    return map;
  }
 function getDescriptorTagMap() {
-  if (labels?.descriptorTagMap && typeof labels.descriptorTagMap === "object") {
+  if (labels.descriptorTagMap && typeof labels.descriptorTagMap === "object") {
     return labels.descriptorTagMap;
   }
 
-  const map = {};
-  for (const b of BUCKETS) {
+  var map = {};
+  for (var b of BUCKETS) {
     map[b.key] = Array.isArray(b.needles) ? b.needles.slice() : [];
   }
   return map;
@@ -1731,38 +1731,38 @@ function _normTag(s) {
 }
 
 function deriveTagDescriptors(item = {}) {
-  const raw = (item.Tags || item.Keywords || []).filter(Boolean);
+  var raw = (item.Tags || item.Keywords || []).filter(Boolean);
   if (!raw.length) return [];
-  const tags = raw.map(_normTag);
-  const map = getDescriptorTagMap();
-  const validCodes = new Set(Object.keys(map));
-  const scoreMap = new Map([...validCodes].map((k) => [k, 0]));
+  var tags = raw.map(_normTag);
+  var map = getDescriptorTagMap();
+  var validCodes = new Set(Object.keys(map));
+  var scoreMap = new Mapfunction([...validCodes].map((k) [k, 0]));
 
-  for (const tg of tags) {
-    const scored = _bucketScoresForTag(tg);
-    for (const [code, s] of scored) {
+  for (var tg of tags) {
+    var scored = _bucketScoresForTag(tg);
+    for (var [code, s] of scored) {
       if (!validCodes.has(code)) continue;
       scoreMap.set(code, (scoreMap.get(code) || 0) + s);
     }
-    for (const code of validCodes) {
-      const neg = NEGATIVE_WORDS[code] || [];
+    for (var code of validCodes) {
+      var neg = NEGATIVE_WORDS[code] || [];
       if (!neg.length) continue;
       scoreMap.set(code, (scoreMap.get(code) || 0) - (0.65 * countMatches(tg, neg)));
     }
   }
 
-  const scores = [...scoreMap.entries()]
-    .filter(([, s]) => s > 1.2)
-    .map(([code, s]) => ({ code, s }));
+  var scores = [...scoreMap.entries()]
+    .filterfunction(([, s]) s > 1.2)
+    .mapfunction(([code, s]) ({ code, s }));
   if (!scores.length) return [];
-  scores.sort((a, b) => {
+  scores.sortfunction((a, b) {
     if (b.s !== a.s) return b.s - a.s;
     return _bucketPriorityRank(a.code) - _bucketPriorityRank(b.code);
   });
-  return scores.slice(0, 2).map((x) => descriptorLabel(x.code));
+  return scores.slice(0, 2).mapfunction((x) descriptorLabel(x.code));
 }
 function getDescriptorKeywordMap() {
-  const k = labels?.descriptorKeywords;
+  var k = labels.descriptorKeywords;
   if (k && typeof k === "object") return k;
   return {
     violence: ["violence", "violent", "fight", "combat", "assault", "brutal", "blood", "briga", "violência", "guerra", "arma", "luta", "gewalt", "kampf", "brutal"],
@@ -1778,37 +1778,37 @@ function getDescriptorKeywordMap() {
   };
 }
 function deriveKeywordDescriptors(item = {}) {
-  const overview = item.Overview || "";
-  const taglines = (item.Taglines || []).join(" ") || "";
-  const keysTags = (item.Keywords || item.Tags || []).join(" ") || "";
-  const studios = (item.Studios || []).map((s) => s?.Name || s).join(" ");
-  const WEIGHTS = { overview: 1.0, taglines: 0.6, keystags: 1.0, studios: 0.3 };
-  const dict = getDescriptorKeywordMap();
+  var overview = item.Overview || "";
+  var taglines = (item.Taglines || []).join(" ") || "";
+  var keysTags = (item.Keywords || item.Tags || []).join(" ") || "";
+  var studios = (item.Studios || []).mapfunction((s) s.Name || s).join(" ");
+  var WEIGHTS = { overview: 1.0, taglines: 0.6, keystags: 1.0, studios: 0.3 };
+  var dict = getDescriptorKeywordMap();
 
-  const scores = [];
-  for (const [code, words] of Object.entries(dict)) {
-    let s = 0;
+  var scores = [];
+  for (var [code, words] of Object.entries(dict)) {
+    var s = 0;
     s += WEIGHTS.overview * countMatches(overview, words);
     s += WEIGHTS.taglines * countMatches(taglines, words);
     s += WEIGHTS.keystags * countMatches(keysTags, words);
     s += WEIGHTS.studios * countMatches(studios, words);
-    const neg = NEGATIVE_WORDS[code] || [];
+    var neg = NEGATIVE_WORDS[code] || [];
     s -= 1.2 * countMatches(overview + " " + keysTags, neg);
     if (s > 0.9) scores.push({ code, s });
   }
   if (!scores.length) return [];
-  scores.sort((a, b) => {
+  scores.sortfunction((a, b) {
     if (b.s !== a.s) return b.s - a.s;
     return _bucketPriorityRank(a.code) - _bucketPriorityRank(b.code);
   });
-  return scores.slice(0, 2).map((x) => descriptorLabel(x.code));
+  return scores.slice(0, 2).mapfunction((x) descriptorLabel(x.code));
 }
 
 export function setupPauseScreen() {
-  const pauseRuntime = getPauseFeaturesRuntimeConfig();
+  var pauseRuntime = getPauseFeaturesRuntimeConfig();
   if (!pauseRuntime.enablePauseOverlay && !pauseRuntime.enableSmartAutoPause) {
     try {
-      window.__jmsPauseOverlay?.destroy?.();
+      window.__jmsPauseOverlay.destroy.();
     } catch {}
     try {
       if (window.__jmsPauseOverlay) {
@@ -1816,31 +1816,31 @@ export function setupPauseScreen() {
         window.__jmsPauseOverlay.destroy = null;
       }
     } catch {}
-    return () => {};
+    return function() {};
   }
 
-  dlog("[PO] setupPauseScreen called", { active: window.__jmsPauseOverlay?.active });
-  let _badgeCtx = "first";
+  dlog("[PO] setupPauseScreen called", { active: window.__jmsPauseOverlay.active });
+  var _badgeCtx = "first";
 
-  const config = getConfig();
-  const overlayConfig = config.pauseOverlay || { enabled: true };
+  var config = getConfig();
+  var overlayConfig = config.pauseOverlay || { enabled: true };
 
   try {
-    window.__jmsPauseOverlay?.destroy?.();
+    window.__jmsPauseOverlay.destroy.();
   } catch {}
 
-  if (window.__jmsPauseOverlay?.active) {
+  if (window.__jmsPauseOverlay.active) {
     window.__jmsPauseOverlay.active = false;
   }
 
   window.__jmsPauseOverlay.active = true;
 
-  const LC = _mkLifecycle();
-  const { signal } = LC;
-  let lazyTagMapReady = false;
+  var LC = _mkLifecycle();
+  var { signal } = LC;
+  var lazyTagMapReady = false;
 
   function _shouldIgnoreEarlyMetaResets() {
-  const now = Date.now();
+  var now = Date.now();
   if ((now - (_playEventAt || 0)) < 2500) return true;
   if (_badgeShownAt && (now - _badgeShownAt) < 2000) return true;
 
@@ -1854,7 +1854,7 @@ export function setupPauseScreen() {
   }
 
 function tryBindOnce(reason = 'kick') {
-  const v = findBestPlayableVideoAnywhere(12);
+  var v = findBestPlayableVideoAnywhere(12);
   if (v) {
     try {
       if (v === activeVideo || v.__jmsPOBound === true) return true;
@@ -1867,8 +1867,8 @@ function tryBindOnce(reason = 'kick') {
 }
 
 function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,12000]) {
-    schedule.forEach((ms) => {
-      LC.addTimeout(() => {
+    schedule.forEach(function((ms) {
+      LC.addTimeoutfunction(() {
         try {
           if (activeVideo && activeVideo.__jmsPOBound === true) return;
         } catch {}
@@ -1876,85 +1876,60 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
       }, ms);
     });
   }
-  const _onRouteHint = () => {
+  var _onRouteHint = function() {
     kickBindRetries();
   };
 
   window.addEventListener('hashchange', _onRouteHint, { signal });
   window.addEventListener('popstate', _onRouteHint, { signal });
 
-  document.addEventListener('play', (e) => {
-    const v = e?.target;
+  document.addEventListenerfunction('play', (e) {
+    var v = e.target;
     if (v instanceof HTMLVideoElement) {
       try { bindVideo(v, 'doc-capture-play'); } catch {}
     }
   }, { capture: true, passive: true, signal });
 
-  async function initDescriptorTagsOnce() {
+  function initDescriptorTagsOnce() {
     try {
       if (labels && labels.descriptorTagMap && typeof labels.descriptorTagMap === "object") return;
-      const catalogTags = await loadCatalogTagsWithCache();
-      const autoMap = buildAutoDescriptorTagMap(catalogTags);
+      var catalogTags = loadCatalogTagsWithCache();
+      var autoMap = buildAutoDescriptorTagMap(catalogTags);
       labels.descriptorTagMap = autoMap;
     } catch (e) {
-      if (!(e?.status === 0 || e?.status === 401 || e?.status === 403 || e?.isAbort)) {
+      if (!(e.status === 0 || e.status === 401 || e.status === 403 || e.isAbort)) {
         console.warn("descriptor tag map init hata:", e);
       }
     }
   }
 
   function isShortActiveVideo() {
-    const v = activeVideo;
+    var v = activeVideo;
     if (!v) return false;
-    const d = Number(v.duration || 0);
+    var d = Number(v.duration || 0);
     return Number.isFinite(d) && d > 0 && d < getMinVideoDurationSec();
   }
 
   if (!document.getElementById("jms-pause-overlay")) {
-    const overlay = document.createElement("div");
+    var overlay = document.createElement("div");
     overlay.id = "jms-pause-overlay";
-    overlay.innerHTML = `
-  <div class="pause-overlay-content">
-    <div class="pause-left">
-      <div id="jms-overlay-title" class="pause-title"></div>
-      <div id="jms-overlay-metadata" class="pause-metadata"></div>
-      <div id="jms-overlay-plot" class="pause-plot"></div>
-    </div>
-    <div class="pause-right">
-      <div class="pause-right-backdrop"></div>
-      <div id="jms-overlay-logo" class="pause-logo-container"></div>
-    </div>
-  </div>
-  <div id="jms-overlay-progress" class="pause-progress-wrap" aria-hidden="true">
-    <div class="pause-progress-top">
-      <span id="jms-progress-remaining"></span>
-      <span id="jms-progress-percent"></span>
-    </div>
-    <div class="pause-progress-bar">
-      <div id="jms-progress-elapsed" class="pause-progress-elapsed"></div>
-      <div id="jms-progress-remainingFill" class="pause-progress-remainingFill"></div>
-      <div id="jms-progress-sep" class="pause-progress-sep">/</div>
-    </div>
-  </div>
-  <div class="pause-status-bottom-right" id="pause-status-bottom-right" style="display:none;">
-    <span><i class="fa-solid fa-pause"></i> ${labels.paused || "Pausado"}</span>
-  </div>`;
+    overlay.innerHTML = "\n  <div class=\"pause-overlay-content\">\n    <div class=\"pause-left\">\n      <div id=\"jms-overlay-title\" class=\"pause-title\"></div>\n      <div id=\"jms-overlay-metadata\" class=\"pause-metadata\"></div>\n      <div id=\"jms-overlay-plot\" class=\"pause-plot\"></div>\n    </div>\n    <div class=\"pause-right\">\n      <div class=\"pause-right-backdrop\"></div>\n      <div id=\"jms-overlay-logo\" class=\"pause-logo-container\"></div>\n    </div>\n  </div>\n  <div id=\"jms-overlay-progress\" class=\"pause-progress-wrap\" aria-hidden=\"true\">\n    <div class=\"pause-progress-top\">\n      <span id=\"jms-progress-remaining\"></span>\n      <span id=\"jms-progress-percent\"></span>\n    </div>\n    <div class=\"pause-progress-bar\">\n      <div id=\"jms-progress-elapsed\" class=\"pause-progress-elapsed\"></div>\n      <div id=\"jms-progress-remainingFill\" class=\"pause-progress-remainingFill\"></div>\n      <div id=\"jms-progress-sep\" class=\"pause-progress-sep\">/</div>\n    </div>\n  </div>\n  <div class=\"pause-status-bottom-right\" id=\"pause-status-bottom-right\" style=\"display:none;\">\n    <span><i class=\"fa-solid fa-pause\"></i> " + (labels.paused || "Pausado") + "</span>\n  </div>";
     document.body.appendChild(overlay);
 
     if (!document.getElementById("jms-pause-extra-css")) {
-      const style = document.createElement("style");
+      var style = document.createElement("style");
       style.id = "jms-pause-extra-css";
      }
     _recoBadgeEl = document.createElement("div");
     _recoBadgeEl.id = "jms-reco-badge";
     _recoBadgeEl.className = "jms-reco-badge";
-    _recoBadgeEl.innerHTML = `<button id="jms-reco-toggle"><i class="fa-solid fa-thumbs-up"></i><span id="jms-reco-badge-text"></span></button>`;
+    _recoBadgeEl.innerHTML = "<button id=\"jms-reco-toggle\"><i class=\"fa-solid fa-thumbs-up\"></i><span id=\"jms-reco-badge-text\"></span></button>";
     document.body.appendChild(_recoBadgeEl);
 
     _recoPanelEl = document.createElement("div");
     _recoPanelEl.id = "jms-reco-panel";
     _recoPanelEl.className = "jms-reco-panel";
-    _recoPanelEl.innerHTML = `<div class="pause-recos-header" id="jms-reco-header"></div><div class="jms-reco-row" id="jms-reco-list"></div>`;
+    _recoPanelEl.innerHTML = "<div class=\"pause-recos-header\" id=\"jms-reco-header\"></div><div class=\"jms-reco-row\" id=\"jms-reco-list\"></div>";
     document.body.appendChild(_recoPanelEl);
 
     _recoToggleEl = _recoBadgeEl.querySelector('#jms-reco-toggle');
@@ -1970,61 +1945,9 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
       ratingGenreElement.className = "rating-genre-overlay";
       document.body.appendChild(ratingGenreElement);
       if (!document.getElementById("jms-rating-genre-css")) {
-        const style = document.createElement("style");
+        var style = document.createElement("style");
         style.id = "jms-rating-genre-css";
-        style.textContent = `
-        .rating-genre-overlay{
-          position:fixed;
-          top:65px;
-          left:50px;
-          z-index:9999;
-          pointer-events:none;
-          opacity:0;
-          transform:translateY(-14px);
-          transition:transform .35s cubic-bezier(.2,.8,.4,1), opacity .35s ease;
-        }
-        .rating-genre-overlay.visible{
-          opacity:1;
-          transform:translateY(0)
-        }
-        .rating-genre-card{
-          display:flex;
-          align-items:flex-start;
-          gap:12px;
-          color:#fff;
-          text-shadow:
-            0 1px 3px rgba(0,0,0,.8),
-            0 2px 6px rgba(0,0,0,.6),
-            0 0 10px rgba(0,0,0,.4);
-        }
-        .rating-genre-card .bar{
-          width:3px;
-          height:44px;
-          background:#e10600;
-          border-radius:2px;
-          flex:0 0 3px;
-          margin-top:2px
-        }
-        .rating-genre-card .texts{
-          line-height:1.15
-        }
-        .rating-genre-card .line1{
-          font-size:22px;
-          font-weight:800;
-          letter-spacing:.3px;
-          text-transform:uppercase;
-          opacity:.98;
-          filter: drop-shadow(0 1px 2px rgba(0,0,0,.4));
-        }
-        .rating-genre-card .line2{
-          margin-top:4px;
-          font-size:16px;
-          font-weight:600;
-          opacity:.95;
-          text-transform:none;
-          filter: drop-shadow(0 1px 2px rgba(0,0,0,.4));
-        }
-        `;
+        style.textContent = "\n        .rating-genre-overlay{\n          position:fixed;\n          top:65px;\n          left:50px;\n          z-index:9999;\n          pointer-events:none;\n          opacity:0;\n          transform:translateY(-14px);\n          transition:transform .35s cubic-bezier(.2,.8,.4,1), opacity .35s ease;\n        }\n        .rating-genre-overlay.visible{\n          opacity:1;\n          transform:translateY(0)\n        }\n        .rating-genre-card{\n          display:flex;\n          align-items:flex-start;\n          gap:12px;\n          color:#fff;\n          text-shadow:\n            0 1px 3px rgba(0,0,0,.8),\n            0 2px 6px rgba(0,0,0,.6),\n            0 0 10px rgba(0,0,0,.4);\n        }\n        .rating-genre-card .bar{\n          width:3px;\n          height:44px;\n          background:#e10600;\n          border-radius:2px;\n          flex:0 0 3px;\n          margin-top:2px\n        }\n        .rating-genre-card .texts{\n          line-height:1.15\n        }\n        .rating-genre-card .line1{\n          font-size:22px;\n          font-weight:800;\n          letter-spacing:.3px;\n          text-transform:uppercase;\n          opacity:.98;\n          filter: drop-shadow(0 1px 2px rgba(0,0,0,.4));\n        }\n        .rating-genre-card .line2{\n          margin-top:4px;\n          font-size:16px;\n          font-weight:600;\n          opacity:.95;\n          text-transform:none;\n          filter: drop-shadow(0 1px 2px rgba(0,0,0,.4));\n        }\n        ";
         document.head.appendChild(style);
       }
     } else {
@@ -2032,12 +1955,12 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
     }
   }
 
-  async function showRatingGenre(itemData, duration = AGE_BADGE_DEFAULT_MS) {
-    const po = getConfig()?.pauseOverlay || {};
+  function showRatingGenre(itemData, duration = AGE_BADGE_DEFAULT_MS) {
+    var po = getConfig().pauseOverlay || {};
     if (po.showAgeBadge === false) return false
     if (!lazyTagMapReady) {
       try {
-        await initDescriptorTagsOnce();
+        initDescriptorTagsOnce();
       } catch {}
       lazyTagMapReady = true;
     }
@@ -2046,58 +1969,51 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
       clearTimeout(ratingGenreTimeout);
       ratingGenreTimeout = null;
     }
-    let data = itemData;
+    var data = itemData;
 
     try {
-      const isEpisode = data?.Type === "Episode";
-      const noTags = !Array.isArray(data?.Tags) || data.Tags.length === 0;
-      const maybeSeriesId = data?.SeriesId || data?._episodeData?.SeriesId || null;
+      var isEpisode = data.Type === "Episode";
+      var noTags = !Array.isArray(data.Tags) || data.Tags.length === 0;
+      var maybeSeriesId = data.SeriesId || data._episodeData.SeriesId || null;
 
-      const genresMissing = !Array.isArray(data?.Genres) || data.Genres.length === 0;
-      const ratingMissing = !data?.OfficialRating;
+      var genresMissing = !Array.isArray(data.Genres) || data.Genres.length === 0;
+      var ratingMissing = !data.OfficialRating;
       if (isEpisode && maybeSeriesId && (noTags || genresMissing || ratingMissing)) {
-        const series = await fetchItemDetailsCached(maybeSeriesId);
-        const mergedTags = [
-          ...(series?.Tags || []),
-          ...(data?.Tags || []),
-          ...(data?.Keywords || []),
+        var series = fetchItemDetailsCached(maybeSeriesId);
+        var mergedTags = [
+          ...(series.Tags || []),
+          ...(data.Tags || []),
+          ...(data.Keywords || []),
         ].filter(Boolean);
         data = {
           ...series,
           ...data,
           Tags: Array.from(new Set(mergedTags)),
-          Genres: genresMissing ? series?.Genres || [] : data.Genres,
-          OfficialRating: ratingMissing ? series?.OfficialRating || data.OfficialRating : data.OfficialRating,
+          Genres: genresMissing ? series.Genres || [] : data.Genres,
+          OfficialRating: ratingMissing ? series.OfficialRating || data.OfficialRating : data.OfficialRating,
         };
       }
     } catch {}
 
-    const mui = getMaturityUiCached(data);
-    const age = mui.age;
-    const line2Arr = mui.line2Arr;
+    var mui = getMaturityUiCached(data);
+    var age = mui.age;
+    var line2Arr = mui.line2Arr;
     try { data.__jmsMaturityIcons = mui.icons; } catch {}
 
     if (!age && (!line2Arr || line2Arr.length === 0)) {
       hideRatingGenre();
       return;
     }
-    const line1 = age ? [localizedMaturityHeader(), age].join(" ") : "";
-    const line2 = line2Arr.join(", ");
+    var line1 = age ? [localizedMaturityHeader(), age].join(" ") : "";
+    var line2 = line2Arr.join(", ");
 
     if (line1 || line2) {
-      ratingGenreElement.innerHTML = `
-        <div class="rating-genre-card">
-          <div class="bar"></div>
-          <div class="texts">
-            ${line1 ? `<div class="line1">${line1}</div>` : ""}
-            ${line2 ? `<div class="line2">${line2}</div>` : ""}
-          </div>
-        </div>`;
+      ratingGenreElement.innerHTML = "\n        <div class=\"rating-genre-card\">\n          <div class=\"bar\"></div>\n          <div class=\"texts\">\n            ${line1 ? "<div class="line1">${line1}</div>" : \"\"}\n            ${line2 ? "<div class="line2">${line2}</div>" : \"\"}\n          </div>\n        </div>";
       ratingGenreElement.classList.add("visible");
       _badgeShownAt = Date.now();
-      ratingGenreTimeout = setTimeout(() => {
+      ratingGenreTimeout = setTimeoutfunction(() {
         hideRatingGenre("auto");
-        setTimeout(() => {
+        setTimeoutfunction(() {
           try {
             showIconBadges(mui.icons, duration);
           } catch {}
@@ -2106,22 +2022,22 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
     }
   }
 
-  const overlayEl = document.getElementById("jms-pause-overlay");
-  const titleEl = document.getElementById("jms-overlay-title");
-  const metaEl = document.getElementById("jms-overlay-metadata");
-  const plotEl = document.getElementById("jms-overlay-plot");
-  const backdropEl = document.querySelector(".pause-right-backdrop");
-  const logoEl = document.getElementById("jms-overlay-logo");
-  const pausedLabel = document.getElementById("pause-status-bottom-right");
-  const progressWrapEl   = document.getElementById("jms-overlay-progress");
-  const progressElapsedEl = document.getElementById("jms-progress-elapsed");
-  const progressRemainFillEl = document.getElementById("jms-progress-remainingFill");
-  const progressSepEl = document.getElementById("jms-progress-sep");
-  const progressRemainEl = document.getElementById("jms-progress-remaining");
-  const progressPctEl    = document.getElementById("jms-progress-percent");
+  var overlayEl = document.getElementById("jms-pause-overlay");
+  var titleEl = document.getElementById("jms-overlay-title");
+  var metaEl = document.getElementById("jms-overlay-metadata");
+  var plotEl = document.getElementById("jms-overlay-plot");
+  var backdropEl = document.querySelector(".pause-right-backdrop");
+  var logoEl = document.getElementById("jms-overlay-logo");
+  var pausedLabel = document.getElementById("pause-status-bottom-right");
+  var progressWrapEl   = document.getElementById("jms-overlay-progress");
+  var progressElapsedEl = document.getElementById("jms-progress-elapsed");
+  var progressRemainFillEl = document.getElementById("jms-progress-remainingFill");
+  var progressSepEl = document.getElementById("jms-progress-sep");
+  var progressRemainEl = document.getElementById("jms-progress-remaining");
+  var progressPctEl    = document.getElementById("jms-progress-percent");
 
-  let _progressTimer = null;
-  const _clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
+  var _progressTimer = null;
+  var _clamp01 = function(x) (x < 0 ? 0 : x > 1 ? 1 : x);
   function updateProgressUI() {
     if (!progressWrapEl) return;
     if (!overlayVisible || !activeVideo) {
@@ -2133,31 +2049,31 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
       return;
     }
 
-    const ct = Number(activeVideo.currentTime || 0);
-    const dur = Number(activeVideo.duration || 0);
-    const hasDur = Number.isFinite(dur) && dur > 0;
+    var ct = Number(activeVideo.currentTime || 0);
+    var dur = Number(activeVideo.duration || 0);
+    var hasDur = Number.isFinite(dur) && dur > 0;
 
-    const pct = hasDur ? _clamp01(ct / dur) : 0;
-    const pctText = hasDur ? `${Math.round(pct * 100)}%` : "";
-    const remLbl = (labels?.remainingTime || "Restante");
-    const remText = hasDur ? formatTime(rem) : (labels?.sonucyok || "Indisponível");
+    var pct = hasDur ? _clamp01(ct / dur) : 0;
+    var pctText = hasDur ? (Math.round(pct * 100)) + "%" : "";
+    var remLbl = (labels.remainingTime || "Restante");
+    var remText = hasDur ? formatTime(rem) : (labels.sonucyok || "Indisponível");
 
-    const pct10 = Math.round(pct * 1000) / 10;
-    const rem10 = Math.max(0, 100 - pct10);
+    var pct10 = Math.round(pct * 1000) / 10;
+    var rem10 = Math.max(0, 100 - pct10);
 
-    try { if (progressElapsedEl) progressElapsedEl.style.width = `${pct10}%`; } catch {}
-    try { if (progressRemainFillEl) progressRemainFillEl.style.width = `${rem10}%`; } catch {}
+    try { if (progressElapsedEl) progressElapsedEl.style.width = (pct10) + "%"; } catch {}
+    try { if (progressRemainFillEl) progressRemainFillEl.style.width = (rem10) + "%"; } catch {}
     try {
       if (progressSepEl) {
         if (hasDur) {
-          progressSepEl.style.left = `${pct10}%`;
+          progressSepEl.style.left = (pct10) + "%";
           progressSepEl.style.opacity = "0.95";
         } else {
           progressSepEl.style.opacity = "0";
         }
       }
     } catch {}
-    if (progressRemainEl) progressRemainEl.textContent = `⏳ ${remLbl}: ${remText}`;
+    if (progressRemainEl) progressRemainEl.textContent = "⏳ " + (remLbl) + ": " + (remText);
     if (progressPctEl) progressPctEl.textContent = pctText;
   }
 
@@ -2172,13 +2088,13 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
     _progressTimer = null;
   }
 
-  overlayEl.addEventListener("click", (e) => {
+  overlayEl.addEventListenerfunction("click", (e) {
     if (!overlayVisible || !activeVideo) return;
     if (overlayEl.__jmsSwipeConsumed) { overlayEl.__jmsSwipeConsumed = false; return; }
-    const inRecos = e.target.closest("#jms-recos-row, .pause-reco-card");
+    var inRecos = e.target.closest("#jms-recos-row, .pause-reco-card");
     if (inRecos) return;
     try {
-      const content = overlayEl.querySelector(".pause-overlay-content");
+      var content = overlayEl.querySelector(".pause-overlay-content");
       content && (content.style.willChange = "transform, opacity");
     } catch {}
     activeVideo.play();
@@ -2186,18 +2102,18 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
   }, { signal });
 
   (function setupSwipeToDismiss(){
-    const content = overlayEl.querySelector(".pause-overlay-content");
+    var content = overlayEl.querySelector(".pause-overlay-content");
     if (!content) return;
-    let startY = 0, startX = 0, lastY = 0, moved = false, dragging = false, startT = 0;
-    const THRESHOLD_PX = 60;
-    const MAX_ANGLE_TAN = Math.tan(35 * Math.PI/180);
-    const CANCEL_CLICK_LOCK_MS = 300;
-    const MAX_PULL_PX = 220;
+    var startY = 0, startX = 0, lastY = 0, moved = false, dragging = false, startT = 0;
+    var THRESHOLD_PX = 60;
+    var MAX_ANGLE_TAN = Math.tan(35 * Math.PI/180);
+    var CANCEL_CLICK_LOCK_MS = 300;
+    var MAX_PULL_PX = 220;
 
     function setTransform(y){
-      const dy = Math.max(0, Math.min(y, MAX_PULL_PX));
-      const op = Math.max(0, 1 - dy/180);
-      content.style.transform = `translateY(${dy}px)`;
+      var dy = Math.max(0, Math.min(y, MAX_PULL_PX));
+      var op = Math.max(0, 1 - dy/180);
+      content.style.transform = "translateY(" + (dy) + "px)";
       content.style.opacity = String(op);
     }
     function clearTransform(){
@@ -2208,7 +2124,7 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
     }
     function onStart(ev){
       if (!overlayVisible) return;
-      const t = ev.touches?.[0];
+      var t = ev.touches.[0];
       if (!t) return;
       startY = lastY = t.clientY;
       startX = t.clientX;
@@ -2218,12 +2134,12 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
     }
     function onMove(ev){
       if (!dragging) return;
-      const t = ev.touches?.[0]; if (!t) return;
-      const dy = t.clientY - startY;
-      const dx = Math.abs(t.clientX - startX);
+      var t = ev.touches.[0]; if (!t) return;
+      var dy = t.clientY - startY;
+      var dx = Math.abs(t.clientX - startX);
       if (!moved) {
         if (dy < 6 && dx < 6) return;
-        const tan = dx / Math.max(1, Math.abs(dy));
+        var tan = dx / Math.max(1, Math.abs(dy));
         if (tan > MAX_ANGLE_TAN) { dragging = false; clearTransform(); return; }
         moved = true;
       }
@@ -2236,19 +2152,19 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
     function onEnd(){
       if (!dragging) return;
       dragging = false;
-      const totalDy = Math.max(0, lastY - startY);
-      const dt = Math.max(1, performance.now() - startT);
-      const v = totalDy / dt;
-      const shouldDismiss = totalDy > THRESHOLD_PX || v > 0.9;
+      var totalDy = Math.max(0, lastY - startY);
+      var dt = Math.max(1, performance.now() - startT);
+      var v = totalDy / dt;
+      var shouldDismiss = totalDy > THRESHOLD_PX || v > 0.9;
       if (shouldDismiss) {
         content.style.transition = "transform 0.22s ease, opacity 0.22s ease";
-        content.style.transform = `translateY(${Math.max(totalDy, 160)}px)`;
+        content.style.transform = "translateY(" + (Math.max(totalDy, 160)) + "px)";
         content.style.opacity = "0";
         overlayEl.__jmsSwipeConsumed = true;
-        setTimeout(() => {
+        setTimeoutfunction(() {
           overlayEl.__jmsSwipeClosing = true;
           hideOverlay({ fromSwipe: true });
-          setTimeout(() => { overlayEl.__jmsSwipeConsumed = false; }, CANCEL_CLICK_LOCK_MS);
+          setTimeoutfunction(() { overlayEl.__jmsSwipeConsumed = false; }, CANCEL_CLICK_LOCK_MS);
         }, 200);
       } else {
         content.style.transition = "transform 0.25s cubic-bezier(.2,.8,.4,1), opacity 0.25s ease";
@@ -2266,28 +2182,28 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
   function renderIconOrEmoji(iconValue) {
     if (!iconValue) return "";
     if (iconValue.startsWith("fa-") || iconValue.includes("fa ")) {
-      return `<i class="${iconValue}"></i>`;
+      return "<i class=\"" + (iconValue) + "\"></i>";
     }
     return iconValue;
   }
 
   function _setRecoHeaderAndBadge(isEpisodeContext) {
-  const headerEl = document.getElementById('jms-reco-header');
-  const badgeTextEl = document.getElementById('jms-reco-badge-text');
-  const badgeIconEl = _recoToggleEl?.querySelector('i');
+  var headerEl = document.getElementById('jms-reco-header');
+  var badgeTextEl = document.getElementById('jms-reco-badge-text');
+  var badgeIconEl = _recoToggleEl.querySelector('i');
 
-  const isEp = !!isEpisodeContext;
-  const iconClass = isEp ? "fa-solid fa-tv" : "fa-solid fa-thumbs-up";
-  const text = isEp ? (labels.unwatchedEpisodes || "Episódios não assistidos") : (labels.youMayAlsoLike || "Você também pode gostar");
+  var isEp = !!isEpisodeContext;
+  var iconClass = isEp ? "fa-solid fa-tv" : "fa-solid fa-thumbs-up";
+  var text = isEp ? (labels.unwatchedEpisodes || "Episódios não assistidos") : (labels.youMayAlsoLike || "Você também pode gostar");
 
-  if (headerEl) headerEl.innerHTML = `<i class="${iconClass}"></i> ${text}`;
+  if (headerEl) headerEl.innerHTML = "<i class=\"" + (iconClass) + "\"></i> " + (text);
   if (badgeTextEl) badgeTextEl.textContent = text;
   if (badgeIconEl) badgeIconEl.className = iconClass;
 }
 
   function _hideRecoBadgeAndPanel(){
-    _recoBadgeEl?.classList.remove('visible');
-    _recoPanelEl?.classList.remove('open');
+    _recoBadgeEl.classList.remove('visible');
+    _recoPanelEl.classList.remove('open');
     _recoPanelOpen = false;
   }
 
@@ -2303,7 +2219,7 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
     if (!_recoItemsCache.length) return;
     if (overlayVisible) return;
     if (isVideoActivelyPlaying()) return;
-    _recoBadgeEl?.classList.add('visible');
+    _recoBadgeEl.classList.add('visible');
   }
 
   function _toggleRecoPanel(){
@@ -2315,16 +2231,16 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
       _recoPanelEl.classList.remove('open');
     }
   }
-  const onToggleTap = (e) => {
+  var onToggleTap = function(e) {
     if (e && e.cancelable) e.preventDefault();
-    e?.stopPropagation?.();
+    e.stopPropagation.();
     _toggleRecoPanel();
   };
-  _recoToggleEl?.addEventListener('click', onToggleTap, { passive:false, capture:true });
-  _recoToggleEl?.addEventListener('pointerup', onToggleTap, { passive:false, capture:true });
-  _recoToggleEl?.addEventListener('touchstart', onToggleTap, { passive:false, capture:true });
+  _recoToggleEl.addEventListener('click', onToggleTap, { passive:false, capture:true });
+  _recoToggleEl.addEventListener('pointerup', onToggleTap, { passive:false, capture:true });
+  _recoToggleEl.addEventListener('touchstart', onToggleTap, { passive:false, capture:true });
 
-  let _recoJustOpenedAt = 0;
+  var _recoJustOpenedAt = 0;
 
   function openRecoPanel(){
     if (!_recoItemsCache.length) return;
@@ -2338,30 +2254,30 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
     _recoPanelOpen = false;
   }
 
-  const IS_TOUCH = navigator.maxTouchPoints > 0;
+  var IS_TOUCH = navigator.maxTouchPoints > 0;
   if (!IS_TOUCH) {
-    _recoBadgeEl?.addEventListener('mouseenter', () => { openRecoPanel(); }, { passive:true });
+    _recoBadgeEl.addEventListenerfunction('mouseenter', () { openRecoPanel(); }, { passive:true });
   } else {
-    _recoBadgeEl?.addEventListener('pointerup', (e) => { if (e.cancelable) e.preventDefault(); e.stopPropagation(); openRecoPanel(); }, { passive:false, capture:true });
-    _recoBadgeEl?.addEventListener('touchstart', (e) => { if (e.cancelable) e.preventDefault(); e.stopPropagation(); openRecoPanel(); }, { passive:false, capture:true });
+    _recoBadgeEl.addEventListenerfunction('pointerup', (e) { if (e.cancelable) e.preventDefault(); e.stopPropagation(); openRecoPanel(); }, { passive:false, capture:true });
+    _recoBadgeEl.addEventListenerfunction('touchstart', (e) { if (e.cancelable) e.preventDefault(); e.stopPropagation(); openRecoPanel(); }, { passive:false, capture:true });
   }
 
-  if (!IS_TOUCH) _recoBadgeEl?.addEventListener('mouseleave', () => {
-    setTimeout(() => {
-      const overPanel = _recoPanelEl?.matches(':hover');
-      const overBadge = _recoBadgeEl?.matches(':hover');
+  if (!IS_TOUCH) _recoBadgeEl.addEventListenerfunction('mouseleave', () {
+    setTimeoutfunction(() {
+      var overPanel = _recoPanelEl.matches(':hover');
+      var overBadge = _recoBadgeEl.matches(':hover');
       if (!overPanel && !overBadge) closeRecoPanel();
     }, 120);
   }, { passive:true });
 
-  if (!IS_TOUCH) _recoPanelEl?.addEventListener('mouseleave', () => {
-    setTimeout(() => {
-      const overPanel = _recoPanelEl?.matches(':hover');
-      const overBadge = _recoBadgeEl?.matches(':hover');
+  if (!IS_TOUCH) _recoPanelEl.addEventListenerfunction('mouseleave', () {
+    setTimeoutfunction(() {
+      var overPanel = _recoPanelEl.matches(':hover');
+      var overBadge = _recoBadgeEl.matches(':hover');
       if (!overPanel && !overBadge) closeRecoPanel();
     }, 120);
   }, { passive:true });
-  document.addEventListener('pointerdown', (e) => {
+  document.addEventListenerfunction('pointerdown', (e) {
     if (performance.now() - _recoJustOpenedAt < 300) return;
     if (_recoPanelOpen && !e.target.closest('#jms-reco-panel, #jms-reco-badge, #jms-reco-toggle')) {
       closeRecoPanel();
@@ -2380,27 +2296,26 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
   if (pausedLabel) {
     pausedLabel.style.display = "flex";
     pausedLabel.style.opacity = "0";
-    LC.addTimeout(() => {
+    LC.addTimeoutfunction(() {
       pausedLabel.style.opacity = "0.92";
     }, 10);
   }
 
-  const content = overlayEl.querySelector(".pause-overlay-content");
-  const progressWrap = progressWrapEl;
+  var content = overlayEl.querySelector(".pause-overlay-content");
+  var progressWrap = progressWrapEl;
   if (content) {
     content.style.willChange = "transform, opacity";
     content.style.transform = "translateY(10px)";
     content.style.opacity = "0";
-    setTimeout(() => {
+    setTimeoutfunction(() {
       content.style.transition =
         "transform 0.4s cubic-bezier(0.2, 0.8, 0.4, 1), opacity 0.4s ease";
       content.style.transform = "translateY(0)";
       content.style.opacity = "1";
     }, 10);
 
-    content.addEventListener(
-      "transitionend",
-      () => {
+    content.addEventListenerfunction("transitionend",
+      () {
         content.style.willChange = "";
       },
       { once: true, signal }
@@ -2411,7 +2326,7 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
     progressWrap.style.willChange = "transform, opacity";
     progressWrap.style.transform = "translateY(10px)";
     progressWrap.style.opacity = "0";
-    setTimeout(() => {
+    setTimeoutfunction(() {
       progressWrap.style.transition =
         "transform 0.4s cubic-bezier(0.2, 0.8, 0.4, 1), opacity 0.4s ease";
       progressWrap.style.transform = "translateY(0)";
@@ -2419,12 +2334,12 @@ function kickBindRetries(schedule = [50,150,350,800,1500,2500,4000,6000,8000,120
     }, 10);
   }
 if (_mouseIdleTimer) { clearTimeout(_mouseIdleTimer); _mouseIdleTimer = null; }
-  const enableMouseClose = (getConfig()?.pauseOverlay?.closeOnMouseMove !== false);
+  var enableMouseClose = (getConfig().pauseOverlay.closeOnMouseMove !== false);
   if (enableMouseClose) {
-    const onMouseMoveClose = () => {
+    var onMouseMoveClose = function() {
       hideOverlay({ preserve: true });
       if (_mouseIdleTimer) { clearTimeout(_mouseIdleTimer); }
-      _mouseIdleTimer = LC.addTimeout(() => {
+      _mouseIdleTimer = LC.addTimeoutfunction(() {
         try {
           if (activeVideo && activeVideo.paused && isVideoVisible(activeVideo) && !overlayVisible) {
             showOverlay();
@@ -2437,13 +2352,13 @@ if (_mouseIdleTimer) { clearTimeout(_mouseIdleTimer); _mouseIdleTimer = null; }
 }
 
 function hideOverlay(opts = {}) {
-  const fromSwipe = !!opts.fromSwipe || !!overlayEl.__jmsSwipeClosing;
-  const preserve = fromSwipe || !!opts.preserve;
-  const HIDE_MS = 300;
+  var fromSwipe = !!opts.fromSwipe || !!overlayEl.__jmsSwipeClosing;
+  var preserve = fromSwipe || !!opts.preserve;
+  var HIDE_MS = 300;
   stopProgressLoop();
 
-  const content = overlayEl.querySelector(".pause-overlay-content");
-  const progressWrap = progressWrapEl;
+  var content = overlayEl.querySelector(".pause-overlay-content");
+  var progressWrap = progressWrapEl;
   if (content) {
     content.style.willChange = "transform, opacity";
     if (!fromSwipe) {
@@ -2466,17 +2381,17 @@ function hideOverlay(opts = {}) {
 
   if (pausedLabel) {
     pausedLabel.style.opacity = "0";
-    LC.addTimeout(() => {
-      overlayEl?.classList.remove("visible");
+    LC.addTimeoutfunction(() {
+      overlayEl.classList.remove("visible");
       pausedLabel.style.display = "none";
     }, HIDE_MS);
   }
 
-  LC.addTimeout(() => {
+  LC.addTimeoutfunction(() {
     overlayEl.classList.remove("visible");
     overlayVisible = false;
     if (content) {
-      const doReset = () => {
+      var doReset = function() {
         content.style.transition = "";
         content.style.transform = "";
         content.style.opacity = "";
@@ -2484,7 +2399,7 @@ function hideOverlay(opts = {}) {
       if (fromSwipe) requestAnimationFrame(doReset); else doReset();
     }
     if (progressWrap) {
-      const doResetProgress = () => {
+      var doResetProgress = function() {
         progressWrap.style.transition = "";
         progressWrap.style.transform = "";
         progressWrap.style.opacity = "";
@@ -2502,7 +2417,7 @@ function hideOverlay(opts = {}) {
     clearTimeout(pauseTimeout);
     pauseTimeout = null;
   }
-  LC.addTimeout(() => { _maybeShowBadge(); }, HIDE_MS + 20);
+  LC.addTimeoutfunction(() { _maybeShowBadge(); }, HIDE_MS + 20);
 }
 
   function _clearRecos() {
@@ -2532,77 +2447,75 @@ function hideOverlay(opts = {}) {
 
   function convertTicks(ticks) {
     if (!ticks || isNaN(ticks)) return labels.sonucyok || "Indisponível";
-    const totalSeconds = ticks / 10000000;
+    var totalSeconds = ticks / 10000000;
     return formatTime(totalSeconds);
   }
   function formatTime(sec) {
     if (!sec || isNaN(sec)) return labels.sonucyok || "Indisponível";
-    const t = Math.floor(sec);
-    const m = Math.floor(t / 60);
-    const h = Math.floor(m / 60);
-    const rm = m % 60;
-    const rs = t % 60;
-    return h > 0 ? `${h}${labels.sa || "h"} ${rm}${labels.dk || "m"} ${rs}${labels.sn || "s"}` : `${rm}${labels.dk || "m"} ${rs}${labels.sn || "s"}`;
+    var t = Math.floor(sec);
+    var m = Math.floor(t / 60);
+    var h = Math.floor(m / 60);
+    var rm = m % 60;
+    var rs = t % 60;
+    return h > 0 ? (h) + (labels.sa || "h") + " " + (rm) + (labels.dk || "m") + " " + (rs) + (labels.sn || "s") : (rm) + (labels.dk || "m") + " " + (rs) + (labels.sn || "s");
   }
   function genRow(label, value) {
     if (!value) return "";
-    return `<div class="info-row"><span>${label}</span><span>${value}</span></div>`;
+    return "<div class=\"info-row\"><span>" + (label) + "</span><span>" + (value) + "</span></div>";
   }
 
-  async function refreshData(data) {
+  function refreshData(data) {
     currentMediaData = data;
     resetContent();
-    const communityRatingValue = getCommunityRatingValue(data?.CommunityRating);
+    var communityRatingValue = getCommunityRatingValue(data.CommunityRating);
 
-    const ep = data._episodeData || null;
+    var ep = data._episodeData || null;
     if (config.pauseOverlay.showBackdrop) {
-      await setBackdrop(data);
+      setBackdrop(data);
     } else {
       backdropEl.style.backgroundImage = "none";
       backdropEl.style.opacity = "0";
     }
     if (config.pauseOverlay.showLogo) {
-      await setLogo(data);
+      setLogo(data);
     } else {
       logoEl.innerHTML = "";
     }
 
     if (ep) {
-      const seriesTitle = data.Name || data.OriginalTitle || "";
-      const line = formatSeasonEpisodeLine(ep);
-      titleEl.innerHTML = `
-        <h1 class="pause-series-title">${seriesTitle}</h1>
-        <h2 class="pause-episode-title">${line}</h2>`;
+      var seriesTitle = data.Name || data.OriginalTitle || "";
+      var line = formatSeasonEpisodeLine(ep);
+      titleEl.innerHTML = "\n        <h1 class=\"pause-series-title\">" + (seriesTitle) + "</h1>\n        <h2 class=\"pause-episode-title\">" + (line) + "</h2>";
     } else {
-      titleEl.innerHTML = `<h1 class="pause-movie-title">${data.Name || data.OriginalTitle || ""}</h1>`;
+      titleEl.innerHTML = "<h1 class=\"pause-movie-title\">" + (data.Name || data.OriginalTitle || "") + "</h1>";
     }
 
     if (config.pauseOverlay.showMetadata) {
-      const rows = [
+      var rows = [
         genRow("📅 " + labels.showYearInfo, data.ProductionYear),
-        genRow("⭐ " + labels.showCommunityRating, communityRatingValue != null ? `${communityRatingValue}/10` : ""),
+        genRow("⭐ " + labels.showCommunityRating, communityRatingValue != null ? (communityRatingValue) + "/10" : ""),
         genRow("👨‍⚖️ " + labels.showCriticRating, data.CriticRating ? Math.round(data.CriticRating) + "%" : ""),
         genRow("👥 " + labels.voteCount, data.VoteCount),
         genRow("🔞 " + labels.showOfficialRating, data.OfficialRating || labels.derecelendirmeyok || "Sem classificação"),
-        genRow("🎭 " + labels.showGenresInfo, data.Genres?.slice(0, 3).join(", ") || labels.noGenresFound || "Sem gêneros"),
-        genRow("⏱️ " + labels.showRuntimeInfo, convertTicks(ep?.RunTimeTicks || data.RunTimeTicks)),
-        genRow("▶ " + labels.currentTime, formatTime(activeVideo?.currentTime || 0)),
-        genRow("⏳ " + labels.remainingTime, formatTime((activeVideo?.duration || 0) - (activeVideo?.currentTime || 0))),
+        genRow("🎭 " + labels.showGenresInfo, data.Genres.slice(0, 3).join(", ") || labels.noGenresFound || "Sem gêneros"),
+        genRow("⏱️ " + labels.showRuntimeInfo, convertTicks(ep.RunTimeTicks || data.RunTimeTicks)),
+        genRow("▶ " + labels.currentTime, formatTime(activeVideo.currentTime || 0)),
+        genRow("⏳ " + labels.remainingTime, formatTime((activeVideo.duration || 0) - (activeVideo.currentTime || 0))),
       ];
       metaEl.innerHTML = rows.join("");
     } else {
       metaEl.innerHTML = "";
     }
 
-    plotEl.textContent = config.pauseOverlay.showPlot ? (ep?.Overview || data.Overview || (labels.konu || "Sobre: ") + (labels.noData || "Sem dados")) : "";
+    plotEl.textContent = config.pauseOverlay.showPlot ? (ep.Overview || data.Overview || (labels.konu || "Sobre: ") + (labels.noData || "Sem dados")) : "";
 
     _setRecoHeaderAndBadge(Boolean(ep));
     try {
-      let recs = [];
+      var recs = [];
       if (ep) {
-        recs = await fetchUnplayedEpisodesInSameSeason(ep, { limit: 5 });
+        recs = fetchUnplayedEpisodesInSameSeason(ep, { limit: 5 });
       } else {
-        recs = await fetchSimilarUnplayed(data, { limit: 5 });
+        recs = fetchSimilarUnplayed(data, { limit: 5 });
       }
       renderRecommendations(recs);
     } catch (e) {
@@ -2613,9 +2526,8 @@ function hideOverlay(opts = {}) {
   }
 
   if (!window.__jmsPauseOverlay._boundBeforeUnload) {
-    window.addEventListener(
-      "beforeunload",
-      () => {
+    window.addEventListenerfunction("beforeunload",
+      () {
         try {
           destroy();
         } catch {}
@@ -2625,33 +2537,33 @@ function hideOverlay(opts = {}) {
     window.__jmsPauseOverlay._boundBeforeUnload = true;
   }
 
-  async function setBackdrop(item) {
-  const tags = item?.BackdropImageTags || [];
-  const base = withServer('');
-  const { accessToken } = getSessionInfo();
-  const tokenQ = accessToken ? `&api_key=${encodeURIComponent(accessToken)}` : "";
+  function setBackdrop(item) {
+  var tags = item.BackdropImageTags || [];
+  var base = withServer('');
+  var { accessToken } = getSessionInfo();
+  var tokenQ = accessToken ? "&api_key=" + (encodeURIComponent(accessToken)) : "";
   if (tags.length > 0) {
-    const url = `${base}/Items/${item.Id}/Images/Backdrop/0?tag=${encodeURIComponent(tags[0])}&maxWidth=1920&quality=90${tokenQ}`;
-    backdropEl.style.backgroundImage = `url('${url}')`;
+    var url = (base) + "/Items/" + (item.Id) + "/Images/Backdrop/0?tag=" + (encodeURIComponent(tags[0])) + "&maxWidth=1920&quality=90" + (tokenQ);
+    backdropEl.style.backgroundImage = "url('" + (url) + "')";
     backdropEl.style.opacity = "0.7";
   } else {
     backdropEl.style.backgroundImage = "none";
     backdropEl.style.opacity = "0";
   }
 }
-  async function setLogo(item) {
+  function setLogo(item) {
   if (!item) return;
-  const base = withServer('');
-  const { accessToken } = getSessionInfo();
-  const tokenQ = accessToken ? `&api_key=${encodeURIComponent(accessToken)}` : "";
-  const imagePref = config.pauseOverlay?.imagePreference || "auto";
-  const hasLogoTag = item?.ImageTags?.Logo || item?.SeriesLogoImageTag || null;
-  const hasDiscTag = item?.ImageTags?.Disc || null;
+  var base = withServer('');
+  var { accessToken } = getSessionInfo();
+  var tokenQ = accessToken ? "&api_key=" + (encodeURIComponent(accessToken)) : "";
+  var imagePref = config.pauseOverlay.imagePreference || "auto";
+  var hasLogoTag = item.ImageTags.Logo || item.SeriesLogoImageTag || null;
+  var hasDiscTag = item.ImageTags.Disc || null;
 
-  const logoUrl = hasLogoTag ? `${base}/Items/${item.Id}/Images/Logo?tag=${encodeURIComponent(hasLogoTag)}${tokenQ}` : null;
-  const discUrl = hasDiscTag ? `${base}/Items/${item.Id}/Images/Disc?tag=${encodeURIComponent(hasDiscTag)}${tokenQ}` : null;
+  var logoUrl = hasLogoTag ? (base) + "/Items/" + (item.Id) + "/Images/Logo?tag=" + (encodeURIComponent(hasLogoTag)) + (tokenQ) : null;
+  var discUrl = hasDiscTag ? (base) + "/Items/" + (item.Id) + "/Images/Disc?tag=" + (encodeURIComponent(hasDiscTag)) + (tokenQ) : null;
 
-    const sequence = (() => {
+    var sequence = function(() {
       switch (imagePref) {
         case "logo":
           return ["logo"];
@@ -2672,55 +2584,55 @@ function hideOverlay(opts = {}) {
     })();
 
     logoEl.innerHTML = "";
-    for (const pref of sequence) {
+    for (var pref of sequence) {
       if (pref === "logo" && logoUrl) {
-        logoEl.innerHTML = `<div class="pause-logo-container"><img class="pause-logo" src="${logoUrl}" alt=""/></div>`;
+        logoEl.innerHTML = "<div class=\"pause-logo-container\"><img class=\"pause-logo\" src=\"" + (logoUrl) + "\" alt=\"\"/></div>";
         return;
       }
       if (pref === "disc" && discUrl) {
-        logoEl.innerHTML = `<div class="pause-disk-container"><img class="pause-disk" src="${discUrl}" alt=""/></div>`;
+        logoEl.innerHTML = "<div class=\"pause-disk-container\"><img class=\"pause-disk\" src=\"" + (discUrl) + "\" alt=\"\"/></div>";
         return;
       }
       if (pref === "title") {
-        logoEl.innerHTML = `<div class="pause-text-logo">${item.Name || item.OriginalTitle || ""}</div>`;
+        logoEl.innerHTML = "<div class=\"pause-text-logo\">" + (item.Name || item.OriginalTitle || "") + "</div>";
         return;
       }
     }
-    logoEl.innerHTML = `<div class="pause-text-logo">${item.Name || item.OriginalTitle || ""}</div>`;
+    logoEl.innerHTML = "<div class=\"pause-text-logo\">" + (item.Name || item.OriginalTitle || "") + "</div>";
   }
 
-  async function showBadgeForCurrentIfFresh() {
+  function showBadgeForCurrentIfFresh() {
     if (Date.now() - _badgeShownAt < BADGE_LOCK_MS) return false;
-    if (ratingGenreElement?.classList?.contains("visible")) return false;
-    if (_iconEl?.classList?.contains("visible")) return false;
+    if (ratingGenreElement.classList.contains("visible")) return false;
+    if (_iconEl.classList.contains("visible")) return false;
     if (!SHOW_AGE_BADGE) return false;
     if (!activeVideo) return false;
-    const BADGE_MIN_CT_SEC = 2.0;
-    const MIN_DUR = getMinVideoDurationSec();
+    var BADGE_MIN_CT_SEC = 2.0;
+    var MIN_DUR = getMinVideoDurationSec();
 
-    const ct = Number(activeVideo.currentTime || 0);
-    const dur = Number(activeVideo.duration || 0);
+    var ct = Number(activeVideo.currentTime || 0);
+    var dur = Number(activeVideo.duration || 0);
     if (!(isFinite(ct) && ct >= BADGE_MIN_CT_SEC)) return false;
-    const durationOk = (isFinite(dur) && dur >= MIN_DUR) || (!isFinite(dur) && ct >= BADGE_MIN_CT_SEC);
+    var durationOk = (isFinite(dur) && dur >= MIN_DUR) || (!isFinite(dur) && ct >= BADGE_MIN_CT_SEC);
     if (!durationOk) return false;
 
-    const itemId = await resolvePlaybackItemId({ minStableMs: 350 }).catch(() => null);
+    var itemId = resolvePlaybackItemId({ minStableMs: 350 }).catchfunction(() null);
     if (!itemId) return false;
 
-    const data = await fetchItemDetailsCached(itemId).catch(() => null);
+    var data = fetchItemDetailsCached(itemId).catchfunction(() null);
     if (!data) { console.debug('[badge] no item data'); return false; }
     if (shouldIgnoreTheme({ video: activeVideo, item: data })) return false;
-    const durMs = _badgeDurationFor(_badgeCtx);
+    var durMs = _badgeDurationFor(_badgeCtx);
 
     if (data.Type === "Episode" && data.SeriesId) {
       try {
-        const series = await fetchItemDetailsCached(data.SeriesId);
-        await showRatingGenre({ ...series, _episodeData: data }, durMs);
+        var series = fetchItemDetailsCached(data.SeriesId);
+        showRatingGenre({ ...series, _episodeData: data }, durMs);
       } catch {
-        await showRatingGenre(data, durMs);
+        showRatingGenre(data, durMs);
       }
     } else {
-      await showRatingGenre(data, durMs);
+      showRatingGenre(data, durMs);
     }
     return true;
   }
@@ -2739,21 +2651,21 @@ function hideOverlay(opts = {}) {
   function isPreviewPlaybackElement(el) {
     if (!el) return false;
     try {
-      if (el.dataset?.jmsIgnorePauseOverlay === "1") return true;
-      if (el.dataset?.jmsPreview === "1") return true;
+      if (el.dataset.jmsIgnorePauseOverlay === "1") return true;
+      if (el.dataset.jmsPreview === "1") return true;
 
-      const p = el.closest?.(".intro-video-container");
+      var p = el.closest.(".intro-video-container");
       if (p) return true;
 
-      const g = (typeof window !== "undefined") ? window.__JMS_PREVIEW_PLAYBACK : null;
-      if (g?.active) return true;
+      var g = (typeof window !== "undefined") ? window.__JMS_PREVIEW_PLAYBACK : null;
+      if (g.active) return true;
     } catch {}
     return false;
   }
 
   function bindVideo(video, why = '') {
     if (isPreviewPlaybackElement(video)) return false;
-    ddbg("[PO] bindVideo", why, "paused?", video?.paused, "src?", video?.currentSrc || video?.src);
+    ddbg("[PO] bindVideo", why, "paused?", video.paused, "src?", video.currentSrc || video.src);
     if (!video) return false;
     try {
       if (video.__jmsPOBound === true && typeof video.__jmsPOUnbind === "function") {
@@ -2777,20 +2689,20 @@ function hideOverlay(opts = {}) {
     try { window.__jmsActiveVideo = video; } catch {}
     relaxScanDepth();
 
-    let cleanupSmart = null;
-    const armSmart = () => {
+    var cleanupSmart = null;
+    var armSmart = function() {
       if (cleanupSmart) { try { cleanupSmart(); } catch {} }
       try { cleanupSmart = createSmartAutoPause(video); } catch {}
     };
-    let badgeStartAt = 0;
-    let badgeChecks = 0;
-    let _badgeSeq = 0;
-    let _playCount = 0;
-    let _badgeArmTimeoutId = null;
-    let _badgeInFlight = false;
-    let _badgeShownThisPlay = false;
-    const BADGE_WINDOW_MS = 45000;
-    const BADGE_MIN_CT_SEC = 2.0;
+    var badgeStartAt = 0;
+    var badgeChecks = 0;
+    var _badgeSeq = 0;
+    var _playCount = 0;
+    var _badgeArmTimeoutId = null;
+    var _badgeInFlight = false;
+    var _badgeShownThisPlay = false;
+    var BADGE_WINDOW_MS = 45000;
+    var BADGE_MIN_CT_SEC = 2.0;
 
     function armBadgeAttempt(reason = "arm") {
       badgeStartAt = 0;
@@ -2803,9 +2715,8 @@ function hideOverlay(opts = {}) {
       cancelBadgeTimer();
       video.addEventListener("timeupdate", onTimeUpdateArm, { passive: true });
 
-      const delayMs = _badgeDelayFor(_badgeCtx);
-    _badgeArmTimeoutId = LC.addTimeout(
-      () => onTimeUpdateArm(_badgeSeq),
+      var delayMs = _badgeDelayFor(_badgeCtx);
+    _badgeArmTimeoutId = LC.addTimeoutfunction(() onTimeUpdateArm(_badgeSeq),
       Math.max(50, delayMs)
     );
 
@@ -2819,14 +2730,14 @@ function hideOverlay(opts = {}) {
       _badgeInFlight = false;
     }
 
-    async function onTimeUpdateArm(evOrSeq = _badgeSeq) {
-      const seq = (typeof evOrSeq === "number") ? evOrSeq : _badgeSeq;
+    function onTimeUpdateArm(evOrSeq = _badgeSeq) {
+      var seq = (typeof evOrSeq === "number") ? evOrSeq : _badgeSeq;
 
       if (seq !== _badgeSeq) return;
       if (_badgeShownThisPlay) return;
 
-      const now = Date.now();
-      const delayMs = _badgeDelayFor(_badgeCtx);
+      var now = Date.now();
+      var delayMs = _badgeDelayFor(_badgeCtx);
       if (delayMs > 0 && (now - (_playEventAt || _playStartAt)) < delayMs) return;
       if ((video.currentTime || 0) < BADGE_MIN_CT_SEC) return;
       if (_badgeInFlight) return;
@@ -2836,7 +2747,7 @@ function hideOverlay(opts = {}) {
         if (!badgeStartAt) badgeStartAt = now;
         badgeChecks++;
 
-        const shown = await showBadgeForCurrentIfFresh();
+        var shown = showBadgeForCurrentIfFresh();
         if (seq !== _badgeSeq) return;
 
         if (shown) {
@@ -2849,7 +2760,7 @@ function hideOverlay(opts = {}) {
         _badgeInFlight = false;
       }
     }
-    const onPause = async () => {
+    var onPause = function() {
       cancelBadgeTimer();
       ddbg("[PO] onPause fired", { ct: video.currentTime, dur: video.duration, paused: video.paused });
       hideRatingGenre();
@@ -2863,10 +2774,10 @@ function hideOverlay(opts = {}) {
         return;
       }
       if (pauseTimeout) clearTimeout(pauseTimeout);
-      pauseTimeout = LC.addTimeout(async () => {
+      pauseTimeout = LC.addTimeoutfunction(() {
         if (!video.paused || video.ended) return;
-        const dur = Number(video.duration || 0);
-        const ok = (isFinite(dur) && dur >= getMinVideoDurationSec()) || (!isFinite(dur) && (video.currentTime || 0) >= 2);
+        var dur = Number(video.duration || 0);
+        var ok = (isFinite(dur) && dur >= getMinVideoDurationSec()) || (!isFinite(dur) && (video.currentTime || 0) >= 2);
         if (!ok) return;
 
         ddbg('[pause] paused', {
@@ -2877,27 +2788,27 @@ function hideOverlay(opts = {}) {
           cpiLast: _cpiLastRawId
         });
 
-        await new Promise(r => setTimeout(r, 220));
-        const itemId = await resolvePlaybackItemId({ minStableMs: 350 }).catch(() => null);
+        new Promise(function(r) setTimeout(r, 220));
+        var itemId = resolvePlaybackItemId({ minStableMs: 350 }).catchfunction(() null);
         if (!itemId) return;
         ddbg('[pause] resolved itemId=', itemId);
 
-        let baseInfo = await fetchItemDetailsCached(itemId).catch(e => (console.warn('[pause] fetchItemDetails err', e), null));
+        var baseInfo = fetchItemDetailsCached(itemId).catch(function(e) (console.warn('[pause] fetchItemDetails err', e), null));
         ddbg('[pause] baseInfo', baseInfo ? { Id: baseInfo.Id, Type: baseInfo.Type, SeriesId: baseInfo.SeriesId } : null);
         if (shouldIgnoreTheme({ video, item: baseInfo })) return;
 
-        let seriesId =
-          (baseInfo?.Type === "Episode" && baseInfo?.SeriesId) || baseInfo?.SeriesId || baseInfo?.Id || null;
+        var seriesId =
+          (baseInfo.Type === "Episode" && baseInfo.SeriesId) || baseInfo.SeriesId || baseInfo.Id || null;
         if (!seriesId) { console.debug('[overlay] no seriesId/baseId'); return; }
 
         currentMediaId = seriesId;
-        const series = await fetchItemDetailsCached(seriesId);
+        var series = fetchItemDetailsCached(seriesId);
         if (!video.paused || video.ended) return;
         if (shouldIgnoreTheme({ video, item: series })) return;
-        if (baseInfo?.Type === "Episode") {
-          await refreshData({ ...series, _episodeData: baseInfo });
+        if (baseInfo.Type === "Episode") {
+          refreshData({ ...series, _episodeData: baseInfo });
         } else {
-          await refreshData({ ...series, _episodeData: null });
+          refreshData({ ...series, _episodeData: null });
         }
         showOverlay();
       }, 1200);
@@ -2906,7 +2817,7 @@ function hideOverlay(opts = {}) {
     _playStartAt = Date.now();
     hardResetBadgeOverlay();
 
-    const onPlay = () => {
+    var onPlay = function() {
       _badgeCtx = (_playCount === 0) ? "first" : "resume";
       _playCount++;
       _playEventAt = Date.now();
@@ -2924,22 +2835,21 @@ function hideOverlay(opts = {}) {
       _badgeInFlight = false;
       cancelBadgeTimer();
       video.addEventListener("timeupdate", onTimeUpdateArm, { passive: true });
-      _badgeArmTimeoutId = LC.addTimeout(
-        () => onTimeUpdateArm(_badgeSeq),
+      _badgeArmTimeoutId = LC.addTimeoutfunction(() onTimeUpdateArm(_badgeSeq),
         Math.max(2000, BADGE_DELAY_MS)
       );
       _hideRecoBadgeAndPanel();
       armBadgeAttempt("play");
     };
 
-    const onLoadedMetadata = () => {
+    var onLoadedMetadata = function() {
       if (_shouldIgnoreEarlyMetaResets()) return;
       if (ratingGenreTimeout) {
         if (DEBUG_PO) dlog("[badge] loadedmetadata ignored (ratingGenreTimeout active)");
         return;
       }
 
-      if (ratingGenreElement?.classList?.contains("visible") && Date.now() - _badgeShownAt < 2000) {
+      if (ratingGenreElement.classList.contains("visible") && Date.now() - _badgeShownAt < 2000) {
         if (DEBUG_PO) dlog("[badge] loadedmetadata ignored (badge protected)");
         return;
       }
@@ -2947,8 +2857,8 @@ function hideOverlay(opts = {}) {
       _playCount = 0;
       _badgeCtx = "first";
 
-      const now = Date.now();
-      const killedRecent = (now - (_badgeShownAt || 0)) < 2500;
+      var now = Date.now();
+      var killedRecent = (now - (_badgeShownAt || 0)) < 2500;
 
       hideRatingGenre("finished");
       try { hideIconBadges("finished"); } catch {}
@@ -2966,7 +2876,7 @@ function hideOverlay(opts = {}) {
       armBadgeAttempt("loadedmetadata");
     };
 
-    const onLoadStartSafe = () => {
+    var onLoadStartSafe = function() {
       if (_shouldIgnoreEarlyMetaResets()) return;
       try {
         if ((video.currentTime || 0) > 1.0) return;
@@ -2974,7 +2884,7 @@ function hideOverlay(opts = {}) {
       onLoadedMetadata();
     };
 
-    const onEnded = () => {
+    var onEnded = function() {
       cancelBadgeTimer();
       hideRatingGenre("finished");
       try { hideIconBadges("finished"); } catch {}
@@ -2984,7 +2894,7 @@ function hideOverlay(opts = {}) {
         pausedLabel.style.display = "none";
       }
     };
-    const onEmptiedLike = () => {
+    var onEmptiedLike = function() {
       cancelBadgeTimer();
       hideRatingGenre("finished");
       try { hideIconBadges("finished"); } catch {}
@@ -2992,7 +2902,7 @@ function hideOverlay(opts = {}) {
       badgeChecks = 0;
       clearOverlayUi();
     };
-    const onSeekingHide = () => {
+    var onSeekingHide = function() {
       if ((video.currentTime || 0) > 3 && Date.now() - _badgeShownAt > BADGE_LOCK_MS) {
         hideRatingGenre();
         try { hideIconBadges(); } catch {}
@@ -3003,14 +2913,14 @@ function hideOverlay(opts = {}) {
     video.addEventListener("play", onPlay, { signal });
     video.addEventListener("loadedmetadata", onLoadedMetadata, { signal });
     video.addEventListener("loadstart", onLoadStartSafe, { signal });
-    const onDurationChange = () => {
+    var onDurationChange = function() {
       if (_shouldIgnoreEarlyMetaResets()) return;
       if (Date.now() - _badgeShownAt > BADGE_LOCK_MS) {
         hideRatingGenre();
       }
     };
     video.addEventListener("durationchange", onDurationChange, { signal });
-    const onPlaying = () => {
+    var onPlaying = function() {
       try { hideIconBadges(); } catch {}
       badgeStartAt = 0;
       badgeChecks = 0;
@@ -3026,12 +2936,12 @@ function hideOverlay(opts = {}) {
 
     if (!video.paused && !video.ended) {
       onPlay();
-      LC.addTimeout(() => {
+      LC.addTimeoutfunction(() {
         try { onTimeUpdateArm(); } catch {}
       }, 300);
     }
 
-    removeHandlers = () => {
+    removeHandlers = function() {
       video.removeEventListener("pause", onPause);
       video.removeEventListener("play", onPlay);
       video.removeEventListener("loadedmetadata", onLoadedMetadata);
@@ -3059,9 +2969,9 @@ function hideOverlay(opts = {}) {
   }
 
   function isPreviewInHub(video) {
-   const inHub = video.closest("#studio-hubs, .hub-card, .hub-row, .hub-video") !== null;
+   var inHub = video.closest("#studio-hubs, .hub-card, .hub-row, .hub-video") !== null;
    if (!inHub) return false;
-   const probablyPreview =
+   var probablyPreview =
      video.muted === true &&
      video.controls !== true &&
     (video.autoplay === true || video.loop === true);
@@ -3069,23 +2979,23 @@ function hideOverlay(opts = {}) {
  }
 
   function findAnyVideoDeep(root = document, maxDepth = 8) {
-    const seen = new Set();
+    var seen = new Set();
     function walk(node, d) {
       if (!node || d > maxDepth) return null;
       if (node instanceof HTMLVideoElement) return node;
       if (node.querySelector) {
-        const v = node.querySelector('video');
+        var v = node.querySelector('video');
         if (v) return v;
       }
-      const sr = node.shadowRoot;
+      var sr = node.shadowRoot;
       if (sr && !seen.has(sr)) {
         seen.add(sr);
-        const v2 = sr.querySelector?.('video') || [...sr.childNodes].map(n => walk(n, d+1)).find(Boolean);
+        var v2 = sr.querySelector.('video') || [...sr.childNodes].map(function(n) walk(n, d+1)).find(Boolean);
         if (v2) return v2;
       }
-      const kids = node.children || [];
-      for (let i = 0; i < kids.length; i++) {
-        const v3 = walk(kids[i], d+1);
+      var kids = node.children || [];
+      for (var i = 0; i < kids.length; i++) {
+        var v3 = walk(kids[i], d+1);
         if (v3) return v3;
       }
       return null;
@@ -3096,11 +3006,11 @@ function hideOverlay(opts = {}) {
   function* iterDocRoots(startDoc = document, maxIframes = 12) {
     yield startDoc;
     try {
-      const iframes = startDoc.querySelectorAll?.("iframe") || [];
-      for (let i = 0; i < iframes.length && i < maxIframes; i++) {
-        const fr = iframes[i];
+      var iframes = startDoc.querySelectorAll.("iframe") || [];
+      for (var i = 0; i < iframes.length && i < maxIframes; i++) {
+        var fr = iframes[i];
         try {
-          const idoc = fr.contentDocument || fr.contentWindow?.document;
+          var idoc = fr.contentDocument || fr.contentWindow.document;
           if (idoc) yield idoc;
         } catch {}
       }
@@ -3114,9 +3024,9 @@ function hideOverlay(opts = {}) {
       if (shouldIgnoreTheme({ video: v })) return -1e9;
       if (isPreviewInHub(v)) return -1e6;
 
-      let s = 0;
-      const cls = String(v.className || '');
-      const src = String(v.currentSrc || v.src || '');
+      var s = 0;
+      var cls = String(v.className || '');
+      var src = String(v.currentSrc || v.src || '');
       if (cls.includes('htmlvideoplayer')) s += 1000;
       if (v.controls) s += 120;
       if (!v.muted) s += 60;
@@ -3131,13 +3041,13 @@ function hideOverlay(opts = {}) {
   }
 
   function findBestPlayableVideoAnywhere(maxIframes = 12){
-    let best = null;
-    let bestS = -1e9;
-    for (const doc of iterDocRoots(document, maxIframes)) {
-      const vids = doc.querySelectorAll?.('video') || [];
-      for (let i = 0; i < vids.length; i++) {
-        const v = vids[i];
-        const sc = _scoreVideoCandidate(v);
+    var best = null;
+    var bestS = -1e9;
+    for (var doc of iterDocRoots(document, maxIframes)) {
+      var vids = doc.querySelectorAll.('video') || [];
+      for (var i = 0; i < vids.length; i++) {
+        var v = vids[i];
+        var sc = _scoreVideoCandidate(v);
         if (sc > bestS) { bestS = sc; best = v; }
       }
     }
@@ -3145,9 +3055,9 @@ function hideOverlay(opts = {}) {
   }
 
   function scheduleMaybeDetachActive() {
-    const v = activeVideo;
+    var v = activeVideo;
     if (!v) return;
-    requestAnimationFrame(() => {
+    requestAnimationFramefunction(() {
       try {
         if (v.isConnected || document.contains(v)) return;
       } catch {}
@@ -3169,7 +3079,7 @@ function hideOverlay(opts = {}) {
   function isStudioTrailerPopoverVideo(video) {
     return (
       video.closest(".mini-trailer-popover") !== null ||
-      video.parentElement?.classList?.contains("mtp-player") ||
+      video.parentElement.classList.contains("mtp-player") ||
       video.closest(".mtp-inner") !== null ||
       video.classList.contains("studio-trailer-video") ||
       (video.tagName === "IFRAME" && video.classList.contains("studio-trailer-iframe"))
@@ -3177,12 +3087,12 @@ function hideOverlay(opts = {}) {
   }
 
   function createSmartAutoPause(video) {
-    const scopeDoc = (video && video.ownerDocument) || document;
-    const scopeWin = (scopeDoc.defaultView) || window;
-    const topDoc = document;
-    const topWin = window;
-    const base = getConfig();
-    const def = {
+    var scopeDoc = (video && video.ownerDocument) || document;
+    var scopeWin = (scopeDoc.defaultView) || window;
+    var topDoc = document;
+    var topWin = window;
+    var base = getConfig();
+    var def = {
       enabled: true,
       blurMinutes: 0.5,
       hiddenMinutes: 0.2,
@@ -3193,26 +3103,26 @@ function hideOverlay(opts = {}) {
       beginAfterMs: 4000,
       postPlayGuardMs: 2500
     };
-    const sap = Object.assign({}, def, base.smartAutoPause || {});
+    var sap = Object.assign({}, def, base.smartAutoPause || {});
     if (sap.idleThresholdMs != null && sap.idleMinutes == null) sap.idleMinutes = Number(sap.idleThresholdMs) / 60000;
     if (sap.unfocusedThresholdMs != null && sap.blurMinutes == null) sap.blurMinutes = Number(sap.unfocusedThresholdMs) / 60000;
     if (sap.offscreenThresholdMs != null && sap.hiddenMinutes == null) sap.hiddenMinutes = Number(sap.offscreenThresholdMs) / 60000;
 
     function minToMs(x) {
-      const n = Number(x || 0);
+      var n = Number(x || 0);
       return isFinite(n) && n > 0 ? n * 60000 : 0;
     }
-    const blurMs = minToMs(sap.blurMinutes);
-    const hidMs = minToMs(sap.hiddenMinutes);
-    const idleMs = minToMs(sap.idleMinutes);
-    const useIdle = !!sap.useIdleDetection;
-    const respectP = !!sap.respectPiP;
+    var blurMs = minToMs(sap.blurMinutes);
+    var hidMs = minToMs(sap.hiddenMinutes);
+    var idleMs = minToMs(sap.idleMinutes);
+    var useIdle = !!sap.useIdleDetection;
+    var respectP = !!sap.respectPiP;
 
-    if (!sap.enabled) return () => {};
-    if (!video) return () => {};
-    const dur = Number(video.duration || 0);
+    if (!sap.enabled) return function() {};
+    if (!video) return function() {};
+    var dur = Number(video.duration || 0);
     if (sap.ignoreShortUnderSec && dur > 0 && dur < Number(sap.ignoreShortUnderSec)) {
-      return () => {};
+      return function() {};
     }
 
     function inPiP() {
@@ -3223,13 +3133,13 @@ function hideOverlay(opts = {}) {
       }
     }
 
-    const actEvts = ["pointermove","pointerdown","mousedown","mouseup","keydown","wheel","touchstart","touchmove"];
-    const onActivity = () => {
+    var actEvts = ["pointermove","pointerdown","mousedown","mouseup","keydown","wheel","touchstart","touchmove"];
+    var onActivity = function() {
       lastActivityAt = Date.now();
     };
-    actEvts.forEach((ev) => scopeDoc.addEventListener(ev, onActivity, { passive: true }));
-    actEvts.forEach((ev) => video.addEventListener(ev, onActivity, { passive: true }));
-    actEvts.forEach((ev) => topDoc.addEventListener(ev, onActivity, { passive: true }));
+    actEvts.forEach(function((ev) scopeDoc.addEventListener(ev, onActivity, { passive: true }));
+    actEvts.forEach(function((ev) video.addEventListener(ev, onActivity, { passive: true }));
+    actEvts.forEach(function((ev) topDoc.addEventListener(ev, onActivity, { passive: true }));
 
     function onFocus() {
       blurAt = null;
@@ -3273,7 +3183,7 @@ function hideOverlay(opts = {}) {
           return;
         }
         if (respectP && inPiP()) return;
-        const reason = lastPauseReason;
+        var reason = lastPauseReason;
         if (!reason) return;
         if (kind === "focus" && reason !== "blur") return;
         if (kind === "vis"   && reason !== "hidden") return;
@@ -3284,12 +3194,12 @@ function hideOverlay(opts = {}) {
       }
     }
 
-    const startedAt = Date.now();
-    let lastPlayAtMs = 0;
-    const timer = setInterval(() => {
+    var startedAt = Date.now();
+    var lastPlayAtMs = 0;
+    var timer = setIntervalfunction(() {
       try {
         if (!video || video.ended) return;
-        const now = Date.now();
+        var now = Date.now();
        if (respectP && inPiP()) return;
        if (video.paused) return;
        if (sap.beginAfterMs > 0 && (now - startedAt) < sap.beginAfterMs) return;
@@ -3322,18 +3232,18 @@ function hideOverlay(opts = {}) {
       } catch {}
     }, 1000);
 
-    const onPlayReset = () => {
+    var onPlayReset = function() {
       lastPauseReason = null;
       lastPlayAtMs = Date.now();
     };
     video.addEventListener("play", onPlayReset);
 
-    return () => {
+    return function() {
       clearInterval(timer);
       video.removeEventListener("play", onPlayReset);
-      actEvts.forEach((ev) => scopeDoc.removeEventListener(ev, onActivity));
-      actEvts.forEach((ev) => video.removeEventListener(ev, onActivity));
-      actEvts.forEach((ev) => topDoc.removeEventListener(ev, onActivity));
+      actEvts.forEach(function((ev) scopeDoc.removeEventListener(ev, onActivity));
+      actEvts.forEach(function((ev) video.removeEventListener(ev, onActivity));
+      actEvts.forEach(function((ev) topDoc.removeEventListener(ev, onActivity));
       scopeWin.removeEventListener("focus", onFocus);
       scopeWin.removeEventListener("blur", onBlur);
       topWin.removeEventListener("focus", onFocus);
@@ -3343,15 +3253,15 @@ function hideOverlay(opts = {}) {
     };
   }
 
-  let _visIO = null,
+  var _visIO = null,
       _visMap = new WeakMap(),
       _visObserved = new WeakSet();
   function ensureVisIO() {
     if (_visIO) return _visIO;
-    const thr = Number(config?.pauseOverlay?.visThreshold ?? 0.1);
-    _visIO = LC.trackMo(new IntersectionObserver((ents) => {
-      ents.forEach((e) => {
-        const ratio = e.intersectionRatio ?? 0;
+    var thr = Number(config.pauseOverlay.visThreshold || 0.1);
+    _visIO = LC.trackMofunction(new IntersectionObserver((ents) {
+      ents.forEach(function((e) {
+        var ratio = e.intersectionRatio || 0;
         _visMap.set(e.target, ratio >= thr);
       });
     }, { root: null, threshold: [0, thr] }));
@@ -3367,112 +3277,112 @@ function hideOverlay(opts = {}) {
   }
   function legacyDomVisible(vid) {
     if (!vid) return false;
-    const rect = vid.getBoundingClientRect?.();
-    const shown =
+    var rect = vid.getBoundingClientRect.();
+    var shown =
       vid.offsetParent !== null && !vid.hidden && vid.style.display !== "none" && vid.style.visibility !== "hidden" && rect && rect.width > 0 && rect.height > 0;
     return !!shown;
   }
   function isVideoVisible(vid = activeVideo || document.querySelector("video")) {
     if (!vid) return false;
-    const io = ensureVisIO();
+    var io = ensureVisIO();
     if (!_visObserved.has(vid)) {
       io.observe(vid);
       _visObserved.add(vid);
     }
-    const seen = _visMap.get(vid);
+    var seen = _visMap.get(vid);
     if (seen === undefined) return legacyDomVisible(vid);
     return !!seen;
   }
 
   function convertDurationFromSeconds(sec) {
-    const t = Math.floor(sec || 0);
-    const m = Math.floor(t / 60),
+    var t = Math.floor(sec || 0);
+    var m = Math.floor(t / 60),
       h = Math.floor(m / 60),
       rm = m % 60,
       rs = t % 60;
-    return h > 0 ? `${h}${labels.sa} ${rm}${labels.dk} ${rs}${labels.sn}` : `${rm}${labels.dk} ${rs}${labels.sn}`;
+    return h > 0 ? (h) + (labels.sa) + " " + (rm) + (labels.dk) + " " + (rs) + (labels.sn) : (rm) + (labels.dk) + " " + (rs) + (labels.sn);
   }
   function formatSeasonEpisodeLine(ep) {
-    const sWord = labels.season || "Temporada";
-    const eWord = labels.episode || "Episódio";
-    const sNum = ep?.ParentIndexNumber;
-    const eNum = ep?.IndexNumber;
-    const eTitle = ep?.Name ? ` – ${ep.Name}` : "";
-    const numberFirst = new Set([]);
+    var sWord = labels.season || "Temporada";
+    var eWord = labels.episode || "Episódio";
+    var sNum = ep.ParentIndexNumber;
+    var eNum = ep.IndexNumber;
+    var eTitle = ep.Name ? " – " + (ep.Name) : "";
+    var numberFirst = new Set([]);
 
-    let left = "",
+    var left = "",
       right = "";
     if (numberFirst.has(currentLang)) {
-      if (sNum != null) left = `${sNum}. ${sWord}`;
-      if (eNum != null) right = `${eNum}. ${eWord}`;
+      if (sNum != null) left = (sNum) + ". " + (sWord);
+      if (eNum != null) right = (eNum) + ". " + (eWord);
     } else {
-      if (sNum != null) left = `${sWord} ${sNum}`;
-      if (eNum != null) right = `${eWord} ${eNum}`;
+      if (sNum != null) left = (sWord) + " " + (sNum);
+      if (eNum != null) right = (eWord) + " " + (eNum);
     }
-    const mid = left && right ? " • " : "";
-    return `${left}${mid}${right}${eTitle}`.trim();
+    var mid = left && right ? " • " : "";
+    return (left) + (mid) + (right) + (eTitle).trim();
   }
   function formatEpisodeLineShort(ep) {
-    const eNum = ep?.IndexNumber;
-    const titlePart = ep?.Name ? ` - ${ep.Name}` : "";
-    const lang = String(currentLang || "").toLowerCase();
-    const fallbackWords = { por: "episódio", pt: "episódio", eng: "Episode", en: "Episode", fra: "Épisode", fr: "Épisode", deu: "Folge", de: "Folge", rus: "серия", ru: "серия" };
-    const rawWord = (labels && typeof labels.episode === "string" && labels.episode.trim()) || fallbackWords[lang] || "Episódio";
-    const numberFirstOverride = typeof labels?.numberFirstEpisode === "boolean" ? labels.numberFirstEpisode : null;
-    const numberFirst = numberFirstOverride !== null ? numberFirstOverride : lang === "ru" || lang === "rus";
-    if (eNum == null) return `${rawWord}${titlePart}`.trim();
+    var eNum = ep.IndexNumber;
+    var titlePart = ep.Name ? " - " + (ep.Name) : "";
+    var lang = String(currentLang || "").toLowerCase();
+    var fallbackWords = { por: "episódio", pt: "episódio", eng: "Episode", en: "Episode", fra: "Épisode", fr: "Épisode", deu: "Folge", de: "Folge", rus: "серия", ru: "серия" };
+    var rawWord = (labels && typeof labels.episode === "string" && labels.episode.trim()) || fallbackWords[lang] || "Episódio";
+    var numberFirstOverride = typeof labels.numberFirstEpisode === "boolean" ? labels.numberFirstEpisode : null;
+    var numberFirst = numberFirstOverride !== null ? numberFirstOverride : lang === "ru" || lang === "rus";
+    if (eNum == null) return (rawWord) + (titlePart).trim();
     if (lang === "ru" || lang === "rus") {
-      const w = rawWord.toLocaleLowerCase("ru");
-      return `${eNum} ${w}${titlePart}`;
+      var w = rawWord.toLocaleLowerCase("ru");
+      return (eNum) + " " + (w) + (titlePart);
     }
-    return `${rawWord} ${eNum}${titlePart}`;
+    return (rawWord) + " " + (eNum) + (titlePart);
   }
 
   function buildImgUrl(item, kind = "Primary", w = 300, h = 169) {
-    if (!item?.Id) return "";
-    const tag = (item.ImageTags && (item.ImageTags[kind] || item.ImageTags["Primary"])) || item.PrimaryImageTag || item.SeriesPrimaryImageTag || "";
-    const base = withServer('');
-    const q = new URLSearchParams({ fillWidth: String(w), fillHeight: String(h), quality: "90", tag });
-    return `${base}/Items/${item.Id}/Images/${kind}?${q.toString()}`;
+    if (!item.Id) return "";
+    var tag = (item.ImageTags && (item.ImageTags[kind] || item.ImageTags["Primary"])) || item.PrimaryImageTag || item.SeriesPrimaryImageTag || "";
+    var base = withServer('');
+    var q = new URLSearchParams({ fillWidth: String(w), fillHeight: String(h), quality: "90", tag });
+    return (base) + "/Items/" + (item.Id) + "/Images/" + (kind) + "?" + (q.toString());
   }
   function buildBackdropUrl(item, w = 360, h = 202) {
-    const base = withServer('');
+    var base = withServer('');
     if (!item) return "";
-    const directTag =
+    var directTag =
       (Array.isArray(item.BackdropImageTags) && item.BackdropImageTags[0]) ||
       (Array.isArray(item.ParentBackdropImageTags) && item.ParentBackdropImageTags[0]) ||
       null;
     if (directTag) {
-      const q = new URLSearchParams({ fillWidth: String(w), fillHeight: String(h), quality: "90", tag: directTag });
-      return `${base}/Items/${item.Id}/Images/Backdrop?${q.toString()}`;
+      var q = new URLSearchParams({ fillWidth: String(w), fillHeight: String(h), quality: "90", tag: directTag });
+      return (base) + "/Items/" + (item.Id) + "/Images/Backdrop?" + (q.toString());
     }
     if (item.ParentId) {
-      const q = new URLSearchParams({ fillWidth: String(w), fillHeight: String(h), quality: "90" });
+      var q = new URLSearchParams({ fillWidth: String(w), fillHeight: String(h), quality: "90" });
       if (Array.isArray(item.ParentBackdropImageTags) && item.ParentBackdropImageTags[0]) q.set("tag", item.ParentBackdropImageTags[0]);
-      return `${base}/Items/${item.ParentId}/Images/Backdrop?${q.toString()}`;
+      return (base) + "/Items/" + (item.ParentId) + "/Images/Backdrop?" + (q.toString());
     }
-    const seriesId = item.SeriesId || null;
-    const seriesBackdropTag = item.SeriesBackdropImageTag || (Array.isArray(item.SeriesBackdropImageTags) && item.SeriesBackdropImageTags[0]) || null;
+    var seriesId = item.SeriesId || null;
+    var seriesBackdropTag = item.SeriesBackdropImageTag || (Array.isArray(item.SeriesBackdropImageTags) && item.SeriesBackdropImageTags[0]) || null;
     if (seriesId) {
-      const q = new URLSearchParams({ fillWidth: String(w), fillHeight: String(h), quality: "90" });
+      var q = new URLSearchParams({ fillWidth: String(w), fillHeight: String(h), quality: "90" });
       if (seriesBackdropTag) q.set("tag", seriesBackdropTag);
-      return `${base}/Items/${seriesId}/Images/Backdrop?${q.toString()}`;
+      return (base) + "/Items/" + (seriesId) + "/Images/Backdrop?" + (q.toString());
     }
     return buildImgUrl(item, "Primary", w, h);
   }
   function goToItem(item) {
-    const { serverId } = getSessionInfo();
-    if (!item?.Id) return;
-    const type = item.Type;
+    var { serverId } = getSessionInfo();
+    if (!item.Id) return;
+    var type = item.Type;
     try { _hideRecoBadgeAndPanel(); } catch {}
     if (type === "Episode" || type === "Season" || true) {
-      location.href = `#/details?id=${encodeURIComponent(item.Id)}&serverId=${encodeURIComponent(serverId)}`;
+      location.href = "#/details?id=" + (encodeURIComponent(item.Id)) + "&serverId=" + (encodeURIComponent(serverId));
     }
   }
-  async function fetchUnplayedEpisodesInSameSeason(currentEp, { limit = 5 } = {}) {
-    if (!currentEp?.SeasonId) return [];
-    const { userId } = getSessionInfo();
-    const qs = new URLSearchParams({
+  function fetchUnplayedEpisodesInSameSeason(currentEp, { limit = 5 } = {}) {
+    if (!currentEp.SeasonId) return [];
+    var { userId } = getSessionInfo();
+    var qs = new URLSearchParams({
       ParentId: currentEp.SeasonId,
       IncludeItemTypes: "Episode",
       Recursive: "false",
@@ -3497,28 +3407,28 @@ function hideOverlay(opts = {}) {
       SortBy: "IndexNumber",
       SortOrder: "Ascending",
     });
-    const data = await makeApiRequest(withServer(`/Items?${qs.toString()}`));
-    const items = data?.Items || [];
-    return items.filter((i) => i.Id !== currentEp.Id).slice(0, limit);
+    var data = makeApiRequest(withServer("/Items?" + (qs.toString())));
+    var items = data.Items || [];
+    return items.filterfunction((i) i.Id !== currentEp.Id).slice(0, limit);
   }
-  async function fetchSimilarUnplayed(item, { limit = 5 } = {}) {
-  if (!item?.Id) return [];
-  const { userId } = getSessionInfo();
-  const qs = new URLSearchParams({
+  function fetchSimilarUnplayed(item, { limit = 5 } = {}) {
+  if (!item.Id) return [];
+  var { userId } = getSessionInfo();
+  var qs = new URLSearchParams({
     UserId: userId || "",
     Limit: String(limit * 3),
     EnableUserData: "true",
     Fields: "UserData,PrimaryImageAspectRatio,RunTimeTicks,ProductionYear,Genres,SeriesId,ParentId,ImageTags,PrimaryImageTag,BackdropImageTags,ParentBackdropImageTags,SeriesBackdropImageTag,SeriesPrimaryImageTag,SeriesLogoImageTag"
   });
-  const items = await makeApiRequest(withServer(`/Items/${encodeURIComponent(item.Id)}/Similar?${qs.toString()}`));
-  const list = Array.isArray(items) ? items : items?.Items || [];
-  const unplayed = list.filter((x) => {
-    const ud = x?.UserData || {};
+  var items = makeApiRequest(withServer("/Items/" + (encodeURIComponent(item.Id)) + "/Similar?" + (qs.toString())));
+  var list = Array.isArray(items) ? items : items.Items || [];
+  var unplayed = list.filterfunction((x) {
+    var ud = x.UserData || {};
     if (typeof ud.Played === "boolean") return !ud.Played;
     if (typeof ud.PlayCount === "number") return ud.PlayCount === 0;
     return true;
   });
-  const chosen = unplayed.slice(0, limit);
+  var chosen = unplayed.slice(0, limit);
   return chosen.length ? chosen : list.slice(0, limit);
 }
 
@@ -3527,45 +3437,45 @@ function hideOverlay(opts = {}) {
     if (!_recoListEl) return;
     _recoListEl.innerHTML = "";
     if (!_recoItemsCache.length) { _clearRecos(); return; }
-    _recoItemsCache.forEach((it) => {
-      const card = document.createElement("button");
+    _recoItemsCache.forEach(function((it) {
+      var card = document.createElement("button");
       card.className = "jms-reco-card";
       card.type = "button";
-      const imgUrl = buildBackdropUrl(it, 360, 202);
-      const primaryFallback = buildImgUrl(it, "Primary", 360, 202);
-      const img = document.createElement("img");
+      var imgUrl = buildBackdropUrl(it, 360, 202);
+      var primaryFallback = buildImgUrl(it, "Primary", 360, 202);
+      var img = document.createElement("img");
       img.className = "jms-reco-thumb";
       img.loading = "lazy";
       img.alt = "";
       img.src = imgUrl || primaryFallback;
-      img.onerror = () => { img.onerror = null; img.src = primaryFallback; };
-      const titleWrap = document.createElement("div");
+      img.onerror = function() { img.onerror = null; img.src = primaryFallback; };
+      var titleWrap = document.createElement("div");
       titleWrap.className = "jms-reco-title";
 
-      const logoUrl = (()=>{
+      var logoUrl = function((){
         if (it.Type === "Episode" && it.SeriesId) {
-          const tag = it.SeriesLogoImageTag || null;
+          var tag = it.SeriesLogoImageTag || null;
           if (tag) {
-            const base = withServer('');
-            const { accessToken } = getSessionInfo();
-            const tokenQ = accessToken ? `&api_key=${encodeURIComponent(accessToken)}` : "";
-            return `${base}/Items/${encodeURIComponent(it.SeriesId)}/Images/Logo?tag=${encodeURIComponent(tag)}${tokenQ}`;
+            var base = withServer('');
+            var { accessToken } = getSessionInfo();
+            var tokenQ = accessToken ? "&api_key=" + (encodeURIComponent(accessToken)) : "";
+            return (base) + "/Items/" + (encodeURIComponent(it.SeriesId)) + "/Images/Logo?tag=" + (encodeURIComponent(tag)) + (tokenQ);
           }
           return null;
         }
-        const tag = (it.ImageTags && it.ImageTags.Logo) || it.SeriesLogoImageTag || null;
+        var tag = (it.ImageTags && it.ImageTags.Logo) || it.SeriesLogoImageTag || null;
         if (tag) {
-          const base = withServer('');
-          const { accessToken } = getSessionInfo();
-          const tokenQ = accessToken ? `&api_key=${encodeURIComponent(accessToken)}` : "";
-          const id = (it.ImageTags && it.ImageTags.Logo) ? it.Id : (it.SeriesId || it.Id);
-          return `${base}/Items/${encodeURIComponent(id)}/Images/Logo?tag=${encodeURIComponent(tag)}${tokenQ}`;
+          var base = withServer('');
+          var { accessToken } = getSessionInfo();
+          var tokenQ = accessToken ? "&api_key=" + (encodeURIComponent(accessToken)) : "";
+          var id = (it.ImageTags && it.ImageTags.Logo) ? it.Id : (it.SeriesId || it.Id);
+          return (base) + "/Items/" + (encodeURIComponent(id)) + "/Images/Logo?tag=" + (encodeURIComponent(tag)) + (tokenQ);
         }
         return null;
       })();
 
       if (logoUrl) {
-        const logoImg = document.createElement("img");
+        var logoImg = document.createElement("img");
         logoImg.className = "jms-reco-title-logo";
         logoImg.alt = "";
         logoImg.loading = "lazy";
@@ -3580,15 +3490,15 @@ function hideOverlay(opts = {}) {
 
       card.appendChild(img);
       card.appendChild(titleWrap);
-      card.addEventListener("click", (e) => { e.stopPropagation(); goToItem(it); });
+      card.addEventListenerfunction("click", (e) { e.stopPropagation(); goToItem(it); });
       _recoListEl.appendChild(card);
     });
     _maybeShowBadge();
   }
 
   if (!window.__jmsPauseOverlay._boundUnload2) {
-    window.addEventListener("beforeunload", () => {
-      for (const v of imageBlobCache.values()) {
+    window.addEventListenerfunction("beforeunload", () {
+      for (var v of imageBlobCache.values()) {
         if (v) URL.revokeObjectURL(v);
       }
       imageBlobCache.clear();
@@ -3596,46 +3506,45 @@ function hideOverlay(opts = {}) {
     window.__jmsPauseOverlay._boundUnload2 = true;
   }
 
-  let _moQueued = false;
+  var _moQueued = false;
   function shouldSkipDeepNode(n) {
     try {
-      const ch = n.childElementCount || 0;
+      var ch = n.childElementCount || 0;
       return ch > 500;
     } catch {
       return false;
     }
   }
-  const mo = LC.trackMo(
-    new MutationObserver((muts) => {
+  var mo = LC.trackMofunction(new MutationObserver((muts) {
       if (_moQueued) return;
       _moQueued = true;
 
-      const queue = new Set();
-      for (const m of muts) {
-        m.addedNodes?.forEach((n) => {
+      var queue = new Set();
+      for (var m of muts) {
+        m.addedNodes.forEach(function((n) {
           if (n.nodeType !== 1) return;
           if (shouldSkipDeepNode(n)) return;
           if (n.tagName === "VIDEO") queue.add(n);
-          else if (n.tagName === "SOURCE" && n.parentElement?.tagName === "VIDEO") queue.add(n.parentElement);
+          else if (n.tagName === "SOURCE" && n.parentElement.tagName === "VIDEO") queue.add(n.parentElement);
           else if (n.tagName === "IFRAME") {
-          const onFrameLoad = () => {
+          var onFrameLoad = function() {
              try {
-               const idoc = n.contentDocument || n.contentWindow?.document;
+               var idoc = n.contentDocument || n.contentWindow.document;
                if (!idoc) return;
-               const vInFrame = findAnyVideoDeep(idoc);
+               var vInFrame = findAnyVideoDeep(idoc);
                if (vInFrame) bindVideo(vInFrame);
              } catch {}
            };
            onFrameLoad();
            try { n.addEventListener("load", onFrameLoad, { once: true }); } catch {}
          }
-          const vids = n.querySelectorAll?.("video");
+          var vids = n.querySelectorAll.("video");
           if (vids) {
-            for (let i = 0; i < vids.length && i < 8; i++) queue.add(vids[i]);
+            for (var i = 0; i < vids.length && i < 8; i++) queue.add(vids[i]);
           }
         });
-        m.removedNodes?.forEach((n) => {
-          const containsActive =
+        m.removedNodes.forEach(function((n) {
+          var containsActive =
             !!activeVideo &&
             n.nodeType === 1 &&
             typeof n.contains === "function" &&
@@ -3645,55 +3554,55 @@ function hideOverlay(opts = {}) {
           }
         });
       }
-      LC.addRaf(() => {
+      LC.addRaffunction(() {
         _moQueued = false;
-        queue.forEach((v) => { try { bindVideo(v, 'mo'); } catch {} });
+        queue.forEach(function((v) { try { bindVideo(v, 'mo'); } catch {} });
       });
     })
   );
   mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
 
-  const initVid = findAnyVideoDeep(document);
+  var initVid = findAnyVideoDeep(document);
   if (initVid) bindVideo(initVid);
-  let _fallbackTries = 0;
-  const _fallbackScan = setInterval(() => {
+  var _fallbackTries = 0;
+  var _fallbackScan = setIntervalfunction(() {
     if (!activeVideo) {
-      const v = findBestPlayableVideoAnywhere(10);
+      var v = findBestPlayableVideoAnywhere(10);
       if (v) bindVideo(v);
     }
     _fallbackTries++;
     if (_fallbackTries > 10) { clearInterval(_fallbackScan); return; }
   }, 300);
- LC.trackClean(() => clearInterval(_fallbackScan));
+ LC.trackCleanfunction(() clearInterval(_fallbackScan));
 
   function startOverlayLogic() {
-    const tick = () => {
-      const onValidPage = isVideoVisible(activeVideo);
+    var tick = function() {
+      var onValidPage = isVideoVisible(activeVideo);
       if (!onValidPage && overlayVisible) hideOverlay();
     };
-    const timer = LC.addInterval(tick, 400);
-    const stop = () => {
+    var timer = LC.addInterval(tick, 400);
+    var stop = function() {
       clearInterval(timer);
     };
     LC.trackClean(stop);
     return stop;
   }
 
-  const _onPop = () => {
+  var _onPop = function() {
     hideOverlay();
     try { _clearRecos(); } catch {}
   };
-  const _onHash = () => {
+  var _onHash = function() {
     hideOverlay();
     try { _clearRecos(); } catch {}
   };
-  const _onVis = () => {
+  var _onVis = function() {
     if (document.visibilityState === "visible" && !isVideoVisible()) {
       hideOverlay();
     }
   };
-  window.addEventListener("hashchange", () => { blurAt = null; hiddenAt = null; lastPauseReason = null; }, { signal });
-  window.addEventListener("popstate",   () => { blurAt = null; hiddenAt = null; lastPauseReason = null; }, { signal });
+  window.addEventListenerfunction("hashchange", () { blurAt = null; hiddenAt = null; lastPauseReason = null; }, { signal });
+  window.addEventListenerfunction("popstate",   () { blurAt = null; hiddenAt = null; lastPauseReason = null; }, { signal });
   function isFullscreenNow() {
   return !!(document.fullscreenElement ||
             document.webkitFullscreenElement ||
@@ -3701,14 +3610,14 @@ function hideOverlay(opts = {}) {
             document.msFullscreenElement);
 }
 
-const _onKey = (e) => {
+var _onKey = function(e) {
   if (e.key === "Escape" && overlayVisible && !isFullscreenNow()) {
     e.preventDefault();
     hideOverlay();
     return;
   }
 
-  const altClose =
+  var altClose =
     (e.key === "Backspace")
 
   if (altClose && overlayVisible) {
@@ -3719,9 +3628,9 @@ const _onKey = (e) => {
 
   if (e.key.toLowerCase() === "f" && activeVideo) {
     if (isFullscreenNow()) {
-      document.exitFullscreen?.();
+      document.exitFullscreen.();
     } else {
-      activeVideo.requestFullscreen?.();
+      activeVideo.requestFullscreen.();
     }
   }
 };
@@ -3730,9 +3639,9 @@ const _onKey = (e) => {
   window.addEventListener("hashchange", _onHash, { signal });
   document.addEventListener("visibilitychange", _onVis, { signal });
 
-  const stopLoop = startOverlayLogic();
-  requestIdleCallback?.(() => {
-    if (!window.__jmsPauseOverlay?.active) return;
+  var stopLoop = startOverlayLogic();
+  requestIdleCallback.function(() {
+    if (!window.__jmsPauseOverlay.active) return;
     initDescriptorTagsOnce();
   }, { timeout: 3000 });
 
@@ -3750,24 +3659,24 @@ const _onKey = (e) => {
     ratingGenreTimeout = null;
     try { wipeBadgeStateAndDom(); } catch {}
     try { wipeIconBadges(); } catch {}
-    try { overlayEl?.classList.remove("visible"); } catch {}
+    try { overlayEl.classList.remove("visible"); } catch {}
     activeVideo = null;
     try { window.__jmsActiveVideo = null; } catch {}
     currentMediaId = null;
     if (pauseTimeout) clearTimeout(pauseTimeout);
     pauseTimeout = null;
     try {
-      stopLoop?.();
+      stopLoop.();
     } catch {}
     try {
       LC.cleanupAll();
     } catch {}
-    try { _visIO?.disconnect(); } catch {}
+    try { _visIO.disconnect(); } catch {}
     _visIO = null;
     _visObserved = new WeakSet();
     _visMap = new WeakMap();
     try {
-      for (const v of imageBlobCache.values()) { if (v) URL.revokeObjectURL(v); }
+      for (var v of imageBlobCache.values()) { if (v) URL.revokeObjectURL(v); }
       imageBlobCache.clear();
     } catch {}
     window.__jmsPauseOverlay.active = false;
@@ -3775,41 +3684,23 @@ const _onKey = (e) => {
   }
   window.__jmsPauseOverlay.destroy = destroy;
 
-  return () => {
+  return function() {
     destroy();
   };
 }
 
 function createIconEl() {
   if (!document.getElementById("jms-rating-icons")) {
-    const el = document.createElement("div");
+    var el = document.createElement("div");
     el.id = "jms-rating-icons";
     el.className = "rating-icons-overlay";
-    el.innerHTML = `<div class="rating-icons-row"></div>`;
+    el.innerHTML = "<div class=\"rating-icons-row\"></div>";
     document.body.appendChild(el);
 
     if (!document.getElementById("jms-rating-icons-css")) {
-      const style = document.createElement("style");
+      var style = document.createElement("style");
       style.id = "jms-rating-icons-css";
-      style.textContent = `
-      .rating-icons-overlay{
-        position:fixed;
-        top:65px;
-        left:60px;
-        z-index:9998;
-        pointer-events:none;
-        opacity:0;
-        transform:translateY(-10px);
-        transition:transform .30s cubic-bezier(.2,.8,.4,1), opacity .30s ease;
-      }
-      .rating-icons-overlay.visible{ opacity:1; transform:translateY(0) }
-      .rating-icons-row{
-        display:flex; align-items:center; gap:10px;
-        filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)) drop-shadow(0 3px 8px rgba(0,0,0,.35));
-      }
-      .rating-icons-row img{
-        width:42px; height:42px; display:block; border-radius:6px; background:transparent;
-      }`;
+      style.textContent = "\n      .rating-icons-overlay{\n        position:fixed;\n        top:65px;\n        left:60px;\n        z-index:9998;\n        pointer-events:none;\n        opacity:0;\n        transform:translateY(-10px);\n        transition:transform .30s cubic-bezier(.2,.8,.4,1), opacity .30s ease;\n      }\n      .rating-icons-overlay.visible{ opacity:1; transform:translateY(0) }\n      .rating-icons-row{\n        display:flex; align-items:center; gap:10px;\n        filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)) drop-shadow(0 3px 8px rgba(0,0,0,.35));\n      }\n      .rating-icons-row img{\n        width:42px; height:42px; display:block; border-radius:6px; background:transparent;\n      }";
       document.head.appendChild(style);
     }
   }
@@ -3823,9 +3714,9 @@ function hideIconBadges(reason) {
   try { if (_iconTimeout) clearTimeout(_iconTimeout); } catch {}
   _iconTimeout = null;
   if (reason === "auto" || reason === "finished") {
-    setTimeout(() => {
+    setTimeoutfunction(() {
       if (_iconEl && _iconEl.parentNode) {
-        const row = _iconEl.querySelector(".rating-icons-row");
+        var row = _iconEl.querySelector(".rating-icons-row");
         if (row) row.innerHTML = "";
       }
     }, 260);
@@ -3837,32 +3728,32 @@ function wipeIconBadges() {
   _iconTimeout = null;
   if (_iconEl) {
     _iconEl.classList.remove("visible");
-    const row = _iconEl.querySelector(".rating-icons-row");
+    var row = _iconEl.querySelector(".rating-icons-row");
     if (row) row.innerHTML = "";
   }
 }
 
 function _hasAnyWords(text, words){
   if (!text) return false;
-  const rx = _getWordRxCached(words);
+  var rx = _getWordRxCached(words);
   return !!(rx && rx.test(String(text)));
 }
 
 function _descCodesFromItem(item){
-  const dict = getDescriptorKeywordMap();
-  const overview = item?.Overview || "";
-  const tags = (item?.Tags || item?.Keywords || []).join(" ");
-  const joined = `${overview} ${tags}`.trim();
+  var dict = getDescriptorKeywordMap();
+  var overview = item.Overview || "";
+  var tags = (item.Tags || item.Keywords || []).join(" ");
+  var joined = (overview) + " " + (tags).trim();
 
-  const codes = new Set();
+  var codes = new Set();
   if (_hasAnyWords(joined, dict.sex)) codes.add("sexo");
   if (_hasAnyWords(joined, dict.violence) || _hasAnyWords(joined, dict.war) || _hasAnyWords(joined, dict.crime)) {
     codes.add("violencia");
   }
   if (_hasAnyWords(joined, dict.mature)) codes.add("adulto");
 
-  for (const t of (item?.Tags || [])) {
-    const hit = _bucketsForTag(t);
+  for (var t of (item.Tags || [])) {
+    var hit = _bucketsForTag(t);
     if (hit.has("sex")) codes.add("sexo");
     if (hit.has("violence")) codes.add("violencia");
     if (hit.has("mature")) codes.add("adulto");
@@ -3871,7 +3762,7 @@ function _descCodesFromItem(item){
   return Array.from(codes);
 }
 
-const BUCKET_ICON_MAP = {
+var BUCKET_ICON_MAP = {
   sex: "sexo",
   nudity: "sexo",
   romance_love: "livre",
@@ -3904,7 +3795,7 @@ const BUCKET_ICON_MAP = {
   sci_fi_tech: "livre"
 };
 
-const BUCKET_ICON_WEIGHT = {
+var BUCKET_ICON_WEIGHT = {
   sex: 0.95,
   nudity: 1.1,
   romance_love: 0.2,
@@ -3937,37 +3828,37 @@ const BUCKET_ICON_WEIGHT = {
   sci_fi_tech: 0.22,
 };
 
-const ICON_THRESHOLD = {
+var ICON_THRESHOLD = {
   sexo: 2.0,
   violencia: 2.2,
   adulto: 3.1,
 };
 
 function _bucketScoresFromItem(item) {
-  const scores = new Map();
-  const add = (k, v) => {
+  var scores = new Map();
+  var add = function(k, v) {
     if (!k || !Number.isFinite(v) || v <= 0) return;
     scores.set(k, (scores.get(k) || 0) + v);
   };
 
-  const tags = Array.from(new Set([
-    ...(item?.Tags || []),
-    ...(item?.Keywords || []),
-  ].map((t) => String(t || "").trim()).filter(Boolean)));
+  var tags = Array.from(new Set([
+    ...(item.Tags || []),
+    ...(item.Keywords || []),
+  ].mapfunction((t) String(t || "").trim()).filter(Boolean)));
 
-  for (const t of tags) {
-    const taggedScores = _bucketScoresForTag(t);
-    for (const [k, s] of taggedScores) add(k, s);
+  for (var t of tags) {
+    var taggedScores = _bucketScoresForTag(t);
+    for (var [k, s] of taggedScores) add(k, s);
   }
 
-  const asText = (v) => String(v || "").toLowerCase();
-  const hay = asText([
-    item?.Overview,
-    (item?.Taglines || []).join(" "),
-    (item?.Studios || []).map((s) => s?.Name || s).join(" "),
+  var asText = function(v) String(v || "").toLowerCase();
+  var hay = asText([
+    item.Overview,
+    (item.Taglines || []).join(" "),
+    (item.Studios || []).mapfunction((s) s.Name || s).join(" "),
   ].join(" "));
 
-  const textBoosts = [
+  var textBoosts = [
     ["horror", /horror|slasher|gore|supernatural|paranormal/g, 1.25],
     ["war", /\bwar|battle|army|military\b/g, 0.95],
     ["crime", /\bcrime|mafia|gang|heist|robbery\b/g, 0.9],
@@ -3981,8 +3872,8 @@ function _bucketScoresFromItem(item) {
     ["romance_love", /\bromance|romantic|love\b/g, 0.6],
     ["mature", /\baddiction|trauma|suicide|abuse|domestic violence\b/g, 1.2],
   ];
-  for (const [bucket, rx, w] of textBoosts) {
-    const count = (hay.match(rx) || []).length;
+  for (var [bucket, rx, w] of textBoosts) {
+    var count = (hay.match(rx) || []).length;
     if (count > 0) add(bucket, count * w);
   }
 
@@ -3990,59 +3881,59 @@ function _bucketScoresFromItem(item) {
 }
 
 function _bucketKeysFromItem(item) {
-  const keys = new Set();
-  for (const [k, s] of _bucketScoresFromItem(item)) {
+  var keys = new Set();
+  for (var [k, s] of _bucketScoresFromItem(item)) {
     if (s >= 1.4) keys.add(k);
   }
   return keys;
 }
 
 function buildIconListForItem(item) {
-  const ALLOWED = new Set(["livre", "sexo", "violencia", "adulto"]);
-  const iconScores = {
+  var ALLOWED = new Set(["livre", "sexo", "violencia", "adulto"]);
+  var iconScores = {
     livre: 0,
     sexo: 0,
     violencia: 0,
     adulto: 0,
   };
 
-  const bucketScores = _bucketScoresFromItem(item);
-  for (const [bucketKey, score] of bucketScores) {
-    const icon = BUCKET_ICON_MAP[bucketKey];
+  var bucketScores = _bucketScoresFromItem(item);
+  for (var [bucketKey, score] of bucketScores) {
+    var icon = BUCKET_ICON_MAP[bucketKey];
     if (!icon) continue;
-    iconScores[icon] += score * (BUCKET_ICON_WEIGHT[bucketKey] ?? 0.35);
+    iconScores[icon] += score * (BUCKET_ICON_WEIGHT[bucketKey] || 0.35);
   }
 
-  const codes = _descCodesFromItem(item);
-  for (const c of codes) {
+  var codes = _descCodesFromItem(item);
+  for (var c of codes) {
     if (ALLOWED.has(c) && c !== "livre") iconScores[c] += 1.15;
   }
 
-  const dict = getDescriptorKeywordMap();
-  const joined = [
-    item?.Overview || "",
-    (item?.Taglines || []).join(" "),
-    (item?.Tags || item?.Keywords || []).join(" "),
+  var dict = getDescriptorKeywordMap();
+  var joined = [
+    item.Overview || "",
+    (item.Taglines || []).join(" "),
+    (item.Tags || item.Keywords || []).join(" "),
   ].join(" ");
   iconScores.sexo += 0.8 * (
-    countMatches(joined, dict?.sex || []) +
-    countMatches(joined, dict?.nudity || [])
+    countMatches(joined, dict.sex || []) +
+    countMatches(joined, dict.nudity || [])
   );
   iconScores.violencia += 0.72 * (
-    countMatches(joined, dict?.violence || []) +
-    countMatches(joined, dict?.war || []) +
-    countMatches(joined, dict?.crime || [])
+    countMatches(joined, dict.violence || []) +
+    countMatches(joined, dict.war || []) +
+    countMatches(joined, dict.crime || [])
   );
   iconScores.adulto += 0.85 * (
-    countMatches(joined, dict?.mature || []) +
-    countMatches(joined, dict?.drugs || []) +
-    countMatches(joined, dict?.profanity || []) +
-    countMatches(joined, dict?.discrimination || [])
+    countMatches(joined, dict.mature || []) +
+    countMatches(joined, dict.drugs || []) +
+    countMatches(joined, dict.profanity || []) +
+    countMatches(joined, dict.discrimination || [])
   );
 
-  const raw = item?.OfficialRating || "";
-  const norm = String(normalizeAgeRating(raw) || "").toLowerCase();
-  const ageNum = parseInt(norm, 10);
+  var raw = item.OfficialRating || "";
+  var norm = String(normalizeAgeRating(raw) || "").toLowerCase();
+  var ageNum = parseInt(norm, 10);
   if (Number.isFinite(ageNum)) {
     if (ageNum >= 18) iconScores.adulto += 4.3;
     else if (ageNum >= 16) iconScores.adulto += 2.4;
@@ -4050,13 +3941,13 @@ function buildIconListForItem(item) {
     else if (ageNum <= 7) iconScores.livre += 1.8;
   }
 
-  const isAdult =
+  var isAdult =
     (Number.isFinite(ageNum) && ageNum >= 18) ||
     /(^|\b)(r|nc-?17|tvma|18\+)/i.test(raw);
   if (isAdult) iconScores.adulto += 3.4;
 
-  const genelLbl = String(labels?.livre || "livre").toLowerCase();
-  const isGeneral =
+  var genelLbl = String(labels.livre || "livre").toLowerCase();
+  var isGeneral =
     norm.includes("livre") ||
     norm === "7+" ||
     norm === "0+" ||
@@ -4064,7 +3955,7 @@ function buildIconListForItem(item) {
     /^g$|^tvg$/i.test(raw);
   if (isGeneral) iconScores.livre += 1.35;
 
-  const hasHardRiskSignal =
+  var hasHardRiskSignal =
     (bucketScores.get("violence") || 0) >= 1.4 ||
     (bucketScores.get("war") || 0) >= 1.2 ||
     (bucketScores.get("crime") || 0) >= 1.35 ||
@@ -4077,38 +3968,38 @@ function buildIconListForItem(item) {
     return ["livre"];
   }
 
-  const out = [];
+  var out = [];
   if (iconScores.adulto >= ICON_THRESHOLD.adulto) out.push("adulto");
   if (iconScores.violencia >= ICON_THRESHOLD.violencia) out.push("violencia");
   if (iconScores.sexo >= ICON_THRESHOLD.sexo) out.push("sexo");
 
-  const shouldIncludeGenel =
+  var shouldIncludeGenel =
     (iconScores.livre >= 1.2 || isGeneral || (Number.isFinite(ageNum) && ageNum <= 7)) &&
     iconScores.adulto < ICON_THRESHOLD.adulto;
   if (shouldIncludeGenel) out.unshift("livre");
 
-  let uniq = Array.from(new Set(out)).filter((n) => ALLOWED.has(n));
+  var uniq = Array.from(new Set(out)).filterfunction((n) ALLOWED.has(n));
   if (!uniq.length) uniq = ["livre"];
   return uniq;
 }
 
 function showIconBadges(itemOrIcons, durationMs) {
-  const po = getConfig()?.pauseOverlay || {};
+  var po = getConfig().pauseOverlay || {};
   if (po.showAgeBadge === false) return;
 
-  const el = createIconEl();
-  const row = el.querySelector(".rating-icons-row");
-  const icons = Array.isArray(itemOrIcons)
+  var el = createIconEl();
+  var row = el.querySelector(".rating-icons-row");
+  var icons = Array.isArray(itemOrIcons)
     ? itemOrIcons
-    : (itemOrIcons?.__jmsMaturityIcons || buildIconListForItem(itemOrIcons));
+    : (itemOrIcons.__jmsMaturityIcons || buildIconListForItem(itemOrIcons));
 
   if (!icons.length) { hideIconBadges(); return; }
 
-  row.innerHTML = icons.map(n => `<img src="./slider/src/images/ages/${n}.svg" alt="">`).join("");
+  row.innerHTML = icons.map(function(n) "<img src=\"./slider/src/images/ages/" + (n) + ".svg\" alt=\"\">").join("");
   el.classList.add("visible");
 
   try { if (_iconTimeout) clearTimeout(_iconTimeout); } catch {}
-  _iconTimeout = setTimeout(() => {
+  _iconTimeout = setTimeoutfunction(() {
     hideIconBadges("auto");
-  }, _msFromConfig((durationMs ?? AGE_BADGE_DEFAULT_MS), 10000));
+  }, _msFromConfig((durationMs || AGE_BADGE_DEFAULT_MS), 10000));
 }

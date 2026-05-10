@@ -1,4 +1,4 @@
-export const languageLabels = {
+export var languageLabels = {
   detailsTitle: "Detalhes",
   content: "Conteúdo",
   unknownUser: "Usuário desconhecido",

@@ -1,4 +1,4 @@
-export const modalState = {
+export var modalState = {
   videoModal: null,
   modalVideo: null,
   modalTitle: null,
@@ -35,8 +35,8 @@ export const modalState = {
   progressBarEl: null,
 };
 
-export const set = (key, value) => { modalState[key] = value; };
-export const get = (key) => modalState[key];
+export var set = function(key, value) { modalState[key] = value; };
+export var get = function(key) modalState[key];
 
 export function resetModalRefs() {
   modalState.videoModal = null;

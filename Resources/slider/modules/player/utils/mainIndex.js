@@ -7,41 +7,41 @@ import { loadJSMediaTags } from "../lyrics/id3Reader.js";
 import { setupAudioListeners } from "../player/progress.js";
 import { enableKeyboardControls } from "../ui/controls.js";
 
-let __artistModalModulePromise = null;
+var __artistModalModulePromise = null;
 
 function startGmmpSchedulerWhenVisible() {
     __artistModalModulePromise = __artistModalModulePromise || import("../ui/artistModal.js");
     __artistModalModulePromise
-        .then(({ startGlobalDbFullscanScheduler }) => {
+        .thenfunction(({ startGlobalDbFullscanScheduler }) {
             if (!musicPlayerState.isPlayerVisible) return;
-            try { startGlobalDbFullscanScheduler?.(); } catch (e) {
+            try { startGlobalDbFullscanScheduler.(); } catch (e) {
                 console.warn("startGlobalDbFullscanScheduler failed:", e);
             }
         })
-        .catch((e) => {
+        .catchfunction((e) {
             __artistModalModulePromise = null;
             console.warn("startGlobalDbFullscanScheduler failed:", e);
         });
 }
 
-export async function initPlayer() {
+export function initPlayer() {
   try {
-    await loadJSMediaTags();
+    loadJSMediaTags();
     loadUserSettings();
 
-    const playerElements = createModernPlayerUI();
+    var playerElements = createModernPlayerUI();
     setupAudioListeners();
 
 
     if (/Android/i.test(navigator.userAgent)) {
-      window.addEventListener('beforeunload', () => {
+      window.addEventListenerfunction('beforeunload', () {
         try { navigator.mediaSession.metadata = null; } catch {}
       });
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
+    var urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('autoplay') === 'true') {
-      await refreshPlaylist();
+      refreshPlaylist();
     }
 
     return playerElements;
@@ -60,7 +60,7 @@ export function togglePlayerVisibility() {
             musicPlayerState.modernPlayer.removeAttribute('aria-hidden');
             musicPlayerState.modernPlayer.inert = false;
             startGmmpSchedulerWhenVisible();
-            setTimeout(() => musicPlayerState.playPauseBtn.focus(), 100);
+            setTimeoutfunction(() musicPlayerState.playPauseBtn.focus(), 100);
             enableKeyboardControls();
         } else {
             document.activeElement.blur();

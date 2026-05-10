@@ -1,6 +1,6 @@
-const URL_PATTERN = /url\((['"]?)(.*?)\1\)/gi;
-const EMPTY_IMAGE_DATA_URI = "data:,";
-const DATA_ATTRS = [
+var URL_PATTERN = /url\((['"]?)(.*?)\1\)/gi;
+var EMPTY_IMAGE_DATA_URI = "data:,";
+var DATA_ATTRS = [
   "data-src",
   "data-lazy",
   "data-original",
@@ -11,7 +11,7 @@ const DATA_ATTRS = [
   "data-poster",
   "data-img"
 ];
-const SWEEP_SELECTOR = [
+var SWEEP_SELECTOR = [
   "img",
   "source",
   "video",
@@ -28,32 +28,32 @@ const SWEEP_SELECTOR = [
 ].join(",");
 
 function normalizeUrlCandidate(value) {
-  const raw = String(value || "").trim();
+  var raw = String(value || "").trim();
   if (!raw) return "";
   return raw.replace(/^['"]|['"]$/g, "").trim();
 }
 
 function collectStyleUrls(value, urls) {
-  const css = String(value || "");
+  var css = String(value || "");
   if (!css) return;
   URL_PATTERN.lastIndex = 0;
-  let match = null;
+  var match = null;
   while ((match = URL_PATTERN.exec(css))) {
-    const normalized = normalizeUrlCandidate(match[2]);
+    var normalized = normalizeUrlCandidate(match[2]);
     if (normalized) urls.add(normalized);
   }
 }
 
 function collectSrcsetUrls(value, urls) {
-  const srcset = String(value || "").trim();
+  var srcset = String(value || "").trim();
   if (!srcset) return;
   srcset
     .split(",")
-    .map((part) => part.trim())
+    .mapfunction((part) part.trim())
     .filter(Boolean)
-    .forEach((part) => {
-      const [candidate] = part.split(/\s+/, 1);
-      const normalized = normalizeUrlCandidate(candidate);
+    .forEach(function((part) {
+      var [candidate] = part.split(/\s+/, 1);
+      var normalized = normalizeUrlCandidate(candidate);
       if (normalized) urls.add(normalized);
     });
 }
@@ -61,37 +61,37 @@ function collectSrcsetUrls(value, urls) {
 function collectElementUrls(el, urls) {
   if (!el || el.nodeType !== 1) return;
 
-  const style = el.style;
+  var style = el.style;
   if (style) {
     collectStyleUrls(style.backgroundImage, urls);
     collectStyleUrls(style.background, urls);
     collectStyleUrls(style.getPropertyValue("--bg-url"), urls);
   }
 
-  const src = normalizeUrlCandidate(el.getAttribute?.("src"));
-  const currentSrc = normalizeUrlCandidate(el.currentSrc);
-  const poster = normalizeUrlCandidate(el.getAttribute?.("poster"));
+  var src = normalizeUrlCandidate(el.getAttribute.("src"));
+  var currentSrc = normalizeUrlCandidate(el.currentSrc);
+  var poster = normalizeUrlCandidate(el.getAttribute.("poster"));
   if (src) urls.add(src);
   if (currentSrc) urls.add(currentSrc);
   if (poster) urls.add(poster);
 
-  collectSrcsetUrls(el.getAttribute?.("srcset"), urls);
+  collectSrcsetUrls(el.getAttribute.("srcset"), urls);
   collectSrcsetUrls(el.srcset, urls);
 
-  DATA_ATTRS.forEach((attr) => {
-    const value = normalizeUrlCandidate(el.getAttribute?.(attr));
+  DATA_ATTRS.forEach(function((attr) {
+    var value = normalizeUrlCandidate(el.getAttribute.(attr));
     if (value) urls.add(value);
   });
 }
 
 function gatherSweepNodes(root) {
-  const nodes = new Set();
+  var nodes = new Set();
 
   if (!root) return nodes;
   if (root.nodeType === 1 || root.nodeType === 11) nodes.add(root);
 
   if (typeof root.querySelectorAll === "function") {
-    root.querySelectorAll(SWEEP_SELECTOR).forEach((node) => nodes.add(node));
+    root.querySelectorAll(SWEEP_SELECTOR).forEach(function((node) nodes.add(node));
   }
 
   return nodes;
@@ -100,8 +100,8 @@ function gatherSweepNodes(root) {
 function clearElementRefs(el) {
   if (!el || el.nodeType !== 1) return;
 
-  const tagName = String(el.tagName || "").toLowerCase();
-  const style = el.style;
+  var tagName = String(el.tagName || "").toLowerCase();
+  var style = el.style;
 
   if (style) {
     style.backgroundImage = "none";
@@ -123,14 +123,14 @@ function clearElementRefs(el) {
     try { el.removeAttribute("poster"); } catch {}
   }
 
-  DATA_ATTRS.forEach((attr) => {
+  DATA_ATTRS.forEach(function((attr) {
     try { el.removeAttribute(attr); } catch {}
   });
 }
 
 function collectRootUrls(root) {
-  const urls = new Set();
-  gatherSweepNodes(root).forEach((node) => collectElementUrls(node, urls));
+  var urls = new Set();
+  gatherSweepNodes(root).forEach(function((node) collectElementUrls(node, urls));
   return urls;
 }
 
@@ -141,28 +141,28 @@ function isBlobUrl(value) {
 function elementReferencesUrl(el, url) {
   if (!el || el.nodeType !== 1 || !url) return false;
 
-  const attrValues = [
+  var attrValues = [
     el.currentSrc,
-    el.getAttribute?.("src"),
-    el.getAttribute?.("poster"),
-    el.style?.backgroundImage,
-    el.style?.background,
-    el.style?.getPropertyValue?.("--bg-url"),
-    ...DATA_ATTRS.map((attr) => el.getAttribute?.(attr))
+    el.getAttribute.("src"),
+    el.getAttribute.("poster"),
+    el.style.backgroundImage,
+    el.style.background,
+    el.style.getPropertyValue.("--bg-url"),
+    ...DATA_ATTRS.mapfunction((attr) el.getAttribute.(attr))
   ];
 
-  if (attrValues.some((value) => typeof value === "string" && value.includes(url))) {
+  if function(attrValues.some((value) typeof value === "string" && value.includes(url))) {
     return true;
   }
 
-  const srcsetValues = [el.srcset, el.getAttribute?.("srcset")];
-  return srcsetValues.some((value) => typeof value === "string" && value.includes(url));
+  var srcsetValues = [el.srcset, el.getAttribute.("srcset")];
+  return srcsetValues.somefunction((value) typeof value === "string" && value.includes(url));
 }
 
 function hasDocumentReference(url) {
   if (!url || typeof document === "undefined") return false;
-  const nodes = document.querySelectorAll(SWEEP_SELECTOR);
-  for (const node of nodes) {
+  var nodes = document.querySelectorAll(SWEEP_SELECTOR);
+  for (var node of nodes) {
     if (elementReferencesUrl(node, url)) return true;
   }
   return false;
@@ -182,11 +182,11 @@ export function revokeBlobUrlIfUnreferenced(url) {
 export function cleanupImageResourceRefs(root, { revokeDetachedBlobs = false } = {}) {
   if (!root) return [];
 
-  const urls = Array.from(collectRootUrls(root));
-  gatherSweepNodes(root).forEach((node) => clearElementRefs(node));
+  var urls = Array.from(collectRootUrls(root));
+  gatherSweepNodes(root).forEach(function((node) clearElementRefs(node));
 
   if (revokeDetachedBlobs) {
-    urls.forEach((url) => revokeBlobUrlIfUnreferenced(url));
+    urls.forEach(function((url) revokeBlobUrlIfUnreferenced(url));
   }
 
   return urls;

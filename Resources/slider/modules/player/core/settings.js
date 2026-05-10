@@ -3,30 +3,30 @@ import { getLanguageLabels, getDefaultLanguage, getStoredLanguagePreference } fr
 import { enhanceFormAccessibility } from "../../accessibility.js";
 
 export function createSettingsModal() {
-    const config = getConfig();
-    const currentLang = config.defaultLanguage || getDefaultLanguage();
-    const labels = getLanguageLabels(currentLang) || {};
-    const modal = document.createElement('div');
+    var config = getConfig();
+    var currentLang = config.defaultLanguage || getDefaultLanguage();
+    var labels = getLanguageLabels(currentLang) || {};
+    var modal = document.createElement('div');
     modal.id = 'settings-modal';
     modal.className = 'settings-modal';
-    const modalContent = document.createElement('div');
+    var modalContent = document.createElement('div');
     modalContent.className = 'settings-modal-content';
-    const closeBtn = document.createElement('span');
+    var closeBtn = document.createElement('span');
     closeBtn.className = 'settings-close';
     closeBtn.innerHTML = '&times;';
-    closeBtn.onclick = () => modal.style.display = 'none';
-    const title = document.createElement('h2');
+    closeBtn.onclick = function() modal.style.display = 'none';
+    var title = document.createElement('h2');
     title.textContent = labels.ayarlarBaslik || 'GP Oynatıcı Ayarları';
-    const form = document.createElement('form');
-    const languageDiv = document.createElement('div');
+    var form = document.createElement('form');
+    var languageDiv = document.createElement('div');
     languageDiv.className = 'setting-item';
-    const languageLabel = document.createElement('label');
+    var languageLabel = document.createElement('label');
     languageLabel.textContent = labels.defaultLanguage || 'Dil:';
-    const languageSelect = document.createElement('select');
+    var languageSelect = document.createElement('select');
     languageSelect.name = 'defaultLanguage';
-    const uiPref = getStoredLanguagePreference() || 'auto';
-    const effective = getDefaultLanguage();
-    const languages = [
+    var uiPref = getStoredLanguagePreference() || 'auto';
+    var effective = getDefaultLanguage();
+    var languages = [
         { value: 'auto', label: labels.optionAuto || '🌐 Otomatik (Tarayıcı dili)' },
         { value: 'tur', label: '🇹🇷 Türkçe' },
         { value: 'eng', label: '🇬🇧 English' },
@@ -36,41 +36,41 @@ export function createSettingsModal() {
         { value: 'rus', label: '🇷🇺 Русский' },
     ];
 
-    languages.forEach(lang => {
-        const option = document.createElement('option');
+    languages.forEach(function(lang) {
+        var option = document.createElement('option');
         option.value = lang.value;
         option.textContent = lang.label;
         languageSelect.appendChild(option);
     });
 
-    const selectedLanguage = languages.some(lang => lang.value === uiPref)
+    var selectedLanguage = languages.some(function(lang) lang.value === uiPref)
         ? uiPref
-        : (languages.some(lang => lang.value === effective) ? effective : 'auto');
+        : (languages.some(function(lang) lang.value === effective) ? effective : 'auto');
     languageSelect.value = selectedLanguage;
 
     languageDiv.append(languageLabel, languageSelect);
 
-    const limitDiv = document.createElement('div');
+    var limitDiv = document.createElement('div');
     limitDiv.className = 'setting-item';
 
-    const limitLabel = document.createElement('label');
+    var limitLabel = document.createElement('label');
     limitLabel.textContent = labels.muziklimit || 'Müzik Limiti:';
 
-    const limitInput = document.createElement('input');
+    var limitInput = document.createElement('input');
     limitInput.type = 'number';
     limitInput.value = config.muziklimit || 100;
     limitInput.name = 'muziklimit';
 
     limitDiv.append(limitLabel, limitInput);
 
-    const saveBtn = document.createElement('button');
+    var saveBtn = document.createElement('button');
     saveBtn.type = 'submit';
     saveBtn.textContent = labels.kaydet || 'Kaydet';
     form.append(languageDiv, limitDiv, saveBtn);
-    form.onsubmit = (e) => {
+    form.onsubmit = function(e) {
         e.preventDefault();
-        const formData = new FormData(form);
-        const updatedConfig = {
+        var formData = new FormData(form);
+        var updatedConfig = {
             ...config,
             defaultLanguage: formData.get('defaultLanguage'),
             muziklimit: parseInt(formData.get('muziklimit'))
@@ -88,10 +88,10 @@ export function createSettingsModal() {
 }
 
 export function initSettings() {
-    const modal = createSettingsModal();
+    var modal = createSettingsModal();
 
     return {
-        open: () => { modal.style.display = 'block'; },
-        close: () => { modal.style.display = 'none'; }
+        open: function() { modal.style.display = 'block'; },
+        close: function() { modal.style.display = 'none'; }
     };
 }

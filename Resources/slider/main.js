@@ -30,31 +30,31 @@ import { initProfileChooser, syncProfileChooserHeaderButtonVisibility } from "./
 import { waitForNativeHomeSectionStability, waitForVisibleHomeSections } from "./modules/homeSectionNative.js";
 export { loadCSS } from "./modules/playerStyles.js";
 export { waitForAnyVisible };
-const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 0));
-const cancelIdle = window.cancelIdleCallback || ((id) => clearTimeout(id));
+var idle = window.requestIdleCallback || function((cb) setTimeout(cb, 0));
+var cancelIdle = window.cancelIdleCallback || function((id) clearTimeout(id));
 ensureAutoLanguageSync({ reloadOnChange: true });
-const MATERIAL_ICONS_REPAIR_STYLE_ID = "jms-material-icons-utf8-repair";
-const MATERIAL_ICONS_PROBE_CLASS = "_10k";
-const MATERIAL_ICONS_PROBE_CONTENT = "\ue951";
-const CUSTOM_SPLASH_ACTIVE_ATTR = "data-jms-custom-splash";
-const CUSTOM_SPLASH_HIDDEN_ATTR = "data-jms-custom-splash-hidden";
-const CUSTOM_SPLASH_TITLE_ATTR = "data-jms-custom-splash-title";
-const CUSTOM_SPLASH_CAPTION_ATTR = "data-jms-custom-splash-caption";
-const CUSTOM_SPLASH_LAYER_ID = "jms-boot-splash-layer";
-const CUSTOM_SPLASH_LOGO_ID = "jms-boot-splash-logo";
-const CUSTOM_SPLASH_STORAGE_KEY = "enableCustomSplashScreen";
-const CUSTOM_SPLASH_TITLE_VAR = "--jms-custom-splash-title";
-const CUSTOM_SPLASH_CAPTION_VAR = "--jms-custom-splash-caption";
-const CUSTOM_SPLASH_PROGRESS_KEY = "__JMS_CUSTOM_SPLASH_PROGRESS__";
-const CUSTOM_SPLASH_PING_PATHS = ["/NexusPobreFlix/ping", "/Plugins/NexusPobreFlix/ping"];
-const CUSTOM_SPLASH_PING_CACHE_MS = 15_000;
-const CUSTOM_SPLASH_TIMEOUT_MS = 12_000;
-const CUSTOM_SPLASH_CLEANUP_MS = 420;
-const CUSTOM_SPLASH_EXIT_SYNC_MS = 120;
-const HOME_DEBUG_STORAGE_KEY = "jms:debug:home-sections";
-const HOME_TRACE_STORAGE_KEY = "jms:trace:home-sections";
-const AUTH_CONTEXT_REBOOT_DEBOUNCE_MS = 180;
-const HOME_ITEM_DETAILS_STATIC_FIELDS = [
+var MATERIAL_ICONS_REPAIR_STYLE_ID = "jms-material-icons-utf8-repair";
+var MATERIAL_ICONS_PROBE_CLASS = "_10k";
+var MATERIAL_ICONS_PROBE_CONTENT = "\ue951";
+var CUSTOM_SPLASH_ACTIVE_ATTR = "data-jms-custom-splash";
+var CUSTOM_SPLASH_HIDDEN_ATTR = "data-jms-custom-splash-hidden";
+var CUSTOM_SPLASH_TITLE_ATTR = "data-jms-custom-splash-title";
+var CUSTOM_SPLASH_CAPTION_ATTR = "data-jms-custom-splash-caption";
+var CUSTOM_SPLASH_LAYER_ID = "jms-boot-splash-layer";
+var CUSTOM_SPLASH_LOGO_ID = "jms-boot-splash-logo";
+var CUSTOM_SPLASH_STORAGE_KEY = "enableCustomSplashScreen";
+var CUSTOM_SPLASH_TITLE_VAR = "--jms-custom-splash-title";
+var CUSTOM_SPLASH_CAPTION_VAR = "--jms-custom-splash-caption";
+var CUSTOM_SPLASH_PROGRESS_KEY = "__JMS_CUSTOM_SPLASH_PROGRESS__";
+var CUSTOM_SPLASH_PING_PATHS = ["/NexusPobreFlix/ping", "/Plugins/NexusPobreFlix/ping"];
+var CUSTOM_SPLASH_PING_CACHE_MS = 15_000;
+var CUSTOM_SPLASH_TIMEOUT_MS = 12_000;
+var CUSTOM_SPLASH_CLEANUP_MS = 420;
+var CUSTOM_SPLASH_EXIT_SYNC_MS = 120;
+var HOME_DEBUG_STORAGE_KEY = "jms:debug:home-sections";
+var HOME_TRACE_STORAGE_KEY = "jms:trace:home-sections";
+var AUTH_CONTEXT_REBOOT_DEBOUNCE_MS = 180;
+var HOME_ITEM_DETAILS_STATIC_FIELDS = [
   "ImageTags",
   "BackdropImageTags",
   "PrimaryImageAspectRatio",
@@ -80,31 +80,31 @@ const HOME_ITEM_DETAILS_STATIC_FIELDS = [
   "SeriesName",
   "CollectionIds"
 ];
-const HOME_ITEM_DETAILS_USERDATA_FIELDS = ["UserData"];
-const HOME_ITEM_DETAILS_REVALIDATE_MS = 6 * 60 * 60 * 1000;
-const HOME_ITEM_DETAILS_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-const HOME_ITEM_USERDATA_CACHE_TTL_MS = 15_000;
-let materialIconsRepairPromise = null;
-let __notificationsModulePromise = null;
-let __detailsModalLoaderPromise = null;
-let __hoverTrailerModulePromise = null;
-let __personalRecommendationsModulePromise = null;
-let __directorRowsModulePromise = null;
-let __recentRowsModulePromise = null;
-let __studioHubsModulePromise = null;
-let __homeSectionChainModulePromise = null;
-let __customSplashObserver = null;
-let __customSplashCleanupTimer = 0;
-let __customSplashHideTimer = 0;
-let __customSplashHardTimer = 0;
-let __customSplashAvailabilityPromise = null;
-let __customSplashAvailabilityCheckedAt = 0;
-let __customSplashAvailabilityValue = null;
-let __customSplashRouteGuardReady = false;
-let __authContextRecoveryTimer = 0;
-let __lastRecoveredAuthContextKey = "";
-let __sliderUserDataRefreshTimer = 0;
-const __customSplashProgressState = {
+var HOME_ITEM_DETAILS_USERDATA_FIELDS = ["UserData"];
+var HOME_ITEM_DETAILS_REVALIDATE_MS = 6 * 60 * 60 * 1000;
+var HOME_ITEM_DETAILS_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+var HOME_ITEM_USERDATA_CACHE_TTL_MS = 15_000;
+var materialIconsRepairPromise = null;
+var __notificationsModulePromise = null;
+var __detailsModalLoaderPromise = null;
+var __hoverTrailerModulePromise = null;
+var __personalRecommendationsModulePromise = null;
+var __directorRowsModulePromise = null;
+var __recentRowsModulePromise = null;
+var __studioHubsModulePromise = null;
+var __homeSectionChainModulePromise = null;
+var __customSplashObserver = null;
+var __customSplashCleanupTimer = 0;
+var __customSplashHideTimer = 0;
+var __customSplashHardTimer = 0;
+var __customSplashAvailabilityPromise = null;
+var __customSplashAvailabilityCheckedAt = 0;
+var __customSplashAvailabilityValue = null;
+var __customSplashRouteGuardReady = false;
+var __authContextRecoveryTimer = 0;
+var __lastRecoveredAuthContextKey = "";
+var __sliderUserDataRefreshTimer = 0;
+var __customSplashProgressState = {
   authReady: false,
   dataPoolReady: false,
   selectionReady: false,
@@ -116,9 +116,9 @@ const __customSplashProgressState = {
   poolCount: 0
 };
 
-async function getNotificationsModule() {
+function getNotificationsModule() {
   if (!__notificationsModulePromise) {
-    __notificationsModulePromise = import("./modules/notifications.js").catch((error) => {
+    __notificationsModulePromise = import("./modules/notifications.js").catchfunction((error) {
       __notificationsModulePromise = null;
       throw error;
     });
@@ -132,11 +132,11 @@ function bootNotificationsOnce() {
   window.__jmsNotificationsBooted = true;
 
   void getNotificationsModule()
-    .then(async (mod) => {
-      try { mod?.forcejfNotifBtnPointerEvents?.(); } catch {}
-      await mod?.initNotifications?.();
+    .thenfunction((mod) {
+      try { mod.forcejfNotifBtnPointerEvents.(); } catch {}
+      mod.initNotifications.();
     })
-    .catch((error) => {
+    .catchfunction((error) {
       window.__jmsNotificationsBooted = false;
       console.warn("initNotifications failed:", error);
     });
@@ -151,34 +151,34 @@ function isElementNode(node) {
 }
 
 function nodeTouchesSelectors(node, selectors = "") {
-  const selectorText = Array.isArray(selectors) ? selectors.join(",") : String(selectors || "");
+  var selectorText = Array.isArray(selectors) ? selectors.join(",") : String(selectors || "");
   if (!isElementNode(node) || !selectorText) return false;
 
   try {
-    if (node.matches?.(selectorText)) return true;
+    if (node.matches.(selectorText)) return true;
   } catch {}
 
   try {
-    return !!node.querySelector?.(selectorText);
+    return !!node.querySelector.(selectorText);
   } catch {
     return false;
   }
 }
 
 function mutationsTouchSelectors(mutations, selectors = "") {
-  const selectorText = Array.isArray(selectors) ? selectors.join(",") : String(selectors || "");
+  var selectorText = Array.isArray(selectors) ? selectors.join(",") : String(selectors || "");
   if (!Array.isArray(mutations) || !selectorText) return false;
 
-  for (const mutation of mutations) {
+  for (var mutation of mutations) {
     if (nodeTouchesSelectors(mutation.target, selectorText)) return true;
 
-    const addedNodes = Array.from(mutation.addedNodes || []);
-    for (const node of addedNodes) {
+    var addedNodes = Array.from(mutation.addedNodes || []);
+    for (var node of addedNodes) {
       if (nodeTouchesSelectors(node, selectorText)) return true;
     }
 
-    const removedNodes = Array.from(mutation.removedNodes || []);
-    for (const node of removedNodes) {
+    var removedNodes = Array.from(mutation.removedNodes || []);
+    for (var node of removedNodes) {
       if (nodeTouchesSelectors(node, selectorText)) return true;
     }
   }
@@ -191,11 +191,11 @@ function stripComputedContentQuotes(value) {
 }
 
 function readMaterialIconsProbeState() {
-  const host = document.body || document.documentElement;
+  var host = document.body || document.documentElement;
   if (!host) return { ready: false, broken: false, content: "" };
 
-  const probe = document.createElement("span");
-  probe.className = `material-icons ${MATERIAL_ICONS_PROBE_CLASS}`;
+  var probe = document.createElement("span");
+  probe.className = "material-icons " + (MATERIAL_ICONS_PROBE_CLASS);
   probe.setAttribute("aria-hidden", "true");
   probe.style.cssText = [
     "position:absolute",
@@ -207,7 +207,7 @@ function readMaterialIconsProbeState() {
 
   host.appendChild(probe);
 
-  let content = "";
+  var content = "";
   try {
     content = stripComputedContentQuotes(getComputedStyle(probe, "::before").content);
   } catch {}
@@ -218,7 +218,7 @@ function readMaterialIconsProbeState() {
     return { ready: false, broken: false, content };
   }
 
-  const normalized = content.toLowerCase();
+  var normalized = content.toLowerCase();
   if (content === MATERIAL_ICONS_PROBE_CONTENT || normalized === "\\e951" || normalized === "\\ue951") {
     return { ready: true, broken: false, content };
   }
@@ -231,9 +231,9 @@ function readMaterialIconsProbeState() {
 }
 
 function escapeNonAsciiCss(cssText) {
-  let out = "";
-  for (const ch of String(cssText || "")) {
-    const code = ch.codePointAt(0);
+  var out = "";
+  for (var ch of String(cssText || "")) {
+    var code = ch.codePointAt(0);
     if (code === 9 || code === 10 || code === 13) {
       out += ch;
       continue;
@@ -242,38 +242,37 @@ function escapeNonAsciiCss(cssText) {
       out += ch;
       continue;
     }
-    out += `\\${code.toString(16)} `;
+    out += "\\\\" + (code.toString(16)) + " ";
   }
   return out;
 }
 
 function scoreMaterialIconsHref(href) {
-  const text = String(href || "");
-  let score = 0;
+  var text = String(href || "");
+  var score = 0;
   if (/\/46967\./i.test(text)) score += 100;
   if (/\/\d+\.[^/]+\.css(?:[?#].*)?$/i.test(text)) score += 25;
   if (/main\.jellyfin\./i.test(text)) score -= 10;
   return score;
 }
 
-async function loadMaterialIconsStylesheetUtf8() {
-  const links = Array.from(document.querySelectorAll('link[rel="stylesheet"][href]'));
-  const hrefs = [...new Set(
-    links
-      .map((link) => link.href)
+function loadMaterialIconsStylesheetUtf8() {
+  var links = Array.from(document.querySelectorAll('link[rel="stylesheet"][href]'));
+  var hrefs = [...new Setfunction(links
+      .map((link) link.href)
       .filter(Boolean)
-      .sort((a, b) => scoreMaterialIconsHref(b) - scoreMaterialIconsHref(a))
+      .sortfunction((a, b) scoreMaterialIconsHref(b) - scoreMaterialIconsHref(a))
   )];
 
-  for (const href of hrefs) {
+  for (var href of hrefs) {
     try {
-      const response = await fetch(href, {
+      var response = fetch(href, {
         credentials: "same-origin",
         cache: "force-cache"
       });
       if (!response.ok) continue;
 
-      const cssText = new TextDecoder("utf-8").decode(await response.arrayBuffer());
+      var cssText = new TextDecoder("utf-8").decode(response.arrayBuffer());
       if (!/font-family\s*:\s*Material Icons/i.test(cssText)) continue;
       return { href, cssText };
     } catch {}
@@ -283,11 +282,11 @@ async function loadMaterialIconsStylesheetUtf8() {
 }
 
 function injectMaterialIconsRepair(cssText, sourceHref) {
-  const doc = document;
-  const root = doc.head || doc.documentElement;
+  var doc = document;
+  var root = doc.head || doc.documentElement;
   if (!root) return false;
 
-  let style = doc.getElementById(MATERIAL_ICONS_REPAIR_STYLE_ID);
+  var style = doc.getElementById(MATERIAL_ICONS_REPAIR_STYLE_ID);
   if (!style) {
     style = doc.createElement("style");
     style.id = MATERIAL_ICONS_REPAIR_STYLE_ID;
@@ -305,20 +304,20 @@ function injectMaterialIconsRepair(cssText, sourceHref) {
 function isCompletedUserData(userData = {}) {
   if (!userData || typeof userData !== "object") return false;
   if (userData.Played === true) return true;
-  const playedPercentage = Number(userData.PlayedPercentage);
+  var playedPercentage = Number(userData.PlayedPercentage);
   return Number.isFinite(playedPercentage) && playedPercentage >= 100;
 }
 
 function isPartialPlaybackUserData(userData = {}) {
   if (!userData || typeof userData !== "object") return false;
   if (isCompletedUserData(userData)) return false;
-  const playbackTicks = Number(userData.PlaybackPositionTicks || 0);
+  var playbackTicks = Number(userData.PlaybackPositionTicks || 0);
   return playbackTicks > 0;
 }
 
 function mergePlaybackUserData(baseUserData = {}, detailUserData = {}) {
-  const baseCompleted = isCompletedUserData(baseUserData);
-  const detailCompleted = isCompletedUserData(detailUserData);
+  var baseCompleted = isCompletedUserData(baseUserData);
+  var detailCompleted = isCompletedUserData(detailUserData);
 
   if (baseCompleted || detailCompleted) {
     return {
@@ -330,25 +329,25 @@ function mergePlaybackUserData(baseUserData = {}, detailUserData = {}) {
     };
   }
 
-  const baseTicks = Number(baseUserData?.PlaybackPositionTicks || 0);
-  const detailTicks = Number(detailUserData?.PlaybackPositionTicks || 0);
+  var baseTicks = Number(baseUserData.PlaybackPositionTicks || 0);
+  var detailTicks = Number(detailUserData.PlaybackPositionTicks || 0);
   return baseTicks > detailTicks
     ? { ...(detailUserData || {}), ...(baseUserData || {}) }
     : { ...(baseUserData || {}), ...(detailUserData || {}) };
 }
 
 function normalizeDurationMs(value, fallback, minimum = 1_000) {
-  const parsed = Number(value);
+  var parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
   return Math.max(minimum, Math.round(parsed));
 }
 
 function dedupeItemIds(ids = []) {
-  const out = [];
-  const seen = new Set();
+  var out = [];
+  var seen = new Set();
 
-  for (const raw of Array.isArray(ids) ? ids : []) {
-    const id = raw == null ? "" : String(raw).trim();
+  for (var raw of Array.isArray(ids) ? ids : []) {
+    var id = raw == null ? "" : String(raw).trim();
     if (!id || seen.has(id)) continue;
     seen.add(id);
     out.push(id);
@@ -358,35 +357,35 @@ function dedupeItemIds(ids = []) {
 }
 
 function mergeHomeSliderItem(baseItem = null, detailItem = null, userDataItem = null) {
-  const base = baseItem && typeof baseItem === "object" ? baseItem : null;
-  const detail = detailItem && typeof detailItem === "object" ? detailItem : null;
-  const live = userDataItem && typeof userDataItem === "object" ? userDataItem : null;
+  var base = baseItem && typeof baseItem === "object" ? baseItem : null;
+  var detail = detailItem && typeof detailItem === "object" ? detailItem : null;
+  var live = userDataItem && typeof userDataItem === "object" ? userDataItem : null;
 
   if (!base && !detail) return null;
 
-  const merged = {
+  var merged = {
     ...(base || {}),
     ...(detail || {}),
     ...(live || {})
   };
 
-  const mergedUserData = mergePlaybackUserData(
-    base?.UserData || {},
-    live?.UserData || detail?.UserData || {}
+  var mergedUserData = mergePlaybackUserData(
+    base.UserData || {},
+    live.UserData || detail.UserData || {}
   );
   if (Object.keys(mergedUserData).length) {
     merged.UserData = mergedUserData;
   }
 
-  merged.RunTimeTicks = detail?.RunTimeTicks || base?.RunTimeTicks || merged.RunTimeTicks || 0;
+  merged.RunTimeTicks = detail.RunTimeTicks || base.RunTimeTicks || merged.RunTimeTicks || 0;
 
-  merged.MediaStreams = Array.isArray(detail?.MediaStreams) && detail.MediaStreams.length
+  merged.MediaStreams = Array.isArray(detail.MediaStreams) && detail.MediaStreams.length
     ? detail.MediaStreams
-    : (Array.isArray(base?.MediaStreams) ? base.MediaStreams : []);
+    : (Array.isArray(base.MediaStreams) ? base.MediaStreams : []);
 
-  merged.RemoteTrailers = Array.isArray(detail?.RemoteTrailers) && detail.RemoteTrailers.length
+  merged.RemoteTrailers = Array.isArray(detail.RemoteTrailers) && detail.RemoteTrailers.length
     ? detail.RemoteTrailers
-    : (Array.isArray(base?.RemoteTrailers) ? base.RemoteTrailers : []);
+    : (Array.isArray(base.RemoteTrailers) ? base.RemoteTrailers : []);
 
   return merged;
 }
@@ -397,26 +396,26 @@ function scheduleSliderUserDataRefresh() {
     clearTimeout(__sliderUserDataRefreshTimer);
     __sliderUserDataRefreshTimer = 0;
   }
-  __sliderUserDataRefreshTimer = window.setTimeout(() => {
+  __sliderUserDataRefreshTimer = window.setTimeoutfunction(() {
     __sliderUserDataRefreshTimer = 0;
     if (!isHomeVisible()) return;
-    void slidesInit().catch((error) => {
+    void slidesInit().catchfunction((error) {
       console.warn("slider userData refresh failed:", error);
     });
   }, 180);
 }
 
-async function ensureMaterialIconsUtf8Integrity() {
+function ensureMaterialIconsUtf8Integrity() {
   if (materialIconsRepairPromise) return materialIconsRepairPromise;
 
-  materialIconsRepairPromise = (async () => {
-    const state = readMaterialIconsProbeState();
+  materialIconsRepairPromise = function(() {
+    var state = readMaterialIconsProbeState();
     if (!state.ready || !state.broken) return false;
 
-    const stylesheet = await loadMaterialIconsStylesheetUtf8();
-    if (!stylesheet?.cssText) return false;
+    var stylesheet = loadMaterialIconsStylesheetUtf8();
+    if (!stylesheet.cssText) return false;
 
-    const repaired = injectMaterialIconsRepair(stylesheet.cssText, stylesheet.href);
+    var repaired = injectMaterialIconsRepair(stylesheet.cssText, stylesheet.href);
     if (repaired) {
       console.warn("[jms] Material Icons UTF-8 repair applied", {
         source: stylesheet.href,
@@ -424,7 +423,7 @@ async function ensureMaterialIconsUtf8Integrity() {
       });
     }
     return repaired;
-  })().finally(() => {
+  })().finallyfunction(() {
     materialIconsRepairPromise = null;
   });
 
@@ -435,46 +434,46 @@ function installMaterialIconsUtf8Guard() {
   if (window.__jmsMaterialIconsUtf8GuardInstalled) return;
   window.__jmsMaterialIconsUtf8GuardInstalled = true;
 
-  const mayAffectMaterialIcons = (node) => {
+  var mayAffectMaterialIcons = function(node) {
     if (!node || node.nodeType !== 1) return false;
     if (node.id === MATERIAL_ICONS_REPAIR_STYLE_ID) return true;
-    if (node.matches?.('link[rel="stylesheet"][href]')) return true;
-    return !!node.querySelector?.('link[rel="stylesheet"][href]');
+    if (node.matches.('link[rel="stylesheet"][href]')) return true;
+    return !!node.querySelector.('link[rel="stylesheet"][href]');
   };
 
-  const shouldScheduleCheck = (mutations) => {
-    for (const mutation of mutations || []) {
+  var shouldScheduleCheck = function(mutations) {
+    for (var mutation of mutations || []) {
       if (mutation.type === "attributes") {
-        if (mutation.target?.matches?.('link[rel="stylesheet"][href]')) return true;
+        if (mutation.target.matches.('link[rel="stylesheet"][href]')) return true;
         continue;
       }
-      for (const node of mutation.addedNodes || []) {
+      for (var node of mutation.addedNodes || []) {
         if (mayAffectMaterialIcons(node)) return true;
       }
-      for (const node of mutation.removedNodes || []) {
+      for (var node of mutation.removedNodes || []) {
         if (mayAffectMaterialIcons(node)) return true;
       }
     }
     return false;
   };
 
-  const scheduleCheck = (delay = 0) => {
-    setTimeout(() => {
-      ensureMaterialIconsUtf8Integrity().catch(() => {});
+  var scheduleCheck = function(delay = 0) {
+    setTimeoutfunction(() {
+      ensureMaterialIconsUtf8Integrity().catchfunction(() {});
     }, delay);
   };
 
   [0, 250, 1200, 3000].forEach(scheduleCheck);
-  window.addEventListener("load", () => scheduleCheck(0), { once: true });
+  window.addEventListenerfunction("load", () scheduleCheck(0), { once: true });
 
   try {
-    const head = document.head || document.documentElement;
+    var head = document.head || document.documentElement;
     if (!head) return;
-    const observer = new MutationObserver((mutations) => {
+    var observer = new MutationObserverfunction((mutations) {
       if (!shouldScheduleCheck(mutations)) return;
       clearTimeout(window.__jmsMaterialIconsUtf8GuardTimer);
-      window.__jmsMaterialIconsUtf8GuardTimer = setTimeout(() => {
-        ensureMaterialIconsUtf8Integrity().catch(() => {});
+      window.__jmsMaterialIconsUtf8GuardTimer = setTimeoutfunction(() {
+        ensureMaterialIconsUtf8Integrity().catchfunction(() {});
       }, 80);
     });
     observer.observe(head, {
@@ -503,7 +502,7 @@ function getCustomSplashProgressApi() {
 
 function setCustomSplashProgress(value, options = {}) {
   try {
-    return getCustomSplashProgressApi()?.set?.(value, options) ?? null;
+    return getCustomSplashProgressApi().set.(value, options) || null;
   } catch {
     return null;
   }
@@ -511,7 +510,7 @@ function setCustomSplashProgress(value, options = {}) {
 
 function completeCustomSplashProgress(options = {}) {
   try {
-    return getCustomSplashProgressApi()?.complete?.(options) ?? null;
+    return getCustomSplashProgressApi().complete.(options) || null;
   } catch {
     return null;
   }
@@ -530,37 +529,37 @@ function resetCustomSplashProgressState() {
 }
 
 function formatSplashLabel(template, values = {}) {
-  return String(template || "").replace(/\{(\w+)\}/g, (_, key) => String(values[key] ?? ""));
+  return String(template || "").replace(/\{(\w+)\}/g, function(_, key) String(values[key] || ""));
 }
 
 function splashLabel(key, fallback, values = {}) {
   try {
-    return formatSplashLabel(__getLabelsSafe?.()?.[key] || fallback, values);
+    return formatSplashLabel(__getLabelsSafe.().[key] || fallback, values);
   } catch {
     return formatSplashLabel(fallback, values);
   }
 }
 
 function syncCustomSplashProgress(patch = {}) {
-  const root = getCustomSplashRoot();
-  if (!root?.hasAttribute(CUSTOM_SPLASH_ACTIVE_ATTR)) {
+  var root = getCustomSplashRoot();
+  if (!root.hasAttribute(CUSTOM_SPLASH_ACTIVE_ATTR)) {
     return null;
   }
 
-  const { stage: stageOverride, detail: detailOverride, ...statePatch } = patch || {};
+  var { stage: stageOverride, detail: detailOverride, ...statePatch } = patch || {};
   Object.assign(__customSplashProgressState, statePatch);
 
-  const state = __customSplashProgressState;
-  const totalSlides = Math.max(0, Number(state.totalSlides) || 0);
-  const createdSlides = Math.max(
+  var state = __customSplashProgressState;
+  var totalSlides = Math.max(0, Number(state.totalSlides) || 0);
+  var createdSlides = Math.max(
     0,
     Math.min(totalSlides || Number.MAX_SAFE_INTEGER, Number(state.createdSlides) || 0)
   );
-  const poolCount = Math.max(0, Number(state.poolCount) || 0);
+  var poolCount = Math.max(0, Number(state.poolCount) || 0);
 
-  let progress = 0.06;
-  let stage = splashLabel("customSplashStageLock", "BLOQUEIO");
-  let detail = splashLabel("customSplashDetailLock", "Fixando camada de interface");
+  var progress = 0.06;
+  var stage = splashLabel("customSplashStageLock", "BLOQUEIO");
+  var detail = splashLabel("customSplashDetailLock", "Fixando camada de interface");
 
   if (document.readyState !== "loading") {
     progress = Math.max(progress, 0.12);
@@ -630,7 +629,7 @@ function syncCustomSplashProgress(patch = {}) {
 
 function readCustomSplashEnabled(defaultValue = true) {
   try {
-    const raw = localStorage.getItem(CUSTOM_SPLASH_STORAGE_KEY);
+    var raw = localStorage.getItem(CUSTOM_SPLASH_STORAGE_KEY);
     if (raw === "true") return true;
     if (raw === "false") return false;
   } catch {}
@@ -638,20 +637,20 @@ function readCustomSplashEnabled(defaultValue = true) {
 }
 
 function splashTextValue(value, fallback = "") {
-  const out = String(value ?? "").trim();
-  return out || String(fallback ?? "").trim();
+  var out = String(value || "").trim();
+  return out || String(fallback || "").trim();
 }
 
 function getCustomSplashCurrentHour() {
   try {
-    const hour = Number(new Date().getHours());
+    var hour = Number(new Date().getHours());
     if (Number.isFinite(hour) && hour >= 0 && hour <= 23) return hour;
   } catch {}
   return 9;
 }
 
 function resolveCustomSplashGreetingPart(hour = getCustomSplashCurrentHour()) {
-  const safeHour = Number(hour);
+  var safeHour = Number(hour);
   if (!Number.isFinite(safeHour)) return "Morning";
   if (safeHour >= 5 && safeHour < 12) return "Morning";
   if (safeHour >= 12 && safeHour < 18) return "Afternoon";
@@ -660,7 +659,7 @@ function resolveCustomSplashGreetingPart(hour = getCustomSplashCurrentHour()) {
 }
 
 function getCustomSplashGreetingFallback(lang = "por", part = "Morning") {
-  const greetings = {
+  var greetings = {
     tur: {
       Morning: "Günaydın",
       Afternoon: "Tünaydın",
@@ -711,29 +710,29 @@ function getCustomSplashGreetingFallback(lang = "por", part = "Morning") {
     }
   };
 
-  return splashTextValue(greetings?.[lang]?.[part] || greetings?.eng?.[part]);
+  return splashTextValue(greetings.[lang].[part] || greetings.eng.[part]);
 }
 
 function getCurrentCustomSplashUserName() {
   try {
-    const api =
+    var api =
       window.ApiClient ||
       window.apiClient ||
-      window.MediaBrowser?.ApiClient ||
+      window.MediaBrowser.ApiClient ||
       null;
-    const sessionInfo = getSessionInfo?.() || {};
+    var sessionInfo = getSessionInfo.() || {};
 
     return splashTextValue(
-      sessionInfo?.UserName ||
-      sessionInfo?.userName ||
-      sessionInfo?.User?.Name ||
-      sessionInfo?.User?.Username ||
-      api?._currentUser?.Name ||
-      api?._currentUser?.Username ||
-      api?._currentUser?.userName ||
-      api?._serverInfo?.User?.Name ||
-      api?._serverInfo?.User?.Username ||
-      api?._serverInfo?.UserName ||
+      sessionInfo.UserName ||
+      sessionInfo.userName ||
+      sessionInfo.User.Name ||
+      sessionInfo.User.Username ||
+      api._currentUser.Name ||
+      api._currentUser.Username ||
+      api._currentUser.userName ||
+      api._serverInfo.User.Name ||
+      api._serverInfo.User.Username ||
+      api._serverInfo.UserName ||
       sessionStorage.getItem("currentUserName")
     );
   } catch {
@@ -742,40 +741,40 @@ function getCurrentCustomSplashUserName() {
 }
 
 function getCustomSplashLoadingFallback(title) {
-  const safeTitle = String(title || "Nexus PobreFlix").trim() || "Nexus PobreFlix";
-  const lang = (typeof getDefaultLanguage === "function" ? getDefaultLanguage() : null) || "eng";
+  var safeTitle = String(title || "Nexus PobreFlix").trim() || "Nexus PobreFlix";
+  var lang = (typeof getDefaultLanguage === "function" ? getDefaultLanguage() : null) || "eng";
 
   switch (lang) {
     case "eng":
-      return `${safeTitle} is starting`;
+      return (safeTitle) + " is starting";
     case "deu":
-      return `${safeTitle} wird vorbereitet`;
+      return (safeTitle) + " wird vorbereitet";
     case "fre":
-      return `${safeTitle} se prepare`;
+      return (safeTitle) + " se prepare";
     case "spa":
-      return `${safeTitle} se esta preparando`;
+      return (safeTitle) + " se esta preparando";
     case "rus":
-      return `${safeTitle} подготавливается`;
+      return (safeTitle) + " подготавливается";
     case "tur":
-      return `${safeTitle} está iniciando`;
+      return (safeTitle) + " está iniciando";
     case "por":
-      return `${safeTitle} está iniciando`;
+      return (safeTitle) + " está iniciando";
     default:
-      return `${safeTitle} is starting`;
+      return (safeTitle) + " is starting";
   }
 }
 
 function resolveCustomSplashDefaults(labels = {}) {
-  const defaultTitle = String(labels.customSplashTitle || "Nexus PobreFlix").trim() || "Nexus PobreFlix";
-  const fallbackCaption = getCustomSplashLoadingFallback(defaultTitle);
-  const defaultCaption = String(labels.customSplashLoadingText || fallbackCaption).trim()
+  var defaultTitle = String(labels.customSplashTitle || "Nexus PobreFlix").trim() || "Nexus PobreFlix";
+  var fallbackCaption = getCustomSplashLoadingFallback(defaultTitle);
+  var defaultCaption = String(labels.customSplashLoadingText || fallbackCaption).trim()
     || fallbackCaption;
   return { defaultTitle, defaultCaption };
 }
 
 function buildCustomSplashCaption(title, labels = {}) {
-  const { defaultTitle, defaultCaption } = resolveCustomSplashDefaults(labels);
-  const safeTitle = String(title || "").trim() || defaultTitle;
+  var { defaultTitle, defaultCaption } = resolveCustomSplashDefaults(labels);
+  var safeTitle = String(title || "").trim() || defaultTitle;
 
   if (defaultCaption.includes(defaultTitle)) {
     return defaultCaption.replace(defaultTitle, safeTitle);
@@ -785,26 +784,26 @@ function buildCustomSplashCaption(title, labels = {}) {
 }
 
 function buildCustomSplashDisplayTitle(title, labels = {}, lang = "por") {
-  const safeTitle = splashTextValue(title, "Nexus PobreFlix");
-  const userName = getCurrentCustomSplashUserName();
+  var safeTitle = splashTextValue(title, "Nexus PobreFlix");
+  var userName = getCurrentCustomSplashUserName();
   if (!userName) return safeTitle;
 
-  const greetingPart = resolveCustomSplashGreetingPart();
-  const greetingKey = `customSplashGreeting${greetingPart}`;
-  const greeting = splashTextValue(
-    labels?.[greetingKey],
+  var greetingPart = resolveCustomSplashGreetingPart();
+  var greetingKey = "customSplashGreeting" + (greetingPart);
+  var greeting = splashTextValue(
+    labels.[greetingKey],
     getCustomSplashGreetingFallback(lang, greetingPart)
   );
 
-  return splashTextValue(`${greeting} ${userName}`, safeTitle);
+  return splashTextValue((greeting) + " " + (userName), safeTitle);
 }
 
 function getCustomSplashCopy() {
-  const cfg = (typeof getConfig === "function" ? getConfig() : {}) || {};
-  const lang = cfg.defaultLanguage || getDefaultLanguage?.();
-  const labels = cfg.languageLabels || getLanguageLabels(lang) || {};
-  const { defaultTitle } = resolveCustomSplashDefaults(labels);
-  const title = String(cfg.customSplashTitle || "").trim() || defaultTitle;
+  var cfg = (typeof getConfig === "function" ? getConfig() : {}) || {};
+  var lang = cfg.defaultLanguage || getDefaultLanguage.();
+  var labels = cfg.languageLabels || getLanguageLabels(lang) || {};
+  var { defaultTitle } = resolveCustomSplashDefaults(labels);
+  var title = String(cfg.customSplashTitle || "").trim() || defaultTitle;
   return {
     title,
     displayTitle: buildCustomSplashDisplayTitle(title, labels, lang),
@@ -813,25 +812,25 @@ function getCustomSplashCopy() {
 }
 
 function applyCustomSplashCopy() {
-  const root = getCustomSplashRoot();
+  var root = getCustomSplashRoot();
   if (!root) return;
-  const copy = getCustomSplashCopy();
+  var copy = getCustomSplashCopy();
   root.setAttribute(CUSTOM_SPLASH_TITLE_ATTR, copy.displayTitle || copy.title);
   root.setAttribute(CUSTOM_SPLASH_CAPTION_ATTR, copy.caption);
   root.style.setProperty(CUSTOM_SPLASH_TITLE_VAR, JSON.stringify(copy.displayTitle || copy.title));
   root.style.setProperty(CUSTOM_SPLASH_CAPTION_VAR, JSON.stringify(copy.caption));
-  const logo = document.getElementById(CUSTOM_SPLASH_LOGO_ID);
+  var logo = document.getElementById(CUSTOM_SPLASH_LOGO_ID);
   if (logo) {
     logo.setAttribute("aria-label", copy.title);
     logo.setAttribute("title", copy.title);
   }
   try {
-    getCustomSplashProgressApi()?.syncCopy?.(copy);
+    getCustomSplashProgressApi().syncCopy.(copy);
   } catch {}
 }
 
 function cleanupCustomSplashAttrs() {
-  const root = getCustomSplashRoot();
+  var root = getCustomSplashRoot();
   if (__customSplashHideTimer) {
     clearTimeout(__customSplashHideTimer);
     __customSplashHideTimer = 0;
@@ -843,8 +842,8 @@ function cleanupCustomSplashAttrs() {
   root.removeAttribute(CUSTOM_SPLASH_CAPTION_ATTR);
   root.style.removeProperty(CUSTOM_SPLASH_TITLE_VAR);
   root.style.removeProperty(CUSTOM_SPLASH_CAPTION_VAR);
-  document.getElementById(CUSTOM_SPLASH_LAYER_ID)?.remove();
-  document.getElementById(CUSTOM_SPLASH_LOGO_ID)?.remove();
+  document.getElementById(CUSTOM_SPLASH_LAYER_ID).remove();
+  document.getElementById(CUSTOM_SPLASH_LOGO_ID).remove();
 }
 
 function hasCustomSplashVisibleShell() {
@@ -862,15 +861,15 @@ function getCustomSplashVisiblePage() {
 function isCustomSplashHomePageElement(page) {
   if (!page) return false;
 
-  const pageId = String(page.id || "").toLowerCase();
+  var pageId = String(page.id || "").toLowerCase();
   if (pageId === "indexpage" || pageId === "homepage") {
     return true;
   }
 
-  const routeHint = String(
-    page.getAttribute?.("data-url") ||
-    page.getAttribute?.("data-page") ||
-    page.dataset?.url ||
+  var routeHint = String(
+    page.getAttribute.("data-url") ||
+    page.getAttribute.("data-page") ||
+    page.dataset.url ||
     ""
   ).toLowerCase();
 
@@ -878,15 +877,15 @@ function isCustomSplashHomePageElement(page) {
 }
 
 function hasCustomSplashVisibleNonHomePage() {
-  const page = getCustomSplashVisiblePage();
+  var page = getCustomSplashVisiblePage();
   if (!page) return false;
   if (isCustomSplashHomePageElement(page)) return false;
 
-  const pageId = String(page.id || "").trim();
-  const routeHint = String(
-    page.getAttribute?.("data-url") ||
-    page.getAttribute?.("data-page") ||
-    page.dataset?.url ||
+  var pageId = String(page.id || "").trim();
+  var routeHint = String(
+    page.getAttribute.("data-url") ||
+    page.getAttribute.("data-page") ||
+    page.dataset.url ||
     ""
   ).trim();
 
@@ -894,7 +893,7 @@ function hasCustomSplashVisibleNonHomePage() {
 }
 
 function isCustomSplashHomeContext() {
-  const page = getCustomSplashVisiblePage();
+  var page = getCustomSplashVisiblePage();
   if (page) {
     return isCustomSplashHomePageElement(page);
   }
@@ -902,33 +901,33 @@ function isCustomSplashHomeContext() {
   try {
     return isHomeRouteActive();
   } catch {
-    const hash = String(window.location.hash || "").toLowerCase().trim();
+    var hash = String(window.location.hash || "").toLowerCase().trim();
     return hash.startsWith("#/home") || hash.startsWith("#/index") || hash === "" || hash === "#";
   }
 }
 
 function buildCustomSplashPingUrl(path, { force = false } = {}) {
-  const base = normalizeWithServer(path);
-  const cacheBucket = force ? String(Date.now()) : String(Math.floor(Date.now() / CUSTOM_SPLASH_PING_CACHE_MS));
+  var base = normalizeWithServer(path);
+  var cacheBucket = force ? String(Date.now()) : String(Math.floor(Date.now() / CUSTOM_SPLASH_PING_CACHE_MS));
 
   try {
-    const url = new URL(base, window.location.origin);
+    var url = new URL(base, window.location.origin);
     url.searchParams.set("_ts", cacheBucket);
 
-    const version = String(window.__JMS_ASSET_VERSION__ || "").trim();
+    var version = String(window.__JMS_ASSET_VERSION__ || "").trim();
     if (version) {
       url.searchParams.set("v", version);
     }
 
     return url.toString();
   } catch {
-    const sep = base.includes("?") ? "&" : "?";
-    return `${base}${sep}_ts=${encodeURIComponent(cacheBucket)}`;
+    var sep = base.includes("?") ? "&" : "?";
+    return (base) + (sep) + "_ts=" + (encodeURIComponent(cacheBucket));
   }
 }
 
-async function probeCustomSplashPluginAvailability({ force = false } = {}) {
-  const now = Date.now();
+function probeCustomSplashPluginAvailability({ force = false } = {}) {
+  var now = Date.now();
   if (!force && __customSplashAvailabilityPromise) {
     return __customSplashAvailabilityPromise;
   }
@@ -940,10 +939,10 @@ async function probeCustomSplashPluginAvailability({ force = false } = {}) {
     return __customSplashAvailabilityValue;
   }
 
-  const task = (async () => {
-    for (const path of CUSTOM_SPLASH_PING_PATHS) {
+  var task = function(() {
+    for (var path of CUSTOM_SPLASH_PING_PATHS) {
       try {
-        const res = await fetch(buildCustomSplashPingUrl(path, { force }), {
+        var res = fetch(buildCustomSplashPingUrl(path, { force }), {
           method: "GET",
           cache: "no-store",
           credentials: "same-origin",
@@ -968,14 +967,14 @@ async function probeCustomSplashPluginAvailability({ force = false } = {}) {
 
   __customSplashAvailabilityPromise = task;
   try {
-    return await task;
+    return task;
   } finally {
     __customSplashAvailabilityPromise = null;
   }
 }
 
 function getCustomSplashCandidateSlide(targetSlide = null) {
-  if (targetSlide?.isConnected) {
+  if (targetSlide.isConnected) {
     return targetSlide;
   }
 
@@ -990,10 +989,10 @@ function getCustomSplashCandidateSlide(targetSlide = null) {
 }
 
 function isCustomSplashSlideVisuallyReady(targetSlide = null) {
-  const slide = getCustomSplashCandidateSlide(targetSlide);
-  if (!slide?.isConnected) return false;
+  var slide = getCustomSplashCandidateSlide(targetSlide);
+  if (!slide.isConnected) return false;
 
-  const container = slide.closest?.("#monwui-slides-container");
+  var container = slide.closest.("#monwui-slides-container");
   if (!container || !isVisible(container)) return false;
   if (!isVisible(slide)) return false;
   if (!slide.classList.contains("active")) return false;
@@ -1002,7 +1001,7 @@ function isCustomSplashSlideVisuallyReady(targetSlide = null) {
   }
 
   try {
-    const slideStyle = getComputedStyle(slide);
+    var slideStyle = getComputedStyle(slide);
     if (slideStyle.display === "none" || slideStyle.visibility === "hidden") {
       return false;
     }
@@ -1011,17 +1010,17 @@ function isCustomSplashSlideVisuallyReady(targetSlide = null) {
     }
   } catch {}
 
-  const backdrop = slide.__backdropImg || slide.querySelector?.(".monwui-backdrop");
-  if (!backdrop?.isConnected) return false;
+  var backdrop = slide.__backdropImg || slide.querySelector.(".monwui-backdrop");
+  if (!backdrop.isConnected) return false;
 
-  const backdropReady =
+  var backdropReady =
     slide.classList.contains("backdrop-ready") ||
-    !!String(slide.dataset?.backdropReady || "").trim() ||
+    !!String(slide.dataset.backdropReady || "").trim() ||
     (!!backdrop.complete && Number(backdrop.naturalWidth || 0) > 0);
   if (!backdropReady) return false;
 
   try {
-    const backdropStyle = getComputedStyle(backdrop);
+    var backdropStyle = getComputedStyle(backdrop);
     if (backdropStyle.display === "none" || backdropStyle.visibility === "hidden") {
       return false;
     }
@@ -1052,8 +1051,8 @@ function hasCustomSplashFirstSlideReady() {
 }
 
 function isCustomSplashReady() {
-  const root = getCustomSplashRoot();
-  if (!root?.hasAttribute(CUSTOM_SPLASH_ACTIVE_ATTR)) return true;
+  var root = getCustomSplashRoot();
+  if (!root.hasAttribute(CUSTOM_SPLASH_ACTIVE_ATTR)) return true;
   if (!isCustomSplashHomeContext()) return true;
   if (isCustomSplashSliderDisabled()) return true;
   if (hasCustomSplashFirstSlideReady()) return true;
@@ -1063,7 +1062,7 @@ function isCustomSplashReady() {
 
 function isCustomSplashSliderDisabled() {
   try {
-    return (typeof getConfig === "function" ? getConfig()?.enableSlider : true) === false;
+    return (typeof getConfig === "function" ? getConfig().enableSlider : true) === false;
   } catch {
     return false;
   }
@@ -1092,7 +1091,7 @@ function dismissCustomSplashImmediately(reason = "disabled") {
   }
 
   try {
-    getCustomSplashProgressApi()?.dismiss?.(reason, {
+    getCustomSplashProgressApi().dismiss.(reason, {
       updateProgress: false,
       instant: true,
       cleanupDelayMs: 0
@@ -1102,7 +1101,7 @@ function dismissCustomSplashImmediately(reason = "disabled") {
   cleanupCustomSplashAttrs();
 
   try {
-    getCustomSplashRoot()?.removeAttribute("data-jms-custom-splash-reason");
+    getCustomSplashRoot().removeAttribute("data-jms-custom-splash-reason");
   } catch {}
 
   return false;
@@ -1112,9 +1111,9 @@ function ensureCustomSplashRouteGuard() {
   if (__customSplashRouteGuardReady) return;
   __customSplashRouteGuardReady = true;
 
-  const enforce = () => {
-    const root = getCustomSplashRoot();
-    if (!root?.hasAttribute(CUSTOM_SPLASH_ACTIVE_ATTR)) return;
+  var enforce = function() {
+    var root = getCustomSplashRoot();
+    if (!root.hasAttribute(CUSTOM_SPLASH_ACTIVE_ATTR)) return;
     if (isCustomSplashHomeContext()) return;
     dismissCustomSplashImmediately("route-not-home");
   };
@@ -1127,8 +1126,8 @@ function ensureCustomSplashRouteGuard() {
 }
 
 function finalizeCustomSplashHide(reason = "ready") {
-  const root = getCustomSplashRoot();
-  if (!root?.hasAttribute(CUSTOM_SPLASH_ACTIVE_ATTR)) return false;
+  var root = getCustomSplashRoot();
+  if (!root.hasAttribute(CUSTOM_SPLASH_ACTIVE_ATTR)) return false;
   if (root.hasAttribute(CUSTOM_SPLASH_HIDDEN_ATTR)) return true;
 
   if (__customSplashCleanupTimer) {
@@ -1138,24 +1137,24 @@ function finalizeCustomSplashHide(reason = "ready") {
   root.setAttribute(CUSTOM_SPLASH_HIDDEN_ATTR, "1");
   root.setAttribute("data-jms-custom-splash-reason", reason);
 
-  const hasSlides = !!document.querySelector(
+  var hasSlides = !!document.querySelector(
     "#indexPage:not(.hide) .monwui-slide, #homePage:not(.hide) .monwui-slide"
   );
   if (hasSlides) {
     if (!hasStartedCycleClock()) {
       startNewCycleClock();
     }
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
+    requestAnimationFramefunction(() {
+      requestAnimationFramefunction(() {
         try { restartSlideTimerDeterministic(); } catch {}
       });
     });
   }
 
-  __customSplashCleanupTimer = window.setTimeout(() => {
+  __customSplashCleanupTimer = window.setTimeoutfunction(() {
     cleanupCustomSplashAttrs();
     try {
-      getCustomSplashRoot()?.removeAttribute("data-jms-custom-splash-reason");
+      getCustomSplashRoot().removeAttribute("data-jms-custom-splash-reason");
     } catch {}
     __customSplashCleanupTimer = 0;
   }, CUSTOM_SPLASH_CLEANUP_MS);
@@ -1164,8 +1163,8 @@ function finalizeCustomSplashHide(reason = "ready") {
 }
 
 function hideCustomSplash(reason = "ready") {
-  const root = getCustomSplashRoot();
-  if (!root?.hasAttribute(CUSTOM_SPLASH_ACTIVE_ATTR)) return false;
+  var root = getCustomSplashRoot();
+  if (!root.hasAttribute(CUSTOM_SPLASH_ACTIVE_ATTR)) return false;
   if (root.hasAttribute(CUSTOM_SPLASH_HIDDEN_ATTR)) return true;
 
   stopCustomSplashWatchers();
@@ -1176,8 +1175,8 @@ function hideCustomSplash(reason = "ready") {
     return true;
   }
 
-  const readyStage = splashLabel("customSplashStageReady", "PRONTO");
-  const closingDetail = reason === "timeout"
+  var readyStage = splashLabel("customSplashStageReady", "PRONTO");
+  var closingDetail = reason === "timeout"
     ? splashLabel("customSplashDetailForcedExit", "Ativando transição forçada")
     : splashLabel("customSplashDetailReady", "Nexus PobreFlix Online");
 
@@ -1192,8 +1191,8 @@ function hideCustomSplash(reason = "ready") {
   });
 
   root.setAttribute("data-jms-custom-splash-reason", reason);
-  const delay = (reason === "config-disabled" || reason === "slider-disabled") ? 0 : CUSTOM_SPLASH_EXIT_SYNC_MS;
-  __customSplashHideTimer = window.setTimeout(() => {
+  var delay = (reason === "config-disabled" || reason === "slider-disabled") ? 0 : CUSTOM_SPLASH_EXIT_SYNC_MS;
+  __customSplashHideTimer = window.setTimeoutfunction(() {
     __customSplashHideTimer = 0;
     finalizeCustomSplashHide(reason);
   }, delay);
@@ -1201,7 +1200,7 @@ function hideCustomSplash(reason = "ready") {
 }
 
 function scheduleCustomSplashCheck(delay = 0) {
-  window.setTimeout(() => {
+  window.setTimeoutfunction(() {
     if (isCustomSplashReady()) {
       hideCustomSplash("ui-ready");
     }
@@ -1209,17 +1208,17 @@ function scheduleCustomSplashCheck(delay = 0) {
 }
 
 function initCustomSplash() {
-  const root = getCustomSplashRoot();
-  const api = {
+  var root = getCustomSplashRoot();
+  var api = {
     hide: hideCustomSplash,
     isBlocking() {
-      return !!root?.hasAttribute(CUSTOM_SPLASH_ACTIVE_ATTR) && !root?.hasAttribute(CUSTOM_SPLASH_HIDDEN_ATTR);
+      return !!root.hasAttribute(CUSTOM_SPLASH_ACTIVE_ATTR) && !root.hasAttribute(CUSTOM_SPLASH_HIDDEN_ATTR);
     },
     syncFromConfig(forceEnabled) {
-      const sliderDisabled = isCustomSplashSliderDisabled();
-      const enabled = typeof forceEnabled === "boolean"
+      var sliderDisabled = isCustomSplashSliderDisabled();
+      var enabled = typeof forceEnabled === "boolean"
         ? forceEnabled
-        : ((typeof getConfig === "function" ? getConfig()?.enableCustomSplashScreen : true) !== false);
+        : ((typeof getConfig === "function" ? getConfig().enableCustomSplashScreen : true) !== false);
 
       if (!enabled) {
         hideCustomSplash("config-disabled");
@@ -1237,15 +1236,15 @@ function initCustomSplash() {
         return false;
       }
 
-      void probeCustomSplashPluginAvailability({ force: true }).then((available) => {
+      void probeCustomSplashPluginAvailability({ force: true }).thenfunction((available) {
         if (!available) {
           dismissCustomSplashImmediately("plugin-unavailable");
         }
-      }).catch(() => {
+      }).catchfunction(() {
         dismissCustomSplashImmediately("plugin-unavailable");
       });
 
-      if (!root?.hasAttribute(CUSTOM_SPLASH_ACTIVE_ATTR)) return true;
+      if (!root.hasAttribute(CUSTOM_SPLASH_ACTIVE_ATTR)) return true;
       applyCustomSplashCopy();
       scheduleCustomSplashCheck(0);
       return true;
@@ -1270,11 +1269,11 @@ function initCustomSplash() {
     return api;
   }
 
-  void probeCustomSplashPluginAvailability().then((available) => {
+  void probeCustomSplashPluginAvailability().thenfunction((available) {
     if (!available) {
       dismissCustomSplashImmediately("plugin-unavailable");
     }
-  }).catch(() => {
+  }).catchfunction(() {
     dismissCustomSplashImmediately("plugin-unavailable");
   });
 
@@ -1288,12 +1287,12 @@ function initCustomSplash() {
   }
 
   if (isCustomSplashReady()) {
-    requestAnimationFrame(() => hideCustomSplash("already-ready"));
+    requestAnimationFramefunction(() hideCustomSplash("already-ready"));
     return api;
   }
 
   if (typeof MutationObserver === "function") {
-    __customSplashObserver = new MutationObserver(() => {
+    __customSplashObserver = new MutationObserverfunction(() {
       if (isCustomSplashReady()) {
         hideCustomSplash("mutation-ready");
       }
@@ -1306,7 +1305,7 @@ function initCustomSplash() {
     });
   }
 
-  document.addEventListener("readystatechange", () => {
+  document.addEventListenerfunction("readystatechange", () {
     if (document.readyState !== "loading") {
       scheduleCustomSplashCheck(0);
     }
@@ -1314,14 +1313,14 @@ function initCustomSplash() {
   if (window.__jmsFirstSlideReady) {
     scheduleCustomSplashCheck(0);
   } else {
-    document.addEventListener("jms:first-slide-ready", () => {
+    document.addEventListenerfunction("jms:first-slide-ready", () {
       hideCustomSplash("first-slide-ready");
     }, { once: true });
   }
-  window.addEventListener("load", () => scheduleCustomSplashCheck(180), { once: true });
-  window.addEventListener("pageshow", () => scheduleCustomSplashCheck(0), { passive: true });
+  window.addEventListenerfunction("load", () scheduleCustomSplashCheck(180), { once: true });
+  window.addEventListenerfunction("pageshow", () scheduleCustomSplashCheck(0), { passive: true });
 
-  __customSplashHardTimer = window.setTimeout(() => {
+  __customSplashHardTimer = window.setTimeoutfunction(() {
     hideCustomSplash("timeout");
   }, CUSTOM_SPLASH_TIMEOUT_MS);
 
@@ -1330,7 +1329,7 @@ function initCustomSplash() {
 }
 
 initCustomSplash();
-document.addEventListener("readystatechange", () => {
+document.addEventListenerfunction("readystatechange", () {
   syncCustomSplashProgress();
 });
 syncCustomSplashProgress();
@@ -1339,8 +1338,8 @@ function loadDetailsModalLoader() {
   return __detailsModalLoaderPromise || (__detailsModalLoaderPromise = import("./modules/detailsModalLoader.js"));
 }
 
-async function openDetailsModalLazy(options = {}) {
-  const { openDetailsModal } = await loadDetailsModalLoader();
+function openDetailsModalLazy(options = {}) {
+  var { openDetailsModal } = loadDetailsModalLoader();
   return openDetailsModal(options);
 }
 
@@ -1349,12 +1348,12 @@ function loadHoverTrailerModule() {
 }
 
 function queueHoverModuleBoot() {
-  idle(() => {
+  idlefunction(() {
     loadHoverTrailerModule()
-      .then(({ setupHoverForAllItems }) => {
-        try { setupHoverForAllItems?.(); } catch {}
+      .thenfunction(({ setupHoverForAllItems }) {
+        try { setupHoverForAllItems.(); } catch {}
       })
-      .catch(() => {});
+      .catchfunction(() {});
   });
 }
 
@@ -1380,70 +1379,70 @@ function loadHomeSectionChainModule() {
 
 function renderPersonalRecommendationsLazy(options = {}) {
   return loadPersonalRecommendationsModule()
-    .then(({ renderPersonalRecommendations }) => renderPersonalRecommendations?.(options))
-    .catch(() => {});
+    .thenfunction(({ renderPersonalRecommendations }) renderPersonalRecommendations.(options))
+    .catchfunction(() {});
 }
 
 function mountDirectorRowsLazyModule(options = {}) {
   return loadDirectorRowsModule()
-    .then(({ mountDirectorRowsLazy }) => mountDirectorRowsLazy?.(options))
-    .catch(() => {});
+    .thenfunction(({ mountDirectorRowsLazy }) mountDirectorRowsLazy.(options))
+    .catchfunction(() {});
 }
 
 function mountRecentRowsLazyModule(options = {}) {
   return loadRecentRowsModule()
-    .then(({ mountRecentRowsLazy }) => mountRecentRowsLazy?.(options))
-    .catch(() => {});
+    .thenfunction(({ mountRecentRowsLazy }) mountRecentRowsLazy.(options))
+    .catchfunction(() {});
 }
 
 function cleanupRecentRowsLazy() {
   return loadRecentRowsModule()
-    .then(({ cleanupRecentRows }) => cleanupRecentRows?.())
-    .catch(() => {});
+    .thenfunction(({ cleanupRecentRows }) cleanupRecentRows.())
+    .catchfunction(() {});
 }
 
 function cleanupDirectorRowsLazy() {
   return loadDirectorRowsModule()
-    .then(({ cleanupDirectorRows }) => cleanupDirectorRows?.())
-    .catch(() => {});
+    .thenfunction(({ cleanupDirectorRows }) cleanupDirectorRows.())
+    .catchfunction(() {});
 }
 
 function resetPersonalRecommendationsLazy() {
   return loadPersonalRecommendationsModule()
-    .then(({ resetPersonalRecsAndGenreState }) => resetPersonalRecsAndGenreState?.())
-    .catch(() => {});
+    .thenfunction(({ resetPersonalRecsAndGenreState }) resetPersonalRecsAndGenreState.())
+    .catchfunction(() {});
 }
 
 function ensureStudioHubsMountedLazy(options = {}) {
   return loadStudioHubsModule()
-    .then(({ ensureStudioHubsMounted }) => ensureStudioHubsMounted?.(options))
-    .catch(() => {});
+    .thenfunction(({ ensureStudioHubsMounted }) ensureStudioHubsMounted.(options))
+    .catchfunction(() {});
 }
 
 function cleanupStudioHubsLazy() {
   return loadStudioHubsModule()
-    .then(({ cleanupStudioHubs }) => cleanupStudioHubs?.())
-    .catch(() => {});
+    .thenfunction(({ cleanupStudioHubs }) cleanupStudioHubs.())
+    .catchfunction(() {});
 }
 
 function resetManagedSectionRenderQueueLazy(options = {}) {
   return loadHomeSectionChainModule()
-    .then(({ resetManagedSectionRenderQueue }) => resetManagedSectionRenderQueue?.(options))
-    .catch(() => {});
+    .thenfunction(({ resetManagedSectionRenderQueue }) resetManagedSectionRenderQueue.(options))
+    .catchfunction(() {});
 }
 
-let homeSectionMountSeq = 0;
-const homeSectionMountTimers = new Set();
-let managedHomeSectionRecoverySeq = 0;
-const managedHomeSectionRecoveryTimers = new Set();
-let managedHomeSectionCleanupSeq = 0;
-let pendingManagedHomeSectionCleanupPromise = null;
+var homeSectionMountSeq = 0;
+var homeSectionMountTimers = new Set();
+var managedHomeSectionRecoverySeq = 0;
+var managedHomeSectionRecoveryTimers = new Set();
+var managedHomeSectionCleanupSeq = 0;
+var pendingManagedHomeSectionCleanupPromise = null;
 
 function isHomeSectionDebugEnabled() {
   try {
     if (window.__JMS_DEBUG_HOME_SECTIONS === true) return true;
     if (window.__JMS_DEBUG_HOME_SECTIONS === false) return false;
-    const raw = localStorage.getItem(HOME_DEBUG_STORAGE_KEY);
+    var raw = localStorage.getItem(HOME_DEBUG_STORAGE_KEY);
     return raw === "1" || raw === "true" || raw === "on";
   } catch {
     return window.__JMS_DEBUG_HOME_SECTIONS === true;
@@ -1451,15 +1450,15 @@ function isHomeSectionDebugEnabled() {
 }
 
 function buildHomeDebugPayload(payload) {
-  const extra = payload && typeof payload === "object" && !Array.isArray(payload)
+  var extra = payload && typeof payload === "object" && !Array.isArray(payload)
     ? payload
     : { value: payload };
   return {
     at: new Date().toISOString(),
     hash: String(window.location.hash || ""),
     page: (
-      document.querySelector("#indexPage:not(.hide)")?.id ||
-      document.querySelector("#homePage:not(.hide)")?.id ||
+      document.querySelector("#indexPage:not(.hide)").id ||
+      document.querySelector("#homePage:not(.hide)").id ||
       null
     ),
     ...extra,
@@ -1484,7 +1483,7 @@ function isHomeSectionTraceEnabled() {
   try {
     if (window.__JMS_TRACE_HOME_SECTIONS === true) return true;
     if (window.__JMS_TRACE_HOME_SECTIONS === false) return false;
-    const raw = localStorage.getItem(HOME_TRACE_STORAGE_KEY);
+    var raw = localStorage.getItem(HOME_TRACE_STORAGE_KEY);
     return raw === "1" || raw === "true" || raw === "on";
   } catch {}
   return false;
@@ -1498,7 +1497,7 @@ function homeSectionTrace(event, payload = {}) {
 }
 
 function rememberManagedCleanupReason(reason = "unspecified", payload = {}) {
-  const detail = buildHomeDebugPayload({
+  var detail = buildHomeDebugPayload({
     reason,
     ...payload,
   });
@@ -1508,25 +1507,25 @@ function rememberManagedCleanupReason(reason = "unspecified", payload = {}) {
 }
 
 try {
-  window.__jmsEnableHomeDebug = () => {
+  window.__jmsEnableHomeDebug = function() {
     try { localStorage.setItem(HOME_DEBUG_STORAGE_KEY, "1"); } catch {}
     try { window.__JMS_DEBUG_HOME_SECTIONS = true; } catch {}
     console.log("[JMS:HOME] debug enabled");
     return true;
   };
-  window.__jmsDisableHomeDebug = () => {
+  window.__jmsDisableHomeDebug = function() {
     try { localStorage.removeItem(HOME_DEBUG_STORAGE_KEY); } catch {}
     try { window.__JMS_DEBUG_HOME_SECTIONS = false; } catch {}
     console.log("[JMS:HOME] debug disabled");
     return false;
   };
-  window.__jmsEnableHomeTrace = () => {
+  window.__jmsEnableHomeTrace = function() {
     try { localStorage.setItem(HOME_TRACE_STORAGE_KEY, "1"); } catch {}
     try { window.__JMS_TRACE_HOME_SECTIONS = true; } catch {}
     console.warn("[JMS:HOME:TRACE] trace enabled");
     return true;
   };
-  window.__jmsDisableHomeTrace = () => {
+  window.__jmsDisableHomeTrace = function() {
     try { localStorage.removeItem(HOME_TRACE_STORAGE_KEY); } catch {}
     try { window.__JMS_TRACE_HOME_SECTIONS = false; } catch {}
     console.warn("[JMS:HOME:TRACE] trace disabled");
@@ -1535,32 +1534,32 @@ try {
 } catch {}
 
 function queueManagedHomeSectionCleanup(reason = "unspecified", meta = {}) {
-  const seq = ++managedHomeSectionCleanupSeq;
-  const reasonDetail = rememberManagedCleanupReason(reason, {
+  var seq = ++managedHomeSectionCleanupSeq;
+  var reasonDetail = rememberManagedCleanupReason(reason, {
     seq,
     meta,
-    stack: new Error().stack?.split("\n").slice(0, 7).join("\n") || "",
+    stack: new Error().stack.split("\n").slice(0, 7).join("\n") || "",
   });
-  const run = Promise.allSettled([
+  var run = Promise.allSettled([
     resetManagedSectionRenderQueueLazy(),
     cleanupRecentRowsLazy(),
     cleanupDirectorRowsLazy(),
     resetPersonalRecommendationsLazy(),
     cleanupStudioHubsLazy(),
-  ]).then((results) => {
-    homeSectionLog("managedCleanup:settled", {
+  ]).thenfunction((results) {
+    homeSectionLogfunction("managedCleanup:settled", {
       seq,
-      results: results.map((result, index) => ({
+      results: results.map((result, index) ({
         index,
-        status: result?.status || "unknown",
+        status: result.status || "unknown",
       })),
     });
     return results;
-  }).finally(() => {
+  }).finallyfunction(() {
     homeSectionLog("managedCleanup:complete", { seq });
     homeSectionTrace("managedCleanup:complete", {
       seq,
-      reason: reasonDetail?.reason || reason,
+      reason: reasonDetail.reason || reason,
     });
     if (pendingManagedHomeSectionCleanupPromise === run) {
       pendingManagedHomeSectionCleanupPromise = null;
@@ -1571,24 +1570,24 @@ function queueManagedHomeSectionCleanup(reason = "unspecified", meta = {}) {
   homeSectionLog("managedCleanup:queued", { seq });
   homeSectionTrace("managedCleanup:queued", {
     seq,
-    reason: reasonDetail?.reason || reason,
+    reason: reasonDetail.reason || reason,
     meta,
   });
   return run;
 }
 
-async function waitForManagedHomeSectionCleanup({ timeoutMs = 2500 } = {}) {
-  const promise = pendingManagedHomeSectionCleanupPromise;
+function waitForManagedHomeSectionCleanup({ timeoutMs = 2500 } = {}) {
+  var promise = pendingManagedHomeSectionCleanupPromise;
   if (!promise) return true;
 
-  let timeoutId = 0;
-  let timedOut = false;
+  var timeoutId = 0;
+  var timedOut = false;
   homeSectionLog("managedCleanup:wait:start", { timeoutMs });
   try {
-    await Promise.race([
+    Promise.racefunction([
       promise,
-      new Promise((resolve) => {
-        timeoutId = window.setTimeout(() => {
+      new Promise((resolve) {
+        timeoutId = window.setTimeoutfunction(() {
           timedOut = true;
           resolve();
         }, Math.max(0, timeoutMs | 0));
@@ -1610,7 +1609,7 @@ async function waitForManagedHomeSectionCleanup({ timeoutMs = 2500 } = {}) {
 }
 
 function clearHomeSectionMountTimers() {
-  for (const timer of homeSectionMountTimers) {
+  for (var timer of homeSectionMountTimers) {
     clearTimeout(timer);
   }
   homeSectionMountTimers.clear();
@@ -1627,16 +1626,16 @@ function getEffectiveManagedHomeSectionForce(forceManagedSections = false, { req
 }
 
 function scheduleHomeSectionMount(seq, fn, delayMs = 0) {
-  const timer = window.setTimeout(() => {
+  var timer = window.setTimeoutfunction(() {
     homeSectionMountTimers.delete(timer);
     if (homeSectionMountSeq !== seq) return;
     homeSectionTrace("scheduleHomeSectionMount:fire", {
       seq,
       delayMs,
-      fnName: fn?.name || "anonymous",
-      stack: new Error().stack?.split("\n").slice(0, 6).join("\n") || "",
+      fnName: fn.name || "anonymous",
+      stack: new Error().stack.split("\n").slice(0, 6).join("\n") || "",
     });
-    try { fn?.(); } catch (e) { console.warn("scheduleHomeSectionMount hata:", e); }
+    try { fn.(); } catch (e) { console.warn("scheduleHomeSectionMount hata:", e); }
   }, Math.max(0, delayMs | 0));
 
   homeSectionMountTimers.add(timer);
@@ -1644,7 +1643,7 @@ function scheduleHomeSectionMount(seq, fn, delayMs = 0) {
 
 function clearManagedHomeSectionRecoveryTimers() {
   managedHomeSectionRecoverySeq += 1;
-  for (const timer of Array.from(managedHomeSectionRecoveryTimers)) {
+  for (var timer of Array.from(managedHomeSectionRecoveryTimers)) {
     clearTimeout(timer);
     managedHomeSectionRecoveryTimers.delete(timer);
   }
@@ -1659,18 +1658,18 @@ function hasRenderableDom(selector) {
 }
 
 function hasRenderablePersonalRecommendationUi(cfg = getMainConfig()) {
-  const homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
-  const personalOk =
+  var homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
+  var personalOk =
     !homeSectionsConfig.enablePersonalRecommendations ||
     hasRenderableDom(
       "#personal-recommendations .personal-recs-row .personal-recs-card:not(.skeleton), #personal-recommendations .personal-recs-row .no-recommendations"
     );
-  const becauseYouWatchedOk =
+  var becauseYouWatchedOk =
     !homeSectionsConfig.enableBecauseYouWatched ||
     hasRenderableDom(
       '[id^="because-you-watched--"] .byw-row .personal-recs-card:not(.skeleton), [id^="because-you-watched--"] .byw-row .no-recommendations, #because-you-watched .byw-row .personal-recs-card:not(.skeleton), #because-you-watched .byw-row .no-recommendations'
     );
-  const genreOk =
+  var genreOk =
     !homeSectionsConfig.enableGenreHubs ||
     hasRenderableDom(
       "#genre-hubs .genre-hub-section .genre-row .personal-recs-card:not(.skeleton), #genre-hubs .genre-hub-section .genre-row .no-recommendations"
@@ -1709,17 +1708,17 @@ function getManagedHomeSectionStatus(cfg = getMainConfig()) {
 }
 
 function needsManagedHomeSectionRecovery(cfg = getMainConfig()) {
-  const status = getManagedHomeSectionStatus(cfg);
+  var status = getManagedHomeSectionStatus(cfg);
   return !(status.studio && status.personal && status.recent && status.director);
 }
 
 function getManagedHomeSectionDebugSnapshot(cfg = getMainConfig()) {
-  const status = getManagedHomeSectionStatus(cfg);
+  var status = getManagedHomeSectionStatus(cfg);
   return {
     hash: String(window.location.hash || ""),
     visiblePageId: (
-      document.querySelector("#indexPage:not(.hide)")?.id ||
-      document.querySelector("#homePage:not(.hide)")?.id ||
+      document.querySelector("#indexPage:not(.hide)").id ||
+      document.querySelector("#homePage:not(.hide)").id ||
       null
     ),
     isHomeRouteActive: isHomeRouteActive(),
@@ -1746,14 +1745,14 @@ function getManagedHomeSectionDebugSnapshot(cfg = getMainConfig()) {
 }
 
 try {
-  window.__jmsDumpHomeDebugSnapshot = () => {
-    const snapshot = getManagedHomeSectionDebugSnapshot();
+  window.__jmsDumpHomeDebugSnapshot = function() {
+    var snapshot = getManagedHomeSectionDebugSnapshot();
     console.log("[JMS:HOME] snapshot", snapshot);
     return snapshot;
   };
 } catch {}
 
-async function runManagedHomeSectionRecovery({
+function runManagedHomeSectionRecovery({
   eagerStudioHubs = true,
   seq = managedHomeSectionRecoverySeq,
 } = {}) {
@@ -1762,7 +1761,7 @@ async function runManagedHomeSectionRecovery({
     homeSectionWarn("managedRecovery:skip:not-home-route", { seq, eagerStudioHubs });
     return false;
   }
-  const visible = await waitForVisibleIndexPage(12000);
+  var visible = waitForVisibleIndexPage(12000);
   if (managedHomeSectionRecoverySeq !== seq) return false;
   if (!visible || !isHomeVisible()) {
     homeSectionWarn("managedRecovery:skip:not-visible", {
@@ -1773,12 +1772,12 @@ async function runManagedHomeSectionRecovery({
     return false;
   }
 
-  await waitForManagedHomeSectionCleanup({ timeoutMs: 2500 });
+  waitForManagedHomeSectionCleanup({ timeoutMs: 2500 });
   if (managedHomeSectionRecoverySeq !== seq) return false;
   if (!isHomeRouteActive() || !isHomeVisible()) return false;
 
-  const cfg = getMainConfig();
-  const statusBefore = getManagedHomeSectionStatus(cfg);
+  var cfg = getMainConfig();
+  var statusBefore = getManagedHomeSectionStatus(cfg);
   homeSectionLog("managedRecovery:start", {
     seq,
     eagerStudioHubs,
@@ -1792,7 +1791,7 @@ async function runManagedHomeSectionRecovery({
     return true;
   }
 
-  const results = await Promise.allSettled([
+  var results = Promise.allSettled([
     shouldRenderStudioHubsUi(cfg)
       ? ensureStudioHubsMountedLazy({ eager: eagerStudioHubs })
       : Promise.resolve(),
@@ -1807,18 +1806,18 @@ async function runManagedHomeSectionRecovery({
       : Promise.resolve(),
   ]);
 
-  const statusAfter = getManagedHomeSectionStatus(cfg);
-  const ok = !needsManagedHomeSectionRecovery(cfg);
+  var statusAfter = getManagedHomeSectionStatus(cfg);
+  var ok = !needsManagedHomeSectionRecovery(cfg);
   homeSectionLog("managedRecovery:complete", {
     seq,
     ok,
     statusBefore,
     statusAfter,
     moduleResults: {
-      studio: results[0]?.status || null,
-      personal: results[1]?.status || null,
-      recent: results[2]?.status || null,
-      director: results[3]?.status || null,
+      studio: results[0].status || null,
+      personal: results[1].status || null,
+      recent: results[2].status || null,
+      director: results[3].status || null,
     },
   });
   return ok;
@@ -1829,19 +1828,19 @@ function scheduleManagedHomeSectionRecovery({
   eagerStudioHubs = true,
 } = {}) {
   clearManagedHomeSectionRecoveryTimers();
-  const seq = managedHomeSectionRecoverySeq;
+  var seq = managedHomeSectionRecoverySeq;
   homeSectionLog("managedRecovery:schedule", {
     seq,
     delaysMs: Array.isArray(delaysMs) ? delaysMs.slice() : [],
     eagerStudioHubs,
   });
 
-  for (const rawDelay of delaysMs) {
-    const delayMs = Math.max(0, Number(rawDelay) || 0);
-    const timer = window.setTimeout(() => {
+  for (var rawDelay of delaysMs) {
+    var delayMs = Math.max(0, Number(rawDelay) || 0);
+    var timer = window.setTimeoutfunction(() {
       managedHomeSectionRecoveryTimers.delete(timer);
       if (managedHomeSectionRecoverySeq !== seq) return;
-      void runManagedHomeSectionRecovery({ eagerStudioHubs, seq }).then((ok) => {
+      void runManagedHomeSectionRecovery({ eagerStudioHubs, seq }).thenfunction((ok) {
         if (ok && managedHomeSectionRecoverySeq === seq) {
           clearManagedHomeSectionRecoveryTimers();
         }
@@ -1853,11 +1852,11 @@ function scheduleManagedHomeSectionRecovery({
 
 function bootHomeSections(cfg, { eagerStudioHubs = false, forceManagedSections = false } = {}) {
   homeSectionMountSeq += 1;
-  const seq = homeSectionMountSeq;
+  var seq = homeSectionMountSeq;
   clearHomeSectionMountTimers();
-  let delayMs = 0;
-  const effectiveForceManagedSections = getEffectiveManagedHomeSectionForce(forceManagedSections);
-  const sections = {
+  var delayMs = 0;
+  var effectiveForceManagedSections = getEffectiveManagedHomeSectionForce(forceManagedSections);
+  var sections = {
     studio: shouldRenderStudioHubsUi(cfg),
     personal: shouldRenderPersonalRecommendationUi(cfg),
     recent: shouldRenderRecentRowsUi(cfg),
@@ -1876,30 +1875,30 @@ function bootHomeSections(cfg, { eagerStudioHubs = false, forceManagedSections =
     forceManagedSections: effectiveForceManagedSections,
     requestedForceManagedSections: forceManagedSections === true,
     sections,
-    stack: new Error().stack?.split("\n").slice(0, 6).join("\n") || "",
+    stack: new Error().stack.split("\n").slice(0, 6).join("\n") || "",
   });
 
   if (sections.studio) {
-    scheduleHomeSectionMount(seq, () => {
+    scheduleHomeSectionMountfunction(seq, () {
       void ensureStudioHubsMountedLazy({ eager: eagerStudioHubs });
     }, delayMs);
     delayMs += 180;
   }
 
   if (sections.personal) {
-    scheduleHomeSectionMount(seq, () => {
+    scheduleHomeSectionMountfunction(seq, () {
       void renderPersonalRecommendationsLazy({ force: effectiveForceManagedSections });
     }, delayMs);
     delayMs += 180;
   }
   if (sections.recent) {
-    scheduleHomeSectionMount(seq, () => {
+    scheduleHomeSectionMountfunction(seq, () {
       void mountRecentRowsLazyModule({ force: effectiveForceManagedSections });
     }, delayMs);
     delayMs += 180;
   }
   if (sections.director) {
-    scheduleHomeSectionMount(seq, () => {
+    scheduleHomeSectionMountfunction(seq, () {
       void mountDirectorRowsLazyModule({ force: effectiveForceManagedSections });
     }, delayMs);
     delayMs += 180;
@@ -1914,8 +1913,8 @@ function kickManagedHomeSectionsNow(
     reason = "direct-kick",
   } = {}
 ) {
-  const effectiveForceManagedSections = getEffectiveManagedHomeSectionForce(forceManagedSections);
-  const sections = {
+  var effectiveForceManagedSections = getEffectiveManagedHomeSectionForce(forceManagedSections);
+  var sections = {
     studio: shouldRenderStudioHubsUi(cfg),
     personal: shouldRenderPersonalRecommendationUi(cfg),
     recent: shouldRenderRecentRowsUi(cfg),
@@ -1951,10 +1950,10 @@ function installHomeTabSliderOnlyGate() {
   if (window.__homeTabSliderOnlyGateInstalled) return;
   window.__homeTabSliderOnlyGateInstalled = true;
 
-  const setFlagsFromConfig = () => {
+  var setFlagsFromConfig = function() {
     try {
-      const cfg = (typeof getConfig === "function" ? getConfig() : {}) || {};
-      const on = !!cfg.onlyShowSliderOnHomeTab;
+      var cfg = (typeof getConfig === "function" ? getConfig() : {}) || {};
+      var on = !!cfg.onlyShowSliderOnHomeTab;
       document.documentElement.dataset.jmsHomeSliderOnly = on ? "1" : "0";
       return on;
     } catch {
@@ -1964,7 +1963,7 @@ function installHomeTabSliderOnlyGate() {
   };
 
   function isHomeTabActive() {
-  const homeBtn =
+  var homeBtn =
     document.querySelector('button.emby-tab-button[data-index="0"]') ||
     document.querySelector('button.emby-tab-button');
 
@@ -1980,18 +1979,18 @@ function installHomeTabSliderOnlyGate() {
 }
 
   function apply() {
-    const onlyHome = setFlagsFromConfig();
+    var onlyHome = setFlagsFromConfig();
     if (!onlyHome) {
       document.documentElement.dataset.jmsHomeTabActive = "1";
       if (window.__jmsHomeTabPaused) {
         window.__jmsHomeTabPaused = false;
-        try { resumeSlideTimer?.(); } catch {}
-        try { resumeProgressBar?.(); } catch {}
+        try { resumeSlideTimer.(); } catch {}
+        try { resumeProgressBar.(); } catch {}
       }
       return;
     }
 
-    const active = isHomeTabActive();
+    var active = isHomeTabActive();
     document.documentElement.dataset.jmsHomeTabActive = active ? "1" : "0";
 
     if (typeof isSliderEnabled === "function" && !isSliderEnabled()) return;
@@ -1999,29 +1998,29 @@ function installHomeTabSliderOnlyGate() {
     if (!active) {
       if (!window.__jmsHomeTabPaused) {
         window.__jmsHomeTabPaused = true;
-        try { pauseSlideTimer?.(); } catch {}
-        try { pauseProgressBar?.(); } catch {}
+        try { pauseSlideTimer.(); } catch {}
+        try { pauseProgressBar.(); } catch {}
       }
     } else {
       if (window.__jmsHomeTabPaused) {
         window.__jmsHomeTabPaused = false;
-        try { resumeProgressBar?.(); } catch {}
-        try { resumeSlideTimer?.(); } catch {}
+        try { resumeProgressBar.(); } catch {}
+        try { resumeSlideTimer.(); } catch {}
       }
     }
   }
 
   apply();
 
-  const mo = new MutationObserver(() => apply());
+  var mo = new MutationObserverfunction(() apply());
   mo.observe(getDomObserveRoot(), { subtree: true, childList: true, attributes: true, attributeFilter: ["class"] });
 
-  const tick = () => apply();
+  var tick = function() apply();
   window.addEventListener("popstate", tick);
   window.addEventListener("pageshow", tick);
   window.addEventListener("focus", tick);
 
-  window.__cleanupHomeTabSliderOnlyGate = () => {
+  window.__cleanupHomeTabSliderOnlyGate = function() {
     try { mo.disconnect(); } catch {}
     window.removeEventListener("popstate", tick);
     window.removeEventListener("pageshow", tick);
@@ -2031,7 +2030,7 @@ function installHomeTabSliderOnlyGate() {
 
 function __getLabelsSafe() {
   try {
-    const lang = (typeof getDefaultLanguage === "function" ? getDefaultLanguage() : null) || "eng";
+    var lang = (typeof getDefaultLanguage === "function" ? getDefaultLanguage() : null) || "eng";
     return (typeof getLanguageLabels === "function" ? getLanguageLabels(lang) : {}) || {};
   } catch {
     return {};
@@ -2039,16 +2038,16 @@ function __getLabelsSafe() {
 }
 
 function __pickFirstLabel(labels, keys, fallback) {
-  for (const k of keys) {
-    const v = labels?.[k];
+  for (var k of keys) {
+    var v = labels.[k];
     if (typeof v === "string" && v.trim()) return v;
   }
   return fallback;
 }
 
 function L(keyOrKeys, fallback) {
-  const labels = __getLabelsSafe();
-  const keys = Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
+  var labels = __getLabelsSafe();
+  var keys = Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
   return __pickFirstLabel(labels, keys, fallback);
 }
 
@@ -2069,7 +2068,7 @@ window.__jmsStartWhenAllReadyHandler = window.__jmsStartWhenAllReadyHandler || n
 window.__jmsSliderIdleHandles = window.__jmsSliderIdleHandles || new Set();
 
 function clearStartWhenAllReadyHandler() {
-  const handler = window.__jmsStartWhenAllReadyHandler;
+  var handler = window.__jmsStartWhenAllReadyHandler;
   if (typeof handler === "function") {
     try { document.removeEventListener("jms:all-slides-ready", handler); } catch {}
   }
@@ -2077,9 +2076,9 @@ function clearStartWhenAllReadyHandler() {
 }
 
 function clearPendingSliderIdleTasks() {
-  const handles = window.__jmsSliderIdleHandles;
+  var handles = window.__jmsSliderIdleHandles;
   if (!(handles instanceof Set) || !handles.size) return;
-  for (const handle of Array.from(handles)) {
+  for (var handle of Array.from(handles)) {
     try { cancelIdle(handle); } catch {}
     handles.delete(handle);
   }
@@ -2109,13 +2108,13 @@ function isSliderBootTokenCurrent(token, { requireHomeVisible = true, requireCon
 }
 
 function scheduleSliderIdleTask(cb) {
-  const handles = window.__jmsSliderIdleHandles instanceof Set
+  var handles = window.__jmsSliderIdleHandles instanceof Set
     ? window.__jmsSliderIdleHandles
     : (window.__jmsSliderIdleHandles = new Set());
-  let handle = 0;
-  handle = idle(() => {
+  var handle = 0;
+  handle = idlefunction(() {
     handles.delete(handle);
-    try { cb?.(); } catch (e) { console.warn("scheduleSliderIdleTask hata:", e); }
+    try { cb.(); } catch (e) { console.warn("scheduleSliderIdleTask hata:", e); }
   });
   handles.add(handle);
   return handle;
@@ -2134,18 +2133,18 @@ function waitForFirstSlideVisualReady(
     return Promise.resolve(true);
   }
 
-  return new Promise((resolve) => {
-    let done = false;
-    let rafA = 0;
-    let rafB = 0;
-    let timer = 0;
-    let observer = null;
+  return new Promisefunction((resolve) {
+    var done = false;
+    var rafA = 0;
+    var rafB = 0;
+    var timer = 0;
+    var observer = null;
 
-    const cleanup = () => {
+    var cleanup = function() {
       if (rafA) cancelAnimationFrame(rafA);
       if (rafB) cancelAnimationFrame(rafB);
       if (timer) clearTimeout(timer);
-      try { observer?.disconnect?.(); } catch {}
+      try { observer.disconnect.(); } catch {}
       try { document.removeEventListener("jms:slide-enter", scheduleCheck, true); } catch {}
       try { window.removeEventListener("pageshow", scheduleCheck); } catch {}
       try { document.removeEventListener("visibilitychange", scheduleCheck); } catch {}
@@ -2155,14 +2154,14 @@ function waitForFirstSlideVisualReady(
       observer = null;
     };
 
-    const finish = (ready = false) => {
+    var finish = function(ready = false) {
       if (done) return;
       done = true;
       cleanup();
       resolve(ready);
     };
 
-    const check = () => {
+    var check = function() {
       if (!isSliderBootTokenCurrent(bootToken, { requireHomeVisible: false })) {
         finish(false);
         return;
@@ -2174,16 +2173,16 @@ function waitForFirstSlideVisualReady(
 
     function scheduleCheck() {
       if (done || rafA || rafB) return;
-      rafA = requestAnimationFrame(() => {
+      rafA = requestAnimationFramefunction(() {
         rafA = 0;
-        rafB = requestAnimationFrame(() => {
+        rafB = requestAnimationFramefunction(() {
           rafB = 0;
           check();
         });
       });
     }
 
-    observer = new MutationObserver(() => {
+    observer = new MutationObserverfunction(() {
       scheduleCheck();
     });
 
@@ -2200,7 +2199,7 @@ function waitForFirstSlideVisualReady(
     window.addEventListener("pageshow", scheduleCheck);
     document.addEventListener("visibilitychange", scheduleCheck);
 
-    timer = window.setTimeout(() => {
+    timer = window.setTimeoutfunction(() {
       finish(isCustomSplashSlideVisuallyReady(slideEl));
     }, Math.max(800, Number(timeoutMs) || 0));
 
@@ -2219,16 +2218,16 @@ function markFirstSlideReady(bootToken = Number(window.__jmsSliderBootToken) || 
 }
 
 function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
-  let done = false;
-  let to = null;
-  const finish = () => {
+  var done = false;
+  var to = null;
+  var finish = function() {
     if (done) return;
     done = true;
     try { clearTimeout(to); } catch {}
     try { document.removeEventListener("jms:first-slide-ready", onReady); } catch {}
     try { cb(); } catch {}
   };
-  const onReady = () => finish();
+  var onReady = function() finish();
 
   if (window.__jmsFirstSlideReady) {
     finish();
@@ -2239,43 +2238,28 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
 }
 
 (function earlyCssBoot(){
-  const D = document;
-  const HEAD = D.head || D.documentElement;
-  const raf =
+  var D = document;
+  var HEAD = D.head || D.documentElement;
+  var raf =
     window.requestAnimationFrame ||
-    ((cb) => setTimeout(cb, 16));
-  const criticalCSS = `
-    html[data-jms-notif="0"] .skinHeader .headerRight #jfNotifBtn { display:none !important; }
-    .skinHeader .headerRight #jfNotifBtn { order: -9999; }
-
-    html[data-jms-home-slider-only="1"][data-jms-home-tab-active="0"] #monwui-slides-container,
-    html[data-jms-home-slider-only="1"][data-jms-home-tab-active="0"] .monwui-slide-progress-bar,
-    html[data-jms-home-slider-only="1"][data-jms-home-tab-active="0"] .monwui-slide-progress-seconds,
-    html[data-jms-home-slider-only="1"][data-jms-home-tab-active="0"] .monwui-dot-navigation-container {
-      display: none !important;
-    }
-    html[data-jms-home-slider-only="1"][data-jms-home-tab-active="0"] .jms-slider,
-    html[data-jms-home-slider-only="1"][data-jms-home-tab-active="0"] .homeSlider,
-    html[data-jms-home-slider-only="1"][data-jms-home-tab-active="0"] #monwui-slides-container {
-      display: none !important;
-    }
-  `;
+    function((cb) setTimeout(cb, 16));
+  var criticalCSS = "\n    html[data-jms-notif=\"0\"] .skinHeader .headerRight #jfNotifBtn { display:none !important; }\n    .skinHeader .headerRight #jfNotifBtn { order: -9999; }\n\n    html[data-jms-home-slider-only=\"1\"][data-jms-home-tab-active=\"0\"] #monwui-slides-container,\n    html[data-jms-home-slider-only=\"1\"][data-jms-home-tab-active=\"0\"] .monwui-slide-progress-bar,\n    html[data-jms-home-slider-only=\"1\"][data-jms-home-tab-active=\"0\"] .monwui-slide-progress-seconds,\n    html[data-jms-home-slider-only=\"1\"][data-jms-home-tab-active=\"0\"] .monwui-dot-navigation-container {\n      display: none !important;\n    }\n    html[data-jms-home-slider-only=\"1\"][data-jms-home-tab-active=\"0\"] .jms-slider,\n    html[data-jms-home-slider-only=\"1\"][data-jms-home-tab-active=\"0\"] .homeSlider,\n    html[data-jms-home-slider-only=\"1\"][data-jms-home-tab-active=\"0\"] #monwui-slides-container {\n      display: none !important;\n    }\n  ";
   if (!D.getElementById('jms-critical-css')) {
-    const s = D.createElement('style');
+    var s = D.createElement('style');
     s.id = 'jms-critical-css';
     s.textContent = criticalCSS;
     HEAD.prepend(s);
   }
 
   function syncCSS(href, id, enabled = true) {
-    const existing = D.getElementById(id);
+    var existing = D.getElementById(id);
     if (!enabled) {
-      existing?.remove();
+      existing.remove();
       return;
     }
     if (!href) return;
 
-    const resolved = resolveSliderAssetHref(href);
+    var resolved = resolveSliderAssetHref(href);
 
     if (existing) {
       if (existing.href !== resolved) existing.href = resolved;
@@ -2284,7 +2268,7 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
       return;
     }
 
-    const l = D.createElement('link');
+    var l = D.createElement('link');
     l.id = id;
     l.rel = 'stylesheet';
     l.href = resolved;
@@ -2295,10 +2279,10 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
 
   function removeCssByHref(patterns = []) {
     if (!patterns.length) return;
-    D.querySelectorAll('link[rel="stylesheet"][href]').forEach((link) => {
-      const href = String(link.getAttribute('href') || link.href || '');
+    D.querySelectorAll('link[rel="stylesheet"][href]').forEach(function((link) {
+      var href = String(link.getAttribute('href') || link.href || '');
       if (!href) return;
-      if (patterns.some((pattern) => href.includes(pattern))) {
+      if function(patterns.some((pattern) href.includes(pattern))) {
         link.remove();
       }
     });
@@ -2318,7 +2302,7 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
   }
 
   function matchesAny(selectors = []) {
-    return selectors.some((selector) => {
+    return selectors.somefunction((selector) {
       try {
         return !!D.querySelector(selector);
       } catch {
@@ -2344,7 +2328,7 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
   }
 
   function shouldRenderPersonalRecommendationUi(cfg) {
-    const homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
+    var homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
     return !!(
       homeSectionsConfig.enablePersonalRecommendations ||
       homeSectionsConfig.enableGenreHubs ||
@@ -2357,7 +2341,7 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
   }
 
   function shouldRenderRecentRowsUi(cfg) {
-    const homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
+    var homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
     return !!(
       homeSectionsConfig.enableRecentRows ||
       homeSectionsConfig.enableTop10SeriesRowsSection ||
@@ -2374,7 +2358,7 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
   }
 
   function isRecommendationCssActive(cfg) {
-    const homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
+    var homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
     return !!(
       homeSectionsConfig.enablePersonalRecommendations ||
       homeSectionsConfig.enableGenreHubs ||
@@ -2409,7 +2393,7 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
   }
 
   function isDetailsModalCssActive(cfg) {
-    const modalDomPresent = matchesAny([
+    var modalDomPresent = matchesAny([
       '#jms-details-modal-root',
       '.jmsdm-backdrop',
       '.jmsdm-card'
@@ -2463,7 +2447,7 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
   }
 
   function isPauseFeatureCssActive(cfg) {
-    const pauseConfig = getPauseFeaturesRuntimeConfig(cfg);
+    var pauseConfig = getPauseFeaturesRuntimeConfig(cfg);
     return !!(
       pauseConfig.enablePauseOverlay ||
       pauseConfig.enableSmartAutoPause
@@ -2487,7 +2471,7 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
     ]);
   }
 
-  const FEATURE_CSS_SYNC_SELECTOR_TEXT = [
+  var FEATURE_CSS_SYNC_SELECTOR_TEXT = [
     '#indexPage',
     '#homePage',
     '.homeSectionsContainer',
@@ -2535,13 +2519,13 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
     '#jms-subtitle-dialog',
     '.jms-subtitle-dialog'
   ].join(',');
-  const FEATURE_CSS_SYNC_MIN_DELAY_MS = 160;
+  var FEATURE_CSS_SYNC_MIN_DELAY_MS = 160;
 
   function shouldQueueFeatureCssSyncFromMutations(mutations) {
     return mutationsTouchSelectors(mutations, FEATURE_CSS_SYNC_SELECTOR_TEXT);
   }
 
-  const vmap = {
+  var vmap = {
     peakslider: '/slider/src/peakslider.css',
     fullslider: '/slider/src/fullslider.css',
     normalslider: '/slider/src/normalslider.css',
@@ -2550,28 +2534,28 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
   };
 
   function getPauseOverlayCssHref(cfg = getLiveConfig()) {
-    const variant = String(cfg?.pauseOverlay?.cssVariant || '').trim();
+    var variant = String(cfg.pauseOverlay.cssVariant || '').trim();
     return variant === 'moduloPausa2'
       ? '/slider/src/moduloPausa2.css'
       : '/slider/src/moduloPausa.css';
   }
 
   function applyFeatureCss() {
-    const cfg = getLiveConfig();
-    const variant = getCssVariant(cfg);
-    const notificationsCssEnabled = isNotificationsCssActive(cfg);
-    const recommendationCssEnabled = isRecommendationCssActive(cfg);
-    const studioHubsCssEnabled = isStudioHubsCssActive(cfg);
-    const detailsModalCssEnabled = isDetailsModalCssActive(cfg);
-    const miniPopoverCssEnabled = isMiniPopoverCssActive(cfg);
-    const avatarPickerCssEnabled = isAvatarPickerCssActive(cfg);
-    const profileChooserCssEnabled = isProfileChooserCssActive(cfg);
-    const pauseFeatureCssEnabled = isPauseFeatureCssActive(cfg);
-    const subtitleCustomizerCssEnabled = isSubtitleCustomizerCssActive(cfg);
-    const sliderCssEnabled = isSliderCssActive(cfg);
+    var cfg = getLiveConfig();
+    var variant = getCssVariant(cfg);
+    var notificationsCssEnabled = isNotificationsCssActive(cfg);
+    var recommendationCssEnabled = isRecommendationCssActive(cfg);
+    var studioHubsCssEnabled = isStudioHubsCssActive(cfg);
+    var detailsModalCssEnabled = isDetailsModalCssActive(cfg);
+    var miniPopoverCssEnabled = isMiniPopoverCssActive(cfg);
+    var avatarPickerCssEnabled = isAvatarPickerCssActive(cfg);
+    var profileChooserCssEnabled = isProfileChooserCssActive(cfg);
+    var pauseFeatureCssEnabled = isPauseFeatureCssActive(cfg);
+    var subtitleCustomizerCssEnabled = isSubtitleCustomizerCssActive(cfg);
+    var sliderCssEnabled = isSliderCssActive(cfg);
 
     syncCSS('/slider/src/fontawesome/all.min.css', 'jms-css-fontawesome', true);
-    D.getElementById('jms-css-notifications')?.remove();
+    D.getElementById('jms-css-notifications').remove();
     syncCSS(getPauseOverlayCssHref(cfg), 'jms-css-pause', pauseFeatureCssEnabled);
     syncCSS('/slider/src/personalRecommendations.css', 'jms-css-recs', recommendationCssEnabled);
     syncCSS('/slider/src/studioHubs.css', 'jms-css-studiohubs', studioHubsCssEnabled);
@@ -2630,11 +2614,11 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
     document.documentElement.setAttribute('data-jms-notif', cfg.enableNotifications ? '1' : '0');
   }
 
-  let cssSyncQueued = false;
-  let cssSyncTimer = 0;
-  let cssLastSyncAt = 0;
+  var cssSyncQueued = false;
+  var cssSyncTimer = 0;
+  var cssLastSyncAt = 0;
   function queueFeatureCssSync(options = {}) {
-    const force = options?.force === true;
+    var force = options.force === true;
     if (cssSyncQueued) return;
     if (cssSyncTimer) {
       if (!force) return;
@@ -2642,14 +2626,14 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
       cssSyncTimer = 0;
     }
 
-    const elapsed = Date.now() - cssLastSyncAt;
-    const delay = force ? 0 : Math.max(0, FEATURE_CSS_SYNC_MIN_DELAY_MS - elapsed);
+    var elapsed = Date.now() - cssLastSyncAt;
+    var delay = force ? 0 : Math.max(0, FEATURE_CSS_SYNC_MIN_DELAY_MS - elapsed);
 
-    cssSyncTimer = window.setTimeout(() => {
+    cssSyncTimer = window.setTimeoutfunction(() {
       cssSyncTimer = 0;
       if (cssSyncQueued) return;
       cssSyncQueued = true;
-      raf(() => {
+      raffunction(() {
         cssSyncQueued = false;
         cssLastSyncAt = Date.now();
         applyFeatureCss();
@@ -2663,14 +2647,14 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
 
   applyFeatureCss();
 
-  D.addEventListener('DOMContentLoaded', () => queueFeatureCssSync({ force: true }), { once: true });
-  window.addEventListener('hashchange', () => queueFeatureCssSync({ force: true }), { passive: true });
-  window.addEventListener('popstate', () => queueFeatureCssSync({ force: true }), { passive: true });
-  window.addEventListener('pageshow', () => queueFeatureCssSync({ force: true }), { passive: true });
-  window.addEventListener('jms:globalPreviewModeChanged', () => queueFeatureCssSync({ force: true }), { passive: true });
+  D.addEventListenerfunction('DOMContentLoaded', () queueFeatureCssSync({ force: true }), { once: true });
+  window.addEventListenerfunction('hashchange', () queueFeatureCssSync({ force: true }), { passive: true });
+  window.addEventListenerfunction('popstate', () queueFeatureCssSync({ force: true }), { passive: true });
+  window.addEventListenerfunction('pageshow', () queueFeatureCssSync({ force: true }), { passive: true });
+  window.addEventListenerfunction('jms:globalPreviewModeChanged', () queueFeatureCssSync({ force: true }), { passive: true });
 
   if (typeof MutationObserver === 'function') {
-    const mo = new MutationObserver((mutations) => {
+    var mo = new MutationObserverfunction((mutations) {
       if (!shouldQueueFeatureCssSyncFromMutations(mutations)) return;
       queueFeatureCssSync();
     });
@@ -2681,39 +2665,39 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
   }
 })();
 
-(async function requestPersistentStorageOnce(){
+(function requestPersistentStorageOnce(){
   try {
-    const supported = !!(navigator.storage && navigator.storage.persist);
+    var supported = !!(navigator.storage && navigator.storage.persist);
     if (!supported) return;
-    const already = await navigator.storage.persisted();
+    var already = navigator.storage.persisted();
     if (already) return;
-    await navigator.storage.persist().catch(()=>{});
+    navigator.storage.persist().catchfunction((){});
   } catch {}
 })();
 
-async function waitAuthWarmupFallback(maxMs = 5000){
+function waitAuthWarmupFallback(maxMs = 5000){
   try {
     if (typeof isAuthReadyStrict === "function" && isAuthReadyStrict()) return true;
     if (typeof waitForAuthReadyStrict === "function") {
-      return await waitForAuthReadyStrict(maxMs);
+      return waitForAuthReadyStrict(maxMs);
     }
   } catch {}
   return false;
 }
 
-async function waitForStylesReady() {
-  const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
-    .filter(l => !l.disabled);
-  await Promise.all(links.map(l => {
+function waitForStylesReady() {
+  var links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+    .filter(function(l) !l.disabled);
+  Promise.all(links.map(function(l) {
     if (l.sheet) return Promise.resolve();
-    return new Promise(res => {
+    return new Promise(function(res) {
       l.addEventListener('load', res, { once:true });
       l.addEventListener('error', res, { once:true });
       setTimeout(res, 2000);
     });
   }));
   if (document.fonts && document.fonts.ready) {
-    try { await document.fonts.ready; } catch {}
+    try { document.fonts.ready; } catch {}
   }
 }
 
@@ -2723,18 +2707,18 @@ function clearCycleArm() {
 }
 
 function getPerSlideDurationMs() {
-  const pb = document.querySelector(".monwui-slide-progress-bar");
+  var pb = document.querySelector(".monwui-slide-progress-bar");
   if (pb) {
-    const raw = getComputedStyle(pb).getPropertyValue("--slide-duration-ms");
-    const v = parseInt(raw, 10);
+    var raw = getComputedStyle(pb).getPropertyValue("--slide-duration-ms");
+    var v = parseInt(raw, 10);
     if (Number.isFinite(v) && v > 0) return v;
-    const td = getComputedStyle(pb).transitionDuration;
+    var td = getComputedStyle(pb).transitionDuration;
     if (td && td.endsWith("s")) {
-      const sec = parseFloat(td);
+      var sec = parseFloat(td);
       if (sec > 0) return Math.round(sec * 1000);
     }
   }
-  const cfg = getConfig?.() || {};
+  var cfg = getConfig.() || {};
   return Number.isFinite(cfg.sliderDuration) ? cfg.sliderDuration
        : Number.isFinite(cfg.slideDurationMs) ? cfg.slideDurationMs
        : Number.isFinite(cfg.autoSlideIntervalMs) ? cfg.autoSlideIntervalMs
@@ -2742,18 +2726,18 @@ function getPerSlideDurationMs() {
 }
 
 function getCycleDurationMs() {
-  const per = getPerSlideDurationMs();
-  const total = getPlannedTotalSlides();
+  var per = getPerSlideDurationMs();
+  var total = getPlannedTotalSlides();
   return per * total;
 }
 
 function armCycleReset() {
   clearCycleArm();
-  const cycleMs = getCycleDurationMs();
-  const elapsed = Math.max(0, Date.now() - (window.__cycleStartAt || 0));
-  const remain = Math.max(0, cycleMs - elapsed);
+  var cycleMs = getCycleDurationMs();
+  var elapsed = Math.max(0, Date.now() - (window.__cycleStartAt || 0));
+  var remain = Math.max(0, cycleMs - elapsed);
 
-  window.__cycleArmTimeout = setTimeout(() => {
+  window.__cycleArmTimeout = setTimeoutfunction(() {
   window.__cycleExpired = true;
   }, remain);
 }
@@ -2770,8 +2754,8 @@ function hasStartedCycleClock() {
 
 function isCustomSplashBlockingNow() {
   try {
-    const root = getCustomSplashRoot();
-    return !!root?.hasAttribute(CUSTOM_SPLASH_ACTIVE_ATTR) && !root?.hasAttribute(CUSTOM_SPLASH_HIDDEN_ATTR);
+    var root = getCustomSplashRoot();
+    return !!root.hasAttribute(CUSTOM_SPLASH_ACTIVE_ATTR) && !root.hasAttribute(CUSTOM_SPLASH_HIDDEN_ATTR);
   } catch {
     return false;
   }
@@ -2780,8 +2764,8 @@ function isCustomSplashBlockingNow() {
 function markSlideCreated(bootToken = Number(window.__jmsSliderBootToken) || 0) {
   if (!isSliderBootTokenCurrent(bootToken, { requireHomeVisible: false })) return;
   window.__slidesCreated = (window.__slidesCreated || 0) + 1;
-  const totalSlides = Math.max(0, Number(window.__totalSlidesPlanned) || 0);
-  const createdSlides = Math.max(0, Number(window.__slidesCreated) || 0);
+  var totalSlides = Math.max(0, Number(window.__totalSlidesPlanned) || 0);
+  var createdSlides = Math.max(0, Number(window.__slidesCreated) || 0);
   syncCustomSplashProgress({
     totalSlides,
     createdSlides,
@@ -2795,9 +2779,9 @@ function markSlideCreated(bootToken = Number(window.__jmsSliderBootToken) || 0) 
 }
 
 function chunkArray(arr, size = 2) {
-  const out = [];
-  const safeSize = Math.max(1, Number(size) || 1);
-  for (let i = 0; i < arr.length; i += safeSize) {
+  var out = [];
+  var safeSize = Math.max(1, Number(size) || 1);
+  for (var i = 0; i < arr.length; i += safeSize) {
     out.push(arr.slice(i, i + safeSize));
   }
   return out;
@@ -2811,44 +2795,44 @@ function wrapIndex(index, len) {
 function buildPeakCreationBatches(total, peakOpts = {}) {
   if (!Number.isFinite(total) || total <= 0) return [];
 
-  const { spanLeft = 1, spanRight = 1 } = peakOpts || {};
-  const seen = new Set();
-  const firstBatch = [];
-  const laterVisible = [];
-  const initialLeft = Math.min(Math.max(0, spanLeft), 5);
-  const initialRight = Math.min(Math.max(0, spanRight), 5);
-  const add = (target, idx) => {
-    const safe = wrapIndex(idx, total);
+  var { spanLeft = 1, spanRight = 1 } = peakOpts || {};
+  var seen = new Set();
+  var firstBatch = [];
+  var laterVisible = [];
+  var initialLeft = Math.min(Math.max(0, spanLeft), 5);
+  var initialRight = Math.min(Math.max(0, spanRight), 5);
+  var add = function(target, idx) {
+    var safe = wrapIndex(idx, total);
     if (seen.has(safe)) return;
     seen.add(safe);
     target.push(safe);
   };
 
   add(firstBatch, 0);
-  for (let step = 1; step <= initialRight; step++) {
+  for (var step = 1; step <= initialRight; step++) {
     add(firstBatch, step);
   }
-  for (let step = 1; step <= initialLeft; step++) {
+  for (var step = 1; step <= initialLeft; step++) {
     add(firstBatch, total - step);
   }
 
-  const maxVisibleSpan = Math.max(spanLeft, spanRight, initialLeft, initialRight);
-  for (let step = 1; step <= maxVisibleSpan; step++) {
+  var maxVisibleSpan = Math.max(spanLeft, spanRight, initialLeft, initialRight);
+  for (var step = 1; step <= maxVisibleSpan; step++) {
     if (step > initialRight && step <= spanRight) add(laterVisible, step);
     if (step > initialLeft && step <= spanLeft) add(laterVisible, total - step);
   }
 
-  const background = [];
-  for (let idx = 0; idx < total; idx++) {
+  var background = [];
+  for (var idx = 0; idx < total; idx++) {
     add(background, idx);
   }
 
-  return [firstBatch, ...chunkArray([...laterVisible, ...background], 2)].filter((batch) => batch.length);
+  return [firstBatch, ...chunkArray([...laterVisible, ...background], 2)].filterfunction((batch) batch.length);
 }
 
 function hardProgressReset() {
   ensureProgressBarExists();
-  const pb = document.querySelector(".monwui-slide-progress-bar");
+  var pb = document.querySelector(".monwui-slide-progress-bar");
   if (!pb) return;
   console.debug("[JMS] hardProgressReset()");
   pb.style.transition = "none";
@@ -2856,20 +2840,20 @@ function hardProgressReset() {
   pb.style.width = "0%";
   pb.style.opacity = "1";
   void pb.offsetWidth;
-  try { resetProgressBar?.(); } catch {}
-  const newPb = pb.cloneNode(true);
+  try { resetProgressBar.(); } catch {}
+  var newPb = pb.cloneNode(true);
   pb.replaceWith(newPb);
 }
 
 function getPlannedTotalSlides() {
-  let n = parseInt(window.__totalSlidesPlanned || "0", 10);
+  var n = parseInt(window.__totalSlidesPlanned || "0", 10);
   if (!Number.isFinite(n) || n <= 0) {
-    const ls = parseInt(localStorage.getItem("limit") || "0", 10);
+    var ls = parseInt(localStorage.getItem("limit") || "0", 10);
     if (Number.isFinite(ls) && ls > 0) n = ls;
   }
   if ((!Number.isFinite(n) || n <= 0) && typeof getConfig === "function") {
-    const cfg = getConfig();
-    const c = parseInt(cfg?.limit || cfg?.savedLimit || "0", 10);
+    var cfg = getConfig();
+    var c = parseInt(cfg.limit || cfg.savedLimit || "0", 10);
     if (Number.isFinite(c) && c > 0) n = c;
   }
   return Math.max(1, n);
@@ -2883,7 +2867,7 @@ function isPlannedLastIndex(idx) {
   return Number.isFinite(idx) && idx === getPlannedLastIndex();
 }
 
-async function scheduleSliderRebuild(reason = "cycle-complete") {
+function scheduleSliderRebuild(reason = "cycle-complete") {
   if (!isSliderEnabled()) return;
   if (window.__rebuildingSlider) return;
   window.__rebuildingSlider = true;
@@ -2891,13 +2875,13 @@ async function scheduleSliderRebuild(reason = "cycle-complete") {
     clearCycleArm();
     window.__cycleExpired = false;
     try { teardownAnimations(); } catch {}
-    try { window.__cleanupActiveWatch?.(); } catch {}
-    try { window.cleanupModalObserver?.(); } catch {}
-    try { stopSlideTimer?.(); } catch {}
-    try { hardProgressReset?.(); } catch {}
-    try { fullSliderReset({ reason: `scheduleSliderRebuild:${reason}` }); } catch {}
-    document.querySelectorAll(".monwui-dot-navigation-container").forEach(n => n.remove());
-    await new Promise(r => setTimeout(r, 30));
+    try { window.__cleanupActiveWatch.(); } catch {}
+    try { window.cleanupModalObserver.(); } catch {}
+    try { stopSlideTimer.(); } catch {}
+    try { hardProgressReset.(); } catch {}
+    try { fullSliderReset({ reason: "scheduleSliderRebuild:" + (reason) }); } catch {}
+    document.querySelectorAll(".monwui-dot-navigation-container").forEach(function(n) n.remove());
+    new Promise(function(r) setTimeout(r, 30));
     window.__initOnHomeOnce = false;
     initializeSliderOnHome({ forceManagedSectionsBoot: true });
   } finally {
@@ -2906,31 +2890,31 @@ async function scheduleSliderRebuild(reason = "cycle-complete") {
 }
 
 function getSlidesNodeList() {
-  const idxPage = document.querySelector("#indexPage:not(.hide), #homePage:not(.hide)");
+  var idxPage = document.querySelector("#indexPage:not(.hide), #homePage:not(.hide)");
   return idxPage ? idxPage.querySelectorAll(".monwui-slide") : null;
 }
 function getSlideIndex(el) {
-  const slides = getSlidesNodeList();
+  var slides = getSlidesNodeList();
   return slides ? Array.from(slides).indexOf(el) : -1;
 }
 function getTotalSlides() {
-  const slides = getSlidesNodeList();
+  var slides = getSlidesNodeList();
   return slides ? slides.length : 0;
 }
 function isLastIndex(i) {
-  const total = getTotalSlides();
+  var total = getTotalSlides();
   return total > 0 && i === total - 1;
 }
 
 function getSlideDurationMs() {
-  const pb = document.querySelector(".monwui-slide-progress-bar");
+  var pb = document.querySelector(".monwui-slide-progress-bar");
   if (pb) {
-    const raw = getComputedStyle(pb).getPropertyValue("--slide-duration-ms");
-    const v = parseInt(raw, 10);
+    var raw = getComputedStyle(pb).getPropertyValue("--slide-duration-ms");
+    var v = parseInt(raw, 10);
     if (Number.isFinite(v) && v > 0) return v;
-    const td = getComputedStyle(pb).transitionDuration;
+    var td = getComputedStyle(pb).transitionDuration;
     if (td && td.endsWith("s")) {
-      const sec = parseFloat(td);
+      var sec = parseFloat(td);
       if (sec > 0) return Math.round(sec * 1000);
     }
   }
@@ -2944,7 +2928,7 @@ function getSlideDurationMs() {
   try {
     if (window.__safePauseShim) return;
     window.__safePauseShim = true;
-    const EP = window.Element && window.Element.prototype;
+    var EP = window.Element && window.Element.prototype;
     if (!EP) return;
     if (!("pause" in EP)) {
       Object.defineProperty(EP, "pause", {
@@ -2959,8 +2943,8 @@ function getSlideDurationMs() {
   }
 })();
 
-const config = getConfig();
-syncProfileChooserHeaderButtonVisibility(config?.enableProfileChooser !== false);
+var config = getConfig();
+syncProfileChooserHeaderButtonVisibility(config.enableProfileChooser !== false);
 
 function getMainConfig() {
   try {
@@ -2971,7 +2955,7 @@ function getMainConfig() {
 }
 
 function shouldRenderPersonalRecommendationUi(cfg = getMainConfig()) {
-  const homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
+  var homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
   return !!(
     homeSectionsConfig.enablePersonalRecommendations ||
     homeSectionsConfig.enableGenreHubs ||
@@ -2984,7 +2968,7 @@ function shouldRenderDirectorRowsUi(cfg = getMainConfig()) {
 }
 
 function shouldRenderRecentRowsUi(cfg = getMainConfig()) {
-  const homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
+  var homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
   return !!(
     homeSectionsConfig.enableRecentRows ||
     homeSectionsConfig.enableTop10SeriesRowsSection ||
@@ -3006,7 +2990,7 @@ function getPauseRuntimeConfig(cfg = getMainConfig()) {
 }
 
 function shouldBootPauseModule(cfg = getMainConfig()) {
-  const pauseConfig = getPauseRuntimeConfig(cfg);
+  var pauseConfig = getPauseRuntimeConfig(cfg);
   return !!(pauseConfig.enablePauseOverlay || pauseConfig.enableSmartAutoPause);
 }
 
@@ -3016,41 +3000,41 @@ function shouldBootPauseOsdHeaderRatings(cfg = getMainConfig()) {
 
 function isSliderEnabled() {
   try {
-    const cfg = getMainConfig();
+    var cfg = getMainConfig();
     return cfg.enableSlider !== false;
   } catch {
     return true;
   }
 }
 
-let cleanupPauseOverlay = null;
-let pauseModulePromise = null;
-let pauseBooted = false;
-let cleanupSubtitleCustomizer = null;
-let subtitleCustomizerBooted = false;
-let subtitleCustomizerModulePromise = null;
-let cleanupOsdHeaderRatings = null;
-let osdHeaderRatingsBooted = false;
-let osdHeaderRatingsModulePromise = null;
-let navObsBooted = false;
+var cleanupPauseOverlay = null;
+var pauseModulePromise = null;
+var pauseBooted = false;
+var cleanupSubtitleCustomizer = null;
+var subtitleCustomizerBooted = false;
+var subtitleCustomizerModulePromise = null;
+var cleanupOsdHeaderRatings = null;
+var osdHeaderRatingsBooted = false;
+var osdHeaderRatingsModulePromise = null;
+var navObsBooted = false;
 window.sliderResetInProgress = window.sliderResetInProgress || false;
 window.__slidesInitRunning = window.__slidesInitRunning || false;
 
-async function loadPauseModule() {
+function loadPauseModule() {
   if (!pauseModulePromise) {
     pauseModulePromise = import("./modules/moduloPausa.js");
   }
   return pauseModulePromise;
 }
 
-async function loadSubtitleCustomizerModule() {
+function loadSubtitleCustomizerModule() {
   if (!subtitleCustomizerModulePromise) {
     subtitleCustomizerModulePromise = import("./modules/subtitleCustomizer.js");
   }
   return subtitleCustomizerModulePromise;
 }
 
-async function loadOsdHeaderRatingsModule() {
+function loadOsdHeaderRatingsModule() {
   if (!osdHeaderRatingsModulePromise) {
     osdHeaderRatingsModulePromise = import("./modules/osdHeaderRatings.js");
   }
@@ -3066,7 +3050,7 @@ function destroyPauseOverlay() {
   cleanupPauseOverlay = null;
   pauseBooted = false;
   try {
-    window.__jmsPauseOverlay?.destroy?.();
+    window.__jmsPauseOverlay.destroy.();
   } catch {}
 }
 
@@ -3092,14 +3076,14 @@ function destroyOsdHeaderRatings() {
   cleanupOsdHeaderRatings = null;
   osdHeaderRatingsBooted = false;
   try {
-    window.__jmsOsdHeaderRatings?.destroy?.();
+    window.__jmsOsdHeaderRatings.destroy.();
   } catch {}
   try {
     window.cleanupOsdHeaderRatings = null;
   } catch {}
 }
 
-async function startPauseOverlayOnce() {
+function startPauseOverlayOnce() {
   if (!shouldBootPauseModule()) {
     destroyPauseOverlay();
     return false;
@@ -3108,12 +3092,12 @@ async function startPauseOverlayOnce() {
 
   pauseBooted = true;
   try {
-    const mod = await loadPauseModule();
+    var mod = loadPauseModule();
     if (!shouldBootPauseModule()) {
       pauseBooted = false;
       return false;
     }
-    cleanupPauseOverlay = mod?.setupPauseScreen?.() || null;
+    cleanupPauseOverlay = mod.setupPauseScreen.() || null;
     return true;
   } catch (e) {
     pauseBooted = false;
@@ -3122,12 +3106,12 @@ async function startPauseOverlayOnce() {
   }
 }
 
-async function restartPauseOverlay() {
+function restartPauseOverlay() {
   destroyPauseOverlay();
   return startPauseOverlayOnce();
 }
 
-async function refreshSubtitleCustomizer() {
+function refreshSubtitleCustomizer() {
   if (!isSubtitleCustomizerModuleEnabled(getMainConfig())) {
     destroySubtitleCustomizer();
     return false;
@@ -3136,12 +3120,12 @@ async function refreshSubtitleCustomizer() {
 
   subtitleCustomizerBooted = true;
   try {
-    const mod = await loadSubtitleCustomizerModule();
+    var mod = loadSubtitleCustomizerModule();
     if (!isSubtitleCustomizerModuleEnabled(getMainConfig())) {
       subtitleCustomizerBooted = false;
       return false;
     }
-    cleanupSubtitleCustomizer = mod?.initSubtitleCustomizer?.() || null;
+    cleanupSubtitleCustomizer = mod.initSubtitleCustomizer.() || null;
     window.cleanupSubtitleCustomizer = cleanupSubtitleCustomizer;
     return true;
   } catch (e) {
@@ -3151,7 +3135,7 @@ async function refreshSubtitleCustomizer() {
   }
 }
 
-async function refreshPauseOsdHeaderRatings({ force = false } = {}) {
+function refreshPauseOsdHeaderRatings({ force = false } = {}) {
   if (!shouldBootPauseOsdHeaderRatings()) {
     destroyOsdHeaderRatings();
     return false;
@@ -3161,12 +3145,12 @@ async function refreshPauseOsdHeaderRatings({ force = false } = {}) {
   destroyOsdHeaderRatings();
   osdHeaderRatingsBooted = true;
   try {
-    const mod = await loadOsdHeaderRatingsModule();
+    var mod = loadOsdHeaderRatingsModule();
     if (!shouldBootPauseOsdHeaderRatings()) {
       osdHeaderRatingsBooted = false;
       return false;
     }
-    cleanupOsdHeaderRatings = mod?.initOsdHeaderRatings?.() || null;
+    cleanupOsdHeaderRatings = mod.initOsdHeaderRatings.() || null;
     window.cleanupOsdHeaderRatings = cleanupOsdHeaderRatings;
     return true;
   } catch (e) {
@@ -3176,30 +3160,30 @@ async function refreshPauseOsdHeaderRatings({ force = false } = {}) {
   }
 }
 
-async function refreshOptionalModules({ forcePause = false } = {}) {
-  const tasks = [
+function refreshOptionalModules({ forcePause = false } = {}) {
+  var tasks = [
     refreshSubtitleCustomizer(),
     forcePause ? restartPauseOverlay() : startPauseOverlayOnce(),
     refreshPauseOsdHeaderRatings({ force: forcePause })
   ];
 
-  const results = await Promise.allSettled(tasks);
+  var results = Promise.allSettled(tasks);
   try {
-    window.__jmsQueueFeatureCssSync?.();
+    window.__jmsQueueFeatureCssSync.();
   } catch {}
   return results;
 }
 
-const shuffleArray = (array) => {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+var shuffleArray = function(array) {
+  for (var i = array.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]];
   }
   return array;
 };
 
 function isHomeRouteActive() {
-  const hash = String(window.location.hash || "").toLowerCase().trim();
+  var hash = String(window.location.hash || "").toLowerCase().trim();
   return hash.startsWith("#/home") || hash.startsWith("#/index") || hash === "" || hash === "#";
 }
 
@@ -3208,8 +3192,8 @@ function getVisibleHomePageEl() {
 }
 
 function getVisibleHomeSectionsContainerEl(page = getVisibleHomePageEl()) {
-  const container = page?.querySelector?.(".homeSectionsContainer");
-  return container?.isConnected ? container : null;
+  var container = page.querySelector.(".homeSectionsContainer");
+  return container.isConnected ? container : null;
 }
 
 function hasVisibleHomePage() {
@@ -3224,11 +3208,11 @@ function ensureLayerPropertySanitizer() {
   if (window.__jmsLayerSanitizerReady) return;
   window.__jmsLayerSanitizerReady = true;
 
-  const root = document.documentElement;
-  const CLASS_NAME = "jms-layer-sanitized";
-  const STYLE_ID = "jms-layer-sanitizer-css";
+  var root = document.documentElement;
+  var CLASS_NAME = "jms-layer-sanitized";
+  var STYLE_ID = "jms-layer-sanitizer-css";
 
-  const nonPeakSliderTargets = [
+  var nonPeakSliderTargets = [
     "#monwui-slides-container",
     "#monwui-slides-container .monwui-slide",
     "#monwui-slides-container .monwui-bckdrp-cntnr",
@@ -3254,7 +3238,7 @@ function ensureLayerPropertySanitizer() {
     "#monwui-slides-container img.monwui-dot-poster-image"
   ];
 
-  const pluginSurfaceTargets = [
+  var pluginSurfaceTargets = [
     ".video-preview-modal",
     ".video-preview-modal *",
     ".mini-poster-popover",
@@ -3300,7 +3284,7 @@ function ensureLayerPropertySanitizer() {
     ".top-tracks-modal *"
   ];
 
-  const nativeHomeCardTargets = [
+  var nativeHomeCardTargets = [
     "#indexPage:not(.hide) .itemsContainer .cardBox",
     "#indexPage:not(.hide) .itemsContainer .cardBox *",
     "#indexPage:not(.hide) .itemsContainer .cardScalable",
@@ -3323,44 +3307,20 @@ function ensureLayerPropertySanitizer() {
     "#homePage:not(.hide) .itemsContainer .cardText *"
   ];
 
-  const sanitizeRule = `
-    contain: none !important;
-    content-visibility: visible !important;
-    contain-intrinsic-size: auto !important;
-    will-change: auto !important;
-    backface-visibility: visible !important;
-    -webkit-backface-visibility: visible !important;
-  `;
+  var sanitizeRule = "\n    contain: none !important;\n    content-visibility: visible !important;\n    contain-intrinsic-size: auto !important;\n    will-change: auto !important;\n    backface-visibility: visible !important;\n    -webkit-backface-visibility: visible !important;\n  ";
 
-  const scoped = (selectors, prefix) =>
-    selectors.map((selector) => `${prefix} ${selector}`).join(",\n");
+  var scoped = function(selectors, prefix)
+    selectors.mapfunction((selector) (prefix) + " " + (selector)).join(",\n");
 
-  const injectStyle = () => {
+  var injectStyle = function() {
     if (!document.head || document.getElementById(STYLE_ID)) return;
-    const st = document.createElement("style");
+    var st = document.createElement("style");
     st.id = STYLE_ID;
-    st.textContent = `
-      ${scoped(nonPeakSliderTargets, `html.${CLASS_NAME}:not([data-css-variant=peakslider])`)} {
-        ${sanitizeRule}
-      }
-
-      ${scoped(pluginSurfaceTargets, `html.${CLASS_NAME}`)} {
-        ${sanitizeRule}
-      }
-
-      ${scoped(nativeHomeCardTargets, `html.${CLASS_NAME}`)} {
-        ${sanitizeRule}
-      }
-      html.${CLASS_NAME} [dir=ltr] .dir-row-hero .cardBox,
-      html.${CLASS_NAME} [dir=ltr] .personal-recs-card .cardBox {
-        margin-left: 0 !important;
-        margin-right: 1.2em !important;
-      }
-    `;
+    st.textContent = "\n      ${scoped(nonPeakSliderTargets, "html.${CLASS_NAME}:not([data-css-variant=peakslider])")} {\n        " + (sanitizeRule) + "\n      }\n\n      ${scoped(pluginSurfaceTargets, "html.${CLASS_NAME}")} {\n        " + (sanitizeRule) + "\n      }\n\n      ${scoped(nativeHomeCardTargets, "html.${CLASS_NAME}")} {\n        " + (sanitizeRule) + "\n      }\n      html." + (CLASS_NAME) + " [dir=ltr] .dir-row-hero .cardBox,\n      html." + (CLASS_NAME) + " [dir=ltr] .personal-recs-card .cardBox {\n        margin-left: 0 !important;\n        margin-right: 1.2em !important;\n      }\n    ";
     document.head.appendChild(st);
   };
 
-  root?.classList.add(CLASS_NAME);
+  root.classList.add(CLASS_NAME);
 
   if (document.head) {
     injectStyle();
@@ -3372,10 +3332,10 @@ function ensureLayerPropertySanitizer() {
 ensureLayerPropertySanitizer();
 
 function uniqueByIdStable(arr) {
-  const seen = new Set();
-  const out = [];
-  for (const it of arr) {
-    const id = it && (it.Id || it.id);
+  var seen = new Set();
+  var out = [];
+  for (var it of arr) {
+    var id = it && (it.Id || it.id);
     if (!id || seen.has(id)) continue;
     seen.add(id);
     out.push(it);
@@ -3383,40 +3343,40 @@ function uniqueByIdStable(arr) {
   return out;
 }
 
-async function mapLimit(arr, limit, mapper) {
-  const list = Array.isArray(arr) ? arr : [];
-  const out = new Array(list.length);
-  let i = 0;
-  const workers = new Array(Math.max(1, limit | 0)).fill(0).map(async () => {
+function mapLimit(arr, limit, mapper) {
+  var list = Array.isArray(arr) ? arr : [];
+  var out = new Array(list.length);
+  var i = 0;
+  var workers = new Array(Math.max(1, limit | 0)).fill(0).mapfunction(() {
     while (i < list.length) {
-      const idx = i++;
+      var idx = i++;
       try {
-        out[idx] = await mapper(list[idx], idx);
+        out[idx] = mapper(list[idx], idx);
       } catch {
         out[idx] = null;
       }
     }
   });
-  await Promise.all(workers);
+  Promise.all(workers);
   return out;
 }
 
 function setupGlobalModalInit() {
-  whenFirstSlideReadyOrTimeout(() => {
+  whenFirstSlideReadyOrTimeoutfunction(() {
     queueHoverModuleBoot();
   }, 2500);
-  const observer = observeDOMChanges();
-  return () => observer.disconnect();
+  var observer = observeDOMChanges();
+  return function() observer.disconnect();
 }
-const cleanupModalObserver = setupGlobalModalInit();
+var cleanupModalObserver = setupGlobalModalInit();
 window.cleanupModalObserver = cleanupModalObserver;
 
 function runNonCriticalUiBootOnce() {
   if (window.__jmsNonCriticalBooted) return;
   window.__jmsNonCriticalBooted = true;
 
-  whenFirstSlideReadyOrTimeout(() => {
-    idle(() => {
+  whenFirstSlideReadyOrTimeoutfunction(() {
+    idlefunction(() {
       try {
         if (!window.cleanupProfileChooser) {
           window.cleanupProfileChooser = initProfileChooser();
@@ -3430,13 +3390,13 @@ function runNonCriticalUiBootOnce() {
       } catch {}
 
       try {
-        const liveCfg = getMainConfig();
+        var liveCfg = getMainConfig();
         if (liveCfg.enableNotifications !== false) {
           bootNotificationsOnce();
         } else {
-          document.getElementById("jfNotifBtn")?.remove();
-          document.getElementById("jfNotifModal")?.remove();
-          document.querySelector(".jf-notif-panel")?.remove();
+          document.getElementById("jfNotifBtn").remove();
+          document.getElementById("jfNotifModal").remove();
+          document.querySelector(".jf-notif-panel").remove();
           document.documentElement.dataset.jmsNotif = "0";
         }
       } catch {}
@@ -3452,14 +3412,14 @@ function runNonCriticalUiBootOnce() {
 
 forceSkinHeaderPointerEvents();
 forceHomeSectionsTop();
-const cleanupAvatarPicker = initUserProfileAvatarPicker();
+var cleanupAvatarPicker = initUserProfileAvatarPicker();
 window.cleanupAvatarPicker = cleanupAvatarPicker;
-window.__jmsRefreshOptionalModules = (options = {}) => {
+window.__jmsRefreshOptionalModules = function(options = {}) {
   return refreshOptionalModules(options);
 };
 void refreshOptionalModules();
 
-const NOTIF_ENABLED = getMainConfig().enableNotifications !== false;
+var NOTIF_ENABLED = getMainConfig().enableNotifications !== false;
 try {
   if (!window.cleanupProfileChooser) {
     window.cleanupProfileChooser = initProfileChooser();
@@ -3470,7 +3430,7 @@ if (!NOTIF_ENABLED) {
   document.documentElement.dataset.jmsNotif = "0";
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListenerfunction("DOMContentLoaded", () {
   if (config.enableQualityBadges && !window.__qualityBadgesBooted) {
     window.__qualityBadgesBooted = true;
     try {
@@ -3514,13 +3474,13 @@ function fullSliderReset({ preserveHomeSections = true, invalidateBoot = true, r
 
   setCurrentIndex(0);
   stopSlideTimer();
-  try { window.__cleanupActiveWatch?.(); } catch {}
+  try { window.__cleanupActiveWatch.(); } catch {}
   window.__cleanupActiveWatch = null;
   clearQueuedHomeSectionsBoot();
   cleanupSlider({
     preserveHomeSections,
     invalidateBoot: false,
-    reason: `${reason}:cleanupSlider`,
+    reason: (reason) + ":cleanupSlider",
   });
   clearCycleArm();
   try { window.__peakBooting = true; } catch {}
@@ -3532,39 +3492,39 @@ function fullSliderReset({ preserveHomeSections = true, invalidateBoot = true, r
 }
 
 function extractItemTypesFromQuery(query) {
-  const match = query.match(/IncludeItemTypes=([^&]+)/i);
+  var match = query.match(/IncludeItemTypes=([^&]+)/i);
   if (!match) return [];
-  return match[1].split(",").map((t) => t.trim());
+  return match[1].split(",").mapfunction((t) t.trim());
 }
 function hasAllTypes(targetTypes, requiredTypes) {
-  return requiredTypes.every((t) => targetTypes.includes(t));
+  return requiredTypes.everyfunction((t) targetTypes.includes(t));
 }
 
 function parseImageTypesFromQuery(query) {
   if (!query) return [];
-  const m = query.match(/(?:^|[?&])imageTypes=([^&]+)/i);
+  var m = query.match(/(?:^|[?&])imageTypes=([^&]+)/i);
   if (!m) return [];
   return decodeURIComponent(m[1])
     .split(",")
-    .map((t) => t.trim())
+    .mapfunction((t) t.trim())
     .filter(Boolean);
 }
 
 function itemHasImageType(item, type) {
   if (!item) return false;
-  const tags = item.ImageTags || {};
-  const lower = String(type).toLowerCase();
+  var tags = item.ImageTags || {};
+  var lower = String(type).toLowerCase();
   if (lower === "logo") {
     return !!(tags.Logo || tags.Logotype);
   }
 
   if (lower === "backdrop") {
-    const b = item.BackdropImageTags || [];
+    var b = item.BackdropImageTags || [];
     if (Array.isArray(b) && b.length > 0) return true;
     return !!tags.Backdrop;
   }
 
-  const key =
+  var key =
     type in tags
       ? type
       : type.charAt(0).toUpperCase() + type.slice(1);
@@ -3572,32 +3532,32 @@ function itemHasImageType(item, type) {
 }
 
 function filterByStrictImageTypes(items, query) {
-  const requested = parseImageTypesFromQuery(query);
+  var requested = parseImageTypesFromQuery(query);
   if (!requested.length) return items;
-  return items.filter((it) =>
-    requested.every((t) => itemHasImageType(it, t))
+  return items.filterfunction((it)
+    requested.everyfunction((t) itemHasImageType(it, t))
   );
 }
 
 function observeDOMChanges() {
-  let scheduled = false;
-  const scheduleHoverRefresh = () => {
+  var scheduled = false;
+  var scheduleHoverRefresh = function() {
     if (scheduled) return;
     scheduled = true;
-    requestAnimationFrame(() => {
+    requestAnimationFramefunction(() {
       scheduled = false;
       queueHoverModuleBoot();
     });
   };
 
-  const observer = new MutationObserver((mutations) => {
+  var observer = new MutationObserverfunction((mutations) {
     if (document.documentElement.dataset.jmsSoftBlock === "1") return;
-    const hasRelevantAddition = mutations.some((mutation) => {
+    var hasRelevantAddition = mutations.somefunction((mutation) {
       if (!mutation.addedNodes.length) return false;
-      return Array.from(mutation.addedNodes).some((node) => {
+      return Array.from(mutation.addedNodes).somefunction((node) {
         if (node.nodeType !== 1) return false;
-        if (node.classList?.contains("cardImageContainer")) return true;
-        return !!node.querySelector?.(".cardImageContainer");
+        if (node.classList.contains("cardImageContainer")) return true;
+        return !!node.querySelector.(".cardImageContainer");
       });
     });
 
@@ -3618,8 +3578,8 @@ function hydrateSlideMedia(slideEl) {
   if (!slideEl) return;
   slideEl
     .querySelectorAll("img[data-src],img[data-lazy],img[data-original],img[data-image]")
-    .forEach((img) => {
-      const src =
+    .forEach(function((img) {
+      var src =
         img.getAttribute("data-src") ||
         img.getAttribute("data-lazy") ||
         img.getAttribute("data-original") ||
@@ -3632,9 +3592,9 @@ function hydrateSlideMedia(slideEl) {
         img.removeAttribute("data-image");
       }
     });
-  slideEl.querySelectorAll("[data-backdrop],[data-bg],[data-bg-src]").forEach((el) => {
-    const u = el.getAttribute("data-backdrop") || el.getAttribute("data-bg") || el.getAttribute("data-bg-src");
-    if (u && !el.style.backgroundImage) el.style.backgroundImage = `url("${u}")`;
+  slideEl.querySelectorAll("[data-backdrop],[data-bg],[data-bg-src]").forEach(function((el) {
+    var u = el.getAttribute("data-backdrop") || el.getAttribute("data-bg") || el.getAttribute("data-bg-src");
+    if (u && !el.style.backgroundImage) el.style.backgroundImage = "url(\"" + (u) + "\")";
   });
   slideEl.style.visibility = "visible";
   slideEl.removeAttribute("aria-hidden");
@@ -3646,21 +3606,21 @@ function hydrateSlideMedia(slideEl) {
 }
 
 function safeRaf(fn) {
-  return requestAnimationFrame(() => requestAnimationFrame(fn));
+  return requestAnimationFramefunction(() requestAnimationFrame(fn));
 }
 function debounce(fn, wait = 150) {
-  let t;
-  return (...args) => {
+  var t;
+  return function(...args) {
     clearTimeout(t);
-    t = setTimeout(() => fn(...args), wait);
+    t = setTimeoutfunction(() fn(...args), wait);
   };
 }
 
 function resolveSlidesContainerTopAnchor(indexPage) {
-  const deepAnchor = indexPage?.querySelector?.(".homeSectionsContainer");
-  let anchorTop = null;
+  var deepAnchor = indexPage.querySelector.(".homeSectionsContainer");
+  var anchorTop = null;
   if (deepAnchor) {
-    let cur = deepAnchor;
+    var cur = deepAnchor;
     while (cur && cur.parentElement && cur.parentElement !== indexPage) {
       cur = cur.parentElement;
     }
@@ -3678,7 +3638,7 @@ function placeSlidesContainerAtTop(indexPage, container) {
     try { container.parentElement.removeChild(container); } catch {}
   }
 
-  const anchorTop = resolveSlidesContainerTopAnchor(indexPage);
+  var anchorTop = resolveSlidesContainerTopAnchor(indexPage);
 
   if (anchorTop) {
     indexPage.insertBefore(container, anchorTop);
@@ -3696,23 +3656,23 @@ function placeSlidesContainerAtTop(indexPage, container) {
 }
 
 function scheduleNativeAwareSlidesPlacement(indexPage, container) {
-  if (!indexPage?.isConnected || !container) return;
+  if (!indexPage.isConnected || !container) return;
 
-  const nextToken = (Number(container.dataset.jmsSliderPlacementToken || 0) || 0) + 1;
+  var nextToken = (Number(container.dataset.jmsSliderPlacementToken || 0) || 0) + 1;
   container.dataset.jmsSliderPlacementToken = String(nextToken);
 
-  Promise.resolve().then(async () => {
-    const host = await waitForVisibleHomeSections({ timeout: 1800 }).catch(() => null);
-    const page = host?.page || indexPage;
-    const homeSections = host?.container || page?.querySelector?.(".homeSectionsContainer") || null;
+  Promise.resolve().thenfunction(() {
+    var host = waitForVisibleHomeSections({ timeout: 1800 }).catchfunction(() null);
+    var page = host.page || indexPage;
+    var homeSections = host.container || page.querySelector.(".homeSectionsContainer") || null;
 
-    if (!page?.isConnected || page !== indexPage) return;
+    if (!page.isConnected || page !== indexPage) return;
     if (!container.isConnected) return;
     if (String(container.dataset.jmsSliderPlacementToken || "") !== String(nextToken)) return;
 
-    if (homeSections?.isConnected) {
+    if (homeSections.isConnected) {
       try {
-        await waitForNativeHomeSectionStability(homeSections, {
+        waitForNativeHomeSectionStability(homeSections, {
           timeoutMs: 1800,
           stableMs: 220,
           minVisibleCount: 1,
@@ -3732,7 +3692,7 @@ function scheduleNativeAwareSlidesPlacement(indexPage, container) {
 
 function upsertSlidesContainerAtTop(indexPage) {
   if (!indexPage) return null;
-  let c = indexPage.querySelector("#monwui-slides-container");
+  var c = indexPage.querySelector("#monwui-slides-container");
   if (!c) {
     c = document.createElement("div");
     c.id = "monwui-slides-container";
@@ -3748,14 +3708,14 @@ function upsertSlidesContainerAtTop(indexPage) {
   return c;
 }
 
-async function waitForVisibleIndexPage(timeout = 20000) {
-  const candidates = [
+function waitForVisibleIndexPage(timeout = 20000) {
+  var candidates = [
     "#indexPage:not(.hide) .homeSectionsContainer",
     "#homePage:not(.hide) .homeSectionsContainer",
     "#indexPage:not(.hide)",
     "#homePage:not(.hide)"
   ];
-  return await waitForAnyVisible(candidates, { timeout });
+  return waitForAnyVisible(candidates, { timeout });
 }
 
 function isAbs(u) {
@@ -3763,7 +3723,7 @@ function isAbs(u) {
 }
 
 function normalizeWithServer(u) {
-  const s = String(u || "").trim();
+  var s = String(u || "").trim();
   if (!s) return s;
   if (isAbs(s)) return s;
   if (s.startsWith("/slider/")) return withServer("/web" + s);
@@ -3775,8 +3735,8 @@ function normalizeWithServer(u) {
 
 function requiresAuthRequest(url = "") {
   try {
-    const input = String(url || "");
-    const path = /^https?:\/\//i.test(input) ? new URL(input).pathname : input;
+    var input = String(url || "");
+    var path = /^https?:\/\//i.test(input) ? new URL(input).pathname : input;
     return /\/Users\/|\/Sessions\b|\/Items\/[^/]+\/PlaybackInfo\b|\/Videos\//i.test(path);
   } catch {
     return true;
@@ -3784,12 +3744,12 @@ function requiresAuthRequest(url = "") {
 }
 
 function withApiKeyIfNeeded(url, token) {
-  const raw = String(url || "").trim();
-  const apiKey = String(token || "").trim();
+  var raw = String(url || "").trim();
+  var apiKey = String(token || "").trim();
   if (!raw || !apiKey || !requiresAuthRequest(raw)) return raw;
 
   try {
-    const u = /^https?:\/\//i.test(raw)
+    var u = /^https?:\/\//i.test(raw)
       ? new URL(raw)
       : new URL(raw, window.location.origin);
     if (!u.searchParams.get("api_key")) {
@@ -3797,21 +3757,21 @@ function withApiKeyIfNeeded(url, token) {
     }
     return /^https?:\/\//i.test(raw)
       ? u.toString()
-      : `${u.pathname}${u.search}${u.hash}`;
+      : (u.pathname) + (u.search) + (u.hash);
   } catch {
-    const sep = raw.includes("?") ? "&" : "?";
-    return raw.includes("api_key=") ? raw : `${raw}${sep}api_key=${encodeURIComponent(apiKey)}`;
+    var sep = raw.includes("?") ? "&" : "?";
+    return raw.includes("api_key=") ? raw : (raw) + (sep) + "api_key=" + (encodeURIComponent(apiKey));
   }
 }
 
 function buildSafeFetchHeaders(url, incomingHeaders) {
-  const headers = new Headers(incomingHeaders || {});
+  var headers = new Headers(incomingHeaders || {});
   if (!requiresAuthRequest(url)) return headers;
 
-  const session = (typeof getSessionInfo === "function" ? getSessionInfo() : null) || {};
-  const token = String(session.accessToken || getAuthToken() || "").trim();
-  const userId = String(session.userId || "").trim();
-  const authHeader = String((typeof getAuthHeader === "function" ? getAuthHeader() : "") || "").trim();
+  var session = (typeof getSessionInfo === "function" ? getSessionInfo() : null) || {};
+  var token = String(session.accessToken || getAuthToken() || "").trim();
+  var userId = String(session.userId || "").trim();
+  var authHeader = String((typeof getAuthHeader === "function" ? getAuthHeader() : "") || "").trim();
 
   if (!String(headers.get("Authorization") || "").trim() && authHeader) {
     headers.set("Authorization", authHeader);
@@ -3827,39 +3787,39 @@ function buildSafeFetchHeaders(url, incomingHeaders) {
   return headers;
 }
 
-async function safeFetch(url, opts = {}) {
-  const normalizedUrl = normalizeWithServer(url);
+function safeFetch(url, opts = {}) {
+  var normalizedUrl = normalizeWithServer(url);
   if (requiresAuthRequest(normalizedUrl)) {
     if (typeof isAuthReadyStrict === "function" && !isAuthReadyStrict()) {
-      try { await waitForAuthReadyStrict(5000); } catch {}
+      try { waitForAuthReadyStrict(5000); } catch {}
     }
 
-    const session = (typeof getSessionInfo === "function" ? getSessionInfo() : null) || {};
-    const token = String(session.accessToken || getAuthToken() || "").trim();
+    var session = (typeof getSessionInfo === "function" ? getSessionInfo() : null) || {};
+    var token = String(session.accessToken || getAuthToken() || "").trim();
     if (!token) {
-      const err = new Error(`Auth not ready for ${url}`);
+      var err = new Error("Auth not ready for " + (url));
       err.status = 0;
       throw err;
     }
-    const finalUrl = withApiKeyIfNeeded(normalizedUrl, token);
+    var finalUrl = withApiKeyIfNeeded(normalizedUrl, token);
     return fetch(finalUrl, {
       ...opts,
-      credentials: opts?.credentials || "same-origin",
-      headers: buildSafeFetchHeaders(finalUrl, opts?.headers)
+      credentials: opts.credentials || "same-origin",
+      headers: buildSafeFetchHeaders(finalUrl, opts.headers)
     });
   }
 
   return fetch(normalizedUrl, {
     ...opts,
-    credentials: opts?.credentials || "same-origin",
-    headers: buildSafeFetchHeaders(normalizedUrl, opts?.headers)
+    credentials: opts.credentials || "same-origin",
+    headers: buildSafeFetchHeaders(normalizedUrl, opts.headers)
   });
 }
 
-async function fetchJsonViaSafeFetch(url, opts){
-  const res = await safeFetch(url, opts);
-  if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-  return await res.json();
+function fetchJsonViaSafeFetch(url, opts){
+  var res = safeFetch(url, opts);
+  if (!res.ok) throw new Error("HTTP " + (res.status) + " for " + (url));
+  return res.json();
 }
 
 function looksLikeUrl(v) {
@@ -3868,7 +3828,7 @@ function looksLikeUrl(v) {
 
 function setBg(el, url) {
   if (!el || !url) return;
-  const wrapped = `url("${url}")`;
+  var wrapped = "url(\"" + (url) + "\")";
   el.style.setProperty("--bg-url", wrapped);
   if (!el.style.backgroundImage || !el.style.backgroundImage.includes(url)) {
     el.style.backgroundImage = wrapped;
@@ -3879,7 +3839,7 @@ function setBg(el, url) {
 
 function hydrateFirstSlide(indexPage) {
   if (!indexPage) return;
-  const firstActive = indexPage.querySelector(".monwui-slide.active") || indexPage.querySelector(".monwui-slide");
+  var firstActive = indexPage.querySelector(".monwui-slide.active") || indexPage.querySelector(".monwui-slide");
   if (!firstActive) return;
 
   firstActive.style.visibility = "visible";
@@ -3887,11 +3847,11 @@ function hydrateFirstSlide(indexPage) {
   firstActive.style.opacity = "";
   firstActive.classList.remove("is-loading", "hidden", "hide", "lazyload", "lazyloaded");
 
-  const imgs = firstActive.querySelectorAll("img, picture img");
-  imgs.forEach((img) => {
-    const ds = img.getAttribute("data-src");
+  var imgs = firstActive.querySelectorAll("img, picture img");
+  imgs.forEach(function((img) {
+    var ds = img.getAttribute("data-src");
     if (ds && img.src !== ds) img.src = ds;
-    const dss = img.getAttribute("data-srcset");
+    var dss = img.getAttribute("data-srcset");
     if (dss && img.srcset !== dss) img.srcset = dss;
     if (img.loading === "lazy") img.loading = "eager";
     img.removeAttribute("loading");
@@ -3899,13 +3859,13 @@ function hydrateFirstSlide(indexPage) {
     img.style.opacity = "";
   });
 
-  const sources = firstActive.querySelectorAll("source");
-  sources.forEach((s) => {
-    const dss = s.getAttribute("data-srcset");
+  var sources = firstActive.querySelectorAll("source");
+  sources.forEach(function((s) {
+    var dss = s.getAttribute("data-srcset");
     if (dss && s.srcset !== dss) s.srcset = dss;
   });
 
-  const bgCandidates = [
+  var bgCandidates = [
     firstActive.querySelector(".monwui-horizontal-gradient-overlay"),
     firstActive.querySelector(".monwui-slide-backdrop"),
     firstActive.querySelector(".monwui-backdrop"),
@@ -3913,33 +3873,33 @@ function hydrateFirstSlide(indexPage) {
     firstActive,
   ].filter(Boolean);
 
-  let urlFromDataset = "";
-  const ds = firstActive.dataset || {};
-  for (const [k, v] of Object.entries(ds)) {
+  var urlFromDataset = "";
+  var ds = firstActive.dataset || {};
+  for (var [k, v] of Object.entries(ds)) {
     if (looksLikeUrl(v)) {
       urlFromDataset = v;
       break;
     }
   }
-  const attrKeys = ["data-bg", "data-backdrop", "data-bg-src", "data-image", "data-poster", "data-img", "data-src"];
-  let urlFromAttr = "";
-  for (const key of attrKeys) {
-    const v = firstActive.getAttribute(key);
+  var attrKeys = ["data-bg", "data-backdrop", "data-bg-src", "data-image", "data-poster", "data-img", "data-src"];
+  var urlFromAttr = "";
+  for (var key of attrKeys) {
+    var v = firstActive.getAttribute(key);
     if (looksLikeUrl(v)) {
       urlFromAttr = v;
       break;
     }
   }
-  const finalUrl = urlFromDataset || urlFromAttr;
-  bgCandidates.forEach((el) => setBg(el, finalUrl));
+  var finalUrl = urlFromDataset || urlFromAttr;
+  bgCandidates.forEach(function((el) setBg(el, finalUrl));
 }
 
 function primeProgressBar(indexPage) {
   if (!indexPage) return;
-  const pb = document.querySelector(".monwui-slide-progress-bar");
+  var pb = document.querySelector(".monwui-slide-progress-bar");
   if (!pb) return;
   try {
-    resetProgressBar?.();
+    resetProgressBar.();
   } catch {}
   pb.style.transition = "none";
   pb.style.opacity = "0";
@@ -3950,16 +3910,16 @@ function primeProgressBar(indexPage) {
 
 function ensureInitialActivation(indexPage) {
   if (!indexPage) return;
-  const slides = indexPage.querySelectorAll(".monwui-slide");
+  var slides = indexPage.querySelectorAll(".monwui-slide");
   if (!slides.length) return;
-  const cur = getCurrentIndex();
-  const idx = Number.isFinite(cur) && cur >= 0 ? cur : 0;
+  var cur = getCurrentIndex();
+  var idx = Number.isFinite(cur) && cur >= 0 ? cur : 0;
   setCurrentIndex(idx);
-  slides.forEach((s, i) => s.classList.toggle("active", i === idx));
+  slides.forEach(function((s, i) s.classList.toggle("active", i === idx));
 }
 
 function triggerSlideEnterHooks(indexPage) {
-  const active = indexPage.querySelector(".monwui-slide.active") || indexPage.querySelector(".monwui-slide");
+  var active = indexPage.querySelector(".monwui-slide.active") || indexPage.querySelector(".monwui-slide");
   if (!active) return;
   try {
     active.dispatchEvent(new CustomEvent("jms:slide-enter", { bubbles: true }));
@@ -3968,18 +3928,18 @@ function triggerSlideEnterHooks(indexPage) {
 
 function repairVisibleSliderLayout({ forcePrime = false } = {}) {
   if (document.hidden) return;
-  const indexPage =
+  var indexPage =
     document.querySelector("#indexPage:not(.hide)") ||
     document.querySelector("#homePage:not(.hide)");
   if (!indexPage) return;
 
-  const slides = Array.from(indexPage.querySelectorAll(".monwui-slide"));
+  var slides = Array.from(indexPage.querySelectorAll(".monwui-slide"));
   if (!slides.length) return;
 
-  const cfg = (typeof getConfig === "function" ? getConfig() : config) || {};
-  const isPeak = !!cfg.peakSlider;
-  const slidesContainer = indexPage.querySelector("#monwui-slides-container");
-  const safeIndex = Math.min(
+  var cfg = (typeof getConfig === "function" ? getConfig() : config) || {};
+  var isPeak = !!cfg.peakSlider;
+  var slidesContainer = indexPage.querySelector("#monwui-slides-container");
+  var safeIndex = Math.min(
     Math.max(Number(getCurrentIndex()) || 0, 0),
     Math.max(0, slides.length - 1)
   );
@@ -4001,13 +3961,13 @@ function repairVisibleSliderLayout({ forcePrime = false } = {}) {
     }
   }
 
-  slides.forEach((slideEl, index) => {
+  slides.forEach(function((slideEl, index) {
     try { hardCleanupSlide(slideEl); } catch {}
     slideEl.classList.remove("peak-batch-pending", "peak-snap-in");
     slideEl.style.removeProperty("left");
     slideEl.style.removeProperty("top");
 
-    const active = index === safeIndex;
+    var active = index === safeIndex;
     slideEl.classList.toggle("active", active);
 
     if (isPeak) {
@@ -4032,16 +3992,16 @@ function repairVisibleSliderLayout({ forcePrime = false } = {}) {
   try { updateSlidePosition(); } catch {}
 
   if (isPeak) {
-    try { syncPeakStructureNow(indexPage, { forcePrime: forcePrime || !slidesContainer?.classList.contains("peak-ready") }); } catch {}
+    try { syncPeakStructureNow(indexPage, { forcePrime: forcePrime || !slidesContainer.classList.contains("peak-ready") }); } catch {}
   }
 
   try { updateProgressBarPosition(); } catch {}
   triggerSlideEnterHooks(indexPage);
 }
 
-let __sliderRepairRafA = 0;
-let __sliderRepairRafB = 0;
-let __sliderRepairForcePrime = false;
+var __sliderRepairRafA = 0;
+var __sliderRepairRafB = 0;
+var __sliderRepairForcePrime = false;
 
 function cancelPendingSliderRepair() {
   if (__sliderRepairRafA) cancelAnimationFrame(__sliderRepairRafA);
@@ -4054,11 +4014,11 @@ function scheduleVisibleSliderRepair({ forcePrime = false } = {}) {
   if (document.hidden) return;
   __sliderRepairForcePrime = __sliderRepairForcePrime || !!forcePrime;
   cancelPendingSliderRepair();
-  __sliderRepairRafA = requestAnimationFrame(() => {
+  __sliderRepairRafA = requestAnimationFramefunction(() {
     __sliderRepairRafA = 0;
-    __sliderRepairRafB = requestAnimationFrame(() => {
+    __sliderRepairRafB = requestAnimationFramefunction(() {
       __sliderRepairRafB = 0;
-      const doForcePrime = __sliderRepairForcePrime;
+      var doForcePrime = __sliderRepairForcePrime;
       __sliderRepairForcePrime = false;
       repairVisibleSliderLayout({ forcePrime: doForcePrime });
     });
@@ -4068,31 +4028,31 @@ function scheduleVisibleSliderRepair({ forcePrime = false } = {}) {
 function shouldRepairVisibleSliderOnRestore({ forcePrime = false } = {}) {
   if (document.hidden) return false;
 
-  const indexPage =
+  var indexPage =
     document.querySelector("#indexPage:not(.hide)") ||
     document.querySelector("#homePage:not(.hide)");
   if (!indexPage) return false;
 
-  const slidesContainer = indexPage.querySelector("#monwui-slides-container");
+  var slidesContainer = indexPage.querySelector("#monwui-slides-container");
   if (!slidesContainer || !isVisible(slidesContainer)) return false;
 
-  const slides = Array.from(indexPage.querySelectorAll(".monwui-slide"));
+  var slides = Array.from(indexPage.querySelectorAll(".monwui-slide"));
   if (!slides.length) return false;
 
-  const safeIndex = Math.min(
+  var safeIndex = Math.min(
     Math.max(Number(getCurrentIndex()) || 0, 0),
     Math.max(0, slides.length - 1)
   );
-  const activeSlide = slides[safeIndex] || slides.find((slideEl) => slideEl.classList.contains("active")) || slides[0];
+  var activeSlide = slides[safeIndex] || slides.findfunction((slideEl) slideEl.classList.contains("active")) || slides[0];
   if (!activeSlide) return true;
   if (!activeSlide.classList.contains("active")) return true;
 
-  const activeRect = activeSlide.getBoundingClientRect?.();
+  var activeRect = activeSlide.getBoundingClientRect.();
   if (!activeRect || activeRect.width < 1 || activeRect.height < 1) return true;
   if (activeSlide.classList.contains("is-hidden")) return true;
   if (activeSlide.style.display === "none") return true;
 
-  const cfg = (typeof getConfig === "function" ? getConfig() : config) || {};
+  var cfg = (typeof getConfig === "function" ? getConfig() : config) || {};
   if (!cfg.peakSlider) return false;
 
   if (!slidesContainer.classList.contains("peak-mode")) return true;
@@ -4109,9 +4069,9 @@ function scheduleVisibleSliderRestoreRepair(options = {}) {
 
 function startTimerAndRevealPB(indexPage) {
   if (!indexPage) return;
-  const pb = document.querySelector(".monwui-slide-progress-bar");
+  var pb = document.querySelector(".monwui-slide-progress-bar");
   startSlideTimer();
-  safeRaf(() => {
+  safeRaffunction(() {
     if (pb) pb.style.opacity = "1";
   });
 }
@@ -4130,22 +4090,22 @@ function restartSlideTimerDeterministic() {
 }
 
 function watchActiveSlideChanges() {
-  let lastActive = document.querySelector("#indexPage:not(.hide) .monwui-slide.active, #homePage:not(.hide) .monwui-slide.active");
-  let resetRafA = 0;
-  let resetRafB = 0;
+  var lastActive = document.querySelector("#indexPage:not(.hide) .monwui-slide.active, #homePage:not(.hide) .monwui-slide.active");
+  var resetRafA = 0;
+  var resetRafB = 0;
 
-  const cancelPendingReset = () => {
+  var cancelPendingReset = function() {
     if (resetRafA) cancelAnimationFrame(resetRafA);
     if (resetRafB) cancelAnimationFrame(resetRafB);
     resetRafA = 0;
     resetRafB = 0;
   };
 
-  const hardResetNextFrame = () => {
+  var hardResetNextFrame = function() {
     cancelPendingReset();
-    resetRafA = requestAnimationFrame(() => {
+    resetRafA = requestAnimationFramefunction(() {
       resetRafA = 0;
-      resetRafB = requestAnimationFrame(() => {
+      resetRafB = requestAnimationFramefunction(() {
         resetRafB = 0;
         hardProgressReset();
         restartSlideTimerDeterministic();
@@ -4154,9 +4114,9 @@ function watchActiveSlideChanges() {
     });
   };
 
-  const handleChange = (ev) => {
-    const eventSlide = ev?.target?.closest?.('.monwui-slide');
-    const cur = eventSlide?.classList?.contains('active')
+  var handleChange = function(ev) {
+    var eventSlide = ev.target.closest.('.monwui-slide');
+    var cur = eventSlide.classList.contains('active')
       ? eventSlide
       : document.querySelector("#indexPage:not(.hide) .monwui-slide.active, #homePage:not(.hide) .monwui-slide.active");
     if (!cur || cur === lastActive) return;
@@ -4166,7 +4126,7 @@ function watchActiveSlideChanges() {
 
   document.addEventListener("slideActive", handleChange, true);
   handleChange();
-  return () => {
+  return function() {
     cancelPendingReset();
     document.removeEventListener("slideActive", handleChange, true);
   };
@@ -4174,38 +4134,38 @@ function watchActiveSlideChanges() {
 
 function warmUpcomingBackdrops(count = 3) {
   try {
-    const indexPage =
+    var indexPage =
       document.querySelector("#indexPage:not(.hide)") ||
       document.querySelector("#homePage:not(.hide)");
     if (!indexPage) return;
 
-    const slides = [...indexPage.querySelectorAll(".monwui-slide")];
-    const active = indexPage.querySelector(".monwui-slide.active") || slides[0];
-    const i = slides.indexOf(active);
-    for (let k = 1; k <= count; k++) {
-      const s = slides[i + k];
+    var slides = [...indexPage.querySelectorAll(".monwui-slide")];
+    var active = indexPage.querySelector(".monwui-slide.active") || slides[0];
+    var i = slides.indexOf(active);
+    for (var k = 1; k <= count; k++) {
+      var s = slides[i + k];
       if (!s) break;
-      const candidate =
+      var candidate =
         s.dataset.background ||
         s.dataset.backdropUrl ||
         s.dataset.landscapeUrl ||
         s.dataset.primaryUrl;
       if (candidate) {
         try {
-          window.__backdropWarmQueue?.enqueue(candidate, { shortPreload: true });
+          window.__backdropWarmQueue.enqueue(candidate, { shortPreload: true });
         } catch {}
       }
     }
   } catch {}
 }
 
-export async function slidesInit() {
+export function slidesInit() {
   if (!isSliderEnabled()) {
     console.debug("[JMS] slidesInit() skipped (slider disabled)");
     return;
   }
   if (window.__slidesInitRunning) {
-    const runningToken = Number(window.__jmsSlidesInitToken) || 0;
+    var runningToken = Number(window.__jmsSlidesInitToken) || 0;
     if (isSliderBootTokenCurrent(runningToken, { requireHomeVisible: false })) {
       console.debug("[JMS] slidesInit() skipped (already running)");
       return;
@@ -4216,13 +4176,13 @@ export async function slidesInit() {
     console.debug("[JMS] slidesInit() skipped (home not visible)");
     return;
   }
-  const bootToken = beginSliderBootSession();
+  var bootToken = beginSliderBootSession();
   window.__jmsSlidesInitToken = bootToken;
-  const isBootActive = ({ requireHomeVisible = true, requireContainer = false } = {}) =>
+  var isBootActive = function({ requireHomeVisible = true, requireContainer = false } = {})
     isSliderBootTokenCurrent(bootToken, { requireHomeVisible, requireContainer });
   window.__slidesInitRunning = true;
   try {
-    await waitAuthWarmupFallback(5000);
+    waitAuthWarmupFallback(5000);
   } catch {}
   if (!isBootActive({ requireHomeVisible: false })) return;
   syncCustomSplashProgress({ authReady: true });
@@ -4230,7 +4190,7 @@ export async function slidesInit() {
     forceSkinHeaderPointerEvents();
     forceHomeSectionsTop();
 
-    const activeResetToken = Number(window.__jmsSliderResetToken) || 0;
+    var activeResetToken = Number(window.__jmsSliderResetToken) || 0;
     if (window.sliderResetInProgress && !isSliderBootTokenCurrent(activeResetToken, { requireHomeVisible: false })) {
       window.sliderResetInProgress = false;
       window.__jmsSliderResetToken = 0;
@@ -4241,19 +4201,19 @@ export async function slidesInit() {
     window.__jmsSliderResetToken = bootToken;
     fullSliderReset({ invalidateBoot: false, reason: "slidesInit:boot-reset" });
 
-    let userId = null, accessToken = null;
-    let fetchItemDetailsCached = window.__jmsFetchItemDetailsCached || null;
-    const config = getMainConfig();
+    var userId = null, accessToken = null;
+    var fetchItemDetailsCached = window.__jmsFetchItemDetailsCached || null;
+    var config = getMainConfig();
 
     function isQuotaErr(e){ return e && (e.name === 'QuotaExceededError' || e.code === 22); }
 
     function safeLocalGet(key, fallback="[]"){
       try {
-        const localValue = localStorage.getItem(key);
+        var localValue = localStorage.getItem(key);
         if (localValue != null) return localValue;
       } catch {}
       try {
-        const sessionValue = sessionStorage.getItem(key);
+        var sessionValue = sessionStorage.getItem(key);
         if (sessionValue != null) return sessionValue;
       } catch {}
       return fallback;
@@ -4274,10 +4234,10 @@ export async function slidesInit() {
     }
 
     function getShuffleHistory(userId) {
-      const key = `slider-shuffle-history-${userId}`;
+      var key = "slider-shuffle-history-" + (userId);
       try {
-        const raw = safeLocalGet(key, "[]");
-        const arr = JSON.parse(raw);
+        var raw = safeLocalGet(key, "[]");
+        var arr = JSON.parse(raw);
         return Array.isArray(arr) ? arr : [];
       } catch {
         return [];
@@ -4285,12 +4245,12 @@ export async function slidesInit() {
     }
 
     function saveShuffleHistory(userId, ids) {
-      const key = `slider-shuffle-history-${userId}`;
-      const limit = Math.max(10, parseInt(config.shuffleSeedLimit || "100", 10));
-      let arr = Array.from(new Set(ids)).slice(-limit);
+      var key = "slider-shuffle-history-" + (userId);
+      var limit = Math.max(10, parseInt(config.shuffleSeedLimit || "100", 10));
+      var arr = Array.from(new Set(ids)).slice(-limit);
       if (safeLocalSet(key, JSON.stringify(arr))) return;
-      const cuts = [Math.floor(limit*0.75), Math.floor(limit*0.5), 20, 10];
-      for (const n of cuts) {
+      var cuts = [Math.floor(limit*0.75), Math.floor(limit*0.5), 20, 10];
+      for (var n of cuts) {
         arr = arr.slice(-n);
         if (safeLocalSet(key, JSON.stringify(arr))) return;
       }
@@ -4298,15 +4258,15 @@ export async function slidesInit() {
     }
 
     function resetShuffleHistory(userId) {
-      const key = `slider-shuffle-history-${userId}`;
+      var key = "slider-shuffle-history-" + (userId);
       safeLocalRemove(key);
     }
 
     try {
       if (typeof isAuthReadyStrict === "function" && !isAuthReadyStrict()) {
-        await waitAuthWarmupFallback(1000);
+        waitAuthWarmupFallback(1000);
     }
-      const s = getSessionInfo();
+      var s = getSessionInfo();
       userId = s.userId;
       accessToken = s.accessToken;
     } catch (e) {
@@ -4315,83 +4275,83 @@ export async function slidesInit() {
     }
     if (!isBootActive()) return;
 
-    const bulkBatchSize = Number(config?.detailsBulkBatchSize) || 60;
-    const itemDetailsStaticMaxAgeMs = normalizeDurationMs(
-      config?.itemDetailsStaticMaxAgeMs,
+    var bulkBatchSize = Number(config.detailsBulkBatchSize) || 60;
+    var itemDetailsStaticMaxAgeMs = normalizeDurationMs(
+      config.itemDetailsStaticMaxAgeMs,
       HOME_ITEM_DETAILS_REVALIDATE_MS
     );
-    const itemDetailsCacheTtlMs = Math.max(
+    var itemDetailsCacheTtlMs = Math.max(
       itemDetailsStaticMaxAgeMs,
       normalizeDurationMs(
-        config?.itemDetailsCacheTtlMs,
+        config.itemDetailsCacheTtlMs,
         HOME_ITEM_DETAILS_CACHE_TTL_MS
       )
     );
-    const itemUserDataMaxAgeMs = normalizeDurationMs(
-      config?.itemDetailsUserDataMaxAgeMs,
+    var itemUserDataMaxAgeMs = normalizeDurationMs(
+      config.itemDetailsUserDataMaxAgeMs,
       HOME_ITEM_USERDATA_CACHE_TTL_MS
     );
 
-    const getAuthHeaders = () => {
-      let tok = accessToken;
-      try { tok = getSessionInfo?.()?.accessToken || tok; } catch {}
+    var getAuthHeaders = function() {
+      var tok = accessToken;
+      try { tok = getSessionInfo.().accessToken || tok; } catch {}
       return {
         "Authorization": getAuthHeader(),
         "X-Emby-Token": tok,
       };
     };
 
-    const fetchHomeItemDetailsOne = async (itemId) => {
+    var fetchHomeItemDetailsOne = function(itemId) {
       if (!itemId) return null;
-      const qs = new URLSearchParams();
+      var qs = new URLSearchParams();
       qs.set("Fields", HOME_ITEM_DETAILS_STATIC_FIELDS.join(","));
       return fetchJsonViaSafeFetch(
-        `/Users/${userId}/Items/${encodeURIComponent(String(itemId).trim())}?${qs.toString()}`,
+        "/Users/" + (userId) + "/Items/" + (encodeURIComponent(String(itemId).trim())) + "?" + (qs.toString()),
         { headers: getAuthHeaders() }
       );
     };
 
-    const fetchHomeItemDetailsMany = async (ids) => {
-      const cleanIds = dedupeItemIds(ids);
+    var fetchHomeItemDetailsMany = function(ids) {
+      var cleanIds = dedupeItemIds(ids);
       if (!cleanIds.length) return [];
 
-      const qs = new URLSearchParams();
+      var qs = new URLSearchParams();
       qs.set("Ids", cleanIds.join(","));
       qs.set("EnableTotalRecordCount", "false");
       qs.set("Fields", HOME_ITEM_DETAILS_STATIC_FIELDS.join(","));
 
-      const data = await fetchJsonViaSafeFetch(`/Users/${userId}/Items?${qs.toString()}`, {
+      var data = fetchJsonViaSafeFetch("/Users/" + (userId) + "/Items?" + (qs.toString()), {
         headers: getAuthHeaders()
       });
-      return data?.Items || data || [];
+      return data.Items || data || [];
     };
 
-    const fetchHomeItemUserDataMap = async (ids) => {
-      const cleanIds = dedupeItemIds(ids);
+    var fetchHomeItemUserDataMap = function(ids) {
+      var cleanIds = dedupeItemIds(ids);
       if (!cleanIds.length) return new Map();
 
-      const out = new Map();
+      var out = new Map();
 
-      for (let start = 0; start < cleanIds.length; start += bulkBatchSize) {
-        const chunk = cleanIds.slice(start, start + bulkBatchSize);
-        const qs = new URLSearchParams();
+      for (var start = 0; start < cleanIds.length; start += bulkBatchSize) {
+        var chunk = cleanIds.slice(start, start + bulkBatchSize);
+        var qs = new URLSearchParams();
         qs.set("Ids", chunk.join(","));
         qs.set("EnableUserData", "true");
         qs.set("EnableTotalRecordCount", "false");
         qs.set("Fields", HOME_ITEM_DETAILS_USERDATA_FIELDS.join(","));
 
-        const data = await cachedFetchJson({
+        var data = cachedFetchJson({
           keyParts: ["homeItemUserData", userId, [...chunk].sort().join(",")],
-          url: `/Users/${userId}/Items?${qs.toString()}`,
+          url: "/Users/" + (userId) + "/Items?" + (qs.toString()),
           opts: { headers: getAuthHeaders() },
           fetchJson: fetchJsonViaSafeFetch,
           ttlMs: itemUserDataMaxAgeMs,
           allowStaleOnError: true,
         });
 
-        const items = Array.isArray(data?.Items) ? data.Items : (Array.isArray(data) ? data : []);
-        for (const item of items) {
-          const id = item?.Id || item?.id;
+        var items = Array.isArray(data.Items) ? data.Items : (Array.isArray(data) ? data : []);
+        for (var item of items) {
+          var id = item.Id || item.id;
           if (id) out.set(id, item);
         }
       }
@@ -4408,104 +4368,103 @@ export async function slidesInit() {
           ttlMs: itemDetailsCacheTtlMs,
           revalidateAfterMs: itemDetailsStaticMaxAgeMs,
           allowStaleOnError: true,
-          maxConcurrent: Number(config?.detailsFetchConcurrency) || 6,
+          maxConcurrent: Number(config.detailsFetchConcurrency) || 6,
         });
       window.__jmsFetchItemDetailsCachedUserId = userId;
     }
 
     try {
-      window.__stopJmsLibraryWatcher?.();
-      window.__stopJmsLibraryWatcher = startLibraryDeltaWatcher({
+      window.__stopJmsLibraryWatcher.();
+      window.__stopJmsLibraryWatcher = startLibraryDeltaWatcherfunction({
         userId,
         fetchJson: fetchJsonViaSafeFetch,
-        getAuthHeaders: () => {
-          let tok = accessToken;
-          try { tok = getSessionInfo?.()?.accessToken || tok; } catch {}
+        getAuthHeaders: () {
+          var tok = accessToken;
+          try { tok = getSessionInfo.().accessToken || tok; } catch {}
           return {
             "Authorization": getAuthHeader(),
             "X-Emby-Token": tok,
           };
         },
         fetchItemDetailsCached,
-        intervalMs: Number(config?.libraryWatchIntervalMs) || 60_000,
-        limit: Number(config?.libraryWatchLimit) || 50,
+        intervalMs: Number(config.libraryWatchIntervalMs) || 60_000,
+        limit: Number(config.libraryWatchLimit) || 50,
       });
     } catch {}
     if (!isBootActive()) return;
 
-    const cfgLimit =
-      Number.isFinite(Number(config?.limit)) ? Number(config.limit) :
-      Number.isFinite(Number(config?.savedLimit)) ? Number(config.savedLimit) :
+    var cfgLimit =
+      Number.isFinite(Number(config.limit)) ? Number(config.limit) :
+      Number.isFinite(Number(config.savedLimit)) ? Number(config.savedLimit) :
       undefined;
-    const savedLimit = Number.isFinite(cfgLimit)
+    var savedLimit = Number.isFinite(cfgLimit)
       ? cfgLimit
       : parseInt(localStorage.getItem("limit") || "20", 10);
     window.myUserId = userId;
 
-    let items = [];
-    let backgroundWarmIds = [];
+    var items = [];
+    var backgroundWarmIds = [];
 
     try {
-      let listItems = null;
+      var listItems = null;
 
       if (config.useManualList && config.manualListIds) {
-        listItems = config.manualListIds.split(",").map((id) => id.trim()).filter(Boolean);
+        listItems = config.manualListIds.split(",").mapfunction((id) id.trim()).filter(Boolean);
       }
 
       if (Array.isArray(listItems) && listItems.length) {
-        const details = await fetchItemDetailsCached.many(listItems);
-        const userDataById = await fetchHomeItemUserDataMap(listItems);
+        var details = fetchItemDetailsCached.many(listItems);
+        var userDataById = fetchHomeItemUserDataMap(listItems);
         items = details
-          .map((detail, idx) => {
-            const id = detail?.Id || listItems[idx];
+          .mapfunction((detail, idx) {
+            var id = detail.Id || listItems[idx];
             return mergeHomeSliderItem(null, detail, userDataById.get(id) || null);
           })
-          .filter((x) => x);
+          .filterfunction((x) x);
         syncCustomSplashProgress({
           dataPoolReady: true,
           poolCount: items.length
         });
       } else {
-        const baseQS = (config.customQueryString || '').replace(/^[?&]+/, '');
-        const onlyUnwatched = !!config.onlyUnwatchedRandom;
-        const hasIsPlayed = /(?:^|[?&])IsPlayed=/i.test(baseQS);
-        const queryString = (onlyUnwatched && !hasIsPlayed)
+        var baseQS = (config.customQueryString || '').replace(/^[?&]+/, '');
+        var onlyUnwatched = !!config.onlyUnwatchedRandom;
+        var hasIsPlayed = /(?:^|[?&])IsPlayed=/i.test(baseQS);
+        var queryString = (onlyUnwatched && !hasIsPlayed)
           ? (baseQS ? baseQS + '&IsPlayed=false' : 'IsPlayed=false')
           : baseQS;
 
-        const includeItemTypes = extractItemTypesFromQuery(queryString);
-        const shouldBalanceTypes =
+        var includeItemTypes = extractItemTypesFromQuery(queryString);
+        var shouldBalanceTypes =
           config.balanceItemTypes &&
           (hasAllTypes(includeItemTypes, ["Movie", "Series"]) || hasAllTypes(includeItemTypes, ["Movie", "Series", "BoxSet"]));
-        const hasExplicitSort =
+        var hasExplicitSort =
           /(?:^|[?&])sortby=/i.test(queryString) ||
           /(?:^|[?&])sortorder=/i.test(queryString);
-        const shouldShuffle = !hasExplicitSort && !config.sortingKeywords?.some(
-          (keyword) => queryString.toLowerCase().includes(String(keyword || "").toLowerCase())
+        var shouldShuffle = !hasExplicitSort && !config.sortingKeywords.somefunction((keyword) queryString.toLowerCase().includes(String(keyword || "").toLowerCase())
         );
 
-        let playingItems = [];
-        const playingLimit = (onlyUnwatched ? 0 : parseInt(config.playingLimit || 0, 10));
-        const authHeaders = {
+        var playingItems = [];
+        var playingLimit = (onlyUnwatched ? 0 : parseInt(config.playingLimit || 0, 10));
+        var authHeaders = {
         "Authorization": getAuthHeader(),
         "X-Emby-Token": accessToken
       };
 
         if (playingLimit > 0) {
           try {
-            const data = await cachedFetchJson({
+            var data = cachedFetchJson({
             keyParts: ["resume", userId, playingLimit * 2],
-            url: `/Users/${userId}/Items?Filters=IsResumable&MediaTypes=Video&Recursive=true&EnableUserData=true&Fields=${encodeURIComponent("Type,UserData,ImageTags,BackdropImageTags,PrimaryImageAspectRatio,Series,SeriesId,CollectionIds,MediaStreams")}&SortBy=DatePlayed,DateCreated&SortOrder=Descending&Limit=${Math.max(10, playingLimit * 3)}`,
+            url: "/Users/" + (userId) + "/Items?Filters=IsResumable&MediaTypes=Video&Recursive=true&EnableUserData=true&Fields=" + (encodeURIComponent("Type,UserData,ImageTags,BackdropImageTags,PrimaryImageAspectRatio,Series,SeriesId,CollectionIds,MediaStreams")) + "&SortBy=DatePlayed,DateCreated&SortOrder=Descending&Limit=" + (Math.max(10, playingLimit * 3)),
             opts: { headers: authHeaders },
             fetchJson: fetchJsonViaSafeFetch,
-            ttlMs: Number(config?.resumeCacheTtlMs) || 10_000,
+            ttlMs: Number(config.resumeCacheTtlMs) || 10_000,
             allowStaleOnError: true,
           });
-            let fetchedItems = Array.isArray(data?.Items) ? data.Items : [];
-            fetchedItems = fetchedItems.filter((item) => isPartialPlaybackUserData(item?.UserData));
+            var fetchedItems = Array.isArray(data.Items) ? data.Items : [];
+            fetchedItems = fetchedItems.filterfunction((item) isPartialPlaybackUserData(item.UserData));
 
             if (config.excludeEpisodesFromPlaying) {
-              playingItems = fetchedItems.filter((item) => item.Type !== "Episode").slice(0, playingLimit);
+              playingItems = fetchedItems.filterfunction((item) item.Type !== "Episode").slice(0, playingLimit);
             } else {
               playingItems = fetchedItems.slice(0, playingLimit);
             }
@@ -4514,40 +4473,39 @@ export async function slidesInit() {
           }
         }
 
-        const maxShufflingLimit = parseInt(config.maxShufflingLimit || "2000", 10);
-        const data = await cachedFetchJson({
+        var maxShufflingLimit = parseInt(config.maxShufflingLimit || "2000", 10);
+        var data = cachedFetchJson({
         keyParts: ["itemsPool", userId, queryString, maxShufflingLimit],
-        url: `/Users/${userId}/Items?${queryString}&Limit=${maxShufflingLimit}&EnableTotalRecordCount=false`,
+        url: "/Users/" + (userId) + "/Items?" + (queryString) + "&Limit=" + (maxShufflingLimit) + "&EnableTotalRecordCount=false",
         opts: { headers: authHeaders },
         fetchJson: fetchJsonViaSafeFetch,
-        ttlMs: Number(config?.itemsPoolCacheTtlMs) || 120_000,
+        ttlMs: Number(config.itemsPoolCacheTtlMs) || 120_000,
         allowStaleOnError: true,
       });
-        let allItems = data.Items || [];
+        var allItems = data.Items || [];
         syncCustomSplashProgress({
           dataPoolReady: true,
           poolCount: Array.isArray(allItems) ? allItems.length : 0
         });
         if (playingItems.length && allItems.length) {
-          const playingIds = new Set(playingItems.map((it) => it && it.Id).filter(Boolean));
-          allItems = allItems.filter((it) => it && !playingIds.has(it.Id));
+          var playingIds = new Setfunction(playingItems.map((it) it && it.Id).filter(Boolean));
+          allItems = allItems.filterfunction((it) it && !playingIds.has(it.Id));
         }
 
         if (queryString.includes("IncludeItemTypes=Season") || queryString.includes("IncludeItemTypes=Episode")) {
-          const seasonDetailConcurrency = Math.max(
+          var seasonDetailConcurrency = Math.max(
             1,
-            Number(config?.seasonDetailFetchConcurrency) || 4
+            Number(config.seasonDetailFetchConcurrency) || 4
           );
-          const detailedSeasons = await mapLimit(
-            allItems,
+          var detailedSeasons = mapLimitfunction(allItems,
             seasonDetailConcurrency,
-            async (item) => {
+            (item) {
               try {
-                const seasonRes = await safeFetch(`/Users/${userId}/Items/${item.Id}`, { headers: authHeaders });
-                const seasonData = await seasonRes.json();
+                var seasonRes = safeFetch("/Users/" + (userId) + "/Items/" + (item.Id), { headers: authHeaders });
+                var seasonData = seasonRes.json();
                 if (seasonData.SeriesId) {
-                  const seriesRes = await safeFetch(`/Users/${userId}/Items/${seasonData.SeriesId}`, { headers: authHeaders });
-                  seasonData.SeriesData = await seriesRes.json();
+                  var seriesRes = safeFetch("/Users/" + (userId) + "/Items/" + (seasonData.SeriesId), { headers: authHeaders });
+                  seasonData.SeriesData = seriesRes.json();
                 }
                 return seasonData;
               } catch (error) {
@@ -4556,15 +4514,15 @@ export async function slidesInit() {
               }
             }
           );
-          allItems = detailedSeasons.filter((item) => item && item.Id);
+          allItems = detailedSeasons.filterfunction((item) item && item.Id);
         }
 
          if (playingItems.length) {
-          const beforePlayingFilter = playingItems.length;
-          const episodes = [];
-          const nonEpisodes = [];
+          var beforePlayingFilter = playingItems.length;
+          var episodes = [];
+          var nonEpisodes = [];
 
-          for (const it of playingItems) {
+          for (var it of playingItems) {
             if (it && it.Type === "Episode") {
               episodes.push(it);
             } else {
@@ -4572,7 +4530,7 @@ export async function slidesInit() {
             }
           }
 
-          const filteredNonEpisodes = filterByStrictImageTypes(nonEpisodes, queryString);
+          var filteredNonEpisodes = filterByStrictImageTypes(nonEpisodes, queryString);
           playingItems = [
             ...episodes,
             ...filteredNonEpisodes
@@ -4586,7 +4544,7 @@ export async function slidesInit() {
           );
         }
 
-        const beforePoolFilter = allItems.length;
+        var beforePoolFilter = allItems.length;
         allItems = filterByStrictImageTypes(allItems, queryString);
         console.debug(
           "[JMS] allItems before imageType filter:",
@@ -4595,71 +4553,69 @@ export async function slidesInit() {
           allItems.length
         );
 
-        backgroundWarmIds = Array.from(new Set(
+        backgroundWarmIds = Array.fromfunction(new Set(
           [...playingItems, ...allItems]
-            .map((item) => item?.Id)
+            .map((item) item.Id)
             .filter(Boolean)
         ));
 
-        let selectedItems = [];
+        var selectedItems = [];
         selectedItems = [...playingItems.slice(0, playingLimit)];
-        const remainingSlots = Math.max(0, savedLimit - selectedItems.length);
+        var remainingSlots = Math.max(0, savedLimit - selectedItems.length);
 
         if (remainingSlots > 0) {
           if (shouldBalanceTypes) {
-            const itemsByType = {};
-            allItems.forEach((item) => {
-              const type = item.Type;
+            var itemsByType = {};
+            allItems.forEach(function((item) {
+              var type = item.Type;
               if (!itemsByType[type]) itemsByType[type] = [];
               itemsByType[type].push(item);
             });
-            const types = Object.keys(itemsByType);
-            const itemsPerType = Math.floor(remainingSlots / types.length);
-            types.forEach((type) => {
-              const itemsOfType = itemsByType[type] || [];
-              const shuffled = shouldShuffle ? shuffleArray(itemsOfType) : itemsOfType;
+            var types = Object.keys(itemsByType);
+            var itemsPerType = Math.floor(remainingSlots / types.length);
+            types.forEach(function((type) {
+              var itemsOfType = itemsByType[type] || [];
+              var shuffled = shouldShuffle ? shuffleArray(itemsOfType) : itemsOfType;
               selectedItems.push(...shuffled.slice(0, itemsPerType));
             });
-            const finalRemaining = savedLimit - selectedItems.length;
+            var finalRemaining = savedLimit - selectedItems.length;
             if (finalRemaining > 0) {
-              const allShuffled = shouldShuffle ? shuffleArray(allItems) : allItems;
+              var allShuffled = shouldShuffle ? shuffleArray(allItems) : allItems;
               selectedItems.push(...allShuffled.slice(0, finalRemaining));
             }
           } else if (shouldShuffle) {
-            const allItemIds = allItems.map((item) => item.Id);
-            const alwaysShuffle = config.sortingKeywords?.some((keyword) => (config.keywords || "").toLowerCase().includes(keyword.toLowerCase()));
+            var allItemIds = allItems.mapfunction((item) item.Id);
+            var alwaysShuffle = config.sortingKeywords.somefunction((keyword) (config.keywords || "").toLowerCase().includes(keyword.toLowerCase()));
             if (alwaysShuffle) {
-              const shuffled = shuffleArray(allItemIds);
-              const selectedItemsFromShuffle = allItems.filter((item) => shuffled.slice(0, remainingSlots).includes(item.Id));
+              var shuffled = shuffleArray(allItemIds);
+              var selectedItemsFromShuffle = allItems.filterfunction((item) shuffled.slice(0, remainingSlots).includes(item.Id));
               selectedItems.push(...selectedItemsFromShuffle);
             } else {
-              const shuffleSeedLimit = parseInt(config.shuffleSeedLimit || "100", 10);
-              const alreadySelected = new Set(selectedItems.map((i) => i.Id));
+              var shuffleSeedLimit = parseInt(config.shuffleSeedLimit || "100", 10);
+              var alreadySelected = new Setfunction(selectedItems.map((i) i.Id));
 
-              let history = getShuffleHistory(userId);
-              const allSet = new Set(allItemIds);
-              history = Array.from(new Set(history.filter((id) => allSet.has(id))));
-              let historyWasReset = false;
+              var history = getShuffleHistory(userId);
+              var allSet = new Set(allItemIds);
+              history = Array.fromfunction(new Set(history.filter((id) allSet.has(id))));
+              var historyWasReset = false;
               if (history.length >= shuffleSeedLimit) {
                 resetShuffleHistory(userId);
                 history = [];
                 historyWasReset = true;
               }
-              let pickedIds = [];
-              const pickedSet = new Set();
-              const pushFromPool = (poolIds, count) => {
+              var pickedIds = [];
+              var pickedSet = new Set();
+              var pushFromPool = function(poolIds, count) {
                 if (count <= 0 || !Array.isArray(poolIds) || !poolIds.length) return;
-                const uniquePool = poolIds.filter(
-                  (id) => !alreadySelected.has(id) && !pickedSet.has(id)
+                var uniquePool = poolIds.filterfunction((id) !alreadySelected.has(id) && !pickedSet.has(id)
                 );
                 if (!uniquePool.length) return;
-                const chosen = shuffleArray(uniquePool).slice(0, count);
-                chosen.forEach((id) => pickedSet.add(id));
+                var chosen = shuffleArray(uniquePool).slice(0, count);
+                chosen.forEach(function((id) pickedSet.add(id));
                 pickedIds = pickedIds.concat(chosen);
               };
 
-              const unseenIds = allItemIds.filter(
-                (id) => !history.includes(id) && !alreadySelected.has(id)
+              var unseenIds = allItemIds.filterfunction((id) !history.includes(id) && !alreadySelected.has(id)
               );
               pushFromPool(unseenIds, remainingSlots);
 
@@ -4669,16 +4625,15 @@ export async function slidesInit() {
                   history = [];
                   historyWasReset = true;
                 }
-                const need = remainingSlots - pickedIds.length;
-                const fallbackPool = allItemIds.filter(
-                  (id) => !alreadySelected.has(id) && !pickedSet.has(id)
+                var need = remainingSlots - pickedIds.length;
+                var fallbackPool = allItemIds.filterfunction((id) !alreadySelected.has(id) && !pickedSet.has(id)
                 );
                 pushFromPool(fallbackPool, need);
               }
-              const selectedItemsFromShuffle = allItems.filter((item) => pickedSet.has(item.Id));
+              var selectedItemsFromShuffle = allItems.filterfunction((item) pickedSet.has(item.Id));
               selectedItems.push(...selectedItemsFromShuffle);
-              const historyBase = historyWasReset ? [] : history;
-              const newHistory = Array.from(new Set([...historyBase, ...pickedIds])).slice(-shuffleSeedLimit);
+              var historyBase = historyWasReset ? [] : history;
+              var newHistory = Array.from(new Set([...historyBase, ...pickedIds])).slice(-shuffleSeedLimit);
               try {
                 saveShuffleHistory(userId, newHistory);
                 console.debug("[JMS] histórico de shuffle salvo:", userId, newHistory.length);
@@ -4693,13 +4648,13 @@ export async function slidesInit() {
 
         if (shouldShuffle) {
           if (selectedItems.length > playingItems.length) {
-            const nonPlayingItems = selectedItems.slice(playingItems.length);
-            const shuffledNonPlaying = shuffleArray(nonPlayingItems);
+            var nonPlayingItems = selectedItems.slice(playingItems.length);
+            var shuffledNonPlaying = shuffleArray(nonPlayingItems);
             selectedItems = [...selectedItems.slice(0, playingItems.length), ...shuffledNonPlaying];
           }
         }
 
-        const beforeUniq = selectedItems.length;
+        var beforeUniq = selectedItems.length;
         selectedItems = uniqueByIdStable(selectedItems).slice(0, savedLimit);
         console.debug(
           "[JMS] selectedItems before uniq:",
@@ -4710,44 +4665,43 @@ export async function slidesInit() {
           savedLimit
         );
 
-        const selectedById = new Map(
-          selectedItems
-            .filter((it) => it?.Id)
-            .map((it) => [it.Id, it])
+        var selectedById = new Mapfunction(selectedItems
+            .filter((it) it.Id)
+            .mapfunction((it) [it.Id, it])
         );
-        const detailed = await fetchItemDetailsCached.many(selectedItems.map(i => i.Id));
-        const userDataById = await fetchHomeItemUserDataMap(selectedItems.map((item) => item?.Id));
+        var detailed = fetchItemDetailsCached.many(selectedItems.map(function(i) i.Id));
+        var userDataById = fetchHomeItemUserDataMapfunction(selectedItems.map((item) item.Id));
         items = detailed
-          .map((detail, idx) => {
-            const base = selectedById.get(detail?.Id || selectedItems[idx]?.Id) || selectedItems[idx] || null;
-            const id = detail?.Id || base?.Id || selectedItems[idx]?.Id;
+          .mapfunction((detail, idx) {
+            var base = selectedById.get(detail.Id || selectedItems[idx].Id) || selectedItems[idx] || null;
+            var id = detail.Id || base.Id || selectedItems[idx].Id;
             return mergeHomeSliderItem(base, detail, userDataById.get(id) || null);
           })
-          .filter((x) => x);
+          .filterfunction((x) x);
       }
     } catch (err) {
       console.error("Erro ao preparar os dados do slide:", err);
     }
 
     if (!isBootActive()) return;
-    if (backgroundWarmIds.length && typeof fetchItemDetailsCached?.startWarmup === "function") {
-      const warmBatchSize = Math.max(
+    if (backgroundWarmIds.length && typeof fetchItemDetailsCached.startWarmup === "function") {
+      var warmBatchSize = Math.max(
         10,
         Math.min(
           200,
-          Number(config?.detailsWarmBatchSize) ||
-          Number(config?.detailsBulkBatchSize) ||
+          Number(config.detailsWarmBatchSize) ||
+          Number(config.detailsBulkBatchSize) ||
           60
         )
       );
-      const warmDelayMs = Math.max(80, Number(config?.detailsWarmDelayMs) || 180);
+      var warmDelayMs = Math.max(80, Number(config.detailsWarmDelayMs) || 180);
 
       void fetchItemDetailsCached.startWarmup({
-        scopeKey: `home:${userId}`,
+        scopeKey: "home:" + (userId),
         ids: backgroundWarmIds,
         batchSize: warmBatchSize,
         delayMs: warmDelayMs,
-      }).catch((error) => {
+      }).catchfunction((error) {
         console.debug("[JMS][cache] background warmup skipped:", error);
       });
     }
@@ -4764,36 +4718,36 @@ export async function slidesInit() {
     createdSlides: 0
   });
 
-    const peakBatches = config.peakSlider ? buildPeakCreationBatches(items.length, getPeakDisplayOptions()) : [];
-    const markSlideReadyWhenVisualSyncOpens = (slideEl) => {
+    var peakBatches = config.peakSlider ? buildPeakCreationBatches(items.length, getPeakDisplayOptions()) : [];
+    var markSlideReadyWhenVisualSyncOpens = function(slideEl) {
       if (!isBootActive({ requireHomeVisible: false })) return;
-      const finalizeWhenVisible = () => {
+      var finalizeWhenVisible = function() {
         waitForFirstSlideVisualReady(slideEl, bootToken, {
           timeoutMs: config.peakSlider ? 4600 : 3200
-        }).then((ready) => {
+        }).thenfunction((ready) {
           if (!ready) return;
           markFirstSlideReady(bootToken);
-        }).catch(() => {});
+        }).catchfunction(() {});
       };
-      if (typeof slideEl?.__waitForBackdropReady === "function") {
+      if (typeof slideEl.__waitForBackdropReady === "function") {
         slideEl.__waitForBackdropReady({
           timeoutMs: config.peakSlider ? 2200 : 1400
-        }).finally(() => {
+        }).finallyfunction(() {
           finalizeWhenVisible();
         });
         return;
       }
       finalizeWhenVisible();
     };
-    const createItemAt = async (itemIndex, options = {}) => {
+    var createItemAt = function(itemIndex, options = {}) {
       if (!isBootActive()) return null;
-      const item = items[itemIndex];
+      var item = items[itemIndex];
       if (!item) return null;
-      const slideEl = await createSlide(item, { insertAt: itemIndex, ...options });
+      var slideEl = createSlide(item, { insertAt: itemIndex, ...options });
       if (!isBootActive()) {
-        const staleContainer = slideEl?.closest?.("#monwui-slides-container") || null;
-        try { slideEl?.__cleanupSlide?.(); } catch {}
-        try { slideEl?.remove?.(); } catch {}
+        var staleContainer = slideEl.closest.("#monwui-slides-container") || null;
+        try { slideEl.__cleanupSlide.(); } catch {}
+        try { slideEl.remove.(); } catch {}
         try {
           if (staleContainer && !staleContainer.querySelector(".monwui-slide")) {
             staleContainer.remove();
@@ -4810,22 +4764,22 @@ export async function slidesInit() {
     };
 
     if (config.peakSlider) {
-      const [firstBatch = [0]] = peakBatches;
-      for (const itemIndex of firstBatch) {
+      var [firstBatch = [0]] = peakBatches;
+      for (var itemIndex of firstBatch) {
         if (!isBootActive()) return;
-        await createItemAt(itemIndex, {
+        createItemAt(itemIndex, {
           suppressInitialDisplay: true,
           deferPeakReveal: itemIndex !== 0
         });
       }
     } else {
       if (!isBootActive()) return;
-      const first = items[0];
-      const firstSlide = await createSlide(first);
+      var first = items[0];
+      var firstSlide = createSlide(first);
       if (!isBootActive()) {
-        const staleContainer = firstSlide?.closest?.("#monwui-slides-container") || null;
-        try { firstSlide?.__cleanupSlide?.(); } catch {}
-        try { firstSlide?.remove?.(); } catch {}
+        var staleContainer = firstSlide.closest.("#monwui-slides-container") || null;
+        try { firstSlide.__cleanupSlide.(); } catch {}
+        try { firstSlide.remove.(); } catch {}
         try {
           if (staleContainer && !staleContainer.querySelector(".monwui-slide")) {
             staleContainer.remove();
@@ -4839,7 +4793,7 @@ export async function slidesInit() {
     }
 
     if (!isBootActive()) return;
-    const idxPage = document.querySelector("#indexPage:not(.hide)") || document.querySelector("#homePage:not(.hide)");
+    var idxPage = document.querySelector("#indexPage:not(.hide)") || document.querySelector("#homePage:not(.hide)");
     if (idxPage) upsertSlidesContainerAtTop(idxPage);
     try {
       updateSlidePosition();
@@ -4849,19 +4803,19 @@ export async function slidesInit() {
       window.__peakBooting = false;
     }
     initializeSlider(bootToken);
-    const rest = config.peakSlider
+    var rest = config.peakSlider
       ? peakBatches.slice(1)
-      : chunkArray(items.map((_, index) => index).slice(1), 1);
-    scheduleSliderIdleTask(() => {
-      (async () => {
+      : chunkArrayfunction(items.map((_, index) index).slice(1), 1);
+    scheduleSliderIdleTaskfunction(() {
+      function(() {
         if (!isBootActive({ requireContainer: true })) return;
-        for (const batch of rest) {
+        for (var batch of rest) {
           if (!isBootActive({ requireContainer: true })) return;
           try {
-            const createdSlides = [];
-            for (const itemIndex of batch) {
+            var createdSlides = [];
+            for (var itemIndex of batch) {
               if (!isBootActive({ requireContainer: true })) return;
-              const slideEl = await createItemAt(itemIndex, {
+              var slideEl = createItemAt(itemIndex, {
                 suppressInitialDisplay: true,
                 deferPeakReveal: config.peakSlider
               });
@@ -4869,22 +4823,22 @@ export async function slidesInit() {
             }
             if (!isBootActive({ requireContainer: true })) return;
             if (config.peakSlider) {
-              const idxPage = document.querySelector('#indexPage:not(.hide), #homePage:not(.hide)');
+              var idxPage = document.querySelector('#indexPage:not(.hide), #homePage:not(.hide)');
               if (idxPage) syncPeakStructureNow(idxPage);
-              const releasePending = () => {
-                createdSlides.forEach((slideEl) => {
-                  if (typeof slideEl?.__releasePeakReveal === "function") {
+              var releasePending = function() {
+                createdSlides.forEach(function((slideEl) {
+                  if (typeof slideEl.__releasePeakReveal === "function") {
                     slideEl.__releasePeakReveal();
                     return;
                   }
-                  slideEl?.classList?.remove('peak-batch-pending');
+                  slideEl.classList.remove('peak-batch-pending');
                 });
               };
-              const container = idxPage?.querySelector?.('#monwui-slides-container');
-              if (container?.classList?.contains('peak-ready')) {
+              var container = idxPage.querySelector.('#monwui-slides-container');
+              if (container.classList.contains('peak-ready')) {
                 requestAnimationFrame(releasePending);
               } else {
-                requestAnimationFrame(() => {
+                requestAnimationFramefunction(() {
                   requestAnimationFrame(releasePending);
                 });
               }
@@ -4916,10 +4870,10 @@ export async function slidesInit() {
 function initializeSlider(bootToken = Number(window.__jmsSliderBootToken) || 0) {
   try {
     if (!isSliderBootTokenCurrent(bootToken, { requireContainer: true })) return;
-    const indexPage =
+    var indexPage =
       document.querySelector("#indexPage:not(.hide)") ||
       document.querySelector("#homePage:not(.hide)") ||
-      document.querySelector(".homeSectionsContainer")?.closest("#indexPage, #homePage") ||
+      document.querySelector(".homeSectionsContainer").closest("#indexPage, #homePage") ||
       document.querySelector("#indexPage");
     if (!indexPage) return;
 
@@ -4929,8 +4883,8 @@ function initializeSlider(bootToken = Number(window.__jmsSliderBootToken) || 0) 
     hydrateFirstSlide(indexPage);
     initSwipeEvents();
     if (config.peakSlider) {
-      const sc = indexPage.querySelector('#monwui-slides-container');
-      const slides = indexPage.querySelectorAll('.monwui-slide');
+      var sc = indexPage.querySelector('#monwui-slides-container');
+      var slides = indexPage.querySelectorAll('.monwui-slide');
       if (sc && slides.length) {
         sc.classList.add('peak-mode');
         primePeakFirstPaint(slides, getCurrentIndex(), sc, getPeakDisplayOptions());
@@ -4943,20 +4897,20 @@ function initializeSlider(bootToken = Number(window.__jmsSliderBootToken) || 0) 
       updateSlidePosition();
     } catch {}
 
-    const slides = indexPage.querySelectorAll(".monwui-slide");
-    const slidesContainer = indexPage.querySelector("#monwui-slides-container");
-    let focusedSlide = null;
-    let keyboardActive = false;
+    var slides = indexPage.querySelectorAll(".monwui-slide");
+    var slidesContainer = indexPage.querySelector("#monwui-slides-container");
+    var focusedSlide = null;
+    var keyboardActive = false;
 
-    const pb = document.querySelector(".monwui-slide-progress-bar");
+    var pb = document.querySelector(".monwui-slide-progress-bar");
     if (pb) {
       pb.style.opacity = "0";
       pb.style.width = "0%";
     }
 
 function queueHardResetNextFrame() {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
+  requestAnimationFramefunction(() {
+    requestAnimationFramefunction(() {
       restartSlideTimerDeterministic();
     });
   });
@@ -4971,10 +4925,10 @@ function startWhenAllReady() {
     return;
   }
 
-  const shouldStartTimer = !hasStartedCycleClock() && !isCustomSplashBlockingNow();
+  var shouldStartTimer = !hasStartedCycleClock() && !isCustomSplashBlockingNow();
 
   try {
-    const oldDots = document.querySelector(".monwui-dot-navigation-container");
+    var oldDots = document.querySelector(".monwui-dot-navigation-container");
     if (oldDots) oldDots.remove();
     createDotNavigation();
   } catch {}
@@ -4987,7 +4941,7 @@ function startWhenAllReady() {
   initSwipeEvents();
   if (shouldStartTimer) {
     startNewCycleClock();
-    safeRaf(() => {
+    safeRaffunction(() {
       hardProgressReset();
       startSlideTimer();
       if (pb) pb.style.opacity = "1";
@@ -5000,8 +4954,8 @@ function startWhenAllReady() {
     try {
       window.__peakBooting = false;
       if (config.peakSlider) {
-        const sc = indexPage.querySelector('#monwui-slides-container');
-        const slides = indexPage.querySelectorAll('.monwui-slide');
+        var sc = indexPage.querySelector('#monwui-slides-container');
+        var slides = indexPage.querySelectorAll('.monwui-slide');
         if (sc && slides.length) {
           sc.classList.add('peak-ready');
           sc.classList.remove('peak-init');
@@ -5010,7 +4964,7 @@ function startWhenAllReady() {
       }
     } catch {}
 
-  try { window.__cleanupActiveWatch?.(); } catch {}
+  try { window.__cleanupActiveWatch.(); } catch {}
   window.__cleanupActiveWatch = watchActiveSlideChanges();
 
   if (window.__jmsStartWhenAllReadyHandler === startWhenAllReady) {
@@ -5027,29 +4981,27 @@ if (window.__totalSlidesPlanned > 0 && window.__slidesCreated >= window.__totalS
   document.addEventListener("jms:all-slides-ready", startWhenAllReady, { once: true });
 }
     attachMouseEvents();
-    const firstImg = indexPage.querySelector(".monwui-slide.active img");
+    var firstImg = indexPage.querySelector(".monwui-slide.active img");
     if (firstImg && !firstImg.complete && firstImg.decode) {
-      firstImg.decode().catch(() => {}).finally(() => {});
+      firstImg.decode().catchfunction(() {}).finallyfunction(() {});
     }
-    slides.forEach((slideEl) => {
-      slideEl.addEventListener(
-        "focus",
-        () => {
+    slides.forEach(function((slideEl) {
+      slideEl.addEventListenerfunction("focus",
+        () {
           focusedSlide = slideEl;
-          slidesContainer?.classList.remove("disable-interaction");
+          slidesContainer.classList.remove("disable-interaction");
         },
         true
       );
-      slideEl.addEventListener(
-        "blur",
-        () => {
+      slideEl.addEventListenerfunction("blur",
+        () {
           if (focusedSlide === slideEl) focusedSlide = null;
         },
         true
       );
     });
 
-    indexPage.addEventListener("keydown", async (e) => {
+    indexPage.addEventListenerfunction("keydown", (e) {
       if (!keyboardActive) return;
       if (e.keyCode === 37) {
         changeSlide(-1);
@@ -5059,14 +5011,14 @@ if (window.__totalSlidesPlanned > 0 && window.__slidesCreated >= window.__totalS
         queueHardResetNextFrame();
       } else if (e.keyCode === 13 && focusedSlide) {
         e.preventDefault();
-        const itemId = focusedSlide.dataset.itemId;
+        var itemId = focusedSlide.dataset.itemId;
         if (!itemId) return;
-        const preferBackdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
-        const originEl = focusedSlide.__backdropImg || focusedSlide.querySelector?.(".monwui-backdrop") || focusedSlide;
+        var preferBackdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
+        var originEl = focusedSlide.__backdropImg || focusedSlide.querySelector.(".monwui-backdrop") || focusedSlide;
         try {
-          await openDetailsModalLazy({
+          openDetailsModalLazy({
             itemId,
-            serverId: getSessionInfo?.()?.serverId || "",
+            serverId: getSessionInfo.().serverId || "",
             preferBackdropIndex,
             originEl,
           });
@@ -5076,26 +5028,26 @@ if (window.__totalSlidesPlanned > 0 && window.__slidesCreated >= window.__totalS
       }
     });
 
-    indexPage.addEventListener("focusin", (e) => {
+    indexPage.addEventListenerfunction("focusin", (e) {
       if (e.target.closest("#monwui-slides-container")) {
         keyboardActive = true;
-        slidesContainer?.classList.remove("disable-interaction");
+        slidesContainer.classList.remove("disable-interaction");
       }
     });
-    indexPage.addEventListener("focusout", (e) => {
+    indexPage.addEventListenerfunction("focusout", (e) {
       if (!e.target.closest("#monwui-slides-container")) {
         keyboardActive = false;
-        slidesContainer?.classList.add("disable-interaction");
+        slidesContainer.classList.add("disable-interaction");
       }
     });
     try {
-      window.__cleanupActiveWatch?.();
+      window.__cleanupActiveWatch.();
     } catch {}
     window.__cleanupActiveWatch = watchActiveSlideChanges();
-    document.addEventListener("jms:per-slide-complete", (ev) => {
+    document.addEventListenerfunction("jms:per-slide-complete", (ev) {
   try {
-    const active = document.querySelector("#indexPage:not(.hide) .monwui-slide.active, #homePage:not(.hide) .monwui-slide.active");
-    const idx = getSlideIndex(active);
+    var active = document.querySelector("#indexPage:not(.hide) .monwui-slide.active, #homePage:not(.hide) .monwui-slide.active");
+    var idx = getSlideIndex(active);
 
     if (window.__cycleExpired && isPlannedLastIndex(idx)) {
       ev.preventDefault();
@@ -5114,17 +5066,17 @@ if (window.__totalSlidesPlanned > 0 && window.__slidesCreated >= window.__totalS
 }
 
 function setupNavigationObserver() {
-  if (navObsBooted) return () => {};
+  if (navObsBooted) return function() {};
   navObsBooted = true;
 
-  let previousUrl = window.location.href;
-  let isOnHomePage = isHomeVisible() || isHomeRouteActive();
-  let scheduledTimer = 0;
-  let disposed = false;
+  var previousUrl = window.location.href;
+  var isOnHomePage = isHomeVisible() || isHomeRouteActive();
+  var scheduledTimer = 0;
+  var disposed = false;
 
-  const checkPageChange = async () => {
-    const currentUrl = window.location.href;
-    const nowOnHomePage = isHomeVisible() || isHomeRouteActive();
+  var checkPageChange = function() {
+    var currentUrl = window.location.href;
+    var nowOnHomePage = isHomeVisible() || isHomeRouteActive();
 
     if (currentUrl !== previousUrl || nowOnHomePage !== isOnHomePage) {
       homeSectionLog("navigation:page-change", {
@@ -5140,10 +5092,10 @@ function setupNavigationObserver() {
         window.__initOnHomeOnce = false;
         fullSliderReset({ reason: "navigation:home-enter" });
         if (getMainConfig().enableNotifications === false) {
-          document.getElementById('jfNotifBtn')?.remove();
-          document.querySelector('.jf-notif-panel')?.remove();
+          document.getElementById('jfNotifBtn').remove();
+          document.querySelector('.jf-notif-panel').remove();
         }
-        const ok = await waitForVisibleIndexPage(12000);
+        var ok = waitForVisibleIndexPage(12000);
         if (ok) {
           homeSectionLog("navigation:home-ready", {
             currentUrl,
@@ -5155,7 +5107,7 @@ function setupNavigationObserver() {
           homeSectionWarn("navigation:home-not-ready:observe", {
             currentUrl,
           });
-          const stop = observeWhenHomeReady(() => {
+          var stop = observeWhenHomeReadyfunction(() {
             window.__initOnHomeOnce = false;
             initializeSliderOnHome({ forceManagedSectionsBoot: true });
             stop();
@@ -5173,23 +5125,23 @@ function setupNavigationObserver() {
     }
   };
 
-  const scheduleCheck = (delay = 0) => {
+  var scheduleCheck = function(delay = 0) {
     if (disposed || scheduledTimer) return;
-    scheduledTimer = window.setTimeout(() => {
+    scheduledTimer = window.setTimeoutfunction(() {
       scheduledTimer = 0;
       void checkPageChange();
     }, Math.max(0, delay | 0));
   };
 
-  const isHomeMutationTarget = (node) => {
+  var isHomeMutationTarget = function(node) {
     if (!node || node.nodeType !== 1) return false;
     if (node.id === "indexPage" || node.id === "homePage") return true;
-    if (node.classList?.contains("homeSectionsContainer")) return true;
-    return !!node.querySelector?.("#indexPage, #homePage, .homeSectionsContainer");
+    if (node.classList.contains("homeSectionsContainer")) return true;
+    return !!node.querySelector.("#indexPage, #homePage, .homeSectionsContainer");
   };
 
-  const domObserver = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
+  var domObserver = new MutationObserverfunction((mutations) {
+    for (var mutation of mutations) {
       if (mutation.type === "attributes") {
         if (isHomeMutationTarget(mutation.target)) {
           scheduleCheck();
@@ -5197,7 +5149,7 @@ function setupNavigationObserver() {
         }
         continue;
       }
-      for (const node of mutation.addedNodes) {
+      for (var node of mutation.addedNodes) {
         if (isHomeMutationTarget(node)) {
           scheduleCheck();
           return;
@@ -5215,8 +5167,8 @@ function setupNavigationObserver() {
 
   scheduleCheck();
 
-  const origPush = history.pushState;
-  const origReplace = history.replaceState;
+  var origPush = history.pushState;
+  var origReplace = history.replaceState;
   history.pushState = function () {
     origPush.apply(this, arguments);
     scheduleCheck();
@@ -5226,12 +5178,12 @@ function setupNavigationObserver() {
     scheduleCheck();
   };
 
-  const onPopState = () => scheduleCheck();
-  const onHashChange = () => scheduleCheck();
-  const onPageShow = () => scheduleCheck();
-  const onViewShow = () => scheduleCheck();
-  const onViewShown = () => scheduleCheck();
-  const onFocus = () => scheduleCheck(50);
+  var onPopState = function() scheduleCheck();
+  var onHashChange = function() scheduleCheck();
+  var onPageShow = function() scheduleCheck();
+  var onViewShow = function() scheduleCheck();
+  var onViewShown = function() scheduleCheck();
+  var onFocus = function() scheduleCheck(50);
 
   window.addEventListener("popstate", onPopState);
   window.addEventListener("hashchange", onHashChange);
@@ -5240,7 +5192,7 @@ function setupNavigationObserver() {
   document.addEventListener("viewshown", onViewShown);
   window.addEventListener("focus", onFocus, { passive: true });
 
-  return () => {
+  return function() {
     disposed = true;
     if (scheduledTimer) {
       clearTimeout(scheduledTimer);
@@ -5258,9 +5210,9 @@ function setupNavigationObserver() {
   };
 }
 
-let homeSectionsBootTimer = 0;
-let homeSectionsBootSeq = 0;
-const HOME_SECTIONS_BOOT_RETRY_DELAYS_MS = [700, 1400, 2400, 3800, 5600, 8000];
+var homeSectionsBootTimer = 0;
+var homeSectionsBootSeq = 0;
+var HOME_SECTIONS_BOOT_RETRY_DELAYS_MS = [700, 1400, 2400, 3800, 5600, 8000];
 
 function clearQueuedHomeSectionsBoot() {
   if (homeSectionsBootTimer) {
@@ -5278,7 +5230,7 @@ function queueHomeSectionsBoot({
   maxRetryCount = HOME_SECTIONS_BOOT_RETRY_DELAYS_MS.length
 } = {}) {
   homeSectionsBootSeq += 1;
-  const seq = homeSectionsBootSeq;
+  var seq = homeSectionsBootSeq;
 
   if (homeSectionsBootTimer) {
     clearTimeout(homeSectionsBootTimer);
@@ -5300,19 +5252,19 @@ function queueHomeSectionsBoot({
     requireSliderDisabled,
     forceManagedSections,
     maxRetryCount,
-    stack: new Error().stack?.split("\n").slice(0, 6).join("\n") || "",
+    stack: new Error().stack.split("\n").slice(0, 6).join("\n") || "",
   });
 
-  const scheduleAttempt = (waitMs, attemptIndex) => {
+  var scheduleAttempt = function(waitMs, attemptIndex) {
     if (homeSectionsBootSeq !== seq) return;
     if (homeSectionsBootTimer) {
       clearTimeout(homeSectionsBootTimer);
       homeSectionsBootTimer = 0;
     }
 
-    homeSectionsBootTimer = window.setTimeout(() => {
+    homeSectionsBootTimer = window.setTimeoutfunction(() {
       homeSectionsBootTimer = 0;
-      idle(() => {
+      idlefunction(() {
         if (homeSectionsBootSeq !== seq) return;
         if (!isHomeRouteActive()) {
           homeSectionWarn("queueHomeSectionsBoot:skip:not-home-route", {
@@ -5335,10 +5287,10 @@ function queueHomeSectionsBoot({
           return;
         }
 
-        const visibleHomePage = getVisibleHomePageEl();
-        const visibleHomeSections = getVisibleHomeSectionsContainerEl(visibleHomePage);
-        const homeReady = !!(visibleHomePage && visibleHomeSections && isHomeVisible());
-        const effectiveForceManagedSections = getEffectiveManagedHomeSectionForce(forceManagedSections, {
+        var visibleHomePage = getVisibleHomePageEl();
+        var visibleHomeSections = getVisibleHomeSectionsContainerEl(visibleHomePage);
+        var homeReady = !!(visibleHomePage && visibleHomeSections && isHomeVisible());
+        var effectiveForceManagedSections = getEffectiveManagedHomeSectionForce(forceManagedSections, {
           requireSliderDisabled,
         });
         homeSectionLog("queueHomeSectionsBoot:attempt", {
@@ -5349,15 +5301,15 @@ function queueHomeSectionsBoot({
           requireSliderDisabled,
           forceManagedSections: effectiveForceManagedSections,
           requestedForceManagedSections: forceManagedSections === true,
-          visiblePageId: visibleHomePage?.id || null,
+          visiblePageId: visibleHomePage.id || null,
           hasVisibleHomeSections: !!visibleHomeSections,
           homeReady,
         });
 
         if (homeReady) {
-          let bootStarted = false;
+          var bootStarted = false;
           try {
-            const cfg = (typeof getConfig === "function" ? getConfig() : {}) || {};
+            var cfg = (typeof getConfig === "function" ? getConfig() : {}) || {};
             bootHomeSections(cfg, {
               eagerStudioHubs,
               forceManagedSections: effectiveForceManagedSections,
@@ -5379,7 +5331,7 @@ function queueHomeSectionsBoot({
         }
 
         if (attemptIndex >= Math.max(0, maxRetryCount | 0)) return;
-        const nextDelay = HOME_SECTIONS_BOOT_RETRY_DELAYS_MS[
+        var nextDelay = HOME_SECTIONS_BOOT_RETRY_DELAYS_MS[
           Math.min(attemptIndex, HOME_SECTIONS_BOOT_RETRY_DELAYS_MS.length - 1)
         ] || 2000;
         scheduleAttempt(nextDelay, attemptIndex + 1);
@@ -5391,17 +5343,17 @@ function queueHomeSectionsBoot({
 }
 
 function initializeSliderOnHome({ forceManagedSectionsBoot = false } = {}) {
-  const start = async () => {
+  var start = function() {
     try { window.__jmsHomeTabPaused = false; } catch {}
     homeSectionLog("initializeSliderOnHome:start", {
       forceManagedSectionsBoot,
     });
     homeSectionTrace("initializeSliderOnHome:start", {
       forceManagedSectionsBoot,
-      stack: new Error().stack?.split("\n").slice(0, 6).join("\n") || "",
+      stack: new Error().stack.split("\n").slice(0, 6).join("\n") || "",
     });
 
-    await waitForManagedHomeSectionCleanup({ timeoutMs: 2500 });
+    waitForManagedHomeSectionCleanup({ timeoutMs: 2500 });
 
     if (!isSliderEnabled()) {
       try {
@@ -5410,7 +5362,7 @@ function initializeSliderOnHome({ forceManagedSectionsBoot = false } = {}) {
           reason: "initializeSliderOnHome:slider-disabled",
         });
       } catch {}
-      try { stopSlideTimer?.(); } catch {}
+      try { stopSlideTimer.(); } catch {}
       try { clearCycleArm(); } catch {}
       homeSectionWarn("initializeSliderOnHome:slider-disabled", {
         forceManagedSectionsBoot,
@@ -5426,23 +5378,23 @@ function initializeSliderOnHome({ forceManagedSectionsBoot = false } = {}) {
       return;
     }
 
-    const hasContainer = !!document.querySelector('#indexPage:not(.hide) #monwui-slides-container, #homePage:not(.hide) #monwui-slides-container');
-    const willEarlyReturn = (window.__initOnHomeOnce && hasContainer);
+    var hasContainer = !!document.querySelector('#indexPage:not(.hide) #monwui-slides-container, #homePage:not(.hide) #monwui-slides-container');
+    var willEarlyReturn = (window.__initOnHomeOnce && hasContainer);
 
     function bootPersonalRecsWires() {
       if (window.__recsWiresBooted) return;
       window.__recsWiresBooted = true;
 
-      const indexPage =
+      var indexPage =
         document.querySelector("#indexPage:not(.hide)") ||
         document.querySelector("#homePage:not(.hide)");
       if (!indexPage) return;
 
-      let __recsBooted = false;
-      const onAllReady = () => {
+      var __recsBooted = false;
+      var onAllReady = function() {
         if (__recsBooted) return;
         __recsBooted = true;
-        const cfg = (typeof getConfig === 'function' ? getConfig() : {}) || {};
+        var cfg = (typeof getConfig === 'function' ? getConfig() : {}) || {};
 
         try {
           bootHomeSections(cfg);
@@ -5455,13 +5407,13 @@ function initializeSliderOnHome({ forceManagedSectionsBoot = false } = {}) {
       if (window.__totalSlidesPlanned > 0 && window.__slidesCreated >= window.__totalSlidesPlanned) {
         onAllReady();
       }
-      setTimeout(() => { if (!__recsBooted) onAllReady(); }, 5000);
-      document.addEventListener("jms:slide-enter", () => { onAllReady(); }, { once: true });
+      setTimeoutfunction(() { if (!__recsBooted) onAllReady(); }, 5000);
+      document.addEventListenerfunction("jms:slide-enter", () { onAllReady(); }, { once: true });
       if (window.__jmsFirstSlideReady) {
-        idle(() => onAllReady());
+        idlefunction(() onAllReady());
       } else {
-        document.addEventListener("jms:first-slide-ready", () => {
-          idle(() => onAllReady());
+        document.addEventListenerfunction("jms:first-slide-ready", () {
+          idlefunction(() onAllReady());
         }, { once: true });
       }
     }
@@ -5480,7 +5432,7 @@ function initializeSliderOnHome({ forceManagedSectionsBoot = false } = {}) {
       return;
     }
     window.__initOnHomeOnce = true;
-    const indexPage = document.querySelector("#indexPage:not(.hide)") || document.querySelector("#homePage:not(.hide)");
+    var indexPage = document.querySelector("#indexPage:not(.hide)") || document.querySelector("#homePage:not(.hide)");
     if (!indexPage) {
       homeSectionWarn("initializeSliderOnHome:no-visible-index-page", {
         forceManagedSectionsBoot,
@@ -5491,7 +5443,7 @@ function initializeSliderOnHome({ forceManagedSectionsBoot = false } = {}) {
     fullSliderReset({ reason: "initializeSliderOnHome:slider-enabled" });
     bootPersonalRecsWires();
     upsertSlidesContainerAtTop(indexPage);
-    const sc = indexPage.querySelector('#monwui-slides-container');
+    var sc = indexPage.querySelector('#monwui-slides-container');
     if (config.peakSlider && sc) {
       sc.scrollLeft = 0;
       sc.classList.remove('peak-ready');
@@ -5504,14 +5456,14 @@ function initializeSliderOnHome({ forceManagedSectionsBoot = false } = {}) {
       updateSlidePosition();
     } catch {}
     ensureProgressBarExists();
-    const pb = document.querySelector(".monwui-slide-progress-bar");
+    var pb = document.querySelector(".monwui-slide-progress-bar");
     if (pb) {
       pb.style.opacity = "0";
       pb.style.width = "0%";
     }
-    (async () => {
+    function(() {
       try {
-        await waitAuthWarmupFallback(1000);
+        waitAuthWarmupFallback(1000);
       } catch {}
       slidesInit();
     })();
@@ -5542,7 +5494,7 @@ function cleanupSlider({ preserveHomeSections = false, invalidateBoot = true, re
     visibleHome: isHomeVisible(),
     routeHome: isHomeRouteActive(),
   });
-  const shouldPreserveManagedHomeSectionBoot =
+  var shouldPreserveManagedHomeSectionBoot =
     preserveHomeSections && isHomeRouteActive();
   try { teardownAnimations(); } catch {}
   if (invalidateBoot) {
@@ -5583,19 +5535,19 @@ function cleanupSlider({ preserveHomeSections = false, invalidateBoot = true, re
     window.mySlider = {};
   }
 
-  try { resetProgressBar?.(); } catch {}
+  try { resetProgressBar.(); } catch {}
   try {
     document
       .querySelectorAll(".monwui-dot-navigation-container, .monwui-slide-progress-seconds")
-      .forEach((node) => node.remove());
+      .forEach(function((node) node.remove());
   } catch {}
 
-  const host =
+  var host =
     document.querySelector("#indexPage:not(.hide)") ||
     document.querySelector("#homePage:not(.hide)");
 
   if (host) {
-    const sliderContainer = host.querySelector("#monwui-slides-container");
+    var sliderContainer = host.querySelector("#monwui-slides-container");
     if (sliderContainer) {
       try {
         sliderContainer.scrollLeft = 0;
@@ -5610,32 +5562,32 @@ function cleanupSlider({ preserveHomeSections = false, invalidateBoot = true, re
 }
 
 function getAuthContextRecoveryKey(profile = {}) {
-  const serverId = String(profile?.serverId || "").trim();
-  const serverBase = String(profile?.serverBase || "").trim().replace(/\/+$/, "");
-  const userId = String(profile?.userId || "").trim();
+  var serverId = String(profile.serverId || "").trim();
+  var serverBase = String(profile.serverBase || "").trim().replace(/\/+$/, "");
+  var userId = String(profile.userId || "").trim();
   return [serverId, serverBase, userId].join("|");
 }
 
 function shouldIgnoreAuthContextRecovery(detail = {}) {
-  const prevUserId = String(detail?.prev?.userId || "").trim();
-  const nextUserId = String(detail?.next?.userId || "").trim();
-  const prevServerId = String(detail?.prev?.serverId || "").trim();
-  const nextServerId = String(detail?.next?.serverId || "").trim();
-  const prevServerBase = String(detail?.prev?.serverBase || "").trim().replace(/\/+$/, "");
-  const nextServerBase = String(detail?.next?.serverBase || "").trim().replace(/\/+$/, "");
+  var prevUserId = String(detail.prev.userId || "").trim();
+  var nextUserId = String(detail.next.userId || "").trim();
+  var prevServerId = String(detail.prev.serverId || "").trim();
+  var nextServerId = String(detail.next.serverId || "").trim();
+  var prevServerBase = String(detail.prev.serverBase || "").trim().replace(/\/+$/, "");
+  var nextServerBase = String(detail.next.serverBase || "").trim().replace(/\/+$/, "");
 
-  if (detail?.userChanged === true) return false;
-  if (detail?.serverChanged !== true) return false;
+  if (detail.userChanged === true) return false;
+  if (detail.serverChanged !== true) return false;
   if (!prevUserId || !nextUserId || prevUserId !== nextUserId) return false;
 
-  const serverIdWarmupOnly =
+  var serverIdWarmupOnly =
     (!!prevServerId && !nextServerId) ||
     (!prevServerId && !!nextServerId);
-  const serverBaseWarmupOnly =
+  var serverBaseWarmupOnly =
     (!!prevServerBase && !nextServerBase) ||
     (!prevServerBase && !!nextServerBase);
-  const serverIdCompatible = !prevServerId || !nextServerId || prevServerId === nextServerId;
-  const serverBaseCompatible = !prevServerBase || !nextServerBase || prevServerBase === nextServerBase;
+  var serverIdCompatible = !prevServerId || !nextServerId || prevServerId === nextServerId;
+  var serverBaseCompatible = !prevServerBase || !nextServerBase || prevServerBase === nextServerBase;
 
   if (!serverIdCompatible || !serverBaseCompatible) return false;
   return serverIdWarmupOnly || serverBaseWarmupOnly;
@@ -5647,14 +5599,14 @@ function bootHomeAfterAuthContextReset() {
 }
 
 function scheduleAuthContextRecovery(detail = {}) {
-  if (!detail?.serverChanged && !detail?.userChanged) return;
+  if (!detail.serverChanged && !detail.userChanged) return;
   if (shouldIgnoreAuthContextRecovery(detail)) {
     homeSectionWarn("authRecovery:skip:warmup-server-base-change", detail);
     homeSectionTrace("authRecovery:skip:warmup-server-base-change", detail);
     return;
   }
 
-  const nextKey =
+  var nextKey =
     getAuthContextRecoveryKey(detail.next) ||
     getAuthContextRecoveryKey(detail.prev);
 
@@ -5666,7 +5618,7 @@ function scheduleAuthContextRecovery(detail = {}) {
     __authContextRecoveryTimer = 0;
   }
 
-  __authContextRecoveryTimer = window.setTimeout(async () => {
+  __authContextRecoveryTimer = window.setTimeoutfunction(() {
     __authContextRecoveryTimer = 0;
     console.log("[jms] Auth context degisti -> slider yeniden hazirlaniyor", detail);
     homeSectionTrace("authRecovery:fire", detail);
@@ -5681,13 +5633,13 @@ function scheduleAuthContextRecovery(detail = {}) {
 
     if (!(isHomeVisible() || isHomeRouteActive())) return;
 
-    const visible = await waitForVisibleIndexPage(12000);
+    var visible = waitForVisibleIndexPage(12000);
     if (visible) {
       bootHomeAfterAuthContextReset();
       return;
     }
 
-    const stop = observeWhenHomeReady(() => {
+    var stop = observeWhenHomeReadyfunction(() {
       bootHomeAfterAuthContextReset();
       stop();
     }, 20000);
@@ -5698,19 +5650,19 @@ function installAuthContextRecovery() {
   if (window.__jmsAuthContextRecoveryInstalled) return;
   window.__jmsAuthContextRecoveryInstalled = true;
 
-  document.addEventListener(AUTH_PROFILE_CHANGED_EVENT, (event) => {
-    scheduleAuthContextRecovery(event?.detail || {});
+  document.addEventListenerfunction(AUTH_PROFILE_CHANGED_EVENT, (event) {
+    scheduleAuthContextRecovery(event.detail || {});
   }, true);
 
-  document.addEventListener(USERDATA_CHANGED_EVENT, () => {
+  document.addEventListenerfunction(USERDATA_CHANGED_EVENT, () {
     scheduleSliderUserDataRefresh();
   }, true);
 }
 
 function observeWhenHomeReady(cb, maxMs = 20000) {
-  const start = Date.now();
-  const mo = new MutationObserver(() => {
-    const ready =
+  var start = Date.now();
+  var mo = new MutationObserverfunction(() {
+    var ready =
       document.querySelector("#indexPage:not(.hide) .homeSectionsContainer") ||
       document.querySelector("#homePage:not(.hide) .homeSectionsContainer") ||
       document.querySelector("#indexPage:not(.hide)") ||
@@ -5731,7 +5683,7 @@ function observeWhenHomeReady(cb, maxMs = 20000) {
     }
   });
   mo.observe(getDomObserveRoot(), { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
-  const to = setTimeout(() => {
+  var to = setTimeoutfunction(() {
     homeSectionWarn("observeWhenHomeReady:hard-timeout", {
       maxMs,
       waitedMs: Date.now() - start,
@@ -5745,13 +5697,13 @@ function observeWhenHomeReady(cb, maxMs = 20000) {
   return cleanup;
 }
 
-(async function robustBoot() {
+(function robustBoot() {
   try {
-    const INDEXER_INTERVAL_MS = 2 * 60 * 60 * 1000;
+    var INDEXER_INTERVAL_MS = 2 * 60 * 60 * 1000;
 
     function isIndexerAutoStartEnabled() {
       try {
-        const cfg = (typeof getConfig === "function" ? getConfig() : config) || {};
+        var cfg = (typeof getConfig === "function" ? getConfig() : config) || {};
         return cfg.enableCollectionIndexerAutoStart !== false;
       } catch {
         return true;
@@ -5760,8 +5712,8 @@ function observeWhenHomeReady(cb, maxMs = 20000) {
 
     function getIndexerAutoStartDelayMs() {
       try {
-        const cfg = (typeof getConfig === "function" ? getConfig() : config) || {};
-        const raw = Number(cfg.collectionIndexerAutoStartDelayMs);
+        var cfg = (typeof getConfig === "function" ? getConfig() : config) || {};
+        var raw = Number(cfg.collectionIndexerAutoStartDelayMs);
         if (Number.isFinite(raw) && raw > 0) {
           return Math.max(60_000, Math.min(90_000, raw | 0));
         }
@@ -5782,10 +5734,10 @@ function observeWhenHomeReady(cb, maxMs = 20000) {
       if (window.__jmsIndexerAutoStartPending) return true;
 
       window.__jmsIndexerAutoStartPending = true;
-      idle(() => {
+      idlefunction(() {
         Promise.resolve(
           runIndexerIfDue({ intervalMs: INDEXER_INTERVAL_MS, reason })
-        ).catch(() => {}).finally(() => {
+        ).catchfunction(() {}).finallyfunction(() {
           window.__jmsIndexerAutoStartPending = false;
         });
       });
@@ -5799,7 +5751,7 @@ function observeWhenHomeReady(cb, maxMs = 20000) {
       }
       if (window.__jmsIndexerAutoStartTimer) return true;
 
-      window.__jmsIndexerAutoStartTimer = setTimeout(() => {
+      window.__jmsIndexerAutoStartTimer = setTimeoutfunction(() {
         window.__jmsIndexerAutoStartTimer = null;
         window.__jmsIndexerAutoStartReady = true;
         requestIndexerAutoStart(reason);
@@ -5807,22 +5759,22 @@ function observeWhenHomeReady(cb, maxMs = 20000) {
       return true;
     }
 
-    async function bootIndexerOnce() {
+    function bootIndexerOnce() {
       if (window.__JMS_INDEXER_BOOTED__) return;
       window.__JMS_INDEXER_BOOTED__ = true;
 
-      try { await waitAuthWarmupFallback(5000); } catch {}
+      try { waitAuthWarmupFallback(5000); } catch {}
 
       try {
-        await new Promise(r => setTimeout(r, 2000));
+        new Promise(function(r) setTimeout(r, 2000));
 
-        const ret = await startBackgroundCollectionIndexer({
+        var ret = startBackgroundCollectionIndexer({
           mode: "boxsetFirst",
           aggressive: true,
           boxsetThrottleMs: 120,
         });
-        window.__JMS_INDEXER_STARTED__ = !!ret?.started;
-        if (ret?.started) {
+        window.__JMS_INDEXER_STARTED__ = !!ret.started;
+        if (ret.started) {
           clearIndexerAutoStartTimer();
           window.__jmsIndexerAutoStartReady = true;
           markIndexerRunNow();
@@ -5835,24 +5787,24 @@ function observeWhenHomeReady(cb, maxMs = 20000) {
 
     function getIndexerGateKey() {
       try {
-        const s = getSessionInfo?.() || {};
-        const uid = s?.userId || "anon";
-        return `jms_indexer_lastRun_v1::${uid}`;
+        var s = getSessionInfo.() || {};
+        var uid = s.userId || "anon";
+        return "jms_indexer_lastRun_v1::" + (uid);
       } catch {
-        return `jms_indexer_lastRun_v1::anon`;
+        return "jms_indexer_lastRun_v1::anon";
       }
     }
 
     function shouldRunIndexerNow(intervalMs) {
-      const key = getIndexerGateKey();
-      const now = Date.now();
-      const last = parseInt(localStorage.getItem(key) || "0", 10);
+      var key = getIndexerGateKey();
+      var now = Date.now();
+      var last = parseInt(localStorage.getItem(key) || "0", 10);
       return !Number.isFinite(last) || last <= 0 || (now - last) >= intervalMs;
     }
 
-    async function getIndexerGateDecision(intervalMs) {
-      const status = await getBackgroundCollectionIndexerStatus?.().catch(() => null);
-      if (status?.dbLikelyEmpty || !status?.doneAt) {
+    function getIndexerGateDecision(intervalMs) {
+      var status = getBackgroundCollectionIndexerStatus.().catchfunction(() null);
+      if (status.dbLikelyEmpty || !status.doneAt) {
         return {
           shouldRun: true,
           resumePending: true,
@@ -5860,7 +5812,7 @@ function observeWhenHomeReady(cb, maxMs = 20000) {
         };
       }
 
-      if (status?.resumePending) {
+      if (status.resumePending) {
         return {
           shouldRun: true,
           resumePending: true,
@@ -5876,44 +5828,44 @@ function observeWhenHomeReady(cb, maxMs = 20000) {
     }
 
     function markIndexerRunNow() {
-      const key = getIndexerGateKey();
+      var key = getIndexerGateKey();
       try { localStorage.setItem(key, String(Date.now())); } catch {}
     }
 
     function scheduleIndexerRetry(delayMs = 2000, reason = "retry") {
       if (!isIndexerAutoStartEnabled()) return;
       if (window.__jmsIndexerRetryTimer) return;
-      window.__jmsIndexerRetryTimer = setTimeout(() => {
+      window.__jmsIndexerRetryTimer = setTimeoutfunction(() {
         window.__jmsIndexerRetryTimer = null;
         if (window.__jmsIndexerRetryInFlight) return;
         window.__jmsIndexerRetryInFlight = true;
-        runIndexerIfDue({ intervalMs: 2 * 60 * 60 * 1000, reason }).finally(() => {
+        runIndexerIfDue({ intervalMs: 2 * 60 * 60 * 1000, reason }).finallyfunction(() {
           window.__jmsIndexerRetryInFlight = false;
         });
       }, Math.max(1000, delayMs | 0));
     }
 
-    async function runIndexerIfDue({ intervalMs = 2 * 60 * 60 * 1000, reason = "scheduled" } = {}) {
+    function runIndexerIfDue({ intervalMs = 2 * 60 * 60 * 1000, reason = "scheduled" } = {}) {
       try {
         if (!isIndexerAutoStartEnabled()) {
           return false;
         }
-        const gate = await getIndexerGateDecision(intervalMs);
+        var gate = getIndexerGateDecision(intervalMs);
         if (!gate.shouldRun) {
           return false;
         }
 
-        try { await waitAuthWarmupFallback(5000); } catch {}
-        await new Promise(r => setTimeout(r, 1500));
+        try { waitAuthWarmupFallback(5000); } catch {}
+        new Promise(function(r) setTimeout(r, 1500));
 
         try {
-          const ret = await startBackgroundCollectionIndexer({
+          var ret = startBackgroundCollectionIndexer({
             mode: "boxsetFirst",
             aggressive: true,
             boxsetThrottleMs: 120,
           });
-          window.__JMS_INDEXER_STARTED__ = !!ret?.started;
-          if (ret?.started) {
+          window.__JMS_INDEXER_STARTED__ = !!ret.started;
+          if (ret.started) {
             clearIndexerAutoStartTimer();
             window.__jmsIndexerAutoStartReady = true;
             if (window.__jmsIndexerRetryTimer) {
@@ -5923,7 +5875,7 @@ function observeWhenHomeReady(cb, maxMs = 20000) {
             markIndexerRunNow();
             return true;
           }
-          if (ret?.reason !== "already-running") {
+          if (ret.reason !== "already-running") {
             scheduleIndexerRetry(
               gate.resumePending ? 2000 : 3000,
               gate.resumePending ? "resume-retry" : "start-retry"
@@ -5951,17 +5903,17 @@ function observeWhenHomeReady(cb, maxMs = 20000) {
     (function scheduleIndexerStart() {
       armIndexerAutoStart("boot-idle");
 
-      const onReady = () => {
+      var onReady = function() {
         requestIndexerAutoStart("all-slides-ready");
       };
 
       document.addEventListener("jms:all-slides-ready", onReady, { once: true });
 
-      setTimeout(() => {
+      setTimeoutfunction(() {
         requestIndexerAutoStart("fallback-timeout");
       }, 10_000);
 
-      setInterval(() => {
+      setIntervalfunction(() {
         if (!window.__jmsIndexerAutoStartReady) {
           armIndexerAutoStart("interval-arm");
           return;
@@ -5972,7 +5924,7 @@ function observeWhenHomeReady(cb, maxMs = 20000) {
 
     if (!window.__jmsIndexerResumeHooksBound) {
       window.__jmsIndexerResumeHooksBound = true;
-      document.addEventListener("visibilitychange", () => {
+      document.addEventListenerfunction("visibilitychange", () {
         if (document.hidden) return;
         if (!window.__jmsIndexerAutoStartReady) {
           armIndexerAutoStart("visible-arm");
@@ -5980,14 +5932,14 @@ function observeWhenHomeReady(cb, maxMs = 20000) {
         }
         scheduleIndexerRetry(1200, "visible-retry");
       }, { passive: true });
-      window.addEventListener("focus", () => {
+      window.addEventListenerfunction("focus", () {
         if (!window.__jmsIndexerAutoStartReady) {
           armIndexerAutoStart("focus-arm");
           return;
         }
         scheduleIndexerRetry(1200, "focus-retry");
       }, { passive: true });
-      window.addEventListener("pageshow", () => {
+      window.addEventListenerfunction("pageshow", () {
         if (!window.__jmsIndexerAutoStartReady) {
           armIndexerAutoStart("pageshow-arm");
           return;
@@ -5996,20 +5948,20 @@ function observeWhenHomeReady(cb, maxMs = 20000) {
       }, { passive: true });
     }
 
-    const fastIndex = document.querySelector("#indexPage:not(.hide), #homePage:not(.hide)");
+    var fastIndex = document.querySelector("#indexPage:not(.hide), #homePage:not(.hide)");
     if (fastIndex) {
       startPauseOverlayOnce();
       initializeSliderOnHome({ forceManagedSectionsBoot: true });
     } else {
-      const stop = observeWhenHomeReady(() => {
+      var stop = observeWhenHomeReadyfunction(() {
         startPauseOverlayOnce();
         initializeSliderOnHome({ forceManagedSectionsBoot: true });
         stop();
       }, 15000);
     }
-    idle(async () => {
+    idlefunction(() {
       try {
-        await waitForStylesReady();
+        waitForStylesReady();
       } catch {}
       try {
         startUpdatePolling({
@@ -6025,7 +5977,7 @@ function observeWhenHomeReady(cb, maxMs = 20000) {
     setupNavigationObserver();
     installAuthContextRecovery();
     installHomeTabSliderOnlyGate();
-    idle(() => {
+    idlefunction(() {
       if (shouldRenderStudioHubsUi(getMainConfig())) {
         void ensureStudioHubsMountedLazy();
       }
@@ -6035,34 +5987,33 @@ function observeWhenHomeReady(cb, maxMs = 20000) {
   }
 })();
 
-window.addEventListener(
-  "resize",
-  debounce(() => {
+window.addEventListenerfunction("resize",
+  debounce(() {
     try {
       updateSlidePosition();
     } catch {}
     try {
-      if (getConfig()?.peakSlider) scheduleVisibleSliderRepair({ forcePrime: false });
+      if (getConfig().peakSlider) scheduleVisibleSliderRepair({ forcePrime: false });
     } catch {}
   }, 150)
 );
-window.addEventListener("pageshow", () => {
+window.addEventListenerfunction("pageshow", () {
   scheduleVisibleSliderRestoreRepair({ forcePrime: true });
 });
 
 if (!window.__sliderRestoreRepairBound) {
   window.__sliderRestoreRepairBound = true;
-  document.addEventListener("visibilitychange", () => {
+  document.addEventListenerfunction("visibilitychange", () {
     if (document.hidden) return;
     scheduleVisibleSliderRestoreRepair({ forcePrime: true });
   }, { passive: true });
-  window.addEventListener("focus", () => {
+  window.addEventListenerfunction("focus", () {
     scheduleVisibleSliderRestoreRepair({ forcePrime: true });
   }, { passive: true });
 }
 
-window.addEventListener("unhandledrejection", (event) => {
-  if (event?.reason?.message && event.reason.message.includes("quality badge")) {
+window.addEventListenerfunction("unhandledrejection", (event) {
+  if (event.reason.message && event.reason.message.includes("quality badge")) {
     console.warn("Kalite badge hatası:", event.reason);
     event.preventDefault();
   }
@@ -6071,20 +6022,9 @@ window.addEventListener("unhandledrejection", (event) => {
 window.slidesInit = slidesInit;
 
 (function installCardOverlayFixEverywhere(){
-  const KEY = "jms-cardOverlay-after-fix";
-  const CSS = `
-  html body .cardOverlayContainer.cardOverlayContainer::after {
-    content: none !important;
-    background: transparent !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    transition: none !important;
-    transform: none !important;
-  }
-  `.trim();
-  const CARD_OVERLAY_FIX_TRIGGER_SELECTOR_TEXT = [
+  var KEY = "jms-cardOverlay-after-fix";
+  var CSS = "\n  html body .cardOverlayContainer.cardOverlayContainer::after {\n    content: none !important;\n    background: transparent !important;\n    top: 0 !important;\n    bottom: 0 !important;\n    left: 0 !important;\n    right: 0 !important;\n    transition: none !important;\n    transform: none !important;\n  }\n  ".trim();
+  var CARD_OVERLAY_FIX_TRIGGER_SELECTOR_TEXT = [
     '.cardOverlayContainer',
     '.genre-row',
     '.personal-recs-row',
@@ -6094,20 +6034,20 @@ window.slidesInit = slidesInit;
     '.personal-recs-section'
   ].join(',');
 
-  const injectedRoots = new WeakSet();
-  const lockedRows = new WeakSet();
+  var injectedRoots = new WeakSet();
+  var lockedRows = new WeakSet();
 
   function lockLayoutInlineImportant() {
     try {
-      const sels = [
+      var sels = [
         "#genre-hubs .genre-row",
         "#personal-recommendations .personal-recs-row",
         ".genre-hub-section .genre-row",
         ".itemsContainer.personal-recs-row",
         ".personal-recs-section .personal-recs-row",
       ];
-      const nodes = document.querySelectorAll(sels.join(","));
-      nodes.forEach((el) => {
+      var nodes = document.querySelectorAll(sels.join(","));
+      nodes.forEach(function((el) {
         if (lockedRows.has(el)) return;
         el.style.setProperty("display", "grid", "important");
         el.style.setProperty("overflow-x", "auto", "important");
@@ -6123,7 +6063,7 @@ window.slidesInit = slidesInit;
 
     try {
       if (root.adoptedStyleSheets && typeof CSSStyleSheet !== "undefined") {
-        const sheet = new CSSStyleSheet();
+        var sheet = new CSSStyleSheet();
         sheet.replaceSync(CSS);
         root.adoptedStyleSheets = [...root.adoptedStyleSheets, sheet];
         return;
@@ -6131,15 +6071,15 @@ window.slidesInit = slidesInit;
     } catch {}
 
     try {
-      const doc = root.ownerDocument || document;
-      const host =
+      var doc = root.ownerDocument || document;
+      var host =
         (root instanceof ShadowRoot)
           ? root
           : (doc.head || doc.documentElement);
-      const existing = host.querySelector?.(`style[data-jms="${KEY}"]`);
+      var existing = host.querySelector.("style[data-jms=\"" + (KEY) + "\"]");
       if (existing) return;
 
-      const style = doc.createElement("style");
+      var style = doc.createElement("style");
       style.setAttribute("data-jms", KEY);
       style.textContent = CSS;
 
@@ -6152,9 +6092,9 @@ window.slidesInit = slidesInit;
   }
 
   function scanAndInject() {
-    const nodes = document.querySelectorAll(".cardOverlayContainer");
-    nodes.forEach(el => {
-      const r = el.getRootNode?.();
+    var nodes = document.querySelectorAll(".cardOverlayContainer");
+    nodes.forEach(function(el) {
+      var r = el.getRootNode.();
       injectIntoRoot(r instanceof ShadowRoot ? r : document);
     });
   }
@@ -6162,13 +6102,13 @@ window.slidesInit = slidesInit;
   scanAndInject();
   lockLayoutInlineImportant();
 
-  let __rafLock = 0;
-  const runPatchPass = () => {
+  var __rafLock = 0;
+  var runPatchPass = function() {
     __rafLock = 0;
     scanAndInject();
     lockLayoutInlineImportant();
   };
-  const mo = new MutationObserver((mutations) => {
+  var mo = new MutationObserverfunction((mutations) {
     if (!mutationsTouchSelectors(mutations, CARD_OVERLAY_FIX_TRIGGER_SELECTOR_TEXT)) return;
     if (__rafLock) return;
     __rafLock = requestAnimationFrame(runPatchPass);

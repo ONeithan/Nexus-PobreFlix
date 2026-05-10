@@ -1,35 +1,38 @@
 (function () {
   function getJfRootFromLocation() {
     try {
-      const baseElement = document.querySelector("base[href]");
-      const baseHref = baseElement ? baseElement.getAttribute("href") : null;
+      var baseElement = document.querySelector("base[href]");
+      var baseHref = baseElement ? baseElement.getAttribute("href") : null;
       if (baseHref) {
-        const url = new URL(baseHref, window.location.href);
+        var url = new URL(baseHref, window.location.href);
         return String(url.pathname || "")
           .replace(/\/web\/?$/i, "")
           .replace(/\/+$/, "");
       }
     } catch (e) {}
 
-    const path = String(window.location.pathname || "/");
-    const match = path.match(/^(.*?)(?:\/web(?:\/|$).*)$/i);
+    var path = String(window.location.pathname || "/");
+    var match = path.match(/^(.*?)(?:\/web(?:\/|$).*)$/i);
     return (match && match[1]) ? match[1].replace(/\/+$/, "") : "";
   }
 
-  const jfRoot = getJfRootFromLocation();
-  const langModuleUrl = `${window.location.origin}${jfRoot}/slider/language/index.js`;
-  const webSettingsModuleUrl = `${window.location.origin}${jfRoot}/Plugins/NexusPobreFlix/assets/settings.js`;
-  const sliderSettingsCssUrl = `${window.location.origin}${jfRoot}/slider/src/settings.css`;
-  const TAB_STORAGE_KEY = "NexusPobreFlix-config-active-tab";
-  const NEXUS_SUBTAB_STORAGE_KEY = "NexusPobreFlix-requested-subtab";
+  var jfRoot = getJfRootFromLocation();
+  var langModuleUrl = String(window.location.origin) + String(jfRoot) + "/slider/language/index.js";
+  var webSettingsModuleUrl = String(window.location.origin) + String(jfRoot) + "/Plugins/NexusPobreFlix/assets/settings.js";
+  var sliderSettingsCssUrl = String(window.location.origin) + String(jfRoot) + "/slider/src/settings.css";
+  var TAB_STORAGE_KEY = "NexusPobreFlix-config-active-tab";
+  var NEXUS_SUBTAB_STORAGE_KEY = "NexusPobreFlix-requested-subtab";
 
-  const api = (p) => String(jfRoot || "") + "/Plugins/NexusPobreFlix/" + String(p);
-  const esc = (s) => {
-    const val = (s === null || s === undefined) ? "" : s;
-    return val.toString().replace(/[&<>]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[m]));
+  var api = function(p) { return String(jfRoot || "") + "/Plugins/NexusPobreFlix/" + String(p); };
+  var esc = function(s) {
+    var val = (s === null || s === undefined) ? "" : s;
+    return val.toString().replace(/[&<>]/g, function(m) {
+       var entities = { "&": "&amp;", "<": "&lt;", ">": "&gt;" };
+       return entities[m];
+    });
   };
 
-  const fallbackLabels = {
+  var fallbackLabels = {
     webConfig: {
       heroEyebrow: "Configuração do Plugin",
       heroTitle: "Nexus PobreFlix — Painel de Controle",
@@ -125,7 +128,7 @@
     }
   };
 
-  const state = {
+  var state = {
     labels: fallbackLabels,
     lang: "eng"
   };
@@ -133,31 +136,32 @@
   function getByPath(obj, pathExpr) {
     return String(pathExpr || "")
       .split(".")
-      .reduce((acc, key) => (acc && acc[key] != null ? acc[key] : null), obj);
+      .reduce(function(acc, key) { return (acc && acc[key] != null ? acc[key] : null); }, obj);
   }
 
-  function t(pathExpr, fallback = "") {
-    const value = getByPath(state.labels, pathExpr);
+  function t(pathExpr, fallback) {
+    if (fallback === undefined) fallback = "";
+    var value = getByPath(state.labels, pathExpr);
     return value == null ? fallback : value;
   }
 
   function setText(view, selector, text) {
-    const el = view.querySelector(selector);
+    var el = view.querySelector(selector);
     if (el) el.textContent = text;
   }
 
   function setHtml(view, selector, html) {
-    const el = view.querySelector(selector);
+    var el = view.querySelector(selector);
     if (el) el.innerHTML = html;
   }
 
   function setPlaceholder(view, selector, text) {
-    const el = view.querySelector(selector);
+    var el = view.querySelector(selector);
     if (el) el.setAttribute("placeholder", text);
   }
 
   function ensureStylesheet(key, href) {
-    let link = document.querySelector(`link[data-nexus-config-css="${key}"]`);
+    var link = document.querySelector('link[data-nexus-config-css="' + String(key) + '"]');
     if (!link) {
       link = document.createElement("link");
       link.rel = "stylesheet";
@@ -171,7 +175,7 @@
   }
 
   function getLanguageDisplayName(code) {
-    const map = {
+    var map = {
       tur: "Turkce",
       eng: "English",
       deu: "Deutsch",
@@ -184,75 +188,83 @@
   }
 
   function webRootLabel() {
-    return `${jfRoot || ""}/web` || "/web";
+    return (jfRoot || "") + "/web" || "/web";
   }
 
-  async function loadLanguagePack() {
-    try {
-      const mod = await import(langModuleUrl);
-      const lang = typeof mod.getEffectiveLanguage === "function"
-        ? mod.getEffectiveLanguage()
-        : (typeof mod.detectBrowserLanguage === "function" ? mod.detectBrowserLanguage() : "eng");
-      const labels = typeof mod.getLanguageLabels === "function"
-        ? mod.getLanguageLabels(lang)
-        : null;
-
-      if (labels) {
-        state.labels = labels;
-        state.lang = lang || "eng";
-        return;
+  function loadLanguagePack() {
+    return (function() {
+      if (typeof import !== "undefined") {
+         return import(langModuleUrl);
       }
-    } catch {}
+      return Promise.reject("ESM not supported");
+    })()
+      .then(function(mod) {
+        var lang = typeof mod.getEffectiveLanguage === "function"
+          ? mod.getEffectiveLanguage()
+          : (typeof mod.detectBrowserLanguage === "function" ? mod.detectBrowserLanguage() : "eng");
+        var labels = typeof mod.getLanguageLabels === "function"
+          ? mod.getLanguageLabels(lang)
+          : null;
 
-    state.labels = fallbackLabels;
-    state.lang = "eng";
+        if (labels) {
+          state.labels = labels;
+          state.lang = lang || "eng";
+        }
+      })
+      .catch(function() {
+        state.labels = fallbackLabels;
+        state.lang = "eng";
+      });
   }
 
-  function showMessage(view, text, kind = "") {
-    const el = view.querySelector("#msg");
+  function showMessage(view, text, kind) {
+    if (kind === undefined) kind = "";
+    var el = view.querySelector("#msg");
     if (!el) return;
-    el.className = `fieldDescription ${kind}`.trim();
+    el.className = ("fieldDescription " + String(kind)).trim();
     el.textContent = text;
     clearTimeout(el.__t);
-    el.__t = setTimeout(() => {
+    el.__t = setTimeout(function() {
       el.textContent = "";
       el.className = "fieldDescription";
     }, 3200);
   }
 
-  function renderNexusPobreFlixSettingsPlaceholder(view, text, tone = "") {
-    const host = view.querySelector("#NexusPobreFlixSettingsHost");
+  function renderNexusPobreFlixSettingsPlaceholder(view, text, tone) {
+    if (tone === undefined) tone = "";
+    var host = view.querySelector("#NexusPobreFlixSettingsHost");
     if (!host) return;
 
-    const placeholder = document.createElement("div");
+    var placeholder = document.createElement("div");
     placeholder.id = "NexusPobreFlixSettingsPlaceholder";
-    placeholder.className = `nexus-empty ${tone ? `nexus-empty--${tone}` : ""}`.trim();
+    placeholder.className = ("nexus-empty " + (tone ? "nexus-empty--" + String(tone) : "")).trim();
     placeholder.textContent = text;
     host.replaceChildren(placeholder);
   }
 
   function consumeRequestedNexusPobreFlixSettingsTab() {
-    let value = "";
+    var value = "";
     try {
       value = sessionStorage.getItem(NEXUS_SUBTAB_STORAGE_KEY) || "";
       if (value) sessionStorage.removeItem(NEXUS_SUBTAB_STORAGE_KEY);
-    } catch {}
+    } catch (e) {}
     return String(value || "").trim() || "NexusPobreFlix";
   }
 
-  async function ensureNexusPobreFlixSettings(view, { force = false } = {}) {
-    const host = view.querySelector("#NexusPobreFlixSettingsHost");
-    const reloadBtn = view.querySelector("#reloadNexusPobreFlixSettingsBtn");
-    if (!host) return null;
+  function ensureNexusPobreFlixSettings(view, opts) {
+    var force = (opts && opts.force === true);
+    var host = view.querySelector("#NexusPobreFlixSettingsHost");
+    var reloadBtn = view.querySelector("#reloadNexusPobreFlixSettingsBtn");
+    if (!host) return Promise.resolve(null);
 
-    const requestedInnerTab = consumeRequestedNexusPobreFlixSettingsTab();
+    var requestedInnerTab = consumeRequestedNexusPobreFlixSettingsTab();
 
     if (!force && host.__nexusReady && host.querySelector("#settings-modal")) {
-      const existingApi = host.__nexusApi || host.__nexusSettingsApi || null;
+      var existingApi = host.__nexusApi || host.__nexusSettingsApi || null;
       if (existingApi && typeof existingApi.open === "function") {
         existingApi.open(requestedInnerTab);
       }
-      return host.querySelector("#settings-modal");
+      return Promise.resolve(host.querySelector("#settings-modal"));
     }
 
     if (host.__nexusPromise) {
@@ -266,34 +278,42 @@
     );
     if (reloadBtn) reloadBtn.disabled = true;
 
-    host.__nexusPromise = (async () => {
+    host.__nexusPromise = (function() {
       ensureStylesheet("NexusPobreFlix-settings", sliderSettingsCssUrl);
 
-      const settingsModule = await import(webSettingsModuleUrl);
-      const settingsApi = (settingsModule && typeof settingsModule.mountNexusPobreFlixSettingsPage === "function")
-        ? await settingsModule.mountNexusPobreFlixSettingsPage(host, {
-            defaultTab: requestedInnerTab,
-            force: force
-          })
-        : null;
-      const modal = settingsApi?.element || host.querySelector("#settings-modal");
+      return (function() {
+        if (typeof import !== "undefined") {
+          return import(webSettingsModuleUrl);
+        }
+        return Promise.reject("ESM not supported");
+      })().then(function(settingsModule) {
+        if (settingsModule && typeof settingsModule.mountNexusPobreFlixSettingsPage === "function") {
+           return settingsModule.mountNexusPobreFlixSettingsPage(host, {
+              defaultTab: requestedInnerTab,
+              force: force
+           });
+        }
+        return null;
+      }).then(function(settingsApi) {
+        var modal = (settingsApi && settingsApi.element) || host.querySelector("#settings-modal");
 
-      if (!modal || !settingsApi) {
-        throw new Error("Nexus PobreFlix settings page is not available.");
-      }
+        if (!modal || !settingsApi) {
+          throw new Error("Nexus PobreFlix settings page is not available.");
+        }
 
-      host.__nexusApi = settingsApi;
-      host.__nexusReady = true;
-      view.__NexusPobreFlixSettingsLoaded = true;
-      return modal;
+        host.__nexusApi = settingsApi;
+        host.__nexusReady = true;
+        view.__NexusPobreFlixSettingsLoaded = true;
+        return modal;
+      });
     })()
-      .catch((error) => {
-        const fallback = t("webConfig.messages.NexusPobreFlixSettingsLoadFailed", "Nexus PobreFlix settings could not be loaded.");
-        const detail = String((error && error.message) || "").trim();
+      .catch(function(error) {
+        var fallback = t("webConfig.messages.NexusPobreFlixSettingsLoadFailed", "Nexus PobreFlix settings could not be loaded.");
+        var detail = String((error && error.message) || "").trim();
         renderNexusPobreFlixSettingsPlaceholder(view, detail ? String(fallback) + " " + String(detail) : fallback, "error");
         throw error;
       })
-      .finally(() => {
+      .finally(function() {
         host.__nexusPromise = null;
         if (reloadBtn) reloadBtn.disabled = false;
       });
@@ -302,24 +322,28 @@
   }
 
   function activateTab(view, tabName) {
-    view.querySelectorAll(".nexus-tab").forEach((tab) => {
-      const active = tab.dataset.tab === tabName;
-      tab.classList.toggle("is-active", active);
-      tab.setAttribute("aria-selected", active ? "true" : "false");
-    });
+    var tabs = view.querySelectorAll(".nexus-tab");
+    for (var i = 0; i < tabs.length; i++) {
+       var tab = tabs[i];
+       var active = tab.dataset.tab === tabName;
+       tab.classList.toggle("is-active", active);
+       tab.setAttribute("aria-selected", active ? "true" : "false");
+    }
 
-    view.querySelectorAll(".nexus-panel").forEach((panel) => {
-      const active = panel.dataset.panel === tabName;
-      panel.classList.toggle("is-active", active);
-      panel.hidden = !active;
-    });
+    var panels = view.querySelectorAll(".nexus-panel");
+    for (var j = 0; j < panels.length; j++) {
+       var panel = panels[j];
+       var pActive = panel.dataset.panel === tabName;
+       panel.classList.toggle("is-active", pActive);
+       panel.hidden = !pActive;
+    }
 
     try {
       localStorage.setItem(TAB_STORAGE_KEY, tabName);
-    } catch {}
+    } catch (e) {}
 
     if (tabName === "NexusPobreFlix-settings") {
-      ensureNexusPobreFlixSettings(view).catch((error) => {
+      ensureNexusPobreFlixSettings(view).catch(function(error) {
         console.error("Nexus PobreFlix settings load failed:", error);
       });
     }
@@ -329,13 +353,18 @@
     if (view.__nexus_tabs_bound) return;
     view.__nexus_tabs_bound = true;
 
-    view.querySelectorAll(".nexus-tab").forEach((tab) => {
-      tab.addEventListener("click", () => activateTab(view, tab.dataset.tab || "NexusPobreFlix"));
-    });
+    var tabs = view.querySelectorAll(".nexus-tab");
+    for (var i = 0; i < tabs.length; i++) {
+      (function(tab) {
+        tab.addEventListener("click", function() {
+          activateTab(view, tab.dataset.tab || "NexusPobreFlix");
+        });
+      })(tabs[i]);
+    }
 
-    let active = "NexusPobreFlix";
+    var active = "NexusPobreFlix";
     try {
-      const stored = localStorage.getItem(TAB_STORAGE_KEY);
+      var stored = localStorage.getItem(TAB_STORAGE_KEY);
       if (stored && (stored === "NexusPobreFlix" || stored === "NexusPobreFlix-settings" || stored === "status" || stored === "snippet")) {
         active = stored;
       }
@@ -416,46 +445,57 @@
     if (typeof view.__inmemOk === "boolean") renderInMem(view, view.__inmemOk);
   }
 
-  async function loadConfig(view) {
-    const r = await fetch(api("Configuration"));
-    if (!r.ok) throw new Error("Failed to load config: " + r.status);
-    const cfg = await r.json();
-    view.__physicalPatchFallbackEnabled = !!cfg.enablePhysicalIndexHtmlPatchFallback;
-    view.querySelector("#scriptDir").value = cfg.scriptDirectory || "";
-    view.querySelector("#playerSub").value = cfg.playerSubdir || "modules/player";
-    const fg = view.querySelector("#forceGlobal");
-    if (fg) fg.checked = !!cfg.forceGlobalUserSettings;
-    return cfg;
+  function loadConfig(view) {
+    return fetch(api("Configuration"))
+      .then(function(r) {
+        if (!r.ok) throw new Error("Failed to load config: " + r.status);
+        return r.json();
+      })
+      .then(function(cfg) {
+        view.__physicalPatchFallbackEnabled = !!cfg.enablePhysicalIndexHtmlPatchFallback;
+        view.querySelector("#scriptDir").value = cfg.scriptDirectory || "";
+        view.querySelector("#playerSub").value = cfg.playerSubdir || "modules/player";
+        var fg = view.querySelector("#forceGlobal");
+        if (fg) fg.checked = !!cfg.forceGlobalUserSettings;
+        return cfg;
+      });
   }
 
-  async function postConfiguration(body) {
-    const r = await fetch(api("Configuration"), {
+  function postConfiguration(body) {
+    return fetch(api("Configuration"), {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify(body)
+    }).then(function(r) {
+      if (!r.ok) {
+        return r.text().then(function(txt) {
+          throw new Error("Save failed: " + r.status + " - " + txt);
+        });
+      }
     });
-
-    if (!r.ok) throw new Error("Save failed: " + r.status + " - " + await r.text());
   }
 
-  async function saveConfig(view) {
-    const body = {
+  function saveConfig(view) {
+    var body = {
       scriptDirectory: view.querySelector("#scriptDir").value.trim(),
       playerSubdir: view.querySelector("#playerSub").value.trim(),
       forceGlobalUserSettings: !!(view.querySelector("#forceGlobal") && view.querySelector("#forceGlobal").checked)
     };
 
-    await postConfiguration(body);
+    return postConfiguration(body);
   }
 
-  async function getStatus() {
-    const r = await fetch(api("Status"));
-    if (!r.ok) throw new Error("Failed to get status: " + r.status);
-    return await r.json();
+  function getStatus() {
+    return fetch(api("Status"))
+      .then(function(r) {
+        if (!r.ok) throw new Error("Failed to get status: " + r.status);
+        return r.json();
+      });
   }
 
-  function statusBadge(text, tone = "is-good") {
-    return `<span class="nexus-badge ${tone}">${esc(text)}</span>`;
+  function statusBadge(text, tone) {
+    if (tone === undefined) tone = "is-good";
+    return '<span class="nexus-badge ' + String(tone) + '">' + esc(text) + '</span>';
   }
 
   function yesNo(value) {
@@ -466,10 +506,10 @@
 
   function renderStatus(view, s) {
     view.__statusData = s;
-    const el = view.querySelector("#status");
+    var el = view.querySelector("#status");
     if (!el) return;
 
-    const rows = [
+    var rows = [
       {
         label: t("webConfig.status.configured", "Configured"),
         value: statusBadge(yesNo(s.configured), s.configured ? "is-good" : "is-bad")
@@ -492,42 +532,47 @@
       },
       {
         label: t("webConfig.status.playerPath", "Resolved player path"),
-        value: `<code>${esc(s.playerPath || "-")}</code>`
+        value: '<code>' + esc(s.playerPath || "-") + '</code>'
       }
     ];
 
-    el.innerHTML = rows.map((row) => `
-      <div class="nexus-status-row">
-        <div class="nexus-status-label">${esc(row.label)}</div>
-        <div class="nexus-status-value">${row.value}</div>
-      </div>
-    `).join("");
+    el.innerHTML = rows.map(function(row) {
+      return '\n      <div class="nexus-status-row">\n        <div class="nexus-status-label">' + esc(row.label) + '</div>\n        <div class="nexus-status-value">' + row.value + '</div>\n      </div>\n    ';
+    }).join("");
   }
 
-  async function showStatus(view) {
-    renderStatus(view, await getStatus());
+  function showStatus(view) {
+    return getStatus().then(function(s) {
+       renderStatus(view, s);
+    });
   }
 
-  async function showSnippet(view) {
-    const r = await fetch(api("Snippet"));
-    if (!r.ok) throw new Error("Failed to get snippet: " + r.status);
-    const html = await r.text();
-    const box = view.querySelector("#snippet");
-    if (!box) return;
+  function showSnippet(view) {
+    return fetch(api("Snippet"))
+      .then(function(r) {
+        if (!r.ok) throw new Error("Failed to get snippet: " + r.status);
+        return r.text();
+      })
+      .then(function(html) {
+        var box = view.querySelector("#snippet");
+        if (!box) return;
 
-    const parsed = new DOMParser().parseFromString(html, "text/html");
-    box.innerHTML = (parsed && parsed.body && parsed.body.innerHTML) || html;
-    view.__snippetLoaded = true;
+        var parsed = new DOMParser().parseFromString(html, "text/html");
+        box.innerHTML = (parsed && parsed.body && parsed.body.innerHTML) || html;
+        view.__snippetLoaded = true;
+      });
   }
 
-  async function getEnv() {
-    const r = await fetch(api("Env"));
-    if (!r.ok) throw new Error("Failed to get env: " + r.status);
-    return await r.json();
+  function getEnv() {
+    return fetch(api("Env"))
+      .then(function(r) {
+        if (!r.ok) throw new Error("Failed to get env: " + r.status);
+        return r.json();
+      });
   }
 
   function fileState(exists, writable) {
-    const parts = [
+    var parts = [
       statusBadge(
         exists ? t("webConfig.env.found", "Found") : t("webConfig.env.notFound", "Not found"),
         exists ? "is-good" : "is-bad"
@@ -551,34 +596,36 @@
     setText(view, "#envUser", env.user || "?");
     setText(view, "#envWebRoot", env.webRoot || "(not found)");
 
-    const idx = view.querySelector("#envIdx");
-    const gz = view.querySelector("#envGz");
-    const br = view.querySelector("#envBr");
-    if (idx) idx.innerHTML = fileState(env.files?.indexHtml?.exists, env.files?.indexHtml?.writable);
-    if (gz) gz.innerHTML = fileState(env.files?.indexGz?.exists, env.files?.indexGz?.writable);
-    if (br) br.innerHTML = fileState(env.files?.indexBr?.exists, env.files?.indexBr?.writable);
+    var idx = view.querySelector("#envIdx");
+    var gz = view.querySelector("#envGz");
+    var br = view.querySelector("#envBr");
+    if (idx) idx.innerHTML = fileState(env.files && env.files.indexHtml && env.files.indexHtml.exists, env.files && env.files.indexHtml && env.files.indexHtml.writable);
+    if (gz) gz.innerHTML = fileState(env.files && env.files.indexGz && env.files.indexGz.exists, env.files && env.files.indexGz && env.files.indexGz.writable);
+    if (br) br.innerHTML = fileState(env.files && env.files.indexBr && env.files.indexBr.exists, env.files && env.files.indexBr && env.files.indexBr.writable);
 
-    const aclEl = view.querySelector("#envAcl");
+    var aclEl = view.querySelector("#envAcl");
     if (aclEl) {
-      const primary = (env.acl && env.acl.primary) || t("webConfig.messages.envPending", "(not computed yet)");
-      const alternative = (env.acl && env.acl.alternative)
+      var primary = (env.acl && env.acl.primary) || t("webConfig.messages.envPending", "(not computed yet)");
+      var alternative = (env.acl && env.acl.alternative)
         ? "\n\n# " + String(t("webConfig.env.alternativeAcl", "Alternative")) + ":\n" + String(env.acl.alternative)
         : "";
       aclEl.textContent = String(primary) + String(alternative);
     }
   }
 
-  async function refreshEnv(view) {
-    renderEnv(view, await getEnv());
-    showMessage(view, t("webConfig.messages.webPathUpdated", "Web path and permissions updated."), "ok");
+  function refreshEnv(view) {
+    return getEnv().then(function(env) {
+       renderEnv(view, env);
+       showMessage(view, t("webConfig.messages.webPathUpdated", "Web path and permissions updated."), "ok");
+    });
   }
 
   function syncEnvCardVisibility(view) {
     if (!view) return;
 
-    const shouldHideEnvCard = view.__inmemOk === true;
-    const envCard = view.querySelector("#envCard");
-    const snippetGrid = view.querySelector("#snippetGrid");
+    var shouldHideEnvCard = view.__inmemOk === true;
+    var envCard = view.querySelector("#envCard");
+    var snippetGrid = view.querySelector("#snippetGrid");
 
     if (envCard) {
       envCard.hidden = shouldHideEnvCard;
@@ -590,126 +637,124 @@
   }
 
   function renderPhysicalPatchFallbackToggle(view) {
-    const shouldShow = (view && (!view.__inmemOk || !!view.__physicalPatchFallbackEnabled));
+    var shouldShow = (view && (!view.__inmemOk || !!view.__physicalPatchFallbackEnabled));
     if (!shouldShow) return "";
 
-    const checked = !!(view && view.__physicalPatchFallbackEnabled);
-    const disabled = !!(view && view.__physicalPatchFallbackBusy);
+    var checked = !!(view && view.__physicalPatchFallbackEnabled);
+    var disabled = !!(view && view.__physicalPatchFallbackBusy);
 
-    return `
-      <div class="nexus-inline-toggle">
-        <label class="inputLabel inputLabel--checkbox" for="physicalPatchFallbackToggle">
-          <input id="physicalPatchFallbackToggle" type="checkbox" ` + (checked ? "checked" : "") + ` ` + (disabled ? "disabled" : "") + `>
-          <span>` + esc(t("webConfig.inMemory.fallbackToggleLabel", "Enable physical index.html patch fallback")) + `</span>
-        </label>
-        <div class="fieldDescription">` + esc(t("webConfig.inMemory.fallbackToggleHint", "Disabled by default. Enable this only if runtime injection does not work or if you explicitly need disk patching. When enabled, NexusPobreFlix will try to patch index.html during startup and configuration changes.")) + `</div>
-      </div>
-    `;
+    return '\n      <div class="nexus-inline-toggle">\n        <label class="inputLabel inputLabel--checkbox" for="physicalPatchFallbackToggle">\n          <input id="physicalPatchFallbackToggle" type="checkbox" ' + (checked ? "checked" : "") + ' ' + (disabled ? "disabled" : "") + '>\n          <span>' + esc(t("webConfig.inMemory.fallbackToggleLabel", "Enable physical index.html patch fallback")) + '</span>\n        </label>\n        <div class="fieldDescription">' + esc(t("webConfig.inMemory.fallbackToggleHint", "Disabled by default. Enable this only if runtime injection does not work or if you explicitly need disk patching. When enabled, NexusPobreFlix will try to patch index.html during startup and configuration changes.")) + '</div>\n      </div>\n    ';
   }
 
-  async function updatePhysicalPatchFallback(view, enabled) {
-    if (!view || view.__physicalPatchFallbackBusy) return;
+  function updatePhysicalPatchFallback(view, enabled) {
+    if (!view || view.__physicalPatchFallbackBusy) return Promise.resolve();
 
-    const previous = !!view.__physicalPatchFallbackEnabled;
+    var previous = !!view.__physicalPatchFallbackEnabled;
     view.__physicalPatchFallbackBusy = true;
 
-    const currentToggle = view.querySelector("#physicalPatchFallbackToggle");
+    var currentToggle = view.querySelector("#physicalPatchFallbackToggle");
     if (currentToggle) currentToggle.disabled = true;
 
-    try {
-      await postConfiguration({
-        enablePhysicalIndexHtmlPatchFallback: !!enabled
+    return postConfiguration({
+      enablePhysicalIndexHtmlPatchFallback: !!enabled
+    })
+      .then(function() {
+        view.__physicalPatchFallbackEnabled = !!enabled;
+        return getEnv();
+      })
+      .then(function(env) {
+        renderEnv(view, env);
+        return showStatus(view);
+      })
+      .then(function() {
+        return checkInMemory(view);
+      })
+      .then(function() {
+        showMessage(
+          view,
+          enabled
+            ? t("webConfig.messages.physicalPatchFallbackEnabled", "Physical index.html patch fallback enabled.")
+            : t("webConfig.messages.physicalPatchFallbackDisabled", "Physical index.html patch fallback disabled."),
+          "ok"
+        );
+      })
+      .catch(function(error) {
+        view.__physicalPatchFallbackEnabled = previous;
+        showMessage(view, (error && error.message) || String(error), "err");
+      })
+      .finally(function() {
+        view.__physicalPatchFallbackBusy = false;
+        if (view.__inmemOk !== true) {
+          renderInMem(view, false);
+        } else if (view.__physicalPatchFallbackEnabled) {
+          renderInMem(view, true);
+        }
       });
-
-      view.__physicalPatchFallbackEnabled = !!enabled;
-      renderEnv(view, await getEnv());
-      await showStatus(view);
-      await checkInMemory(view);
-
-      showMessage(
-        view,
-        enabled
-          ? t("webConfig.messages.physicalPatchFallbackEnabled", "Physical index.html patch fallback enabled.")
-          : t("webConfig.messages.physicalPatchFallbackDisabled", "Physical index.html patch fallback disabled."),
-        "ok"
-      );
-    } catch (error) {
-      view.__physicalPatchFallbackEnabled = previous;
-      showMessage(view, error?.message || String(error), "err");
-    } finally {
-      view.__physicalPatchFallbackBusy = false;
-      if (view.__inmemOk !== true) {
-        renderInMem(view, false);
-      } else if (view.__physicalPatchFallbackEnabled) {
-        renderInMem(view, true);
-      }
-    }
   }
 
   function renderInMem(view, ok) {
     view.__inmemOk = !!ok;
     syncEnvCardVisibility(view);
 
-    const el = view.querySelector("#inmem");
+    var el = view.querySelector("#inmem");
     if (!el) return;
 
     if (ok) {
       el.className = "nexus-inline-state ok";
-      el.innerHTML = `
-        <strong>${esc(t("webConfig.inMemory.activeTitle", "In-memory injection is active."))}</strong><br>
-        <span>${esc(t("webConfig.inMemory.activeHint", "Physical patching is not required while runtime injection is working."))}</span>
-        ${renderPhysicalPatchFallbackToggle(view)}
-      `;
+      el.innerHTML = '\n        <strong>' + esc(t("webConfig.inMemory.activeTitle", "In-memory injection is active.")) + '</strong><br>\n        <span>' + esc(t("webConfig.inMemory.activeHint", "Physical patching is not required while runtime injection is working.")) + '</span>\n        ' + renderPhysicalPatchFallbackToggle(view) + '\n      ';
     } else {
       el.className = "nexus-inline-state warn";
-      el.innerHTML = `
-        <strong>${esc(t("webConfig.inMemory.inactiveTitle", "In-memory injection was not detected."))}</strong><br>
-        <span>${esc(t("webConfig.inMemory.inactiveHint", "Use Patch if you want to persist the snippet into index.html."))}</span>
-        ${renderPhysicalPatchFallbackToggle(view)}
-      `;
+      el.innerHTML = '\n        <strong>' + esc(t("webConfig.inMemory.inactiveTitle", "In-memory injection was not detected.")) + '</strong><br>\n        <span>' + esc(t("webConfig.inMemory.inactiveHint", "Use Patch if you want to persist the snippet into index.html.")) + '</span>\n        ' + renderPhysicalPatchFallbackToggle(view) + '\n      ';
     }
 
-    const toggle = el.querySelector("#physicalPatchFallbackToggle");
+    var toggle = el.querySelector("#physicalPatchFallbackToggle");
     if (toggle) {
-      toggle.addEventListener("change", (event) => {
-        const nextValue = !!event?.currentTarget?.checked;
-        updatePhysicalPatchFallback(view, nextValue).catch((error) => {
+      toggle.addEventListener("change", function(event) {
+        var nextValue = !!(event && event.currentTarget && event.currentTarget.checked);
+        updatePhysicalPatchFallback(view, nextValue).catch(function(error) {
           showMessage(view, (error && error.message) || String(error), "err");
         });
       });
     }
   }
 
-  async function checkInMemory(view) {
-    try {
-      const url = String(jfRoot) + "/web/?_nexus_check=" + String(Date.now());
-      const r = await fetch(url, { cache: "no-store", headers: { "X-Nexus-Check": "1" } });
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      const txt = await r.text();
-      const ok = /<!--\s*NEXUS-INJECT BEGIN\s*-->/.test(txt);
-      renderInMem(view, ok);
-      return ok;
-    } catch {
-      renderInMem(view, false);
-      return false;
-    }
+  function checkInMemory(view) {
+    var url = String(jfRoot) + "/web/?_nexus_check=" + String(Date.now());
+    return fetch(url, { cache: "no-store", headers: { "X-Nexus-Check": "1" } })
+      .then(function(r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.text();
+      })
+      .then(function(txt) {
+        var ok = /<!--\s*NEXUS-INJECT BEGIN\s*-->/.test(txt);
+        renderInMem(view, ok);
+        return ok;
+      })
+      .catch(function() {
+        renderInMem(view, false);
+        return false;
+      });
   }
 
-  async function doPatch(view, kind) {
-    const ep = kind === "patch" ? "Patch" : "Unpatch";
-    const r = await fetch(api(ep), { method: "POST" });
-    if (!r.ok) throw new Error(`${ep} failed: ` + r.status);
+  function doPatch(view, kind) {
+    var ep = kind === "patch" ? "Patch" : "Unpatch";
+    return fetch(api(ep), { method: "POST" })
+      .then(function(r) {
+        if (!r.ok) throw new Error(ep + " failed: " + r.status);
 
-    showMessage(
-      view,
-      kind === "patch"
-        ? t("webConfig.messages.patchDone", "Patch completed.")
-        : t("webConfig.messages.unpatchDone", "Patch removed."),
-      "ok"
-    );
+        showMessage(
+          view,
+          kind === "patch"
+            ? t("webConfig.messages.patchDone", "Patch completed.")
+            : t("webConfig.messages.unpatchDone", "Patch removed."),
+          "ok"
+        );
 
-    await checkInMemory(view);
-    await showStatus(view);
+        return checkInMemory(view);
+      })
+      .then(function() {
+        return showStatus(view);
+      });
   }
 
   function authHeaders() {
@@ -723,154 +768,180 @@
     return {};
   }
 
-  async function initView(view) {
+  function initView(view) {
     if (view.__nexus_initialized) return;
     view.__nexus_initialized = true;
 
-    await loadLanguagePack();
-    applyTranslations(view);
-    initTabs(view);
+    loadLanguagePack().then(function() {
+      applyTranslations(view);
+      initTabs(view);
 
-    view.querySelector("#saveBtn")?.addEventListener("click", async () => {
-      try {
-        await saveConfig(view);
-        showMessage(view, t("webConfig.messages.settingsSaved", "Settings saved."), "ok");
-        await Promise.all([showStatus(view), showSnippet(view), refreshEnv(view)]);
-        await checkInMemory(view);
-      } catch (e) {
-        console.error(e);
-        showMessage(view, e.message || String(e), "err");
-      }
-    });
-
-    view.querySelector("#publishGlobalBtn")?.addEventListener("click", async () => {
-      try {
-        const snapshot = {};
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          snapshot[key] = localStorage.getItem(key);
-        }
-
-        const r = await fetch(api("UserSettings/Publish"), {
-          method: "POST",
-          headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
-          body: JSON.stringify({ global: snapshot })
+      var saveBtn = view.querySelector("#saveBtn");
+      if (saveBtn) {
+        saveBtn.addEventListener("click", function() {
+          saveConfig(view).then(function() {
+            showMessage(view, t("webConfig.messages.settingsSaved", "Settings saved."), "ok");
+            return Promise.all([showStatus(view), showSnippet(view), refreshEnv(view)]);
+          })
+          .then(function() {
+            return checkInMemory(view);
+          })
+          .catch(function(e) {
+            console.error(e);
+            showMessage(view, (e && e.message) || String(e), "err");
+          });
         });
-
-        if (!r.ok) throw new Error("Publish failed");
-        await fetch(String(jfRoot) + "/Plugins/NexusPobreFlix/UserSettings", { cache: "no-store" }).catch(() => null);
-        showMessage(view, t("webConfig.messages.publishDone", "Global settings published successfully."), "ok");
-      } catch (e) {
-        showMessage(view, e.message || String(e), "err");
-      }
-    });
-
-    view.querySelector("#reloadNexusPobreFlixSettingsBtn")?.addEventListener("click", async () => {
-      try {
-        await ensureNexusPobreFlixSettings(view, { force: true });
-      } catch (e) {
-        showMessage(view, e.message || String(e), "err");
-      }
-    });
-
-    view.querySelector("#refreshEnvBtn")?.addEventListener("click", async () => {
-      try {
-        await refreshEnv(view);
-      } catch (e) {
-        showMessage(view, e.message || String(e), "err");
-      }
-    });
-
-    view.querySelector("#copyAclBtn")?.addEventListener("click", () => {
-      const box = view.querySelector("#envAcl");
-      const toCopy = box?.textContent || "";
-      if (!toCopy.trim()) {
-        showMessage(view, t("webConfig.messages.nothingToCopy", "There is nothing to copy."), "warn");
-        return;
       }
 
-      navigator.clipboard.writeText(toCopy)
-        .then(() => showMessage(view, t("webConfig.messages.commandsCopied", "Permission commands copied."), "ok"))
-        .catch((err) => showMessage(view, "Copy failed: " + err, "err"));
-    });
+      var pubBtn = view.querySelector("#publishGlobalBtn");
+      if (pubBtn) {
+        pubBtn.addEventListener("click", function() {
+          var snapshot = {};
+          try {
+            for (var i = 0; i < localStorage.length; i++) {
+              var key = localStorage.key(i);
+              snapshot[key] = localStorage.getItem(key);
+            }
+          } catch (e) {}
 
-    view.querySelector("#patchBtn")?.addEventListener("click", async () => {
-      try {
-        await doPatch(view, "patch");
-      } catch (e) {
-        showMessage(view, e.message || String(e), "err");
+          var headers = authHeaders();
+          headers["Content-Type"] = "application/json";
+
+          fetch(api("UserSettings/Publish"), {
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify({ global: snapshot })
+          })
+          .then(function(r) {
+            if (!r.ok) throw new Error("Publish failed");
+            return fetch(String(jfRoot) + "/Plugins/NexusPobreFlix/UserSettings", { cache: "no-store" });
+          })
+          .then(function() {
+            showMessage(view, t("webConfig.messages.publishDone", "Global settings published successfully."), "ok");
+          })
+          .catch(function(e) {
+            showMessage(view, (e && e.message) || String(e), "err");
+          });
+        });
       }
-    });
 
-    view.querySelector("#unpatchBtn")?.addEventListener("click", async () => {
-      try {
-        await doPatch(view, "unpatch");
-      } catch (e) {
-        showMessage(view, e.message || String(e), "err");
+      var relBtn = view.querySelector("#reloadNexusPobreFlixSettingsBtn");
+      if (relBtn) {
+        relBtn.addEventListener("click", function() {
+          ensureNexusPobreFlixSettings(view, { force: true }).catch(function(e) {
+            showMessage(view, (e && e.message) || String(e), "err");
+          });
+        });
       }
+
+      var refrBtn = view.querySelector("#refreshEnvBtn");
+      if (refrBtn) {
+        refrBtn.addEventListener("click", function() {
+          refreshEnv(view).catch(function(e) {
+            showMessage(view, (e && e.message) || String(e), "err");
+          });
+        });
+      }
+
+      var cpBtn = view.querySelector("#copyAclBtn");
+      if (cpBtn) {
+        cpBtn.addEventListener("click", function() {
+          var box = view.querySelector("#envAcl");
+          var toCopy = (box && box.textContent) || "";
+          if (!toCopy.trim()) {
+            showMessage(view, t("webConfig.messages.nothingToCopy", "There is nothing to copy."), "warn");
+            return;
+          }
+
+          if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+            navigator.clipboard.writeText(toCopy)
+              .then(function() { showMessage(view, t("webConfig.messages.commandsCopied", "Permission commands copied."), "ok"); })
+              .catch(function(err) { showMessage(view, "Copy failed: " + err, "err"); });
+          } else {
+             showMessage(view, "Clipboard API not available", "err");
+          }
+        });
+      }
+
+      var pBtn = view.querySelector("#patchBtn");
+      if (pBtn) {
+        pBtn.addEventListener("click", function() {
+          doPatch(view, "patch").catch(function(e) {
+            showMessage(view, (e && e.message) || String(e), "err");
+          });
+        });
+      }
+
+      var uBtn = view.querySelector("#unpatchBtn");
+      if (uBtn) {
+        uBtn.addEventListener("click", function() {
+          doPatch(view, "unpatch").catch(function(e) {
+            showMessage(view, (e && e.message) || String(e), "err");
+          });
+        });
+      }
+
+      loadConfig(view)
+        .then(function() {
+          return Promise.all([showStatus(view), showSnippet(view), refreshEnv(view)]);
+        })
+        .then(function() {
+          return checkInMemory(view);
+        })
+        .catch(function(e) {
+          console.error(e);
+        });
     });
-
-    try {
-      await loadConfig(view);
-    } catch (e) {
-      showMessage(view, `${t("webConfig.messages.configLoadFailed", "Configuration could not be loaded.")} ${e.message || String(e)}`, "err");
-    }
-
-    try {
-      await Promise.all([showStatus(view), showSnippet(view), refreshEnv(view)]);
-      await checkInMemory(view);
-    } catch (e) {
-      console.error(e);
-    }
   }
 
-  async function refreshLanguageIfNeeded() {
-    const view = document.getElementById("NexusPobreFlixConfigPage");
-    if (!view) return;
-    await loadLanguagePack();
-    applyTranslations(view);
+  function refreshLanguageIfNeeded() {
+    var view = document.getElementById("NexusPobreFlixConfigPage");
+    if (!view) return Promise.resolve();
+    return loadLanguagePack().then(function() {
+      applyTranslations(view);
+    });
   }
 
   function handlePageEvents(e) {
-    const view = e.detail?.view || e.target || null;
-    const pageId = "NexusPobreFlixConfigPage";
-    const legacyId = "NexusPobreFlixConfigPage";
-    if (view && (view.id === pageId || view.id === legacyId || (view.querySelector && (view.querySelector(`#${pageId}`) || view.querySelector(`#${legacyId}`))))) {
-      const page = (view.id === pageId || view.id === legacyId) ? view : (view.querySelector(`#${pageId}`) || view.querySelector(`#${legacyId}`));
-      if (page) setTimeout(() => initView(page), 50);
+    var view = (e.detail && e.detail.view) || e.target || null;
+    var pageId = "NexusPobreFlixConfigPage";
+    var legacyId = "NexusPobreFlixConfigPage";
+    if (view && (view.id === pageId || view.id === legacyId || (view.querySelector && (view.querySelector("#" + pageId) || view.querySelector("#" + legacyId))))) {
+      var page = (view.id === pageId || view.id === legacyId) ? view : (view.querySelector("#" + pageId) || view.querySelector("#" + legacyId));
+      if (page) setTimeout(function() { initView(page); }, 50);
     }
   }
 
-  window.addEventListener("storage", (e) => {
+  window.addEventListener("storage", function(e) {
     if (e.key === "defaultLanguage") {
-      refreshLanguageIfNeeded().catch(() => {});
+      refreshLanguageIfNeeded().catch(function() {});
     }
   });
 
   document.addEventListener("viewshow", handlePageEvents);
   document.addEventListener("pageshow", handlePageEvents);
   document.addEventListener("DOMContentLoaded", function () {
-    const existingView = document.getElementById("NexusPobreFlixConfigPage");
-    if (existingView) setTimeout(() => initView(existingView), 50);
+    var existingView = document.getElementById("NexusPobreFlixConfigPage");
+    if (existingView) setTimeout(function() { initView(existingView); }, 50);
   });
 
-  window.addEventListener("NexusPobreFlix:plugin-config-open-request", (event) => {
-    const detail = event?.detail || {};
-    if (detail.pluginTab === "Nexus PobreFlix-settings") {
+  window.addEventListener("NexusPobreFlix:plugin-config-open-request", function(event) {
+    var detail = (event && event.detail) || {};
+    if (detail.pluginTab === "NexusPobreFlix-settings") {
       try {
-        localStorage.setItem(TAB_STORAGE_KEY, "Nexus PobreFlix-settings");
-      } catch {}
+        localStorage.setItem(TAB_STORAGE_KEY, "NexusPobreFlix-settings");
+      } catch (e) {}
       try {
         sessionStorage.setItem(NEXUS_SUBTAB_STORAGE_KEY, String(detail.settingsTab || "NexusPobreFlix"));
-      } catch {}
+      } catch (e) {}
     }
 
-    const existingView = document.getElementById("NexusPobreFlixConfigPage");
+    var existingView = document.getElementById("NexusPobreFlixConfigPage");
     if (existingView) {
       activateTab(existingView, detail.pluginTab || "NexusPobreFlix");
     }
   });
 
-  const immediateCheck = document.getElementById("NexusPobreFlixConfigPage");
-  if (immediateCheck) setTimeout(() => initView(immediateCheck), 50);
+  var immediateCheck = document.getElementById("NexusPobreFlixConfigPage");
+  if (immediateCheck) setTimeout(function() { initView(immediateCheck); }, 50);
 })();

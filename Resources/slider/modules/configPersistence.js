@@ -2,7 +2,7 @@ import { getConfig } from "./config.js";
 
 export function isLocalStorageAvailable() {
   try {
-    const testKey = "test";
+    var testKey = "test";
     localStorage.setItem(testKey, testKey);
     localStorage.removeItem(testKey);
     return true;
@@ -12,14 +12,14 @@ export function isLocalStorageAvailable() {
 }
 
 export function updateConfig(updatedConfig) {
-  const cfg = getConfig();
+  var cfg = getConfig();
 
   if (cfg && cfg.forceGlobalUserSettings && !cfg.currentUserIsAdmin) {
-    const allowedKeys = new Set([
+    var allowedKeys = new Set([
       "playerTheme"
     ]);
 
-    const onlyAllowed =
+    var onlyAllowed =
       Object.keys(updatedConfig || {}).every(function(key) { return allowedKeys.has(key); });
 
     if (!onlyAllowed) {
@@ -28,14 +28,14 @@ export function updateConfig(updatedConfig) {
     }
   }
 
-  const existingDicebearParams = localStorage.getItem("dicebearParams");
-  const isPlainObject = function(value) {
+  var existingDicebearParams = localStorage.getItem("dicebearParams");
+  var isPlainObject = function(value) {
     return value !== null && typeof value === "object" && !Array.isArray(value);
   };
 
   Object.entries(updatedConfig || {}).forEach(function(entry) {
-    const key = entry[0];
-    const value = entry[1];
+    var key = entry[0];
+    var value = entry[1];
     if (key === "dicebearParams") return;
 
     try {
@@ -71,7 +71,7 @@ export function updateConfig(updatedConfig) {
 
   if (!isLocalStorageAvailable()) return;
 
-  const keysToSave = [
+  var keysToSave = [
     "playerTheme",
     "playerStyle",
     "useAlbumArtAsBackground",
@@ -86,7 +86,7 @@ export function updateConfig(updatedConfig) {
   ];
 
   keysToSave.forEach(function(key) {
-    const value = updatedConfig ? updatedConfig[key] : undefined;
+    var value = updatedConfig ? updatedConfig[key] : undefined;
     if (value !== undefined && value !== null) {
       localStorage.setItem(key, String(value));
     }

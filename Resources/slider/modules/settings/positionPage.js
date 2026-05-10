@@ -2,28 +2,28 @@ import { getConfig } from "../config.js";
 import { updateSlidePosition } from '../positionUtils.js';
 import { applySettings } from "./applySettings.js";
 
-const config = getConfig();
+var config = getConfig();
 
 export function createPositionEditor(config, labels, section) {
   function createSettingItem(labelText, configKey, cssProperty, placeholder, target = 'slides', containerType = '') {
-    const container = document.createElement('div');
+    var container = document.createElement('div');
     container.className = 'position-item';
 
-    const inputId = `input-${configKey}`;
+    var inputId = "input-" + (configKey);
 
-    const label = document.createElement('label');
+    var label = document.createElement('label');
     label.textContent = labelText;
     label.htmlFor = inputId;
 
-    const input = document.createElement('input');
+    var input = document.createElement('input');
     input.type = 'number';
     input.name = configKey;
     input.id = inputId;
     input.value = config[configKey] || '';
     input.placeholder = placeholder || config.languageLabels.placeholderText || 'Insira um valor';
 
-    const allowsNegative = ['top', 'left'].includes(cssProperty);
-    const isProgressHeight = configKey === 'progressBarHeight';
+    var allowsNegative = ['top', 'left'].includes(cssProperty);
+    var isProgressHeight = configKey === 'progressBarHeight';
 
     if (!allowsNegative) {
       input.min = 0;
@@ -34,11 +34,11 @@ export function createPositionEditor(config, labels, section) {
       input.step = 0.1;
     }
 
-    const resetBtn = document.createElement('button');
+    var resetBtn = document.createElement('button');
     resetBtn.textContent = config.languageLabels.resetButton || 'Resetar';
     resetBtn.type = 'button';
     resetBtn.className = 'reset-button';
-    resetBtn.addEventListener('click', () => {
+    resetBtn.addEventListenerfunction('click', () {
       input.value = '';
       config[configKey] = '';
       updateContainerStyle(target, containerType, cssProperty, '');
@@ -50,7 +50,7 @@ export function createPositionEditor(config, labels, section) {
     });
 
     input.addEventListener('input', function() {
-      let value = parseFloat(this.value);
+      var value = parseFloat(this.value);
       if (!allowsNegative && value < 0) {
         value = 0;
       }
@@ -58,7 +58,7 @@ export function createPositionEditor(config, labels, section) {
         if (value < 0.1) value = 0.1;
         if (value > 10) value = 10;
       }
-      const newValue = isNaN(value) ? '' : value;
+      var newValue = isNaN(value) ? '' : value;
       this.value = newValue;
       config[configKey] = newValue;
       updateContainerStyle(target, containerType, cssProperty, newValue);
@@ -69,10 +69,10 @@ export function createPositionEditor(config, labels, section) {
 }
 
   function createGlobalResetButton() {
-    const container = document.createElement('div');
+    var container = document.createElement('div');
     container.className = 'global-reset-container';
 
-    const resetBtn = document.createElement('button');
+    var resetBtn = document.createElement('button');
     resetBtn.textContent = config.languageLabels.resetAllButton || 'Resetar Tudo';
     resetBtn.type = 'button';
     resetBtn.className = 'global-reset-button';
@@ -83,24 +83,24 @@ export function createPositionEditor(config, labels, section) {
   }
 
   function resetAllSettings() {
-    document.querySelectorAll('.position-item input').forEach(input => {
+    document.querySelectorAll('.position-item input').forEach(function(input) {
       input.value = '';
-      const configKey = input.name;
-      const cssProperty = input.dataset.cssProperty || '';
-      const target = input.dataset.target || 'slides';
-      const containerType = input.dataset.containerType || '';
+      var configKey = input.name;
+      var cssProperty = input.dataset.cssProperty || '';
+      var target = input.dataset.target || 'slides';
+      var containerType = input.dataset.containerType || '';
 
       config[configKey] = '';
       updateContainerStyle(target, containerType, cssProperty, '');
     });
 
-    document.querySelectorAll('.flex-item select').forEach(select => {
+    document.querySelectorAll('.flex-item select').forEach(function(select) {
       select.value = '';
-      const configKey = select.name;
-      const containerType = select.dataset.containerType || '';
+      var configKey = select.name;
+      var containerType = select.dataset.containerType || '';
 
       config[configKey] = '';
-      updateFlexStyle(containerType, configKey.replace(`${containerType}Container`, ''), '');
+      updateFlexStyle(containerType, configKey.replace((containerType) + "Container", ''), '');
     });
 
     if (config.homeSectionsTop !== undefined) {
@@ -120,53 +120,53 @@ export function createPositionEditor(config, labels, section) {
   }
 
   function openPositionModal(inputElement, configKey, cssProperty, placeholder, target, containerType) {
-  const mainModal = document.getElementById('settings-modal');
+  var mainModal = document.getElementById('settings-modal');
   if (mainModal) mainModal.style.display = 'none';
 
-  const modal = document.createElement('div');
+  var modal = document.createElement('div');
   modal.className = 'position-modal';
   modal.style.display = 'block';
 
-  const modalContent = document.createElement('div');
+  var modalContent = document.createElement('div');
   modalContent.className = 'position-modal-content';
 
-  const closeBtn = document.createElement('span');
+  var closeBtn = document.createElement('span');
   closeBtn.className = 'position-close';
   closeBtn.innerHTML = '&times;';
-  closeBtn.onclick = () => {
+  closeBtn.onclick = function() {
     modal.remove();
     if (mainModal) mainModal.style.display = 'block';
   };
 
-  const title = document.createElement('h3');
-  let sectionLabel;
+  var title = document.createElement('h3');
+  var sectionLabel;
   if (containerType === 'homeSections') {
     sectionLabel = config.languageLabels.homeSectionsPosition;
   } else if (containerType) {
-    sectionLabel = config.languageLabels[`${containerType}Container`];
+    sectionLabel = config.languageLabels[(containerType) + "Container"];
   } else {
     sectionLabel = config.languageLabels.slidesPosition;
   }
 
-  const fieldLabel = inputElement.previousElementSibling?.textContent
+  var fieldLabel = inputElement.previousElementSibling.textContent
     || config.languageLabels[configKey]
     || configKey.replace(/([A-Z])/g, ' $1').trim();
 
   title.textContent = sectionLabel
-    ? `${sectionLabel} — ${fieldLabel}`
+    ? (sectionLabel) + " — " + (fieldLabel)
     : fieldLabel;
   title.className = 'position-modal-title';
 
-  const inputContainer = document.createElement('div');
+  var inputContainer = document.createElement('div');
   inputContainer.className = 'position-modal-input-container';
 
-  const modalInput = document.createElement('input');
+  var modalInput = document.createElement('input');
   modalInput.type = 'number';
   modalInput.value = inputElement.value;
   modalInput.placeholder = placeholder || config.languageLabels.placeholderText || 'Insira um valor';
   modalInput.className = 'position-modal-input';
 
-  const isProgressHeight = configKey === 'progressBarHeight';
+  var isProgressHeight = configKey === 'progressBarHeight';
   if (isProgressHeight) {
     modalInput.min = 0.1;
     modalInput.max = 10;
@@ -178,10 +178,10 @@ export function createPositionEditor(config, labels, section) {
   inputContainer.append(modalInput);
 
   if (configKey === 'homeSectionsTop') {
-    const applyBtn = document.createElement('button');
+    var applyBtn = document.createElement('button');
     applyBtn.className = 'position-modal-apply';
     applyBtn.textContent = config.languageLabels.applyButton || 'Aplicar';
-    applyBtn.onclick = () => {
+    applyBtn.onclick = function() {
       if (typeof applySettings === 'function') {
         applySettings(false);
       }
@@ -189,8 +189,8 @@ export function createPositionEditor(config, labels, section) {
     inputContainer.append(applyBtn);
   }
 
-  modalInput.addEventListener('input', () => {
-    let value = parseFloat(modalInput.value);
+  modalInput.addEventListenerfunction('input', () {
+    var value = parseFloat(modalInput.value);
     if (isProgressHeight) {
       if (isNaN(value)) {
         value = '';
@@ -213,14 +213,14 @@ export function createPositionEditor(config, labels, section) {
   modal.appendChild(modalContent);
   document.body.appendChild(modal);
 
-  modal.addEventListener('click', (e) => {
+  modal.addEventListenerfunction('click', (e) {
     if (e.target === modal) {
       modal.remove();
       if (mainModal) mainModal.style.display = 'block';
     }
   });
 
-  setTimeout(() => {
+  setTimeoutfunction(() {
     modalInput.focus();
   }, 100);
 
@@ -229,26 +229,26 @@ export function createPositionEditor(config, labels, section) {
 
 
   function createFlexSettingItem(labelText, configKey, options, containerType) {
-    const container = document.createElement('div');
+    var container = document.createElement('div');
     container.className = 'flex-item';
 
-    const selectId = `select-${configKey}`;
+    var selectId = "select-" + (configKey);
 
-    const label = document.createElement('label');
+    var label = document.createElement('label');
     label.textContent = labelText;
     label.htmlFor = selectId;
 
-    const select = document.createElement('select');
+    var select = document.createElement('select');
     select.name = configKey;
     select.id = selectId;
 
-    const emptyOption = document.createElement('option');
+    var emptyOption = document.createElement('option');
     emptyOption.value = '';
     emptyOption.textContent = config.languageLabels.selectDefault || 'Padrão';
     select.appendChild(emptyOption);
 
-    options.forEach(option => {
-      const optElement = document.createElement('option');
+    options.forEach(function(option) {
+      var optElement = document.createElement('option');
       optElement.value = option.value;
       optElement.textContent = option.label;
       if (config[configKey] === option.value) {
@@ -257,19 +257,19 @@ export function createPositionEditor(config, labels, section) {
       select.appendChild(optElement);
     });
 
-    const resetBtn = document.createElement('button');
+    var resetBtn = document.createElement('button');
     resetBtn.textContent = config.languageLabels.resetButton || 'Resetar';
     resetBtn.type = 'button';
     resetBtn.className = 'reset-button';
-    resetBtn.addEventListener('click', () => {
+    resetBtn.addEventListenerfunction('click', () {
       select.value = '';
       config[configKey] = '';
-      updateFlexStyle(containerType, configKey.replace(`${containerType}Container`, ''), '');
+      updateFlexStyle(containerType, configKey.replace((containerType) + "Container", ''), '');
     });
 
     select.addEventListener('change', function() {
       config[configKey] = this.value;
-      updateFlexStyle(containerType, configKey.replace(`${containerType}Container`, ''), this.value);
+      updateFlexStyle(containerType, configKey.replace((containerType) + "Container", ''), this.value);
     });
 
     select.addEventListener('mousedown', function(e) {
@@ -283,53 +283,53 @@ export function createPositionEditor(config, labels, section) {
 }
 
   function openSelectModal(selectElement, configKey, options, containerType) {
-  const mainModal = document.getElementById('settings-modal');
+  var mainModal = document.getElementById('settings-modal');
   if (mainModal) mainModal.style.display = 'none';
 
-  const modal = document.createElement('div');
+  var modal = document.createElement('div');
   modal.className = 'position-modal';
   modal.style.display = 'block';
 
-  const modalContent = document.createElement('div');
+  var modalContent = document.createElement('div');
   modalContent.className = 'position-modal-content';
 
-  const title = document.createElement('h3');
-  const sectionLabel = containerType
-    ? config.languageLabels[`${containerType}Container`]
+  var title = document.createElement('h3');
+  var sectionLabel = containerType
+    ? config.languageLabels[(containerType) + "Container"]
     : config.languageLabels.slidesPosition;
-  const fieldLabel = selectElement.previousElementSibling?.textContent
+  var fieldLabel = selectElement.previousElementSibling.textContent
     || config.languageLabels[configKey]
     || configKey.replace(/([A-Z])/g, ' $1').trim();
   title.textContent = sectionLabel
-    ? `${sectionLabel} — ${fieldLabel}`
+    ? (sectionLabel) + " — " + (fieldLabel)
     : fieldLabel;
   title.className = 'position-modal-title';
   modalContent.appendChild(title);
 
-  const closeBtn = document.createElement('span');
+  var closeBtn = document.createElement('span');
   closeBtn.className = 'position-close';
   closeBtn.innerHTML = '&times;';
-  closeBtn.onclick = () => {
+  closeBtn.onclick = function() {
     modal.remove();
     if (mainModal) mainModal.style.display = 'block';
   };
   modalContent.appendChild(closeBtn);
 
-  const optionsContainer = document.createElement('div');
+  var optionsContainer = document.createElement('div');
   optionsContainer.className = 'position-modal-options';
 
-  options.forEach(option => {
-    const optionBtn = document.createElement('button');
+  options.forEach(function(option) {
+    var optionBtn = document.createElement('button');
     optionBtn.className = 'position-modal-option';
     if (selectElement.value === option.value) {
       optionBtn.classList.add('active');
     }
     optionBtn.textContent = option.label;
-    optionBtn.onclick = () => {
+    optionBtn.onclick = function() {
       selectElement.value = option.value;
       config[configKey] = option.value;
-      updateFlexStyle(containerType, configKey.replace(`${containerType}Container`, ''), option.value);
-      optionsContainer.querySelectorAll('.position-modal-option').forEach(btn => btn.classList.remove('active'));
+      updateFlexStyle(containerType, configKey.replace((containerType) + "Container", ''), option.value);
+      optionsContainer.querySelectorAll('.position-modal-option').forEach(function(btn) btn.classList.remove('active'));
       optionBtn.classList.add('active');
     };
     optionsContainer.appendChild(optionBtn);
@@ -339,7 +339,7 @@ export function createPositionEditor(config, labels, section) {
   modal.appendChild(modalContent);
   document.body.appendChild(modal);
 
-  modal.addEventListener('click', (e) => {
+  modal.addEventListenerfunction('click', (e) {
     if (e.target === modal) {
       modal.remove();
       if (mainModal) mainModal.style.display = 'block';
@@ -349,47 +349,47 @@ export function createPositionEditor(config, labels, section) {
 
   function updateContainerStyle(target, containerType, cssProperty, newValue) {
   if (target === 'homeSections') {
-    const elements = [
+    var elements = [
       document.querySelector(".homeSectionsContainer"),
       document.querySelector("#favoritesTab")
     ];
 
-    elements.forEach(el => {
+    elements.forEach(function(el) {
       if (el) {
-        el.style[cssProperty] = newValue === '' ? '' : `${newValue}vh`;
+        el.style[cssProperty] = newValue === '' ? '' : (newValue) + "vh";
       }
     });
    } else {
-    const selector = containerType
+    var selector = containerType
       ? (containerType === 'button' ? '.monwui-main-button-container'
         : containerType === 'slider' ? '.monwui-slider-wrapper'
         : containerType === 'existingDot' ? '.monwui-dot-navigation-container'
         : containerType === 'progress' ? '.monwui-slide-progress-bar'
         : containerType === 'progressSeconds' ? '.monwui-slide-progress-seconds'
-        : `.monwui-${containerType}-container`)
+        : ".monwui-" + (containerType) + "-container")
       : "#monwui-slides-container";
 
-    document.querySelectorAll(selector).forEach(el => {
-      el.style[cssProperty] = newValue === '' ? '' : `${newValue}%`;
+    document.querySelectorAll(selector).forEach(function(el) {
+      el.style[cssProperty] = newValue === '' ? '' : (newValue) + "%";
     });
   }
 }
 
   function updateFlexStyle(containerType, flexProperty, newValue) {
-  const selector =
+  var selector =
     containerType === 'button' ? '.monwui-main-button-container' :
     containerType === 'slider' ? '.monwui-slider-wrapper' :
     containerType === 'existingDot' ? '.monwui-dot-navigation-container' :
     containerType === 'progress' ? '.monwui-slide-progress-bar' :
     containerType === 'progressSeconds' ? '.monwui-slide-progress-seconds' :
-    `.monwui-${containerType}-container`;
+    ".monwui-" + (containerType) + "-container";
 
-  document.querySelectorAll(selector).forEach(el => {
+  document.querySelectorAll(selector).forEach(function(el) {
     if (flexProperty.includes('Display')) {
       el.style.display = newValue || '';
     } else {
-      let camel = flexProperty.charAt(0).toLowerCase() + flexProperty.slice(1);
-      const cssProp = camel.replace(/([A-Z])/g, m => '-' + m.toLowerCase());
+      var camel = flexProperty.charAt(0).toLowerCase() + flexProperty.slice(1);
+      var cssProp = camel.replace(/([A-Z])/g, function(m) '-' + m.toLowerCase());
       el.style[cssProp] = newValue || '';
     }
   });
@@ -397,11 +397,11 @@ export function createPositionEditor(config, labels, section) {
 
   function render() {
     section.appendChild(createGlobalResetButton());
-    const homeSectionsHeader = document.createElement('h3');
+    var homeSectionsHeader = document.createElement('h3');
     homeSectionsHeader.textContent = config.languageLabels.homeSectionsPosition || 'Posição das Seções da Home';
     section.appendChild(homeSectionsHeader);
 
-    const homeSectionsHeaderNote = document.createElement('h5');
+    var homeSectionsHeaderNote = document.createElement('h5');
     homeSectionsHeaderNote.textContent = config.languageLabels.homeSectionsPositionNote || '(Valores negativos invertem a direção)';
     section.appendChild(homeSectionsHeaderNote);
 
@@ -415,13 +415,13 @@ export function createPositionEditor(config, labels, section) {
       )
     );
 
-    const slidesHeader = document.createElement('h3');
+    var slidesHeader = document.createElement('h3');
     slidesHeader.textContent = config.languageLabels.slidesPosition || 'Posição do Contêiner de Slides';
     section.appendChild(slidesHeader);
 
     section.appendChild(
       createSettingItem(
-        config.languageLabels.containerTop ?? 'Posição Vertical (%):',
+        config.languageLabels.containerTop || 'Posição Vertical (%):',
         'slideTop',
         'top',
         config.languageLabels.placeholderText
@@ -429,7 +429,7 @@ export function createPositionEditor(config, labels, section) {
     );
     section.appendChild(
       createSettingItem(
-        config.languageLabels.containerLeft ?? 'Posição Horizontal (%):',
+        config.languageLabels.containerLeft || 'Posição Horizontal (%):',
         'slideLeft',
         'left',
         config.languageLabels.placeholderText
@@ -437,7 +437,7 @@ export function createPositionEditor(config, labels, section) {
     );
     section.appendChild(
       createSettingItem(
-        config.languageLabels.containerWidth ?? 'Largura (%):',
+        config.languageLabels.containerWidth || 'Largura (%):',
         'slideWidth',
         'width',
         config.languageLabels.placeholderText
@@ -445,14 +445,14 @@ export function createPositionEditor(config, labels, section) {
     );
     section.appendChild(
       createSettingItem(
-        config.languageLabels.containerHeight ?? 'Altura (%):',
+        config.languageLabels.containerHeight || 'Altura (%):',
         'slideHeight',
         'height',
         config.languageLabels.placeholderText
       )
     );
 
-    const containers = [
+    var containers = [
       { type: 'logo', label: config.languageLabels.logoContainer || 'Contêiner da Logo', flexSettings: false, positionSettings: true },
       { type: 'meta', label: config.languageLabels.metaContainer || 'Contêiner de Metadados', flexSettings: true, positionSettings: true },
       { type: 'status', label: config.languageLabels.statusContainer || 'Posição do Status', flexSettings: true, positionSettings: true },
@@ -467,8 +467,8 @@ export function createPositionEditor(config, labels, section) {
       { type: 'providericons', label: config.languageLabels.providericonsContainer || 'Posição dos Ícones de Provedores', flexSettings: true, positionSettings: false }
     ];
 
-    containers.forEach(({ type, label, flexSettings, positionSettings }) => {
-      const header = document.createElement('h3');
+    containers.forEach(function(({ type, label, flexSettings, positionSettings }) {
+      var header = document.createElement('h3');
       header.textContent = label;
       section.appendChild(header);
 
@@ -476,7 +476,7 @@ export function createPositionEditor(config, labels, section) {
         section.appendChild(
           createSettingItem(
             config.languageLabels.containerTop || 'Posição Vertical (%):',
-            `${type}ContainerTop`,
+            (type) + "ContainerTop",
             'top',
             config.languageLabels.placeholderText,
             type,
@@ -486,7 +486,7 @@ export function createPositionEditor(config, labels, section) {
         section.appendChild(
           createSettingItem(
             config.languageLabels.containerLeft || 'Posição Horizontal (%):',
-            `${type}ContainerLeft`,
+            (type) + "ContainerLeft",
             'left',
             config.languageLabels.placeholderText,
             type,
@@ -496,7 +496,7 @@ export function createPositionEditor(config, labels, section) {
         section.appendChild(
           createSettingItem(
             config.languageLabels.containerWidth || 'Largura (%):',
-            `${type}ContainerWidth`,
+            (type) + "ContainerWidth",
             'width',
             config.languageLabels.placeholderText,
             type,
@@ -506,7 +506,7 @@ export function createPositionEditor(config, labels, section) {
         section.appendChild(
           createSettingItem(
             config.languageLabels.containerHeight || 'Altura (%):',
-            `${type}ContainerHeight`,
+            (type) + "ContainerHeight",
             'height',
             config.languageLabels.placeholderText,
             type,
@@ -519,7 +519,7 @@ export function createPositionEditor(config, labels, section) {
         section.appendChild(
           createFlexSettingItem(
             config.languageLabels.flexDisplay || 'Tipo de Exibição:',
-            `${type}ContainerDisplay`,
+            (type) + "ContainerDisplay",
             [
               { value: 'flex', label: config.languageLabels.flex || 'Flex' },
               { value: 'inline-flex', label: config.languageLabels.inlineFlex || 'Inline Flex' },
@@ -531,7 +531,7 @@ export function createPositionEditor(config, labels, section) {
         section.appendChild(
           createFlexSettingItem(
             config.languageLabels.flexDirection || 'Direção do Flex:',
-            `${type}ContainerFlexDirection`,
+            (type) + "ContainerFlexDirection",
             [
               { value: 'row', label: config.languageLabels.row || 'Row' },
               { value: 'column', label: config.languageLabels.column || 'Column' },
@@ -545,7 +545,7 @@ export function createPositionEditor(config, labels, section) {
         section.appendChild(
           createFlexSettingItem(
             config.languageLabels.justifyContent || 'Alinhamento do Eixo Principal:',
-            `${type}ContainerJustifyContent`,
+            (type) + "ContainerJustifyContent",
             [
               { value: 'flex-start', label: config.languageLabels.flexstart || 'Flex Start' },
               { value: 'flex-end', label: config.languageLabels.flexend || 'Flex End' },
@@ -561,7 +561,7 @@ export function createPositionEditor(config, labels, section) {
         section.appendChild(
           createFlexSettingItem(
             config.languageLabels.alignItems || 'Alinhamento do Eixo Transversal:',
-            `${type}ContainerAlignItems`,
+            (type) + "ContainerAlignItems",
             [
               { value: 'flex-start', label: config.languageLabels.flexstart || 'Flex Start' },
               { value: 'flex-end', label: config.languageLabels.flexend || 'Flex End' },
@@ -576,7 +576,7 @@ export function createPositionEditor(config, labels, section) {
         section.appendChild(
           createFlexSettingItem(
             config.languageLabels.flexWrap || 'Comportamento de Quebra:',
-            `${type}ContainerFlexWrap`,
+            (type) + "ContainerFlexWrap",
             [
               { value: 'nowrap', label: config.languageLabels.nowrap || 'No Wrap' },
               { value: 'wrap', label: config.languageLabels.wrap || 'Wrap' },
@@ -588,7 +588,7 @@ export function createPositionEditor(config, labels, section) {
       }
     });
 
-    const sliderWrapperHeader = document.createElement('h3');
+    var sliderWrapperHeader = document.createElement('h3');
     sliderWrapperHeader.textContent = config.languageLabels.sliderWrapperContainer || 'Contêiner do Wrapper do Slider';
     section.appendChild(sliderWrapperHeader);
 
@@ -703,7 +703,7 @@ export function createPositionEditor(config, labels, section) {
       )
     );
 
-const progressSecondsHeader = document.createElement('h3');
+var progressSecondsHeader = document.createElement('h3');
 progressSecondsHeader.textContent = config.languageLabels.progressSecondsHeader || 'Contêiner de Progresso (Segundos)';
 section.appendChild(progressSecondsHeader);
 
@@ -728,7 +728,7 @@ section.appendChild(
   )
 );
 
-    const progressBarHeader = document.createElement('h3');
+    var progressBarHeader = document.createElement('h3');
     progressBarHeader.textContent = config.languageLabels.progressBarHeader || 'Contêiner de Progresso';
     section.appendChild(progressBarHeader);
 

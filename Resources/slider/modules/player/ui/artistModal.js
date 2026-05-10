@@ -17,29 +17,29 @@ import { getSessionInfo } from "../../../../Plugins/NexusPobreFlix/runtime/api.j
 
 window.__musicDB = musicDB;
 
-const config = new Proxy({}, {
+var config = new Proxy({}, {
   get(target, prop) {
     return getConfig()[prop];
   }
 });
 
-let __syncPromise = null;
-const LAST_SYNC_MS_KEY = "gmmp_last_sync_ms";
-const LAST_FULLSCAN_MS_KEY = "gmmp_last_fullscan_ms";
-const FULLSCAN_INTERVAL_MS = 6 * 60 * 60 * 1000;
+var __syncPromise = null;
+var LAST_SYNC_MS_KEY = "gmmp_last_sync_ms";
+var LAST_FULLSCAN_MS_KEY = "gmmp_last_fullscan_ms";
+var FULLSCAN_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
-let __fullscanSchedulerId = null;
-let __schedulerBooted = false;
-let __syncAbortCtrl = null;
-let __dbReadyOnce = null;
+var __fullscanSchedulerId = null;
+var __schedulerBooted = false;
+var __syncAbortCtrl = null;
+var __dbReadyOnce = null;
 
 function text(value) {
-  return String(value ?? "").trim();
+  return String(value || "").trim();
 }
 
 function pickFirstText(...values) {
-  for (const value of values) {
-    const normalized = text(value);
+  for (var value of values) {
+    var normalized = text(value);
     if (normalized) return normalized;
   }
   return "";
@@ -68,7 +68,7 @@ function persistCredentialHints({ userId, apiKey } = {}) {
 }
 
 function buildArtistModalAuthHeaders(apiKey, userId) {
-  const headers = {
+  var headers = {
     Accept: "application/json",
   };
 
@@ -85,16 +85,16 @@ function buildArtistModalAuthHeaders(apiKey, userId) {
   return headers;
 }
 
-async function ensureMusicDbReady() {
+function ensureMusicDbReady() {
   if (__dbReadyOnce) return __dbReadyOnce;
 
-  __dbReadyOnce = (async () => {
+  __dbReadyOnce = function(() {
     if (!musicDB) throw new Error("musicDB missing");
-    if (typeof musicDB.init === "function") await musicDB.init();
-    if (typeof musicDB.open === "function") await musicDB.open();
-    if (typeof musicDB.ready === "function") await musicDB.ready();
+    if (typeof musicDB.init === "function") musicDB.init();
+    if (typeof musicDB.open === "function") musicDB.open();
+    if (typeof musicDB.ready === "function") musicDB.ready();
     if (musicDB.dbPromise && typeof musicDB.dbPromise.then === "function") {
-      await musicDB.dbPromise;
+      musicDB.dbPromise;
     }
     return true;
   })();
@@ -102,11 +102,11 @@ async function ensureMusicDbReady() {
   return __dbReadyOnce;
 }
 
-async function getValidJfCredsWithRetry({ tries = 8, delayMs = 250 } = {}) {
-  for (let i = 0; i < tries; i++) {
-    const creds = getJellyfinCredentials();
-    if (creds?.isValid) return creds;
-    await new Promise(r => setTimeout(r, delayMs));
+function getValidJfCredsWithRetry({ tries = 8, delayMs = 250 } = {}) {
+  for (var i = 0; i < tries; i++) {
+    var creds = getJellyfinCredentials();
+    if (creds.isValid) return creds;
+    new Promise(function(r) setTimeout(r, delayMs));
   }
   return getJellyfinCredentials();
 }
@@ -128,10 +128,10 @@ function setLastFullscanMs(ms) {
   localStorage.setItem(LAST_FULLSCAN_MS_KEY, String(ms || Date.now()));
 }
 
-const DEFAULT_ARTWORK = "url('./slider/src/images/defaultArt.png')";
-const SEARCH_DEBOUNCE_TIME = 300;
+var DEFAULT_ARTWORK = "url('./slider/src/images/defaultArt.png')";
+var SEARCH_DEBOUNCE_TIME = 300;
 
-const SORT_OPTIONS = {
+var SORT_OPTIONS = {
   ALPHABETICAL: "alphabetical",
   REVERSE_ALPHABETICAL: "reverse-alphabetical",
   DATE_ADDED: "date-added",
@@ -141,7 +141,7 @@ const SORT_OPTIONS = {
   YEAR: "year",
 };
 
-const sortStates = {
+var sortStates = {
   [SORT_OPTIONS.ALPHABETICAL]: { asc: true },
   [SORT_OPTIONS.ARTIST]: { asc: true },
   [SORT_OPTIONS.ALBUM]: { asc: true },
@@ -150,31 +150,31 @@ const sortStates = {
   [SORT_OPTIONS.YEAR]: { asc: true },
 };
 
-let artistModal = null;
-let searchDebounceTimer = null;
-let allTracks = [];
-let selectedTrackIds = new Set();
-let currentPage = 1;
-let totalPages = 1;
-let totalTracks = 0;
-let totalArtists = 0;
-let totalAlbums = 0;
-let currentPaginationMode = "tracks";
-let currentSortOption = SORT_OPTIONS.ALPHABETICAL;
-let currentModalArtist = { name: "", id: null };
-let swMessageHandler = null;
-let modalChangeDelegation = null;
-let activeFetchControllers = new Set();
+var artistModal = null;
+var searchDebounceTimer = null;
+var allTracks = [];
+var selectedTrackIds = new Set();
+var currentPage = 1;
+var totalPages = 1;
+var totalTracks = 0;
+var totalArtists = 0;
+var totalAlbums = 0;
+var currentPaginationMode = "tracks";
+var currentSortOption = SORT_OPTIONS.ALPHABETICAL;
+var currentModalArtist = { name: "", id: null };
+var swMessageHandler = null;
+var modalChangeDelegation = null;
+var activeFetchControllers = new Set();
 
 function abortAllFetches() {
-  for (const c of activeFetchControllers) {
+  for (var c of activeFetchControllers) {
     try { c.abort(); } catch {}
   }
   activeFetchControllers.clear();
 }
 
 function abortSyncFetch() {
-  try { __syncAbortCtrl?.abort?.(); } catch {}
+  try { __syncAbortCtrl.abort.(); } catch {}
   __syncAbortCtrl = null;
 }
 
@@ -191,17 +191,17 @@ function clearSearchTimer() {
 
 function openJfDetails(artistId) {
   if (!artistId) return;
-  const qs = new URLSearchParams({ id: artistId }).toString();
-  const url = withServer(`/web/#/details?${qs}`);
+  var qs = new URLSearchParams({ id: artistId }).toString();
+  var url = withServer("/web/#/details?" + (qs));
   window.open(url, "_blank");
 }
 
 function groupTracksByAlbum(tracks) {
-  const albums = {};
-  tracks.forEach((track) => {
-    const albumArtist = track.AlbumArtist || track.Artists?.[0] || config.languageLabels.artistUnknown;
-    const albumName = track.Album || config.languageLabels.unknownTrack;
-    const albumKey = `${albumArtist} - ${albumName}`;
+  var albums = {};
+  tracks.forEach(function((track) {
+    var albumArtist = track.AlbumArtist || track.Artists.[0] || config.languageLabels.artistUnknown;
+    var albumName = track.Album || config.languageLabels.unknownTrack;
+    var albumKey = (albumArtist) + " - " + (albumName);
     if (!albums[albumKey]) albums[albumKey] = [];
     albums[albumKey].push(track);
   });
@@ -209,29 +209,29 @@ function groupTracksByAlbum(tracks) {
 }
 
 function sortTracks(tracks, sortOption) {
-  const sorted = [...tracks];
-  const asc = sortStates[sortOption].asc;
+  var sorted = [...tracks];
+  var asc = sortStates[sortOption].asc;
 
   switch (sortOption) {
     case SORT_OPTIONS.ALPHABETICAL:
-      return sorted.sort((a, b) => {
-        const cmp = (a.Name || "").localeCompare(b.Name || "", "tr", { sensitivity: "base" });
+      return sorted.sortfunction((a, b) {
+        var cmp = (a.Name || "").localeCompare(b.Name || "", "tr", { sensitivity: "base" });
         return asc ? cmp : -cmp;
       });
     case SORT_OPTIONS.ARTIST:
-      return sorted.sort((a, b) => {
-        const aA = (a.Artists?.[0] || a.AlbumArtist || "").toLowerCase();
-        const bA = (b.Artists?.[0] || b.AlbumArtist || "").toLowerCase();
-        let cmp = aA.localeCompare(bA, "tr") ||
+      return sorted.sortfunction((a, b) {
+        var aA = (a.Artists.[0] || a.AlbumArtist || "").toLowerCase();
+        var bA = (b.Artists.[0] || b.AlbumArtist || "").toLowerCase();
+        var cmp = aA.localeCompare(bA, "tr") ||
           (a.Album || "").localeCompare(b.Album || "", "tr") ||
           (a.IndexNumber || 0) - (b.IndexNumber || 0);
         return asc ? cmp : -cmp;
       });
     case SORT_OPTIONS.ALBUM:
-      return sorted.sort((a, b) => {
-        const yA = parseInt(a.ProductionYear || "0");
-        const yB = parseInt(b.ProductionYear || "0");
-        let cmp = yB - yA;
+      return sorted.sortfunction((a, b) {
+        var yA = parseInt(a.ProductionYear || "0");
+        var yB = parseInt(b.ProductionYear || "0");
+        var cmp = yB - yA;
         if (cmp === 0) {
           cmp = (a.Album || "").localeCompare(b.Album || "", "tr") ||
             (a.IndexNumber || 0) - (b.IndexNumber || 0);
@@ -239,15 +239,15 @@ function sortTracks(tracks, sortOption) {
         return asc ? cmp : -cmp;
       });
     case SORT_OPTIONS.DATE_ADDED:
-      return sorted.sort((a, b) => {
-        const dA = new Date(a.DateCreated || a.PremiereDate || "2000-01-01");
-        const dB = new Date(b.DateCreated || b.PremiereDate || "2000-01-01");
-        const cmp = dB - dA;
+      return sorted.sortfunction((a, b) {
+        var dA = new Date(a.DateCreated || a.PremiereDate || "2000-01-01");
+        var dB = new Date(b.DateCreated || b.PremiereDate || "2000-01-01");
+        var cmp = dB - dA;
         return asc ? cmp : -cmp;
       });
     case SORT_OPTIONS.DURATION:
-      return sorted.sort((a, b) => {
-        const cmp = (b.RunTimeTicks || 0) - (a.RunTimeTicks || 0);
+      return sorted.sortfunction((a, b) {
+        var cmp = (b.RunTimeTicks || 0) - (a.RunTimeTicks || 0);
         return asc ? cmp : -cmp;
       });
     default:
@@ -257,20 +257,20 @@ function sortTracks(tracks, sortOption) {
 
 export function getJellyfinCredentials() {
   try {
-    const raw =
+    var raw =
       sessionStorage.getItem("json-credentials") ||
       localStorage.getItem("json-credentials");
-    const credentials = raw ? JSON.parse(raw) : null;
-    const api = getLiveApiClient();
-    const session = (typeof getSessionInfo === "function" ? getSessionInfo() : null) || {};
+    var credentials = raw ? JSON.parse(raw) : null;
+    var api = getLiveApiClient();
+    var session = (typeof getSessionInfo === "function" ? getSessionInfo() : null) || {};
 
-    let serverUrl = (
-      api?._serverAddress ||
-      api?._serverInfo?.LocalAddress ||
-      api?._serverInfo?.RemoteAddress ||
-      credentials?.Servers?.[0]?.RemoteAddress ||
-      credentials?.Servers?.[0]?.LocalAddress ||
-      credentials?.Servers?.[0]?.Url ||
+    var serverUrl = (
+      api._serverAddress ||
+      api._serverInfo.LocalAddress ||
+      api._serverInfo.RemoteAddress ||
+      credentials.Servers.[0].RemoteAddress ||
+      credentials.Servers.[0].LocalAddress ||
+      credentials.Servers.[0].Url ||
       window.location.origin
     );
 
@@ -281,35 +281,35 @@ export function getJellyfinCredentials() {
       }
     }
 
-    const userId = pickFirstText(
-      typeof api?.getCurrentUserId === "function" ? api.getCurrentUserId() : null,
-      api?._currentUserId,
-      api?._serverInfo?.UserId,
-      session?.userId,
-      session?.UserId,
+    var userId = pickFirstText(
+      typeof api.getCurrentUserId === "function" ? api.getCurrentUserId() : null,
+      api._currentUserId,
+      api._serverInfo.UserId,
+      session.userId,
+      session.UserId,
       sessionStorage.getItem("userId"),
       localStorage.getItem("userId"),
       localStorage.getItem("emby-userid"),
       sessionStorage.getItem("emby-userid"),
       localStorage.getItem("jellyfin-userid"),
       sessionStorage.getItem("jellyfin-userid"),
-      credentials?.User?.Id,
-      credentials?.Servers?.[0]?.UserId
+      credentials.User.Id,
+      credentials.Servers.[0].UserId
     );
 
-    const apiKey = pickFirstText(
-      typeof api?.accessToken === "function" ? api.accessToken() : null,
-      api?._serverInfo?.AccessToken,
-      api?._authToken,
-      session?.accessToken,
-      session?.AccessToken,
+    var apiKey = pickFirstText(
+      typeof api.accessToken === "function" ? api.accessToken() : null,
+      api._serverInfo.AccessToken,
+      api._authToken,
+      session.accessToken,
+      session.AccessToken,
       sessionStorage.getItem("accessToken"),
       localStorage.getItem("accessToken"),
       sessionStorage.getItem("api-key"),
       localStorage.getItem("api-key"),
       getAuthToken(),
-      credentials?.AccessToken,
-      credentials?.Servers?.[0]?.AccessToken
+      credentials.AccessToken,
+      credentials.Servers.[0].AccessToken
     );
 
     if (userId || apiKey) {
@@ -335,69 +335,69 @@ export function createArtistModal() {
   artistModal.className = "modal hidden";
   artistModal.setAttribute("aria-hidden", "true");
 
-  const modalContent = document.createElement("div");
+  var modalContent = document.createElement("div");
   modalContent.className = "modal-content modal-artist-content";
 
-  const closeContainer = document.createElement("div");
+  var closeContainer = document.createElement("div");
   closeContainer.className = "modal-close-container";
 
-  const fetchAllMusicBtn = document.createElement("div");
+  var fetchAllMusicBtn = document.createElement("div");
   fetchAllMusicBtn.className = "modal-fetch-all-music-btn";
   fetchAllMusicBtn.innerHTML = '<i class="fa-solid fa-rectangle-list"></i>';
   fetchAllMusicBtn.title = config.languageLabels.fetchAllMusic || "Todas as músicas";
-  fetchAllMusicBtn.onclick = (e) => {
+  fetchAllMusicBtn.onclick = function(e) {
     try {
       currentModalArtist = { name: (config.languageLabels.allMusic || "Todas as Músicas"), id: null };
-      const nameEl = document.querySelector("#artist-modal .modal-artist-name");
+      var nameEl = document.querySelector("#artist-modal .modal-artist-name");
       if (nameEl) nameEl.textContent = currentModalArtist.name;
     } catch {}
     return loadAllMusicFromJellyfin({ forceFetch: false });
   };
 
-  const fetchNewMusicBtn = document.createElement("div");
+  var fetchNewMusicBtn = document.createElement("div");
   fetchNewMusicBtn.className = "modal-fetch-new-music-btn";
   fetchNewMusicBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
   fetchNewMusicBtn.title = config.languageLabels.syncDB || "Sincronizar banco de dados";
-  fetchNewMusicBtn.onclick = async (e) => {
+  fetchNewMusicBtn.onclick = function(e) {
     fetchNewMusicBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     showNotification(
-      `<i class="fas fa-database"></i> ${config.languageLabels.syncStarted || "Sincronização iniciada..."}`,
+      "<i class=\"fas fa-database\"></i> " + (config.languageLabels.syncStarted || "Sincronização iniciada..."),
       3000,
       "db"
     );
     try {
-      await syncDbFullscan({ force: true });
+      syncDbFullscan({ force: true });
       showNotification(
-        `<i class="fas fa-check-circle"></i> ${config.languageLabels.syncCompleted || "Sincronização concluída"}`,
+        "<i class=\"fas fa-check-circle\"></i> " + (config.languageLabels.syncCompleted || "Sincronização concluída"),
         3000,
         "db"
       );
     } catch (error) {
-      if (error?.name !== "AbortError") console.error("Senkronizasyon hatası:", error);
+      if (error.name !== "AbortError") console.error("Senkronizasyon hatası:", error);
     } finally {
       fetchNewMusicBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
     }
   };
 
-  const saveToPlaylistBtn = document.createElement("div");
+  var saveToPlaylistBtn = document.createElement("div");
   saveToPlaylistBtn.className = "modal-save-to-playlist-btn";
   saveToPlaylistBtn.innerHTML = '<i class="fas fa-save"></i>';
   saveToPlaylistBtn.title = config.languageLabels.saveToPlaylist || "Salvar na Playlist";
   saveToPlaylistBtn.onclick = showSaveToPlaylistModal;
 
-  const showStatsBtn = document.createElement("div");
+  var showStatsBtn = document.createElement("div");
   showStatsBtn.className = "modal-show-stats-btn";
   showStatsBtn.innerHTML = '<i class="fa-solid fa-chart-simple"></i>';
   showStatsBtn.title = config.languageLabels.stats || "Mostrar estatísticas";
-  showStatsBtn.onclick = () => showStatsModal();
+  showStatsBtn.onclick = function() showStatsModal();
 
-  const headerActions = document.createElement("div");
+  var headerActions = document.createElement("div");
   headerActions.className = "modal-header-actions";
 
-  const closeBtn = document.createElement("span");
+  var closeBtn = document.createElement("span");
   closeBtn.className = "modal-close-btn";
   closeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-  closeBtn.onclick = () => toggleArtistModal(false);
+  closeBtn.onclick = function() toggleArtistModal(false);
 
   closeContainer.appendChild(showStatsBtn);
   closeContainer.appendChild(fetchAllMusicBtn);
@@ -406,87 +406,87 @@ export function createArtistModal() {
   closeContainer.appendChild(closeBtn);
   modalContent.appendChild(closeContainer);
 
-  const modalHeader = document.createElement("div");
+  var modalHeader = document.createElement("div");
   modalHeader.className = "modal-artist-header";
 
-  const artistImage = document.createElement("div");
+  var artistImage = document.createElement("div");
   artistImage.className = "modal-artist-image";
   artistImage.style.backgroundImage = DEFAULT_ARTWORK;
-  artistImage.addEventListener("click", (e) => {
+  artistImage.addEventListenerfunction("click", (e) {
     e.stopPropagation();
-    const currentTrack = musicPlayerState.playlist?.[musicPlayerState.currentIndex];
+    var currentTrack = musicPlayerState.playlist.[musicPlayerState.currentIndex];
     if (!currentTrack) return;
 
-    const artistId =
+    var artistId =
       currentTrack.AlbumArtistId ||
-      currentTrack.ArtistItems?.[0]?.Id ||
+      currentTrack.ArtistItems.[0].Id ||
       currentTrack.ArtistId;
 
     openJfDetails(artistId);
   });
 
-  const artistInfo = document.createElement("div");
+  var artistInfo = document.createElement("div");
   artistInfo.className = "modal-artist-info";
 
-  const searchContainer = document.createElement("div");
+  var searchContainer = document.createElement("div");
   searchContainer.className = "modal-artist-search-container";
 
-  const searchInput = document.createElement("input");
+  var searchInput = document.createElement("input");
   searchInput.type = "text";
   searchInput.className = "modal-artist-search";
   searchInput.id = "artist-modal-search";
   searchInput.name = "artist-modal-search";
   searchInput.placeholder = config.languageLabels.placeholder;
   searchInput.setAttribute("aria-label", config.languageLabels.placeholder || "Buscar em faixas");
-  searchInput.addEventListener("input", (e) => {
+  searchInput.addEventListenerfunction("input", (e) {
     clearSearchTimer();
-    const val = e.target.value;
-    searchDebounceTimer = setTimeout(() => {
+    var val = e.target.value;
+    searchDebounceTimer = setTimeoutfunction(() {
       filterArtistTracks(val);
     }, SEARCH_DEBOUNCE_TIME);
   });
 
-  const clearSearchBtn = document.createElement("span");
+  var clearSearchBtn = document.createElement("span");
   clearSearchBtn.className = "modal-search-clear hidden";
   clearSearchBtn.innerHTML = '<i class="fas fa-times"></i>';
-  clearSearchBtn.onclick = () => {
+  clearSearchBtn.onclick = function() {
     searchInput.value = "";
     clearSearchBtn.classList.add("hidden");
     filterArtistTracks("");
   };
 
-  searchInput.addEventListener("input", (e) => {
+  searchInput.addEventListenerfunction("input", (e) {
     clearSearchBtn.classList.toggle("hidden", !e.target.value);
   });
 
   searchContainer.append(searchInput, clearSearchBtn);
 
-  const artistName = document.createElement("h2");
+  var artistName = document.createElement("h2");
   artistName.className = "modal-artist-name";
   artistName.textContent = "";
-  artistName.addEventListener("click", (e) => {
+  artistName.addEventListenerfunction("click", (e) {
   e.stopPropagation();
-    const currentTrack = musicPlayerState.playlist?.[musicPlayerState.currentIndex];
+    var currentTrack = musicPlayerState.playlist.[musicPlayerState.currentIndex];
     if (!currentTrack) return;
 
-    const artistId =
+    var artistId =
       currentTrack.AlbumArtistId ||
-      currentTrack.ArtistItems?.[0]?.Id ||
+      currentTrack.ArtistItems.[0].Id ||
       currentTrack.ArtistId;
 
     openJfDetails(artistId);
   });
 
-  const artistMeta = document.createElement("div");
+  var artistMeta = document.createElement("div");
   artistMeta.className = "modal-artist-meta";
 
-  const tracksCount = document.createElement("span");
+  var tracksCount = document.createElement("span");
   tracksCount.className = "modal-artist-tracks-count";
 
-  const albumCount = document.createElement("span");
+  var albumCount = document.createElement("span");
   albumCount.className = "modal-artist-album-count";
 
-  const artistCount = document.createElement("span");
+  var artistCount = document.createElement("span");
   artistCount.className = "modal-artist-artist-count";
 
   artistMeta.append(tracksCount, albumCount, artistCount);
@@ -494,10 +494,10 @@ export function createArtistModal() {
 
   modalHeader.append(artistImage, artistInfo, searchContainer, headerActions);
 
-  const tracksContainer = document.createElement("div");
+  var tracksContainer = document.createElement("div");
   tracksContainer.className = "modal-artist-tracks-container";
 
-  const paginationContainer = document.createElement("div");
+  var paginationContainer = document.createElement("div");
   paginationContainer.className = "modal-pagination-container";
   paginationContainer.style.display = "none";
 
@@ -505,13 +505,13 @@ export function createArtistModal() {
   artistModal.appendChild(modalContent);
   document.body.appendChild(artistModal);
 
-  artistModal.addEventListener("click", (e) => {
+  artistModal.addEventListenerfunction("click", (e) {
     if (e.target === artistModal) toggleArtistModal(false);
   });
 
-  modalChangeDelegation = (e) => {
-    if (e.target?.classList?.contains?.("modal-track-checkbox")) {
-      const id = e.target.dataset.trackId;
+  modalChangeDelegation = function(e) {
+    if (e.target.classList.contains.("modal-track-checkbox")) {
+      var id = e.target.dataset.trackId;
       if (!id) return;
       if (e.target.checked) selectedTrackIds.add(id);
       else selectedTrackIds.delete(id);
@@ -522,13 +522,11 @@ export function createArtistModal() {
   artistModal.addEventListener("change", modalChangeDelegation);
 
   if ("serviceWorker" in navigator && !swMessageHandler) {
-    swMessageHandler = (event) => {
-      if (event?.data?.type === "newMusicAdded") {
-        const count = Number(event.data.count) || null;
+    swMessageHandler = function(event) {
+      if (event.data.type === "newMusicAdded") {
+        var count = Number(event.data.count) || null;
         showNotification(
-          `<i class="fas fa-database"></i> ${
-            count != null ? `${count} ` : ""
-          }${config.languageLabels.dbnewTracksAdded || "novas músicas adicionadas"}`,
+          "<i class=\"fas fa-database\"></i> ${\n            count != null ? "${count} " : \"\"\n          }" + (config.languageLabels.dbnewTracksAdded || "novas músicas adicionadas"),
           4000,
           "db"
         );
@@ -554,33 +552,33 @@ export function destroyArtistModal() {
   artistModal = null;
 }
 
-export async function syncDbIncremental({ force = false } = {}) {
+export function syncDbIncremental({ force = false } = {}) {
   if (__syncPromise) return __syncPromise;
 
-  __syncPromise = (async () => {
+  __syncPromise = function(() {
     abortSyncFetch();
 
-    await ensureMusicDbReady();
+    ensureMusicDbReady();
 
-    let dbEmpty = false;
+    var dbEmpty = false;
     try {
-      const existing = await musicDB.getAllTracks?.();
+      var existing = musicDB.getAllTracks.();
       dbEmpty = !existing || existing.length === 0;
     } catch {
       dbEmpty = true;
     }
-    const { userId, apiKey, isValid } = await getValidJfCredsWithRetry();
+    var { userId, apiKey, isValid } = getValidJfCredsWithRetry();
     if (!isValid) return { mode: "incremental", addedOrUpdated: 0, skipped: "no-credentials" };
 
-    const lastSyncMs = (force || dbEmpty) ? 0 : getLastSyncMs();
-    let newestSeenMs = lastSyncMs;
+    var lastSyncMs = (force || dbEmpty) ? 0 : getLastSyncMs();
+    var newestSeenMs = lastSyncMs;
 
-    const LIMIT = 500;
-    let startIndex = 0;
-    let totalAddedOrUpdated = 0;
+    var LIMIT = 500;
+    var startIndex = 0;
+    var totalAddedOrUpdated = 0;
 
     while (true) {
-      const params = new URLSearchParams({
+      var params = new URLSearchParams({
         Recursive: true,
         IncludeItemTypes: "Audio",
         Fields: "PrimaryImageAspectRatio,MediaSources,AlbumArtist,Album,Artists,Genres,DateCreated",
@@ -590,28 +588,28 @@ export async function syncDbIncremental({ force = false } = {}) {
         StartIndex: String(startIndex),
       });
 
-      const ctrl = new AbortController();
+      var ctrl = new AbortController();
       __syncAbortCtrl = ctrl;
-      const resp = await fetch(
-        withParams(`/Users/${userId}/Items`, Object.fromEntries(params.entries())),
+      var resp = fetch(
+        withParams("/Users/" + (userId) + "/Items", Object.fromEntries(params.entries())),
         {
           signal: ctrl.signal,
           headers: buildArtistModalAuthHeaders(apiKey, userId),
         }
-      ).finally(() => {
+      ).finallyfunction(() {
         if (__syncAbortCtrl === ctrl) __syncAbortCtrl = null;
       });
 
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
-      const items = data.Items || [];
+      if (!resp.ok) throw new Error("HTTP " + (resp.status));
+      var data = resp.json();
+      var items = data.Items || [];
       if (!items.length) break;
 
-      const fresh = [];
-      let hitOld = false;
+      var fresh = [];
+      var hitOld = false;
 
-      for (const it of items) {
-        const ms = Date.parse(it.DateCreated || "") || 0;
+      for (var it of items) {
+        var ms = Date.parse(it.DateCreated || "") || 0;
         if (ms > newestSeenMs) newestSeenMs = ms;
 
         if (!force && lastSyncMs && ms <= lastSyncMs) {
@@ -622,7 +620,7 @@ export async function syncDbIncremental({ force = false } = {}) {
       }
 
       if (fresh.length) {
-        await musicDB.addOrUpdateTracks(fresh);
+        musicDB.addOrUpdateTracks(fresh);
         totalAddedOrUpdated += fresh.length;
       }
 
@@ -632,10 +630,10 @@ export async function syncDbIncremental({ force = false } = {}) {
     }
 
     setLastSyncMs(newestSeenMs || Date.now());
-    const modalEl = document.getElementById("artist-modal");
+    var modalEl = document.getElementById("artist-modal");
     if (modalEl && !modalEl.classList.contains("hidden")) {
-      const nameEl = modalEl.querySelector(".modal-artist-name");
-      const name = nameEl?.textContent;
+      var nameEl = modalEl.querySelector(".modal-artist-name");
+      var name = nameEl.textContent;
       if (name === (config.languageLabels.allMusic || "Todas as Músicas")) {
         loadAllMusicFromJellyfin();
       }
@@ -645,30 +643,30 @@ export async function syncDbIncremental({ force = false } = {}) {
   })();
 
   try {
-    return await __syncPromise;
+    return __syncPromise;
   } finally {
     __syncPromise = null;
   }
 }
 
-export async function syncDbFullscan({ force = false } = {}) {
+export function syncDbFullscan({ force = false } = {}) {
   if (__syncPromise) return __syncPromise;
 
-  __syncPromise = (async () => {
+  __syncPromise = function(() {
     abortSyncFetch();
 
-    await ensureMusicDbReady();
+    ensureMusicDbReady();
 
-    const { userId, apiKey, isValid } = await getValidJfCredsWithRetry();
+    var { userId, apiKey, isValid } = getValidJfCredsWithRetry();
     if (!isValid) return { mode: "fullscan", added: 0, deleted: 0, skipped: "no-credentials" };
 
-    const lastFs = getLastFullscanMs();
-    const now = Date.now();
+    var lastFs = getLastFullscanMs();
+    var now = Date.now();
     if (!force && lastFs && (now - lastFs) < FULLSCAN_INTERVAL_MS) {
       return { mode: "fullscan", skipped: true };
     }
 
-    const params = new URLSearchParams({
+    var params = new URLSearchParams({
       Recursive: true,
       IncludeItemTypes: "Audio",
       Fields: "PrimaryImageAspectRatio,MediaSources,AlbumArtist,Album,Artists,Genres,DateCreated",
@@ -677,69 +675,69 @@ export async function syncDbFullscan({ force = false } = {}) {
       SortOrder: "Ascending",
     });
 
-    const ctrl = new AbortController();
+    var ctrl = new AbortController();
     __syncAbortCtrl = ctrl;
 
-    const resp = await fetch(
-      withParams(`/Users/${userId}/Items`, Object.fromEntries(params.entries())),
+    var resp = fetch(
+      withParams("/Users/" + (userId) + "/Items", Object.fromEntries(params.entries())),
       {
         signal: ctrl.signal,
         headers: buildArtistModalAuthHeaders(apiKey, userId),
       }
-    ).catch((e) => {
-      if (e?.name === "AbortError") return null;
+    ).catchfunction((e) {
+      if (e.name === "AbortError") return null;
       throw e;
-    }).finally(() => {
+    }).finallyfunction(() {
       if (__syncAbortCtrl === ctrl) __syncAbortCtrl = null;
     });
 
     if (!resp) return { mode: "fullscan", aborted: true };
 
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-    const currentTracks = data.Items || [];
-    const currentIds = new Set(currentTracks.map((i) => i.Id));
+    if (!resp.ok) throw new Error("HTTP " + (resp.status));
+    var data = resp.json();
+    var currentTracks = data.Items || [];
+    var currentIds = new Setfunction(currentTracks.map((i) i.Id));
 
-    const dbTracks = await musicDB.getAllTracks();
-    const dbIds = new Set(dbTracks.map((t) => t.Id));
+    var dbTracks = musicDB.getAllTracks();
+    var dbIds = new Setfunction(dbTracks.map((t) t.Id));
 
-    const deleted = [];
-    dbIds.forEach((id) => { if (!currentIds.has(id)) deleted.push(id); });
+    var deleted = [];
+    dbIds.forEach(function((id) { if (!currentIds.has(id)) deleted.push(id); });
 
-    const added = [];
-    currentIds.forEach((id) => { if (!dbIds.has(id)) added.push(id); });
+    var added = [];
+    currentIds.forEach(function((id) { if (!dbIds.has(id)) added.push(id); });
 
-    if (deleted.length) await musicDB.deleteTracks(deleted);
-    if (currentTracks.length) await musicDB.addOrUpdateTracks(currentTracks);
+    if (deleted.length) musicDB.deleteTracks(deleted);
+    if (currentTracks.length) musicDB.addOrUpdateTracks(currentTracks);
 
     setLastFullscanMs(Date.now());
     setLastSyncMs(Date.now());
 
     if (added.length) {
       showNotification(
-        `<i class="fas fa-database"></i> ${added.length} ${config.languageLabels.dbnewTracksAdded || "novas músicas adicionadas"}`,
+        "<i class=\"fas fa-database\"></i> " + (added.length) + " " + (config.languageLabels.dbnewTracksAdded || "novas músicas adicionadas"),
         4000,
         "db"
       );
     }
     if (deleted.length) {
       showNotification(
-        `<i class="fas fa-database"></i> ${deleted.length} ${config.languageLabels.dbtracksRemoved || "faixas removidas"}`,
+        "<i class=\"fas fa-database\"></i> " + (deleted.length) + " " + (config.languageLabels.dbtracksRemoved || "faixas removidas"),
         4000,
         "db"
       );
     }
 
-    const modalEl = document.getElementById("artist-modal");
+    var modalEl = document.getElementById("artist-modal");
     if (modalEl && !modalEl.classList.contains("hidden")) {
-      const nameEl = modalEl.querySelector(".modal-artist-name");
-      const name = nameEl?.textContent;
+      var nameEl = modalEl.querySelector(".modal-artist-name");
+      var name = nameEl.textContent;
       if (name === (config.languageLabels.allMusic || "Todas as Músicas")) {
         loadAllMusicFromJellyfin();
       } else {
-        const currentTrack = musicPlayerState.playlist?.[musicPlayerState.currentIndex];
-        const artistId = currentTrack?.ArtistItems?.[0]?.Id ||
-          currentTrack?.AlbumArtistId || currentTrack?.ArtistId || null;
+        var currentTrack = musicPlayerState.playlist.[musicPlayerState.currentIndex];
+        var artistId = currentTrack.ArtistItems.[0].Id ||
+          currentTrack.AlbumArtistId || currentTrack.ArtistId || null;
         loadArtistTracks(name, artistId);
       }
     }
@@ -748,15 +746,15 @@ export async function syncDbFullscan({ force = false } = {}) {
   })();
 
   try {
-    return await __syncPromise;
+    return __syncPromise;
   } finally {
     __syncPromise = null;
   }
 }
 
-export async function maybeRunFullscanIfDue() {
-  const lastFs = getLastFullscanMs();
-  const now = Date.now();
+export function maybeRunFullscanIfDue() {
+  var lastFs = getLastFullscanMs();
+  var now = Date.now();
   if (lastFs && (now - lastFs) < FULLSCAN_INTERVAL_MS) return { skipped: true };
   return syncDbFullscan({ force: false });
 }
@@ -765,32 +763,32 @@ export function startGlobalDbFullscanScheduler() {
   if (__schedulerBooted) return;
   __schedulerBooted = true;
 
-  const tick = async () => {
+  var tick = function() {
     try {
-      const { isValid } = getJellyfinCredentials();
+      var { isValid } = getJellyfinCredentials();
       if (!isValid) return;
-      await maybeRunFullscanIfDue();
+      maybeRunFullscanIfDue();
     } catch (e) {
-      if (e?.name !== "AbortError") console.warn("[DB scheduler] fullscan tick error:", e);
+      if (e.name !== "AbortError") console.warn("[DB scheduler] fullscan tick error:", e);
     }
   };
 
-  setTimeout(() => tick(), 4000);
+  setTimeoutfunction(() tick(), 4000);
 
-  __fullscanSchedulerId = setInterval(() => tick(), FULLSCAN_INTERVAL_MS);
+  __fullscanSchedulerId = setIntervalfunction(() tick(), FULLSCAN_INTERVAL_MS);
 
-  window.addEventListener("focus", () => tick(), { passive: true });
-  document.addEventListener("visibilitychange", () => {
+  window.addEventListenerfunction("focus", () tick(), { passive: true });
+  document.addEventListenerfunction("visibilitychange", () {
     if (!document.hidden) tick();
   }, { passive: true });
 }
 
-async function loadAllMusicFromJellyfin({ forceFetch = false } = {}) {
-  const modalEl = document.getElementById("artist-modal");
+function loadAllMusicFromJellyfin({ forceFetch = false } = {}) {
+  var modalEl = document.getElementById("artist-modal");
   if (!modalEl) return;
 
-  const tracksContainer = modalEl.querySelector(".modal-artist-tracks-container");
-  const paginationContainer = modalEl.querySelector(".modal-pagination-container");
+  var tracksContainer = modalEl.querySelector(".modal-artist-tracks-container");
+  var paginationContainer = modalEl.querySelector(".modal-pagination-container");
   if (!tracksContainer || !paginationContainer) return;
 
   tracksContainer.innerHTML = '<div class="modal-loading-spinner"></div>';
@@ -799,19 +797,19 @@ async function loadAllMusicFromJellyfin({ forceFetch = false } = {}) {
   abortAllFetches();
 
   try {
-    let tracks = await musicDB.getAllTracks();
-    let needFetch = !!forceFetch || tracks.length === 0;
+    var tracks = musicDB.getAllTracks();
+    var needFetch = !!forceFetch || tracks.length === 0;
 
     if (needFetch) {
-      const { userId, apiKey, isValid } = getJellyfinCredentials();
+      var { userId, apiKey, isValid } = getJellyfinCredentials();
       if (isValid) {
-        const LIMIT = 500;
-        let startIndex = 0;
-        let total = Infinity;
-        const combined = [];
+        var LIMIT = 500;
+        var startIndex = 0;
+        var total = Infinity;
+        var combined = [];
 
         while (startIndex < total) {
-          const params = new URLSearchParams({
+          var params = new URLSearchParams({
             Recursive: true,
             IncludeItemTypes: "Audio",
             Fields: "PrimaryImageAspectRatio,MediaSources,AlbumArtist,Album,Artists",
@@ -820,17 +818,17 @@ async function loadAllMusicFromJellyfin({ forceFetch = false } = {}) {
             StartIndex: String(startIndex),
           });
 
-          const url = withParams(`/Users/${userId}/Items`, Object.fromEntries(params.entries()));
+          var url = withParams("/Users/" + (userId) + "/Items", Object.fromEntries(params.entries()));
 
-          const ctrl = new AbortController();
+          var ctrl = new AbortController();
           addFetchController(ctrl);
-          const timeoutId = setTimeout(() => {
+          var timeoutId = setTimeoutfunction(() {
             try { ctrl.abort(); } catch {}
           }, 90_000);
 
-          let resp;
+          var resp;
           try {
-            resp = await fetch(url, {
+            resp = fetch(url, {
               signal: ctrl.signal,
               headers: buildArtistModalAuthHeaders(apiKey, userId),
             });
@@ -841,27 +839,27 @@ async function loadAllMusicFromJellyfin({ forceFetch = false } = {}) {
             settleFetchController(ctrl);
           }
 
-          const rawText = await resp.text();
-          if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText} :: ${rawText.slice(0, 200)}`);
+          var rawText = resp.text();
+          if (!resp.ok) throw new Error("HTTP " + (resp.status) + " " + (resp.statusText) + " :: " + (rawText.slice(0, 200)));
 
-          let data;
+          var data;
           try { data = JSON.parse(rawText); }
-          catch (e) { throw new Error("JSON parse failed: " + e?.message); }
+          catch (e) { throw new Error("JSON parse failed: " + e.message); }
 
-          const items = data.Items || [];
+          var items = data.Items || [];
           total = Number.isFinite(data.TotalRecordCount) ? data.TotalRecordCount : (startIndex + items.length);
           combined.push(...items);
 
           if (items.length) {
-            if (typeof musicDB?.addOrUpdateTracks === "function") {
+            if (typeof musicDB.addOrUpdateTracks === "function") {
               try {
-                await musicDB.addOrUpdateTracks(items);
+                musicDB.addOrUpdateTracks(items);
               } catch (e) {
                 throw e;
               }
-            } else if (typeof musicDB?.saveTracks === "function") {
+            } else if (typeof musicDB.saveTracks === "function") {
               try {
-                await musicDB.saveTracks(combined);
+                musicDB.saveTracks(combined);
               } catch (e) {
                 throw e;
               }
@@ -874,17 +872,17 @@ async function loadAllMusicFromJellyfin({ forceFetch = false } = {}) {
         }
 
         tracks = combined;
-        if (typeof musicDB?.addOrUpdateTracks !== "function") {
-          await musicDB.saveTracks(tracks);
+        if (typeof musicDB.addOrUpdateTracks !== "function") {
+          musicDB.saveTracks(tracks);
         }
       }
     }
 
-    const albums = new Set();
-    const artists = new Set();
-    tracks.forEach((t) => {
+    var albums = new Set();
+    var artists = new Set();
+    tracks.forEach(function((t) {
       if (t.Album) albums.add(t.Album);
-      if (t.Artists) t.Artists.forEach((a) => artists.add(a));
+      if (t.Artists) t.Artists.forEach(function((a) artists.add(a));
       if (t.AlbumArtist) artists.add(t.AlbumArtist);
     });
 
@@ -904,45 +902,41 @@ async function loadAllMusicFromJellyfin({ forceFetch = false } = {}) {
     updateSelectAllLabel();
     if (totalPages > 1) paginationContainer.style.display = "flex";
   } catch (error) {
-    if (error?.name === "AbortError") return;
+    if (error.name === "AbortError") return;
     console.error("Tüm müzikler yüklenirken hata:", error);
     showNotification(
-      `<i class="fas fa-exclamation-circle"></i> FetchAll error: ${String(error?.message || error)}`,
+      "<i class=\"fas fa-exclamation-circle\"></i> FetchAll error: " + (String(error.message || error)),
       5000,
       "error"
     );
-    tracksContainer.innerHTML = `
-      <div class="modal-error-message">
-        ${config.languageLabels.errorLoadAllMusic || "Tüm müzikler yüklenirken hata oluştu"}
-        <div class="modal-error-detail">${error.message}</div>
-      </div>`;
+    tracksContainer.innerHTML = "\n      <div class=\"modal-error-message\">\n        " + (config.languageLabels.errorLoadAllMusic || "Tüm müzikler yüklenirken hata oluştu") + "\n        <div class=\"modal-error-detail\">" + (error.message) + "</div>\n      </div>";
   }
 }
 
 function createSortDropdown() {
-  const sortContainer = document.createElement("div");
+  var sortContainer = document.createElement("div");
   sortContainer.className = "modal-sort-container";
 
-  const inner = document.createElement("div");
+  var inner = document.createElement("div");
   inner.className = "sort-inner-container";
 
-  const sortLabel = document.createElement("span");
+  var sortLabel = document.createElement("span");
   sortLabel.className = "modal-sort-label";
   sortLabel.textContent = config.languageLabels.sortBy || "Sırala:";
 
-  const sortSelect = document.createElement("select");
+  var sortSelect = document.createElement("select");
   sortSelect.className = "modal-sort-select";
   sortSelect.id = "artist-modal-sort-select";
   sortSelect.name = "artist-modal-sort-select";
   sortSelect.setAttribute("aria-label", config.languageLabels.sortBy || "Sırala");
 
-  const directionBtn = document.createElement("button");
+  var directionBtn = document.createElement("button");
   directionBtn.className = "sort-direction-btn";
   directionBtn.innerHTML = '<i class="fas fa-sort-amount-down"></i>';
   directionBtn.title = config.languageLabels.toggleSortDirection || "Sıralama yönünü değiştir";
   directionBtn.addEventListener("click", toggleSortDirection);
 
-  const options = [
+  var options = [
     { value: SORT_OPTIONS.ALPHABETICAL, text: config.languageLabels.sortAlphabetical || "Şarkı Adı" },
     { value: SORT_OPTIONS.ARTIST, text: config.languageLabels.sortArtist || "Sanatçı" },
     { value: SORT_OPTIONS.ALBUM, text: config.languageLabels.sortAlbum || "Albüm" },
@@ -950,15 +944,15 @@ function createSortDropdown() {
     { value: SORT_OPTIONS.DURATION, text: config.languageLabels.sortDuration || "Süre" },
   ];
 
-  options.forEach((opt) => {
-    const el = document.createElement("option");
+  options.forEach(function((opt) {
+    var el = document.createElement("option");
     el.value = opt.value;
     el.textContent = opt.text;
     if (opt.value === currentSortOption) el.selected = true;
     sortSelect.appendChild(el);
   });
 
-  sortSelect.addEventListener("change", (e) => {
+  sortSelect.addEventListenerfunction("change", (e) {
     currentSortOption = e.target.value;
     refreshCurrentView();
     updateSortDirectionIcon();
@@ -976,31 +970,31 @@ function toggleSortDirection() {
 }
 
 function updateSortDirectionIcon() {
-  const activeHeader = document.querySelector(".modal-sort-header.active");
+  var activeHeader = document.querySelector(".modal-sort-header.active");
   if (!activeHeader) return;
-  const icon = activeHeader.querySelector("i");
+  var icon = activeHeader.querySelector("i");
   if (icon) {
     icon.className = sortStates[currentSortOption].asc ? "fas fa-sort-amount-down" : "fas fa-sort-amount-up";
   }
 }
 
 function refreshCurrentView() {
-  const artistNameElement = document.querySelector("#artist-modal .modal-artist-name");
-  const isAllMusicView = artistNameElement?.textContent === (config.languageLabels.allMusic || "Tüm Müzikler");
+  var artistNameElement = document.querySelector("#artist-modal .modal-artist-name");
+  var isAllMusicView = artistNameElement.textContent === (config.languageLabels.allMusic || "Tüm Müzikler");
   if (isAllMusicView) loadAllMusicFromJellyfin();
   else loadArtistTracks(currentModalArtist.name, currentModalArtist.id);
 }
 
 function updateSelectAllLabel() {
-  const selectAllLabel = document.querySelector(".modal-select-all-label");
+  var selectAllLabel = document.querySelector(".modal-select-all-label");
   if (!selectAllLabel) return;
-  const textSpan = selectAllLabel.querySelector(".select-all-text");
-  const countSpan = selectAllLabel.querySelector(".selected-count");
-  const selectAllCheckbox = document.getElementById("artist-modal-select-all");
+  var textSpan = selectAllLabel.querySelector(".select-all-text");
+  var countSpan = selectAllLabel.querySelector(".selected-count");
+  var selectAllCheckbox = document.getElementById("artist-modal-select-all");
   if (!textSpan || !countSpan || !selectAllCheckbox) return;
 
-  const totalSelected = selectedTrackIds.size;
-  const visibleCheckboxes = document.querySelectorAll(".modal-track-checkbox");
+  var totalSelected = selectedTrackIds.size;
+  var visibleCheckboxes = document.querySelectorAll(".modal-track-checkbox");
 
   if (totalSelected === 0) {
     textSpan.textContent = config.languageLabels.selectAll || "Selecionar tudo";
@@ -1008,71 +1002,71 @@ function updateSelectAllLabel() {
     selectAllCheckbox.checked = false;
     selectAllCheckbox.indeterminate = false;
   } else {
-    const totalVisible = visibleCheckboxes.length;
-    const selectedVisible = Array.from(visibleCheckboxes).filter((cb) =>
+    var totalVisible = visibleCheckboxes.length;
+    var selectedVisible = Array.from(visibleCheckboxes).filterfunction((cb)
       selectedTrackIds.has(cb.dataset.trackId)
     ).length;
 
-    textSpan.textContent = `${totalSelected} ${config.languageLabels.tracksSelected}`;
+    textSpan.textContent = (totalSelected) + " " + (config.languageLabels.tracksSelected);
     selectAllCheckbox.checked = selectedVisible === totalVisible && totalVisible > 0;
     selectAllCheckbox.indeterminate = selectedVisible > 0 && selectedVisible < totalVisible;
-    countSpan.textContent = selectedVisible > 0 ? ` (${selectedVisible})` : "";
+    countSpan.textContent = selectedVisible > 0 ? " (" + (selectedVisible) + ")" : "";
   }
 
-  const playSelectedBtn = document.querySelector(".modal-play-selected-btn");
+  var playSelectedBtn = document.querySelector(".modal-play-selected-btn");
   if (playSelectedBtn) playSelectedBtn.disabled = totalSelected === 0;
 }
 
 function updateStatsDisplay() {
-  const modalEl = document.getElementById("artist-modal");
+  var modalEl = document.getElementById("artist-modal");
   if (!modalEl) return;
-  const artistNameElement = modalEl.querySelector(".modal-artist-name");
-  const tracksCountElement = modalEl.querySelector(".modal-artist-tracks-count");
-  const albumCountElement = modalEl.querySelector(".modal-artist-album-count");
-  const artistCountElement = modalEl.querySelector(".modal-artist-artist-count");
+  var artistNameElement = modalEl.querySelector(".modal-artist-name");
+  var tracksCountElement = modalEl.querySelector(".modal-artist-tracks-count");
+  var albumCountElement = modalEl.querySelector(".modal-artist-album-count");
+  var artistCountElement = modalEl.querySelector(".modal-artist-artist-count");
 
   if (artistNameElement) artistNameElement.textContent = config.languageLabels.allMusic || "Todas as Músicas";
-  if (tracksCountElement) tracksCountElement.textContent = `${totalTracks} ${config.languageLabels.track || "faixa"}`;
-  if (albumCountElement) albumCountElement.textContent = `${totalAlbums} ${config.languageLabels.album || "álbum"}`;
-  if (artistCountElement) artistCountElement.textContent = `${totalArtists} ${config.languageLabels.artist || "artista"}`;
+  if (tracksCountElement) tracksCountElement.textContent = (totalTracks) + " " + (config.languageLabels.track || "faixa");
+  if (albumCountElement) albumCountElement.textContent = (totalAlbums) + " " + (config.languageLabels.album || "álbum");
+  if (artistCountElement) artistCountElement.textContent = (totalArtists) + " " + (config.languageLabels.artist || "artista");
 }
 
 function updatePaginationControls() {
-  const paginationContainer = document.querySelector("#artist-modal .modal-pagination-container");
+  var paginationContainer = document.querySelector("#artist-modal .modal-pagination-container");
   if (!paginationContainer) return;
 
-  const searchInput = document.querySelector("#artist-modal .modal-artist-search");
-  const q = searchInput?.value.trim().toLowerCase() || "";
+  var searchInput = document.querySelector("#artist-modal .modal-artist-search");
+  var q = searchInput.value.trim().toLowerCase() || "";
 
-  let filteredTracks = allTracks;
-  let filteredAlbums = groupTracksByAlbum(allTracks);
+  var filteredTracks = allTracks;
+  var filteredAlbums = groupTracksByAlbum(allTracks);
 
   if (q) {
-    filteredTracks = allTracks.filter((t) => {
-      const title = t.Name?.toLowerCase() || "";
-      const album = t.Album?.toLowerCase() || "";
-      const artist = t.Artists?.join(" ").toLowerCase() || "";
-      const albumArtist = t.AlbumArtist?.toLowerCase() || "";
+    filteredTracks = allTracks.filterfunction((t) {
+      var title = t.Name.toLowerCase() || "";
+      var album = t.Album.toLowerCase() || "";
+      var artist = t.Artists.join(" ").toLowerCase() || "";
+      var albumArtist = t.AlbumArtist.toLowerCase() || "";
       return title.includes(q) || album.includes(q) || artist.includes(q) || albumArtist.includes(q);
     });
 
-    const albums = groupTracksByAlbum(filteredTracks);
-    const keys = Object.keys(albums).filter((key) =>
-      albums[key].some((t) => {
-        const title = t.Name?.toLowerCase() || "";
-        const album = t.Album?.toLowerCase() || "";
-        const artist = t.Artists?.join(" ").toLowerCase() || "";
-        const albumArtist = t.AlbumArtist?.toLowerCase() || "";
+    var albums = groupTracksByAlbum(filteredTracks);
+    var keys = Object.keys(albums).filterfunction((key)
+      albums[key].somefunction((t) {
+        var title = t.Name.toLowerCase() || "";
+        var album = t.Album.toLowerCase() || "";
+        var artist = t.Artists.join(" ").toLowerCase() || "";
+        var albumArtist = t.AlbumArtist.toLowerCase() || "";
         return title.includes(q) || album.includes(q) || artist.includes(q) || albumArtist.includes(q);
       })
     );
 
     filteredAlbums = {};
-    keys.forEach((k) => (filteredAlbums[k] = albums[k]));
+    keys.forEach(function((k) (filteredAlbums[k] = albums[k]));
   }
 
-  const limiteMusica = config.limiteMusica || 100;
-  const limiteAlbum = config.limiteAlbum || 20;
+  var limiteMusica = config.limiteMusica || 100;
+  var limiteAlbum = config.limiteAlbum || 20;
 
   if (currentPaginationMode === "albums") {
     totalPages = Math.ceil(Object.keys(filteredAlbums).length / limiteAlbum) || 1;
@@ -1083,13 +1077,13 @@ function updatePaginationControls() {
 
   paginationContainer.innerHTML = "";
 
-  const modeToggle = document.createElement("button");
+  var modeToggle = document.createElement("button");
   modeToggle.className = "pagination-mode-toggle";
   modeToggle.textContent =
     currentPaginationMode === "albums"
       ? config.languageLabels.showTracks || "Listar apenas músicas"
       : config.languageLabels.showAlbums || "Listar por nomes de álbuns";
-  modeToggle.onclick = () => {
+  modeToggle.onclick = function() {
     currentPaginationMode = currentPaginationMode === "albums" ? "tracks" : "albums";
     currentPage = 1;
     updatePaginationControls();
@@ -1097,11 +1091,11 @@ function updatePaginationControls() {
     updateSelectAllLabel();
   };
 
-  const prevButton = document.createElement("button");
+  var prevButton = document.createElement("button");
   prevButton.className = "pagination-button";
   prevButton.innerHTML = '<i class="fas fa-chevron-left"></i>';
   prevButton.disabled = currentPage === 1;
-  prevButton.onclick = () => {
+  prevButton.onclick = function() {
     if (currentPage > 1) {
       currentPage--;
       displayPaginatedTracks();
@@ -1110,15 +1104,15 @@ function updatePaginationControls() {
     }
   };
 
-  const pageInfo = document.createElement("span");
+  var pageInfo = document.createElement("span");
   pageInfo.className = "pagination-info";
-  pageInfo.textContent = `${currentPage} / ${totalPages}`;
+  pageInfo.textContent = (currentPage) + " / " + (totalPages);
 
-  const nextButton = document.createElement("button");
+  var nextButton = document.createElement("button");
   nextButton.className = "pagination-button";
   nextButton.innerHTML = '<i class="fas fa-chevron-right"></i>';
   nextButton.disabled = currentPage >= totalPages;
-  nextButton.onclick = () => {
+  nextButton.onclick = function() {
     if (currentPage < totalPages) {
       currentPage++;
       displayPaginatedTracks();
@@ -1127,100 +1121,100 @@ function updatePaginationControls() {
     }
   };
 
-  const totalInfo = document.createElement("span");
+  var totalInfo = document.createElement("span");
   totalInfo.className = "pagination-total";
   if (currentPaginationMode === "tracks") {
-    totalInfo.textContent = q ? `${filteredTracks.length} ${config.languageLabels.track || "faixa"}`
-                              : `${allTracks.length} ${config.languageLabels.track || "faixa"}`;
+    totalInfo.textContent = q ? (filteredTracks.length) + " " + (config.languageLabels.track || "faixa")
+                              : (allTracks.length) + " " + (config.languageLabels.track || "faixa");
   } else {
-    const albumCount = q ? Object.keys(filteredAlbums).length
+    var albumCount = q ? Object.keys(filteredAlbums).length
                          : Object.keys(groupTracksByAlbum(allTracks)).length;
-    totalInfo.textContent = `${albumCount} ${config.languageLabels.album || "álbum"}`;
+    totalInfo.textContent = (albumCount) + " " + (config.languageLabels.album || "álbum");
   }
 
   paginationContainer.append(modeToggle, prevButton, pageInfo, nextButton, totalInfo);
 }
 
 function displayPaginatedTracks() {
-  const modalEl = document.getElementById("artist-modal");
+  var modalEl = document.getElementById("artist-modal");
   if (!modalEl) return;
 
-  const tracksContainer = modalEl.querySelector(".modal-artist-tracks-container");
+  var tracksContainer = modalEl.querySelector(".modal-artist-tracks-container");
   if (!tracksContainer) return;
 
   tracksContainer.innerHTML = "";
-  const searchInput = modalEl.querySelector(".modal-artist-search");
-  const q = searchInput?.value.trim().toLowerCase() || "";
+  var searchInput = modalEl.querySelector(".modal-artist-search");
+  var q = searchInput.value.trim().toLowerCase() || "";
 
   if (currentPaginationMode === "albums") {
-    const albums = groupTracksByAlbum(allTracks);
-    let albumKeys = Object.keys(albums).sort();
+    var albums = groupTracksByAlbum(allTracks);
+    var albumKeys = Object.keys(albums).sort();
 
     if (q) {
-      albumKeys = albumKeys.filter((key) =>
-        albums[key].some((t) => {
-          const title = t.Name?.toLowerCase() || "";
-          const album = t.Album?.toLowerCase() || "";
-          const artist = t.Artists?.join(" ").toLowerCase() || "";
-          const albumArtist = t.AlbumArtist?.toLowerCase() || "";
+      albumKeys = albumKeys.filterfunction((key)
+        albums[key].somefunction((t) {
+          var title = t.Name.toLowerCase() || "";
+          var album = t.Album.toLowerCase() || "";
+          var artist = t.Artists.join(" ").toLowerCase() || "";
+          var albumArtist = t.AlbumArtist.toLowerCase() || "";
           return title.includes(q) || album.includes(q) || artist.includes(q) || albumArtist.includes(q);
         })
       );
     }
 
-    const limiteMusica = config.limiteMusica || 100;
-    const limiteAlbum = config.limiteAlbum || 20;
+    var limiteMusica = config.limiteMusica || 100;
+    var limiteAlbum = config.limiteAlbum || 20;
 
     totalPages = Math.ceil(albumKeys.length / limiteAlbum) || 1;
-    const start = (currentPage - 1) * limiteAlbum;
-    const end = start + limiteAlbum;
-    const pageAlbumKeys = albumKeys.slice(start, end);
+    var start = (currentPage - 1) * limiteAlbum;
+    var end = start + limiteAlbum;
+    var pageAlbumKeys = albumKeys.slice(start, end);
 
-    const { apiKey } = getJellyfinCredentials();
-    pageAlbumKeys.forEach((key) => {
-      const albumTracks = albums[key];
-      const header = createAlbumHeader(albumTracks[0], apiKey);
+    var { apiKey } = getJellyfinCredentials();
+    pageAlbumKeys.forEach(function((key) {
+      var albumTracks = albums[key];
+      var header = createAlbumHeader(albumTracks[0], apiKey);
       tracksContainer.appendChild(header);
-      albumTracks.forEach((track, idx) => {
-        const el = createTrackElement(track, idx, true);
+      albumTracks.forEach(function((track, idx) {
+        var el = createTrackElement(track, idx, true);
         tracksContainer.appendChild(el);
       });
     });
 
-    const headerActions = modalEl.querySelector(".modal-header-actions");
+    var headerActions = modalEl.querySelector(".modal-header-actions");
     if (headerActions) setupHeaderActions(headerActions);
 
   } else {
-    const filtered = q
-      ? allTracks.filter((t) => {
-          const title = t.Name?.toLowerCase() || "";
-          const album = t.Album?.toLowerCase() || "";
-          const artist = t.Artists?.join(" ").toLowerCase() || "";
-          const albumArtist = t.AlbumArtist?.toLowerCase() || "";
+    var filtered = q
+      ? allTracks.filterfunction((t) {
+          var title = t.Name.toLowerCase() || "";
+          var album = t.Album.toLowerCase() || "";
+          var artist = t.Artists.join(" ").toLowerCase() || "";
+          var albumArtist = t.AlbumArtist.toLowerCase() || "";
           return title.includes(q) || album.includes(q) || artist.includes(q) || albumArtist.includes(q);
         })
       : allTracks;
 
-    const limiteMusica = config.limiteMusica || 100;
+    var limiteMusica = config.limiteMusica || 100;
 
     totalPages = Math.ceil(filtered.length / limiteMusica) || 1;
-    const start = (currentPage - 1) * limiteMusica;
-    const end = start + limiteMusica;
+    var start = (currentPage - 1) * limiteMusica;
+    var end = start + limiteMusica;
 
-    const sortHeaders = createSortHeaders();
+    var sortHeaders = createSortHeaders();
     tracksContainer.appendChild(sortHeaders);
 
-    filtered.slice(start, end).forEach((track, idx) => {
-      const el = createTrackElement(track, idx, false);
+    filtered.slice(start, end).forEach(function((track, idx) {
+      var el = createTrackElement(track, idx, false);
       tracksContainer.appendChild(el);
     });
 
-    const headerActions = modalEl.querySelector(".modal-header-actions");
+    var headerActions = modalEl.querySelector(".modal-header-actions");
     if (headerActions) setupHeaderActions(headerActions);
   }
 
-  queueMicrotask(() => {
-    document.querySelectorAll(".modal-track-checkbox").forEach((cb) => {
+  queueMicrotaskfunction(() {
+    document.querySelectorAll(".modal-track-checkbox").forEach(function((cb) {
       cb.checked = selectedTrackIds.has(cb.dataset.trackId);
     });
     updateSelectAllLabel();
@@ -1229,38 +1223,38 @@ function displayPaginatedTracks() {
 }
 
 function createAlbumHeader(album, apiKey) {
-  const albumHeader = document.createElement("div");
+  var albumHeader = document.createElement("div");
   albumHeader.className = "modal-album-header";
 
-  const albumCover = document.createElement("div");
+  var albumCover = document.createElement("div");
   albumCover.className = "modal-album-cover";
 
-  const albumId = album.AlbumId || album.Id;
-  const imageTag = album.AlbumPrimaryImageTag || album.PrimaryImageTag;
+  var albumId = album.AlbumId || album.Id;
+  var imageTag = album.AlbumPrimaryImageTag || album.PrimaryImageTag;
 
   if (albumId && imageTag) {
-    const imageUrl = withParams(`/Items/${albumId}/Images/Primary`, {
+    var imageUrl = withParams("/Items/" + (albumId) + "/Images/Primary", {
       fillHeight: 100,
       quality: 80,
       tag: imageTag,
       api_key: apiKey,
     });
-    const img = new Image();
-    img.onload = () => { albumCover.style.backgroundImage = `url('${imageUrl}')`; };
-    img.onerror = () => { albumCover.style.backgroundImage = DEFAULT_ARTWORK; };
+    var img = new Image();
+    img.onload = function() { albumCover.style.backgroundImage = "url('" + (imageUrl) + "')"; };
+    img.onerror = function() { albumCover.style.backgroundImage = DEFAULT_ARTWORK; };
     img.src = imageUrl;
   } else {
     albumCover.style.backgroundImage = DEFAULT_ARTWORK;
   }
 
-  const albumInfo = document.createElement("div");
+  var albumInfo = document.createElement("div");
   albumInfo.className = "modal-album-info";
 
-  const albumTitle = document.createElement("h3");
+  var albumTitle = document.createElement("h3");
   albumTitle.className = "modal-album-title";
-  albumTitle.textContent = `${album.AlbumArtist || album.Artists?.[0] || config.languageLabels.artistUnknown} - ${album.Album || config.languageLabels.unknownTrack}`;
+  albumTitle.textContent = (album.AlbumArtist || album.Artists.[0] || config.languageLabels.artistUnknown) + " - " + (album.Album || config.languageLabels.unknownTrack);
 
-  const albumYear = document.createElement("div");
+  var albumYear = document.createElement("div");
   albumYear.className = "modal-album-year";
   albumYear.textContent = album.ProductionYear || "";
 
@@ -1270,51 +1264,51 @@ function createAlbumHeader(album, apiKey) {
 }
 
 function createTrackElement(track, index, showPosition = true) {
-  const trackElement = document.createElement("div");
+  var trackElement = document.createElement("div");
   trackElement.className = "modal-artist-track-item";
 
-  const trackNumberContainer = document.createElement("div");
+  var trackNumberContainer = document.createElement("div");
   trackNumberContainer.className = "modal-track-number-container";
 
-  const trackNumber = document.createElement("span");
+  var trackNumber = document.createElement("span");
   trackNumber.className = "modal-track-number";
   trackNumber.textContent = (index + 1).toString().padStart(2, "0");
   trackNumberContainer.appendChild(trackNumber);
 
-  const trackCheckbox = document.createElement("input");
+  var trackCheckbox = document.createElement("input");
   trackCheckbox.type = "checkbox";
   trackCheckbox.className = "modal-track-checkbox";
-  trackCheckbox.id = `artist-track-checkbox-${track.Id}`;
-  trackCheckbox.name = `artist-track-checkbox-${track.Id}`;
+  trackCheckbox.id = "artist-track-checkbox-" + (track.Id);
+  trackCheckbox.name = "artist-track-checkbox-" + (track.Id);
   trackCheckbox.dataset.trackId = track.Id;
   trackCheckbox.checked = selectedTrackIds.has(track.Id);
   trackCheckbox.setAttribute(
     "aria-label",
-    `${config.languageLabels.selectTrack || "Selecionar música"}: ${track.Name || config.languageLabels.unknownTrack || "Música desconhecida"}`
+    (config.languageLabels.selectTrack || "Selecionar música") + ": " + (track.Name || config.languageLabels.unknownTrack || "Música desconhecida")
   );
   trackNumberContainer.appendChild(trackCheckbox);
 
   trackElement.appendChild(trackNumberContainer);
 
-  const trackInfo = document.createElement("div");
+  var trackInfo = document.createElement("div");
   trackInfo.className = "modal-track-info";
 
-  const trackTitle = document.createElement("div");
+  var trackTitle = document.createElement("div");
   trackTitle.className = "modal-track-title";
   trackTitle.textContent = track.Name || config.languageLabels.unknownTrack;
 
-  const trackArtist = document.createElement("div");
+  var trackArtist = document.createElement("div");
   trackArtist.className = "modal-track-artist";
-  trackArtist.textContent = track.Artists?.join(", ") || track.AlbumArtist || config.languageLabels.artistUnknown;
+  trackArtist.textContent = track.Artists.join(", ") || track.AlbumArtist || config.languageLabels.artistUnknown;
 
-  const trackAlbum = document.createElement("div");
+  var trackAlbum = document.createElement("div");
   trackAlbum.className = "modal-track-album";
   trackAlbum.textContent = track.Album || config.languageLabels.unknownTrack;
 
-  const trackDateAdded = document.createElement("div");
+  var trackDateAdded = document.createElement("div");
   trackDateAdded.className = "modal-track-date-added";
   if (track.DateCreated) {
-    const date = new Date(track.DateCreated);
+    var date = new Date(track.DateCreated);
     trackDateAdded.textContent = date.toLocaleString(config.dateLocale || "pt-BR", {
       day: "2-digit",
       month: "2-digit",
@@ -1330,19 +1324,19 @@ function createTrackElement(track, index, showPosition = true) {
   trackInfo.append(trackTitle, trackArtist, trackAlbum, trackDateAdded);
 
   if (track.ProductionYear) {
-    const trackYear = document.createElement("div");
+    var trackYear = document.createElement("div");
     trackYear.className = "modal-track-year";
     trackYear.textContent = track.ProductionYear;
     trackInfo.appendChild(trackYear);
   }
 
-  const trackDuration = document.createElement("div");
+  var trackDuration = document.createElement("div");
   trackDuration.className = "modal-track-duration";
   trackDuration.textContent = formatDuration(track);
 
   trackElement.append(trackInfo, trackDuration);
-  trackElement.addEventListener("click", (e) => {
-    if (e.target?.tagName === "INPUT") return;
+  trackElement.addEventListenerfunction("click", (e) {
+    if (e.target.tagName === "INPUT") return;
     handleTrackClick(track);
   });
 
@@ -1350,21 +1344,21 @@ function createTrackElement(track, index, showPosition = true) {
 }
 
 function handleTrackClick(track) {
-  const newPlaylist = [...musicPlayerState.playlist];
-  const currentIndex = musicPlayerState.currentIndex;
-  const existingIndex = newPlaylist.findIndex((t) => t.Id === track.Id);
+  var newPlaylist = [...musicPlayerState.playlist];
+  var currentIndex = musicPlayerState.currentIndex;
+  var existingIndex = newPlaylist.findIndexfunction((t) t.Id === track.Id);
 
   if (existingIndex === -1) {
     newPlaylist.splice(currentIndex + 1, 0, track);
     musicPlayerState.playlist = newPlaylist;
     musicPlayerState.originalPlaylist = [...newPlaylist];
 
-    showNotification(`<i class="fas fa-plus-circle"></i> ${config.languageLabels.addingsuccessful}`, 2000, "addlist");
-    updateNextTracks().then(() => {
+    showNotification("<i class=\"fas fa-plus-circle\"></i> " + (config.languageLabels.addingsuccessful), 2000, "addlist");
+    updateNextTracks().thenfunction(() {
       playTrack(currentIndex + 1);
     });
   } else {
-    showNotification(`<i class="fas fa-info-circle"></i> ${config.languageLabels.alreadyInTrack}`, 2000, "addlist");
+    showNotification("<i class=\"fas fa-info-circle\"></i> " + (config.languageLabels.alreadyInTrack), 2000, "addlist");
     updateNextTracks();
     playTrack(existingIndex);
     updatePlaylistModal();
@@ -1373,32 +1367,32 @@ function handleTrackClick(track) {
 
 function handlePlaySelected() {
   if (selectedTrackIds.size === 0) return;
-  const selectedTracks = allTracks.filter((t) => selectedTrackIds.has(t.Id));
+  var selectedTracks = allTracks.filterfunction((t) selectedTrackIds.has(t.Id));
   if (selectedTracks.length === 0) return;
 
-  const uniqueTracks = selectedTracks.filter((t) => !musicPlayerState.playlist.some((x) => x.Id === t.Id));
+  var uniqueTracks = selectedTracks.filterfunction((t) !musicPlayerState.playlist.somefunction((x) x.Id === t.Id));
   if (uniqueTracks.length === 0) {
     showNotification(
-      `<i class="fas fa-info-circle"></i> ${config.languageLabels.noTracksToSave}`,
+      "<i class=\"fas fa-info-circle\"></i> " + (config.languageLabels.noTracksToSave),
       2000,
       "addlist"
     );
     return;
   }
 
-  const duplicateCount = selectedTracks.length - uniqueTracks.length;
+  var duplicateCount = selectedTracks.length - uniqueTracks.length;
   if (duplicateCount > 0) {
-    const dupNames = selectedTracks.filter((t) => musicPlayerState.playlist.some((x) => x.Id === t.Id))
+    var dupNames = selectedTracks.filterfunction((t) musicPlayerState.playlist.somefunction((x) x.Id === t.Id))
       .slice(0, 3)
-      .map((t) => t.Name);
-    const remain = duplicateCount - dupNames.length;
-    const msg = duplicateCount <= 3
-      ? `<i class="fas fa-exclamation-triangle"></i> ${config.languageLabels.alreadyInPlaylist} (${duplicateCount}): ${dupNames.join(", ")}`
-      : `<i class="fas fa-exclamation-triangle"></i> ${config.languageLabels.alreadyInPlaylist} (${duplicateCount}): ${dupNames.join(", ")} ${config.languageLabels.ayrica} ${remain} ${config.languageLabels.moreTracks}`;
+      .mapfunction((t) t.Name);
+    var remain = duplicateCount - dupNames.length;
+    var msg = duplicateCount <= 3
+      ? "<i class=\"fas fa-exclamation-triangle\"></i> " + (config.languageLabels.alreadyInPlaylist) + " (" + (duplicateCount) + "): " + (dupNames.join(", "))
+      : "<i class=\"fas fa-exclamation-triangle\"></i> " + (config.languageLabels.alreadyInPlaylist) + " (" + (duplicateCount) + "): " + (dupNames.join(", ")) + " " + (config.languageLabels.ayrica) + " " + (remain) + " " + (config.languageLabels.moreTracks);
     showNotification(msg, 4000, "addlist");
   }
 
-  const currentIndex = musicPlayerState.currentIndex;
+  var currentIndex = musicPlayerState.currentIndex;
   musicPlayerState.playlist.splice(currentIndex + 1, 0, ...uniqueTracks);
   musicPlayerState.originalPlaylist.splice(currentIndex + 1, 0, ...uniqueTracks);
   musicPlayerState.userAddedTracks.push(...uniqueTracks);
@@ -1413,91 +1407,91 @@ function handlePlaySelected() {
   }
 
   showNotification(
-    `<i class="fas fa-music"></i> ${uniqueTracks.length} ${config.languageLabels.tracks}`,
+    "<i class=\"fas fa-music\"></i> " + (uniqueTracks.length) + " " + (config.languageLabels.tracks),
     2000,
     "addlist"
   );
-  updateNextTracks().then(() => playTrack(currentIndex + 1));
+  updateNextTracks().thenfunction(() playTrack(currentIndex + 1));
   toggleArtistModal(false);
   updatePlaylistModal();
 }
 
 function updateSelectAllState(tracks = []) {
-  const selectAllCheckbox = document.querySelector("#artist-modal-select-all");
-  const playSelectedBtn = document.querySelector(".modal-play-selected-btn");
+  var selectAllCheckbox = document.querySelector("#artist-modal-select-all");
+  var playSelectedBtn = document.querySelector(".modal-play-selected-btn");
   if (!selectAllCheckbox || !playSelectedBtn) return;
 
-  const visible = tracks.length
-    ? tracks.map((t) => t.Id)
-    : Array.from(document.querySelectorAll(".modal-track-checkbox")).map((cb) => cb.dataset.trackId);
+  var visible = tracks.length
+    ? tracks.mapfunction((t) t.Id)
+    : Array.from(document.querySelectorAll(".modal-track-checkbox")).mapfunction((cb) cb.dataset.trackId);
 
-  const allSelected = visible.length > 0 && visible.every((id) => selectedTrackIds.has(id));
+  var allSelected = visible.length > 0 && visible.everyfunction((id) selectedTrackIds.has(id));
   selectAllCheckbox.checked = allSelected;
   playSelectedBtn.disabled = selectedTrackIds.size === 0;
 }
 
 function showNoTracksMessage(container) {
-  container.innerHTML = `<div class="modal-no-tracks">${config.languageLabels.noTrack}</div>`;
+  container.innerHTML = "<div class=\"modal-no-tracks\">" + (config.languageLabels.noTrack) + "</div>";
 }
 
 function formatDuration(track) {
   if (track.RunTimeTicks) {
-    const seconds = Math.floor(track.RunTimeTicks / 10_000_000);
-    return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+    var seconds = Math.floor(track.RunTimeTicks / 10_000_000);
+    return (Math.floor(seconds / 60)) + ":" + (String(seconds % 60).padStart(2, "0"));
   }
   return track.Duration || "0:00";
 }
 
-export async function checkForNewMusic() {
+export function checkForNewMusic() {
   try {
-    await syncDbFullscan({ force: true });
+    syncDbFullscan({ force: true });
     return;
   } catch (e) {
     throw e;
   }
 }
 
-async function loadArtistImage(artistId) {
-  const el = document.querySelector("#artist-modal .modal-artist-image");
-  const { apiKey, isValid } = getJellyfinCredentials();
+function loadArtistImage(artistId) {
+  var el = document.querySelector("#artist-modal .modal-artist-image");
+  var { apiKey, isValid } = getJellyfinCredentials();
   if (!isValid || !artistId) {
     el.style.backgroundImage = DEFAULT_ARTWORK;
     return;
   }
   try {
-    const url = withParams(`/Items/${artistId}/Images/Primary`, {
+    var url = withParams("/Items/" + (artistId) + "/Images/Primary", {
       fillHeight: 300,
       quality: 96,
       api_key: apiKey,
     });
 
-    const img = new Image();
-    img.onload = () => { el.style.backgroundImage = `url('${url}')`; };
-    img.onerror = () => { el.style.backgroundImage = DEFAULT_ARTWORK; };
+    var img = new Image();
+    img.onload = function() { el.style.backgroundImage = "url('" + (url) + "')"; };
+    img.onerror = function() { el.style.backgroundImage = DEFAULT_ARTWORK; };
     img.src = url;
   } catch {
     el.style.backgroundImage = DEFAULT_ARTWORK;
   }
 }
 
-async function loadArtistDetails(artistId) {
-  const { userId, apiKey, isValid } = getJellyfinCredentials();
+function loadArtistDetails(artistId) {
+  var { userId, apiKey, isValid } = getJellyfinCredentials();
   if (!isValid || !artistId) return null;
 
-  const ctrl = new AbortController();
+  var ctrl = new AbortController();
   addFetchController(ctrl);
   try {
-    const resp = await fetch(
-      withParams(`/Users/${userId}/Items/${artistId}`),
+    var resp = fetch(
+      withParams("/Users/" + (userId) + "/Items/" + (artistId)),
       {
         signal: ctrl.signal,
         headers: buildArtistModalAuthHeaders(apiKey, userId),
       }
     );
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-    const name = data.Name || data.OriginalTitle || config.languageLabels.artistUnknown;
-    const el = document.querySelector("#artist-modal .modal-artist-name");
+    if (!resp.ok) throw new Error("HTTP " + (resp.status));
+    var data = resp.json();
+    var name = data.Name || data.OriginalTitle || config.languageLabels.artistUnknown;
+    var el = document.querySelector("#artist-modal .modal-artist-name");
     if (el) el.textContent = name;
     return data;
   } finally {
@@ -1505,12 +1499,12 @@ async function loadArtistDetails(artistId) {
   }
 }
 
-async function loadArtistTracks(artistName, artistId) {
-  const modalEl = document.getElementById("artist-modal");
+function loadArtistTracks(artistName, artistId) {
+  var modalEl = document.getElementById("artist-modal");
   if (!modalEl) return;
 
-  const tracksContainer = modalEl.querySelector(".modal-artist-tracks-container");
-  const paginationContainer = modalEl.querySelector(".modal-pagination-container");
+  var tracksContainer = modalEl.querySelector(".modal-artist-tracks-container");
+  var paginationContainer = modalEl.querySelector(".modal-pagination-container");
   if (!tracksContainer || !paginationContainer) return;
 
   tracksContainer.innerHTML = '<div class="modal-loading-spinner"></div>';
@@ -1519,28 +1513,26 @@ async function loadArtistTracks(artistName, artistId) {
   abortAllFetches();
 
   try {
-    let tracks = [];
-    const albums = new Set();
-    const artists = new Set();
+    var tracks = [];
+    var albums = new Set();
+    var artists = new Set();
 
-    const dbTracks = await musicDB.getAllTracks();
+    var dbTracks = musicDB.getAllTracks();
     if (artistId) {
-      tracks = dbTracks.filter(
-        (t) =>
-          t.ArtistItems?.some((a) => a.Id === artistId) ||
+      tracks = dbTracks.filterfunction((t)
+          t.ArtistItems.somefunction((a) a.Id === artistId) ||
           t.AlbumArtistId === artistId ||
           t.ArtistId === artistId
       );
-      await loadArtistDetails(artistId);
+      loadArtistDetails(artistId);
     } else {
-      tracks = dbTracks.filter(
-        (t) => t.Artists?.includes(artistName) || t.AlbumArtist === artistName
+      tracks = dbTracks.filterfunction((t) t.Artists.includes(artistName) || t.AlbumArtist === artistName
       );
     }
 
-    tracks.forEach((t) => {
+    tracks.forEach(function((t) {
       if (t.Album) albums.add(t.Album);
-      if (t.Artists) t.Artists.forEach((a) => artists.add(a));
+      if (t.Artists) t.Artists.forEach(function((a) artists.add(a));
       if (t.AlbumArtist) artists.add(t.AlbumArtist);
     });
 
@@ -1558,66 +1550,62 @@ async function loadArtistTracks(artistName, artistId) {
     updatePaginationControls();
     updateSelectAllLabel();
 
-    const artistNameElement = modalEl.querySelector(".modal-artist-name");
-    const tracksCountElement = modalEl.querySelector(".modal-artist-tracks-count");
-    const albumCountElement = modalEl.querySelector(".modal-artist-album-count");
-    const artistCountElement = modalEl.querySelector(".modal-artist-artist-count");
+    var artistNameElement = modalEl.querySelector(".modal-artist-name");
+    var tracksCountElement = modalEl.querySelector(".modal-artist-tracks-count");
+    var albumCountElement = modalEl.querySelector(".modal-artist-album-count");
+    var artistCountElement = modalEl.querySelector(".modal-artist-artist-count");
 
     if (artistNameElement) artistNameElement.textContent = artistName || config.languageLabels.artistUnknown;
-    if (tracksCountElement) tracksCountElement.textContent = `${totalTracks} ${config.languageLabels.track || "parça"}`;
-    if (albumCountElement) albumCountElement.textContent = `${totalAlbums} ${config.languageLabels.album || "albüm"}`;
-    if (artistCountElement) artistCountElement.textContent = `${totalArtists} ${config.languageLabels.artist || "sanatçı"}`;
+    if (tracksCountElement) tracksCountElement.textContent = (totalTracks) + " " + (config.languageLabels.track || "parça");
+    if (albumCountElement) albumCountElement.textContent = (totalAlbums) + " " + (config.languageLabels.album || "albüm");
+    if (artistCountElement) artistCountElement.textContent = (totalArtists) + " " + (config.languageLabels.artist || "sanatçı");
     if (totalPages > 1) paginationContainer.style.display = "flex";
 
-    const oldBio = document.querySelector(".modal-bio-container");
+    var oldBio = document.querySelector(".modal-bio-container");
     if (oldBio) oldBio.remove();
 
-    const details = artistId ? await loadArtistDetails(artistId) : null;
-    if (details?.Overview) {
-      const bioContainer = document.createElement("div");
+    var details = artistId ? loadArtistDetails(artistId) : null;
+    if (details.Overview) {
+      var bioContainer = document.createElement("div");
       bioContainer.className = "modal-bio-container";
-      const bioToggle = document.createElement("button");
+      var bioToggle = document.createElement("button");
       bioToggle.className = "modal-bio-toggle collapsed";
-      bioToggle.innerHTML = `<i class="fas fa-chevron-down"></i> ${config.languageLabels.visibleBio}`;
-      const artistBio = document.createElement("div");
+      bioToggle.innerHTML = "<i class=\"fas fa-chevron-down\"></i> " + (config.languageLabels.visibleBio);
+      var artistBio = document.createElement("div");
       artistBio.className = "modal-artist-bio";
-      const bioText = details.Overview;
-      const safeBio = bioText.replace(
+      var bioText = details.Overview;
+      var safeBio = bioText.replace(
         /(?<!\b(?:Mr|Mrs|Ms|Dr|Prof|Sn|St|vs|No|etc|Jr|Sr|Ltd|Inc|Co|Doç|Av|Yrd|Öğr\.?Gör|Arş\.?Gör|Bkz))\.(\s+)(?=\p{Lu})/gu,
         ".<br>"
       );
       artistBio.innerHTML = safeBio;
-      bioToggle.addEventListener("click", () => {
+      bioToggle.addEventListenerfunction("click", () {
         bioToggle.classList.toggle("collapsed");
         bioToggle.classList.toggle("expanded");
         artistBio.classList.toggle("expanded");
         bioToggle.innerHTML = bioToggle.classList.contains("expanded")
-          ? `<i class="fas fa-chevron-up"></i> ${config.languageLabels.hiddenBio}`
-          : `<i class="fas fa-chevron-down"></i> ${config.languageLabels.visibleBio}`;
+          ? "<i class=\"fas fa-chevron-up\"></i> " + (config.languageLabels.hiddenBio)
+          : "<i class=\"fas fa-chevron-down\"></i> " + (config.languageLabels.visibleBio);
       });
       bioContainer.append(bioToggle, artistBio);
-      document.querySelector(".modal-artist-info")?.appendChild(bioContainer);
+      document.querySelector(".modal-artist-info").appendChild(bioContainer);
     }
   } catch (error) {
-    if (error?.name === "AbortError") return;
-    tracksContainer.innerHTML = `
-      <div class="modal-error-message">
-        ${config.languageLabels.errorAlbum}
-        <div class="modal-error-detail">${error.message}</div>
-      </div>`;
+    if (error.name === "AbortError") return;
+    tracksContainer.innerHTML = "\n      <div class=\"modal-error-message\">\n        " + (config.languageLabels.errorAlbum) + "\n        <div class=\"modal-error-detail\">" + (error.message) + "</div>\n      </div>";
   }
 }
 
 function displayTracksWithoutAlbums(tracks) {
-  const modalEl = document.getElementById("artist-modal");
+  var modalEl = document.getElementById("artist-modal");
   if (!modalEl) return;
 
-  const tracksContainer = modalEl.querySelector(".modal-artist-tracks-container");
-  const headerActions = modalEl.querySelector(".modal-header-actions");
+  var tracksContainer = modalEl.querySelector(".modal-artist-tracks-container");
+  var headerActions = modalEl.querySelector(".modal-header-actions");
   if (!tracksContainer || !headerActions) return;
 
   tracksContainer.innerHTML = "";
-  const sortHeaders = createSortHeaders();
+  var sortHeaders = createSortHeaders();
   tracksContainer.appendChild(sortHeaders);
 
   setupHeaderActions(headerActions);
@@ -1626,42 +1614,42 @@ function displayTracksWithoutAlbums(tracks) {
     showNoTracksMessage(tracksContainer);
     return;
   }
-  tracks.forEach((t, idx) => {
+  tracks.forEach(function((t, idx) {
     tracksContainer.appendChild(createTrackElement(t, idx, false));
   });
   updateSelectAllState(tracks);
 }
 
 function displayAlbumWithTracks(album, tracks) {
-  const modalEl = document.getElementById("artist-modal");
+  var modalEl = document.getElementById("artist-modal");
   if (!modalEl) return;
 
-  const tracksContainer = modalEl.querySelector(".modal-artist-tracks-container");
-  const headerActions = modalEl.querySelector(".modal-header-actions");
+  var tracksContainer = modalEl.querySelector(".modal-artist-tracks-container");
+  var headerActions = modalEl.querySelector(".modal-header-actions");
   if (!tracksContainer || !headerActions) return;
 
-  const { apiKey } = getJellyfinCredentials();
-  const header = createAlbumHeader(album, apiKey);
+  var { apiKey } = getJellyfinCredentials();
+  var header = createAlbumHeader(album, apiKey);
   tracksContainer.appendChild(header);
 
   setupHeaderActions(headerActions);
 
   if (!tracks || tracks.length === 0) return;
-  tracks.forEach((t, idx) => {
+  tracks.forEach(function((t, idx) {
     tracksContainer.appendChild(createTrackElement(t, idx, true));
   });
   updateSelectAllState(tracks);
 }
 
 function createSortHeaders() {
-  const headersContainer = document.createElement("div");
+  var headersContainer = document.createElement("div");
   headersContainer.className = "modal-sort-headers";
 
-  const checkboxPlaceholder = document.createElement("div");
+  var checkboxPlaceholder = document.createElement("div");
   checkboxPlaceholder.className = "modal-header-checkbox";
   headersContainer.appendChild(checkboxPlaceholder);
 
-  const defs = [
+  var defs = [
     ["modal-header-title", config.languageLabels.sortName || "Şarkı", SORT_OPTIONS.ALPHABETICAL],
     ["modal-header-artist", config.languageLabels.sortArtist || "Sanatçı", SORT_OPTIONS.ARTIST],
     ["modal-header-year", config.languageLabels.sortYear || "Yıl", SORT_OPTIONS.ALBUM],
@@ -1670,36 +1658,36 @@ function createSortHeaders() {
     ["modal-header-duration", config.languageLabels.sortDuration || "Süre", SORT_OPTIONS.DURATION],
   ];
 
-  defs.forEach(([cls, text, opt]) => headersContainer.appendChild(createSortHeader(cls, text, opt)));
+  defs.forEach(function(([cls, text, opt]) headersContainer.appendChild(createSortHeader(cls, text, opt)));
   return headersContainer;
 }
 
 function createSortHeader(className, text, sortOption) {
-  const header = document.createElement("div");
-  header.className = `modal-sort-header ${className}`;
+  var header = document.createElement("div");
+  header.className = "modal-sort-header " + (className);
   header.textContent = text;
   header.dataset.sortOption = sortOption;
 
   if (currentSortOption === sortOption) {
     header.classList.add("active");
-    const icon = document.createElement("i");
+    var icon = document.createElement("i");
     icon.className = sortStates[sortOption].asc ? "fas fa-sort-amount-down" : "fas fa-sort-amount-up";
     header.appendChild(icon);
   }
 
-  header.addEventListener("click", () => {
+  header.addEventListenerfunction("click", () {
     if (currentSortOption === sortOption) {
       toggleSortDirection();
     } else {
       currentSortOption = sortOption;
       refreshCurrentView();
     }
-    document.querySelectorAll(".modal-sort-header").forEach((h) => {
+    document.querySelectorAll(".modal-sort-header").forEach(function((h) {
       h.classList.remove("active");
-      h.querySelector("i")?.remove();
+      h.querySelector("i").remove();
     });
     header.classList.add("active");
-    const icon = document.createElement("i");
+    var icon = document.createElement("i");
     icon.className = sortStates[sortOption].asc ? "fas fa-sort-amount-down" : "fas fa-sort-amount-up";
     header.appendChild(icon);
   });
@@ -1710,34 +1698,34 @@ function createSortHeader(className, text, sortOption) {
 function setupHeaderActions(headerActions) {
   headerActions.innerHTML = "";
 
-  const selectAllContainer = document.createElement("div");
+  var selectAllContainer = document.createElement("div");
   selectAllContainer.className = "modal-select-all-container";
 
-  const selectAllCheckbox = document.createElement("input");
+  var selectAllCheckbox = document.createElement("input");
   selectAllCheckbox.type = "checkbox";
   selectAllCheckbox.id = "artist-modal-select-all";
   selectAllCheckbox.name = "artist-modal-select-all";
   selectAllCheckbox.className = "modal-select-all-checkbox";
   selectAllCheckbox.title = config.languageLabels.selectAll;
 
-  const selectAllLabel = document.createElement("label");
+  var selectAllLabel = document.createElement("label");
   selectAllLabel.htmlFor = "artist-modal-select-all";
   selectAllLabel.className = "modal-select-all-label";
 
-  const textSpan = document.createElement("span");
+  var textSpan = document.createElement("span");
   textSpan.className = "select-all-text";
   textSpan.textContent = config.languageLabels.selectAll || "Tümünü seç";
 
-  const countSpan = document.createElement("span");
+  var countSpan = document.createElement("span");
   countSpan.className = "selected-count";
 
   selectAllLabel.append(textSpan, countSpan);
   selectAllContainer.append(selectAllCheckbox, selectAllLabel);
 
-  const playSelectedContainer = document.createElement("div");
+  var playSelectedContainer = document.createElement("div");
   playSelectedContainer.className = "modal-play-selected-container";
 
-  const playSelectedBtn = document.createElement("button");
+  var playSelectedBtn = document.createElement("button");
   playSelectedBtn.className = "modal-play-selected-btn";
   playSelectedBtn.title = config.languageLabels.addToExisting;
   playSelectedBtn.innerHTML = '<i class="fa-solid fa-plus"></i>';
@@ -1746,13 +1734,13 @@ function setupHeaderActions(headerActions) {
 
   playSelectedContainer.appendChild(playSelectedBtn);
   headerActions.append(selectAllContainer, playSelectedContainer);
-  const update = () => {
-    const visibleCBs = document.querySelectorAll(".modal-track-checkbox");
-    const visIds = Array.from(visibleCBs).map((cb) => cb.dataset.trackId);
-    const visSelected = visIds.filter((id) => selectedTrackIds.has(id)).length;
+  var update = function() {
+    var visibleCBs = document.querySelectorAll(".modal-track-checkbox");
+    var visIds = Array.from(visibleCBs).mapfunction((cb) cb.dataset.trackId);
+    var visSelected = visIds.filterfunction((id) selectedTrackIds.has(id)).length;
 
-    const allVisSelected = visibleCBs.length > 0 && visSelected === visibleCBs.length;
-    const someVisSelected = visSelected > 0 && !allVisSelected;
+    var allVisSelected = visibleCBs.length > 0 && visSelected === visibleCBs.length;
+    var someVisSelected = visSelected > 0 && !allVisSelected;
 
     if (allVisSelected) {
       textSpan.textContent = config.languageLabels.allSelected || "Tümü seçildi";
@@ -1767,17 +1755,17 @@ function setupHeaderActions(headerActions) {
       selectAllCheckbox.checked = false;
       selectAllCheckbox.indeterminate = false;
     }
-    countSpan.textContent = visSelected > 0 ? ` (${visSelected})` : "";
+    countSpan.textContent = visSelected > 0 ? " (" + (visSelected) + ")" : "";
     playSelectedBtn.disabled = selectedTrackIds.size === 0;
   };
 
   update();
 
-  selectAllCheckbox.addEventListener("change", (e) => {
-    const shouldSelect = e.target.checked;
-    document.querySelectorAll(".modal-track-checkbox").forEach((cb) => {
+  selectAllCheckbox.addEventListenerfunction("change", (e) {
+    var shouldSelect = e.target.checked;
+    document.querySelectorAll(".modal-track-checkbox").forEach(function((cb) {
       cb.checked = shouldSelect;
-      const id = cb.dataset.trackId;
+      var id = cb.dataset.trackId;
       if (!id) return;
       if (shouldSelect) selectedTrackIds.add(id);
       else selectedTrackIds.delete(id);
@@ -1786,7 +1774,7 @@ function setupHeaderActions(headerActions) {
   });
 }
 
-export async function toggleArtistModal(show, artistName = "", artistId = null) {
+export function toggleArtistModal(show, artistName = "", artistId = null) {
   if (!artistModal) createArtistModal();
 
   if (show) {
@@ -1798,35 +1786,35 @@ export async function toggleArtistModal(show, artistName = "", artistId = null) 
       currentModalArtist = { name: artistName, id: artistId };
     }
 
-    const tracksContainer = document.querySelector("#artist-modal .modal-artist-tracks-container");
+    var tracksContainer = document.querySelector("#artist-modal .modal-artist-tracks-container");
     if (tracksContainer) tracksContainer.innerHTML = '<div class="modal-loading-spinner"></div>';
 
-      const nameEl = document.querySelector("#artist-modal .modal-artist-name");
-  const imgEl = document.querySelector("#artist-modal .modal-artist-image");
+      var nameEl = document.querySelector("#artist-modal .modal-artist-name");
+  var imgEl = document.querySelector("#artist-modal .modal-artist-image");
 
   if (nameEl) nameEl.textContent = artistName || config.languageLabels.artistUnknown;
   if (imgEl) imgEl.style.backgroundImage = DEFAULT_ARTWORK;
 
-  const artistMeta = document.querySelector("#artist-modal .modal-artist-meta");
+  var artistMeta = document.querySelector("#artist-modal .modal-artist-meta");
   if (artistMeta) {
     artistMeta.innerHTML = "";
-    const tracksCountElement = document.createElement("span");
+    var tracksCountElement = document.createElement("span");
     tracksCountElement.className = "modal-artist-tracks-count";
     tracksCountElement.textContent = config.languageLabels.loading || "Carregando...";
 
-    const albumCountElement = document.createElement("span");
+    var albumCountElement = document.createElement("span");
     albumCountElement.className = "modal-artist-album-count";
 
-    const artistCountElement = document.createElement("span");
+    var artistCountElement = document.createElement("span");
     artistCountElement.className = "modal-artist-artist-count";
 
     artistMeta.append(tracksCountElement, albumCountElement, artistCountElement);
   }
 
-  const searchEl = document.querySelector("#artist-modal .modal-artist-search");
+  var searchEl = document.querySelector("#artist-modal .modal-artist-search");
   if (searchEl) searchEl.value = "";
 
-  const oldBio = document.querySelector("#artist-modal .modal-bio-container");
+  var oldBio = document.querySelector("#artist-modal .modal-bio-container");
   if (oldBio) oldBio.remove();
 
   artistModal.style.display = "flex";
@@ -1835,8 +1823,8 @@ export async function toggleArtistModal(show, artistName = "", artistId = null) 
   document.body.style.overflow = "hidden";
 
   try {
-    await loadArtistTracks(artistName, artistId);
-    if (artistId) await loadArtistImage(artistId);
+    loadArtistTracks(artistName, artistId);
+    if (artistId) loadArtistImage(artistId);
     updateSelectAllLabel();
   } catch (error) {
     console.error("Modal açılırken hata:", error);
@@ -1853,171 +1841,171 @@ export async function toggleArtistModal(show, artistName = "", artistId = null) 
 }
 
 export function setupArtistClickHandler() {
-  const artistElement = musicPlayerState.modernArtistEl;
+  var artistElement = musicPlayerState.modernArtistEl;
   if (!artistElement) return;
 
   artistElement.style.cursor = "pointer";
-  artistElement.addEventListener("click", async () => {
-    const artistName = artistElement.textContent.trim();
+  artistElement.addEventListenerfunction("click", () {
+    var artistName = artistElement.textContent.trim();
     if (!artistName || artistName === config.languageLabels.artistUnknown) return;
 
-    const currentTrack = musicPlayerState.playlist?.[musicPlayerState.currentIndex];
+    var currentTrack = musicPlayerState.playlist.[musicPlayerState.currentIndex];
     if (isRadioTrack(currentTrack)) return;
-    const artistId =
-      currentTrack?.ArtistItems?.[0]?.Id ||
-      currentTrack?.AlbumArtistId ||
-      currentTrack?.ArtistId ||
+    var artistId =
+      currentTrack.ArtistItems.[0].Id ||
+      currentTrack.AlbumArtistId ||
+      currentTrack.ArtistId ||
       null;
 
     currentModalArtist = { name: artistName, id: artistId };
-    await toggleArtistModal(true, artistName, artistId);
+    toggleArtistModal(true, artistName, artistId);
   });
 }
 
-async function showSaveToPlaylistModal() {
+function showSaveToPlaylistModal() {
   if (selectedTrackIds.size === 0) {
     showNotification(
-      `<i class="fas fa-exclamation-triangle"></i> ${config.languageLabels.noSelection || "Hiç şarkı seçilmedi"}`,
+      "<i class=\"fas fa-exclamation-triangle\"></i> " + (config.languageLabels.noSelection || "Hiç şarkı seçilmedi"),
       3000,
       "warning"
     );
     return;
   }
 
-  const modal = document.createElement("div");
+  var modal = document.createElement("div");
   modal.className = "playlist-save-modal";
 
-  const modalContent = document.createElement("div");
+  var modalContent = document.createElement("div");
   modalContent.className = "playlist-save-modal-content";
 
-  const modalHeader = document.createElement("div");
+  var modalHeader = document.createElement("div");
   modalHeader.className = "playlist-save-modal-header";
 
-  const modalTitle = document.createElement("h3");
+  var modalTitle = document.createElement("h3");
   modalTitle.textContent = config.languageLabels.saveToPlaylist || "Seçilenleri Kaydet";
   modalHeader.appendChild(modalTitle);
 
-  const closeButton = document.createElement("span");
+  var closeButton = document.createElement("span");
   closeButton.className = "playlist-save-modal-close";
   closeButton.innerHTML = '<i class="fas fa-times"></i>';
-  closeButton.onclick = () => closeModal();
+  closeButton.onclick = function() closeModal();
   modalHeader.appendChild(closeButton);
 
-  const modalBody = document.createElement("div");
+  var modalBody = document.createElement("div");
   modalBody.className = "playlist-save-modal-body";
 
-  const nameInputContainer = document.createElement("div");
+  var nameInputContainer = document.createElement("div");
   nameInputContainer.className = "name-input-container";
 
-  const nameInput = document.createElement("input");
+  var nameInput = document.createElement("input");
   nameInput.type = "text";
   nameInput.placeholder = config.languageLabels.enterPlaylistName;
   nameInput.setAttribute("aria-label", config.languageLabels.enterPlaylistName || "Oynatma listesi adı");
 
-  const titleName = document.querySelector("#artist-modal .modal-artist-name")?.textContent || "";
-  nameInput.value = `${titleName} - ${new Date().toLocaleString(config.dateLocale || "pt-BR", {
+  var titleName = document.querySelector("#artist-modal .modal-artist-name").textContent || "";
+  nameInput.value = (titleName) + " - " + (new Date().toLocaleString(config.dateLocale || "pt-BR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  })}`;
+  ) + ")}";
 
   nameInputContainer.appendChild(nameInput);
 
-  const publicLabel = document.createElement("label");
+  var publicLabel = document.createElement("label");
   publicLabel.className = "public-checkbox-label";
-  const publicCheckbox = document.createElement("input");
+  var publicCheckbox = document.createElement("input");
   publicCheckbox.type = "checkbox";
   publicCheckbox.id = "artist-playlist-public";
   publicCheckbox.name = "artist-playlist-public";
   publicLabel.appendChild(publicCheckbox);
   publicLabel.appendChild(document.createTextNode(config.languageLabels.makePlaylistPublic));
 
-  const actionContainer = document.createElement("div");
+  var actionContainer = document.createElement("div");
   actionContainer.className = "action-container";
 
-  const newPlaylistOption = document.createElement("div");
+  var newPlaylistOption = document.createElement("div");
   newPlaylistOption.className = "radio-option";
-  const newPlaylistRadio = document.createElement("input");
+  var newPlaylistRadio = document.createElement("input");
   newPlaylistRadio.type = "radio";
   newPlaylistRadio.name = "saveAction";
   newPlaylistRadio.id = "artist-new-playlist";
   newPlaylistRadio.value = "new";
   newPlaylistRadio.checked = true;
   newPlaylistRadio.onchange = togglePlaylistSelection;
-  const newPlaylistLabel = document.createElement("label");
+  var newPlaylistLabel = document.createElement("label");
   newPlaylistLabel.htmlFor = "artist-new-playlist";
   newPlaylistLabel.textContent = config.languageLabels.newPlaylist || "Yeni liste oluştur";
   newPlaylistOption.append(newPlaylistRadio, newPlaylistLabel);
 
-  const existingPlaylistOption = document.createElement("div");
+  var existingPlaylistOption = document.createElement("div");
   existingPlaylistOption.className = "radio-option";
-  const existingPlaylistRadio = document.createElement("input");
+  var existingPlaylistRadio = document.createElement("input");
   existingPlaylistRadio.type = "radio";
   existingPlaylistRadio.name = "saveAction";
   existingPlaylistRadio.id = "artist-existing-playlist";
   existingPlaylistRadio.value = "existing";
   existingPlaylistRadio.onchange = togglePlaylistSelection;
-  const existingPlaylistLabel = document.createElement("label");
+  var existingPlaylistLabel = document.createElement("label");
   existingPlaylistLabel.htmlFor = "artist-existing-playlist";
   existingPlaylistLabel.textContent = config.languageLabels.addToExisting || "Mevcut listeye ekle";
   existingPlaylistOption.append(existingPlaylistRadio, existingPlaylistLabel);
 
   actionContainer.append(newPlaylistOption, existingPlaylistOption);
 
-  const playlistSelectContainer = document.createElement("div");
+  var playlistSelectContainer = document.createElement("div");
   playlistSelectContainer.className = "playlist-select-container";
   playlistSelectContainer.style.display = "none";
 
-  const playlistSelectLabel = document.createElement("label");
+  var playlistSelectLabel = document.createElement("label");
   playlistSelectLabel.textContent = config.languageLabels.selectPlaylist || "Liste seçin:";
 
-  const playlistSelect = document.createElement("select");
+  var playlistSelect = document.createElement("select");
   playlistSelect.className = "playlist-select";
   playlistSelect.id = "artist-existing-playlist-select";
   playlistSelect.name = "artist-existing-playlist-select";
   playlistSelect.disabled = true;
   playlistSelectLabel.htmlFor = "artist-existing-playlist-select";
 
-  const loadingOption = document.createElement("option");
+  var loadingOption = document.createElement("option");
   loadingOption.value = "";
   loadingOption.textContent = config.languageLabels.loadingPlaylists || "Listeler getiriliyor...";
   playlistSelect.appendChild(loadingOption);
 
   playlistSelectContainer.append(playlistSelectLabel, playlistSelect);
 
-  const selectedCountContainer = document.createElement("div");
+  var selectedCountContainer = document.createElement("div");
   selectedCountContainer.className = "selected-count-container";
-  selectedCountContainer.textContent = `${selectedTrackIds.size} ${config.languageLabels.tracksSelected || "şarkı seçildi"}`;
+  selectedCountContainer.textContent = (selectedTrackIds.size) + " " + (config.languageLabels.tracksSelected || "şarkı seçildi");
 
   modalBody.append(nameInputContainer, publicLabel, actionContainer, playlistSelectContainer, selectedCountContainer);
 
-  const modalFooter = document.createElement("div");
+  var modalFooter = document.createElement("div");
   modalFooter.className = "playlist-save-modal-footer";
 
-  const saveButton = document.createElement("button");
+  var saveButton = document.createElement("button");
   saveButton.className = "playlist-save-modal-save";
   saveButton.textContent = config.languageLabels.save || "Kaydet";
-  saveButton.onclick = async () => {
-    const tracksToSave = allTracks.filter((t) => selectedTrackIds.has(t.Id));
-    const isNew = newPlaylistRadio.checked;
-    const playlistId = isNew ? null : playlistSelect.value;
-    const playlistName = isNew ? nameInput.value : playlistSelect.options[playlistSelect.selectedIndex].text;
+  saveButton.onclick = function() {
+    var tracksToSave = allTracks.filterfunction((t) selectedTrackIds.has(t.Id));
+    var isNew = newPlaylistRadio.checked;
+    var playlistId = isNew ? null : playlistSelect.value;
+    var playlistName = isNew ? nameInput.value : playlistSelect.options[playlistSelect.selectedIndex].text;
 
     try {
-      await saveCurrentPlaylistToJellyfin(playlistName, publicCheckbox.checked, tracksToSave, isNew, playlistId);
+      saveCurrentPlaylistToJellyfin(playlistName, publicCheckbox.checked, tracksToSave, isNew, playlistId);
 
-      const message = isNew
-        ? `<i class="fas fa-check-circle"></i> ${config.languageLabels.playlistCreatedSuccessfully} (${tracksToSave.length} ${config.languageLabels.track})`
-        : `<i class="fas fa-check-circle"></i> ${tracksToSave.length} ${config.languageLabels.track} ${config.languageLabels.addingsuccessful}`;
+      var message = isNew
+        ? "<i class=\"fas fa-check-circle\"></i> " + (config.languageLabels.playlistCreatedSuccessfully) + " (" + (tracksToSave.length) + " " + (config.languageLabels.track) + ")"
+        : "<i class=\"fas fa-check-circle\"></i> " + (tracksToSave.length) + " " + (config.languageLabels.track) + " " + (config.languageLabels.addingsuccessful);
 
       showNotification(message, 3000, "addlist");
       closeModal();
     } catch (err) {
       console.error(err);
       showNotification(
-        `<i class="fas fa-exclamation-circle"></i> ${config.languageLabels.playlistSaveError}`,
+        "<i class=\"fas fa-exclamation-circle\"></i> " + (config.languageLabels.playlistSaveError),
         4000,
         "error"
       );
@@ -2032,14 +2020,14 @@ async function showSaveToPlaylistModal() {
 
   loadExistingPlaylists(playlistSelect);
 
-  modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+  modal.onclick = function(e) { if (e.target === modal) closeModal(); };
   nameInput.focus();
 
-  const handleKeyDown = (e) => { if (e.key === "Escape") closeModal(); };
+  var handleKeyDown = function(e) { if (e.key === "Escape") closeModal(); };
   document.addEventListener("keydown", handleKeyDown);
 
   function togglePlaylistSelection() {
-    const isNew = newPlaylistRadio.checked;
+    var isNew = newPlaylistRadio.checked;
     nameInputContainer.style.display = isNew ? "block" : "none";
     playlistSelectContainer.style.display = isNew ? "none" : "block";
     publicLabel.style.display = isNew ? "block" : "none";
@@ -2051,13 +2039,13 @@ async function showSaveToPlaylistModal() {
   }
 }
 
-async function loadExistingPlaylists(selectElement) {
+function loadExistingPlaylists(selectElement) {
   try {
-    const playlists = await fetchJellyfinPlaylists();
+    var playlists = fetchJellyfinPlaylists();
     selectElement.innerHTML = "";
 
     if (!playlists.length) {
-      const noPlaylistOption = document.createElement("option");
+      var noPlaylistOption = document.createElement("option");
       noPlaylistOption.value = "";
       noPlaylistOption.textContent = config.languageLabels.noPlaylists || "Hiç çalma listesi bulunamadı";
       selectElement.appendChild(noPlaylistOption);
@@ -2065,9 +2053,9 @@ async function loadExistingPlaylists(selectElement) {
       return;
     }
 
-    playlists.sort((a, b) => a.name.localeCompare(b.name));
-    playlists.forEach((p) => {
-      const opt = document.createElement("option");
+    playlists.sortfunction((a, b) a.name.localeCompare(b.name));
+    playlists.forEach(function((p) {
+      var opt = document.createElement("option");
       opt.value = p.id;
       opt.textContent = p.name;
       selectElement.appendChild(opt);
@@ -2076,7 +2064,7 @@ async function loadExistingPlaylists(selectElement) {
   } catch (error) {
     console.error("Listeler yüklenirken hata:", error);
     selectElement.innerHTML = "";
-    const errOpt = document.createElement("option");
+    var errOpt = document.createElement("option");
     errOpt.value = "";
     errOpt.textContent = config.languageLabels.loadError || "Listeler yüklenemedi";
     selectElement.appendChild(errOpt);
@@ -2085,20 +2073,20 @@ async function loadExistingPlaylists(selectElement) {
 }
 
 function filterArtistTracks(query) {
-  const q = (query || "").trim().toLowerCase();
-  const modalEl = document.getElementById("artist-modal");
+  var q = (query || "").trim().toLowerCase();
+  var modalEl = document.getElementById("artist-modal");
   if (!modalEl) return;
 
   if (!q) {
-    const artistName = modalEl.querySelector(".modal-artist-name")?.textContent || "";
+    var artistName = modalEl.querySelector(".modal-artist-name").textContent || "";
     if (artistName === (config.languageLabels.allMusic || "Tüm Müzikler")) {
       loadAllMusicFromJellyfin();
     } else {
-      const currentTrack = musicPlayerState.playlist?.[musicPlayerState.currentIndex];
-      const artistId =
-        currentTrack?.ArtistItems?.[0]?.Id ||
-        currentTrack?.AlbumArtistId ||
-        currentTrack?.ArtistId ||
+      var currentTrack = musicPlayerState.playlist.[musicPlayerState.currentIndex];
+      var artistId =
+        currentTrack.ArtistItems.[0].Id ||
+        currentTrack.AlbumArtistId ||
+        currentTrack.ArtistId ||
         null;
       loadArtistTracks(artistName, artistId);
     }

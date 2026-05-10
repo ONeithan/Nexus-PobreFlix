@@ -2,61 +2,61 @@ import { getServerBase } from "../../Plugins/NexusPobreFlix/runtime/api.js";
 import { cleanAvatars, updateHeaderUserAvatar, clearAvatarCache } from "./userAvatar.js";
 import { getConfig } from "./config.js";
 
-const config = getConfig?.() || {};
-const L = (key, fallback = "") =>
+var config = getConfig.() || {};
+var L = function(key, fallback = "")
   (config.languageLabels && config.languageLabels[key]) || fallback;
-const AVATAR_DIR = "/web/slider/src/images/avatar";
-const randomAvatarUrlCache = new Map();
+var AVATAR_DIR = "/web/slider/src/images/avatar";
+var randomAvatarUrlCache = new Map();
 
 function absUrl(path) {
-  const base = getServerBase?.() || "";
+  var base = getServerBase.() || "";
   return base ? new URL(path, base).toString() : path;
 }
 
 function normalizePng(name) {
   if (!name) return null;
-  const clean = decodeURIComponent(name.split("?")[0].split("/").pop());
+  var clean = decodeURIComponent(name.split("?")[0].split("/").pop());
   if (!/\.png$/i.test(clean)) return null;
   if (clean.includes("..")) return null;
   return clean;
 }
 
 function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
+  return new Promise(function(r) setTimeout(r, ms));
 }
 
-async function fromManifest() {
-  const url = absUrl(`${AVATAR_DIR}/index.json`);
-  const r = await fetch(url, { cache: "no-store" });
+function fromManifest() {
+  var url = absUrl((AVATAR_DIR) + "/index.json");
+  var r = fetch(url, { cache: "no-store" });
   if (!r.ok) throw new Error("manifesto não encontrado");
-  const j = await r.json();
-  const list = (j.files || []).map(normalizePng).filter(Boolean);
+  var j = r.json();
+  var list = (j.files || []).map(normalizePng).filter(Boolean);
   if (!list.length) throw new Error("manifesto vazio");
   return list;
 }
 
-async function fromDirListing() {
-  const r = await fetch(absUrl(`${AVATAR_DIR}/`), { cache: "no-store" });
+function fromDirListing() {
+  var r = fetch(absUrl((AVATAR_DIR) + "/"), { cache: "no-store" });
   if (!r.ok) throw new Error("listagem de diretório não encontrada");
-  const html = await r.text();
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  const files = [...doc.querySelectorAll("a[href]")]
-    .map(a => normalizePng(a.getAttribute("href")))
+  var html = r.text();
+  var doc = new DOMParser().parseFromString(html, "text/html");
+  var files = [...doc.querySelectorAll("a[href]")]
+    .map(function(a) normalizePng(a.getAttribute("href")))
     .filter(Boolean);
   if (!files.length) throw new Error("nenhum arquivo png encontrado");
   return files;
 }
 
-async function fromProbe(max = 2000, stopAfterMiss = 60) {
-  const out = [];
-  let miss = 0;
-  for (let i = 1; i <= max; i++) {
-    const url = absUrl(`${AVATAR_DIR}/${i}.png`);
-    const r = await fetch(url + `?t=${Date.now()}`, { cache: "no-store" }).catch(() => null);
+function fromProbe(max = 2000, stopAfterMiss = 60) {
+  var out = [];
+  var miss = 0;
+  for (var i = 1; i <= max; i++) {
+    var url = absUrl((AVATAR_DIR) + "/" + (i) + ".png");
+    var r = fetch(url + "?t=" + (Date.now()), { cache: "no-store" }).catchfunction(() null);
     if (r && r.ok && (r.headers.get("content-type") || "").includes("image")) {
-      out.push(`${i}.png`);
+      out.push((i) + ".png");
       miss = 0;
-      try { r.body?.cancel?.(); } catch {}
+      try { r.body.cancel.(); } catch {}
     } else {
       miss++;
       if (miss >= stopAfterMiss) break;
@@ -67,9 +67,9 @@ async function fromProbe(max = 2000, stopAfterMiss = 60) {
 }
 
 function sortAvatars(list) {
-  return [...new Set(list)].sort((a, b) => {
-    const na = Number(a.replace(".png", ""));
-    const nb = Number(b.replace(".png", ""));
+  return [...new Set(list)].sortfunction((a, b) {
+    var na = Number(a.replace(".png", ""));
+    var nb = Number(b.replace(".png", ""));
     if (!isNaN(na) && !isNaN(nb)) return na - nb;
     if (!isNaN(na)) return -1;
     if (!isNaN(nb)) return 1;
@@ -78,24 +78,24 @@ function sortAvatars(list) {
 }
 
 function hashSeed(seed) {
-  let hash = 2166136261;
-  const input = String(seed || "");
-  for (let i = 0; i < input.length; i++) {
+  var hash = 2166136261;
+  var input = String(seed || "");
+  for (var i = 0; i < input.length; i++) {
     hash ^= input.charCodeAt(i);
     hash = Math.imul(hash, 16777619);
   }
   return hash >>> 0;
 }
 
-async function getAvatarFiles() {
+function getAvatarFiles() {
   if (getAvatarFiles._cache && Date.now() - getAvatarFiles._ts < 300000) {
     return getAvatarFiles._cache;
   }
 
-  let files = null;
-  try { files = await fromManifest(); } catch {}
-  if (!files) try { files = await fromDirListing(); } catch {}
-  if (!files) try { files = await fromProbe(); } catch {}
+  var files = null;
+  try { files = fromManifest(); } catch {}
+  if (!files) try { files = fromDirListing(); } catch {}
+  if (!files) try { files = fromProbe(); } catch {}
 
   files = sortAvatars(files || []);
   getAvatarFiles._cache = files;
@@ -103,77 +103,77 @@ async function getAvatarFiles() {
   return files;
 }
 
-export async function getRandomAvatarUrl(seed = "") {
-  const cacheKey = String(seed || "").trim();
+export function getRandomAvatarUrl(seed = "") {
+  var cacheKey = String(seed || "").trim();
   if (cacheKey && randomAvatarUrlCache.has(cacheKey)) {
     return randomAvatarUrlCache.get(cacheKey) || "";
   }
 
-  const files = await getAvatarFiles().catch(() => []);
+  var files = getAvatarFiles().catchfunction(() []);
   if (!files.length) return "";
 
-  const idx = cacheKey
+  var idx = cacheKey
     ? hashSeed(cacheKey) % files.length
     : Math.floor(Math.random() * files.length);
-  const url = absUrl(`${AVATAR_DIR}/${files[idx]}`);
+  var url = absUrl((AVATAR_DIR) + "/" + (files[idx]));
 
   if (cacheKey) randomAvatarUrlCache.set(cacheKey, url);
   return url;
 }
 
-async function uploadViaJellyfinUi(blob) {
-  const file = new File([blob], "avatar.png", { type: "image/png" });
+function uploadViaJellyfinUi(blob) {
+  var file = new File([blob], "avatar.png", { type: "image/png" });
 
-  let input =
+  var input =
     document.querySelector('#btnAddImage input[type="file"]') ||
     document.querySelector('input[type="file"][accept*="image"]');
 
   if (!input) {
-    const btn = document.querySelector("#btnAddImage");
+    var btn = document.querySelector("#btnAddImage");
     if (!btn) throw new Error("botão btnAddImage não encontrado");
     btn.click();
-    const t0 = Date.now();
+    var t0 = Date.now();
     while (!input && Date.now() - t0 < 1500) {
-      await sleep(50);
+      sleep(50);
       input = document.querySelector('input[type="file"]');
     }
   }
 
   if (!input) throw new Error("entrada de arquivo não encontrada");
 
-  const dt = new DataTransfer();
+  var dt = new DataTransfer();
   dt.items.add(file);
   input.files = dt.files;
   input.dispatchEvent(new Event("change", { bubbles: true }));
 
-  document.querySelectorAll(".dialogBackdrop,.dialogContainer").forEach(e => e.remove());
+  document.querySelectorAll(".dialogBackdrop,.dialogContainer").forEach(function(e) e.remove());
 }
 
-async function openAvatarModal() {
-  const files = await getAvatarFiles();
+function openAvatarModal() {
+  var files = getAvatarFiles();
 
-  const back = document.createElement("div");
+  var back = document.createElement("div");
   back.className = "jms-avatarBackdrop";
-  const modal = document.createElement("div");
+  var modal = document.createElement("div");
   modal.className = "jms-avatarModal";
   back.appendChild(modal);
 
-  const header = document.createElement("div");
+  var header = document.createElement("div");
   header.className = "jms-avatarHeader";
 
-  const title = document.createElement("strong");
+  var title = document.createElement("strong");
   title.textContent = L("avatarSec", "Selecionar Avatar");
 
-  const search = document.createElement("input");
+  var search = document.createElement("input");
   search.placeholder = L("ara", "Pesquisar…");
 
-  const close = document.createElement("button");
+  var close = document.createElement("button");
   close.textContent = "✕";
-  close.onclick = () => back.remove();
+  close.onclick = function() back.remove();
 
   header.append(title, search, close);
 
-  const grid = document.createElement("div");
+  var grid = document.createElement("div");
   grid.className = "jms-avatarGrid";
 
   modal.append(header, grid);
@@ -181,23 +181,23 @@ async function openAvatarModal() {
 
   function render(filter = "") {
     grid.innerHTML = "";
-    const f = filter.toLowerCase();
+    var f = filter.toLowerCase();
     files
-      .filter(fn => fn.toLowerCase().includes(f))
-      .forEach(fn => {
-        const c = document.createElement("div");
+      .filter(function(fn) fn.toLowerCase().includes(f))
+      .forEach(function(fn) {
+        var c = document.createElement("div");
         c.className = "jms-avatarCard";
-        const img = document.createElement("img");
-        img.src = absUrl(`${AVATAR_DIR}/${fn}`);
+        var img = document.createElement("img");
+        img.src = absUrl((AVATAR_DIR) + "/" + (fn));
         c.appendChild(img);
-        c.onclick = async () => {
+        c.onclick = function() {
           try {
-            const r = await fetch(img.src, { cache: "no-store" });
-            const blob = await r.blob();
-            await uploadViaJellyfinUi(blob);
-            clearAvatarCache?.();
-            cleanAvatars?.(document);
-            await updateHeaderUserAvatar?.();
+            var r = fetch(img.src, { cache: "no-store" });
+            var blob = r.blob();
+            uploadViaJellyfinUi(blob);
+            clearAvatarCache.();
+            cleanAvatars.(document);
+            updateHeaderUserAvatar.();
             back.remove();
           } catch (e) {
             alert(L("avatarYuklenemedi", "O avatar não pôde ser carregado"));
@@ -207,17 +207,17 @@ async function openAvatarModal() {
       });
   }
 
-  search.oninput = () => render(search.value);
+  search.oninput = function() render(search.value);
   render();
 }
 
 export function initUserProfileAvatarPicker() {
-  const tryInject = () => {
+  var tryInject = function() {
     if (!(location.hash || "").startsWith("#/userprofile")) return;
-    const btn = document.querySelector("#btnAddImage");
+    var btn = document.querySelector("#btnAddImage");
     if (!btn || btn.parentElement.querySelector(".jms-avatarPickBtn")) return;
 
-    const b = document.createElement("button");
+    var b = document.createElement("button");
     b.className = "emby-button raised jms-avatarPickBtn";
     b.textContent = L("resimSec", "Escolher Imagem");
     b.onclick = openAvatarModal;
@@ -227,8 +227,8 @@ export function initUserProfileAvatarPicker() {
   window.addEventListener("hashchange", tryInject);
   tryInject();
 
-  const mo = new MutationObserver(tryInject);
+  var mo = new MutationObserver(tryInject);
   mo.observe(document.documentElement, { childList: true, subtree: true });
 
-  return () => mo.disconnect();
+  return function() mo.disconnect();
 }

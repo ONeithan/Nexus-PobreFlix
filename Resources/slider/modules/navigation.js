@@ -13,22 +13,22 @@ import { modalState, set, get, resetModalRefs } from './modalState.js';
 import { createVideoModal, destroyVideoModal, animatedShow, closeVideoModal, modalIsVisible, preloadVideoPreview, updateModalContent, positionModalRelativeToItem, applyVolumePreference, ensureOverlaysClosed, getBackdropFromItem, calculateMatchPercentage, openPreviewModalForItem, setModalAnimation, getPlayButtonText, PREVIEW_MAX_ENTRIES, startModalHideTimer, getClosingRemaining, bindModalEvents, hardStopPlayback, resetModalInfo, resetModalButtons, scheduleOpenForItem } from './hoverTrailerModal.js';
 import { withServer } from "./jfUrl.js";
 
-const IS_TOUCH = (typeof window !== 'undefined') && (('ontouchstart' in window) || (navigator.maxTouchPoints > 0));
-const config = getConfig();
-const currentLang = config.defaultLanguage || getDefaultLanguage();
+var IS_TOUCH = (typeof window !== 'undefined') && (('ontouchstart' in window) || (navigator.maxTouchPoints > 0));
+var config = getConfig();
+var currentLang = config.defaultLanguage || getDefaultLanguage();
 if (!config.languageLabels) {
   config.languageLabels = getLanguageLabels(currentLang) || {};
 }
 
-let __peakViewportObserver = null;
-let __peakObservedContainer = null;
-let __peakObserveMO = null;
-let __peakRefreshTimer = 0;
-let __peakRefreshRaf = 0;
-let __peakLiteContainer = null;
-let __peakLiteEnabled = false;
-let __peakStructureSyncTimer = 0;
-let __peakStructureSyncRaf = 0;
+var __peakViewportObserver = null;
+var __peakObservedContainer = null;
+var __peakObserveMO = null;
+var __peakRefreshTimer = 0;
+var __peakRefreshRaf = 0;
+var __peakLiteContainer = null;
+var __peakLiteEnabled = false;
+var __peakStructureSyncTimer = 0;
+var __peakStructureSyncRaf = 0;
 
 function getPeakShiftDurationMs() {
   return isLowPowerPeakRuntime() ? 220 : 320;
@@ -46,11 +46,11 @@ function isPlaybackCompletedState({
 } = {}) {
   if (isPlayed === true) return true;
 
-  const percent = Number(playedPercentage);
+  var percent = Number(playedPercentage);
   if (Number.isFinite(percent) && percent >= 100) return true;
 
-  const position = Number(positionTicks || 0);
-  const runtime = Number(runtimeTicks || 0);
+  var position = Number(positionTicks || 0);
+  var runtime = Number(runtimeTicks || 0);
   return position > 0 && runtime > 0 && position >= runtime;
 }
 
@@ -62,10 +62,10 @@ function hasPartialPlaybackState({
 } = {}) {
   if (isPlaybackCompletedState({ isPlayed, playedPercentage, positionTicks, runtimeTicks })) return false;
 
-  const position = Number(positionTicks || 0);
+  var position = Number(positionTicks || 0);
   if (!(position > 0)) return false;
 
-  const runtime = Number(runtimeTicks || 0);
+  var runtime = Number(runtimeTicks || 0);
   return runtime > 0 ? position < runtime : true;
 }
 
@@ -75,134 +75,25 @@ if (typeof document !== 'undefined' && (document.hidden || document.visibilitySt
 
 function ensureFlickerFixCSS() {
   if (document.getElementById('android-flicker-fix')) return;
-  const st = document.createElement('style');
+  var st = document.createElement('style');
   st.id = 'android-flicker-fix';
-  st.textContent = `
-    #monwui-slides-container.peak-mode .monwui-slide {
-      will-change: transform, opacity;
-      backface-visibility: hidden;
-    }
-    .monwui-slide.is-hidden {
-      visibility: hidden !important;
-      pointer-events: none !important;
-    }
-    #monwui-slides-container.peak-first-reveal {
-      opacity: 0 !important;
-    }
-    #monwui-slides-container.peak-first-reveal.peak-first-reveal-active {
-      opacity: 1 !important;
-      transition: opacity .22s cubic-bezier(.2,.6,.2,1) !important;
-    }
-    .monwui-slide.is-visible {
-      visibility: visible !important;
-      pointer-events: auto !important;
-    }
-    .monwui-slide.peak-batch-pending,
-    .monwui-slide.peak-batch-pending * {
-      animation: none !important;
-      transition: none !important;
-    }
-    .monwui-slide.peak-batch-pending {
-      opacity: 0 !important;
-      pointer-events: none !important;
-      visibility: hidden !important;
-    }
-    #monwui-slides-container.peak-shifting .monwui-slide {
-      transition:
-        transform var(--peak-shift-ms, 320ms) var(--peak-shift-ease, cubic-bezier(.23,.78,.32,1)),
-        opacity var(--peak-shift-opacity-ms, 220ms) ease-out !important;
-      will-change: transform, opacity !important;
-    }
-    #monwui-slides-container.peak-shifting .monwui-slide,
-    #monwui-slides-container.peak-shifting .monwui-slide.active {
-      box-shadow: none !important;
-    }
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-backdrop {
-      transition: opacity var(--peak-shift-opacity-ms, 220ms) ease-out !important;
-      will-change: opacity !important;
-    }
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-button-container,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-button-container *,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-director-container,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-horizontal-gradient-overlay,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-horizontal-gradient-overlay:before,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-horizontal-gradient-overlay:after,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-info-container,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-language-container,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-logo-container,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-logo-container .logo-img,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-main-button-container,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-meta-container,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-meta-container *,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-plot-container,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-plot-container *,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-provider-container,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-provider-container *,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-slider-wrapper,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-status-container,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-status-container *,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-title-container,
-    #monwui-slides-container.peak-shifting .monwui-slide .monwui-title-container * {
-      animation: none !important;
-      transition: none !important;
-      will-change: auto !important;
-    }
-    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) {
-      box-shadow: none !important;
-      outline: none !important;
-    }
-    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-button-container,
-    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-director-container,
-    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-info-container,
-    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-language-container,
-    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-logo-container,
-    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-main-button-container,
-    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-meta-container,
-    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-plot-container,
-    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-provider-container,
-    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-slider-wrapper,
-    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-status-container,
-    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-title-container {
-      opacity: 0 !important;
-      pointer-events: none !important;
-      transform: translateY(4px) !important;
-      visibility: hidden !important;
-    }
-    #monwui-slides-container.peak-ready .monwui-slide.peak-snap-in,
-    #monwui-slides-container.peak-ready .monwui-slide.peak-snap-in * {
-      transition: none !important;
-      animation: none !important;
-    }
-	    #monwui-slides-container.peak-ready .monwui-slide.off-left,
-	    #monwui-slides-container.peak-ready .monwui-slide.off-right {
-	      visibility: hidden !important;
-	      pointer-events: none !important;
-	      content-visibility: hidden !important;
-	      contain: strict !important;
-	    }
-	    html[data-css-variant=showcase] #monwui-slides-container.peak-ready .monwui-slide.off-left {
-	      transform: translate3d(calc(-50% - 220vw), -50%, 0) scale(.82) !important;
-	    }
-	    html[data-css-variant=showcase] #monwui-slides-container.peak-ready .monwui-slide.off-right {
-	      transform: translate3d(calc(-50% + 220vw), -50%, 0) scale(.82) !important;
-	    }
-	  `;
+  st.textContent = "\n    #monwui-slides-container.peak-mode .monwui-slide {\n      will-change: transform, opacity;\n      backface-visibility: hidden;\n    }\n    .monwui-slide.is-hidden {\n      visibility: hidden !important;\n      pointer-events: none !important;\n    }\n    #monwui-slides-container.peak-first-reveal {\n      opacity: 0 !important;\n    }\n    #monwui-slides-container.peak-first-reveal.peak-first-reveal-active {\n      opacity: 1 !important;\n      transition: opacity .22s cubic-bezier(.2,.6,.2,1) !important;\n    }\n    .monwui-slide.is-visible {\n      visibility: visible !important;\n      pointer-events: auto !important;\n    }\n    .monwui-slide.peak-batch-pending,\n    .monwui-slide.peak-batch-pending * {\n      animation: none !important;\n      transition: none !important;\n    }\n    .monwui-slide.peak-batch-pending {\n      opacity: 0 !important;\n      pointer-events: none !important;\n      visibility: hidden !important;\n    }\n    #monwui-slides-container.peak-shifting .monwui-slide {\n      transition:\n        transform var(--peak-shift-ms, 320ms) var(--peak-shift-ease, cubic-bezier(.23,.78,.32,1)),\n        opacity var(--peak-shift-opacity-ms, 220ms) ease-out !important;\n      will-change: transform, opacity !important;\n    }\n    #monwui-slides-container.peak-shifting .monwui-slide,\n    #monwui-slides-container.peak-shifting .monwui-slide.active {\n      box-shadow: none !important;\n    }\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-backdrop {\n      transition: opacity var(--peak-shift-opacity-ms, 220ms) ease-out !important;\n      will-change: opacity !important;\n    }\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-button-container,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-button-container *,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-director-container,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-horizontal-gradient-overlay,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-horizontal-gradient-overlay:before,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-horizontal-gradient-overlay:after,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-info-container,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-language-container,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-logo-container,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-logo-container .logo-img,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-main-button-container,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-meta-container,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-meta-container *,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-plot-container,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-plot-container *,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-provider-container,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-provider-container *,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-slider-wrapper,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-status-container,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-status-container *,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-title-container,\n    #monwui-slides-container.peak-shifting .monwui-slide .monwui-title-container * {\n      animation: none !important;\n      transition: none !important;\n      will-change: auto !important;\n    }\n    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) {\n      box-shadow: none !important;\n      outline: none !important;\n    }\n    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-button-container,\n    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-director-container,\n    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-info-container,\n    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-language-container,\n    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-logo-container,\n    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-main-button-container,\n    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-meta-container,\n    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-plot-container,\n    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-provider-container,\n    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-slider-wrapper,\n    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-status-container,\n    html[data-css-variant=showcase] #monwui-slides-container.peak-mode .monwui-slide.active:not(.backdrop-ready) .monwui-title-container {\n      opacity: 0 !important;\n      pointer-events: none !important;\n      transform: translateY(4px) !important;\n      visibility: hidden !important;\n    }\n    #monwui-slides-container.peak-ready .monwui-slide.peak-snap-in,\n    #monwui-slides-container.peak-ready .monwui-slide.peak-snap-in * {\n      transition: none !important;\n      animation: none !important;\n    }\n	    #monwui-slides-container.peak-ready .monwui-slide.off-left,\n	    #monwui-slides-container.peak-ready .monwui-slide.off-right {\n	      visibility: hidden !important;\n	      pointer-events: none !important;\n	      content-visibility: hidden !important;\n	      contain: strict !important;\n	    }\n	    html[data-css-variant=showcase] #monwui-slides-container.peak-ready .monwui-slide.off-left {\n	      transform: translate3d(calc(-50% - 220vw), -50%, 0) scale(.82) !important;\n	    }\n	    html[data-css-variant=showcase] #monwui-slides-container.peak-ready .monwui-slide.off-right {\n	      transform: translate3d(calc(-50% + 220vw), -50%, 0) scale(.82) !important;\n	    }\n	  ";
   document.head.appendChild(st);
 }
 
 function isLowPowerPeakRuntime() {
   try {
-    const ua = String((typeof navigator !== 'undefined' && navigator.userAgent) || '');
-    const uaMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-    const coarse = window.matchMedia?.('(pointer: coarse)')?.matches === true;
-    const anyCoarse = window.matchMedia?.('(any-pointer: coarse)')?.matches === true;
-    const fine = window.matchMedia?.('(pointer: fine)')?.matches === true;
-    const shortestSide = Math.min(
-      window.innerWidth || window.screen?.width || 0,
-      window.innerHeight || window.screen?.height || 0
+    var ua = String((typeof navigator !== 'undefined' && navigator.userAgent) || '');
+    var uaMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    var coarse = window.matchMedia.('(pointer: coarse)').matches === true;
+    var anyCoarse = window.matchMedia.('(any-pointer: coarse)').matches === true;
+    var fine = window.matchMedia.('(pointer: fine)').matches === true;
+    var shortestSide = Math.min(
+      window.innerWidth || window.screen.width || 0,
+      window.innerHeight || window.screen.height || 0
     );
-    const autoMobileProfile = getDeviceProfileAuto() === 'mobile';
-    const touchOnlyLikeMobile = (coarse || anyCoarse || IS_TOUCH) && !fine;
+    var autoMobileProfile = getDeviceProfileAuto() === 'mobile';
+    var touchOnlyLikeMobile = (coarse || anyCoarse || IS_TOUCH) && !fine;
 
     // Touch-enabled desktop/laptop devices can expose maxTouchPoints > 0 even when
     // they should still use the desktop peak layout. Gate low-power mode behind the
@@ -220,83 +111,19 @@ function isLowPowerPeakRuntime() {
 
 function injectPeakLiteCSS() {
   if (document.getElementById('peak-mobile-lite-css')) return;
-  const st = document.createElement('style');
+  var st = document.createElement('style');
   st.id = 'peak-mobile-lite-css';
-  st.textContent = `
-    html.jms-peak-lite,
-    body.jms-peak-lite {
-      scroll-behavior: auto !important;
-    }
-    html.jms-peak-lite #homePage,
-    html.jms-peak-lite #indexPage,
-    html.jms-peak-lite .homeSectionsContainer {
-      scroll-snap-type: none !important;
-    }
-    #monwui-slides-container.peak-lite {
-      contain: none !important;
-      will-change: auto !important;
-      overflow: visible !important;
-    }
-    #monwui-slides-container.peak-lite .monwui-slide,
-    #monwui-slides-container.peak-lite .monwui-slide .monwui-backdrop {
-      contain: none !important;
-      contain-intrinsic-size: auto !important;
-      content-visibility: visible !important;
-      will-change: auto !important;
-      backface-visibility: hidden !important;
-      -webkit-backface-visibility: hidden !important;
-    }
-    #monwui-slides-container.peak-lite .monwui-slide {
-      transition: none !important;
-      animation: none !important;
-      box-shadow: none !important;
-      outline: none !important;
-    }
-    #monwui-slides-container.peak-lite .monwui-slide.active {
-      box-shadow: 0 10px 18px -12px rgba(28,39,64,.9) !important;
-    }
-    #monwui-slides-container.peak-lite .monwui-backdrop,
-    #monwui-slides-container.peak-lite .monwui-horizontal-gradient-overlay,
-    #monwui-slides-container.peak-lite .monwui-button-container,
-    #monwui-slides-container.peak-lite .monwui-info-container,
-    #monwui-slides-container.peak-lite .monwui-language-container,
-    #monwui-slides-container.peak-lite .monwui-meta-container,
-    #monwui-slides-container.peak-lite .monwui-plot-container,
-    #monwui-slides-container.peak-lite .monwui-provider-container,
-    #monwui-slides-container.peak-lite .monwui-status-container,
-    #monwui-slides-container.peak-lite .monwui-title-container {
-      backdrop-filter: none !important;
-      filter: none !important;
-      box-shadow: none !important;
-    }
-    #monwui-slides-container.peak-lite .monwui-backdrop,
-    #monwui-slides-container.peak-lite .monwui-horizontal-gradient-overlay {
-      transition: none !important;
-      animation: none !important;
-    }
-    #monwui-slides-container.peak-lite .monwui-slide.active,
-    #monwui-slides-container.peak-lite .monwui-slide.active .monwui-backdrop {
-      opacity: 1 !important;
-      visibility: visible !important;
-    }
-    #monwui-slides-container.peak-lite .monwui-slide.active img.monwui-backdrop {
-      left: 0 !important;
-      right: 0 !important;
-      width: 100% !important;
-      transform: none !important;
-      object-position: 50% 50% !important;
-    }
-  `;
+  st.textContent = "\n    html.jms-peak-lite,\n    body.jms-peak-lite {\n      scroll-behavior: auto !important;\n    }\n    html.jms-peak-lite #homePage,\n    html.jms-peak-lite #indexPage,\n    html.jms-peak-lite .homeSectionsContainer {\n      scroll-snap-type: none !important;\n    }\n    #monwui-slides-container.peak-lite {\n      contain: none !important;\n      will-change: auto !important;\n      overflow: visible !important;\n    }\n    #monwui-slides-container.peak-lite .monwui-slide,\n    #monwui-slides-container.peak-lite .monwui-slide .monwui-backdrop {\n      contain: none !important;\n      contain-intrinsic-size: auto !important;\n      content-visibility: visible !important;\n      will-change: auto !important;\n      backface-visibility: hidden !important;\n      -webkit-backface-visibility: hidden !important;\n    }\n    #monwui-slides-container.peak-lite .monwui-slide {\n      transition: none !important;\n      animation: none !important;\n      box-shadow: none !important;\n      outline: none !important;\n    }\n    #monwui-slides-container.peak-lite .monwui-slide.active {\n      box-shadow: 0 10px 18px -12px rgba(28,39,64,.9) !important;\n    }\n    #monwui-slides-container.peak-lite .monwui-backdrop,\n    #monwui-slides-container.peak-lite .monwui-horizontal-gradient-overlay,\n    #monwui-slides-container.peak-lite .monwui-button-container,\n    #monwui-slides-container.peak-lite .monwui-info-container,\n    #monwui-slides-container.peak-lite .monwui-language-container,\n    #monwui-slides-container.peak-lite .monwui-meta-container,\n    #monwui-slides-container.peak-lite .monwui-plot-container,\n    #monwui-slides-container.peak-lite .monwui-provider-container,\n    #monwui-slides-container.peak-lite .monwui-status-container,\n    #monwui-slides-container.peak-lite .monwui-title-container {\n      backdrop-filter: none !important;\n      filter: none !important;\n      box-shadow: none !important;\n    }\n    #monwui-slides-container.peak-lite .monwui-backdrop,\n    #monwui-slides-container.peak-lite .monwui-horizontal-gradient-overlay {\n      transition: none !important;\n      animation: none !important;\n    }\n    #monwui-slides-container.peak-lite .monwui-slide.active,\n    #monwui-slides-container.peak-lite .monwui-slide.active .monwui-backdrop {\n      opacity: 1 !important;\n      visibility: visible !important;\n    }\n    #monwui-slides-container.peak-lite .monwui-slide.active img.monwui-backdrop {\n      left: 0 !important;\n      right: 0 !important;\n      width: 100% !important;\n      transform: none !important;\n      object-position: 50% 50% !important;\n    }\n  ";
   document.head.appendChild(st);
 }
 
 function syncPeakLiteMode(container = document.querySelector('#monwui-slides-container')) {
   injectPeakLiteCSS();
-  const enabled = !!container && container.classList.contains('peak-mode') && isLowPowerPeakRuntime();
+  var enabled = !!container && container.classList.contains('peak-mode') && isLowPowerPeakRuntime();
 
   if (__peakLiteEnabled !== enabled) {
     try { document.documentElement.classList.toggle('jms-peak-lite', enabled); } catch {}
-    try { document.body?.classList?.toggle('jms-peak-lite', enabled); } catch {}
+    try { document.body.classList.toggle('jms-peak-lite', enabled); } catch {}
     __peakLiteEnabled = enabled;
   }
 
@@ -312,17 +139,17 @@ function syncPeakLiteMode(container = document.querySelector('#monwui-slides-con
 }
 
 export function getPeakDisplayOptions() {
-  const cfg = getConfig();
+  var cfg = getConfig();
   if (isLowPowerPeakRuntime()) {
     return {
       spanLeft: 1,
       spanRight: 1,
-      diagonal: !!cfg?.peakDiagonal
+      diagonal: !!cfg.peakDiagonal
     };
   }
-  let spanLeft = Number(cfg?.peakSpanLeft ?? 1);
-  let spanRight = Number(cfg?.peakSpanRight ?? 5);
-  const diagonal = !!cfg?.peakDiagonal;
+  var spanLeft = Number(cfg.peakSpanLeft || 1);
+  var spanRight = Number(cfg.peakSpanRight || 5);
+  var diagonal = !!cfg.peakDiagonal;
   if (!diagonal) {
     spanLeft = 1;
     spanRight = 1;
@@ -331,38 +158,38 @@ export function getPeakDisplayOptions() {
 }
 
 function getPeakActiveIndex(slides) {
-  const arr = Array.from(slides || []);
+  var arr = Array.from(slides || []);
   if (!arr.length) return 0;
 
-  const stateIndex = Number(getCurrentIndex());
+  var stateIndex = Number(getCurrentIndex());
   if (Number.isInteger(stateIndex) && stateIndex >= 0 && stateIndex < arr.length) {
     return stateIndex;
   }
 
-  const domIndex = arr.findIndex((slide) => slide.classList.contains('active'));
+  var domIndex = arr.findIndexfunction((slide) slide.classList.contains('active'));
   return domIndex >= 0 ? domIndex : 0;
 }
 
 function getPeakViewportContainer(root = document) {
-  return root.querySelector?.("#indexPage:not(.hide) #monwui-slides-container, #homePage:not(.hide) #monwui-slides-container, #monwui-slides-container") || null;
+  return root.querySelector.("#indexPage:not(.hide) #monwui-slides-container, #homePage:not(.hide) #monwui-slides-container, #monwui-slides-container") || null;
 }
 
 function resolveSlidesArray(slides) {
   return Array.isArray(slides) ? slides : Array.from(slides || []);
 }
 
-const LEGACY_PEAK_POS_CLASS_RE = /\b(?:left|right)\d+\b/;
+var LEGACY_PEAK_POS_CLASS_RE = /\b(?:left|right)\d+\b/;
 
 function removeLegacyPeakPosClasses(slide) {
-  const className = slide?.className;
+  var className = slide.className;
   if (typeof className !== 'string' || !LEGACY_PEAK_POS_CLASS_RE.test(className)) return;
-  Array.from(slide.classList).forEach((name) => {
+  Array.from(slide.classList).forEach(function((name) {
     if (/^(left|right)\d+$/.test(name)) slide.classList.remove(name);
   });
 }
 
 function normalizePeakOptions(spanOrOpts = 2) {
-  const base = (typeof spanOrOpts === 'object')
+  var base = (typeof spanOrOpts === 'object')
     ? { spanLeft: 2, spanRight: 2, diagonal: false, ...spanOrOpts }
     : { spanLeft: spanOrOpts, spanRight: spanOrOpts, diagonal: false };
 
@@ -374,16 +201,16 @@ function normalizePeakOptions(spanOrOpts = 2) {
 }
 
 function buildPeakVisibleIndexSet(len, activeIndex, spanLeft, spanRight) {
-  const visible = new Set();
+  var visible = new Set();
   if (!len) return visible;
   visible.add(activeIndex);
-  for (let step = 1; step <= spanLeft; step++) visible.add((activeIndex - step + len) % len);
-  for (let step = 1; step <= spanRight; step++) visible.add((activeIndex + step) % len);
+  for (var step = 1; step <= spanLeft; step++) visible.add((activeIndex - step + len) % len);
+  for (var step = 1; step <= spanRight; step++) visible.add((activeIndex + step) % len);
   return visible;
 }
 
 function getPeakSlideState(index, activeIndex, len, spanLeft, spanRight) {
-  const d = circSignedDist(index, activeIndex, len);
+  var d = circSignedDist(index, activeIndex, len);
   if (d === 0) {
     return {
       active: true,
@@ -430,8 +257,8 @@ function getPeakSlideState(index, activeIndex, len, spanLeft, spanRight) {
 
 function applyPeakSlideState(slide, nextState) {
   if (!slide) return;
-  const prev = slide.__peakState || {};
-  const enteringVisible = !prev.visible && !!nextState.visible;
+  var prev = slide.__peakState || {};
+  var enteringVisible = !prev.visible && !!nextState.visible;
   removeLegacyPeakPosClasses(slide);
 
   if (enteringVisible) {
@@ -474,9 +301,9 @@ function applyPeakSlideState(slide, nextState) {
   slide.__peakState = nextState;
 
   if (enteringVisible) {
-    slide.__peakSnapRafA = requestAnimationFrame(() => {
+    slide.__peakSnapRafA = requestAnimationFramefunction(() {
       slide.__peakSnapRafA = 0;
-      slide.__peakSnapRafB = requestAnimationFrame(() => {
+      slide.__peakSnapRafB = requestAnimationFramefunction(() {
         slide.__peakSnapRafB = 0;
         slide.classList.remove('peak-snap-in');
       });
@@ -485,9 +312,9 @@ function applyPeakSlideState(slide, nextState) {
 }
 
 function rebuildPeakState(arr, activeIndex, opts) {
-  const { spanLeft, spanRight } = opts;
-  const len = arr.length;
-  for (let i = 0; i < len; i++) {
+  var { spanLeft, spanRight } = opts;
+  var len = arr.length;
+  for (var i = 0; i < len; i++) {
     applyPeakSlideState(arr[i], getPeakSlideState(i, activeIndex, len, spanLeft, spanRight));
   }
   return buildPeakVisibleIndexSet(len, activeIndex, spanLeft, spanRight);
@@ -503,11 +330,11 @@ function applyPeakContainerState(container, diagonal) {
 function isPeakViewportMutationNode(node) {
   if (!(node instanceof Element)) return false;
   if (node.id === 'monwui-slides-container' || node.id === 'indexPage' || node.id === 'homePage') return true;
-  return !!node.querySelector?.('#monwui-slides-container, #indexPage, #homePage');
+  return !!node.querySelector.('#monwui-slides-container, #indexPage, #homePage');
 }
 
 function mutationTouchesPeakViewport(mutations) {
-  return mutations.some((mutation) => (
+  return mutations.somefunction((mutation) (
     isPeakViewportMutationNode(mutation.target) ||
     Array.from(mutation.addedNodes || []).some(isPeakViewportMutationNode) ||
     Array.from(mutation.removedNodes || []).some(isPeakViewportMutationNode)
@@ -515,29 +342,29 @@ function mutationTouchesPeakViewport(mutations) {
 }
 
 function isElementInViewport(el) {
-  if (!el?.getBoundingClientRect) return false;
-  const rect = el.getBoundingClientRect();
-  const vw = window.innerWidth || document.documentElement.clientWidth || 0;
-  const vh = window.innerHeight || document.documentElement.clientHeight || 0;
+  if (!el.getBoundingClientRect) return false;
+  var rect = el.getBoundingClientRect();
+  var vw = window.innerWidth || document.documentElement.clientWidth || 0;
+  var vh = window.innerHeight || document.documentElement.clientHeight || 0;
   return rect.width > 1 && rect.height > 1 && rect.bottom > 0 && rect.right > 0 && rect.top < vh && rect.left < vw;
 }
 
 function promotePeakBackdrop(activeSlide) {
-  const backdrop = activeSlide?.__backdropImg || activeSlide?.querySelector?.('.monwui-backdrop');
+  var backdrop = activeSlide.__backdropImg || activeSlide.querySelector.('.monwui-backdrop');
   if (!backdrop) return;
 
   try { backdrop.style.opacity = '1'; } catch {}
   try { backdrop.style.visibility = 'visible'; } catch {}
-  backdrop.__requestHi?.({ eagerLoad: true, fetchPriority: 'high' });
+  backdrop.__requestHi.({ eagerLoad: true, fetchPriority: 'high' });
 }
 
 function syncPeakBackdropForState(slide, prevState, nextState) {
-  const backdrop = slide?.__backdropImg || slide?.querySelector?.('.monwui-backdrop');
+  var backdrop = slide.__backdropImg || slide.querySelector.('.monwui-backdrop');
   if (!backdrop) return;
-  backdrop.__clearPeakHiTimer?.();
+  backdrop.__clearPeakHiTimer.();
 
   if (!nextState.visible) {
-    backdrop.__requestLq?.();
+    backdrop.__requestLq.();
     return;
   }
 
@@ -547,44 +374,44 @@ function syncPeakBackdropForState(slide, prevState, nextState) {
   }
 
   try { backdrop.removeAttribute('fetchpriority'); } catch {}
-  const wasVisibleNeighbor = !!prevState?.visible && !!prevState?.neighbor;
-  const step = Math.max(1, Number(nextState.k) || 1);
-  const delay = wasVisibleNeighbor ? 0 : Math.min(160, 35 + (step - 1) * 55);
+  var wasVisibleNeighbor = !!prevState.visible && !!prevState.neighbor;
+  var step = Math.max(1, Number(nextState.k) || 1);
+  var delay = wasVisibleNeighbor ? 0 : Math.min(160, 35 + (step - 1) * 55);
   if (delay <= 0) {
-    backdrop.__requestHi?.({ fetchPriority: 'low' });
+    backdrop.__requestHi.({ fetchPriority: 'low' });
     return;
   }
-  backdrop.__peakHiTimer = setTimeout(() => {
+  backdrop.__peakHiTimer = setTimeoutfunction(() {
     backdrop.__peakHiTimer = 0;
     if (!backdrop.isConnected) return;
     if (!slide.classList.contains('active') && !slide.classList.contains('peak-neighbor')) return;
-    backdrop.__requestHi?.({ fetchPriority: 'low' });
+    backdrop.__requestHi.({ fetchPriority: 'low' });
   }, delay);
 }
 
 function refreshPeakViewport({ forcePrime = false } = {}) {
-  const container = getPeakViewportContainer();
+  var container = getPeakViewportContainer();
   if (!container || !container.classList.contains('peak-mode')) {
     syncPeakLiteMode(null);
     return;
   }
 
-  const lite = syncPeakLiteMode(container);
+  var lite = syncPeakLiteMode(container);
   if (!lite && !forcePrime) return;
   if (!isElementInViewport(container)) return;
 
-  const slides = container.querySelectorAll('.monwui-slide');
+  var slides = container.querySelectorAll('.monwui-slide');
   if (!slides.length) return;
 
-  const activeIndex = getPeakActiveIndex(slides);
-  const activeSlide = slides[activeIndex];
+  var activeIndex = getPeakActiveIndex(slides);
+  var activeSlide = slides[activeIndex];
   if (activeSlide) {
     showSlide(activeSlide);
     activeSlide.classList.add('active');
     promotePeakBackdrop(activeSlide);
   }
 
-  const peakOpts = getPeakDisplayOptions();
+  var peakOpts = getPeakDisplayOptions();
   if (!container.classList.contains('peak-ready')) {
     try { delete container.dataset.peakPrimed; } catch {}
     primePeakFirstPaint(slides, activeIndex, container, peakOpts);
@@ -601,9 +428,9 @@ function schedulePeakViewportRefresh({ forcePrime = false } = {}) {
   if (__peakRefreshTimer) clearTimeout(__peakRefreshTimer);
   if (__peakRefreshRaf) cancelAnimationFrame(__peakRefreshRaf);
 
-  __peakRefreshTimer = setTimeout(() => {
+  __peakRefreshTimer = setTimeoutfunction(() {
     __peakRefreshTimer = 0;
-    __peakRefreshRaf = requestAnimationFrame(() => {
+    __peakRefreshRaf = requestAnimationFramefunction(() {
       __peakRefreshRaf = 0;
       refreshPeakViewport({ forcePrime });
     });
@@ -611,15 +438,15 @@ function schedulePeakViewportRefresh({ forcePrime = false } = {}) {
 }
 
 function bindPeakViewportObserver() {
-  const container = getPeakViewportContainer();
+  var container = getPeakViewportContainer();
   if (container === __peakObservedContainer) {
     syncPeakLiteMode(container);
     return;
   }
 
   if (!__peakViewportObserver) {
-    __peakViewportObserver = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
+    __peakViewportObserver = new IntersectionObserverfunction((entries) {
+      for (var entry of entries) {
         if (entry.isIntersecting && entry.intersectionRatio >= 0.15) {
           schedulePeakViewportRefresh({ forcePrime: false });
         }
@@ -645,13 +472,13 @@ function ensurePeakViewportStability() {
   window.__peakViewportStabilityBound = true;
 
   bindPeakViewportObserver();
-  window.addEventListener('pageshow', () => schedulePeakViewportRefresh({ forcePrime: true }), { passive: true });
-  window.addEventListener('orientationchange', () => schedulePeakViewportRefresh({ forcePrime: true }), { passive: true });
-  document.addEventListener('visibilitychange', () => {
+  window.addEventListenerfunction('pageshow', () schedulePeakViewportRefresh({ forcePrime: true }), { passive: true });
+  window.addEventListenerfunction('orientationchange', () schedulePeakViewportRefresh({ forcePrime: true }), { passive: true });
+  document.addEventListenerfunction('visibilitychange', () {
     if (!document.hidden) schedulePeakViewportRefresh({ forcePrime: true });
   }, { passive: true });
 
-  __peakObserveMO = new MutationObserver((mutations) => {
+  __peakObserveMO = new MutationObserverfunction((mutations) {
     if (mutationTouchesPeakViewport(mutations)) bindPeakViewportObserver();
   });
   __peakObserveMO.observe(document.documentElement, { childList: true, subtree: true });
@@ -659,17 +486,17 @@ function ensurePeakViewportStability() {
 
 function armPeakShiftLite(container) {
   if (!container) return;
-  const duration = getPeakShiftDurationMs();
-  const opacityDuration = Math.max(180, Math.round(duration * 0.82));
-  container.style.setProperty('--peak-shift-ms', `${duration}ms`);
-  container.style.setProperty('--peak-shift-opacity-ms', `${opacityDuration}ms`);
+  var duration = getPeakShiftDurationMs();
+  var opacityDuration = Math.max(180, Math.round(duration * 0.82));
+  container.style.setProperty('--peak-shift-ms', (duration) + "ms");
+  container.style.setProperty('--peak-shift-opacity-ms', (opacityDuration) + "ms");
   container.style.setProperty('--peak-shift-ease', getPeakShiftEasing());
   container.classList.add('peak-shifting');
 
   if (container.__peakShiftTimer) {
     clearTimeout(container.__peakShiftTimer);
   }
-  container.__peakShiftTimer = setTimeout(() => {
+  container.__peakShiftTimer = setTimeoutfunction(() {
     container.__peakShiftTimer = 0;
     if (!container.isConnected) return;
     container.classList.remove('peak-shifting');
@@ -696,7 +523,7 @@ function armPeakInitialReveal(container) {
   if (!container || container.dataset.peakInitialRevealDone === '1') return;
   container.dataset.peakInitialRevealDone = '1';
 
-  const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  var prefersReduced = window.matchMedia.('(prefers-reduced-motion: reduce)').matches;
   if (prefersReduced) return;
 
   if (container.__peakInitialRevealTimer) {
@@ -707,14 +534,14 @@ function armPeakInitialReveal(container) {
   container.classList.add('peak-first-reveal');
   container.classList.remove('peak-first-reveal-active');
 
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
+  requestAnimationFramefunction(() {
+    requestAnimationFramefunction(() {
       if (!container.isConnected) return;
       container.classList.add('peak-first-reveal-active');
     });
   });
 
-  container.__peakInitialRevealTimer = setTimeout(() => {
+  container.__peakInitialRevealTimer = setTimeoutfunction(() {
     container.__peakInitialRevealTimer = 0;
     if (!container.isConnected) return;
     container.classList.remove('peak-first-reveal');
@@ -727,20 +554,20 @@ function hideSlide(el, { soft = true } = {}) {
   el.classList.remove('is-visible');
   el.classList.add('is-hidden');
   if (!soft) {
-    setTimeout(() => {
+    setTimeoutfunction(() {
       if (!el.classList.contains('active')) el.style.display = 'none';
     }, 50);
   }
 }
 
 function scrollContainerToSlide(index, { smooth = true } = {}) {
-  const container = document.querySelector("#monwui-slides-container");
+  var container = document.querySelector("#monwui-slides-container");
   if (!container) return;
-  const slides = container.querySelectorAll(".monwui-slide");
-  const target = slides?.[index];
+  var slides = container.querySelectorAll(".monwui-slide");
+  var target = slides.[index];
   if (!target) return;
 
-  const left = target.offsetLeft - (container.clientWidth - target.clientWidth) / 2;
+  var left = target.offsetLeft - (container.clientWidth - target.clientWidth) / 2;
   container.scrollTo({
     left: Math.max(0, left),
     behavior: smooth ? "smooth" : "auto",
@@ -748,12 +575,12 @@ function scrollContainerToSlide(index, { smooth = true } = {}) {
 }
 
 function L(key, fallback = '') {
-  try { return (getConfig()?.languageLabels?.[key]) ?? fallback; }
+  try { return (getConfig().languageLabels.[key]) || fallback; }
   catch { return fallback; }
 }
-function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
+function sleep(ms) { return new Promise(function(res) setTimeout(res, ms)); }
 function hardResetProgressBarEl() {
-  const pb = document.querySelector(".monwui-slide-progress-bar");
+  var pb = document.querySelector(".monwui-slide-progress-bar");
   if (!pb) return;
   pb.style.transition = "none";
   pb.style.animation  = "none";
@@ -766,22 +593,22 @@ function hardResetProgressBarEl() {
 function microFadeSwap(
   oldSlide,
   newSlide,
-  durMs = Math.min(300, Math.max(120, (getConfig()?.slideAnimationDuration ?? 280)))
+  durMs = Math.min(300, Math.max(120, (getConfig().slideAnimationDuration || 280)))
 ) {
   if (!newSlide) return;
 
-  const prefersReduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-  const D = prefersReduced ? 0 : durMs;
+  var prefersReduced = window.matchMedia.('(prefers-reduced-motion: reduce)').matches;
+  var D = prefersReduced ? 0 : durMs;
 
   if (newSlide.dataset.fx === 'running') return;
   newSlide.dataset.fx = 'running';
   if (oldSlide) oldSlide.dataset.fxPrev = 'running';
 
-  const killTransitions = (el) => {
+  var killTransitions = function(el) {
     el.style.transition = 'none';
     el.style.willChange = 'auto';
   };
-  const flush = () => { void document.body.offsetWidth; };
+  var flush = function() { void document.body.offsetWidth; };
 
   showSlide(newSlide);
   newSlide.style.opacity = '0';
@@ -800,7 +627,7 @@ function microFadeSwap(
 
   flush(); flush();
 
-  const cleanup = () => {
+  var cleanup = function() {
     newSlide.style.transition = '';
     newSlide.style.willChange = '';
     newSlide.style.zIndex = '';
@@ -814,7 +641,7 @@ function microFadeSwap(
       oldSlide.style.pointerEvents = '';
       oldSlide.style.zIndex = '';
       oldSlide.style.opacity = '0';
-      setTimeout(() => {
+      setTimeoutfunction(() {
         if (!oldSlide.classList.contains('active')) oldSlide.style.display = 'none';
       }, 60);
       delete oldSlide.dataset.fxPrev;
@@ -828,20 +655,20 @@ function microFadeSwap(
     return;
   }
 
-  newSlide.style.transition = `opacity ${D}ms ease`;
+  newSlide.style.transition = "opacity " + (D) + "ms ease";
   if (oldSlide && oldSlide !== newSlide) {
-    oldSlide.style.transition = `opacity ${D}ms ease`;
+    oldSlide.style.transition = "opacity " + (D) + "ms ease";
   }
 
-  requestAnimationFrame(() => {
+  requestAnimationFramefunction(() {
     newSlide.style.opacity = '1';
     if (oldSlide && oldSlide !== newSlide) {
       oldSlide.style.opacity = '0';
     }
   });
 
-  let done = false;
-  const onEnd = () => {
+  var done = false;
+  var onEnd = function() {
     if (done) return;
     done = true;
     newSlide.removeEventListener('transitionend', onEnd);
@@ -854,9 +681,9 @@ function microFadeSwap(
 
 
 function getBackdropFromDot(dot) {
-  const img = dot?.querySelector?.('.monwui-dot-poster-image');
-  if (img?.src) return img.src;
-  const slideEl = document.querySelector(`.monwui-slide[data-item-id="${dot?.dataset?.itemId}"]`);
+  var img = dot.querySelector.('.monwui-dot-poster-image');
+  if (img.src) return img.src;
+  var slideEl = document.querySelector(".monwui-slide[data-item-id=\"" + (dot.dataset.itemId) + "\"]");
   if (slideEl) {
     return slideEl.dataset.background || slideEl.dataset.backdrop || slideEl.dataset.primaryimage || null;
   }
@@ -864,25 +691,25 @@ function getBackdropFromDot(dot) {
 }
 
 function enterPeakScrollMode() {
-  const sc = document.querySelector("#monwui-slides-container");
+  var sc = document.querySelector("#monwui-slides-container");
   if (!sc) return;
   sc.classList.add("peak-scroll");
-  sc.querySelectorAll(".monwui-slide").forEach(slide => {
+  sc.querySelectorAll(".monwui-slide").forEach(function(slide) {
     slide.removeAttribute("data-side");
     slide.removeAttribute("data-prime-pos");
   });
 }
 
 export function changeSlide(direction) {
-  const slides = getPeakViewportContainer()?.querySelectorAll(".monwui-slide") || document.querySelectorAll(".monwui-slide");
+  var slides = getPeakViewportContainer().querySelectorAll(".monwui-slide") || document.querySelectorAll(".monwui-slide");
   if (!slides.length) return;
 
   clearAllTimers();
   stopSlideTimer();
-  const currentIndex = getCurrentIndex();
-  const newIndex = (currentIndex + direction + slides.length) % slides.length;
+  var currentIndex = getCurrentIndex();
+  var newIndex = (currentIndex + direction + slides.length) % slides.length;
   setCurrentIndex(newIndex);
-  const sc = document.querySelector("#monwui-slides-container");
+  var sc = document.querySelector("#monwui-slides-container");
   if (sc && sc.classList.contains("peak-scroll")) {
     scrollContainerToSlide(newIndex, { smooth: true });
   }
@@ -905,7 +732,7 @@ function clearManagedDotStateClasses(dot) {
     "monwui-dot-hidden-next"
   );
 
-  Array.from(dot.classList).forEach((className) => {
+  Array.from(dot.classList).forEach(function((className) {
     if (/^monwui-dot-(prev|next)-\d+$/.test(className)) {
       dot.classList.remove(className);
     }
@@ -921,8 +748,8 @@ function getDotWindowBounds(totalDots, currentIndex, rawVisibleCount) {
     return { start: 0, end: -1, visibleCount: 0 };
   }
 
-  const requestedVisibleCount = Number.parseInt(rawVisibleCount, 10);
-  const visibleCount =
+  var requestedVisibleCount = Number.parseInt(rawVisibleCount, 10);
+  var visibleCount =
     Number.isFinite(requestedVisibleCount) && requestedVisibleCount > 0
       ? Math.max(1, Math.min(totalDots, requestedVisibleCount))
       : totalDots;
@@ -931,12 +758,12 @@ function getDotWindowBounds(totalDots, currentIndex, rawVisibleCount) {
     return { start: 0, end: totalDots - 1, visibleCount };
   }
 
-  const safeCurrentIndex = Math.max(0, Math.min(totalDots - 1, currentIndex));
-  const visibleBefore = Math.floor((visibleCount - 1) / 2);
-  const visibleAfter = visibleCount - visibleBefore - 1;
+  var safeCurrentIndex = Math.max(0, Math.min(totalDots - 1, currentIndex));
+  var visibleBefore = Math.floor((visibleCount - 1) / 2);
+  var visibleAfter = visibleCount - visibleBefore - 1;
 
-  let start = safeCurrentIndex - visibleBefore;
-  let end = safeCurrentIndex + visibleAfter;
+  var start = safeCurrentIndex - visibleBefore;
+  var end = safeCurrentIndex + visibleAfter;
 
   if (start < 0) {
     end = Math.min(totalDots - 1, end - start);
@@ -952,22 +779,22 @@ function getDotWindowBounds(totalDots, currentIndex, rawVisibleCount) {
 }
 
 function applyDotStateClasses(dots, currentIndex, config, lowPower = false) {
-  const dotArray = Array.from(dots || []);
+  var dotArray = Array.from(dots || []);
   if (!dotArray.length) return;
-  const maxStyledDistance = 5;
+  var maxStyledDistance = 5;
 
-  const safeCurrentIndex = Math.max(0, Math.min(dotArray.length - 1, currentIndex));
-  const { start, end } = getDotWindowBounds(
+  var safeCurrentIndex = Math.max(0, Math.min(dotArray.length - 1, currentIndex));
+  var { start, end } = getDotWindowBounds(
     dotArray.length,
     safeCurrentIndex,
-    config?.dotVisibleCount
+    config.dotVisibleCount
   );
 
-  dotArray.forEach((dot, arrayIndex) => {
-    const wasActive = dot.classList.contains("active");
-    const parsedIndex = Number(dot.dataset.index);
-    const dotIndex = Number.isFinite(parsedIndex) ? parsedIndex : arrayIndex;
-    const isActive = dotIndex === safeCurrentIndex;
+  dotArray.forEach(function((dot, arrayIndex) {
+    var wasActive = dot.classList.contains("active");
+    var parsedIndex = Number(dot.dataset.index);
+    var dotIndex = Number.isFinite(parsedIndex) ? parsedIndex : arrayIndex;
+    var isActive = dotIndex === safeCurrentIndex;
 
     clearManagedDotStateClasses(dot);
 
@@ -977,19 +804,19 @@ function applyDotStateClasses(dots, currentIndex, config, lowPower = false) {
       dot.dataset.dotDirection = "current";
       dot.dataset.dotDistance = "0";
     } else {
-      const distance = Math.abs(dotIndex - safeCurrentIndex);
-      const styledDistance = Math.min(distance, maxStyledDistance);
-      const direction = dotIndex < safeCurrentIndex ? "prev" : "next";
-      const isHidden = dotIndex < start || dotIndex > end;
+      var distance = Math.abs(dotIndex - safeCurrentIndex);
+      var styledDistance = Math.min(distance, maxStyledDistance);
+      var direction = dotIndex < safeCurrentIndex ? "prev" : "next";
+      var isHidden = dotIndex < start || dotIndex > end;
 
       dot.dataset.dotState = isHidden ? "hidden" : direction;
       dot.dataset.dotDirection = direction;
       dot.dataset.dotDistance = String(distance);
 
       if (isHidden) {
-        dot.classList.add("monwui-dot-hidden", `monwui-dot-hidden-${direction}`);
+        dot.classList.add("monwui-dot-hidden", "monwui-dot-hidden-" + (direction));
       } else {
-        dot.classList.add(`monwui-dot-${direction}`, `monwui-dot-${direction}-${styledDistance}`);
+        dot.classList.add("monwui-dot-" + (direction), "monwui-dot-" + (direction) + "-" + (styledDistance));
       }
     }
 
@@ -1000,10 +827,10 @@ function applyDotStateClasses(dots, currentIndex, config, lowPower = false) {
 }
 
 export function updateActiveDot() {
-  const currentIndex = getCurrentIndex();
-  const dots = document.querySelectorAll(".monwui-dot");
-  const config = getConfig();
-  const lowPower = isLowPowerPeakRuntime();
+  var currentIndex = getCurrentIndex();
+  var dots = document.querySelectorAll(".monwui-dot");
+  var config = getConfig();
+  var lowPower = isLowPowerPeakRuntime();
 
   applyDotStateClasses(dots, currentIndex, config, lowPower);
 
@@ -1011,9 +838,9 @@ export function updateActiveDot() {
 }
 
 export function createDotNavigation() {
-  const config = getConfig();
+  var config = getConfig();
   if (!config.showDotNavigation) {
-    const existingDotContainer = document.querySelector(".monwui-dot-navigation-container");
+    var existingDotContainer = document.querySelector(".monwui-dot-navigation-container");
     if (existingDotContainer) {
       teardownAnimations();
       existingDotContainer.remove();
@@ -1021,16 +848,16 @@ export function createDotNavigation() {
     return;
   }
 
-  const dotType = config.dotBackgroundImageType;
-  const slidesContainer = getPeakViewportContainer();
+  var dotType = config.dotBackgroundImageType;
+  var slidesContainer = getPeakViewportContainer();
   if (!slidesContainer) {
     return;
   }
 
-  const slides = slidesContainer.querySelectorAll(".monwui-slide");
+  var slides = slidesContainer.querySelectorAll(".monwui-slide");
   if (!slides || slides.length === 0) return;
 
-  let dotContainer = slidesContainer.querySelector(".monwui-dot-navigation-container");
+  var dotContainer = slidesContainer.querySelector(".monwui-dot-navigation-container");
   if (!dotContainer) {
     dotContainer = document.createElement("div");
     dotContainer.className = "monwui-dot-navigation-container";
@@ -1038,84 +865,84 @@ export function createDotNavigation() {
     slidesContainer.appendChild(dotContainer);
   }
 
-  const currentIndex = getCurrentIndex();
-  const lowPower = isLowPowerPeakRuntime();
+  var currentIndex = getCurrentIndex();
+  var lowPower = isLowPowerPeakRuntime();
 
   if (config.dotPosterMode) {
     dotContainer.innerHTML = "";
     dotContainer.classList.add("dot-poster-mode");
 
-    const scrollWrapper = document.createElement("div");
+    var scrollWrapper = document.createElement("div");
     scrollWrapper.className = "monwui-dot-scroll-wrapper";
 
-    const slidesArray = Array.from(slides);
+    var slidesArray = Array.from(slides);
 
-    const dotElements = slidesArray.map((slide, index) => {
-    const itemId = slide.dataset.itemId;
+    var dotElements = slidesArray.mapfunction((slide, index) {
+    var itemId = slide.dataset.itemId;
     if (!itemId) {
-        console.warn(`Dot oluşturulamadı: monwui-slide ${index} için itemId eksik`);
+        console.warn("Dot oluşturulamadı: monwui-slide " + (index) + " için itemId eksik");
         return null;
     }
 
-    const dot = document.createElement("div");
+    var dot = document.createElement("div");
     dot.className = "monwui-dot monwui-poster-dot";
     dot.dataset.index = index;
     dot.dataset.itemId = itemId;
 
-    const imageUrl = dotType === "useSlideBackground"
+    var imageUrl = dotType === "useSlideBackground"
         ? slide.dataset.background
         : slide.dataset[dotType];
 
     if (imageUrl) {
-        const image = document.createElement("img");
+        var image = document.createElement("img");
         image.src = withServer(imageUrl);
         image.className = "monwui-dot-poster-image";
         image.style.opacity = config.dotBackgroundOpacity || 0.3;
-        image.style.filter = lowPower ? "none" : `blur(${config.dotBackgroundBlur ?? 10}px)`;
+        image.style.filter = lowPower ? "none" : "blur(" + (config.dotBackgroundBlur || 10) + "px)";
         dot.appendChild(image);
     }
 
     try {
-        const mediaStreams = slide.dataset.mediaStreams ? JSON.parse(slide.dataset.mediaStreams) : [];
-        const videoStream = mediaStreams.find(s => s.Type === "Video");
+        var mediaStreams = slide.dataset.mediaStreams ? JSON.parse(slide.dataset.mediaStreams) : [];
+        var videoStream = mediaStreams.find(function(s) s.Type === "Video");
         if (videoStream) {
-            const qualityText = getVideoQualityText(videoStream);
+            var qualityText = getVideoQualityText(videoStream);
             if (qualityText) {
-                const qualityBadge = document.createElement("div");
+                var qualityBadge = document.createElement("div");
                 qualityBadge.className = "monwui-dot-quality-badge";
-                qualityBadge.innerHTML = `${qualityText}`;
+                qualityBadge.innerHTML = (qualityText);
                 dot.appendChild(qualityBadge);
-                const style = document.createElement("style");
+                var style = document.createElement("style");
             }
         }
     } catch (e) {
         console.warn("Video kalite bilgisi yüklenirken hata:", e);
     }
 
-        const positionTicks = Number(slide.dataset.playbackpositionticks);
-        const runtimeTicks = Number(slide.dataset.runtimeticks);
-        const slideIsPlayed = slide.dataset.played === "true";
+        var positionTicks = Number(slide.dataset.playbackpositionticks);
+        var runtimeTicks = Number(slide.dataset.runtimeticks);
+        var slideIsPlayed = slide.dataset.played === "true";
 
         if (config.showPlaybackProgress && hasPartialPlaybackState({
             isPlayed: slideIsPlayed,
             positionTicks,
             runtimeTicks
         })) {
-            const progressContainer = document.createElement("div");
+            var progressContainer = document.createElement("div");
             progressContainer.className = "monwui-dot-progress-container";
 
-            const barWrapper = document.createElement("div");
+            var barWrapper = document.createElement("div");
             barWrapper.className = "monwui-dot-duration-bar-wrapper";
 
-            const bar = document.createElement("div");
+            var bar = document.createElement("div");
             bar.className = "monwui-dot-duration-bar";
-            const percentage = Math.min((positionTicks / runtimeTicks) * 100, 100);
-            bar.style.width = `${percentage.toFixed(1)}%`;
+            var percentage = Math.min((positionTicks / runtimeTicks) * 100, 100);
+            bar.style.width = (percentage.toFixed(1)) + "%";
 
-            const remainingMinutes = Math.round((runtimeTicks - positionTicks) / 600000000);
-            const text = document.createElement("span");
+            var remainingMinutes = Math.round((runtimeTicks - positionTicks) / 600000000);
+            var text = document.createElement("span");
             text.className = "monwui-dot-duration-remaining";
-            text.innerHTML = `<i class="fa-solid fa-hourglass-half"></i> ${remainingMinutes} ${config.languageLabels.dakika} ${config.languageLabels.kaldi}`;
+            text.innerHTML = "<i class=\"fa-solid fa-hourglass-half\"></i> " + (remainingMinutes) + " " + (config.languageLabels.dakika) + " " + (config.languageLabels.kaldi);
 
             barWrapper.appendChild(bar);
             progressContainer.appendChild(barWrapper);
@@ -1123,23 +950,23 @@ export function createDotNavigation() {
             dot.appendChild(progressContainer);
         }
 
-        const playButtonContainer = document.createElement("div");
+        var playButtonContainer = document.createElement("div");
         playButtonContainer.className = "monwui-dot-play-container";
 
-        const playButton = document.createElement("button");
+        var playButton = document.createElement("button");
         playButton.className = "monwui-dot-play-button";
         playButton.textContent = config.languageLabels.izle;
 
-        playButton.addEventListener('click', async (e) => {
+        playButton.addEventListenerfunction('click', (e) {
         e.stopPropagation();
-        const itemId = slide.dataset.itemId;
+        var itemId = slide.dataset.itemId;
         if (!itemId) {
         alert("Oynatma başarısız: itemId bulunamadı");
         return;
       }
       closeVideoModal();
       try {
-        await playNow(itemId);
+        playNow(itemId);
       } catch (error) {
         console.error("Oynatma hatası:", error);
         alert("Oynatma başarısız: " + error.message);
@@ -1148,9 +975,9 @@ export function createDotNavigation() {
       }
     });
 
-        const matchBadge = document.createElement("div");
+        var matchBadge = document.createElement("div");
         matchBadge.className = "monwui-dot-match-div";
-        matchBadge.textContent = `...% ${config.languageLabels.uygun}`;
+        matchBadge.textContent = "...% " + (config.languageLabels.uygun);
 
         playButtonContainer.appendChild(playButton);
         playButtonContainer.appendChild(matchBadge);
@@ -1161,39 +988,39 @@ export function createDotNavigation() {
         if (config.dotPosterMode && config.enableDotPosterAnimations && !lowPower) {
             applyDotPosterAnimation(dot, index === currentIndex);
         }
-        dot.addEventListener("click", () => {
+        dot.addEventListenerfunction("click", () {
             if (index !== getCurrentIndex()) {
                 changeSlide(index - getCurrentIndex());
             }
         });
 
-      dot.addEventListener("mouseenter", () => {
+      dot.addEventListenerfunction("mouseenter", () {
       modalState.isMouseInItem = true;
       clearTimeout(modalState.modalHideTimeout);
       modalState.modalHoverState = true;
       if (dot.abortController) dot.abortController.abort();
       dot.abortController = new AbortController();
-      const { signal } = dot.abortController;
-      const itemId = dot.dataset.itemId;
+      var { signal } = dot.abortController;
+      var itemId = dot.dataset.itemId;
       if (!itemId) return;
-      scheduleOpenForItem(dot, itemId, signal, async () => {
+      scheduleOpenForItemfunction(dot, itemId, signal, () {
       if (!modalState.isMouseInItem && !modalState.isMouseInModal) return;
       try {
-      await openModalForDot(dot, itemId, signal);
+      openModalForDot(dot, itemId, signal);
 
-      const item = await fetchItemDetails(itemId, { signal });
-      const isFavorite = item.UserData?.IsFavorite || false;
-      const isPlayed   = item.UserData?.Played || false;
-      const positionTicks = Number(item.UserData?.PlaybackPositionTicks || 0);
-      const runtimeTicks  = Number(item.RunTimeTicks || 0);
-      const hasPartialPlayback = hasPartialPlaybackState({
+      var item = fetchItemDetails(itemId, { signal });
+      var isFavorite = item.UserData.IsFavorite || false;
+      var isPlayed   = item.UserData.Played || false;
+      var positionTicks = Number(item.UserData.PlaybackPositionTicks || 0);
+      var runtimeTicks  = Number(item.RunTimeTicks || 0);
+      var hasPartialPlayback = hasPartialPlaybackState({
         isPlayed,
-        playedPercentage: item.UserData?.PlayedPercentage,
+        playedPercentage: item.UserData.PlayedPercentage,
         positionTicks,
         runtimeTicks
       });
 
-      const playButton = dot.querySelector('.monwui-dot-play-button');
+      var playButton = dot.querySelector('.monwui-dot-play-button');
       if (playButton) {
         playButton.textContent = getPlayButtonText({
           isPlayed,
@@ -1202,23 +1029,23 @@ export function createDotNavigation() {
         });
       }
 
-      const matchPercentage = await calculateMatchPercentage(item.UserData, item);
-      const matchBadge = dot.querySelector('.monwui-dot-match-div');
+      var matchPercentage = calculateMatchPercentage(item.UserData, item);
+      var matchBadge = dot.querySelector('.monwui-dot-match-div');
       if (matchBadge) {
-        matchBadge.textContent = `${matchPercentage}% ${config.languageLabels.uygun}`;
+        matchBadge.textContent = (matchPercentage) + "% " + (config.languageLabels.uygun);
       }
 
       dot.dataset.favorite = isFavorite.toString();
       dot.dataset.played   = isPlayed.toString();
     } catch (error) {
-      if (error?.name !== 'AbortError') {
+      if (error.name !== 'AbortError') {
         console.error('Poster monwui-dot hover hatası:', error);
         if (modalState.videoModal) modalState.videoModal.style.display = 'none';
       }
     }
   });
 });
-      dot.addEventListener("mouseleave", () => {
+      dot.addEventListenerfunction("mouseleave", () {
       modalState.isMouseInItem = false;
 
       if (dot.abortController) {
@@ -1239,10 +1066,10 @@ export function createDotNavigation() {
       ensureDotQualityBadgeCSS();
 
       if (!lowPower) {
-        setTimeout(() => {
-          const createdDots = Array.from(scrollWrapper.querySelectorAll('.monwui-poster-dot'));
-          createdDots.forEach(dot => {
-            const itemId = dot.dataset.itemId;
+        setTimeoutfunction(() {
+          var createdDots = Array.from(scrollWrapper.querySelectorAll('.monwui-poster-dot'));
+          createdDots.forEach(function(dot) {
+            var itemId = dot.dataset.itemId;
             if (itemId) preloadVideoPreview(itemId);
           });
 
@@ -1252,25 +1079,25 @@ export function createDotNavigation() {
         }, 0);
       }
 
-      dotElements.forEach(dot => scrollWrapper.appendChild(dot));
-      setTimeout(async () => {
-        const dotItemIds = dotElements.map(dot => dot.dataset.itemId).filter(Boolean);
-        await preloadGenreData(dotItemIds);
-        for (const dot of dotElements) {
+      dotElements.forEach(function(dot) scrollWrapper.appendChild(dot));
+      setTimeoutfunction(() {
+        var dotItemIds = dotElements.map(function(dot) dot.dataset.itemId).filter(Boolean);
+        preloadGenreData(dotItemIds);
+        for (var dot of dotElements) {
           try {
-              const itemId = dot.dataset.itemId;
-              const item = await fetchItemDetails(itemId);
-              const isFavorite = item.UserData?.IsFavorite || false;
-              const isPlayed = item.UserData?.Played || false;
-              const positionTicks = Number(item.UserData?.PlaybackPositionTicks || 0);
-              const runtimeTicks = Number(item.RunTimeTicks || 0);
-              const hasPartialPlayback = hasPartialPlaybackState({
+              var itemId = dot.dataset.itemId;
+              var item = fetchItemDetails(itemId);
+              var isFavorite = item.UserData.IsFavorite || false;
+              var isPlayed = item.UserData.Played || false;
+              var positionTicks = Number(item.UserData.PlaybackPositionTicks || 0);
+              var runtimeTicks = Number(item.RunTimeTicks || 0);
+              var hasPartialPlayback = hasPartialPlaybackState({
                 isPlayed,
-                playedPercentage: item.UserData?.PlayedPercentage,
+                playedPercentage: item.UserData.PlayedPercentage,
                 positionTicks,
                 runtimeTicks
               });
-              const playButton = dot.querySelector('.monwui-dot-play-button');
+              var playButton = dot.querySelector('.monwui-dot-play-button');
               if (playButton) {
               playButton.textContent = getPlayButtonText({
               isPlayed,
@@ -1278,70 +1105,70 @@ export function createDotNavigation() {
               labels: config.languageLabels
             });
           }
-              const matchPercentage = await calculateMatchPercentage(item.UserData, item);
-              const matchBadge = dot.querySelector('.monwui-dot-match-div');
+              var matchPercentage = calculateMatchPercentage(item.UserData, item);
+              var matchBadge = dot.querySelector('.monwui-dot-match-div');
               if (matchBadge) {
-                  matchBadge.textContent = `${matchPercentage}% ${config.languageLabels.uygun}`;
+                  matchBadge.textContent = (matchPercentage) + "% " + (config.languageLabels.uygun);
               }
               dot.dataset.favorite = isFavorite.toString();
               dot.dataset.played = isPlayed.toString();
 
           } catch (error) {
-              console.error(`Dot verileri yüklenirken hata (${dot.dataset.itemId}):`, error);
+              console.error("Dot verileri yüklenirken hata (" + (dot.dataset.itemId) + "):", error);
           }
       }
   }, lowPower ? 350 : 0);
 
     applyDotStateClasses(dotElements, currentIndex, config, lowPower);
 
-    const leftArrow = document.createElement("button");
+    var leftArrow = document.createElement("button");
     leftArrow.className = "monwui-dot-arrow monwui-dot-arrow-left";
     leftArrow.innerHTML = "&#10094;";
-    leftArrow.addEventListener("click", () => {
+    leftArrow.addEventListenerfunction("click", () {
         scrollWrapper.scrollBy({ left: -scrollWrapper.clientWidth, behavior: lowPower ? "auto" : "smooth" });
     });
 
-    const rightArrow = document.createElement("button");
+    var rightArrow = document.createElement("button");
     rightArrow.className = "monwui-dot-arrow monwui-dot-arrow-right";
     rightArrow.innerHTML = "&#10095;";
-    rightArrow.addEventListener("click", () => {
+    rightArrow.addEventListenerfunction("click", () {
         scrollWrapper.scrollBy({ left: scrollWrapper.clientWidth, behavior: lowPower ? "auto" : "smooth" });
     });
 
     dotContainer.append(leftArrow, scrollWrapper, rightArrow);
     if (scrollWrapper.__dotRO) scrollWrapper.__dotRO.disconnect();
-    scrollWrapper.__dotRO = new ResizeObserver(() => { centerActiveDot(); });
+    scrollWrapper.__dotRO = new ResizeObserverfunction(() { centerActiveDot(); });
     scrollWrapper.__dotRO.observe(scrollWrapper);
 
-    setTimeout(() => centerActiveDot({ smooth: !lowPower, force: true }), 300);
+    setTimeoutfunction(() centerActiveDot({ smooth: !lowPower, force: true }), 300);
     return;
   }
 
   dotContainer.innerHTML = "";
-  const currentDotIndex = getCurrentIndex();
+  var currentDotIndex = getCurrentIndex();
 
-  slides.forEach((slide, index) => {
-    const dot = document.createElement("span");
+  slides.forEach(function((slide, index) {
+    var dot = document.createElement("span");
     dot.className = "monwui-dot";
     dot.dataset.index = index;
 
-    const imageUrl = dotType === "useSlideBackground"
+    var imageUrl = dotType === "useSlideBackground"
       ? slide.dataset.background
       : slide.dataset[dotType];
 
     if (imageUrl) {
-      const imageOverlay = document.createElement("div");
+      var imageOverlay = document.createElement("div");
       imageOverlay.className = "monwui-dot-image-overlay";
-      imageOverlay.style.backgroundImage = `url(${imageUrl})`;
+      imageOverlay.style.backgroundImage = "url(" + (imageUrl) + ")";
       imageOverlay.style.backgroundSize = "cover";
       imageOverlay.style.backgroundPosition = "center";
       imageOverlay.style.opacity = config.dotBackgroundOpacity || 0.3;
-      imageOverlay.style.filter = lowPower ? "none" : `blur(${config.dotBackgroundBlur ?? 10}px)`;
+      imageOverlay.style.filter = lowPower ? "none" : "blur(" + (config.dotBackgroundBlur || 10) + "px)";
       dot.appendChild(imageOverlay);
     }
 
     dot.classList.toggle("active", index === currentDotIndex);
-    dot.addEventListener("click", () => {
+    dot.addEventListenerfunction("click", () {
       if (index !== getCurrentIndex()) {
         changeSlide(index - getCurrentIndex());
       }
@@ -1353,8 +1180,8 @@ export function createDotNavigation() {
   applyDotStateClasses(dotContainer.querySelectorAll(".monwui-dot"), currentDotIndex, config, lowPower);
 }
 
-async function openModalForDot(dot, itemId, signal) {
-  const cfg = getConfig();
+function openModalForDot(dot, itemId, signal) {
+  var cfg = getConfig();
   if (!cfg || cfg.previewModal === false) return
   if (modalState.videoModal) {
     hardStopPlayback();
@@ -1367,10 +1194,10 @@ async function openModalForDot(dot, itemId, signal) {
     }
   }
 
-  const item = await fetchItemDetails(itemId, { signal });
-  if (signal?.aborted) return;
+  var item = fetchItemDetails(itemId, { signal });
+  if (signal.aborted) return;
   if (!modalState.videoModal || !document.body.contains(modalState.videoModal)) {
-    const modalElements = createVideoModal({ showButtons: true, context: 'monwui-dot' });
+    var modalElements = createVideoModal({ showButtons: true, context: 'monwui-dot' });
     if (!modalElements) return;
     modalState.videoModal = modalElements.modal;
     modalState.modalVideo = modalElements.video;
@@ -1385,8 +1212,8 @@ async function openModalForDot(dot, itemId, signal) {
     bindModalEvents(modalState.videoModal);
   }
 
-  const domUrl = getBackdropFromDot(dot);
-  const itemUrl = getBackdropFromItem(item);
+  var domUrl = getBackdropFromDot(dot);
+  var itemUrl = getBackdropFromItem(item);
   modalState.videoModal.setBackdrop(domUrl || itemUrl || null);
 
   modalState.videoModal.dataset.itemId = itemId;
@@ -1398,54 +1225,54 @@ async function openModalForDot(dot, itemId, signal) {
   }
   applyVolumePreference();
 
-  const videoUrl = await preloadVideoPreview(itemId);
-  if (signal?.aborted) return;
-  await updateModalContent(item, videoUrl);
+  var videoUrl = preloadVideoPreview(itemId);
+  if (signal.aborted) return;
+  updateModalContent(item, videoUrl);
 }
 
 export function initSwipeEvents() {
-  const slidesContainer = getPeakViewportContainer();
+  var slidesContainer = getPeakViewportContainer();
   if (!slidesContainer) return;
   if (slidesContainer.__swipeBound) return;
   slidesContainer.__swipeBound = true;
 
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let touchEndX = 0;
-  let touchEndY = 0;
-  let isHorizontalSwipe = false;
+  var touchStartX = 0;
+  var touchStartY = 0;
+  var touchEndX = 0;
+  var touchEndY = 0;
+  var isHorizontalSwipe = false;
 
-  const handleTouchStart = (e) => {
+  var handleTouchStart = function(e) {
     touchStartX = e.changedTouches[0].screenX;
     touchStartY = e.changedTouches[0].screenY;
     isHorizontalSwipe = false;
-    e.stopImmediatePropagation?.();
+    e.stopImmediatePropagation.();
   };
 
-  const handleTouchMove = (e) => {
-    const moveX = e.changedTouches[0].screenX - touchStartX;
-    const moveY = e.changedTouches[0].screenY - touchStartY;
+  var handleTouchMove = function(e) {
+    var moveX = e.changedTouches[0].screenX - touchStartX;
+    var moveY = e.changedTouches[0].screenY - touchStartY;
     if (Math.abs(moveX) > Math.abs(moveY) && Math.abs(moveX) > 10) {
       isHorizontalSwipe = true;
       e.preventDefault();
     } else {
       isHorizontalSwipe = false;
     }
-    e.stopImmediatePropagation?.();
+    e.stopImmediatePropagation.();
   };
 
-  const handleTouchEnd = (e) => {
+  var handleTouchEnd = function(e) {
     touchEndX = e.changedTouches[0].screenX;
     touchEndY = e.changedTouches[0].screenY;
-    const deltaX = touchEndX - touchStartX;
-    const deltaY = touchEndY - touchStartY;
+    var deltaX = touchEndX - touchStartX;
+    var deltaY = touchEndY - touchStartY;
 
     if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
       changeSlide(deltaX > 0 ? -1 : 1);
     }
 
     isHorizontalSwipe = false;
-    e.stopImmediatePropagation?.();
+    e.stopImmediatePropagation.();
   };
 
   slidesContainer.addEventListener("touchstart", handleTouchStart, { passive: false });
@@ -1455,25 +1282,25 @@ export function initSwipeEvents() {
 
 export function centerActiveDot({ smooth = true, force = false } = {}) {
   if (isLowPowerPeakRuntime()) smooth = false;
-  const scrollWrapper = document.querySelector(".monwui-dot-scroll-wrapper");
-  const activeDot = scrollWrapper?.querySelector(".monwui-poster-dot.active");
+  var scrollWrapper = document.querySelector(".monwui-dot-scroll-wrapper");
+  var activeDot = scrollWrapper.querySelector(".monwui-poster-dot.active");
   if (!scrollWrapper || !activeDot) return;
 
-  const wrapperRect = scrollWrapper.getBoundingClientRect();
-  const dotRect = activeDot.getBoundingClientRect();
+  var wrapperRect = scrollWrapper.getBoundingClientRect();
+  var dotRect = activeDot.getBoundingClientRect();
 
-  const isFullyVisible =
+  var isFullyVisible =
     dotRect.left >= wrapperRect.left &&
     dotRect.right <= wrapperRect.right;
 
-  const dotCenter = dotRect.left + dotRect.width / 2;
-  const isRoughlyCentered =
+  var dotCenter = dotRect.left + dotRect.width / 2;
+  var isRoughlyCentered =
     dotCenter > wrapperRect.left + wrapperRect.width * 0.4 &&
     dotCenter < wrapperRect.right - wrapperRect.width * 0.4;
 
   if (!force && isFullyVisible && isRoughlyCentered) return;
 
-  const scrollAmount =
+  var scrollAmount =
     activeDot.offsetLeft - scrollWrapper.clientWidth / 2 + activeDot.offsetWidth / 2;
 
   scrollWrapper.scrollTo({
@@ -1482,15 +1309,14 @@ export function centerActiveDot({ smooth = true, force = false } = {}) {
   });
 }
 
-async function preloadGenreData(itemIds) {
+function preloadGenreData(itemIds) {
   if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) return;
 
-  const genreMap = new Map();
+  var genreMap = new Map();
 
-  await Promise.all(
-    itemIds.map(async (itemId) => {
+  Promise.allfunction(itemIds.map((itemId) {
       try {
-        const item = await fetchItemDetails(itemId);
+        var item = fetchItemDetails(itemId);
         if (item && Array.isArray(item.Genres)) {
           genreMap.set(itemId, item.Genres);
         }
@@ -1503,43 +1329,43 @@ async function preloadGenreData(itemIds) {
 export function displaySlide(index) {
   ensureFlickerFixCSS();
 
-  const slidesContainer = getPeakViewportContainer();
+  var slidesContainer = getPeakViewportContainer();
   if (!slidesContainer) return;
 
-  const slides = slidesContainer.querySelectorAll(".monwui-slide");
+  var slides = slidesContainer.querySelectorAll(".monwui-slide");
   if (!slides.length) return;
 
   if (!document.querySelector(".monwui-dot-navigation-container")) {
     createDotNavigation();
   }
 
-  const currentSlide = slides[index];
+  var currentSlide = slides[index];
   if (!currentSlide) return;
 
-  const activeSlide = slidesContainer.querySelector(".monwui-slide.active");
-  const slidesArr = Array.from(slides);
-  const len = slidesArr.length;
+  var activeSlide = slidesContainer.querySelector(".monwui-slide.active");
+  var slidesArr = Array.from(slides);
+  var len = slidesArr.length;
 
-  let prevIndex = activeSlide ? slidesArr.indexOf(activeSlide) : -1;
+  var prevIndex = activeSlide ? slidesArr.indexOf(activeSlide) : -1;
   if (prevIndex < 0) prevIndex = (index - 1 + len) % len;
 
-  let delta = index - prevIndex;
+  var delta = index - prevIndex;
   if (delta >  len / 2)  delta -= len;
   if (delta < -len / 2)  delta += len;
 
-  const direction = delta === 0 ? 1 : (delta > 0 ? 1 : -1);
+  var direction = delta === 0 ? 1 : (delta > 0 ? 1 : -1);
 
-  const isPeak = !!getConfig()?.peakSlider;
+  var isPeak = !!getConfig().peakSlider;
   if (slidesContainer) slidesContainer.classList.toggle("peak-mode", isPeak);
   if (isPeak && slidesContainer && !slidesContainer.classList.contains('peak-ready')) {
     slidesContainer.classList.add('peak-init');
     slidesContainer.scrollLeft = 0;
   }
-  if (isPeak && activeSlide && activeSlide !== currentSlide && slidesContainer?.classList?.contains('peak-ready')) {
+  if (isPeak && activeSlide && activeSlide !== currentSlide && slidesContainer.classList.contains('peak-ready')) {
     armPeakShiftLite(slidesContainer);
   }
 
-  slides.forEach(s => {
+  slides.forEach(function(s) {
     if (s === currentSlide || s === activeSlide) {
       showSlide(s);
     } else if (!isPeak) {
@@ -1549,25 +1375,25 @@ export function displaySlide(index) {
 
   if (activeSlide) {
     if (!isPeak) {
-      const enableAnims = !!getConfig()?.enableSlideAnimations;
+      var enableAnims = !!getConfig().enableSlideAnimations;
       if (!enableAnims) {
-        requestAnimationFrame(() => {
+        requestAnimationFramefunction(() {
           microFadeSwap(activeSlide, currentSlide);
         });
       } else {
         cancelOngoingAnimations(slidesArr);
         showSlide(currentSlide);
-        const currentBackdrop =
+        var currentBackdrop =
           currentSlide.__backdropImg ||
-          currentSlide.querySelector?.('img.monwui-backdrop') ||
-          currentSlide.querySelector?.('.monwui-backdrop') ||
+          currentSlide.querySelector.('img.monwui-backdrop') ||
+          currentSlide.querySelector.('.monwui-backdrop') ||
           null;
         if (currentBackdrop) {
           currentBackdrop.style.opacity = "0";
           currentBackdrop.style.willChange = "transform, opacity";
           forceReflow(currentBackdrop);
         }
-        requestAnimationFrame(() => {
+        requestAnimationFramefunction(() {
           applySlideAnimation(activeSlide, currentSlide, direction);
         });
       }
@@ -1585,10 +1411,10 @@ export function displaySlide(index) {
     enablePeakNeighborActivation();
   } else {
     syncPeakLiteMode(null);
-    slides.forEach(slide => {
+    slides.forEach(function(slide) {
       if (slide !== currentSlide) {
         slide.classList.remove("active");
-        setTimeout(() => {
+        setTimeoutfunction(() {
           if (!slide.classList.contains("active")) {
             hideSlide(slide, { soft: true });
           }
@@ -1598,7 +1424,7 @@ export function displaySlide(index) {
   }
 
   showSlide(currentSlide);
-  requestAnimationFrame(() => {
+  requestAnimationFramefunction(() {
     currentSlide.classList.add("active");
     currentSlide.dispatchEvent(new CustomEvent("slideActive", {
       bubbles: true,
@@ -1607,7 +1433,7 @@ export function displaySlide(index) {
 
     if (isPeak) {
       if (window.__peakBooting) {
-        setTimeout(() => {
+        setTimeoutfunction(() {
           updateProgressBarPosition();
         }, 50);
       }
@@ -1615,7 +1441,7 @@ export function displaySlide(index) {
       updateProgressBarPosition();
     }
 
-    const directorContainer = currentSlide.querySelector(".monwui-director-container");
+    var directorContainer = currentSlide.querySelector(".monwui-director-container");
     if (directorContainer && !isPeak) {
       showAndHideElementWithAnimation(directorContainer, {
         girisSure: config.girisSure,
@@ -1630,14 +1456,14 @@ export function displaySlide(index) {
   initSwipeEvents();
 }
 
-window.addEventListener('resize', () => {
+window.addEventListenerfunction('resize', () {
   if (modalState.progressBarEl && !useSecondsMode()) {
     updateProgressBarPosition();
   }
 });
 
 function cancelOngoingAnimations(slidesArr) {
-  for (const s of slidesArr) {
+  for (var s of slidesArr) {
     if (s.__animating || s.__animToken) {
       hardCleanupSlide(s);
       if (!s.classList.contains('active')) {
@@ -1649,19 +1475,19 @@ function cancelOngoingAnimations(slidesArr) {
 }
 
 function circSignedDist(i, active, len) {
-  let d = ((i - active) % len + len) % len;
+  var d = ((i - active) % len + len) % len;
   if (d > len / 2) d -= len;
   return d;
 }
 
 export function updatePeakClasses(slides, activeIndex, spanOrOpts = 2) {
-  const arr = resolveSlidesArray(slides);
+  var arr = resolveSlidesArray(slides);
   if (!arr.length) return;
-  const len = arr.length;
-  const safeActiveIndex = ((Number(activeIndex) || 0) % len + len) % len;
+  var len = arr.length;
+  var safeActiveIndex = ((Number(activeIndex) || 0) % len + len) % len;
 
   if (window.__peakBooting) {
-    arr.forEach((slide, index) => {
+    arr.forEach(function((slide, index) {
       removeLegacyPeakPosClasses(slide);
       slide.classList.remove('off-left', 'off-right', 'peak-neighbor');
       slide.classList.toggle('active', index === safeActiveIndex);
@@ -1679,7 +1505,7 @@ export function updatePeakClasses(slides, activeIndex, spanOrOpts = 2) {
       };
     });
 
-    const container = arr[0]?.closest?.('#monwui-slides-container') || getPeakViewportContainer();
+    var container = arr[0].closest.('#monwui-slides-container') || getPeakViewportContainer();
     if (container) {
       container.__peakStateCache = null;
       container.classList.remove('peak-ready');
@@ -1688,29 +1514,29 @@ export function updatePeakClasses(slides, activeIndex, spanOrOpts = 2) {
     return;
   }
 
-  const opts = normalizePeakOptions(spanOrOpts);
-  const { spanLeft, spanRight, diagonal } = opts;
-  const container = arr[0]?.closest?.('#monwui-slides-container') || getPeakViewportContainer();
+  var opts = normalizePeakOptions(spanOrOpts);
+  var { spanLeft, spanRight, diagonal } = opts;
+  var container = arr[0].closest.('#monwui-slides-container') || getPeakViewportContainer();
   if (container) {
     applyPeakContainerState(container, diagonal);
   }
-  const prevState = container?.__peakStateCache || null;
-  const nextVisible = buildPeakVisibleIndexSet(len, safeActiveIndex, spanLeft, spanRight);
-  const needsFullRebuild = !prevState || prevState.len !== len;
+  var prevState = container.__peakStateCache || null;
+  var nextVisible = buildPeakVisibleIndexSet(len, safeActiveIndex, spanLeft, spanRight);
+  var needsFullRebuild = !prevState || prevState.len !== len;
 
   if (needsFullRebuild) {
     rebuildPeakState(arr, safeActiveIndex, opts);
   } else {
-    const dirty = new Set([safeActiveIndex, prevState.activeIndex, ...prevState.visibleIndices, ...nextVisible]);
-    dirty.forEach((idx) => {
-      const slide = arr[idx];
+    var dirty = new Set([safeActiveIndex, prevState.activeIndex, ...prevState.visibleIndices, ...nextVisible]);
+    dirty.forEach(function((idx) {
+      var slide = arr[idx];
       if (!slide) return;
       applyPeakSlideState(slide, getPeakSlideState(idx, safeActiveIndex, len, spanLeft, spanRight));
     });
   }
 
   if (modalState.progressBarEl && !useSecondsMode()) {
-    setTimeout(() => {
+    setTimeoutfunction(() {
       updateProgressBarPosition();
     }, 50);
   }
@@ -1728,12 +1554,12 @@ export function updatePeakClasses(slides, activeIndex, spanOrOpts = 2) {
 }
 
 export function primePeakFirstPaint(slides, activeIndex, slidesContainer, spanOrOpts = 2) {
-  const opts = (typeof spanOrOpts === 'object')
+  var opts = (typeof spanOrOpts === 'object')
     ? { spanLeft: 2, spanRight: 2, diagonal: false, ...spanOrOpts }
     : { spanLeft: spanOrOpts, spanRight: spanOrOpts, diagonal: false };
 
   if (window.__peakBooting) {
-    const arr = Array.from(slides);
+    var arr = Array.from(slides);
     if (slidesContainer) {
       slidesContainer.__peakStateCache = null;
       ensurePeakVars(slidesContainer);
@@ -1743,17 +1569,17 @@ export function primePeakFirstPaint(slides, activeIndex, slidesContainer, spanOr
       slidesContainer.classList.add('peak-init');
       slidesContainer.classList.remove('peak-ready');
     }
-    arr.forEach((s, i) => {
+    arr.forEach(function((s, i) {
       s.style.setProperty('transition','none','important');
       showSlide(s);
       s.classList.toggle('active', i === activeIndex);
       s.classList.remove('off-left','off-right','peak-neighbor');
-      [...s.classList].forEach(c => { if (/^(left|right)\d+$/.test(c)) s.classList.remove(c); });
+      [...s.classList].forEach(function(c) { if (/^(left|right)\d+$/.test(c)) s.classList.remove(c); });
       s.removeAttribute('data-side');
       s.style.removeProperty('--k');
     });
-    requestAnimationFrame(() => {
-      arr.forEach((s) => {
+    requestAnimationFramefunction(() {
+      arr.forEach(function((s) {
         s.style.removeProperty('transition');
         releasePeakPending(s);
       });
@@ -1772,19 +1598,19 @@ export function primePeakFirstPaint(slides, activeIndex, slidesContainer, spanOr
   slidesContainer.dataset.peakPrimed = '1';
   slidesContainer.classList.add('peak-init');
 
-  const arr = Array.from(slides);
-  const len = arr.length;
-  const { spanLeft, spanRight, diagonal } = opts;
+  var arr = Array.from(slides);
+  var len = arr.length;
+  var { spanLeft, spanRight, diagonal } = opts;
 
-  arr.forEach((s, i) => {
+  arr.forEach(function((s, i) {
     s.style.setProperty('transition', 'none', 'important');
     s.style.display = 'block';
     s.style.left = '50%';
     s.style.top  = '50%';
     s.removeAttribute('data-prime-pos');
 
-    const leftDist  = (activeIndex - i + len) % len;
-    const rightDist = (i - activeIndex + len) % len;
+    var leftDist  = (activeIndex - i + len) % len;
+    var rightDist = (i - activeIndex + len) % len;
 
     if (i === activeIndex) {
       s.setAttribute('data-prime-pos', 'active');
@@ -1797,10 +1623,10 @@ export function primePeakFirstPaint(slides, activeIndex, slidesContainer, spanOr
 }
   });
 
-  requestAnimationFrame(() => {
+  requestAnimationFramefunction(() {
     void document.body.offsetHeight;
-    requestAnimationFrame(() => {
-      arr.forEach(s => {
+    requestAnimationFramefunction(() {
+      arr.forEach(function(s) {
         s.style.removeProperty('transition');
         s.style.removeProperty('left');
         s.style.removeProperty('top');
@@ -1808,7 +1634,7 @@ export function primePeakFirstPaint(slides, activeIndex, slidesContainer, spanOr
       slidesContainer.classList.add('peak-ready');
       slidesContainer.classList.remove('peak-init');
       updatePeakClasses(slides, activeIndex, opts);
-      arr.forEach((s) => {
+      arr.forEach(function((s) {
         s.removeAttribute('data-prime-pos');
         releasePeakPending(s);
       });
@@ -1819,11 +1645,11 @@ export function primePeakFirstPaint(slides, activeIndex, slidesContainer, spanOr
 
 function ensurePeakVars(container) {
   if (!container) return;
-  const cfg = getConfig();
-  const gxLeft  = (cfg.peakGapLeft  ?? cfg.peakGapX ?? 110) + 'px';
-  const gxRight = (cfg.peakGapRight ?? cfg.peakGapX ?? 110) + 'px';
-  const gy      = (cfg.peakGapY ?? 0) + 'px';
-  const varsKey = `${gxLeft}|${gxRight}|${gy}`;
+  var cfg = getConfig();
+  var gxLeft  = (cfg.peakGapLeft  || cfg.peakGapX || 110) + 'px';
+  var gxRight = (cfg.peakGapRight || cfg.peakGapX || 110) + 'px';
+  var gy      = (cfg.peakGapY || 0) + 'px';
+  var varsKey = (gxLeft) + "|" + (gxRight) + "|" + (gy);
 
   if (container.__peakVarsKey === varsKey) return;
   container.__peakVarsKey = varsKey;
@@ -1834,15 +1660,15 @@ function ensurePeakVars(container) {
 }
 
 function syncPeakStructure(root = null, { forcePrime = false } = {}) {
-  const base = root && root.nodeType === 1 ? root : document;
-  const container = base.querySelector?.('#monwui-slides-container') || getPeakViewportContainer();
+  var base = root && root.nodeType === 1 ? root : document;
+  var container = base.querySelector.('#monwui-slides-container') || getPeakViewportContainer();
   if (!container || !container.classList.contains('peak-mode')) return;
 
-  const slides = container.querySelectorAll('.monwui-slide');
+  var slides = container.querySelectorAll('.monwui-slide');
   if (!slides.length) return;
 
-  const activeIndex = getPeakActiveIndex(slides);
-  const opts = getPeakDisplayOptions();
+  var activeIndex = getPeakActiveIndex(slides);
+  var opts = getPeakDisplayOptions();
   if (forcePrime || !container.classList.contains('peak-ready') || container.dataset.peakPrimed !== '1') {
     primePeakFirstPaint(slides, activeIndex, container, opts);
     return;
@@ -1858,9 +1684,9 @@ export function schedulePeakStructureSync(root = null, { forcePrime = false } = 
   if (__peakStructureSyncTimer) clearTimeout(__peakStructureSyncTimer);
   if (__peakStructureSyncRaf) cancelAnimationFrame(__peakStructureSyncRaf);
 
-  __peakStructureSyncTimer = setTimeout(() => {
+  __peakStructureSyncTimer = setTimeoutfunction(() {
     __peakStructureSyncTimer = 0;
-    __peakStructureSyncRaf = requestAnimationFrame(() => {
+    __peakStructureSyncRaf = requestAnimationFramefunction(() {
       __peakStructureSyncRaf = 0;
       syncPeakStructure(root, { forcePrime });
     });
@@ -1868,7 +1694,7 @@ export function schedulePeakStructureSync(root = null, { forcePrime = false } = 
 }
 
 export function showAndHideElementWithAnimation(el, config) {
-  const {
+  var {
     girisSure = 0,
     aktifSure = 2000,
     transitionDuration = 600,
@@ -1877,16 +1703,16 @@ export function showAndHideElementWithAnimation(el, config) {
   el.style.opacity = "0";
   el.style.transform = "scale(0.95)";
   el.style.display = "none";
-  setTimeout(() => {
+  setTimeoutfunction(() {
     el.style.display = "flex";
-    requestAnimationFrame(() => {
-      el.style.transition = `opacity ${transitionDuration}ms ease, transform ${transitionDuration}ms ease`;
+    requestAnimationFramefunction(() {
+      el.style.transition = "opacity " + (transitionDuration) + "ms ease, transform " + (transitionDuration) + "ms ease";
       el.style.opacity = "1";
       el.style.transform = "scale(1)";
-      setTimeout(() => {
+      setTimeoutfunction(() {
         el.style.opacity = "0";
         el.style.transform = "scale(0.95)";
-        setTimeout(() => {
+        setTimeoutfunction(() {
           el.style.display = "none";
         }, transitionDuration);
       }, aktifSure);
@@ -1895,25 +1721,25 @@ export function showAndHideElementWithAnimation(el, config) {
 }
 
 function initSliderArrows(slide) {
-  const actorContainer = slide.querySelector(".monwui-artist-container");
-  const leftArrow = slide.querySelector(".monwui-slider-arrow.left");
-  const rightArrow = slide.querySelector(".monwui-slider-arrow.right");
-  const lowPower = isLowPowerPeakRuntime();
+  var actorContainer = slide.querySelector(".monwui-artist-container");
+  var leftArrow = slide.querySelector(".monwui-slider-arrow.left");
+  var rightArrow = slide.querySelector(".monwui-slider-arrow.right");
+  var lowPower = isLowPowerPeakRuntime();
 
   if (!actorContainer || !leftArrow || !rightArrow) return;
 
-  const updateArrows = () => {
-    const maxScrollLeft = actorContainer.scrollWidth - actorContainer.clientWidth;
+  var updateArrows = function() {
+    var maxScrollLeft = actorContainer.scrollWidth - actorContainer.clientWidth;
     leftArrow.classList.toggle("hidden", actorContainer.scrollLeft <= 0);
     rightArrow.classList.toggle("hidden", actorContainer.scrollLeft >= maxScrollLeft - 1);
   };
 
-  leftArrow.onclick = () => {
+  leftArrow.onclick = function() {
     actorContainer.scrollBy({ left: -actorContainer.clientWidth, behavior: lowPower ? "auto" : "smooth" });
     setTimeout(updateArrows, 300);
   };
 
-  rightArrow.onclick = () => {
+  rightArrow.onclick = function() {
     actorContainer.scrollBy({ left: actorContainer.clientWidth, behavior: lowPower ? "auto" : "smooth" });
     setTimeout(updateArrows, 300);
   };
@@ -1931,15 +1757,15 @@ function initSliderArrows(slide) {
 }
 
 export function positionModalRelativeToDot(modal, dot) {
-  const dotRect = dot.getBoundingClientRect();
-  const modalWidth = 400;
-  const modalHeight = 330;
-  const windowPadding = 20;
-  const edgeThreshold = 100;
-  const verticalOffset = -10;
+  var dotRect = dot.getBoundingClientRect();
+  var modalWidth = 400;
+  var modalHeight = 330;
+  var windowPadding = 20;
+  var edgeThreshold = 100;
+  var verticalOffset = -10;
 
-  let left = dotRect.left + window.scrollX + (dotRect.width - modalWidth) / 2;
-  let top = dotRect.top + window.scrollY - modalHeight + verticalOffset;
+  var left = dotRect.left + window.scrollX + (dotRect.width - modalWidth) / 2;
+  var top = dotRect.top + window.scrollY - modalHeight + verticalOffset;
 
   if (dotRect.right > window.innerWidth - edgeThreshold) {
     left = window.innerWidth - modalWidth - windowPadding;
@@ -1957,29 +1783,29 @@ export function positionModalRelativeToDot(modal, dot) {
   left = Math.max(windowPadding, Math.min(left, window.innerWidth - modalWidth - windowPadding));
   top = Math.max(windowPadding, Math.min(top, window.innerHeight + window.scrollY - modalHeight - windowPadding));
 
-  modal.style.left = `${left}px`;
-  modal.style.top = `${top}px`;
+  modal.style.left = (left) + "px";
+  modal.style.top = (top) + "px";
 }
 
 function clearVideoPreloadCache(opts = {}) {
-  const { mode = 'all', itemId, test } = opts;
+  var { mode = 'all', itemId, test } = opts;
   try {
     switch (mode) {
       case 'expired':
         {
-          const now = Date.now();
-          for (const [id, entry] of previewPreloadCache) {
+          var now = Date.now();
+          for (var [id, entry] of previewPreloadCache) {
             if (!entry || entry.expiresAt <= now) previewPreloadCache.delete(id);
           }
         }
         break;
       case 'overLimit':
         {
-          const limit = typeof PREVIEW_MAX_ENTRIES === 'number' ? PREVIEW_MAX_ENTRIES : 100;
-          const overflow = previewPreloadCache.size - limit;
+          var limit = typeof PREVIEW_MAX_ENTRIES === 'number' ? PREVIEW_MAX_ENTRIES : 100;
+          var overflow = previewPreloadCache.size - limit;
           if (overflow > 0) {
-            let n = overflow;
-            for (const [id] of previewPreloadCache) {
+            var n = overflow;
+            for (var [id] of previewPreloadCache) {
               previewPreloadCache.delete(id);
               if (--n <= 0) break;
             }
@@ -1991,7 +1817,7 @@ function clearVideoPreloadCache(opts = {}) {
         break;
       case 'predicate':
         if (typeof test === 'function') {
-          for (const [id, entry] of previewPreloadCache) {
+          for (var [id, entry] of previewPreloadCache) {
             if (test(id, entry)) previewPreloadCache.delete(id);
           }
         }
@@ -2006,48 +1832,27 @@ function clearVideoPreloadCache(opts = {}) {
 
 function ensureDotQualityBadgeCSS() {
   if (document.getElementById('dot-quality-badge-css')) return;
-  const style = document.createElement('style');
+  var style = document.createElement('style');
   style.id = 'dot-quality-badge-css';
-  style.textContent = `
-    .monwui-dot-quality-badge {
-      position: absolute;
-      bottom: 24px;
-      left: 2px;
-      color: white;
-      display: flex;
-      gap: 2px;
-      flex-direction: column;
-    }
-    .monwui-dot-quality-badge img.range-icon,
-    .monwui-dot-quality-badge img.codec-icon,
-    .monwui-dot-quality-badge img.quality-icon {
-      width: 20px;
-      height: 14px;
-      background: rgba(30,30,40,.7);
-      border-radius: 4px;
-      padding: 1px;
-      object-fit: contain;
-      transition: all .3s ease;
-    }
-  `;
+  style.textContent = "\n    .monwui-dot-quality-badge {\n      position: absolute;\n      bottom: 24px;\n      left: 2px;\n      color: white;\n      display: flex;\n      gap: 2px;\n      flex-direction: column;\n    }\n    .monwui-dot-quality-badge img.range-icon,\n    .monwui-dot-quality-badge img.codec-icon,\n    .monwui-dot-quality-badge img.quality-icon {\n      width: 20px;\n      height: 14px;\n      background: rgba(30,30,40,.7);\n      border-radius: 4px;\n      padding: 1px;\n      object-fit: contain;\n      transition: all .3s ease;\n    }\n  ";
   document.head.appendChild(style);
 }
 
 export function enablePeakNeighborActivation() {
-  const container = document.querySelector('#monwui-slides-container');
+  var container = document.querySelector('#monwui-slides-container');
   if (!container || container.__peakClickBound) return;
   container.__peakClickBound = true;
 
-  container.addEventListener('click', (e) => {
+  container.addEventListenerfunction('click', (e) {
     if (!container.classList.contains('peak-mode')) return;
 
-    const IG = ['BUTTON','A','INPUT','SELECT','TEXTAREA','LABEL','VIDEO'];
-    if (e.defaultPrevented || IG.includes(e.target?.tagName)) return;
-    if (e.target.closest?.('[data-no-peak-activate="1"], .monwui-dot-navigation-container')) return;
+    var IG = ['BUTTON','A','INPUT','SELECT','TEXTAREA','LABEL','VIDEO'];
+    if (e.defaultPrevented || IG.includes(e.target.tagName)) return;
+    if (e.target.closest.('[data-no-peak-activate="1"], .monwui-dot-navigation-container')) return;
 
-    const x = e.clientX, y = e.clientY;
-    const topEl    = document.elementFromPoint(x, y);
-    const topSlide = topEl?.closest?.('.monwui-slide');
+    var x = e.clientX, y = e.clientY;
+    var topEl    = document.elementFromPoint(x, y);
+    var topSlide = topEl.closest.('.monwui-slide');
     if (!topSlide) return;
     if (!topSlide.classList.contains('peak-neighbor')) return;
     if (topSlide.classList.contains('active')) return;
@@ -2055,13 +1860,13 @@ export function enablePeakNeighborActivation() {
     e.preventDefault();
     e.stopPropagation();
 
-    const slides = Array.from(container.querySelectorAll('.monwui-slide'));
-    const targetIndex  = slides.indexOf(topSlide);
-    const currentIndex = getCurrentIndex();
+    var slides = Array.from(container.querySelectorAll('.monwui-slide'));
+    var targetIndex  = slides.indexOf(topSlide);
+    var currentIndex = getCurrentIndex();
     if (targetIndex < 0 || targetIndex === currentIndex) return;
 
-    const len = slides.length;
-    let delta = targetIndex - currentIndex;
+    var len = slides.length;
+    var delta = targetIndex - currentIndex;
     if (delta >  len / 2) delta -= len;
     if (delta < -len / 2) delta += len;
 
@@ -2069,9 +1874,9 @@ export function enablePeakNeighborActivation() {
   }, { capture: true, passive: false });
 
   if (!document.getElementById('peak-neighbor-cursor-css')) {
-    const style = document.createElement('style');
+    var style = document.createElement('style');
     style.id = 'peak-neighbor-cursor-css';
-    style.textContent = `.peak-ready .monwui-slide.peak-neighbor{ cursor:pointer; }`;
+    style.textContent = ".peak-ready .monwui-slide.peak-neighbor{ cursor:pointer; }";
     document.head.appendChild(style);
   }
 }

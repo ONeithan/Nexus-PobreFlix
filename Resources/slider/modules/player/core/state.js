@@ -2,13 +2,13 @@ import { getConfig } from "../../config.js";
 import { updateVolumeIcon } from "../ui/controls.js";
 import { getRepeatOneIconHtml } from "../../customIcons.js";
 
-const config = new Proxy({}, {
+var config = new Proxy({}, {
   get(target, prop) {
     return getConfig()[prop];
   }
 });
 
-export const musicPlayerState = {
+export var musicPlayerState = {
   playlist: [],
   originalPlaylist: [],
   currentIndex: 0,
@@ -60,23 +60,23 @@ export const musicPlayerState = {
   radioSearchResults: [],
   radioModal: null,
   radioNowPlayingSource: null,
-  audio: (() => {
-    const audio = new Audio();
+  audio: function(() {
+    var audio = new Audio();
     audio.preload = "metadata";
     audio.crossOrigin = "anonymous";
 
     function fadeAudio(audioEl, fromVolume, toVolume, durationSec) {
-      const steps = 30;
-      const intervalSec = durationSec / steps;
-      let currentStep = 0;
+      var steps = 30;
+      var intervalSec = durationSec / steps;
+      var currentStep = 0;
 
-      const volumeStep = (toVolume - fromVolume) / steps;
+      var volumeStep = (toVolume - fromVolume) / steps;
       audioEl.volume = fromVolume;
 
-      return new Promise((resolve) => {
-        const fadeId = setInterval(() => {
+      return new Promisefunction((resolve) {
+        var fadeId = setIntervalfunction(() {
           currentStep++;
-          const nextVol = Math.min(Math.max((audioEl.volume ?? fromVolume) + volumeStep, 0), 1);
+          var nextVol = Math.min(Math.max((audioEl.volume || fromVolume) + volumeStep, 0), 1);
           audioEl.volume = nextVol;
           if (currentStep >= steps) {
             clearInterval(fadeId);
@@ -86,29 +86,29 @@ export const musicPlayerState = {
       });
     }
 
-    audio.addEventListener("play", () => {
+    audio.addEventListenerfunction("play", () {
       if (musicPlayerState.playPauseBtn) {
         musicPlayerState.playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
       }
     });
 
-    audio.addEventListener("pause", () => {
+    audio.addEventListenerfunction("pause", () {
       if (musicPlayerState.playPauseBtn) {
         musicPlayerState.playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
       }
     });
 
-    audio.addEventListener("volumechange", () => {
+    audio.addEventListenerfunction("volumechange", () {
       if (musicPlayerState.volumeBtn && musicPlayerState.volumeSlider) {
-        const vol = audio.muted ? 0 : (audio.volume ?? 0);
+        var vol = audio.muted ? 0 : (audio.volume || 0);
         try { musicPlayerState.volumeSlider.value = vol; } catch {}
         updateVolumeIcon(vol);
       }
     });
 
-    setTimeout(() => {
+    setTimeoutfunction(() {
       musicPlayerState.utils = musicPlayerState.utils || {};
-      musicPlayerState.utils.fadeAudio = (from, to, dur) => fadeAudio(audio, from, to, dur);
+      musicPlayerState.utils.fadeAudio = function(from, to, dur) fadeAudio(audio, from, to, dur);
     }, 0);
 
     return audio;
@@ -132,10 +132,10 @@ export const musicPlayerState = {
 };
 
 export function loadUserSettings() {
-  const savedSettings = localStorage.getItem("musicPlayerSettings");
+  var savedSettings = localStorage.getItem("musicPlayerSettings");
   if (savedSettings) {
     try {
-      const parsed = JSON.parse(savedSettings);
+      var parsed = JSON.parse(savedSettings);
 
       if (typeof parsed.shuffle === "string") {
         parsed.shuffle = parsed.shuffle === "true";
@@ -168,16 +168,16 @@ export function loadUserSettings() {
 }
 
 function updateRepeatButtonUI() {
-  const repeatBtn = document.querySelector(".player-btn.repeat-btn");
+  var repeatBtn = document.querySelector(".player-btn.repeat-btn");
   if (!repeatBtn) return;
 
-  const titles = {
-    none: (config.languageLabels?.repeatModOff || "Tekrar kapalı"),
-    one: (config.languageLabels?.repeatModModOne || "Tek şarkı tekrarı"),
-    all: (config.languageLabels?.repeatModAll || "Tüm liste tekrarı"),
+  var titles = {
+    none: (config.languageLabels.repeatModOff || "Tekrar kapalı"),
+    one: (config.languageLabels.repeatModModOne || "Tek şarkı tekrarı"),
+    all: (config.languageLabels.repeatModAll || "Tüm liste tekrarı"),
   };
 
-  const isActive = musicPlayerState.userSettings.repeatMode !== "none";
+  var isActive = musicPlayerState.userSettings.repeatMode !== "none";
   repeatBtn.classList.toggle('active', isActive);
 
   repeatBtn.title = titles[musicPlayerState.userSettings.repeatMode];
@@ -187,16 +187,16 @@ function updateRepeatButtonUI() {
 }
 
 function updateShuffleButtonUI() {
-  const shuffleIconEl = document.querySelector(".player-btn .fa-random");
-  const shuffleBtn = shuffleIconEl?.parentElement;
+  var shuffleIconEl = document.querySelector(".player-btn .fa-random");
+  var shuffleBtn = shuffleIconEl.parentElement;
   if (!shuffleBtn) return;
 
-  const titles = {
-    true: (config.languageLabels?.shuffleOn || "Karıştırma açık"),
-    false: (config.languageLabels?.shuffleOff || "Karıştırma kapalı"),
+  var titles = {
+    true: (config.languageLabels.shuffleOn || "Karıştırma açık"),
+    false: (config.languageLabels.shuffleOff || "Karıştırma kapalı"),
   };
 
-  const on = !!musicPlayerState.userSettings.shuffle;
+  var on = !!musicPlayerState.userSettings.shuffle;
   shuffleBtn.classList.toggle('active', on);
   shuffleBtn.title = titles[on];
   shuffleBtn.innerHTML = '<i class="fas fa-random"></i>';

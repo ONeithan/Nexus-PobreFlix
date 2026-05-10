@@ -2,23 +2,23 @@ import { getConfig } from "../config.js";
 import { createCheckbox, createSection } from "./shared.js";
 import { applySettings } from "./applySettings.js";
 
-const config = getConfig();
+var config = getConfig();
 
 export function createNotificationsPanel(config, labels) {
-    const panel = document.createElement('div');
+    var panel = document.createElement('div');
     panel.id = 'notifications-panel';
     panel.className = 'settings-panel';
 
-    const section = createSection(labels.notificationsSettings || 'Configurações de Notificações');
+    var section = createSection(labels.notificationsSettings || 'Configurações de Notificações');
 
-    const enableCheckbox = createCheckbox(
+    var enableCheckbox = createCheckbox(
     'enableNotifications',
     labels.enableNotifications || 'Ícone de Notificações',
     config.enableNotifications
 );
     section.appendChild(enableCheckbox);
 
-    const enableToastNewCheckbox = createCheckbox(
+    var enableToastNewCheckbox = createCheckbox(
     'enableToastNew',
     labels.enableToastNew || 'Toast para novidades',
     config.enableToastNew
@@ -26,27 +26,27 @@ export function createNotificationsPanel(config, labels) {
     section.appendChild(enableToastNewCheckbox);
 
 
-    const enableToastSystemCheckbox = createCheckbox(
+    var enableToastSystemCheckbox = createCheckbox(
     'enableToastSystem',
     labels.enableToastSystem || 'Toast para sistema',
     config.enableToastSystem
 );
     section.appendChild(enableToastSystemCheckbox);
 
-    const enableCounterSystemCheckbox = createCheckbox(
+    var enableCounterSystemCheckbox = createCheckbox(
     'enableCounterSystem',
     labels.enableCounterSystem || 'Incluir sistema no contador',
     config.enableCounterSystem
 );
     section.appendChild(enableCounterSystemCheckbox);
 
-    const maxNotificationsDiv = document.createElement('div');
+    var maxNotificationsDiv = document.createElement('div');
     maxNotificationsDiv.className = 'setting-item limit-container';
 
-    const maxNotificationsLabel = document.createElement('label');
+    var maxNotificationsLabel = document.createElement('label');
     maxNotificationsLabel.textContent = labels.maxNotifications || 'Limite de notificações:';
 
-    const maxNotificationsInput = document.createElement('input');
+    var maxNotificationsInput = document.createElement('input');
     maxNotificationsInput.type = 'number';
     maxNotificationsInput.value = typeof config.maxNotifications !== 'undefined' ? config.maxNotifications : 15;
     maxNotificationsInput.name = 'maxNotifications';
@@ -58,13 +58,13 @@ export function createNotificationsPanel(config, labels) {
     maxNotificationsDiv.append(maxNotificationsLabel, maxNotificationsInput);
     section.appendChild(maxNotificationsDiv);
 
-    const toastDurationDiv = document.createElement('div');
+    var toastDurationDiv = document.createElement('div');
     toastDurationDiv.className = 'setting-item limit-container';
 
-    const toastDurationLabel = document.createElement('label');
+    var toastDurationLabel = document.createElement('label');
     toastDurationLabel.textContent = labels.toastDuration || 'Duração do Toast (ms):';
 
-    const toastDurationInput = document.createElement('input');
+    var toastDurationInput = document.createElement('input');
     toastDurationInput.type = 'number';
     toastDurationInput.value = typeof config.toastDuration !== 'undefined' ? config.toastDuration : 4000;
     toastDurationInput.name = 'toastDuration';
@@ -76,13 +76,13 @@ export function createNotificationsPanel(config, labels) {
     toastDurationDiv.append(toastDurationLabel, toastDurationInput);
     section.appendChild(toastDurationDiv);
 
-    const toastGroupThresholdDiv = document.createElement('div');
+    var toastGroupThresholdDiv = document.createElement('div');
     toastGroupThresholdDiv.className = 'setting-item limit-container';
 
-    const toastGroupThresholdLabel = document.createElement('label');
+    var toastGroupThresholdLabel = document.createElement('label');
     toastGroupThresholdLabel.textContent = labels.toastGroupThreshold || 'Limite de Notificações:';
 
-    const toastGroupThresholdInput = document.createElement('input');
+    var toastGroupThresholdInput = document.createElement('input');
     toastGroupThresholdInput.type = 'number';
     toastGroupThresholdInput.value = typeof config.toastGroupThreshold !== 'undefined' ? config.toastGroupThreshold : 15;
     toastGroupThresholdInput.name = 'toastGroupThreshold';
@@ -94,20 +94,20 @@ export function createNotificationsPanel(config, labels) {
     toastGroupThresholdDiv.append(toastGroupThresholdLabel, toastGroupThresholdInput);
     section.appendChild(toastGroupThresholdDiv);
 
-    const enableRenderResumeCheckbox = createCheckbox(
+    var enableRenderResumeCheckbox = createCheckbox(
     'enableRenderResume',
     labels.enableRenderResume || "Exibir 'Continuar Assistindo'",
     config.enableRenderResume
 );
     section.appendChild(enableRenderResumeCheckbox);
 
-    const renderResumeDiv = document.createElement('div');
+    var renderResumeDiv = document.createElement('div');
     renderResumeDiv.className = 'setting-item limit-container';
 
-    const renderResumeLabel = document.createElement('label');
+    var renderResumeLabel = document.createElement('label');
     renderResumeLabel.textContent = labels.playingLimit || 'Limite de Continuar Assistindo';
 
-    const renderResumeInput = document.createElement('input');
+    var renderResumeInput = document.createElement('input');
     renderResumeInput.type = 'number';
     renderResumeInput.value = typeof config.renderResume !== 'undefined' ? config.renderResume : 10;
     renderResumeInput.name = 'renderResume';

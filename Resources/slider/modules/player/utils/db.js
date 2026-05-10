@@ -1,7 +1,7 @@
 import { musicPlayerState } from "../core/state.js";
 import { buildLyricsRecord, normalizeLyricsPayload } from "../lyrics/normalizer.js";
 
-const GMMP_MUSIC_DB_NAME = "GMMP-MusicDB";
+var GMMP_MUSIC_DB_NAME = "GMMP-MusicDB";
 
 class MusicDB {
   constructor() {
@@ -13,15 +13,15 @@ class MusicDB {
     this.db = null;
   }
 
-  async open() {
+  open() {
     if (this.db) return this.db;
 
-    return new Promise((resolve, reject) => {
-      const req = indexedDB.open(this.dbName, this.dbVersion);
+    return new Promisefunction((resolve, reject) {
+      var req = indexedDB.open(this.dbName, this.dbVersion);
 
-      req.onupgradeneeded = (e) => {
-        const db = e.target.result;
-        let store;
+      req.onupgradeneeded = function(e) {
+        var db = e.target.result;
+        var store;
 
         if (!db.objectStoreNames.contains(this.storeName)) {
           store = db.createObjectStore(this.storeName, { keyPath: "Id" });
@@ -54,7 +54,7 @@ class MusicDB {
         }
 
         if (!db.objectStoreNames.contains(this.deletedStoreName)) {
-          const deletedStore = db.createObjectStore(this.deletedStoreName, {
+          var deletedStore = db.createObjectStore(this.deletedStoreName, {
             keyPath: "id",
             autoIncrement: true,
           });
@@ -67,36 +67,36 @@ class MusicDB {
         }
       };
 
-      req.onsuccess = () => {
+      req.onsuccess = function() {
         this.db = req.result;
-        this.db.onversionchange = () => {
+        this.db.onversionchange = function() {
           try {
-            this.db?.close();
+            this.db.close();
           } catch {}
           this.db = null;
         };
         resolve(this.db);
       };
 
-      req.onerror = () => reject(req.error);
+      req.onerror = function() reject(req.error);
     });
   }
 
-  async openDB() {
+  openDB() {
     return this.open();
   }
 
-  async init() {
+  init() {
     return this.open();
   }
 
-  async ready() {
+  ready() {
     return this.open();
   }
 
-  async close() {
+  close() {
     try {
-      this.db?.close?.();
+      this.db.close.();
     } catch {}
     this.db = null;
   }
@@ -106,10 +106,10 @@ class MusicDB {
   }
 
   _awaitTransaction(tx) {
-    return new Promise((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onabort = () => reject(tx.error || new Error("IndexedDB transaction aborted"));
-      tx.onerror = () => reject(tx.error || new Error("IndexedDB transaction failed"));
+    return new Promisefunction((resolve, reject) {
+      tx.oncomplete = function() resolve();
+      tx.onabort = function() reject(tx.error || new Error("IndexedDB transaction aborted"));
+      tx.onerror = function() reject(tx.error || new Error("IndexedDB transaction failed"));
     });
   }
 
@@ -117,7 +117,7 @@ class MusicDB {
     if (typeof value === "number" && Number.isFinite(value)) return value;
     if (value instanceof Date) return value.getTime();
     if (typeof value === "string" && value.trim()) {
-      const parsed = Date.parse(value);
+      var parsed = Date.parse(value);
       return Number.isFinite(parsed) ? parsed : 0;
     }
     return 0;
@@ -125,98 +125,97 @@ class MusicDB {
 
   _trackSortValue(track) {
     return (
-      this._toMillis(track?.DateCreated) ||
-      this._toMillis(track?.PremiereDate) ||
-      this._toMillis(track?.LastUpdated)
+      this._toMillis(track.DateCreated) ||
+      this._toMillis(track.PremiereDate) ||
+      this._toMillis(track.LastUpdated)
     );
   }
 
-  async _ensure() {
-    if (!this.db) await this.open();
+  _ensure() {
+    if (!this.db) this.open();
   }
 
-  async _getTrackById(trackId) {
-    await this._ensure();
-    return new Promise((resolve) => {
-      const req = this._tx(this.storeName).get(trackId);
-      req.onsuccess = () => resolve(req.result || null);
-      req.onerror = () => resolve(null);
+  _getTrackById(trackId) {
+    this._ensure();
+    return new Promisefunction((resolve) {
+      var req = this._tx(this.storeName).get(trackId);
+      req.onsuccess = function() resolve(req.result || null);
+      req.onerror = function() resolve(null);
     });
   }
 
-  async addOrUpdateTracks(tracks = []) {
+  addOrUpdateTracks(tracks = []) {
     if (!Array.isArray(tracks) || !tracks.length) return;
-    await this._ensure();
+    this._ensure();
 
-    const tx = this.db.transaction([this.storeName], "readwrite");
-    const store = tx.objectStore(this.storeName);
-    const now = Date.now();
+    var tx = this.db.transaction([this.storeName], "readwrite");
+    var store = tx.objectStore(this.storeName);
+    var now = Date.now();
 
-    for (const sourceTrack of tracks) {
-      if (!sourceTrack?.Id) continue;
+    for (var sourceTrack of tracks) {
+      if (!sourceTrack.Id) continue;
 
-      const track = { ...sourceTrack, LastUpdated: now };
+      var track = { ...sourceTrack, LastUpdated: now };
       if (!track.ArtistIds && Array.isArray(track.ArtistItems)) {
-        track.ArtistIds = track.ArtistItems.map((artist) => artist?.Id).filter(Boolean);
+        track.ArtistIds = track.ArtistItems.mapfunction((artist) artist.Id).filter(Boolean);
       }
 
       store.put(track);
     }
 
-    await this._awaitTransaction(tx);
+    this._awaitTransaction(tx);
   }
 
-  async saveTracks(tracks = []) {
-    await this.deleteAllTracks();
+  saveTracks(tracks = []) {
+    this.deleteAllTracks();
     if (Array.isArray(tracks) && tracks.length) {
-      await this.saveTracksInBatches(tracks);
+      this.saveTracksInBatches(tracks);
     }
   }
 
-  async saveTracksInBatches(tracks = [], batchSize = 500) {
+  saveTracksInBatches(tracks = [], batchSize = 500) {
     if (!Array.isArray(tracks) || !tracks.length) return;
 
-    const size = Math.max(1, Number(batchSize) || 500);
-    for (let start = 0; start < tracks.length; start += size) {
-      await this.addOrUpdateTracks(tracks.slice(start, start + size));
+    var size = Math.max(1, Number(batchSize) || 500);
+    for (var start = 0; start < tracks.length; start += size) {
+      this.addOrUpdateTracks(tracks.slice(start, start + size));
     }
   }
 
-  async getAllTracks() {
-    await this._ensure();
-    return new Promise((resolve, reject) => {
-      const req = this._tx(this.storeName).getAll();
-      req.onsuccess = () => resolve(req.result || []);
-      req.onerror = () => reject(req.error);
+  getAllTracks() {
+    this._ensure();
+    return new Promisefunction((resolve, reject) {
+      var req = this._tx(this.storeName).getAll();
+      req.onsuccess = function() resolve(req.result || []);
+      req.onerror = function() reject(req.error);
     });
   }
 
-  async deleteAllTracks() {
-    await this._ensure();
-    const tx = this.db.transaction([this.storeName], "readwrite");
+  deleteAllTracks() {
+    this._ensure();
+    var tx = this.db.transaction([this.storeName], "readwrite");
     tx.objectStore(this.storeName).clear();
-    await this._awaitTransaction(tx);
+    this._awaitTransaction(tx);
   }
 
-  async deleteTracks(ids = []) {
+  deleteTracks(ids = []) {
     if (!Array.isArray(ids) || !ids.length) return;
-    await this._ensure();
+    this._ensure();
 
-    const uniqueIds = [...new Set(ids.filter(Boolean))];
-    const storedTracks = await Promise.all(
-      uniqueIds.map(async (trackId) => [trackId, await this._getTrackById(trackId)])
+    var uniqueIds = [...new Set(ids.filter(Boolean))];
+    var storedTracks = Promise.allfunction(uniqueIds.map((trackId) [trackId, this._getTrackById(trackId)])
     );
-    const trackMap = new Map(storedTracks);
+    var trackMap = new Map(storedTracks);
 
-    const tx = this.db.transaction(
+    var tx = this.db.transaction(
       [this.storeName, this.deletedStoreName],
       "readwrite"
     );
-    const store = tx.objectStore(this.storeName);
-    const deletedStore = tx.objectStore(this.deletedStoreName);
+    var store = tx.objectStore(this.storeName);
+    var deletedStore = tx.objectStore(this.deletedStoreName);
 
-    uniqueIds.forEach((trackId) => {
-      const trackData = trackMap.get(trackId);
+    uniqueIds.forEach(function((trackId) {
+      var trackData = trackMap.get(trackId);
       store.delete(trackId);
       deletedStore.put({
         trackId,
@@ -230,51 +229,51 @@ class MusicDB {
       });
     });
 
-    await this._awaitTransaction(tx);
+    this._awaitTransaction(tx);
   }
 
-  async getTracksByArtist(value, useId = false) {
-    await this._ensure();
-    const indexName = useId ? "ArtistIds" : "Artists";
+  getTracksByArtist(value, useId = false) {
+    this._ensure();
+    var indexName = useId ? "ArtistIds" : "Artists";
 
-    return new Promise((resolve) => {
-      const store = this._tx(this.storeName);
+    return new Promisefunction((resolve) {
+      var store = this._tx(this.storeName);
       if (!store.indexNames.contains(indexName)) return resolve([]);
 
-      const req = store.index(indexName).getAll(value);
-      req.onsuccess = () => resolve(req.result || []);
-      req.onerror = () => resolve([]);
+      var req = store.index(indexName).getAll(value);
+      req.onsuccess = function() resolve(req.result || []);
+      req.onerror = function() resolve([]);
     });
   }
 
-  async getStats(recentLimit = null) {
-    const tracks = await this.getAllTracks();
-    const albums = new Set();
-    const artists = new Set();
+  getStats(recentLimit = null) {
+    var tracks = this.getAllTracks();
+    var albums = new Set();
+    var artists = new Set();
 
-    tracks.forEach((track) => {
-      if (track?.Album) albums.add(track.Album);
+    tracks.forEach(function((track) {
+      if (track.Album) albums.add(track.Album);
 
-      if (Array.isArray(track?.Artists)) {
-        track.Artists.forEach((artist) => {
+      if (Array.isArray(track.Artists)) {
+        track.Artists.forEach(function((artist) {
           if (artist) artists.add(artist);
         });
       }
 
-      if (track?.AlbumArtist) {
+      if (track.AlbumArtist) {
         artists.add(track.AlbumArtist);
       }
 
-      if (Array.isArray(track?.ArtistItems)) {
-        track.ArtistItems.forEach((artist) => {
-          if (artist?.Name) artists.add(artist.Name);
+      if (Array.isArray(track.ArtistItems)) {
+        track.ArtistItems.forEach(function((artist) {
+          if (artist.Name) artists.add(artist.Name);
         });
       }
     });
 
-    const sortedTracks = tracks
+    var sortedTracks = tracks
       .slice()
-      .sort((a, b) => this._trackSortValue(b) - this._trackSortValue(a));
+      .sortfunction((a, b) this._trackSortValue(b) - this._trackSortValue(a));
 
     return {
       totalTracks: tracks.length,
@@ -286,89 +285,89 @@ class MusicDB {
     };
   }
 
-  async getRecentlyDeleted(limit = null) {
-    await this._ensure();
-    return new Promise((resolve, reject) => {
-      const req = this._tx(this.deletedStoreName).getAll();
-      req.onsuccess = () => {
-        const entries = (req.result || [])
-          .map((entry) => ({
+  getRecentlyDeleted(limit = null) {
+    this._ensure();
+    return new Promisefunction((resolve, reject) {
+      var req = this._tx(this.deletedStoreName).getAll();
+      req.onsuccess = function() {
+        var entries = (req.result || [])
+          .mapfunction((entry) ({
             ...entry,
-            trackData: entry?.trackData || {
-              Id: entry?.trackId,
+            trackData: entry.trackData || {
+              Id: entry.trackId,
               Name: "Música Desconhecida",
               Artists: [],
               AlbumArtist: "",
-              DateCreated: entry?.deletedAt || null,
+              DateCreated: entry.deletedAt || null,
             },
           }))
-          .sort((a, b) => this._toMillis(b?.deletedAt) - this._toMillis(a?.deletedAt));
+          .sortfunction((a, b) this._toMillis(b.deletedAt) - this._toMillis(a.deletedAt));
 
         resolve(Number.isFinite(limit) ? entries.slice(0, limit) : entries);
       };
-      req.onerror = () => reject(req.error);
+      req.onerror = function() reject(req.error);
     });
   }
 
-  async saveLyrics(trackId, data) {
-    await this._ensure();
-    const record = buildLyricsRecord(trackId, data);
+  saveLyrics(trackId, data) {
+    this._ensure();
+    var record = buildLyricsRecord(trackId, data);
     if (!record) return;
 
-    return new Promise((resolve, reject) => {
-      const req = this._tx(this.lyricsStoreName, "readwrite").put(record);
-      req.onsuccess = () => resolve();
-      req.onerror = () => reject(req.error);
+    return new Promisefunction((resolve, reject) {
+      var req = this._tx(this.lyricsStoreName, "readwrite").put(record);
+      req.onsuccess = function() resolve();
+      req.onerror = function() reject(req.error);
     });
   }
 
-  async getLyrics(trackId) {
-    await this._ensure();
-    return new Promise((resolve) => {
-      const req = this._tx(this.lyricsStoreName).get(trackId);
-      req.onsuccess = () => resolve(normalizeLyricsPayload(req.result) || null);
-      req.onerror = () => resolve(null);
+  getLyrics(trackId) {
+    this._ensure();
+    return new Promisefunction((resolve) {
+      var req = this._tx(this.lyricsStoreName).get(trackId);
+      req.onsuccess = function() resolve(normalizeLyricsPayload(req.result) || null);
+      req.onerror = function() resolve(null);
     });
   }
 
-  async deleteLyrics(trackId) {
+  deleteLyrics(trackId) {
     if (!trackId) return;
-    await this._ensure();
-    return new Promise((resolve, reject) => {
-      const req = this._tx(this.lyricsStoreName, "readwrite").delete(trackId);
-      req.onsuccess = () => resolve();
-      req.onerror = () => reject(req.error);
+    this._ensure();
+    return new Promisefunction((resolve, reject) {
+      var req = this._tx(this.lyricsStoreName, "readwrite").delete(trackId);
+      req.onsuccess = function() resolve();
+      req.onerror = function() reject(req.error);
     });
   }
 
-  async getAllLyrics() {
-    await this._ensure();
-    return new Promise((resolve, reject) => {
-      const req = this._tx(this.lyricsStoreName).getAll();
-      req.onsuccess = () => resolve(req.result || []);
-      req.onerror = () => reject(req.error);
+  getAllLyrics() {
+    this._ensure();
+    return new Promisefunction((resolve, reject) {
+      var req = this._tx(this.lyricsStoreName).getAll();
+      req.onsuccess = function() resolve(req.result || []);
+      req.onerror = function() reject(req.error);
     });
   }
 
-  async getLyricsCount() {
-    await this._ensure();
-    return new Promise((resolve, reject) => {
-      const req = this._tx(this.lyricsStoreName).count();
-      req.onsuccess = () => resolve(req.result || 0);
-      req.onerror = () => reject(req.error);
+  getLyricsCount() {
+    this._ensure();
+    return new Promisefunction((resolve, reject) {
+      var req = this._tx(this.lyricsStoreName).count();
+      req.onsuccess = function() resolve(req.result || 0);
+      req.onerror = function() reject(req.error);
     });
   }
 
-  async saveCustomLyrics(trackId, lyricsText) {
-    const lyricsData = {
+  saveCustomLyrics(trackId, lyricsText) {
+    var lyricsData = {
       text: lyricsText,
       source: "user",
       addedAt: new Date().toISOString(),
     };
 
-    await this.saveLyrics(trackId, lyricsData);
+    this.saveLyrics(trackId, lyricsData);
 
-    if (musicPlayerState.currentTrack?.Id === trackId) {
+    if (musicPlayerState.currentTrack.Id === trackId) {
       musicPlayerState.lyricsCache[trackId] = lyricsData;
 
       try {
@@ -382,10 +381,10 @@ class MusicDB {
   }
 }
 
-export const musicDB = new MusicDB();
+export var musicDB = new MusicDB();
 
-export async function prepareMusicDbForDeletion() {
-  await musicDB.close();
+export function prepareMusicDbForDeletion() {
+  musicDB.close();
   try {
     musicPlayerState.lyricsCache = {};
   } catch {}

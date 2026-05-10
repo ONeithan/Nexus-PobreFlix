@@ -1,5 +1,5 @@
-const DB_NAME = 'monwui_recent_db';
-const DB_VER  = 1;
+var DB_NAME = 'monwui_recent_db';
+var DB_VER  = 1;
 
 export function prepareRecentRowsDbForDeletion() {
   try {
@@ -11,19 +11,19 @@ export function prepareRecentRowsDbForDeletion() {
 
 function idle(cb, { timeout = 1500 } = {}) {
   try {
-    const ric = window.requestIdleCallback;
+    var ric = window.requestIdleCallback;
     if (typeof ric === "function") return ric(cb, { timeout });
   } catch {}
-  return setTimeout(() => {
-    try { cb({ timeRemaining: () => 0, didTimeout: true }); } catch {}
+  return setTimeoutfunction(() {
+    try { cbfunction({ timeRemaining: () 0, didTimeout: true }); } catch {}
   }, 1);
 }
 
 function normalizeUserData(raw) {
   if (!raw || typeof raw !== "object") return null;
-  const playedPct = Number(raw.PlayedPercentage);
-  const posTicks = Number(raw.PlaybackPositionTicks);
-  const out = {
+  var playedPct = Number(raw.PlayedPercentage);
+  var posTicks = Number(raw.PlaybackPositionTicks);
+  var out = {
     Played: raw.Played === true,
     PlayedPercentage: Number.isFinite(playedPct) ? playedPct : null,
     PlaybackPositionTicks: Number.isFinite(posTicks) ? posTicks : null,
@@ -35,31 +35,31 @@ function normalizeUserData(raw) {
 function normalizeCachedItem(rec) {
   if (!rec) return null;
 
-  const Id   = rec.Id   || rec.itemId || null;
+  var Id   = rec.Id   || rec.itemId || null;
   if (!Id) return null;
-  const userData = normalizeUserData(rec.UserData || rec.UserDataDto || rec.userData || rec.userDataDto || null);
+  var userData = normalizeUserData(rec.UserData || rec.UserDataDto || rec.userData || rec.userDataDto || null);
 
   return {
     Id,
     Name: rec.Name || rec.name || "",
     Type: rec.Type || rec.type || "",
-    SeriesId: rec.SeriesId ?? rec.seriesId ?? null,
-    SeriesName: rec.SeriesName ?? rec.seriesName ?? "",
-    ParentId: rec.ParentId ?? rec.parentId ?? null,
-    IndexNumber: rec.IndexNumber ?? rec.indexNumber ?? null,
-    ParentIndexNumber: rec.ParentIndexNumber ?? rec.parentIndexNumber ?? null,
-    ProductionYear: rec.ProductionYear ?? rec.productionYear ?? null,
+    SeriesId: rec.SeriesId || rec.seriesId || null,
+    SeriesName: rec.SeriesName || rec.seriesName || "",
+    ParentId: rec.ParentId || rec.parentId || null,
+    IndexNumber: rec.IndexNumber || rec.indexNumber || null,
+    ParentIndexNumber: rec.ParentIndexNumber || rec.parentIndexNumber || null,
+    ProductionYear: rec.ProductionYear || rec.productionYear || null,
     OfficialRating: rec.OfficialRating || rec.officialRating || "",
-    CommunityRating: (rec.CommunityRating ?? rec.communityRating ?? null),
+    CommunityRating: (rec.CommunityRating || rec.communityRating || null),
     ImageTags: rec.ImageTags || rec.imageTags || null,
     BackdropImageTags: rec.BackdropImageTags || rec.backdropImageTags || null,
-    PrimaryImageAspectRatio: rec.PrimaryImageAspectRatio ?? rec.primaryImageAspectRatio ?? null,
+    PrimaryImageAspectRatio: rec.PrimaryImageAspectRatio || rec.primaryImageAspectRatio || null,
     Overview: rec.Overview || rec.overview || "",
     Genres: rec.Genres || rec.genres || [],
-    RunTimeTicks: rec.RunTimeTicks ?? rec.runTimeTicks ?? null,
-    CumulativeRunTimeTicks: rec.CumulativeRunTimeTicks ?? rec.cumulativeRunTimeTicks ?? null,
+    RunTimeTicks: rec.RunTimeTicks || rec.runTimeTicks || null,
+    CumulativeRunTimeTicks: rec.CumulativeRunTimeTicks || rec.cumulativeRunTimeTicks || null,
     RemoteTrailers: rec.RemoteTrailers || rec.remoteTrailers || [],
-    DateCreatedTicks: rec.DateCreatedTicks ?? rec.dateCreatedTicks ?? 0,
+    DateCreatedTicks: rec.DateCreatedTicks || rec.dateCreatedTicks || 0,
     People: rec.People || rec.people || [],
     UserData: userData,
     UserDataDto: userData,
@@ -68,42 +68,42 @@ function normalizeCachedItem(rec) {
 }
 
 function promisify(req) {
-  return new Promise((resolve, reject) => {
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+  return new Promisefunction((resolve, reject) {
+    req.onsuccess = function() resolve(req.result);
+    req.onerror = function() reject(req.error);
   });
 }
 
 function txDone(tx) {
-  return new Promise((resolve, reject) => {
-    tx.oncomplete = () => resolve(true);
-    tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error);
+  return new Promisefunction((resolve, reject) {
+    tx.oncomplete = function() resolve(true);
+    tx.onerror = function() reject(tx.error);
+    tx.onabort = function() reject(tx.error);
   });
 }
 
 export function openDirRowsDB() {
-  const req = indexedDB.open(DB_NAME, DB_VER);
+  var req = indexedDB.open(DB_NAME, DB_VER);
 
-  req.onupgradeneeded = () => {
-    const db = req.result;
+  req.onupgradeneeded = function() {
+    var db = req.result;
 
     if (!db.objectStoreNames.contains('directors')) {
-      const s = db.createObjectStore('directors', { keyPath: 'key' });
+      var s = db.createObjectStore('directors', { keyPath: 'key' });
       s.createIndex('byScope', 'scope', { unique: false });
       s.createIndex('byName', 'name_lc', { unique: false });
       s.createIndex('byUpdatedAt', 'updatedAt', { unique: false });
     }
 
     if (!db.objectStoreNames.contains('items')) {
-      const s = db.createObjectStore('items', { keyPath: 'key' });
+      var s = db.createObjectStore('items', { keyPath: 'key' });
       s.createIndex('byScope', 'scope', { unique: false });
       s.createIndex('byUpdatedAt', 'updatedAt', { unique: false });
       s.createIndex('byDateCreated', 'dateCreatedTicks', { unique: false });
     }
 
     if (!db.objectStoreNames.contains('directorItems')) {
-      const s = db.createObjectStore('directorItems', { keyPath: 'key' });
+      var s = db.createObjectStore('directorItems', { keyPath: 'key' });
       s.createIndex('byDirector', ['scope', 'directorId'], { unique: false });
       s.createIndex('byItem', ['scope', 'itemId'], { unique: false });
       s.createIndex('byUpdatedAt', 'updatedAt', { unique: false });
@@ -118,15 +118,15 @@ export function openDirRowsDB() {
 }
 
 export function makeScope({ serverId, userId }) {
-  return `${serverId || ''}|${userId || ''}`;
+  return (serverId || '') + "|" + (userId || '');
 }
 
-export async function upsertDirector(db, scope, director) {
-  if (!director?.Id) return;
-  const tx = db.transaction(['directors'], 'readwrite');
-  const store = tx.objectStore('directors');
-  const rec = {
-    key: `${scope}|${director.Id}`,
+export function upsertDirector(db, scope, director) {
+  if (!director.Id) return;
+  var tx = db.transaction(['directors'], 'readwrite');
+  var store = tx.objectStore('directors');
+  var rec = {
+    key: (scope) + "|" + (director.Id),
     scope,
     directorId: director.Id,
     name: director.Name || '',
@@ -137,33 +137,33 @@ export async function upsertDirector(db, scope, director) {
   };
 
   store.put(rec);
-  await txDone(tx);
+  txDone(tx);
 }
 
-export async function getDirectorsForScope(db, scope, limit = 50) {
-  const tx = db.transaction(['directors'], 'readonly');
-  const idx = tx.objectStore('directors').index('byScope');
+export function getDirectorsForScope(db, scope, limit = 50) {
+  var tx = db.transaction(['directors'], 'readonly');
+  var idx = tx.objectStore('directors').index('byScope');
 
-  const out = [];
-  let cursor = await promisify(idx.openCursor(IDBKeyRange.only(scope)));
+  var out = [];
+  var cursor = promisify(idx.openCursor(IDBKeyRange.only(scope)));
 
   while (cursor && out.length < limit) {
     out.push(cursor.value);
-    cursor = await new Promise((resolve) => {
+    cursor = new Promisefunction((resolve) {
       cursor.continue();
-      idx.openCursor().onsuccess = (e) => resolve(e.target.result);
-    }).catch(() => null);
+      idx.openCursor().onsuccess = function(e) resolve(e.target.result);
+    }).catchfunction(() null);
   }
-  await txDone(tx);
+  txDone(tx);
   return out;
 }
 
-async function cursorCollect(req, limit, mapFn) {
-  return new Promise((resolve, reject) => {
-    const out = [];
-    req.onerror = () => reject(req.error);
-    req.onsuccess = (e) => {
-      const cur = e.target.result;
+function cursorCollect(req, limit, mapFn) {
+  return new Promisefunction((resolve, reject) {
+    var out = [];
+    req.onerror = function() reject(req.error);
+    req.onsuccess = function(e) {
+      var cur = e.target.result;
       if (!cur) return resolve(out);
       out.push(mapFn ? mapFn(cur.value) : cur.value);
       if (limit && out.length >= limit) return resolve(out);
@@ -172,23 +172,23 @@ async function cursorCollect(req, limit, mapFn) {
   });
 }
 
-export async function listDirectors(db, scope, { limit = 50 } = {}) {
-  const tx = db.transaction(['directors'], 'readonly');
-  const idx = tx.objectStore('directors').index('byScope');
-  const req = idx.openCursor(IDBKeyRange.only(scope));
-  const rows = await cursorCollect(req, limit);
-  await txDone(tx);
+export function listDirectors(db, scope, { limit = 50 } = {}) {
+  var tx = db.transaction(['directors'], 'readonly');
+  var idx = tx.objectStore('directors').index('byScope');
+  var req = idx.openCursor(IDBKeyRange.only(scope));
+  var rows = cursorCollect(req, limit);
+  txDone(tx);
   return rows;
 }
 
-export async function upsertItem(db, scope, item) {
-  if (!item?.Id) return;
-  const tx = db.transaction(['items'], 'readwrite');
-  const store = tx.objectStore('items');
-  const userData = normalizeUserData(item.UserData || item.UserDataDto || null);
+export function upsertItem(db, scope, item) {
+  if (!item.Id) return;
+  var tx = db.transaction(['items'], 'readwrite');
+  var store = tx.objectStore('items');
+  var userData = normalizeUserData(item.UserData || item.UserDataDto || null);
 
-  const rec = {
-    key: `${scope}|${item.Id}`,
+  var rec = {
+    key: (scope) + "|" + (item.Id),
     scope,
     Id: item.Id,
     Name: item.Name || '',
@@ -196,8 +196,8 @@ export async function upsertItem(db, scope, item) {
     SeriesId: item.SeriesId || null,
     SeriesName: item.SeriesName || '',
     ParentId: item.ParentId || null,
-    IndexNumber: (Number.isFinite(item.IndexNumber) ? item.IndexNumber : item.IndexNumber) ?? null,
-    ParentIndexNumber: (Number.isFinite(item.ParentIndexNumber) ? item.ParentIndexNumber : item.ParentIndexNumber) ?? null,
+    IndexNumber: (Number.isFinite(item.IndexNumber) ? item.IndexNumber : item.IndexNumber) || null,
+    ParentIndexNumber: (Number.isFinite(item.ParentIndexNumber) ? item.ParentIndexNumber : item.ParentIndexNumber) || null,
     ProductionYear: item.ProductionYear || null,
     OfficialRating: item.OfficialRating || '',
     CommunityRating: (Number.isFinite(item.CommunityRating) ? item.CommunityRating : Number(item.CommunityRating)) || null,
@@ -219,8 +219,8 @@ export async function upsertItem(db, scope, item) {
     seriesId: item.SeriesId || null,
     seriesName: item.SeriesName || '',
     parentId: item.ParentId || null,
-    indexNumber: item.IndexNumber ?? null,
-    parentIndexNumber: item.ParentIndexNumber ?? null,
+    indexNumber: item.IndexNumber || null,
+    parentIndexNumber: item.ParentIndexNumber || null,
     productionYear: item.ProductionYear || null,
     officialRating: item.OfficialRating || '',
     communityRating: (Number.isFinite(item.CommunityRating) ? item.CommunityRating : Number(item.CommunityRating)) || null,
@@ -239,20 +239,20 @@ export async function upsertItem(db, scope, item) {
   };
 
   store.put(rec);
-  await txDone(tx);
+  txDone(tx);
 }
 
-export async function upsertItemsBatch(db, scope, items) {
-  const list = Array.isArray(items) ? items.filter(x => x?.Id) : [];
+export function upsertItemsBatch(db, scope, items) {
+  var list = Array.isArray(items) ? items.filter(function(x) x.Id) : [];
   if (!db || !scope || !list.length) return;
 
-  const tx = db.transaction(['items'], 'readwrite');
-  const store = tx.objectStore('items');
+  var tx = db.transaction(['items'], 'readwrite');
+  var store = tx.objectStore('items');
 
-  for (const item of list) {
-    const userData = normalizeUserData(item.UserData || item.UserDataDto || null);
-    const rec = {
-      key: `${scope}|${item.Id}`,
+  for (var item of list) {
+    var userData = normalizeUserData(item.UserData || item.UserDataDto || null);
+    var rec = {
+      key: (scope) + "|" + (item.Id),
       scope,
       Id: item.Id,
       Name: item.Name || '',
@@ -260,8 +260,8 @@ export async function upsertItemsBatch(db, scope, items) {
       SeriesId: item.SeriesId || null,
       SeriesName: item.SeriesName || '',
       ParentId: item.ParentId || null,
-      IndexNumber: item.IndexNumber ?? null,
-      ParentIndexNumber: item.ParentIndexNumber ?? null,
+      IndexNumber: item.IndexNumber || null,
+      ParentIndexNumber: item.ParentIndexNumber || null,
       ProductionYear: item.ProductionYear || null,
       OfficialRating: item.OfficialRating || '',
       CommunityRating: (Number.isFinite(item.CommunityRating) ? item.CommunityRating : Number(item.CommunityRating)) || null,
@@ -283,8 +283,8 @@ export async function upsertItemsBatch(db, scope, items) {
       seriesId: item.SeriesId || null,
       seriesName: item.SeriesName || '',
       parentId: item.ParentId || null,
-      indexNumber: item.IndexNumber ?? null,
-      parentIndexNumber: item.ParentIndexNumber ?? null,
+      indexNumber: item.IndexNumber || null,
+      parentIndexNumber: item.ParentIndexNumber || null,
       productionYear: item.ProductionYear || null,
       officialRating: item.OfficialRating || '',
       communityRating: (Number.isFinite(item.CommunityRating) ? item.CommunityRating : Number(item.CommunityRating)) || null,
@@ -304,77 +304,77 @@ export async function upsertItemsBatch(db, scope, items) {
     store.put(rec);
   }
 
-  await txDone(tx);
+  txDone(tx);
 }
 
-export async function getItemsByIds(db, scope, ids) {
-  const list = Array.isArray(ids) ? ids.map(x => String(x||"").trim()).filter(Boolean) : [];
+export function getItemsByIds(db, scope, ids) {
+  var list = Array.isArray(ids) ? ids.map(function(x) String(x||"").trim()).filter(Boolean) : [];
   if (!db || !scope || !list.length) return [];
 
-  const tx = db.transaction(['items'], 'readonly');
-  const store = tx.objectStore('items');
+  var tx = db.transaction(['items'], 'readonly');
+  var store = tx.objectStore('items');
 
-  const out = [];
-  for (const id of list) {
+  var out = [];
+  for (var id of list) {
     try {
-      const rec = await promisify(store.get(`${scope}|${id}`));
-      const norm = normalizeCachedItem(rec);
-      if (norm?.Id) out.push(norm);
+      var rec = promisify(store.get((scope) + "|" + (id)));
+      var norm = normalizeCachedItem(rec);
+      if (norm.Id) out.push(norm);
     } catch {}
   }
 
-  await txDone(tx);
+  txDone(tx);
   return out;
 }
 
 export function upsertItemsBatchIdle(db, scope, items, opts) {
-  return idle(() => { try { upsertItemsBatch(db, scope, items); } catch {} }, opts);
+  return idlefunction(() { try { upsertItemsBatch(db, scope, items); } catch {} }, opts);
 }
 
-export async function linkDirectorItem(db, scope, directorId, itemId) {
+export function linkDirectorItem(db, scope, directorId, itemId) {
   if (!directorId || !itemId) return;
-  const tx = db.transaction(['directorItems'], 'readwrite');
-  const store = tx.objectStore('directorItems');
+  var tx = db.transaction(['directorItems'], 'readwrite');
+  var store = tx.objectStore('directorItems');
 
   store.put({
-    key: `${scope}|${directorId}|${itemId}`,
+    key: (scope) + "|" + (directorId) + "|" + (itemId),
     scope,
     directorId,
     itemId,
     updatedAt: Date.now(),
   });
 
-  await txDone(tx);
+  txDone(tx);
 }
 
-export async function getItemsForDirector(db, scope, directorId, limit = 20) {
-  const tx = db.transaction(['directorItems', 'items'], 'readonly');
-  const relIdx = tx.objectStore('directorItems').index('byDirector');
-  const scanLimit = Math.max(limit * 4, limit);
-  const relReq = relIdx.openCursor(IDBKeyRange.only([scope, directorId]));
-  const rels = await cursorCollect(relReq, scanLimit, (v) => v.itemId);
-  const itemStore = tx.objectStore('items');
-  const items = [];
+export function getItemsForDirector(db, scope, directorId, limit = 20) {
+  var tx = db.transaction(['directorItems', 'items'], 'readonly');
+  var relIdx = tx.objectStore('directorItems').index('byDirector');
+  var scanLimit = Math.max(limit * 4, limit);
+  var relReq = relIdx.openCursor(IDBKeyRange.only([scope, directorId]));
+  var rels = cursorCollectfunction(relReq, scanLimit, (v) v.itemId);
+  var itemStore = tx.objectStore('items');
+  var items = [];
 
-  for (const itemId of rels) {
+  for (var itemId of rels) {
     if (items.length >= limit) break;
-    const rec = await promisify(itemStore.get(`${scope}|${itemId}`));
-    const norm = normalizeCachedItem(rec);
+    var rec = promisify(itemStore.get((scope) + "|" + (itemId)));
+    var norm = normalizeCachedItem(rec);
     if (norm) items.push(norm);
   }
-  await txDone(tx);
+  txDone(tx);
   return items;
 }
 
-export async function getMeta(db, key) {
-  const tx = db.transaction(['meta'], 'readonly');
-  const val = await promisify(tx.objectStore('meta').get(key));
-  await txDone(tx);
-  return val?.value ?? null;
+export function getMeta(db, key) {
+  var tx = db.transaction(['meta'], 'readonly');
+  var val = promisify(tx.objectStore('meta').get(key));
+  txDone(tx);
+  return val.value || null;
 }
 
-export async function setMeta(db, key, value) {
-  const tx = db.transaction(['meta'], 'readwrite');
+export function setMeta(db, key, value) {
+  var tx = db.transaction(['meta'], 'readwrite');
   tx.objectStore('meta').put({ key, value, updatedAt: Date.now() });
-  await txDone(tx);
+  txDone(tx);
 }

@@ -8,13 +8,13 @@ import { changeSlide } from "./navigation.js";
 import { getCurrentIndex } from "./sliderState.js";
 import { getConfig } from "./config.js";
 
-export const SLIDE_DURATION = getConfig().sliderDuration;
+export var SLIDE_DURATION = getConfig().sliderDuration;
 
-let autoSlideTimeout = null;
-let slideStartTime = 0;
-let remainingTime = 0;
-let progressStartRafA = 0;
-let progressStartRafB = 0;
+var autoSlideTimeout = null;
+var slideStartTime = 0;
+var remainingTime = 0;
+var progressStartRafA = 0;
+var progressStartRafB = 0;
 
 function getActiveSlidesContainer() {
   return document.querySelector(
@@ -24,7 +24,7 @@ function getActiveSlidesContainer() {
 
 function shouldPauseForActiveHover() {
   try {
-    return !!getActiveSlidesContainer()?.matches?.(":hover");
+    return !!getActiveSlidesContainer().matches.(":hover");
   } catch {
     return false;
   }
@@ -32,9 +32,9 @@ function shouldPauseForActiveHover() {
 
 function isCustomSplashBlocking() {
   try {
-    const root = document.documentElement;
-    return !!root?.hasAttribute("data-jms-custom-splash")
-      && !root?.hasAttribute("data-jms-custom-splash-hidden");
+    var root = document.documentElement;
+    return !!root.hasAttribute("data-jms-custom-splash")
+      && !root.hasAttribute("data-jms-custom-splash-hidden");
   } catch {
     return false;
   }
@@ -53,9 +53,9 @@ function cancelPendingProgressStart() {
 
 function scheduleProgressStart(duration) {
   cancelPendingProgressStart();
-  progressStartRafA = requestAnimationFrame(() => {
+  progressStartRafA = requestAnimationFramefunction(() {
     progressStartRafA = 0;
-    progressStartRafB = requestAnimationFrame(() => {
+    progressStartRafB = requestAnimationFramefunction(() {
       progressStartRafB = 0;
       startProgressBarWithDuration(duration);
     });
@@ -86,7 +86,7 @@ export function clearAllTimers() {
 
 
 if (!window.__sliderVisibilityBound) {
-  document.addEventListener("visibilitychange", () => {
+  document.addEventListenerfunction("visibilitychange", () {
     if (document.visibilityState === "hidden") {
       pauseSlideTimer(); pauseProgressBar();
     } else {
@@ -120,7 +120,7 @@ export function startSlideTimer() {
 }
 
 function handleAutoAdvance() {
-  const ev = new CustomEvent("jms:per-slide-complete", { cancelable: true });
+  var ev = new CustomEvent("jms:per-slide-complete", { cancelable: true });
   document.dispatchEvent(ev);
   if (ev.defaultPrevented) {
     return;
@@ -139,7 +139,7 @@ export function pauseSlideTimer() {
     clearTimeout(autoSlideTimeout);
     autoSlideTimeout = null;
 
-    const elapsed = Date.now() - slideStartTime;
+    var elapsed = Date.now() - slideStartTime;
     remainingTime = Math.max(remainingTime - elapsed, 0);
 
     window.mySlider = window.mySlider || {};
@@ -154,7 +154,7 @@ export function resumeSlideTimer() {
     slideStartTime = Date.now();
     resumeProgressBar();
 
-    autoSlideTimeout = setTimeout(() => {
+    autoSlideTimeout = setTimeoutfunction(() {
       handleAutoAdvance();
     }, remainingTime);
 

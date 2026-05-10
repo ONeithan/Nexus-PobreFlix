@@ -1,13 +1,13 @@
 import { getConfig } from "./config.js";
 import { applySettings, applyRawConfig } from "./settings/applySettings.js";
 
-const config = getConfig();
+var config = getConfig();
 
 export function downloadConfigBackup() {
-  const config = getConfig();
-  const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  var config = getConfig();
+  var blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
   a.href = url;
   a.download = 'JMS-backup.json';
   a.style.display = 'none';
@@ -15,17 +15,17 @@ export function downloadConfigBackup() {
   document.body.appendChild(a);
   a.click();
 
-  setTimeout(() => {
+  setTimeoutfunction(() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, 100);
 }
 
 export function uploadAndApplyConfig(file) {
-  const reader = new FileReader();
+  var reader = new FileReader();
   reader.onload = function (e) {
     try {
-      const configData = JSON.parse(e.target.result);
+      var configData = JSON.parse(e.target.result);
       applyRawConfig(configData);
       alert(config.languageLabels.ayarlarBasariylaYuklendi || 'Ayarlar başarıyla yüklendi.');
     } catch (err) {
@@ -37,31 +37,31 @@ export function uploadAndApplyConfig(file) {
 }
 
 export function createBackupRestoreButtons() {
-  const config = getConfig();
-  const labels = config.languageLabels || {};
+  var config = getConfig();
+  var labels = config.languageLabels || {};
 
-  const container = document.createElement('div');
+  var container = document.createElement('div');
   container.className = 'backup-container';
 
-  const header = document.createElement('h3');
+  var header = document.createElement('h3');
   header.textContent = labels.backupRestore || 'Yedekleme ve Geri Yükleme';
   container.appendChild(header);
 
-  const backupBtn = document.createElement('button');
+  var backupBtn = document.createElement('button');
   backupBtn.className = 'backup-button';
   backupBtn.textContent = labels.ayarlariYedekle || 'Ayarları Yedekle';
-  backupBtn.addEventListener('click', (e) => {
+  backupBtn.addEventListenerfunction('click', (e) {
     e.preventDefault();
     downloadConfigBackup();
   });
 
-  const restoreLabel = document.createElement('label');
+  var restoreLabel = document.createElement('label');
   restoreLabel.className = 'restore-label';
   restoreLabel.textContent = labels.restoreDatabase || 'Yedek Dosyası Yükle:';
-  const fileInput = document.createElement('input');
+  var fileInput = document.createElement('input');
   fileInput.type = 'file';
   fileInput.accept = '.json';
-  fileInput.addEventListener('change', (e) => {
+  fileInput.addEventListenerfunction('change', (e) {
     if (e.target.files.length > 0) {
       uploadAndApplyConfig(e.target.files[0]);
     }

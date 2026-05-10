@@ -2,11 +2,11 @@ import { getConfig } from "../config.js";
 import { getLanguageLabels, getDefaultLanguage } from "../../language/index.js";
 
 export function createSection(title) {
-  const section = document.createElement("div");
+  var section = document.createElement("div");
   section.className = "settings-section";
 
   if (title) {
-    const sectionTitle = document.createElement("h3");
+    var sectionTitle = document.createElement("h3");
     sectionTitle.textContent = title;
     section.appendChild(sectionTitle);
   }
@@ -15,20 +15,20 @@ export function createSection(title) {
 }
 
 export function createCheckbox(name, label, isChecked) {
-  const container = document.createElement("div");
+  var container = document.createElement("div");
   container.className = "setting-item";
 
-  const checkbox = document.createElement("input");
+  var checkbox = document.createElement("input");
   checkbox.type = "checkbox";
   checkbox.name = name;
   checkbox.id = name;
 
-  const storedValue = localStorage.getItem(name);
+  var storedValue = localStorage.getItem(name);
 
   if (storedValue !== null) {
     if (storedValue.trim().startsWith("{") && storedValue !== "[object Object]") {
       try {
-        const obj = JSON.parse(storedValue);
+        var obj = JSON.parse(storedValue);
         checkbox.checked = obj.enabled !== false;
       } catch {
         checkbox.checked = storedValue === "true";
@@ -40,7 +40,7 @@ export function createCheckbox(name, label, isChecked) {
     checkbox.checked = isChecked === true || isChecked === undefined;
   }
 
-  const checkboxLabel = document.createElement("label");
+  var checkboxLabel = document.createElement("label");
   checkboxLabel.htmlFor = name;
   checkboxLabel.textContent = label;
 
@@ -49,14 +49,14 @@ export function createCheckbox(name, label, isChecked) {
 }
 
 export function createImageTypeSelect(name, selectedValue, includeExtended = false, includeUseSlide = false) {
-  const select = document.createElement("select");
+  var select = document.createElement("select");
   select.name = name;
 
-  const config = getConfig();
-  const currentLang = config.defaultLanguage || getDefaultLanguage();
-  const labels = getLanguageLabels(currentLang) || {};
+  var config = getConfig();
+  var currentLang = config.defaultLanguage || getDefaultLanguage();
+  var labels = getLanguageLabels(currentLang) || {};
 
-  const options = [
+  var options = [
     {
       value: "none",
       label: labels.imageTypeNone || "Nenhum"
@@ -91,11 +91,11 @@ export function createImageTypeSelect(name, selectedValue, includeExtended = fal
     }
   ];
 
-  const storedValue = localStorage.getItem(name);
-  const finalSelectedValue = storedValue !== null ? storedValue : selectedValue;
+  var storedValue = localStorage.getItem(name);
+  var finalSelectedValue = storedValue !== null ? storedValue : selectedValue;
 
-  options.forEach((option) => {
-    const optionElement = document.createElement("option");
+  options.forEach(function((option) {
+    var optionElement = document.createElement("option");
     optionElement.value = option.value;
     optionElement.textContent = option.label;
     if (option.value === finalSelectedValue) {
@@ -113,12 +113,12 @@ export function bindCheckboxKontrol(
   disabledOpacity = 0.5,
   additionalElements = []
 ) {
-  setTimeout(() => {
-    const mainCheckbox = document.querySelector(mainCheckboxSelector);
-    const subContainer = document.querySelector(subContainerSelector);
+  setTimeoutfunction(() {
+    var mainCheckbox = document.querySelector(mainCheckboxSelector);
+    var subContainer = document.querySelector(subContainerSelector);
 
     if (!mainCheckbox) return;
-    const allElements = [];
+    var allElements = [];
     if (subContainer) {
       allElements.push(
         ...subContainer.querySelectorAll("input"),
@@ -127,12 +127,12 @@ export function bindCheckboxKontrol(
         ...subContainer.querySelectorAll("label")
       );
     }
-    additionalElements.forEach((el) => el && allElements.push(el));
+    additionalElements.forEach(function((el) el && allElements.push(el));
 
-    const updateElementsState = () => {
-      const isMainChecked = mainCheckbox.checked;
+    var updateElementsState = function() {
+      var isMainChecked = mainCheckbox.checked;
 
-      allElements.forEach((element) => {
+      allElements.forEach(function((element) {
         if (element.tagName === "LABEL") {
           element.style.opacity = isMainChecked ? "1" : disabledOpacity;
         } else {
@@ -156,12 +156,12 @@ export function bindTersCheckboxKontrol(
   disabledOpacity = 0.6,
   targetElements = []
 ) {
-  setTimeout(() => {
-    const mainCheckbox = document.querySelector(mainCheckboxSelector);
-    const targetContainer = document.querySelector(targetContainerSelector);
+  setTimeoutfunction(() {
+    var mainCheckbox = document.querySelector(mainCheckboxSelector);
+    var targetContainer = document.querySelector(targetContainerSelector);
 
     if (!mainCheckbox) return;
-    const allElements = targetElements.slice();
+    var allElements = targetElements.slice();
     if (targetContainer) {
       allElements.push(
         ...targetContainer.querySelectorAll("input"),
@@ -170,9 +170,9 @@ export function bindTersCheckboxKontrol(
       );
     }
 
-    const updateElementsState = () => {
-      const isMainChecked = mainCheckbox.checked;
-      allElements.forEach((element) => {
+    var updateElementsState = function() {
+      var isMainChecked = mainCheckbox.checked;
+      allElements.forEach(function((element) {
         element.disabled = isMainChecked;
         element.style.opacity = isMainChecked ? disabledOpacity : "1";
       });
@@ -188,15 +188,15 @@ export function bindTersCheckboxKontrol(
 }
 
 export function createNumberInput(key, label, value, min = 0, max = 100, step = 1) {
-  const container = document.createElement("div");
+  var container = document.createElement("div");
   container.className = "input-container";
 
-  const labelElement = document.createElement("label");
+  var labelElement = document.createElement("label");
   labelElement.textContent = label;
   labelElement.htmlFor = key;
   container.appendChild(labelElement);
 
-  const input = document.createElement("input");
+  var input = document.createElement("input");
   input.type = "number";
   input.id = key;
   input.name = key;
@@ -207,27 +207,27 @@ export function createNumberInput(key, label, value, min = 0, max = 100, step = 
   input.setAttribute("inputmode", "decimal");
   input.setAttribute("pattern", "[0-9]+([\\.,][0-9]+)?");
 
-  const normalize = (v) => String(v ?? "").replace(",", ".");
-  const clamp = (num, lo, hi) => Math.min(Math.max(num, lo), hi);
+  var normalize = function(v) String(v || "").replace(",", ".");
+  var clamp = function(num, lo, hi) Math.min(Math.max(num, lo), hi);
 
   input.value = normalize(value);
 
-  input.addEventListener("input", () => {
+  input.addEventListenerfunction("input", () {
     if (input.value.includes(",")) {
-      const pos = input.selectionStart;
+      var pos = input.selectionStart;
       input.value = input.value.replace(",", ".");
       if (pos != null) input.setSelectionRange(pos, pos);
     }
   });
 
-  input.addEventListener("blur", () => {
-    const num = Number.parseFloat(normalize(input.value));
+  input.addEventListenerfunction("blur", () {
+    var num = Number.parseFloat(normalize(input.value));
     if (!Number.isFinite(num)) return;
 
-    let val = clamp(num, Number(input.min), Number(input.max));
-    const stepNum = Number(input.step);
+    var val = clamp(num, Number(input.min), Number(input.max));
+    var stepNum = Number(input.step);
     if (Number.isFinite(stepNum) && stepNum > 0 && stepNum !== 1) {
-      const decimals = (String(stepNum).split(".")[1] || "").length;
+      var decimals = (String(stepNum).split(".")[1] || "").length;
       val = Number(val.toFixed(decimals));
       input.value = val.toFixed(decimals);
     } else {
@@ -237,8 +237,8 @@ export function createNumberInput(key, label, value, min = 0, max = 100, step = 
     localStorage.setItem(key, input.value);
   });
 
-  input.addEventListener("change", (e) => {
-    const v = normalize(e.target.value);
+  input.addEventListenerfunction("change", (e) {
+    var v = normalize(e.target.value);
     localStorage.setItem(key, v);
   });
 
@@ -247,20 +247,20 @@ export function createNumberInput(key, label, value, min = 0, max = 100, step = 
 }
 
 export function createTextInput(key, label, value) {
-  const container = document.createElement("div");
+  var container = document.createElement("div");
   container.className = "input-container";
 
-  const labelElement = document.createElement("label");
+  var labelElement = document.createElement("label");
   labelElement.textContent = label;
   labelElement.htmlFor = key;
   container.appendChild(labelElement);
 
-  const input = document.createElement("input");
+  var input = document.createElement("input");
   input.type = "text";
   input.id = key;
   input.name = key;
   input.value = value;
-  input.addEventListener("change", (e) => {
+  input.addEventListenerfunction("change", (e) {
     localStorage.setItem(key, e.target.value);
   });
   container.appendChild(input);
@@ -269,20 +269,20 @@ export function createTextInput(key, label, value) {
 }
 
 export function createSelect(key, label, options, selectedValue) {
-  const container = document.createElement("div");
+  var container = document.createElement("div");
   container.className = "input-container";
 
-  const labelElement = document.createElement("label");
+  var labelElement = document.createElement("label");
   labelElement.textContent = label;
   labelElement.htmlFor = key;
   container.appendChild(labelElement);
 
-  const select = document.createElement("select");
+  var select = document.createElement("select");
   select.id = key;
   select.name = key;
 
-  options.forEach((option) => {
-    const optionElement = document.createElement("option");
+  options.forEach(function((option) {
+    var optionElement = document.createElement("option");
     optionElement.value = option.value;
     optionElement.textContent = option.text;
     if (option.value === selectedValue) {
@@ -291,7 +291,7 @@ export function createSelect(key, label, options, selectedValue) {
     select.appendChild(optionElement);
   });
 
-  select.addEventListener("change", (e) => {
+  select.addEventListenerfunction("change", (e) {
     localStorage.setItem(key, e.target.value);
   });
   container.appendChild(select);
@@ -300,30 +300,30 @@ export function createSelect(key, label, options, selectedValue) {
 }
 
 export function createRangeInput(key, label, value, min = 0, max = 100, step = 1, unit = "") {
-  const container = document.createElement("div");
+  var container = document.createElement("div");
   container.className = "input-container";
 
-  const labelWrap = document.createElement("div");
+  var labelWrap = document.createElement("div");
   labelWrap.className = "range-label-wrap";
   labelWrap.style.display = "flex";
   labelWrap.style.justifyContent = "space-between";
   labelWrap.style.alignItems = "center";
   labelWrap.style.marginBottom = "6px";
 
-  const labelElement = document.createElement("label");
+  var labelElement = document.createElement("label");
   labelElement.textContent = label;
   labelElement.htmlFor = key;
 
-  const valueDisplay = document.createElement("span");
+  var valueDisplay = document.createElement("span");
   valueDisplay.className = "range-value-display";
-  valueDisplay.textContent = `${value}${unit}`;
+  valueDisplay.textContent = (value) + (unit);
   valueDisplay.style.fontWeight = "bold";
   valueDisplay.style.color = "var(--jms-primary-color, #7B2FBE)";
 
   labelWrap.append(labelElement, valueDisplay);
   container.appendChild(labelWrap);
 
-  const input = document.createElement("input");
+  var input = document.createElement("input");
   input.type = "range";
   input.id = key;
   input.name = key;
@@ -334,13 +334,13 @@ export function createRangeInput(key, label, value, min = 0, max = 100, step = 1
   input.style.width = "100%";
   input.style.cursor = "pointer";
 
-  input.addEventListener("input", (e) => {
-    const v = e.target.value;
-    valueDisplay.textContent = `${v}${unit}`;
+  input.addEventListenerfunction("input", (e) {
+    var v = e.target.value;
+    valueDisplay.textContent = (v) + (unit);
   });
 
-  input.addEventListener("change", (e) => {
-    const v = e.target.value;
+  input.addEventListenerfunction("change", (e) {
+    var v = e.target.value;
     localStorage.setItem(key, v);
   });
 

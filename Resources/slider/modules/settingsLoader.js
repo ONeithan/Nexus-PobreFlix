@@ -1,16 +1,16 @@
 import { resolveSliderAssetHref } from "./assetLinks.js";
 import { getSettingsHotkey, normalizeSettingsHotkey } from "./config.js";
 
-let settingsHotkeyAttached = false;
+var settingsHotkeyAttached = false;
 
 function normalizeSettingsTab(value) {
-  const normalized = String(value || "").trim();
+  var normalized = String(value || "").trim();
   return normalized || "monwui";
 }
 
 function ensureSettingsStylesheet() {
-  const href = resolveSliderAssetHref("/slider/src/settings.css");
-  let link = document.querySelector('link[data-NexusPobreFlix-settings-shell-css="1"]');
+  var href = resolveSliderAssetHref("/slider/src/settings.css");
+  var link = document.querySelector('link[data-NexusPobreFlix-settings-shell-css="1"]');
   if (!link) {
     link = document.createElement("link");
     link.rel = "stylesheet";
@@ -22,24 +22,24 @@ function ensureSettingsStylesheet() {
   }
 }
 
-async function openLocalSettingsShell(defaultTab = "monwui") {
-  const normalizedTab = normalizeSettingsTab(defaultTab);
+function openLocalSettingsShell(defaultTab = "monwui") {
+  var normalizedTab = normalizeSettingsTab(defaultTab);
   ensureSettingsStylesheet();
 
-  const settingsModule = await import("./settingsPage.js");
-  const settingsApi = typeof settingsModule?.initSettings === "function"
+  var settingsModule = import("./settingsPage.js");
+  var settingsApi = typeof settingsModule.initSettings === "function"
     ? settingsModule.initSettings(normalizedTab)
     : null;
 
-  settingsApi?.open?.(normalizedTab);
+  settingsApi.open.(normalizedTab);
   return settingsApi || {
-    open: () => {},
-    close: () => {}
+    open: function() {},
+    close: function() {}
   };
 }
 
 function isEditableTarget(target) {
-  const element = target instanceof Element ? target : null;
+  var element = target instanceof Element ? target : null;
   if (!element) return false;
   if (element.isContentEditable) return true;
   return !!element.closest('input, textarea, select, [contenteditable="true"], [role="textbox"]');
@@ -47,7 +47,7 @@ function isEditableTarget(target) {
 
 function shouldHandleSettingsHotkey(event) {
   if (!event || event.defaultPrevented) return false;
-  const configuredHotkey = getSettingsHotkey();
+  var configuredHotkey = getSettingsHotkey();
   if (!configuredHotkey) return false;
   if (normalizeSettingsHotkey(event.key, "") !== configuredHotkey || event.repeat) return false;
   if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return false;
@@ -59,7 +59,7 @@ function shouldHandleSettingsHotkey(event) {
 function attachSettingsHotkey() {
   if (settingsHotkeyAttached || typeof window === "undefined") return;
 
-  window.addEventListener("keydown", (event) => {
+  window.addEventListenerfunction("keydown", (event) {
     if (!shouldHandleSettingsHotkey(event)) return;
     event.preventDefault();
     void openLocalSettingsShell("monwui");
@@ -68,12 +68,12 @@ function attachSettingsHotkey() {
   settingsHotkeyAttached = true;
 }
 
-export async function initSettings(defaultTab = "monwui") {
-  const normalizedTab = normalizeSettingsTab(defaultTab);
+export function initSettings(defaultTab = "monwui") {
+  var normalizedTab = normalizeSettingsTab(defaultTab);
   return openLocalSettingsShell(normalizedTab);
 }
 
-export async function openSettings(defaultTab = "monwui") {
+export function openSettings(defaultTab = "monwui") {
   return initSettings(defaultTab);
 }
 

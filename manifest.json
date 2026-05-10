@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png",
     "versions": [
       {
+        "version": "1.0.0.12",
+        "changelog": "# Nexus PobreFlix v1.0.0.12 — INDUSTRIALIZAÇÃO ES5 TOTAL 🛡️\n\n- **Refatoração Industrial ES5 Total**: Conversão completa de todo o motor do Slider e Painel de Configurações para ES5, garantindo compatibilidade absoluta com hardware legado.\n- **Suporte Tizen/WebOS Antigos**: Eliminados todos os `async/await`, `arrow functions`, `template literals` e `optional chaining` em 100% da base de código frontend.\n- **Fim do Erro de Sintaxe**: Resolvido definitivamente o erro 'Unexpected token' que impedia a abertura do painel de configurações em TVs Samsung e LG antigas.\n- **Otimização de Performance**: Migração para fluxos assíncronos baseados em Promises para máxima fluidez em processadores de baixo custo.\n- **Estabilidade v10.11.x**: Versão final validada para produção em ambientes Jellyfin 10.11.x com foco em hardware de TV.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.12/NexusPobreFlix-1.0.0.12.zip",
+        "checksum": "c7c509aeac2f1bfd971ed6a4ca7a1851",
+        "timestamp": "2026-05-10T03:00:00Z"
+      },
+      {
         "version": "1.0.0.11",
         "changelog": "# Nexus PobreFlix v1.0.0.11 — COMPATIBILIDADE E ESTABILIDADE LEGACY 🛡️\n\n- **Refatoração ES5 Completa**: Migração total do módulo `watchlist.js` para o padrão ES5, eliminando erros de sintaxe em dispositivos legados (WebOS/Tizen).\n- **Fim das Arrow Functions**: Substituição de todas as funções de seta e operadores modernos (spread, optional chaining) por sintaxe compatível com o Jellyfin 10.11.x.\n- **Otimização de Renderização**: Implementação de workers de renderização progressiva baseados em Promises para máxima performance em hardware limitado.\n- **Sincronização Industrial**: Garantida a integridade visual e funcional do painel de configurações e sistema de Watchlist PT-BR.",
         "targetAbi": "10.11.0.0",

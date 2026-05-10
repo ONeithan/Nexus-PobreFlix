@@ -3,13 +3,13 @@ import { getConfig, getPauseFeaturesRuntimeConfig } from "./config.js";
 import { getTomatoIconHtml } from "./customIcons.js";
 import { withServer } from "./jfUrl.js";
 
-const HOST_ID = "jms-osd-header-ratings-v4";
-const SESSION_POLL_INTERVAL_MS = 10_000;
-const ITEM_DETAILS_CACHE_TTL_MS = 2_500;
-const LEGACY_LOGO_SELECTOR = '[data-jms-osd-legacy-logo="1"]';
-const HOST_BRAND_SELECTOR = '[data-jms-osd-header-brand="1"]';
-const HOST_RATINGS_SELECTOR = '[data-jms-osd-header-ratings="1"]';
-const LEGACY_HEADER_TITLE_SELECTORS = [
+var HOST_ID = "jms-osd-header-ratings-v4";
+var SESSION_POLL_INTERVAL_MS = 10_000;
+var ITEM_DETAILS_CACHE_TTL_MS = 2_500;
+var LEGACY_LOGO_SELECTOR = '[data-jms-osd-legacy-logo="1"]';
+var HOST_BRAND_SELECTOR = '[data-jms-osd-header-brand="1"]';
+var HOST_RATINGS_SELECTOR = '[data-jms-osd-header-ratings="1"]';
+var LEGACY_HEADER_TITLE_SELECTORS = [
   ".pageTitle",
   ".headerTitle",
   ".headerLeft .title",
@@ -18,16 +18,16 @@ const LEGACY_HEADER_TITLE_SELECTORS = [
   ".sectionTitle",
   ".headerName",
 ].join(", ");
-const MUI_PLAYBACK_HEADER_SELECTOR = ".MuiToolbar-root";
-const MUI_PLAYBACK_ACTION_STRONG_SELECTOR = [
+var MUI_PLAYBACK_HEADER_SELECTOR = ".MuiToolbar-root";
+var MUI_PLAYBACK_ACTION_STRONG_SELECTOR = [
   '[aria-controls="app-sync-play-menu"]',
   '[aria-controls="app-remote-play-menu"]',
 ].join(", ");
-const MUI_PLAYBACK_ACTION_WEAK_SELECTOR = "#jellyfinPlayerToggle";
-const MUI_BACK_LABEL_TOKENS = ["geri", "back", "zuruck", "zurück", "retour", "volver", "назад"];
+var MUI_PLAYBACK_ACTION_WEAK_SELECTOR = "#jellyfinPlayerToggle";
+var MUI_BACK_LABEL_TOKENS = ["geri", "back", "zuruck", "zurück", "retour", "volver", "назад"];
 
 function buildAuthHeaders() {
-  const s =
+  var s =
     (typeof getSessionInfo === "function" ? getSessionInfo() : null) || {};
 
   return {
@@ -39,17 +39,17 @@ function buildAuthHeaders() {
 
 function getCurrentUserId() {
   try {
-    const sessionInfo =
+    var sessionInfo =
       (typeof getSessionInfo === "function" ? getSessionInfo() : null) || {};
-    return sessionInfo?.userId || sessionInfo?.UserId || null;
+    return sessionInfo.userId || sessionInfo.UserId || null;
   } catch {
     return null;
   }
 }
 
 function getCommunityRatingValue(communityRating) {
-  const raw = Array.isArray(communityRating)
-    ? communityRating.reduce((sum, value) => sum + Number(value || 0), 0) /
+  var raw = Array.isArray(communityRating)
+    ? communityRating.reducefunction((sum, value) sum + Number(value || 0), 0) /
       Math.max(1, communityRating.length)
     : Number(communityRating);
 
@@ -58,31 +58,31 @@ function getCommunityRatingValue(communityRating) {
 }
 
 function getOsdHeaderRatingsState(cfg = {}) {
-  const pauseCfg = cfg?.pauseOverlay || {};
-  const hasPauseKey = (key) =>
+  var pauseCfg = cfg.pauseOverlay || {};
+  var hasPauseKey = function(key)
     Object.prototype.hasOwnProperty.call(pauseCfg, key);
-  const pauseRuntime = getPauseFeaturesRuntimeConfig(cfg);
+  var pauseRuntime = getPauseFeaturesRuntimeConfig(cfg);
 
   return {
     enabled: pauseRuntime.enablePauseOsdHeaderRatings && (
       hasPauseKey("showOsdHeaderRatings")
         ? pauseCfg.showOsdHeaderRatings !== false
-        : cfg?.showRatingInfo !== false
+        : cfg.showRatingInfo !== false
     ),
     showCommunity: hasPauseKey("showOsdHeaderCommunityRating")
       ? pauseCfg.showOsdHeaderCommunityRating !== false
-      : cfg?.showCommunityRating !== false,
+      : cfg.showCommunityRating !== false,
     showCritic: hasPauseKey("showOsdHeaderCriticRating")
       ? pauseCfg.showOsdHeaderCriticRating !== false
-      : cfg?.showCriticRating !== false,
+      : cfg.showCriticRating !== false,
     showOfficial: hasPauseKey("showOsdHeaderOfficialRating")
       ? pauseCfg.showOsdHeaderOfficialRating !== false
-      : !!cfg?.showOfficialRating
+      : !!cfg.showOfficialRating
   };
 }
 
 function shouldRenderRatings(cfg = {}) {
-  const ratingsState = getOsdHeaderRatingsState(cfg);
+  var ratingsState = getOsdHeaderRatingsState(cfg);
   if (!ratingsState.enabled) return false;
   return (
     ratingsState.showCommunity ||
@@ -97,7 +97,7 @@ function isRenderableNode(el) {
   if (el.closest(".hide,[hidden],[aria-hidden='true']")) return false;
 
   try {
-    const style = window.getComputedStyle(el);
+    var style = window.getComputedStyle(el);
     if (!style) return true;
     if (style.display === "none" || style.visibility === "hidden") return false;
   } catch {}
@@ -109,31 +109,31 @@ function isVisibleBox(el) {
   if (!(el instanceof Element)) return false;
   if (!isRenderableNode(el)) return false;
 
-  const rect = el.getBoundingClientRect?.();
+  var rect = el.getBoundingClientRect.();
   if (!rect) return false;
   return rect.width > 0 && rect.height > 0;
 }
 
 function getActiveVideoContainer() {
-  const containers = Array.from(document.querySelectorAll(".videoPlayerContainer"));
-  for (const container of containers) {
+  var containers = Array.from(document.querySelectorAll(".videoPlayerContainer"));
+  for (var container of containers) {
     if (!isVisibleBox(container)) continue;
-    const video = container.querySelector("video.htmlvideoplayer, video");
+    var video = container.querySelector("video.htmlvideoplayer, video");
     if (video && isRenderableNode(video)) return container;
   }
   return null;
 }
 
 function isPlaybackScreenActive() {
-  const activeContainer = getActiveVideoContainer();
+  var activeContainer = getActiveVideoContainer();
   if (!activeContainer) return false;
 
-  const controls = document.querySelector(
+  var controls = document.querySelector(
     ".videoOsdBottom.videoOsdBottom-maincontrols .buttons"
   );
   if (controls && isRenderableNode(controls)) return true;
 
-  const video = activeContainer.querySelector("video.htmlvideoplayer, video");
+  var video = activeContainer.querySelector("video.htmlvideoplayer, video");
   if (!(video instanceof HTMLMediaElement)) return false;
   if (!String(video.currentSrc || video.src || "").trim()) return false;
   return true;
@@ -147,7 +147,7 @@ function isArrowBackButton(button) {
     if (button.querySelector('svg[data-testid="ArrowBackIcon"]')) return true;
   } catch {}
 
-  const rawLabel = String(
+  var rawLabel = String(
     button.getAttribute("aria-label") ||
     button.getAttribute("title") ||
     button.textContent ||
@@ -155,34 +155,34 @@ function isArrowBackButton(button) {
   ).trim();
   if (!rawLabel) return false;
 
-  const normalized = rawLabel
+  var normalized = rawLabel
     .toLocaleLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 
-  return MUI_BACK_LABEL_TOKENS.some((token) => normalized.includes(token));
+  return MUI_BACK_LABEL_TOKENS.somefunction((token) normalized.includes(token));
 }
 
 function findMuiPlaybackHeaderMount() {
-  const toolbars = Array.from(
+  var toolbars = Array.from(
     document.querySelectorAll(MUI_PLAYBACK_HEADER_SELECTOR)
   ).filter(isVisibleBox);
   if (!toolbars.length) return null;
 
-  let best = null;
-  let bestScore = -Infinity;
+  var best = null;
+  var bestScore = -Infinity;
 
-  toolbars.forEach((toolbar, index) => {
-    const buttons = Array.from(toolbar.querySelectorAll("button"));
-    const backButton = buttons.find(isArrowBackButton) || null;
+  toolbars.forEach(function((toolbar, index) {
+    var buttons = Array.from(toolbar.querySelectorAll("button"));
+    var backButton = buttons.find(isArrowBackButton) || null;
     if (!backButton) return;
 
-    const hasStrongPlaybackActions = !!toolbar.querySelector(MUI_PLAYBACK_ACTION_STRONG_SELECTOR);
-    const hasWeakPlaybackActions = !!toolbar.querySelector(MUI_PLAYBACK_ACTION_WEAK_SELECTOR);
-    const hasNotificationButton = !!toolbar.querySelector("#jfNotifBtn");
-    const rect = toolbar.getBoundingClientRect?.() || null;
+    var hasStrongPlaybackActions = !!toolbar.querySelector(MUI_PLAYBACK_ACTION_STRONG_SELECTOR);
+    var hasWeakPlaybackActions = !!toolbar.querySelector(MUI_PLAYBACK_ACTION_WEAK_SELECTOR);
+    var hasNotificationButton = !!toolbar.querySelector("#jfNotifBtn");
+    var rect = toolbar.getBoundingClientRect.() || null;
 
-    let score = index / 1000;
+    var score = index / 1000;
     if (hasStrongPlaybackActions) score += 50;
     if (hasWeakPlaybackActions) score += 16;
     if (hasNotificationButton) score += 2;
@@ -209,16 +209,16 @@ function findMuiPlaybackHeaderMount() {
 
 function findLastRenderableChild(container) {
   if (!(container instanceof HTMLElement)) return null;
-  for (let i = container.children.length - 1; i >= 0; i -= 1) {
-    const child = container.children[i];
-    if (child?.id === HOST_ID) continue;
+  for (var i = container.children.length - 1; i >= 0; i -= 1) {
+    var child = container.children[i];
+    if (child.id === HOST_ID) continue;
     if (isRenderableNode(child)) return child;
   }
   return null;
 }
 
 function pickLegacyOsdHeaderMount() {
-  const activeContainer = getActiveVideoContainer();
+  var activeContainer = getActiveVideoContainer();
   if (!activeContainer) {
     return {
       header: null,
@@ -229,10 +229,10 @@ function pickLegacyOsdHeaderMount() {
     };
   }
 
-  const headers = Array.from(document.querySelectorAll(
+  var headers = Array.from(document.querySelectorAll(
     ".skinHeader.osdHeader, .skinHeader.focuscontainer-x.osdHeader, .osdHeader"
   )).filter(isVisibleBox);
-  const header = headers.length ? headers[headers.length - 1] : null;
+  var header = headers.length ? headers[headers.length - 1] : null;
 
   if (!header) {
     return {
@@ -244,19 +244,19 @@ function pickLegacyOsdHeaderMount() {
     };
   }
 
-  const headerLeft =
+  var headerLeft =
     header.querySelector(".headerLeft") ||
     header.querySelector(".skinHeader .headerLeft") ||
     null;
 
-  const titleEl =
+  var titleEl =
     header.querySelector(".pageTitle") ||
     header.querySelector(".headerTitle") ||
     header.querySelector(".headerLeft .title") ||
     header.querySelector("h1,h2,.sectionTitle,.headerName") ||
     null;
 
-  const containerEl =
+  var containerEl =
     headerLeft instanceof HTMLElement && isRenderableNode(headerLeft)
       ? headerLeft
       : titleEl instanceof HTMLElement && titleEl.parentElement instanceof HTMLElement
@@ -273,7 +273,7 @@ function pickLegacyOsdHeaderMount() {
     };
   }
 
-  const anchorEl =
+  var anchorEl =
     titleEl instanceof HTMLElement && titleEl.parentElement === containerEl
       ? titleEl
       : findLastRenderableChild(containerEl);
@@ -288,20 +288,20 @@ function pickLegacyOsdHeaderMount() {
 }
 
 function pickOsdHeaderMount() {
-  const mui = findMuiPlaybackHeaderMount();
-  const legacy = pickLegacyOsdHeaderMount();
-  if (legacy?.header && legacy?.containerEl && (!mui?.header || (mui?.playbackStrength || 0) < 2)) {
+  var mui = findMuiPlaybackHeaderMount();
+  var legacy = pickLegacyOsdHeaderMount();
+  if (legacy.header && legacy.containerEl && (!mui.header || (mui.playbackStrength || 0) < 2)) {
     return legacy;
   }
-  if (mui?.header && mui?.anchorEl) return mui;
-  if (legacy?.header && legacy?.containerEl) return legacy;
+  if (mui.header && mui.anchorEl) return mui;
+  if (legacy.header && legacy.containerEl) return legacy;
   return { header: null, anchorEl: null, containerEl: null, kind: "unknown" };
 }
 
 function syncHostPlacement(anchorEl, host, containerEl = null) {
   if (!(host instanceof HTMLElement)) return;
 
-  const parent =
+  var parent =
     containerEl instanceof HTMLElement
       ? containerEl
       : anchorEl instanceof HTMLElement
@@ -325,7 +325,7 @@ function syncHostPlacement(anchorEl, host, containerEl = null) {
 }
 
 function getHostMode(host) {
-  return String(host?.getAttribute?.("data-jms-osd-header-kind") || "legacy").trim() || "legacy";
+  return String(host.getAttribute.("data-jms-osd-header-kind") || "legacy").trim() || "legacy";
 }
 
 function getHostVisibleDisplay(mode) {
@@ -333,24 +333,24 @@ function getHostVisibleDisplay(mode) {
 }
 
 function getHostBrandEl(host) {
-  return host?.querySelector?.(HOST_BRAND_SELECTOR) || null;
+  return host.querySelector.(HOST_BRAND_SELECTOR) || null;
 }
 
 function getHostRatingsEl(host) {
-  return host?.querySelector?.(HOST_RATINGS_SELECTOR) || null;
+  return host.querySelector.(HOST_RATINGS_SELECTOR) || null;
 }
 
 function ensureHostStructure(host) {
   if (!(host instanceof HTMLElement)) return { brandEl: null, ratingsEl: null };
 
-  let brandEl = getHostBrandEl(host);
+  var brandEl = getHostBrandEl(host);
   if (!brandEl) {
     brandEl = document.createElement("div");
     brandEl.setAttribute("data-jms-osd-header-brand", "1");
     host.appendChild(brandEl);
   }
 
-  let ratingsEl = getHostRatingsEl(host);
+  var ratingsEl = getHostRatingsEl(host);
   if (!ratingsEl) {
     ratingsEl = document.createElement("div");
     ratingsEl.setAttribute("data-jms-osd-header-ratings", "1");
@@ -362,12 +362,12 @@ function ensureHostStructure(host) {
 
 function applyHostModeStyles(host, mode) {
   if (!(host instanceof HTMLElement)) return;
-  const prevMode = getHostMode(host);
+  var prevMode = getHostMode(host);
   if (prevMode === "legacy" && mode !== "legacy") {
     clearLegacyBrand(host);
   }
-  const { brandEl, ratingsEl } = ensureHostStructure(host);
-  const display = host.style.display === "none" ? "none" : getHostVisibleDisplay(mode);
+  var { brandEl, ratingsEl } = ensureHostStructure(host);
+  var display = host.style.display === "none" ? "none" : getHostVisibleDisplay(mode);
 
   host.setAttribute("data-jms-osd-header-kind", mode || "legacy");
   Object.assign(host.style, {
@@ -415,7 +415,7 @@ function applyHostModeStyles(host, mode) {
 }
 
 function clearBrand(host) {
-  const brandEl = getHostBrandEl(host);
+  var brandEl = getHostBrandEl(host);
   if (brandEl) {
     brandEl.replaceChildren();
     brandEl.removeAttribute("data-brand-key");
@@ -428,26 +428,26 @@ function getLegacyHeaderTitleEl(host) {
   if (!(host instanceof HTMLElement)) return null;
   if (getHostMode(host) !== "legacy") return null;
 
-  const container = host.parentElement;
+  var container = host.parentElement;
   if (!(container instanceof HTMLElement)) return null;
 
-  const candidate = container.querySelector(LEGACY_HEADER_TITLE_SELECTORS);
+  var candidate = container.querySelector(LEGACY_HEADER_TITLE_SELECTORS);
   if (!(candidate instanceof HTMLElement)) return null;
-  if (candidate === host || candidate.closest?.(`#${HOST_ID}`)) return null;
+  if (candidate === host || candidate.closest.("#" + (HOST_ID))) return null;
   return candidate;
 }
 
 function getLegacyLogoEl(host) {
   if (!(host instanceof HTMLElement)) return null;
-  const titleEl = getLegacyHeaderTitleEl(host);
-  const container = titleEl?.parentElement;
+  var titleEl = getLegacyHeaderTitleEl(host);
+  var container = titleEl.parentElement;
   if (!(container instanceof HTMLElement)) return null;
-  const candidate = container.querySelector(LEGACY_LOGO_SELECTOR);
+  var candidate = container.querySelector(LEGACY_LOGO_SELECTOR);
   return candidate instanceof HTMLElement ? candidate : null;
 }
 
 function syncLegacyHeaderTitleVisibility(host, hidden) {
-  const titleEl = getLegacyHeaderTitleEl(host);
+  var titleEl = getLegacyHeaderTitleEl(host);
   if (!(titleEl instanceof HTMLElement)) return;
 
   if (hidden) {
@@ -458,7 +458,7 @@ function syncLegacyHeaderTitleVisibility(host, hidden) {
     return;
   }
 
-  const prevDisplay = titleEl.getAttribute("data-jms-osd-prev-display");
+  var prevDisplay = titleEl.getAttribute("data-jms-osd-prev-display");
   if (prevDisplay != null) {
     if (prevDisplay) {
       titleEl.style.display = prevDisplay;
@@ -470,7 +470,7 @@ function syncLegacyHeaderTitleVisibility(host, hidden) {
 }
 
 function clearLegacyBrand(host) {
-  const logoEl = getLegacyLogoEl(host);
+  var logoEl = getLegacyLogoEl(host);
   if (logoEl) {
     logoEl.replaceChildren();
     logoEl.removeAttribute("data-brand-key");
@@ -480,10 +480,10 @@ function clearLegacyBrand(host) {
 }
 
 function ensureLegacyLogoEl(host) {
-  const titleEl = getLegacyHeaderTitleEl(host);
+  var titleEl = getLegacyHeaderTitleEl(host);
   if (!(titleEl instanceof HTMLElement)) return null;
 
-  let logoEl = getLegacyLogoEl(host);
+  var logoEl = getLegacyLogoEl(host);
   if (!logoEl) {
     logoEl = document.createElement("div");
     logoEl.setAttribute("data-jms-osd-legacy-logo", "1");
@@ -506,20 +506,20 @@ function ensureLegacyLogoEl(host) {
 }
 
 function renderLegacyBrand(host, item) {
-  const logoEl = ensureLegacyLogoEl(host);
+  var logoEl = ensureLegacyLogoEl(host);
   if (!logoEl || !item) {
     clearLegacyBrand(host);
     return false;
   }
 
-  const title = buildBrandTitle(item);
-  const logoUrl = buildItemLogoUrl(item);
+  var title = buildBrandTitle(item);
+  var logoUrl = buildItemLogoUrl(item);
   if (!logoUrl) {
     clearLegacyBrand(host);
     return false;
   }
 
-  const brandKey = `${logoUrl}|${title}`;
+  var brandKey = (logoUrl) + "|" + (title);
   if (logoEl.getAttribute("data-brand-key") === brandKey && logoEl.childNodes.length > 0) {
     logoEl.style.display = "inline-flex";
     syncLegacyHeaderTitleVisibility(host, true);
@@ -529,7 +529,7 @@ function renderLegacyBrand(host, item) {
   logoEl.setAttribute("data-brand-key", brandKey);
   logoEl.replaceChildren();
 
-  const img = document.createElement("img");
+  var img = document.createElement("img");
   img.alt = title || "";
   img.decoding = "async";
   img.loading = "eager";
@@ -544,7 +544,7 @@ function renderLegacyBrand(host, item) {
     filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.78))",
   });
 
-  img.addEventListener("error", () => {
+  img.addEventListenerfunction("error", () {
     if (logoEl.getAttribute("data-brand-key") !== brandKey) return;
     clearLegacyBrand(host);
   }, { once: true });
@@ -556,7 +556,7 @@ function renderLegacyBrand(host, item) {
 }
 
 function createTitleFallbackNode(title) {
-  const text = document.createElement("span");
+  var text = document.createElement("span");
   text.className = "jms-osd-header-title";
   text.textContent = title;
   Object.assign(text.style, {
@@ -577,28 +577,28 @@ function createTitleFallbackNode(title) {
 
 function buildBrandTitle(item) {
   if (!item) return "";
-  const type = String(item?.Type || "").trim().toLowerCase();
+  var type = String(item.Type || "").trim().toLowerCase();
   if (type === "episode") {
-    return String(item?.SeriesName || item?.Name || item?.OriginalTitle || "").trim();
+    return String(item.SeriesName || item.Name || item.OriginalTitle || "").trim();
   }
-  return String(item?.Name || item?.OriginalTitle || item?.SeriesName || "").trim();
+  return String(item.Name || item.OriginalTitle || item.SeriesName || "").trim();
 }
 
 function getLogoCandidate(item) {
   if (!item) return null;
 
-  const directTag =
-    item?.ImageTags?.Logo ||
-    item?.ImageTags?.logo ||
-    item?.ImageTags?.LogoImageTag ||
-    item?.LogoImageTag ||
+  var directTag =
+    item.ImageTags.Logo ||
+    item.ImageTags.logo ||
+    item.ImageTags.LogoImageTag ||
+    item.LogoImageTag ||
     "";
-  const parentLogoItemId = String(item?.ParentLogoItemId || item?.ParentId || "").trim();
-  const parentLogoTag = String(item?.ParentLogoImageTag || "").trim();
-  const seriesId = String(item?.SeriesId || "").trim();
-  const seriesLogoTag = String(item?.SeriesLogoImageTag || "").trim();
-  const itemId = String(item?.Id || "").trim();
-  const type = String(item?.Type || "").trim().toLowerCase();
+  var parentLogoItemId = String(item.ParentLogoItemId || item.ParentId || "").trim();
+  var parentLogoTag = String(item.ParentLogoImageTag || "").trim();
+  var seriesId = String(item.SeriesId || "").trim();
+  var seriesLogoTag = String(item.SeriesLogoImageTag || "").trim();
+  var itemId = String(item.Id || "").trim();
+  var type = String(item.Type || "").trim().toLowerCase();
 
   if (type === "episode" && seriesId && seriesLogoTag) {
     return { itemId: seriesId, tag: seriesLogoTag };
@@ -616,37 +616,37 @@ function getLogoCandidate(item) {
 }
 
 function buildItemLogoUrl(item, width = 260, quality = 80) {
-  const candidate = getLogoCandidate(item);
-  if (!candidate?.itemId || !candidate?.tag) return "";
+  var candidate = getLogoCandidate(item);
+  if (!candidate.itemId || !candidate.tag) return "";
 
-  const qs = new URLSearchParams();
+  var qs = new URLSearchParams();
   qs.set("maxWidth", String(width));
   qs.set("quality", String(quality));
   qs.set("EnableImageEnhancers", "false");
   qs.set("tag", String(candidate.tag));
 
   try {
-    const token = String(getSessionInfo?.()?.accessToken || "").trim();
+    var token = String(getSessionInfo.().accessToken || "").trim();
     if (token) qs.set("api_key", token);
   } catch {}
 
-  return withServer(`/Items/${encodeURIComponent(String(candidate.itemId))}/Images/Logo?${qs.toString()}`);
+  return withServer("/Items/" + (encodeURIComponent(String(candidate.itemId))) + "/Images/Logo?" + (qs.toString()));
 }
 
 function buildItemRenderKey(host, item) {
   if (!item) return "";
 
-  const mode = getHostMode(host);
-  const logo = getLogoCandidate(item);
-  const logoKey = logo ? `${logo.itemId}:${logo.tag}` : "";
-  const title = buildBrandTitle(item);
+  var mode = getHostMode(host);
+  var logo = getLogoCandidate(item);
+  var logoKey = logo ? (logo.itemId) + ":" + (logo.tag) : "";
+  var title = buildBrandTitle(item);
 
   return [
     mode,
-    String(item?.Id || ""),
-    String(item?.CriticRating || ""),
-    String(item?.CommunityRating || ""),
-    String(item?.OfficialRating || ""),
+    String(item.Id || ""),
+    String(item.CriticRating || ""),
+    String(item.CommunityRating || ""),
+    String(item.OfficialRating || ""),
     logoKey,
     title,
   ].join("|");
@@ -654,22 +654,22 @@ function buildItemRenderKey(host, item) {
 
 function hasHostVisibleContent(host) {
   if (!(host instanceof HTMLElement)) return false;
-  const brandEl = getHostBrandEl(host);
-  const ratingsEl = getHostRatingsEl(host);
-  const brandVisible = !!(
+  var brandEl = getHostBrandEl(host);
+  var ratingsEl = getHostRatingsEl(host);
+  var brandVisible = !!(
     brandEl &&
     brandEl.style.display !== "none" &&
     (brandEl.querySelector("img") || String(brandEl.textContent || "").trim())
   );
-  const ratingsVisible = !!String(ratingsEl?.innerHTML || "").trim();
+  var ratingsVisible = !!String(ratingsEl.innerHTML || "").trim();
   return brandVisible || ratingsVisible;
 }
 
 function renderBrand(host, item) {
-  const brandEl = getHostBrandEl(host);
+  var brandEl = getHostBrandEl(host);
   if (!brandEl) return false;
 
-  const mode = getHostMode(host);
+  var mode = getHostMode(host);
   if ((mode !== "mui" && mode !== "legacy") || !item) {
     clearBrand(host);
     return false;
@@ -684,13 +684,13 @@ function renderBrand(host, item) {
 
   clearLegacyBrand(host);
 
-  const title = buildBrandTitle(item);
-  const logoUrl = buildItemLogoUrl(item);
-  const brandKey = `${logoUrl}|${title}`;
-  const allowTitleFallback = mode === "mui";
+  var title = buildBrandTitle(item);
+  var logoUrl = buildItemLogoUrl(item);
+  var brandKey = (logoUrl) + "|" + (title);
+  var allowTitleFallback = mode === "mui";
 
   if (brandEl.getAttribute("data-brand-key") === brandKey && hasHostVisibleContent(host)) {
-    const hasBrandContent = brandEl.childNodes.length > 0;
+    var hasBrandContent = brandEl.childNodes.length > 0;
     brandEl.style.display = hasBrandContent ? "inline-flex" : "none";
     syncLegacyHeaderTitleVisibility(host, mode === "legacy" && !!logoUrl && hasBrandContent);
     return brandEl.childNodes.length > 0;
@@ -708,7 +708,7 @@ function renderBrand(host, item) {
   });
 
   if (logoUrl) {
-    const img = document.createElement("img");
+    var img = document.createElement("img");
     img.alt = title || "";
     img.decoding = "async";
     img.loading = "eager";
@@ -722,7 +722,7 @@ function renderBrand(host, item) {
       objectFit: "contain",
       filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.78))",
     });
-    img.addEventListener("error", () => {
+    img.addEventListenerfunction("error", () {
       if (brandEl.getAttribute("data-brand-key") !== brandKey) return;
       brandEl.replaceChildren();
       if (!allowTitleFallback || !title) {
@@ -754,10 +754,10 @@ function renderBrand(host, item) {
 }
 
 function ensureHost() {
-  const { header, anchorEl, containerEl, kind } = pickOsdHeaderMount();
+  var { header, anchorEl, containerEl, kind } = pickOsdHeaderMount();
   if (!header || !(containerEl instanceof HTMLElement || anchorEl instanceof HTMLElement)) return null;
 
-  let host = document.getElementById(HOST_ID);
+  var host = document.getElementById(HOST_ID);
   if (!host) {
     host = document.createElement("div");
     host.id = HOST_ID;
@@ -770,7 +770,7 @@ function ensureHost() {
 }
 
 function removeExistingHost() {
-  const host = document.getElementById(HOST_ID);
+  var host = document.getElementById(HOST_ID);
   if (!host) return false;
   clearBrand(host);
   host.innerHTML = "";
@@ -778,22 +778,22 @@ function removeExistingHost() {
   return true;
 }
 
-async function fetchSessions() {
-  const headers = buildAuthHeaders();
-  const url = `/Sessions?ActiveWithinSeconds=120`;
-  const res = await fetch(url, { headers });
-  if (!res.ok) throw new Error(`Sessions HTTP ${res.status}`);
-  return await res.json();
+function fetchSessions() {
+  var headers = buildAuthHeaders();
+  var url = "/Sessions?ActiveWithinSeconds=120";
+  var res = fetch(url, { headers });
+  if (!res.ok) throw new Error("Sessions HTTP " + (res.status));
+  return res.json();
 }
 
 function getActiveVideoEl() {
-  const container = getActiveVideoContainer();
+  var container = getActiveVideoContainer();
   if (!container) return null;
   return container.querySelector("video.htmlvideoplayer, video");
 }
 
 function getItemIdFromDom() {
-  const selectors = [
+  var selectors = [
     '.videoOsdBottom-hidden > div:nth-child(1) > div:nth-child(4) > button:nth-child(3)',
     'div.page:nth-child(3) > div:nth-child(3) > div:nth-child(1) > div:nth-child(4) > button:nth-child(3)',
     ".btnUserRating",
@@ -801,9 +801,9 @@ function getItemIdFromDom() {
     ".btnUserRating[data-id]",
   ];
 
-  for (const selector of selectors) {
-    const el = document.querySelector(selector);
-    const id = String(el?.getAttribute?.("data-id") || "").trim();
+  for (var selector of selectors) {
+    var el = document.querySelector(selector);
+    var id = String(el.getAttribute.("data-id") || "").trim();
     if (id) return id;
   }
   return null;
@@ -811,14 +811,14 @@ function getItemIdFromDom() {
 
 function parsePlayableIdFromVideo(videoEl) {
   try {
-    const rawSrc = String(videoEl?.currentSrc || videoEl?.src || "").trim();
+    var rawSrc = String(videoEl.currentSrc || videoEl.src || "").trim();
     if (!rawSrc) return null;
 
-    const url = new URL(rawSrc, window.location.href);
-    const itemId = url.searchParams.get("ItemId") || url.searchParams.get("itemId");
+    var url = new URL(rawSrc, window.location.href);
+    var itemId = url.searchParams.get("ItemId") || url.searchParams.get("itemId");
     if (itemId) return itemId;
 
-    const pathId = url.pathname.match(/\/(?:Videos|Audio)\/([^/?#]+)/i)?.[1];
+    var pathId = url.pathname.match(/\/(?:Videos|Audio)\/([^/?#]+)/i).[1];
     if (pathId) return decodeURIComponent(pathId);
     return null;
   } catch {
@@ -827,22 +827,22 @@ function parsePlayableIdFromVideo(videoEl) {
 }
 
 function getPlaybackItemIdFromDom() {
-  const videoId = parsePlayableIdFromVideo(getActiveVideoEl());
+  var videoId = parsePlayableIdFromVideo(getActiveVideoEl());
   if (videoId) return videoId;
   return getItemIdFromDom();
 }
 
-const __itemDetailsCache = {
+var __itemDetailsCache = {
   key: "",
   at: 0,
   value: null,
 };
 
-async function fetchItemDetails(itemId, userId) {
-  const id = String(itemId || "").trim();
+function fetchItemDetails(itemId, userId) {
+  var id = String(itemId || "").trim();
   if (!id) return null;
 
-  const cacheKey = `${String(userId || "")}:${id}`;
+  var cacheKey = (String(userId || "")) + ":" + (id);
   if (
     __itemDetailsCache.key === cacheKey &&
     (Date.now() - __itemDetailsCache.at) <= ITEM_DETAILS_CACHE_TTL_MS
@@ -850,10 +850,10 @@ async function fetchItemDetails(itemId, userId) {
     return __itemDetailsCache.value || null;
   }
 
-  const path = userId
-    ? `/Users/${encodeURIComponent(String(userId))}/Items/${encodeURIComponent(id)}`
-    : `/Items/${encodeURIComponent(id)}`;
-  const fields = encodeURIComponent([
+  var path = userId
+    ? "/Users/" + (encodeURIComponent(String(userId))) + "/Items/" + (encodeURIComponent(id))
+    : "/Items/" + (encodeURIComponent(id));
+  var fields = encodeURIComponent([
     "CommunityRating",
     "CriticRating",
     "OfficialRating",
@@ -871,11 +871,11 @@ async function fetchItemDetails(itemId, userId) {
     "IndexNumber",
     "ParentIndexNumber",
   ].join(","));
-  const url = `${path}?Fields=${fields}`;
+  var url = (path) + "?Fields=" + (fields);
 
-  const res = await fetch(url, { headers: buildAuthHeaders() });
-  if (!res.ok) throw new Error(`Item HTTP ${res.status}`);
-  const item = await res.json();
+  var res = fetch(url, { headers: buildAuthHeaders() });
+  if (!res.ok) throw new Error("Item HTTP " + (res.status));
+  var item = res.json();
 
   __itemDetailsCache.key = cacheKey;
   __itemDetailsCache.at = Date.now();
@@ -884,115 +884,93 @@ async function fetchItemDetails(itemId, userId) {
   return item || null;
 }
 
-async function resolveCurrentPlaybackItem(userId, {
+function resolveCurrentPlaybackItem(userId, {
   suppressItemId = "",
   allowSessionsFallback = true,
 } = {}) {
-  const suppressedId = String(suppressItemId || "").trim();
-  const isSuppressed = (value) => {
-    const id = String(value || "").trim();
+  var suppressedId = String(suppressItemId || "").trim();
+  var isSuppressed = function(value) {
+    var id = String(value || "").trim();
     return !!(suppressedId && id && id === suppressedId);
   };
 
-  const videoItemId = parsePlayableIdFromVideo(getActiveVideoEl());
-  const domItemId = getItemIdFromDom();
-  const directItemIds = [videoItemId, domItemId]
-    .map((value) => String(value || "").trim())
+  var videoItemId = parsePlayableIdFromVideo(getActiveVideoEl());
+  var domItemId = getItemIdFromDom();
+  var directItemIds = [videoItemId, domItemId]
+    .mapfunction((value) String(value || "").trim())
     .filter(Boolean)
-    .filter((value, index, list) => list.indexOf(value) === index);
+    .filterfunction((value, index, list) list.indexOf(value) === index);
 
-  for (const itemId of directItemIds) {
+  for (var itemId of directItemIds) {
     if (isSuppressed(itemId)) continue;
     try {
-      const item = await fetchItemDetails(itemId, userId);
-      if (item?.Id) return item;
+      var item = fetchItemDetails(itemId, userId);
+      if (item.Id) return item;
     } catch {}
   }
 
   if (!allowSessionsFallback) return null;
 
-  const sessions = await fetchSessions();
-  const sess = pickBestNowPlayingSession(sessions, userId);
-  const item = sess?.NowPlayingItem || null;
-  if (isSuppressed(item?.Id)) return null;
-  if (!item?.Id) return item;
+  var sessions = fetchSessions();
+  var sess = pickBestNowPlayingSession(sessions, userId);
+  var item = sess.NowPlayingItem || null;
+  if (isSuppressed(item.Id)) return null;
+  if (!item.Id) return item;
 
   try {
-    return await fetchItemDetails(item.Id, userId);
+    return fetchItemDetails(item.Id, userId);
   } catch {
     return item;
   }
 }
 
 function pickBestNowPlayingSession(sessions, userId) {
-  const list = Array.isArray(sessions) ? sessions : [];
-  const candidates = list.filter((x) => {
+  var list = Array.isArray(sessions) ? sessions : [];
+  var candidates = list.filterfunction((x) {
     if (!x) return false;
     if (userId && String(x.UserId || "") !== String(userId)) return false;
     return !!x.NowPlayingItem;
   });
   if (!candidates.length) return null;
 
-  const score = (sess) => {
-    const last = Date.parse(sess.LastActivityDate || "") || 0;
-    const isPaused = !!sess.PlayState?.IsPaused;
+  var score = function(sess) {
+    var last = Date.parse(sess.LastActivityDate || "") || 0;
+    var isPaused = !!sess.PlayState.IsPaused;
     return last + (isPaused ? -5000 : 0);
   };
 
-  candidates.sort((a, b) => score(b) - score(a));
+  candidates.sortfunction((a, b) score(b) - score(a));
   return candidates[0];
 }
 
 function buildStarRatingHtml(communityRating) {
-  const ratingValue = getCommunityRatingValue(communityRating);
+  var ratingValue = getCommunityRatingValue(communityRating);
   if (ratingValue == null) return "";
-  const ratingPercentage = ratingValue * 10;
+  var ratingPercentage = ratingValue * 10;
 
-  return `
-    <span class="jms-rating-container" data-jms-rating="star" style="opacity:0; transform:scale(0.9); animation:jmsRatingFadeIn 0.2s ease-out forwards;">
-      <span class="jms-star-wrapper" aria-label="Community rating">
-        <span class="jms-star-box">
-          <span class="jms-star-filled" style="clip-path: inset(${100 - ratingPercentage}% 0 0 0);">
-            <i class="fa-solid fa-star" data-jms-star="full"></i>
-          </span>
-          <i class="fa-regular fa-star" data-jms-star="empty"></i>
-        </span>
-      </span>
-      <span class="jms-rating-value">${ratingValue}</span>
-    </span>
-  `.trim();
+  return "\n    <span class=\"jms-rating-container\" data-jms-rating=\"star\" style=\"opacity:0; transform:scale(0.9); animation:jmsRatingFadeIn 0.2s ease-out forwards;\">\n      <span class=\"jms-star-wrapper\" aria-label=\"Community rating\">\n        <span class=\"jms-star-box\">\n          <span class=\"jms-star-filled\" style=\"clip-path: inset(" + (100 - ratingPercentage) + "% 0 0 0);\">\n            <i class=\"fa-solid fa-star\" data-jms-star=\"full\"></i>\n          </span>\n          <i class=\"fa-regular fa-star\" data-jms-star=\"empty\"></i>\n        </span>\n      </span>\n      <span class=\"jms-rating-value\">" + (ratingValue) + "</span>\n    </span>\n  ".trim();
 }
 
 function buildTomatoHtml(criticRating) {
-  const raw = Array.isArray(criticRating) ? criticRating[0] : criticRating;
-  const n = Number(raw);
+  var raw = Array.isArray(criticRating) ? criticRating[0] : criticRating;
+  var n = Number(raw);
   if (!Number.isFinite(n) || n <= 0) return "";
 
-  return `
-    <span class="jms-tomato-container" data-jms-rating="tomato" style="opacity:0; transform:scale(0.9); animation:jmsRatingFadeIn 0.2s ease-out forwards;">
-      ${getTomatoIconHtml({ size: "1.25em" })}
-      <span class="jms-tomato-value">${Math.round(n)}</span>
-    </span>
-  `.trim();
+  return "\n    <span class=\"jms-tomato-container\" data-jms-rating=\"tomato\" style=\"opacity:0; transform:scale(0.9); animation:jmsRatingFadeIn 0.2s ease-out forwards;\">\n      " + (getTomatoIconHtml({ size: "1.25em" ) + ")}\n      <span class=\"jms-tomato-value\">" + (Math.round(n)) + "</span>\n    </span>\n  ".trim();
 }
 
 function buildOfficialHtml(officialRating) {
-  const v = String(
+  var v = String(
     Array.isArray(officialRating) ? officialRating[0] : officialRating || ""
   ).trim();
   if (!v) return "";
-  return `
-    <span class="jms-official-container" data-jms-rating="official" style="opacity:0; transform:scale(0.9); animation:jmsRatingFadeIn 0.2s ease-out forwards;">
-      <i class="fa-solid fa-user-group"></i>
-      <span class="jms-official-value">${v}</span>
-    </span>
-  `.trim();
+  return "\n    <span class=\"jms-official-container\" data-jms-rating=\"official\" style=\"opacity:0; transform:scale(0.9); animation:jmsRatingFadeIn 0.2s ease-out forwards;\">\n      <i class=\"fa-solid fa-user-group\"></i>\n      <span class=\"jms-official-value\">" + (v) + "</span>\n    </span>\n  ".trim();
 }
 
 function applyModernStyles(host) {
   if (!host) return;
-  const ratingsEl = getHostRatingsEl(host) || host;
-  const mode = getHostMode(host);
+  var ratingsEl = getHostRatingsEl(host) || host;
+  var mode = getHostMode(host);
 
   Object.assign(ratingsEl.style, {
     display: "inline-flex",
@@ -1003,7 +981,7 @@ function applyModernStyles(host) {
     marginLeft: "0",
   });
 
-  host.querySelectorAll(".jms-rating-container, .jms-tomato-container, .jms-official-container").forEach((container) => {
+  host.querySelectorAll(".jms-rating-container, .jms-tomato-container, .jms-official-container").forEach(function((container) {
     if (!(container instanceof HTMLElement)) return;
 
     Object.assign(container.style, {
@@ -1020,7 +998,7 @@ function applyModernStyles(host) {
     });
   });
 
-  host.querySelectorAll(".jms-star-wrapper").forEach((wrapper) => {
+  host.querySelectorAll(".jms-star-wrapper").forEach(function((wrapper) {
     if (!(wrapper instanceof HTMLElement)) return;
     Object.assign(wrapper.style, {
       display: "inline-flex",
@@ -1030,7 +1008,7 @@ function applyModernStyles(host) {
     });
   });
 
-  host.querySelectorAll(".jms-star-box").forEach((box) => {
+  host.querySelectorAll(".jms-star-box").forEach(function((box) {
     if (!(box instanceof HTMLElement)) return;
 
     Object.assign(box.style, {
@@ -1039,7 +1017,7 @@ function applyModernStyles(host) {
     });
   });
 
-  host.querySelectorAll(".jms-star-filled").forEach((filled) => {
+  host.querySelectorAll(".jms-star-filled").forEach(function((filled) {
     if (!(filled instanceof HTMLElement)) return;
 
     Object.assign(filled.style, {
@@ -1053,7 +1031,7 @@ function applyModernStyles(host) {
     });
   });
 
-  host.querySelectorAll('[data-jms-star="empty"]').forEach((star) => {
+  host.querySelectorAll('[data-jms-star="empty"]').forEach(function((star) {
     if (!(star instanceof HTMLElement)) return;
 
     Object.assign(star.style, {
@@ -1067,7 +1045,7 @@ function applyModernStyles(host) {
     });
   });
 
-  host.querySelectorAll('[data-jms-star="full"]').forEach((star) => {
+  host.querySelectorAll('[data-jms-star="full"]').forEach(function((star) {
     if (!(star instanceof HTMLElement)) return;
 
     Object.assign(star.style, {
@@ -1081,7 +1059,7 @@ function applyModernStyles(host) {
     });
   });
 
-  host.querySelectorAll(".jms-rating-value, .jms-tomato-value, .jms-official-value").forEach((value) => {
+  host.querySelectorAll(".jms-rating-value, .jms-tomato-value, .jms-official-value").forEach(function((value) {
     if (!(value instanceof HTMLElement)) return;
 
     Object.assign(value.style, {
@@ -1092,17 +1070,17 @@ function applyModernStyles(host) {
     });
   });
 
-  host.querySelectorAll(".jms-rating-value").forEach((value) => {
+  host.querySelectorAll(".jms-rating-value").forEach(function((value) {
     if (!(value instanceof HTMLElement)) return;
     value.style.color = "#ffe082";
   });
 
-  host.querySelectorAll(".jms-tomato-value").forEach((value) => {
+  host.querySelectorAll(".jms-tomato-value").forEach(function((value) {
     if (!(value instanceof HTMLElement)) return;
     value.style.color = "#ffd0c7";
   });
 
-  host.querySelectorAll(".jms-official-value").forEach((value) => {
+  host.querySelectorAll(".jms-official-value").forEach(function((value) {
     if (!(value instanceof HTMLElement)) return;
     value.style.color = "#d8e6ff";
   });
@@ -1112,31 +1090,9 @@ function applyModernStyles(host) {
 function addAnimationStyles() {
   if (document.getElementById("jms-rating-animations")) return;
 
-  const style = document.createElement("style");
+  var style = document.createElement("style");
   style.id = "jms-rating-animations";
-  style.textContent = `
-    @keyframes jmsRatingFadeIn {
-      0% {
-        opacity: 0;
-        transform: scale(0.9);
-      }
-      100% {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    @keyframes jmsRatingFadeOut {
-      0% {
-        opacity: 1;
-        transform: scale(1);
-      }
-      100% {
-        opacity: 0;
-        transform: scale(0.9);
-      }
-    }
-  `;
+  style.textContent = "\n    @keyframes jmsRatingFadeIn {\n      0% {\n        opacity: 0;\n        transform: scale(0.9);\n      }\n      100% {\n        opacity: 1;\n        transform: scale(1);\n      }\n    }\n\n    @keyframes jmsRatingFadeOut {\n      0% {\n        opacity: 1;\n        transform: scale(1);\n      }\n      100% {\n        opacity: 0;\n        transform: scale(0.9);\n      }\n    }\n  ";
   document.head.appendChild(style);
 }
 
@@ -1145,7 +1101,7 @@ function animateHost(host, show) {
 
   if (show) {
     host.style.display = getHostVisibleDisplay(getHostMode(host));
-    requestAnimationFrame(() => {
+    requestAnimationFramefunction(() {
       Object.assign(host.style, {
         opacity: "1",
         transform: "translate3d(0,0,0)"
@@ -1157,7 +1113,7 @@ function animateHost(host, show) {
       transform: "translate3d(-10px,0,0)"
     });
 
-    setTimeout(() => {
+    setTimeoutfunction(() {
       if (host.style.opacity === "0") {
         host.style.display = "none";
       }
@@ -1167,7 +1123,7 @@ function animateHost(host, show) {
 
 function render(host, item, cfg) {
   if (!host) return;
-  const ratingsEl = getHostRatingsEl(host) || host;
+  var ratingsEl = getHostRatingsEl(host) || host;
 
   if (!item) {
     clearBrand(host);
@@ -1176,7 +1132,7 @@ function render(host, item, cfg) {
     return;
   }
 
-  const ratingsState = getOsdHeaderRatingsState(cfg);
+  var ratingsState = getOsdHeaderRatingsState(cfg);
   if (!ratingsState.enabled) {
     clearBrand(host);
     ratingsEl.innerHTML = "";
@@ -1184,12 +1140,12 @@ function render(host, item, cfg) {
     return;
   }
 
-  const communityHtml = ratingsState.showCommunity ? buildStarRatingHtml(item.CommunityRating) : "";
-  const tomatoHtml = ratingsState.showCritic ? buildTomatoHtml(item.CriticRating) : "";
-  const officialHtml = ratingsState.showOfficial ? buildOfficialHtml(item.OfficialRating) : "";
+  var communityHtml = ratingsState.showCommunity ? buildStarRatingHtml(item.CommunityRating) : "";
+  var tomatoHtml = ratingsState.showCritic ? buildTomatoHtml(item.CriticRating) : "";
+  var officialHtml = ratingsState.showOfficial ? buildOfficialHtml(item.OfficialRating) : "";
 
-  const html = [communityHtml, tomatoHtml, officialHtml].filter(Boolean).join("");
-  const hasBrand = renderBrand(host, item);
+  var html = [communityHtml, tomatoHtml, officialHtml].filter(Boolean).join("");
+  var hasBrand = renderBrand(host, item);
 
   if (ratingsEl.innerHTML !== html) {
     ratingsEl.innerHTML = html;
@@ -1205,11 +1161,11 @@ function render(host, item, cfg) {
 }
 
 export function initOsdHeaderRatings() {
-  if (window.__jmsOsdHeaderRatings?.active) {
+  if (window.__jmsOsdHeaderRatings.active) {
     return window.__jmsOsdHeaderRatings.destroy;
   }
 
-  const cfg = (() => {
+  var cfg = function(() {
     try {
       return (typeof getConfig === "function" ? getConfig() : {}) || {};
     } catch {
@@ -1218,85 +1174,85 @@ export function initOsdHeaderRatings() {
   })();
 
   if (!shouldRenderRatings(cfg)) {
-    const staleHost = document.getElementById(HOST_ID);
+    var staleHost = document.getElementById(HOST_ID);
     if (staleHost) {
       clearBrand(staleHost);
       staleHost.remove();
     }
-    const style = document.getElementById("jms-rating-animations");
+    var style = document.getElementById("jms-rating-animations");
     if (style) style.remove();
     window.__jmsOsdHeaderRatings = { active: false, destroy: null };
-    return () => {};
+    return function() {};
   }
 
   addAnimationStyles();
 
-  let destroyed = false;
-  let intervalId = null;
-  let lastKey = "";
-  let bodyObserver = null;
-  let quickSyncScheduled = false;
-  let tickRunning = false;
-  let videoEventCleanup = null;
-  let trackedVideoEl = null;
-  let playbackInactive = false;
-  let suppressedItemId = "";
+  var destroyed = false;
+  var intervalId = null;
+  var lastKey = "";
+  var bodyObserver = null;
+  var quickSyncScheduled = false;
+  var tickRunning = false;
+  var videoEventCleanup = null;
+  var trackedVideoEl = null;
+  var playbackInactive = false;
+  var suppressedItemId = "";
 
-  const clearPlaybackInactive = () => {
+  var clearPlaybackInactive = function() {
     playbackInactive = false;
     suppressedItemId = "";
   };
 
-  const markPlaybackInactive = (candidateId = "") => {
-    const nextId = String(candidateId || getPlaybackItemIdFromDom() || "").trim();
+  var markPlaybackInactive = function(candidateId = "") {
+    var nextId = String(candidateId || getPlaybackItemIdFromDom() || "").trim();
     if (nextId) suppressedItemId = nextId;
     playbackInactive = true;
     lastKey = "";
     removeExistingHost();
   };
 
-  const bindVideoSignals = () => {
-    const nextVideo = getActiveVideoEl();
+  var bindVideoSignals = function() {
+    var nextVideo = getActiveVideoEl();
     if (trackedVideoEl === nextVideo) return;
 
-    try { videoEventCleanup?.(); } catch {}
+    try { videoEventCleanup.(); } catch {}
     videoEventCleanup = null;
     trackedVideoEl = nextVideo || null;
 
     if (!nextVideo) return;
 
-    const onVideoWake = () => {
+    var onVideoWake = function() {
       clearPlaybackInactive();
       queueQuickSync();
     };
 
-    const onVideoTerminal = () => {
+    var onVideoTerminal = function() {
       markPlaybackInactive(
         getPlaybackItemIdFromDom() || parsePlayableIdFromVideo(nextVideo)
       );
     };
 
-    const wakeEvents = ["loadstart", "loadedmetadata", "canplay", "play", "playing"];
-    const terminalEvents = ["ended", "emptied", "abort", "error"];
+    var wakeEvents = ["loadstart", "loadedmetadata", "canplay", "play", "playing"];
+    var terminalEvents = ["ended", "emptied", "abort", "error"];
 
-    wakeEvents.forEach((eventName) => {
+    wakeEvents.forEach(function((eventName) {
       try { nextVideo.addEventListener(eventName, onVideoWake, { passive: true }); } catch {}
     });
-    terminalEvents.forEach((eventName) => {
+    terminalEvents.forEach(function((eventName) {
       try { nextVideo.addEventListener(eventName, onVideoTerminal, { passive: true }); } catch {}
     });
 
-    videoEventCleanup = () => {
-      wakeEvents.forEach((eventName) => {
+    videoEventCleanup = function() {
+      wakeEvents.forEach(function((eventName) {
         try { nextVideo.removeEventListener(eventName, onVideoWake); } catch {}
       });
-      terminalEvents.forEach((eventName) => {
+      terminalEvents.forEach(function((eventName) {
         try { nextVideo.removeEventListener(eventName, onVideoTerminal); } catch {}
       });
     };
   };
 
-  const tick = async () => {
+  var tick = function() {
     if (destroyed || document.hidden) return;
 
     if (!isPlaybackScreenActive()) {
@@ -1306,19 +1262,19 @@ export function initOsdHeaderRatings() {
       return;
     }
 
-    const activeVideo = getActiveVideoEl();
-    if (activeVideo?.ended) {
+    var activeVideo = getActiveVideoEl();
+    if (activeVideo.ended) {
       markPlaybackInactive(parsePlayableIdFromVideo(activeVideo));
       return;
     }
 
-    const host = ensureHost();
+    var host = ensureHost();
     if (!host) return;
 
-    const userId = getCurrentUserId();
+    var userId = getCurrentUserId();
 
     try {
-      const item = await resolveCurrentPlaybackItem(userId, {
+      var item = resolveCurrentPlaybackItem(userId, {
         suppressItemId: playbackInactive ? suppressedItemId : "",
         allowSessionsFallback: !playbackInactive,
       });
@@ -1329,8 +1285,8 @@ export function initOsdHeaderRatings() {
         return;
       }
 
-      const key = buildItemRenderKey(host, item);
-      const hostHasContent = hasHostVisibleContent(host);
+      var key = buildItemRenderKey(host, item);
+      var hostHasContent = hasHostVisibleContent(host);
       if (key && key === lastKey && hostHasContent) return;
       lastKey = key;
 
@@ -1341,32 +1297,32 @@ export function initOsdHeaderRatings() {
     }
   };
 
-  const runTick = async () => {
+  var runTick = function() {
     if (destroyed || document.hidden || tickRunning) return;
     tickRunning = true;
     try {
-      await tick();
+      tick();
     } finally {
       tickRunning = false;
     }
   };
 
-  const stopPolling = () => {
+  var stopPolling = function() {
     if (intervalId) clearInterval(intervalId);
     intervalId = null;
   };
 
-  const startPolling = () => {
+  var startPolling = function() {
     if (destroyed || intervalId || document.hidden) return;
-    intervalId = window.setInterval(() => {
-      runTick().catch(() => {});
+    intervalId = window.setIntervalfunction(() {
+      runTick().catchfunction(() {});
     }, SESSION_POLL_INTERVAL_MS);
   };
 
-  const queueQuickSync = () => {
+  var queueQuickSync = function() {
     if (destroyed || document.hidden || quickSyncScheduled) return;
     quickSyncScheduled = true;
-    requestAnimationFrame(() => {
+    requestAnimationFramefunction(() {
       quickSyncScheduled = false;
       if (destroyed || document.hidden) return;
 
@@ -1377,15 +1333,15 @@ export function initOsdHeaderRatings() {
         return;
       }
 
-      runTick().catch(() => {});
+      runTick().catchfunction(() {});
     });
   };
 
-  const onRouteLikeChange = () => {
+  var onRouteLikeChange = function() {
     queueQuickSync();
   };
 
-  const onVisibilityChange = () => {
+  var onVisibilityChange = function() {
     if (document.hidden) {
       stopPolling();
       return;
@@ -1394,7 +1350,7 @@ export function initOsdHeaderRatings() {
     startPolling();
   };
 
-  runTick().catch(() => {});
+  runTick().catchfunction(() {});
   startPolling();
   bindVideoSignals();
 
@@ -1405,7 +1361,7 @@ export function initOsdHeaderRatings() {
   } catch {}
 
   try {
-    bodyObserver = new MutationObserver(() => {
+    bodyObserver = new MutationObserverfunction(() {
       if (destroyed || document.hidden) return;
       bindVideoSignals();
       if (!isPlaybackScreenActive() && !document.getElementById(HOST_ID)) return;
@@ -1414,7 +1370,7 @@ export function initOsdHeaderRatings() {
     bodyObserver.observe(document.body, { childList: true, subtree: true });
   } catch {}
 
-  const destroy = () => {
+  var destroy = function() {
     destroyed = true;
     stopPolling();
     quickSyncScheduled = false;
@@ -1424,14 +1380,14 @@ export function initOsdHeaderRatings() {
       window.removeEventListener("popstate", onRouteLikeChange);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     } catch {}
-    try { bodyObserver?.disconnect?.(); } catch {}
+    try { bodyObserver.disconnect.(); } catch {}
     bodyObserver = null;
-    try { videoEventCleanup?.(); } catch {}
+    try { videoEventCleanup.(); } catch {}
     videoEventCleanup = null;
     trackedVideoEl = null;
     clearPlaybackInactive();
 
-    const el = document.getElementById(HOST_ID);
+    var el = document.getElementById(HOST_ID);
     if (el) {
       clearBrand(el);
       Object.assign(el.style, {
@@ -1439,14 +1395,14 @@ export function initOsdHeaderRatings() {
         transform: "translateX(-10px)"
       });
 
-      setTimeout(() => {
+      setTimeoutfunction(() {
         if (el && el.parentNode) {
           el.remove();
         }
       }, 250);
     }
 
-    const style = document.getElementById("jms-rating-animations");
+    var style = document.getElementById("jms-rating-animations");
     if (style) style.remove();
 
     window.__jmsOsdHeaderRatings = { active: false, destroy: null };

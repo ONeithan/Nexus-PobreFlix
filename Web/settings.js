@@ -1,32 +1,51 @@
 function getJfRootFromLocation() {
   try {
-    const baseElement = document.querySelector("base[href]");
-    const baseHref = baseElement ? baseElement.getAttribute("href") : null;
+    var baseElement = document.querySelector("base[href]");
+    var baseHref = baseElement ? baseElement.getAttribute("href") : null;
     if (baseHref) {
-      const url = new URL(baseHref, window.location.href);
+      var url = new URL(baseHref, window.location.href);
       return String(url.pathname || "")
         .replace(/\/web\/?$/i, "")
         .replace(/\/+$/, "");
     }
   } catch (e) {}
 
-  const path = String(window.location.pathname || "/");
-  const match = path.match(/^(.*?)(?:\/web(?:\/|$).*)$/i);
+  var path = String(window.location.pathname || "/");
+  var match = path.match(/^(.*?)(?:\/web(?:\/|$).*)$/i);
   return (match && match[1]) ? match[1].replace(/\/+$/, "") : "";
 }
 
-const jfRoot = getJfRootFromLocation();
-const settingsPageModuleUrl = String(window.location.origin) + String(jfRoot) + "/slider/modules/settingsPage.js";
+var jfRoot = getJfRootFromLocation();
+var settingsPageModuleUrl = String(window.location.origin) + String(jfRoot) + "/slider/modules/settingsPage.js";
 
-async function loadSettingsPageModule() {
-  return import(settingsPageModuleUrl);
+function loadSettingsPageModule() {
+  // Fallback para navegadores que não suportam import() dinâmico
+  if (typeof import !== "undefined") {
+    return import(settingsPageModuleUrl);
+  }
+  
+  return new Promise(function(resolve, reject) {
+    var script = document.createElement('script');
+    script.src = settingsPageModuleUrl;
+    script.type = 'text/javascript';
+    script.onload = function() {
+       // Se o settingsPage.js definir algo global, pegamos daqui.
+       // Mas o Nexus usa export, então precisamos de um wrapper ou mudar o settingsPage.js para definir global.
+       resolve(window.NexusPobreFlixSettingsModule); 
+    };
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
 }
 
-export async function mountNexusPobreFlixSettingsPage(host, options) {
-  const params = options || {};
-  const mod = await loadSettingsPageModule();
-  if (!mod || typeof mod.mountNexusPobreFlixSettingsPage !== "function") {
-    throw new Error("Nexus PobreFlix settings page module is not available.");
-  }
-  return mod.mountNexusPobreFlixSettingsPage(host, params);
+// Alterando para exportação compatível com o Jellyfin mas usando sintaxe ES5 interna
+export function mountNexusPobreFlixSettingsPage(host, options) {
+  var params = options || {};
+  
+  return loadSettingsPageModule().then(function(mod) {
+    if (!mod || typeof mod.mountNexusPobreFlixSettingsPage !== "function") {
+      throw new Error("Nexus PobreFlix settings page module is not available.");
+    }
+    return mod.mountNexusPobreFlixSettingsPage(host, params);
+  });
 }

@@ -1,4 +1,4 @@
-export const GENERATED_BUCKET_APPENDS = {
+export var GENERATED_BUCKET_APPENDS = {
   "superhero": [
     "aging superhero",
     "america",
@@ -1489,7 +1489,7 @@ export const GENERATED_BUCKET_APPENDS = {
   ],
 };
 
-export const GENERATED_NEW_BUCKETS = [
+export var GENERATED_NEW_BUCKETS = [
   {
     "key": "tag_people_roles",
     "needles": [

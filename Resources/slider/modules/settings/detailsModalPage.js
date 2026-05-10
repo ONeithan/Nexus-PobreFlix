@@ -1,20 +1,20 @@
 import { bindCheckboxKontrol, createCheckbox, createSection } from "./shared.js";
 
 export function createDetailsModalPanel(config, labels) {
-  const panel = document.createElement("div");
+  var panel = document.createElement("div");
   panel.id = "details-modal-panel";
   panel.className = "settings-panel";
 
-  const section = createSection(labels.detailsModalSettingsTab || "Detaylar Modülü Ayarları");
+  var section = createSection(labels.detailsModalSettingsTab || "Detaylar Modülü Ayarları");
 
-  const description = document.createElement("div");
+  var description = document.createElement("div");
   description.className = "description-text";
   description.textContent =
     labels.detailsModalSettingsDescription ||
     "Detaylar modülü aktifken hangi alanların gösterileceğini buradan kontrol edebilirsin.";
   section.appendChild(description);
 
-  const fieldsWrap = document.createElement("div");
+  var fieldsWrap = document.createElement("div");
   fieldsWrap.className = "sub-options details-modal-sub-options";
 
   fieldsWrap.appendChild(createCheckbox(
@@ -31,7 +31,7 @@ export function createDetailsModalPanel(config, labels) {
 
   section.appendChild(fieldsWrap);
 
-  const localCommentsHint = document.createElement("div");
+  var localCommentsHint = document.createElement("div");
   localCommentsHint.className = "description-text";
   localCommentsHint.textContent =
     labels.detailsModalLocalCommentsHint ||
@@ -40,7 +40,7 @@ export function createDetailsModalPanel(config, labels) {
 
   panel.appendChild(section);
 
-  setTimeout(() => {
+  setTimeoutfunction(() {
     bindCheckboxKontrol("#enableDetailsModalModule", ".details-modal-sub-options", 0.5);
   }, 0);
 

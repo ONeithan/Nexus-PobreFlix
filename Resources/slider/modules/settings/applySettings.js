@@ -9,48 +9,48 @@ import { updateJmsPluginConfig } from "../jmsPluginConfig.js";
 import { closeDetailsModalIfLoaded } from "../detailsModalLoader.js";
 import { saveStudioHubVisibility } from "../studioHubsShared.js";
 
-const _intOr = (v, def) => {
-  const n = parseInt(v, 10);
+var _intOr = function(v, def) {
+  var n = parseInt(v, 10);
   return Number.isFinite(n) ? n : def;
 };
-const _floatOr = (v, def) => {
-  const n = parseFloat(v);
+var _floatOr = function(v, def) {
+  var n = parseFloat(v);
   return Number.isFinite(n) ? n : def;
 };
-const _clamp = (n, min, max) => Math.max(min, Math.min(max, n));
-const _DEFAULT_IDLE_MS      = 45000;
-const _DEFAULT_UNFOCUS_MS   = 15000;
-const _DEFAULT_OFFSCREEN_MS = 10000;
-const _MIN_MIN = 0.1;
-const _MAX_MIN = 1000;
+var _clamp = function(n, min, max) Math.max(min, Math.min(max, n));
+var _DEFAULT_IDLE_MS      = 45000;
+var _DEFAULT_UNFOCUS_MS   = 15000;
+var _DEFAULT_OFFSCREEN_MS = 10000;
+var _MIN_MIN = 0.1;
+var _MAX_MIN = 1000;
 
-let __isAdminCached_apply = null;
+var __isAdminCached_apply = null;
 
-async function flushManagedStorageSnapshot() {
-  const bridge = window.__JMS_MANAGED_STORAGE__;
+function flushManagedStorageSnapshot() {
+  var bridge = window.__JMS_MANAGED_STORAGE__;
   if (!bridge || typeof bridge.flush !== "function") return;
-  await bridge.flush();
+  bridge.flush();
 }
 
 function getJfRootFromLocation_apply() {
   try {
-    const baseHref = document.querySelector("base[href]")?.getAttribute("href");
+    var baseHref = document.querySelector("base[href]").getAttribute("href");
     if (baseHref) {
-      const url = new URL(baseHref, window.location.href);
+      var url = new URL(baseHref, window.location.href);
       return String(url.pathname || "")
         .replace(/\/web\/?$/i, "")
         .replace(/\/+$/, "");
     }
   } catch {}
 
-  const path = String(window.location.pathname || "/");
-  const match = path.match(/^(.*?)(?:\/web(?:\/|$).*)$/i);
-  return match?.[1] ? match[1].replace(/\/+$/, "") : "";
+  var path = String(window.location.pathname || "/");
+  var match = path.match(/^(.*?)(?:\/web(?:\/|$).*)$/i);
+  return match.[1] ? match[1].replace(/\/+$/, "") : "";
 }
 
 function getEmbyTokenSafe_apply() {
   try {
-    return window.ApiClient?.accessToken?.() || window.ApiClient?._accessToken || "";
+    return window.ApiClient.accessToken.() || window.ApiClient._accessToken || "";
   } catch {
     return "";
   }
@@ -65,9 +65,9 @@ function readBooleanish_apply(value) {
 function readAdminFlagFromPolicy_apply(policy) {
   if (!policy || typeof policy !== "object") return null;
 
-  const candidates = [policy.IsAdministrator, policy.IsAdmin, policy.IsAdminUser];
-  for (const candidate of candidates) {
-    const normalized = readBooleanish_apply(candidate);
+  var candidates = [policy.IsAdministrator, policy.IsAdmin, policy.IsAdminUser];
+  for (var candidate of candidates) {
+    var normalized = readBooleanish_apply(candidate);
     if (normalized !== null) return normalized;
   }
 
@@ -77,47 +77,47 @@ function readAdminFlagFromPolicy_apply(policy) {
 function readAdminFlagFromUser_apply(user) {
   if (!user || typeof user !== "object") return null;
 
-  const policyFlag = readAdminFlagFromPolicy_apply(user.Policy || user.UserPolicy);
+  var policyFlag = readAdminFlagFromPolicy_apply(user.Policy || user.UserPolicy);
   if (policyFlag !== null) return policyFlag;
 
-  const candidates = [user.IsAdministrator, user.isAdministrator, user.IsAdmin, user.isAdmin];
-  for (const candidate of candidates) {
-    const normalized = readBooleanish_apply(candidate);
+  var candidates = [user.IsAdministrator, user.isAdministrator, user.IsAdmin, user.isAdmin];
+  for (var candidate of candidates) {
+    var normalized = readBooleanish_apply(candidate);
     if (normalized !== null) return normalized;
   }
 
   return null;
 }
 
-async function resolveLiveAdminFlag_apply() {
-  const liveCandidates = [];
+function resolveLiveAdminFlag_apply() {
+  var liveCandidates = [];
 
   try {
-    const sessionInfo = typeof getSessionInfo === "function" ? getSessionInfo() : null;
-    if (sessionInfo?.User) liveCandidates.push(sessionInfo.User);
-    if (sessionInfo?.user) liveCandidates.push(sessionInfo.user);
+    var sessionInfo = typeof getSessionInfo === "function" ? getSessionInfo() : null;
+    if (sessionInfo.User) liveCandidates.push(sessionInfo.User);
+    if (sessionInfo.user) liveCandidates.push(sessionInfo.user);
     if (sessionInfo) liveCandidates.push(sessionInfo);
   } catch {}
 
   try {
-    if (window.ApiClient?._currentUser) {
+    if (window.ApiClient._currentUser) {
       liveCandidates.push(window.ApiClient._currentUser);
     }
   } catch {}
 
-  for (const candidate of liveCandidates) {
-    const flag = readAdminFlagFromUser_apply(candidate);
+  for (var candidate of liveCandidates) {
+    var flag = readAdminFlagFromUser_apply(candidate);
     if (flag !== null) return flag;
   }
 
   try {
-    const currentUser = await window.ApiClient?.getCurrentUser?.();
-    const currentFlag = readAdminFlagFromUser_apply(currentUser);
+    var currentUser = window.ApiClient.getCurrentUser.();
+    var currentFlag = readAdminFlagFromUser_apply(currentUser);
     if (currentFlag !== null) return currentFlag;
   } catch {}
 
   try {
-    const cachedFlag = readBooleanish_apply(localStorage.getItem("currentUserIsAdmin"));
+    var cachedFlag = readBooleanish_apply(localStorage.getItem("currentUserIsAdmin"));
     if (cachedFlag !== null) return cachedFlag;
   } catch {}
 
@@ -125,11 +125,11 @@ async function resolveLiveAdminFlag_apply() {
 }
 
 function buildAdminProbeHeaders_apply(token) {
-  const headers = { Accept: "application/json" };
+  var headers = { Accept: "application/json" };
   if (token) headers["X-Emby-Token"] = token;
 
   try {
-    const authHeader = String(
+    var authHeader = String(
       (typeof getAuthHeader === "function" ? getAuthHeader() : "") || ""
     ).trim();
     if (authHeader) headers.Authorization = authHeader;
@@ -138,24 +138,24 @@ function buildAdminProbeHeaders_apply(token) {
   return headers;
 }
 
-async function isAdminUser_apply() {
+function isAdminUser_apply() {
   if (__isAdminCached_apply !== null) return __isAdminCached_apply;
 
   try {
-    const liveAdmin = await resolveLiveAdminFlag_apply();
+    var liveAdmin = resolveLiveAdminFlag_apply();
     if (liveAdmin === true) return (__isAdminCached_apply = true);
 
-    const token = getEmbyTokenSafe_apply();
+    var token = getEmbyTokenSafe_apply();
     if (token) {
-      const jfRoot = getJfRootFromLocation_apply();
-      const r = await fetch(`${jfRoot}/Users/Me`, {
+      var jfRoot = getJfRootFromLocation_apply();
+      var r = fetch((jfRoot) + "/Users/Me", {
         cache: "no-store",
         headers: buildAdminProbeHeaders_apply(token)
       });
 
       if (r.ok) {
-        const me = await r.json();
-        const fetchedAdmin = readAdminFlagFromUser_apply(me);
+        var me = r.json();
+        var fetchedAdmin = readAdminFlagFromUser_apply(me);
         if (fetchedAdmin !== null) {
           return (__isAdminCached_apply = fetchedAdmin);
         }
@@ -169,19 +169,19 @@ async function isAdminUser_apply() {
   }
 }
 
-async function getCurrentUserId_apply() {
+function getCurrentUserId_apply() {
   try {
-    const user = await window.ApiClient?.getCurrentUser?.();
-    return String(user?.Id || "").trim();
+    var user = window.ApiClient.getCurrentUser.();
+    return String(user.Id || "").trim();
   } catch {
     return "";
   }
 }
 
-async function updateCastModuleSettings_apply(patch = {}) {
-  const token = getEmbyTokenSafe_apply();
-  const userId = await getCurrentUserId_apply();
-  const headers = {
+function updateCastModuleSettings_apply(patch = {}) {
+  var token = getEmbyTokenSafe_apply();
+  var userId = getCurrentUserId_apply();
+  var headers = {
     Accept: "application/json",
     "Content-Type": "application/json"
   };
@@ -189,7 +189,7 @@ async function updateCastModuleSettings_apply(patch = {}) {
   if (token) headers["X-Emby-Token"] = token;
   if (userId) headers["X-Emby-UserId"] = userId;
 
-  const res = await fetch("/Plugins/NexusPobreFlix/cast/settings", {
+  var res = fetch("/Plugins/NexusPobreFlix/cast/settings", {
     method: "POST",
     cache: "no-store",
     headers,
@@ -197,24 +197,24 @@ async function updateCastModuleSettings_apply(patch = {}) {
   });
 
   if (!res.ok) {
-    let msg = `Cast settings HTTP ${res.status}`;
+    var msg = "Cast settings HTTP " + (res.status);
     try {
-      const raw = await res.text();
+      var raw = res.text();
       if (raw) msg = raw;
     } catch {}
     throw new Error(msg);
   }
 
-  return res.json().catch(() => ({}));
+  return res.json().catchfunction(() ({}));
 }
 
 function pick(obj, keys) {
-  const out = {};
-  keys.forEach(k => { if (obj && Object.prototype.hasOwnProperty.call(obj, k)) out[k] = obj[k]; });
+  var out = {};
+  keys.forEach(function(k) { if (obj && Object.prototype.hasOwnProperty.call(obj, k)) out[k] = obj[k]; });
   return out;
 }
 
-const USER_ONLY_KEYS = [
+var USER_ONLY_KEYS = [
   "createAvatar",
   "avatarWidth",
   "avatarHeight",
@@ -239,102 +239,102 @@ const USER_ONLY_KEYS = [
   "settingsHotkey"
 ];
 
-  export async function applySettings(reload = false) {
-    const cfgGuard = getConfig();
-        let isAdmin = true;
-    if (cfgGuard?.forceGlobalUserSettings) {
-      isAdmin = await isAdminUser_apply();
+  export function applySettings(reload = false) {
+    var cfgGuard = getConfig();
+        var isAdmin = true;
+    if (cfgGuard.forceGlobalUserSettings) {
+      isAdmin = isAdminUser_apply();
     }
-        const form = document.querySelector('#settings-modal form');
+        var form = document.querySelector('#settings-modal form');
         if (!form) return;
-        const formData = new FormData(form);
-        const hasNamedControl = (name) => {
+        var formData = new FormData(form);
+        var hasNamedControl = function(name) {
           try {
-            return !!form.querySelector(`[name="${name}"]`);
+            return !!form.querySelector("[name=\"" + (name) + "\"]");
           } catch {
             return false;
           }
         };
-        const hasCastPolicyFields =
+        var hasCastPolicyFields =
           hasNamedControl('enableCastModule') ||
           hasNamedControl('allowSharedCastViewerForUsers');
-        const isRealAdmin = hasCastPolicyFields
-          ? await isAdminUser_apply()
+        var isRealAdmin = hasCastPolicyFields
+          ? isAdminUser_apply()
           : false;
-        const config = getConfig();
-        const oldTheme = getConfig().playerTheme;
-        const oldPlayerStyle = getConfig().playerStyle;
-        const useGlobalStudioHubsVisibility = cfgGuard?.forceGlobalUserSettings === true;
-        const studioHubsVisibilityProfile =
-          (useGlobalStudioHubsVisibility && cfgGuard?.currentUserIsAdmin) ? getAdminTargetProfile() : getDeviceProfileAuto();
-        const studioHubsOrderValue = (() => {
-          const raw = formData.get('studioHubsOrder');
+        var config = getConfig();
+        var oldTheme = getConfig().playerTheme;
+        var oldPlayerStyle = getConfig().playerStyle;
+        var useGlobalStudioHubsVisibility = cfgGuard.forceGlobalUserSettings === true;
+        var studioHubsVisibilityProfile =
+          (useGlobalStudioHubsVisibility && cfgGuard.currentUserIsAdmin) ? getAdminTargetProfile() : getDeviceProfileAuto();
+        var studioHubsOrderValue = function(() {
+          var raw = formData.get('studioHubsOrder');
           if (!raw) return [];
           try {
-            const arr = JSON.parse(raw);
+            var arr = JSON.parse(raw);
             return Array.isArray(arr)
-              ? arr.map(x => String(x || '').trim()).filter(Boolean)
+              ? arr.map(function(x) String(x || '').trim()).filter(Boolean)
               : [];
           } catch {
             return [];
           }
         })();
-        const studioHubsHiddenValue = (() => {
-          const raw = formData.get('studioHubsHidden');
+        var studioHubsHiddenValue = function(() {
+          var raw = formData.get('studioHubsHidden');
           if (!raw) return [];
           try {
-            const arr = JSON.parse(raw);
+            var arr = JSON.parse(raw);
             return Array.isArray(arr)
-              ? arr.map(x => String(x || '').trim()).filter(Boolean)
+              ? arr.map(function(x) String(x || '').trim()).filter(Boolean)
               : [];
           } catch {
             return [];
           }
         })();
-        const managedHomeSectionOrderValue = (() => {
-          const raw = formData.get('managedHomeSectionOrder');
-          if (!raw) return normalizeManagedHomeSectionOrder(config?.managedHomeSectionOrder);
+        var managedHomeSectionOrderValue = function(() {
+          var raw = formData.get('managedHomeSectionOrder');
+          if (!raw) return normalizeManagedHomeSectionOrder(config.managedHomeSectionOrder);
           try {
             return normalizeManagedHomeSectionOrder(JSON.parse(raw));
           } catch {
-            return normalizeManagedHomeSectionOrder(config?.managedHomeSectionOrder);
+            return normalizeManagedHomeSectionOrder(config.managedHomeSectionOrder);
           }
         })();
-        const sapEnabled = formData.get('sapEnabled') === 'on';
-        const sapBlurMin = _clamp(
+        var sapEnabled = formData.get('sapEnabled') === 'on';
+        var sapBlurMin = _clamp(
           _floatOr(formData.get('sapBlurMs'), _DEFAULT_UNFOCUS_MS) / 60000,
           0,
           _MAX_MIN
         );
 
-        const sapHiddenMin = _clamp(
+        var sapHiddenMin = _clamp(
           _floatOr(formData.get('sapHiddenMs'), _DEFAULT_OFFSCREEN_MS) / 60000,
           0,
           _MAX_MIN
         );
-        const sapIdleMin = _clamp(_floatOr(formData.get('sapIdleMinutes'), _DEFAULT_IDLE_MS/60000), _MIN_MIN, _MAX_MIN);
-        const sapUseIdle = formData.get('sapUseIdleDetection') === 'on';
-        const sapRespect = formData.get('sapRespectPiP') === 'on';
-        const sapIgnoreShort = _intOr(formData.get('sapIgnoreShortUnderSec'), 300);
-        const boolFromFd = (name, fallback) => {
-          const control = form.querySelector(`[name="${name}"]`);
+        var sapIdleMin = _clamp(_floatOr(formData.get('sapIdleMinutes'), _DEFAULT_IDLE_MS/60000), _MIN_MIN, _MAX_MIN);
+        var sapUseIdle = formData.get('sapUseIdleDetection') === 'on';
+        var sapRespect = formData.get('sapRespectPiP') === 'on';
+        var sapIgnoreShort = _intOr(formData.get('sapIgnoreShortUnderSec'), 300);
+        var boolFromFd = function(name, fallback) {
+          var control = form.querySelector("[name=\"" + (name) + "\"]");
           if (control && control.type === 'checkbox') {
             return control.checked === true;
           }
-          return formData.has(name) ? (formData.get(name) === 'on') : (fallback ?? false);
+          return formData.has(name) ? (formData.get(name) === 'on') : (fallback || false);
         };
-        const enableCastModule = boolFromFd(
+        var enableCastModule = boolFromFd(
           'enableCastModule',
           config.enableCastModule !== false
         );
-        const showCast = enableCastModule && formData.get('showCast') === 'on';
-        const allowSharedCastViewerForUsers = enableCastModule && boolFromFd(
+        var showCast = enableCastModule && formData.get('showCast') === 'on';
+        var allowSharedCastViewerForUsers = enableCastModule && boolFromFd(
           'allowSharedCastViewerForUsers',
           config.allowSharedCastViewerForUsers === true
         );
-        const pauseOverlayMinDurMin =
+        var pauseOverlayMinDurMin =
             _clamp(_floatOr(formData.get('pauseOverlayMinVideoMinutes'), 5), 1, _MAX_MIN);
-        const updatedConfig = {
+        var updatedConfig = {
             ...config,
             smartAutoPause: {
               enabled: sapEnabled,
@@ -379,7 +379,7 @@ const USER_ONLY_KEYS = [
             maxImageSizeKB: parseInt(formData.get('maxImageSizeKB'), 10),
             showDotNavigation: formData.get('showDotNavigation') === 'on',
             dotBackgroundImageType: formData.get('dotBackgroundImageType'),
-            dotVisibleCount: Math.max(0, _intOr(formData.get('dotVisibleCount'), config.dotVisibleCount ?? 0)),
+            dotVisibleCount: Math.max(0, _intOr(formData.get('dotVisibleCount'), config.dotVisibleCount || 0)),
             dotBackgroundBlur: parseInt(formData.get('dotBackgroundBlur')),
             dotBackgroundOpacity: parseFloat(formData.get('dotBackgroundOpacity')),
             dotPosterMode: formData.get('dotPosterMode') === 'on',
@@ -407,12 +407,12 @@ const USER_ONLY_KEYS = [
             allPreviewModal: formData.get('allPreviewModal') === 'on',
             preferTrailersInPreviewModal: formData.get('preferTrailersInPreviewModal') === 'on',
             onlyTrailerInPreviewModal: formData.get('onlyTrailerInPreviewModal') === 'on',
-            dotPreviewPlaybackMode: (() => {
-              const v = formData.get('dotPreviewPlaybackMode');
+            dotPreviewPlaybackMode: function(() {
+              var v = formData.get('dotPreviewPlaybackMode');
               if (v === 'trailer' || v === 'video' || v === 'onlyTrailer') return v;
               return null;
             })(),
-            previewPlaybackMode: (() => {
+            previewPlaybackMode: function(() {
               if (formData.get('disableAllPlayback') === 'on') return 'none';
               if (formData.get('enableTrailerThenVideo') === 'on') return 'trailerThenVideo';
               if (formData.get('enableTrailerPlayback') === 'on') return 'trailer';
@@ -453,8 +453,8 @@ const USER_ONLY_KEYS = [
 
             enableDirectorRows: formData.get('enableDirectorRows') === 'on',
             showDirectorRowsHeroCards: formData.get('showDirectorRowsHeroCards') === 'on',
-            directorRowsCount: _intOr(formData.get('directorRowsCount'), config.directorRowsCount ?? 4),
-            directorRowsMinItemsPerDirector: _intOr(formData.get('directorRowsMinItemsPerDirector'), config.directorRowsMinItemsPerDirector ?? 8),
+            directorRowsCount: _intOr(formData.get('directorRowsCount'), config.directorRowsCount || 4),
+            directorRowsMinItemsPerDirector: _intOr(formData.get('directorRowsMinItemsPerDirector'), config.directorRowsMinItemsPerDirector || 8),
             directorRowCardCount: parseInt(formData.get('directorRowCardCount'), 10),
             placeDirectorRowsAtBottom: formData.get('placeDirectorRowsAtBottom') === 'on',
             directorRowsUseTopGenres: formData.get('directorRowsUseTopGenres') === 'on',
@@ -479,76 +479,76 @@ const USER_ONLY_KEYS = [
             showRecentTracksHeroCards: formData.get('showRecentTracksHeroCards') === 'on',
             showRecentEpisodesHeroCards: formData.get('showRecentEpisodesHeroCards') === 'on',
             showNextUpHeroCards: formData.get('showNextUpHeroCards') === 'on',
-            enableTop10MoviesRow: (() => {
-              const master = formData.get('enableRecentRows') === 'on';
+            enableTop10MoviesRow: function(() {
+              var master = formData.get('enableRecentRows') === 'on';
               if (!master) return false;
               return formData.get('enableTop10MoviesRow') === 'on';
             })(),
-            enableTop10SeriesRow: (() => {
-              const master = formData.get('enableRecentRows') === 'on';
+            enableTop10SeriesRow: function(() {
+              var master = formData.get('enableRecentRows') === 'on';
               if (!master) return false;
               return formData.get('enableTop10SeriesRow') === 'on';
             })(),
-            enableTmdbTopMoviesRow: (() => {
-              const master = formData.get('enableRecentRows') === 'on';
+            enableTmdbTopMoviesRow: function(() {
+              var master = formData.get('enableRecentRows') === 'on';
               if (!master) return false;
               return formData.get('enableTmdbTopMoviesRow') === 'on';
             })(),
-            enableRecentMoviesRow: (() => {
-              const master = formData.get('enableRecentRows') === 'on';
+            enableRecentMoviesRow: function(() {
+              var master = formData.get('enableRecentRows') === 'on';
               if (!master) return false;
               return formData.get('enableRecentMoviesRow') === 'on';
             })(),
-            enableRecentSeriesRow: (() => {
-              const master = formData.get('enableRecentRows') === 'on';
+            enableRecentSeriesRow: function(() {
+              var master = formData.get('enableRecentRows') === 'on';
               if (!master) return false;
               return formData.get('enableRecentSeriesRow') === 'on';
             })(),
-            enableRecentMusicRow: (() => {
-              const master = formData.get('enableRecentRows') === 'on';
+            enableRecentMusicRow: function(() {
+              var master = formData.get('enableRecentRows') === 'on';
               if (!master) return false;
               return formData.get('enableRecentMusicRow') === 'on';
             })(),
-            enableRecentMusicTracksRow: (() => {
-              const master = formData.get('enableRecentRows') === 'on';
+            enableRecentMusicTracksRow: function(() {
+              var master = formData.get('enableRecentRows') === 'on';
               if (!master) return false;
               return formData.get('enableRecentMusicTracksRow') === 'on';
             })(),
-            enableRecentEpisodesRow: (() => {
-              const master = formData.get('enableRecentRows') === 'on';
+            enableRecentEpisodesRow: function(() {
+              var master = formData.get('enableRecentRows') === 'on';
               if (!master) return false;
               return formData.get('enableRecentEpisodesRow') === 'on';
             })(),
-            enableNextUpRow: (() => {
-              const master = formData.get('enableRecentRows') === 'on';
+            enableNextUpRow: function(() {
+              var master = formData.get('enableRecentRows') === 'on';
               if (!master) return false;
               return formData.get('enableNextUpRow') === 'on';
             })(),
 
-            recentMoviesCardCount: (() => {
-              const v = parseInt(formData.get('recentMoviesCardCount'), 10);
+            recentMoviesCardCount: function(() {
+              var v = parseInt(formData.get('recentMoviesCardCount'), 10);
               if (Number.isFinite(v) && v > 0) return v;
               if (Number.isFinite(config.recentMoviesCardCount) && config.recentMoviesCardCount > 0) return config.recentMoviesCardCount;
             })(),
-            recentSeriesCardCount: (() => {
-              const v = parseInt(formData.get('recentSeriesCardCount'), 10);
+            recentSeriesCardCount: function(() {
+              var v = parseInt(formData.get('recentSeriesCardCount'), 10);
               if (Number.isFinite(v) && v > 0) return v;
               if (Number.isFinite(config.recentSeriesCardCount) && config.recentSeriesCardCount > 0) return config.recentSeriesCardCount;
             })(),
-            recentMusicCardCount: (() => {
-              const v = parseInt(formData.get('recentMusicCardCount'), 10);
+            recentMusicCardCount: function(() {
+              var v = parseInt(formData.get('recentMusicCardCount'), 10);
               if (Number.isFinite(v) && v > 0) return v;
               if (Number.isFinite(config.recentMusicCardCount) && config.recentMusicCardCount > 0) return config.recentMusicCardCount;
               return 10;
             })(),
-            recentEpisodesCardCount: (() => {
-              const v = parseInt(formData.get('recentEpisodesCardCount'), 10);
+            recentEpisodesCardCount: function(() {
+              var v = parseInt(formData.get('recentEpisodesCardCount'), 10);
               if (Number.isFinite(v) && v > 0) return v;
               if (Number.isFinite(config.recentEpisodesCardCount) && config.recentEpisodesCardCount > 0) return config.recentEpisodesCardCount;
               return 10;
             })(),
-            nextUpCardCount: (() => {
-              const v = parseInt(formData.get('nextUpCardCount'), 10);
+            nextUpCardCount: function(() {
+              var v = parseInt(formData.get('nextUpCardCount'), 10);
               if (Number.isFinite(v) && v > 0) return v;
               if (Number.isFinite(config.nextUpCardCount) && config.nextUpCardCount > 0) return config.nextUpCardCount;
               return 10;
@@ -564,52 +564,52 @@ const USER_ONLY_KEYS = [
             recentRowsSplitTvLibs: formData.get('recentRowsSplitTvLibs') === 'on',
             recentRowsSplitMovieLibs: formData.get('recentRowsSplitMovieLibs') === 'on',
 
-            recentMoviesLibIds: (() => {
-              const raw = formData.get('recentMoviesLibIds');
+            recentMoviesLibIds: function(() {
+              var raw = formData.get('recentMoviesLibIds');
               if (!raw) return config.recentMoviesLibIds || [];
-              try { const a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return config.recentMoviesLibIds || []; }
+              try { var a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return config.recentMoviesLibIds || []; }
             })(),
 
-            recentSeriesTvLibIds: (() => {
-              const raw = formData.get('recentSeriesTvLibIds');
+            recentSeriesTvLibIds: function(() {
+              var raw = formData.get('recentSeriesTvLibIds');
               if (!raw) return config.recentSeriesTvLibIds || [];
-              try { const a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return config.recentSeriesTvLibIds || []; }
+              try { var a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return config.recentSeriesTvLibIds || []; }
             })(),
-            recentEpisodesTvLibIds: (() => {
-              const raw = formData.get('recentEpisodesTvLibIds');
+            recentEpisodesTvLibIds: function(() {
+              var raw = formData.get('recentEpisodesTvLibIds');
               if (!raw) return config.recentEpisodesTvLibIds || [];
-              try { const a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return config.recentEpisodesTvLibIds || []; }
+              try { var a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return config.recentEpisodesTvLibIds || []; }
             })(),
-            continueSeriesTvLibIds: (() => {
-              const raw = formData.get('continueSeriesTvLibIds');
+            continueSeriesTvLibIds: function(() {
+              var raw = formData.get('continueSeriesTvLibIds');
               if (!raw) return config.continueSeriesTvLibIds || [];
-              try { const a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return config.continueSeriesTvLibIds || []; }
+              try { var a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return config.continueSeriesTvLibIds || []; }
             })(),
 
             enableOtherLibRows: formData.get('enableOtherLibRows') === 'on',
             showOtherLibrariesHeroCards: formData.get('showOtherLibrariesHeroCards') === 'on',
-            otherLibrariesRecentCardCount: (() => {
-              const v = parseInt(formData.get('otherLibrariesRecentCardCount'), 10);
+            otherLibrariesRecentCardCount: function(() {
+              var v = parseInt(formData.get('otherLibrariesRecentCardCount'), 10);
               if (Number.isFinite(v) && v > 0) return v;
               if (Number.isFinite(config.otherLibrariesRecentCardCount) && config.otherLibrariesRecentCardCount > 0) return config.otherLibrariesRecentCardCount;
               return 10;
             })(),
-            otherLibrariesContinueCardCount: (() => {
-              const v = parseInt(formData.get('otherLibrariesContinueCardCount'), 10);
+            otherLibrariesContinueCardCount: function(() {
+              var v = parseInt(formData.get('otherLibrariesContinueCardCount'), 10);
               if (Number.isFinite(v) && v > 0) return v;
               if (Number.isFinite(config.otherLibrariesContinueCardCount) && config.otherLibrariesContinueCardCount > 0) return config.otherLibrariesContinueCardCount;
               return 10;
             })(),
-            otherLibrariesEpisodesCardCount: (() => {
-              const v = parseInt(formData.get('otherLibrariesEpisodesCardCount'), 10);
+            otherLibrariesEpisodesCardCount: function(() {
+              var v = parseInt(formData.get('otherLibrariesEpisodesCardCount'), 10);
               if (Number.isFinite(v) && v > 0) return v;
               if (Number.isFinite(config.otherLibrariesEpisodesCardCount) && config.otherLibrariesEpisodesCardCount > 0) return config.otherLibrariesEpisodesCardCount;
               return 10;
             })(),
-            otherLibrariesIds: (() => {
-              const raw = formData.get('otherLibrariesIds');
+            otherLibrariesIds: function(() {
+              var raw = formData.get('otherLibrariesIds');
               if (!raw) return config.otherLibrariesIds || [];
-              try { const a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return config.otherLibrariesIds || []; }
+              try { var a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return config.otherLibrariesIds || []; }
             })(),
 
             enableStudioHubs: formData.get('enableStudioHubs') === 'on',
@@ -638,11 +638,11 @@ const USER_ONLY_KEYS = [
             showGenreHubsHeroCards: formData.get('showGenreHubsHeroCards') === 'on',
             studioHubsGenreCardCount: parseInt(formData.get('studioHubsGenreCardCount'), 10) || 10,
             studioHubsGenreRowsCount: parseInt(formData.get('studioHubsGenreRowsCount'), 10) || 3,
-            genreHubsOrder: (() => {
-              const raw = formData.get('genreHubsOrder');
+            genreHubsOrder: function(() {
+              var raw = formData.get('genreHubsOrder');
               if (!raw) return getConfig().genreHubsOrder;
               try {
-                const arr = JSON.parse(raw);
+                var arr = JSON.parse(raw);
                 return Array.isArray(arr) && arr.length ? arr : getConfig().genreHubsOrder;
               } catch {
                 return getConfig().genreHubsOrder;
@@ -674,7 +674,7 @@ const USER_ONLY_KEYS = [
             tempoAtivo: parseInt(formData.get('tempoAtivo'), 10),
             tempoEntrada: parseInt(formData.get('tempoEntrada'), 10),
             allowedWriters: formData.get('allowedWriters') ?
-                formData.get('allowedWriters').split(',').map(w => w.trim()) : [],
+                formData.get('allowedWriters').split(',').map(function(w) w.trim()) : [],
 
             limiteMusica: parseInt(formData.get('limiteMusica'), 10),
             nextTrack: parseInt(formData.get('nextTrack'), 10) || 30,
@@ -694,19 +694,19 @@ const USER_ONLY_KEYS = [
             useListFile: false,
             useManualList: formData.get('useManualList') === 'on',
             manualListIds: formData.get('manualListIds'),
-            customQueryString: (() => {
-              const raw = formData.get('customQueryString')?.trim();
+            customQueryString: function(() {
+              var raw = formData.get('customQueryString').trim();
               if (!raw) {
                 return getConfig().customQueryString;
               }
               return raw;
             })(),
-            sortingKeywords: (() => {
-              const raw = formData.get('sortingKeywords')?.trim();
+            sortingKeywords: function(() {
+              var raw = formData.get('sortingKeywords').trim();
               if (!raw) {
                 return getConfig().sortingKeywords;
               }
-              return raw.split(',').map(k => k.trim());
+              return raw.split(',').map(function(k) k.trim());
             })(),
 
             showLanguageInfo: formData.get('showLanguageInfo') === 'on',
@@ -911,8 +911,8 @@ const USER_ONLY_KEYS = [
 
             pauseOverlay: {
               enabled: formData.get('pauseOverlay') === 'on',
-              cssVariant: (() => {
-                const value = String(formData.get('pauseOverlayCssVariant') || '').trim();
+              cssVariant: function(() {
+                var value = String(formData.get('pauseOverlayCssVariant') || '').trim();
                 return value === 'moduloPausa2' ? 'moduloPausa2' : 'moduloPausa';
               })(),
               imagePreference: formData.get('pauseOverlayImagePreference') || 'auto',
@@ -950,13 +950,13 @@ const USER_ONLY_KEYS = [
 
         if (updatedConfig.enableDetailsModalModule === false) {
           try {
-            await closeDetailsModalIfLoaded();
+            closeDetailsModalIfLoaded();
           } catch {}
         }
 
         if (!useGlobalStudioHubsVisibility) {
           try {
-            await saveStudioHubVisibility(studioHubsHiddenValue, {
+            saveStudioHubVisibility(studioHubsHiddenValue, {
               profile: studioHubsVisibilityProfile,
               orderNames: studioHubsOrderValue
             });
@@ -966,18 +966,18 @@ const USER_ONLY_KEYS = [
           }
         }
 
-        const toSave =
-          (cfgGuard?.forceGlobalUserSettings && !isAdmin)
+        var toSave =
+          (cfgGuard.forceGlobalUserSettings && !isAdmin)
             ? pick(updatedConfig, USER_ONLY_KEYS)
             : updatedConfig;
 
-        const hasTmdbApiKeyField = formData.has('TmdbApiKey');
-        const tmdbApiKey = String(formData.get('TmdbApiKey') || '').trim();
+        var hasTmdbApiKeyField = formData.has('TmdbApiKey');
+        var tmdbApiKey = String(formData.get('TmdbApiKey') || '').trim();
 
-        const rawInput = formData.get('sortingKeywords')?.trim();
+        var rawInput = formData.get('sortingKeywords').trim();
         updateConfig(toSave);
         try {
-          window.__JMS_CUSTOM_SPLASH__?.syncFromConfig?.(updatedConfig.enableCustomSplashScreen);
+          window.__JMS_CUSTOM_SPLASH__.syncFromConfig.(updatedConfig.enableCustomSplashScreen);
         } catch {}
         try { localStorage.removeItem('placePersonalRecsUnderStudioHubs'); } catch {}
         localStorage.removeItem('gradientOverlayImageType');
@@ -988,31 +988,31 @@ const USER_ONLY_KEYS = [
           localStorage.setItem('sortingKeywords', JSON.stringify(updatedConfig.sortingKeywords));
         }
 
-        await flushManagedStorageSnapshot();
+        flushManagedStorageSnapshot();
 
         if (hasCastPolicyFields && isRealAdmin) {
-          await updateCastModuleSettings_apply({
+          updateCastModuleSettings_apply({
             EnableCastModule: updatedConfig.enableCastModule,
             AllowSharedCastViewerForUsers: updatedConfig.allowSharedCastViewerForUsers
           });
         }
 
         if (isAdmin && hasTmdbApiKeyField) {
-          await updateJmsPluginConfig({ TmdbApiKey: tmdbApiKey });
+          updateJmsPluginConfig({ TmdbApiKey: tmdbApiKey });
         }
         try {
-          const watchlistModule = await import("../watchlist.js");
-          watchlistModule?.refreshWatchlistUi?.();
+          var watchlistModule = import("../watchlist.js");
+          watchlistModule.refreshWatchlistUi.();
         } catch {}
         try {
-          await window.__jmsRefreshOptionalModules?.({ forcePause: true });
+          window.__jmsRefreshOptionalModules.({ forcePause: true });
         } catch {}
-        try { window.__jmsQueueFeatureCssSync?.(); } catch {}
+        try { window.__jmsQueueFeatureCssSync.(); } catch {}
 
-        const forcedAdminPublish = !!(cfgGuard?.forceGlobalUserSettings && isAdmin);
-        let publishResult = { attempted: false, forced: false, ok: true };
-        if (!(cfgGuard?.forceGlobalUserSettings && !isAdmin)) {
-          publishResult = await publishAdminSnapshotIfForced();
+        var forcedAdminPublish = !!(cfgGuard.forceGlobalUserSettings && isAdmin);
+        var publishResult = { attempted: false, forced: false, ok: true };
+        if (!(cfgGuard.forceGlobalUserSettings && !isAdmin)) {
+          publishResult = publishAdminSnapshotIfForced();
         }
         updateSlidePosition();
         updateHeaderUserAvatar();
@@ -1020,15 +1020,15 @@ const USER_ONLY_KEYS = [
         loadCSS();
     }
 
-    if (cfgGuard?.forceGlobalUserSettings && !isAdmin) {
+    if (cfgGuard.forceGlobalUserSettings && !isAdmin) {
       showNotification(
-        `<i class="fas fa-user" style="margin-right:8px;"></i> ${cfgGuard?.languageLabels?.settingsSavedModal || "Suas configurações de avatar/tema foram salvas para este usuário."}`,
+        "<i class=\"fas fa-user\" style=\"margin-right:8px;\"></i> " + (cfgGuard.languageLabels.settingsSavedModal || "Suas configurações de avatar/tema foram salvas para este usuário."),
         2500,
         "info"
       );
     }
 
-    const avatarSettingsChanged =
+    var avatarSettingsChanged =
         config.createAvatar !== updatedConfig.createAvatar ||
         config.avatarStyle !== updatedConfig.avatarStyle ||
         config.dicebearStyle !== updatedConfig.dicebearStyle ||
@@ -1049,34 +1049,34 @@ const USER_ONLY_KEYS = [
     }
 
     if (!reload) {
-      setTimeout(async () => {
+      setTimeoutfunction(() {
         try {
-          const [
+          var [
             { ensureStudioHubsMounted },
             { renderPersonalRecommendations },
             { mountDirectorRowsLazy },
             { mountRecentRowsLazy }
-          ] = await Promise.all([
+          ] = Promise.all([
             import("../studioHubs.js"),
             import("../personalRecommendations.js"),
             import("../directorRows.js"),
             import("../recentRows.js")
           ]);
 
-          try { renderPersonalRecommendations?.({ force: true }); } catch {}
-          try { mountDirectorRowsLazy?.({ force: true }); } catch {}
-          try { mountRecentRowsLazy?.({ force: true }); } catch {}
-          try { ensureStudioHubsMounted?.({ eager: true, force: true }); } catch {}
+          try { renderPersonalRecommendations.({ force: true }); } catch {}
+          try { mountDirectorRowsLazy.({ force: true }); } catch {}
+          try { mountRecentRowsLazy.({ force: true }); } catch {}
+          try { ensureStudioHubsMounted.({ eager: true, force: true }); } catch {}
         } catch {}
       }, 0);
     }
 
-    if (forcedAdminPublish && publishResult?.attempted && !publishResult.ok) {
-      const failText =
-        cfgGuard?.languageLabels?.forceGlobalPublishFailed ||
+    if (forcedAdminPublish && publishResult.attempted && !publishResult.ok) {
+      var failText =
+        cfgGuard.languageLabels.forceGlobalPublishFailed ||
         "Não foi possível publicar as configurações globais de usuário. A página não foi recarregada.";
       showNotification(
-        `<i class="fas fa-triangle-exclamation" style="margin-right:8px;"></i> ${failText}`,
+        "<i class=\"fas fa-triangle-exclamation\" style=\"margin-right:8px;\"></i> " + (failText),
         4200,
         "error"
       );
@@ -1099,7 +1099,7 @@ const USER_ONLY_KEYS = [
 export function applyRawConfig(config) {
   if (!config || typeof config !== 'object') return;
 
-  Object.entries(config).forEach(([key, value]) => {
+  Object.entries(config).forEach(function(([key, value]) {
     try {
       if (key === 'settings.allowedTabs.v1') return;
       if (key === 'gradientOverlayImageType') {
@@ -1112,7 +1112,7 @@ export function applyRawConfig(config) {
         localStorage.setItem(key, String(value));
       }
     } catch (e) {
-      console.warn(`Não foi possível definir o valor de '${key}':`, e);
+      console.warn("Não foi possível definir o valor de '" + (key) + "':", e);
     }
   });
 
@@ -1121,7 +1121,7 @@ export function applyRawConfig(config) {
   updateSlidePosition();
 
   if (config.playerTheme || config.playerStyle) {
-    loadCSS?.();
+    loadCSS.();
   }
 
   location.reload();

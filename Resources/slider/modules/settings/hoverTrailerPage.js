@@ -2,22 +2,22 @@ import { getConfig } from "../config.js";
 import { createCheckbox, createSection, bindCheckboxKontrol, createRangeInput } from "./shared.js";
 import { applySettings } from "./applySettings.js";
 
-const cfg = getConfig();
+var cfg = getConfig();
 
 export function createHoverTrailerPanel(config, labels) {
-  const panel = document.createElement('div');
+  var panel = document.createElement('div');
   panel.id = 'hover-panel';
   panel.className = 'settings-panel';
 
-  const section = createSection(labels.hoverTrailer || 'HoverTrailer');
-  const allPreviewModalCheckbox = createCheckbox(
+  var section = createSection(labels.hoverTrailer || 'HoverTrailer');
+  var allPreviewModalCheckbox = createCheckbox(
     'allPreviewModal',
     labels.allPreviewModal || 'Aplicar modal em todo o Jellyfin',
     config.allPreviewModal
   );
   section.appendChild(allPreviewModalCheckbox);
 
-  const hoverVolumeRange = createRangeInput(
+  var hoverVolumeRange = createRangeInput(
     'hoverVolume',
     labels.hoverVolumeLabel || 'Volume do Hover Trailer',
     config.hoverVolume,
@@ -26,29 +26,29 @@ export function createHoverTrailerPanel(config, labels) {
   hoverVolumeRange.style.marginTop = '12px';
   section.appendChild(hoverVolumeRange);
 
-  const modeWrap = document.createElement('div');
+  var modeWrap = document.createElement('div');
   modeWrap.className = 'field-group';
   modeWrap.style.margin = '8px 0 4px';
 
-  const title = document.createElement('div');
+  var title = document.createElement('div');
   title.className = 'field-label';
   title.textContent = (labels.globalPreviewMode || 'Tipo de hover global');
   modeWrap.appendChild(title);
 
-  const modes = [
+  var modes = [
     { val: 'modal',      text: (labels.globalPreviewModeModal || 'HoverTrailer (Padrão)')},
     { val: 'studioMini', text: (labels.globalPreviewModeStudio || 'StudioHubs Mini') }
   ];
-  const current = config.globalPreviewMode || 'modal';
+  var current = config.globalPreviewMode || 'modal';
 
-  modes.forEach(m => {
-    const label = document.createElement('label');
+  modes.forEach(function(m) {
+    var label = document.createElement('label');
     label.style.display = 'inline-flex';
     label.style.alignItems = 'center';
     label.style.gap = '6px';
     label.style.marginRight = '16px';
 
-    const input = document.createElement('input');
+    var input = document.createElement('input');
     input.type = 'radio';
     input.name = 'globalPreviewMode';
     input.value = m.val;
@@ -61,7 +61,7 @@ export function createHoverTrailerPanel(config, labels) {
 
   section.appendChild(modeWrap);
 
-  const studioMiniTrailerPopover = createCheckbox(
+  var studioMiniTrailerPopover = createCheckbox(
     'studioMiniTrailerPopover',
     (labels.studioMiniTrailerPopover || 'Ativar popover de trailer no StudioHubs'),
     !!config.studioMiniTrailerPopover
@@ -69,14 +69,14 @@ export function createHoverTrailerPanel(config, labels) {
   studioMiniTrailerPopover.style.margin = '8px 0';
   section.appendChild(studioMiniTrailerPopover);
 
-  const preferTrailerCheckbox = createCheckbox(
+  var preferTrailerCheckbox = createCheckbox(
     'preferTrailersInPreviewModal',
     labels.preferTrailersInPreviewModal || 'Preferir Trailer > Vídeo no modal',
     config.preferTrailersInPreviewModal
   );
   section.appendChild(preferTrailerCheckbox);
 
-  const onlyTrailerCheckbox = createCheckbox(
+  var onlyTrailerCheckbox = createCheckbox(
     'onlyTrailerInPreviewModal',
     labels.onlyTrailerInPreviewModal || 'Exibir apenas trailers no modal',
     config.onlyTrailerInPreviewModal
@@ -85,35 +85,35 @@ export function createHoverTrailerPanel(config, labels) {
 
   panel.appendChild(section);
 
-  setTimeout(() => {
-    const modalRadio  = document.querySelector('input[name="globalPreviewMode"][value="modal"]');
-    const studioRadio = document.querySelector('input[name="globalPreviewMode"][value="studioMini"]');
+  setTimeoutfunction(() {
+    var modalRadio  = document.querySelector('input[name="globalPreviewMode"][value="modal"]');
+    var studioRadio = document.querySelector('input[name="globalPreviewMode"][value="studioMini"]');
 
-    const preferCb  = document.querySelector('input[name="preferTrailersInPreviewModal"]');
-    const preferLbl = document.querySelector('label[for="preferTrailersInPreviewModal"]');
+    var preferCb  = document.querySelector('input[name="preferTrailersInPreviewModal"]');
+    var preferLbl = document.querySelector('label[for="preferTrailersInPreviewModal"]');
 
-    const onlyCb    = document.querySelector('input[name="onlyTrailerInPreviewModal"]');
-    const onlyLbl   = document.querySelector('label[for="onlyTrailerInPreviewModal"]');
+    var onlyCb    = document.querySelector('input[name="onlyTrailerInPreviewModal"]');
+    var onlyLbl   = document.querySelector('label[for="onlyTrailerInPreviewModal"]');
 
-    const smTrailerCb  = document.querySelector('input[name="studioMiniTrailerPopover"]');
-    const smTrailerLbl = document.querySelector('label[for="studioMiniTrailerPopover"]');
-    const smTrailerContainer = smTrailerCb ? smTrailerCb.closest('.checkboxContainer') || smTrailerCb.parentElement : null;
+    var smTrailerCb  = document.querySelector('input[name="studioMiniTrailerPopover"]');
+    var smTrailerLbl = document.querySelector('label[for="studioMiniTrailerPopover"]');
+    var smTrailerContainer = smTrailerCb ? smTrailerCb.closest('.checkboxContainer') || smTrailerCb.parentElement : null;
 
-    const setDisabled = (el, lbl, disabled) => {
+    var setDisabled = function(el, lbl, disabled) {
       if (!el || !lbl) return;
       el.disabled = disabled;
       el.style.opacity = disabled ? '0.5' : '1';
       lbl.style.opacity = disabled ? '0.5' : '1';
     };
 
-    const setVisible = (element, visible) => {
+    var setVisible = function(element, visible) {
       if (!element) return;
       element.style.display = visible ? '' : 'none';
     };
 
-    const updateByMode = () => {
-      const isModal = !!modalRadio?.checked;
-      const isStudio = !!studioRadio?.checked;
+    var updateByMode = function() {
+      var isModal = !!modalRadio.checked;
+      var isStudio = !!studioRadio.checked;
 
       if (!preferCb || !onlyCb) return;
 
@@ -137,21 +137,21 @@ export function createHoverTrailerPanel(config, labels) {
       }
     };
 
-    const publishMode = () => {
-      const mode = modalRadio?.checked ? 'modal' : 'studioMini';
+    var publishMode = function() {
+      var mode = modalRadio.checked ? 'modal' : 'studioMini';
       window.dispatchEvent(new CustomEvent('jms:globalPreviewModeChanged', { detail: { mode } }));
     };
 
-    const onPreferChange = () => {
-      if (!modalRadio?.checked || !preferCb || !onlyCb) return;
+    var onPreferChange = function() {
+      if (!modalRadio.checked || !preferCb || !onlyCb) return;
 
       if (preferCb.checked) {
         if (onlyCb.checked) onlyCb.checked = false;
       }
     };
 
-    const onOnlyChange = () => {
-      if (!modalRadio?.checked || !preferCb || !onlyCb) return;
+    var onOnlyChange = function() {
+      if (!modalRadio.checked || !preferCb || !onlyCb) return;
 
       if (onlyCb.checked) {
         if (preferCb.checked) preferCb.checked = false;
@@ -161,10 +161,10 @@ export function createHoverTrailerPanel(config, labels) {
     updateByMode();
     publishMode();
 
-    modalRadio?.addEventListener('change', () => { updateByMode(); publishMode(); });
-    studioRadio?.addEventListener('change', () => { updateByMode(); publishMode(); });
-    preferCb?.addEventListener('change', onPreferChange);
-    onlyCb?.addEventListener('change', onOnlyChange);
+    modalRadio.addEventListenerfunction('change', () { updateByMode(); publishMode(); });
+    studioRadio.addEventListenerfunction('change', () { updateByMode(); publishMode(); });
+    preferCb.addEventListener('change', onPreferChange);
+    onlyCb.addEventListener('change', onOnlyChange);
   }, 100);
 
   return panel;
