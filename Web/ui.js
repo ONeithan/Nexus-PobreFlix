@@ -1,18 +1,19 @@
 (function () {
   function getJfRootFromLocation() {
     try {
-      const baseHref = document.querySelector("base[href]")?.getAttribute("href");
+      const baseElement = document.querySelector("base[href]");
+      const baseHref = baseElement ? baseElement.getAttribute("href") : null;
       if (baseHref) {
         const url = new URL(baseHref, window.location.href);
         return String(url.pathname || "")
           .replace(/\/web\/?$/i, "")
           .replace(/\/+$/, "");
       }
-    } catch {}
+    } catch (e) {}
 
     const path = String(window.location.pathname || "/");
     const match = path.match(/^(.*?)(?:\/web(?:\/|$).*)$/i);
-    return match?.[1] ? match[1].replace(/\/+$/, "") : "";
+    return (match && match[1]) ? match[1].replace(/\/+$/, "") : "";
   }
 
   const jfRoot = getJfRootFromLocation();
@@ -22,8 +23,11 @@
   const TAB_STORAGE_KEY = "NexusPobreFlix-config-active-tab";
   const NEXUS_SUBTAB_STORAGE_KEY = "NexusPobreFlix-requested-subtab";
 
-  const api = (p) => `${jfRoot}/Plugins/NexusPobreFlix/${p}`;
-  const esc = (s) => (s ?? "").toString().replace(/[&<>]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[m]));
+  const api = (p) => String(jfRoot || "") + "/Plugins/NexusPobreFlix/" + String(p);
+  const esc = (s) => {
+    const val = (s === null || s === undefined) ? "" : s;
+    return val.toString().replace(/[&<>]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[m]));
+  };
 
   const fallbackLabels = {
     webConfig: {
@@ -245,7 +249,9 @@
 
     if (!force && host.__nexusReady && host.querySelector("#settings-modal")) {
       const existingApi = host.__nexusApi || host.__nexusSettingsApi || null;
-      existingApi?.open?.(requestedInnerTab);
+      if (existingApi && typeof existingApi.open === "function") {
+        existingApi.open(requestedInnerTab);
+      }
       return host.querySelector("#settings-modal");
     }
 
@@ -264,10 +270,10 @@
       ensureStylesheet("NexusPobreFlix-settings", sliderSettingsCssUrl);
 
       const settingsModule = await import(webSettingsModuleUrl);
-      const settingsApi = typeof settingsModule?.mountNexusPobreFlixSettingsPage === "function"
+      const settingsApi = (settingsModule && typeof settingsModule.mountNexusPobreFlixSettingsPage === "function")
         ? await settingsModule.mountNexusPobreFlixSettingsPage(host, {
             defaultTab: requestedInnerTab,
-            force
+            force: force
           })
         : null;
       const modal = settingsApi?.element || host.querySelector("#settings-modal");
@@ -283,8 +289,8 @@
     })()
       .catch((error) => {
         const fallback = t("webConfig.messages.NexusPobreFlixSettingsLoadFailed", "Nexus PobreFlix settings could not be loaded.");
-        const detail = String(error?.message || "").trim();
-        renderNexusPobreFlixSettingsPlaceholder(view, detail ? `${fallback} ${detail}` : fallback, "error");
+        const detail = String((error && error.message) || "").trim();
+        renderNexusPobreFlixSettingsPlaceholder(view, detail ? String(fallback) + " " + String(detail) : fallback, "error");
         throw error;
       })
       .finally(() => {
@@ -330,10 +336,10 @@
     let active = "NexusPobreFlix";
     try {
       const stored = localStorage.getItem(TAB_STORAGE_KEY);
-      if (stored && ["NexusPobreFlix", "NexusPobreFlix-settings", "status", "snippet"].includes(stored)) {
+      if (stored && (stored === "NexusPobreFlix" || stored === "NexusPobreFlix-settings" || stored === "status" || stored === "snippet")) {
         active = stored;
       }
-    } catch {}
+    } catch (e) {}
     activateTab(view, active);
   }
 
@@ -436,7 +442,7 @@
     const body = {
       scriptDirectory: view.querySelector("#scriptDir").value.trim(),
       playerSubdir: view.querySelector("#playerSub").value.trim(),
-      forceGlobalUserSettings: !!view.querySelector("#forceGlobal")?.checked
+      forceGlobalUserSettings: !!(view.querySelector("#forceGlobal") && view.querySelector("#forceGlobal").checked)
     };
 
     await postConfiguration(body);
@@ -510,7 +516,7 @@
     if (!box) return;
 
     const parsed = new DOMParser().parseFromString(html, "text/html");
-    box.innerHTML = parsed?.body?.innerHTML || html;
+    box.innerHTML = (parsed && parsed.body && parsed.body.innerHTML) || html;
     view.__snippetLoaded = true;
   }
 
@@ -554,11 +560,11 @@
 
     const aclEl = view.querySelector("#envAcl");
     if (aclEl) {
-      const primary = env.acl?.primary || t("webConfig.messages.envPending", "(not computed yet)");
-      const alternative = env.acl?.alternative
-        ? `\n\n# ${t("webConfig.env.alternativeAcl", "Alternative")}:\n${env.acl.alternative}`
+      const primary = (env.acl && env.acl.primary) || t("webConfig.messages.envPending", "(not computed yet)");
+      const alternative = (env.acl && env.acl.alternative)
+        ? "\n\n# " + String(t("webConfig.env.alternativeAcl", "Alternative")) + ":\n" + String(env.acl.alternative)
         : "";
-      aclEl.textContent = `${primary}${alternative}`;
+      aclEl.textContent = String(primary) + String(alternative);
     }
   }
 
@@ -584,19 +590,19 @@
   }
 
   function renderPhysicalPatchFallbackToggle(view) {
-    const shouldShow = !view?.__inmemOk || !!view?.__physicalPatchFallbackEnabled;
+    const shouldShow = (view && (!view.__inmemOk || !!view.__physicalPatchFallbackEnabled));
     if (!shouldShow) return "";
 
-    const checked = !!view?.__physicalPatchFallbackEnabled;
-    const disabled = !!view?.__physicalPatchFallbackBusy;
+    const checked = !!(view && view.__physicalPatchFallbackEnabled);
+    const disabled = !!(view && view.__physicalPatchFallbackBusy);
 
     return `
       <div class="nexus-inline-toggle">
         <label class="inputLabel inputLabel--checkbox" for="physicalPatchFallbackToggle">
-          <input id="physicalPatchFallbackToggle" type="checkbox" ${checked ? "checked" : ""} ${disabled ? "disabled" : ""}>
-          <span>${esc(t("webConfig.inMemory.fallbackToggleLabel", "Enable physical index.html patch fallback"))}</span>
+          <input id="physicalPatchFallbackToggle" type="checkbox" ` + (checked ? "checked" : "") + ` ` + (disabled ? "disabled" : "") + `>
+          <span>` + esc(t("webConfig.inMemory.fallbackToggleLabel", "Enable physical index.html patch fallback")) + `</span>
         </label>
-        <div class="fieldDescription">${esc(t("webConfig.inMemory.fallbackToggleHint", "Disabled by default. Enable this only if runtime injection does not work or if you explicitly need disk patching. When enabled, NexusPobreFlix will try to patch index.html during startup and configuration changes."))}</div>
+        <div class="fieldDescription">` + esc(t("webConfig.inMemory.fallbackToggleHint", "Disabled by default. Enable this only if runtime injection does not work or if you explicitly need disk patching. When enabled, NexusPobreFlix will try to patch index.html during startup and configuration changes.")) + `</div>
       </div>
     `;
   }
@@ -668,7 +674,7 @@
       toggle.addEventListener("change", (event) => {
         const nextValue = !!event?.currentTarget?.checked;
         updatePhysicalPatchFallback(view, nextValue).catch((error) => {
-          showMessage(view, error?.message || String(error), "err");
+          showMessage(view, (error && error.message) || String(error), "err");
         });
       });
     }
@@ -676,7 +682,7 @@
 
   async function checkInMemory(view) {
     try {
-      const url = `${jfRoot}/web/?_nexus_check=${Date.now()}`;
+      const url = String(jfRoot) + "/web/?_nexus_check=" + String(Date.now());
       const r = await fetch(url, { cache: "no-store", headers: { "X-Nexus-Check": "1" } });
       if (!r.ok) throw new Error("HTTP " + r.status);
       const txt = await r.text();
@@ -708,12 +714,12 @@
 
   function authHeaders() {
     try {
-      const token =
-        window.ApiClient?.accessToken?.() ||
-        window.ApiClient?._accessToken ||
-        window.ApiClient?._authToken;
+      const apiClient = window.ApiClient;
+      const token = (apiClient && typeof apiClient.accessToken === "function")
+        ? apiClient.accessToken()
+        : (apiClient ? (apiClient._accessToken || apiClient._authToken) : null);
       if (token) return { "X-Emby-Token": token };
-    } catch {}
+    } catch (e) {}
     return {};
   }
 
@@ -747,12 +753,12 @@
 
         const r = await fetch(api("UserSettings/Publish"), {
           method: "POST",
-          headers: { "Content-Type": "application/json", ...authHeaders() },
+          headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
           body: JSON.stringify({ global: snapshot })
         });
 
         if (!r.ok) throw new Error("Publish failed");
-        await fetch(`${jfRoot}/Plugins/NexusPobreFlix/UserSettings`, { cache: "no-store" }).catch(() => null);
+        await fetch(String(jfRoot) + "/Plugins/NexusPobreFlix/UserSettings", { cache: "no-store" }).catch(() => null);
         showMessage(view, t("webConfig.messages.publishDone", "Global settings published successfully."), "ok");
       } catch (e) {
         showMessage(view, e.message || String(e), "err");

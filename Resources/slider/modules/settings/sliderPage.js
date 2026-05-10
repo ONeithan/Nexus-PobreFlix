@@ -797,7 +797,7 @@ export function createSliderPanel(config, labels) {
   dotopacityInput.min = '0';
   dotopacityInput.max = '1';
   dotopacityInput.step = '0.1';
-  dotopacityInput.value = config.dotBackgroundOpacity ?? 0.5;
+  dotopacityInput.value = (config.dotBackgroundOpacity !== undefined ? config.dotBackgroundOpacity : 0.5);
   dotopacityInput.name = 'dotBackgroundOpacity';
   dotopacityInput.id = 'dotBackgroundOpacity';
 
@@ -817,7 +817,7 @@ export function createSliderPanel(config, labels) {
     languageDiv,
     tmdbWrap,
     cssDiv,
-    sliderDiv,
+    sliderDiv
   );
 
   requestAnimationFrame(() => {
@@ -828,9 +828,12 @@ export function createSliderPanel(config, labels) {
 }
 
 function updateTrailerRelatedFields() {
-  const t = document.querySelector('#enableTrailerPlayback')?.checked;
-  const v = document.querySelector('#enableVideoPlayback')?.checked;
-  const tv = document.querySelector('#enableTrailerThenVideo')?.checked;
+  const elT = document.querySelector('#enableTrailerPlayback');
+  const elV = document.querySelector('#enableVideoPlayback');
+  const elTV = document.querySelector('#enableTrailerThenVideo');
+  const t = elT && elT.checked;
+  const v = elV && elV.checked;
+  const tv = elTV && elTV.checked;
   const isEnabled = !!(t || v || tv);
 
   const trailerDelayContainer = document.querySelector('.trailer-delay-container');

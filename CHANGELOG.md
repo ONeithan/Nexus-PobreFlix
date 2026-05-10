@@ -4,6 +4,16 @@ Este documento é a **Fonte da Verdade** para auditoria industrial do projeto.
 
 ---
 
+## 🛡️ v1.0.0.11 (10/05/2026)
+### COMPATIBILIDADE E ESTABILIDADE LEGACY
+
+- **[CORE]** Refatoração industrial completa do módulo `watchlist.js` para **ES5 estrito**.
+- **[FIX]** Removidas Arrow Functions, Template Literals, Const/Let, Spread e Optional Chaining para compatibilidade total com Jellyfin 10.11.x em hardware WebOS/Tizen.
+- **[PERF]** Otimização do pool de workers de renderização usando encadeamento recursivo de Promises (Zero generators/async).
+- **[META]** Sincronização de versão (v1.0.0.11) para build de produção industrial.
+
+---
+
 ## 💎 v1.0.0.10 (08/05/2026)
 ### ESTABILIDADE E PURGA FINAL
 

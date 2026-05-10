@@ -36,14 +36,22 @@ export function createStatusRatingPanel(config, labels) {
         btnClear.className = 'btn btn-warning';
         btnClear.title = (labels.clearQualityCacheTitle || 'Limpar cache de selos de qualidade');
         btnClear.textContent = (labels.clearQualityCache || 'Limpar cache de selos de qualidade');
-        btnClear.addEventListener('click', () => {
+        btnClear.addEventListener('click', function() {
             try {
                 clearQualityBadgesCacheAndRefresh();
-                (window.showToast?.(labels.qualityCacheCleared || 'Cache de selos de qualidade limpo e reconstruído.'))
-                ?? alert(labels.qualityCacheCleared || 'Cache de selos de qualidade limpo e reconstruído.');
+                const showToast = window.showToast;
+                if (showToast && typeof showToast === "function") {
+                    showToast(labels.qualityCacheCleared || 'Cache de selos de qualidade limpo e reconstruído.');
+                } else {
+                    alert(labels.qualityCacheCleared || 'Cache de selos de qualidade limpo e reconstruído.');
+                }
             } catch (e) {
-                (window.showToast?.(labels.qualityCacheClearError || 'Ocorreu um erro ao limpar o cache.'))
-                ?? alert(labels.qualityCacheClearError || 'Ocorreu um erro ao limpar o cache.');
+                const showToast = window.showToast;
+                if (showToast && typeof showToast === "function") {
+                    showToast(labels.qualityCacheClearError || 'Ocorreu um erro ao limpar o cache.');
+                } else {
+                    alert(labels.qualityCacheClearError || 'Ocorreu um erro ao limpar o cache.');
+                }
                 console.warn('clearQualityBadgesCacheAndRefresh error:', e);
             }
         });
@@ -427,11 +435,11 @@ export  function createProviderPanel(config, labels) {
     }
 
     fetchJmsPluginConfig()
-      .then((pluginConfig) => {
+      .then(function(pluginConfig) {
         const pluginEnableCastModule =
-          pluginConfig?.enableCastModule ?? pluginConfig?.EnableCastModule;
+          (pluginConfig && (pluginConfig.enableCastModule !== undefined ? pluginConfig.enableCastModule : pluginConfig.EnableCastModule));
         const pluginAllowSharedCastViewerForUsers =
-          pluginConfig?.allowSharedCastViewerForUsers ?? pluginConfig?.AllowSharedCastViewerForUsers;
+          (pluginConfig && (pluginConfig.allowSharedCastViewerForUsers !== undefined ? pluginConfig.allowSharedCastViewerForUsers : pluginConfig.AllowSharedCastViewerForUsers));
 
         if (castModuleInput) {
           castModuleInput.checked = pluginEnableCastModule !== false;
@@ -444,7 +452,7 @@ export  function createProviderPanel(config, labels) {
       })
       .catch(() => {});
 
-    if (config?.currentUserIsAdmin !== true) {
+    if (config && config.currentUserIsAdmin !== true) {
       [castModuleInput, sharedViewerInput].forEach((input) => {
         if (!input) return;
         input.disabled = true;

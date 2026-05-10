@@ -33,7 +33,7 @@ const SETTINGS_OVERLAY_CLASS = 'jms-settings-overlay-shell';
 const SETTINGS_EMBEDDED_CLASS = 'jms-settings-page-shell';
 
 export function createSettingsModal() {
-    if (settingsModal?.isConnected) {
+    if (settingsModal && settingsModal.isConnected) {
         return settingsModal;
     }
 
@@ -70,7 +70,7 @@ export function createSettingsModal() {
       wrap.style.marginBottom = "10px";
 
       const lab = document.createElement("label");
-      lab.textContent = labels?.profileTarget || "Perfil de Destino";
+      lab.textContent = (labels && labels.profileTarget) ? labels.profileTarget : "Perfil de Destino";
       lab.style.marginRight = "10px";
       lab.htmlFor = "jmsProfileTarget";
 
@@ -80,20 +80,20 @@ export function createSettingsModal() {
 
       const autoProfile = getDeviceProfileAuto();
       const profileNameMap = {
-        desktop: labels?.profileDesktop || "Perfil Desktop",
-        mobile: labels?.profileMobile || "Perfil Mobile"
+        desktop: (labels && labels.profileDesktop) ? labels.profileDesktop : "Perfil Desktop",
+        mobile: (labels && labels.profileMobile) ? labels.profileMobile : "Perfil Mobile"
       };
 
       const autoProfileLabel =
-        profileNameMap[autoProfile] || (labels?.profileAutoUnknown || autoProfile);
+        profileNameMap[autoProfile] || ((labels && labels.profileAutoUnknown) ? labels.profileAutoUnknown : autoProfile);
 
       const opts = [
         {
           v: "auto",
-          t: `${labels?.profileAuto || "Seleção Automática"} (${autoProfileLabel})`
+          t: String((labels && labels.profileAuto) ? labels.profileAuto : "Seleção Automática") + " (" + String(autoProfileLabel) + ")"
         },
-        { v: "desktop", t: labels?.profileDesktop || "Perfil Desktop" },
-        { v: "mobile", t: labels?.profileMobile || "Perfil Mobile" }
+        { v: "desktop", t: (labels && labels.profileDesktop) ? labels.profileDesktop : "Perfil Desktop" },
+        { v: "mobile", t: (labels && labels.profileMobile) ? labels.profileMobile : "Perfil Mobile" }
       ];
 
       opts.forEach(o => {
@@ -108,9 +108,7 @@ export function createSettingsModal() {
       select.addEventListener("change", () => {
         localStorage.setItem("jms:settingsTargetProfile", select.value);
         showNotification(
-          `<i class="fas fa-layer-group" style="margin-right:8px;"></i> ${
-            labels?.profileChanged || "Perfil selecionado. Ao salvar, as configurações serão publicadas neste perfil."
-          }`,
+          '<i class="fas fa-layer-group" style="margin-right:8px;"></i> ' + String((labels && labels.profileChanged) ? labels.profileChanged : "Perfil selecionado. Ao salvar, as configurações serão publicadas neste perfil."),
           2500,
           "info"
         );
@@ -120,19 +118,19 @@ export function createSettingsModal() {
       return wrap;
     }
 
-    if (config?.currentUserIsAdmin) {
+    if (config && config.currentUserIsAdmin) {
       try {
         const profSel = createProfileSelector(labels);
         modalContent.appendChild(profSel);
       } catch {}
     }
 
-    if (config?.currentUserIsAdmin && config?.forceGlobalUserSettings) {
+    if (config && config.currentUserIsAdmin && config.forceGlobalUserSettings) {
       const forcedHint = document.createElement('div');
       forcedHint.className = 'description-text2';
       forcedHint.style.margin = '0 0 12px';
       forcedHint.textContent =
-        labels?.forceGlobalAdminHint ||
+        (labels && labels.forceGlobalAdminHint) ? labels.forceGlobalAdminHint :
         'Forçar Configurações Globais está ativo. Salvar/Aplicar publica o perfil de configurações selecionado globalmente para todos os usuários.';
       modalContent.appendChild(forcedHint);
     }
@@ -156,7 +154,7 @@ export function createSettingsModal() {
     const notificationsTab = createTab('notifications', 'fa-bell', labels.notificationsSettings || 'Configurações de Notificação');
     const detailsModalTab = createTab('details-modal', 'fa-circle-info', labels.detailsModalSettingsTab || 'Configurações do Módulo de Detalhes');
     const avatarTab = createTab('avatar', 'fa-user', labels.avatarCreateInput || 'Configurações de Avatar');
-    const parentalPinTab = config?.currentUserIsAdmin
+    const parentalPinTab = (config && config.currentUserIsAdmin)
       ? createTab('parental-pin', 'fa-key', labels.parentalPinTab || 'Configurações de PIN Parental')
       : null;
     const positionTab = createTab('position', 'fa-arrows-up-down-left-right', labels.positionSettings || 'Configurações de Posicionamento');
@@ -197,7 +195,7 @@ export function createSettingsModal() {
     const detailsModalPanel = createDetailsModalPanel(config, labels);
     const watchlistSettingsPanel = createWatchlistPanel(config, labels);
     const dbManagementPanel = createDbManagementPanel(config, labels);
-    const parentalPinPanel = config?.currentUserIsAdmin
+    const parentalPinPanel = (config && config.currentUserIsAdmin)
       ? createParentalPinPanel(config, labels)
       : null;
     const mainPanel = createMainSettingsPanel(labels, {
@@ -320,8 +318,8 @@ export function createSettingsModal() {
         }
       });
 
-      saveBtn.textContent = isBusy ? (labels?.saving || 'Salvando...') : saveLabel;
-      applyBtn.textContent = isBusy ? (labels?.applying || 'Aplicando...') : applyLabel;
+      saveBtn.textContent = isBusy ? ((labels && labels.saving) ? labels.saving : 'Salvando...') : saveLabel;
+      applyBtn.textContent = isBusy ? ((labels && labels.applying) ? labels.applying : 'Aplicando...') : applyLabel;
       resetBtn.textContent = resetLabel;
     }
 
@@ -331,21 +329,22 @@ export function createSettingsModal() {
       setBusyState(true);
 
       try {
-        const panelSaveHooks = [parentalPinPanel?.__jmsSave].filter(fn => typeof fn === 'function');
-        for (const saveHook of panelSaveHooks) {
-          await saveHook({ reload });
+        const panelSaveHooks = (parentalPinPanel && typeof parentalPinPanel.__jmsSave === 'function') ? [parentalPinPanel.__jmsSave] : [];
+        for (let i = 0; i < panelSaveHooks.length; i++) {
+          const saveHook = panelSaveHooks[i];
+          await saveHook({ reload: reload });
         }
 
         const result = await applySettings(reload);
-        if (reload || result?.ok === false) return result;
+        if (reload || (result && result.ok === false)) return result;
 
-        if (result?.forcedAdminPublish && result?.publishResult?.attempted && result?.publishResult?.ok) {
+        if (result && result.forcedAdminPublish && result.publishResult && result.publishResult.attempted && result.publishResult.ok) {
           const profileLabel =
-            result?.publishResult?.profile === 'mobile'
-              ? (labels?.profileMobile || 'Perfil Mobile')
-              : (labels?.profileDesktop || 'Perfil Desktop');
+            result.publishResult.profile === 'mobile'
+              ? (labels.profileMobile || 'Perfil Mobile')
+              : (labels.profileDesktop || 'Perfil Desktop');
           showNotification(
-            `<i class="fas fa-globe" style="margin-right: 8px;"></i> ${labels?.forceGlobalPublishOk || `Configurações globais publicadas para o perfil ${profileLabel}.`}`,
+            '<i class="fas fa-globe" style="margin-right: 8px;"></i> ' + String((labels && labels.forceGlobalPublishOk) ? labels.forceGlobalPublishOk : "Configurações globais publicadas para o perfil " + String(profileLabel) + "."),
             3200,
             'info'
           );
@@ -365,7 +364,7 @@ export function createSettingsModal() {
           labels?.settingsSaveFailed ||
           'Não foi possível salvar as configurações.';
         showNotification(
-          `<i class="fas fa-triangle-exclamation" style="margin-right: 8px;"></i> ${errText}`,
+          '<i class="fas fa-triangle-exclamation" style="margin-right: 8px;"></i> ' + String(errText),
           4200,
           'error'
         );
@@ -394,7 +393,7 @@ export function createSettingsModal() {
 
 function setSettingsThemeToggleVisuals() {
   const cfg = getConfig();
-  const currentLang = cfg.defaultLanguage || getDefaultLanguage?.();
+  const currentLang = cfg.defaultLanguage || (typeof getDefaultLanguage === 'function' ? getDefaultLanguage() : null);
   const labels = (typeof getLanguageLabels === 'function' ? getLanguageLabels(currentLang) : {}) || cfg.languageLabels || {};
 
   themeToggleBtn.innerHTML = `<i class="fas fa-${cfg.playerTheme === 'light' ? 'moon' : 'sun'}"></i>`;
@@ -427,11 +426,11 @@ themeToggleBtn.onclick = async () => {
 
     const labels = cfg.languageLabels || {};
       showNotification(
-        `<i class="fas fa-${newTheme === 'light' ? 'sun' : 'moon'}"></i> ${
+        '<i class="fas fa-' + String(newTheme === 'light' ? 'sun' : 'moon') + '"></i> ' + String(
           newTheme === 'light'
             ? (labels.lightThemeEnabled || 'Tema claro ativado')
             : (labels.darkThemeEnabled || 'Tema escuro ativado')
-        }`,
+        ),
         2000,
         'info'
       );
@@ -442,9 +441,9 @@ themeToggleBtn.onclick = async () => {
       } catch {}
 
     const publishResult = await publishAdminSnapshotIfForced();
-    if (cfg?.forceGlobalUserSettings && cfg?.currentUserIsAdmin && publishResult?.attempted && !publishResult?.ok) {
+    if (cfg && cfg.forceGlobalUserSettings && cfg.currentUserIsAdmin && publishResult && publishResult.attempted && !publishResult.ok) {
       showNotification(
-        `<i class="fas fa-triangle-exclamation" style="margin-right: 8px;"></i> ${labels?.forceGlobalPublishFailed || 'Não foi possível publicar as configurações globais.'}`,
+        '<i class="fas fa-triangle-exclamation" style="margin-right: 8px;"></i> ' + String((labels && labels.forceGlobalPublishFailed) ? labels.forceGlobalPublishFailed : 'Não foi possível publicar as configurações globais.'),
         4200,
         'error'
       );
@@ -526,7 +525,7 @@ function closeLocalSettingsShell(modal) {
   }
 
   const modalContent = modal.querySelector('.settings-modal-content');
-  if (modalContent?.__overlayStopPropagationHandler) {
+  if (modalContent && modalContent.__overlayStopPropagationHandler) {
     modalContent.removeEventListener('click', modalContent.__overlayStopPropagationHandler);
     delete modalContent.__overlayStopPropagationHandler;
   }
@@ -549,7 +548,7 @@ function prepareModalForLocalShell(modal) {
   modal.classList.remove(SETTINGS_EMBEDDED_CLASS);
   modal.removeAttribute('data-jms-settings-page');
 
-  let closeBtn = modalContent?.querySelector('.settings-close');
+  let closeBtn = modalContent ? modalContent.querySelector('.settings-close') : null;
   if (!closeBtn && modalContent) {
     closeBtn = document.createElement('button');
     closeBtn.type = 'button';
@@ -622,7 +621,8 @@ function prepareModalForEmbeddedPage(modal) {
   modal.classList.add(SETTINGS_EMBEDDED_CLASS);
   modal.classList.remove(SETTINGS_OVERLAY_CLASS);
   modal.setAttribute('data-jms-settings-page', 'true');
-  modal.querySelector('.settings-close')?.remove();
+  const existingClose = modal.querySelector('.settings-close');
+  if (existingClose) existingClose.remove();
 
   if (title) {
     title.style.display = 'none';
@@ -736,23 +736,26 @@ function createTab(id, icon, label, isActive = false, isDisabled = false) {
     return tab;
 }
 
-function extractContainerByInput(root, inputName, closestSelector = '.setting-item') {
-    const input = root?.querySelector(`input[name="${inputName}"]`);
-    return input?.closest(closestSelector) || null;
+function extractContainerByInput(root, inputName, closestSelector) {
+    if (closestSelector === undefined) closestSelector = '.setting-item';
+    const input = root ? root.querySelector('input[name="' + String(inputName) + '"]') : null;
+    return (input && typeof input.closest === "function") ? input.closest(closestSelector) : null;
 }
 
-function extractContainerBySelect(root, selectName, closestSelector = '.setting-item') {
-    const select = root?.querySelector(`select[name="${selectName}"]`);
-    return select?.closest(closestSelector) || null;
+function extractContainerBySelect(root, selectName, closestSelector) {
+    if (closestSelector === undefined) closestSelector = '.setting-item';
+    const select = root ? root.querySelector('select[name="' + String(selectName) + '"]') : null;
+    return (select && typeof select.closest === "function") ? select.closest(closestSelector) : null;
 }
 
 function extractTmdbGroup(root) {
-    const keyInput = root?.querySelector('#tmdbKeyForReviews');
-    return keyInput?.closest('.fsetting-item')?.parentElement || null;
+    const keyInput = root ? root.querySelector('#tmdbKeyForReviews') : null;
+    const item = (keyInput && typeof keyInput.closest === "function") ? keyInput.closest('.fsetting-item') : null;
+    return item ? item.parentElement : null;
 }
 
 function extractCheckboxPair(root, inputName) {
-    const input = root?.querySelector(`input[name="${inputName}"]`);
+    const input = root ? root.querySelector('input[name="' + String(inputName) + '"]') : null;
     if (!input) return null;
 
     const label = root.querySelector(`label[for="${input.id}"]`);
@@ -914,7 +917,7 @@ function createMainSettingsPanel(labels, panels) {
         bindCheckboxKontrol('#enableCastModule', '.cast-module-main-sub-options');
     }
 
-    if (config?.currentUserIsAdmin !== true && (castModuleSetting || sharedCastViewerSetting)) {
+    if (config && config.currentUserIsAdmin !== true && (castModuleSetting || sharedCastViewerSetting)) {
         const castAdminHint = document.createElement('div');
         castAdminHint.className = 'description-text';
         castAdminHint.textContent =
@@ -963,9 +966,9 @@ function appendMergedPanelToSlider(targetPanel, sourcePanel, title) {
 
     const hasSingleSection =
         sourcePanel.childElementCount === 1 &&
-        sourcePanel.firstElementChild?.classList?.contains('settings-section');
+        (sourcePanel.firstElementChild && sourcePanel.firstElementChild.classList && sourcePanel.firstElementChild.classList.contains('settings-section'));
 
-    const existingTitle = hasSingleSection && sourcePanel.firstElementChild?.firstElementChild?.tagName === 'H3'
+    const existingTitle = (hasSingleSection && sourcePanel.firstElementChild.firstElementChild && sourcePanel.firstElementChild.firstElementChild.tagName === 'H3')
         ? normalizeSectionTitle(sourcePanel.firstElementChild.firstElementChild.textContent)
         : '';
 
@@ -1166,26 +1169,30 @@ export function bindTersCheckboxKontrol(
     }, 50);
 }
 
-export function initSettings(defaultTab = 'monwui') {
+export function initSettings(defaultTab) {
+    if (defaultTab === undefined) defaultTab = 'monwui';
     const modal = createSettingsModal();
 
     return {
         element: modal,
-        open: (tab = defaultTab) => {
+        open: function(tab) {
+            if (tab === undefined) tab = defaultTab;
             prepareModalForLocalShell(modal);
             return activateSettingsPanel(modal, tab);
         },
-        close: () => closeLocalSettingsShell(modal)
+        close: function() { return closeLocalSettingsShell(modal); }
     };
 }
 
-export function mountNexusPobreFlixSettingsPage(host, { defaultTab = 'monwui', force = false } = {}) {
+export function mountNexusPobreFlixSettingsPage(host, options) {
     if (!host) return null;
+    const defaultTab = (options && options.defaultTab) ? options.defaultTab : 'monwui';
+    const force = (options && options.force === true);
 
     if (force) {
         const existing = host.querySelector('#settings-modal');
         if (existing) existing.remove();
-        if (settingsModal?.isConnected) settingsModal.remove();
+        if (settingsModal && settingsModal.isConnected) settingsModal.remove();
         settingsModal = null;
     }
 
@@ -1199,11 +1206,12 @@ export function mountNexusPobreFlixSettingsPage(host, { defaultTab = 'monwui', f
 
     const api = {
         element: modal,
-        open: (tab = defaultTab) => {
+        open: function(tab) {
+            if (tab === undefined) tab = defaultTab;
             prepareModalForEmbeddedPage(modal);
             return activateSettingsPanel(modal, tab);
         },
-        close: () => {}
+        close: function() {}
     };
 
     host.__nexusPobreFlixSettingsApi = api;
@@ -1271,8 +1279,8 @@ export function createNumberInput(key, label, value, min = 0, max = 100, step = 
   input.setAttribute('inputmode', 'decimal');
   input.setAttribute('pattern', '[0-9]+([\\.,][0-9]+)?');
 
-  const normalize = (v) => String(v ?? '').replace(',', '.');
-  const clamp = (num, lo, hi) => Math.min(Math.max(num, lo), hi);
+  const normalize = function(v) { return String((v !== null && v !== undefined) ? v : '').replace(',', '.'); };
+  const clamp = function(num, lo, hi) { return Math.min(Math.max(num, lo), hi); };
 
   input.value = normalize(value);
 
@@ -1367,24 +1375,30 @@ let __isAdminCached = null;
 
 function getJfRootFromLocation() {
   try {
-    const baseHref = document.querySelector("base[href]")?.getAttribute("href");
+    const baseEl = document.querySelector("base[href]");
+    const baseHref = baseEl ? baseEl.getAttribute("href") : null;
     if (baseHref) {
       const url = new URL(baseHref, window.location.href);
       return String(url.pathname || "")
         .replace(/\/web\/?$/i, "")
         .replace(/\/+$/, "");
     }
-  } catch {}
+  } catch (e) {}
 
   const path = String(window.location.pathname || "/");
   const match = path.match(/^(.*?)(?:\/web(?:\/|$).*)$/i);
-  return match?.[1] ? match[1].replace(/\/+$/, "") : "";
+  return (match && match[1]) ? match[1].replace(/\/+$/, "") : "";
 }
 
 function getEmbyTokenSafe() {
   try {
-    return window.ApiClient?.accessToken?.() || window.ApiClient?._accessToken || "";
-  } catch {
+    const apiClient = window.ApiClient;
+    if (!apiClient) return "";
+    const token = (typeof apiClient.accessToken === "function")
+      ? apiClient.accessToken()
+      : (apiClient._accessToken || "");
+    return token || "";
+  } catch (e) {
     return "";
   }
 }
@@ -1427,10 +1441,10 @@ async function resolveLiveAdminFlag() {
 
   try {
     const sessionInfo = typeof getSessionInfo === "function" ? getSessionInfo() : null;
-    if (sessionInfo?.User) liveCandidates.push(sessionInfo.User);
-    if (sessionInfo?.user) liveCandidates.push(sessionInfo.user);
+    if (sessionInfo && sessionInfo.User) liveCandidates.push(sessionInfo.User);
+    if (sessionInfo && sessionInfo.user) liveCandidates.push(sessionInfo.user);
     if (sessionInfo) liveCandidates.push(sessionInfo);
-  } catch {}
+  } catch (e) {}
 
   try {
     if (window.ApiClient?._currentUser) {
@@ -1444,15 +1458,18 @@ async function resolveLiveAdminFlag() {
   }
 
   try {
-    const currentUser = await window.ApiClient?.getCurrentUser?.();
-    const currentFlag = readAdminFlagFromUser(currentUser);
-    if (currentFlag !== null) return currentFlag;
-  } catch {}
+    const apiClient = window.ApiClient;
+    if (apiClient && typeof apiClient.getCurrentUser === "function") {
+        const currentUser = await apiClient.getCurrentUser();
+        const currentFlag = readAdminFlagFromUser(currentUser);
+        if (currentFlag !== null) return currentFlag;
+    }
+  } catch (e) {}
 
   try {
     const cachedFlag = readBooleanish(localStorage.getItem("currentUserIsAdmin"));
     if (cachedFlag !== null) return cachedFlag;
-  } catch {}
+  } catch (e) {}
 
   return null;
 }
@@ -1514,21 +1531,21 @@ async function isAdminUser() {
 
 export function isGlobalSettingsLockedForUser() {
   const cfg = getConfig();
-  const forced = !!cfg?.forceGlobalUserSettings;
+  const forced = (cfg && cfg.forceGlobalUserSettings === true);
 
   if (!forced) return false;
   return true;
 }
 
-async function applyGlobalSettingsLockUI({
-  labels,
-  saveBtn,
-  applyBtn,
-  resetBtn,
-  themeToggleBtn
-}) {
+async function applyGlobalSettingsLockUI(args) {
+  const labels = args.labels;
+  const saveBtn = args.saveBtn;
+  const applyBtn = args.applyBtn;
+  const resetBtn = args.resetBtn;
+  const themeToggleBtn = args.themeToggleBtn;
+
   const cfg = getConfig();
-  if (!cfg?.forceGlobalUserSettings) return;
+  if (!cfg || !cfg.forceGlobalUserSettings) return;
 
   const admin = await isAdminUser();
   if (admin) return;
@@ -1573,7 +1590,7 @@ async function applyGlobalSettingsLockUI({
   }
 
   showNotification(
-    `<i class="fas fa-lock" style="margin-right:8px;"></i> ${lockMsg}`,
+    '<i class="fas fa-lock" style="margin-right:8px;"></i> ' + String(lockMsg),
     5000,
     "warning"
   );

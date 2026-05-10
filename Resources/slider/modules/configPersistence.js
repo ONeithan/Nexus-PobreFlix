@@ -14,13 +14,13 @@ export function isLocalStorageAvailable() {
 export function updateConfig(updatedConfig) {
   const cfg = getConfig();
 
-  if (cfg?.forceGlobalUserSettings && !cfg?.currentUserIsAdmin) {
+  if (cfg && cfg.forceGlobalUserSettings && !cfg.currentUserIsAdmin) {
     const allowedKeys = new Set([
       "playerTheme"
     ]);
 
     const onlyAllowed =
-      Object.keys(updatedConfig || {}).every((key) => allowedKeys.has(key));
+      Object.keys(updatedConfig || {}).every(function(key) { return allowedKeys.has(key); });
 
     if (!onlyAllowed) {
       console.warn("[NexusPobreFlix] Global settings forced - update blocked (non-admin).");
@@ -29,10 +29,13 @@ export function updateConfig(updatedConfig) {
   }
 
   const existingDicebearParams = localStorage.getItem("dicebearParams");
-  const isPlainObject = (value) =>
-    value !== null && typeof value === "object" && !Array.isArray(value);
+  const isPlainObject = function(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+  };
 
-  Object.entries(updatedConfig || {}).forEach(([key, value]) => {
+  Object.entries(updatedConfig || {}).forEach(function(entry) {
+    const key = entry[0];
+    const value = entry[1];
     if (key === "dicebearParams") return;
 
     try {
@@ -58,11 +61,11 @@ export function updateConfig(updatedConfig) {
     localStorage.setItem("dicebearParams", existingDicebearParams);
   }
 
-  if (updatedConfig?.defaultLanguage !== undefined) {
+  if (updatedConfig && updatedConfig.defaultLanguage !== undefined) {
     localStorage.setItem("defaultLanguage", updatedConfig.defaultLanguage);
   }
 
-  if (updatedConfig?.dateLocale !== undefined) {
+  if (updatedConfig && updatedConfig.dateLocale !== undefined) {
     localStorage.setItem("dateLocale", updatedConfig.dateLocale);
   }
 
@@ -82,8 +85,8 @@ export function updateConfig(updatedConfig) {
     "nextTracksSource"
   ];
 
-  keysToSave.forEach((key) => {
-    const value = updatedConfig?.[key];
+  keysToSave.forEach(function(key) {
+    const value = updatedConfig ? updatedConfig[key] : undefined;
     if (value !== undefined && value !== null) {
       localStorage.setItem(key, String(value));
     }

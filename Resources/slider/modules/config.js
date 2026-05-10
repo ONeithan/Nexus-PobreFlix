@@ -1,7 +1,7 @@
 import { getLanguageLabels, getDefaultLanguage, getStoredLanguagePreference } from '../language/index.js';
 
 let __globalOverride =
-  (typeof window !== "undefined" && window.__JMS_MANAGED_STORAGE__?.bootstrapOverride)
+  (typeof window !== "undefined" && window.__JMS_MANAGED_STORAGE__ && window.__JMS_MANAGED_STORAGE__.bootstrapOverride)
     ? window.__JMS_MANAGED_STORAGE__.bootstrapOverride
     : null;
 let __globalApplied = false;
@@ -168,48 +168,60 @@ export function normalizeManagedHomeSectionOrder(value = null, { nativeEntries }
   return out;
 }
 
-function isRecentRowsSectionEnabled(cfg = {}, masterEnabled = cfg?.enableHomeSectionsMaster !== false) {
+function isRecentRowsSectionEnabled(cfg, masterEnabled) {
+  if (cfg === undefined) cfg = {};
+  if (masterEnabled === undefined) masterEnabled = cfg.enableHomeSectionsMaster !== false;
   const recentMasterEnabled = masterEnabled && cfg?.enableRecentRows !== false;
   const hasRecentContent =
     recentMasterEnabled &&
     (
-      cfg?.enableRecentMoviesRow !== false ||
-      cfg?.enableRecentSeriesRow !== false ||
-      cfg?.enableRecentEpisodesRow !== false ||
-      cfg?.enableRecentMusicRow !== false
+      cfg.enableRecentMoviesRow !== false ||
+      cfg.enableRecentSeriesRow !== false ||
+      cfg.enableRecentEpisodesRow !== false ||
+      cfg.enableRecentMusicRow !== false
     );
 
-  return hasRecentContent || (masterEnabled && cfg?.enableOtherLibRows === true);
+  return hasRecentContent || (masterEnabled && cfg.enableOtherLibRows === true);
 }
 
-function isTop10SeriesRowsSectionEnabled(cfg = {}, masterEnabled = cfg?.enableHomeSectionsMaster !== false) {
-  return masterEnabled && cfg?.enableRecentRows !== false && cfg?.enableTop10SeriesRow !== false;
+function isTop10SeriesRowsSectionEnabled(cfg, masterEnabled) {
+  if (cfg === undefined) cfg = {};
+  if (masterEnabled === undefined) masterEnabled = cfg.enableHomeSectionsMaster !== false;
+  return masterEnabled && cfg.enableRecentRows !== false && cfg.enableTop10SeriesRow !== false;
 }
 
-function isTop10MovieRowsSectionEnabled(cfg = {}, masterEnabled = cfg?.enableHomeSectionsMaster !== false) {
-  return masterEnabled && cfg?.enableRecentRows !== false && cfg?.enableTop10MoviesRow !== false;
+function isTop10MovieRowsSectionEnabled(cfg, masterEnabled) {
+  if (cfg === undefined) cfg = {};
+  if (masterEnabled === undefined) masterEnabled = cfg.enableHomeSectionsMaster !== false;
+  return masterEnabled && cfg.enableRecentRows !== false && cfg.enableTop10MoviesRow !== false;
 }
 
-function isTmdbTopMoviesRowsSectionEnabled(cfg = {}, masterEnabled = cfg?.enableHomeSectionsMaster !== false) {
-  return masterEnabled && cfg?.enableRecentRows !== false && cfg?.enableTmdbTopMoviesRow !== false;
+function isTmdbTopMoviesRowsSectionEnabled(cfg, masterEnabled) {
+  if (cfg === undefined) cfg = {};
+  if (masterEnabled === undefined) masterEnabled = cfg.enableHomeSectionsMaster !== false;
+  return masterEnabled && cfg.enableRecentRows !== false && cfg.enableTmdbTopMoviesRow !== false;
 }
 
-function isContinueRowsSectionEnabled(cfg = {}, masterEnabled = cfg?.enableHomeSectionsMaster !== false) {
-  const recentMasterEnabled = masterEnabled && cfg?.enableRecentRows !== false;
-  const hasRecentTracks = recentMasterEnabled && cfg?.enableRecentMusicTracksRow !== false;
+function isContinueRowsSectionEnabled(cfg, masterEnabled) {
+  if (cfg === undefined) cfg = {};
+  if (masterEnabled === undefined) masterEnabled = cfg.enableHomeSectionsMaster !== false;
+  const recentMasterEnabled = masterEnabled && cfg.enableRecentRows !== false;
+  const hasRecentTracks = recentMasterEnabled && cfg.enableRecentMusicTracksRow !== false;
   const hasContinueContent =
     masterEnabled &&
     (
-      cfg?.enableContinueMovies !== false ||
-      cfg?.enableContinueSeries !== false
+      cfg.enableContinueMovies !== false ||
+      cfg.enableContinueSeries !== false
     );
 
-  return hasRecentTracks || hasContinueContent || (masterEnabled && cfg?.enableOtherLibRows === true);
+  return hasRecentTracks || hasContinueContent || (masterEnabled && cfg.enableOtherLibRows === true);
 }
 
-function isNextUpRowsSectionEnabled(cfg = {}, masterEnabled = cfg?.enableHomeSectionsMaster !== false) {
-  const recentMasterEnabled = masterEnabled && cfg?.enableRecentRows !== false;
-  return recentMasterEnabled && cfg?.enableNextUpRow !== false;
+function isNextUpRowsSectionEnabled(cfg, masterEnabled) {
+  if (cfg === undefined) cfg = {};
+  if (masterEnabled === undefined) masterEnabled = cfg.enableHomeSectionsMaster !== false;
+  const recentMasterEnabled = masterEnabled && cfg.enableRecentRows !== false;
+  return recentMasterEnabled && cfg.enableNextUpRow !== false;
 }
 
 function ensureImplicitManagedFollowerOrder(out, explicit, anchorKey, followerKey) {
@@ -229,26 +241,28 @@ function ensureImplicitManagedFollowerOrder(out, explicit, anchorKey, followerKe
   out.splice(nextAnchorIndex + 1, 0, followerKey);
 }
 
-function buildManagedHomeSectionEnabledMap(cfg = {}) {
-  const masterEnabled = cfg?.enableHomeSectionsMaster !== false;
+function buildManagedHomeSectionEnabledMap(cfg) {
+  if (cfg === undefined) cfg = {};
+  const masterEnabled = cfg.enableHomeSectionsMaster !== false;
   return {
-    studioHubs: masterEnabled && cfg?.enableStudioHubs !== false,
-    personalRecommendations: masterEnabled && cfg?.enablePersonalRecommendations !== false,
+    studioHubs: masterEnabled && cfg.enableStudioHubs !== false,
+    personalRecommendations: masterEnabled && cfg.enablePersonalRecommendations !== false,
     top10SeriesRows: isTop10SeriesRowsSectionEnabled(cfg, masterEnabled),
     top10MovieRows: isTop10MovieRowsSectionEnabled(cfg, masterEnabled),
     tmdbTopMoviesRows: isTmdbTopMoviesRowsSectionEnabled(cfg, masterEnabled),
     recentRows: isRecentRowsSectionEnabled(cfg, masterEnabled),
     continueRows: isContinueRowsSectionEnabled(cfg, masterEnabled),
     nextUpRows: isNextUpRowsSectionEnabled(cfg, masterEnabled),
-    becauseYouWatched: masterEnabled && cfg?.enableBecauseYouWatched !== false,
-    genreHubs: masterEnabled && cfg?.enableGenreHubs !== false,
-    directorRows: masterEnabled && cfg?.enableDirectorRows !== false,
+    becauseYouWatched: masterEnabled && cfg.enableBecauseYouWatched !== false,
+    genreHubs: masterEnabled && cfg.enableGenreHubs !== false,
+    directorRows: masterEnabled && cfg.enableDirectorRows !== false,
   };
 }
 
-export function getManagedHomeSectionRuntimeOrder(source = null, { enabledOnly = false } = {}) {
+export function getManagedHomeSectionRuntimeOrder(source, options) {
+  const enabledOnly = (options && options.enabledOnly === true);
   const cfg = source || getConfig() || {};
-  const order = normalizeManagedHomeSectionOrder(cfg?.managedHomeSectionOrder);
+  const order = normalizeManagedHomeSectionOrder(cfg.managedHomeSectionOrder);
   if (!enabledOnly) {
     return order;
   }
@@ -267,22 +281,29 @@ function getManagedStorageBridge() {
   }
 }
 
-function registerManagedStorageKeys(keys = []) {
+function registerManagedStorageKeys(keys) {
+  if (keys === undefined) keys = [];
   try {
-    getManagedStorageBridge()?.registerKeys?.(keys);
-  } catch {}
+    const bridge = getManagedStorageBridge();
+    if (bridge && typeof bridge.registerKeys === "function") {
+      bridge.registerKeys(keys);
+    }
+  } catch (e) {}
 }
 
 function maybeBootstrapManagedStorage(snapshot) {
   try {
-    getManagedStorageBridge()?.maybeBootstrapFromLocal?.(snapshot);
-  } catch {}
+    const bridge = getManagedStorageBridge();
+    if (bridge && typeof bridge.maybeBootstrapFromLocal === "function") {
+      bridge.maybeBootstrapFromLocal(snapshot);
+    }
+  } catch (e) {}
 }
 
 export function normalizeSettingsHotkey(value, fallback = SETTINGS_HOTKEY_DEFAULT) {
   if (value === " ") return "Space";
 
-  const raw = String(value ?? "").trim();
+  const raw = String((value === null || value === undefined) ? "" : value).trim();
   if (!raw) return fallback;
 
   const aliased = SETTINGS_HOTKEY_ALIASES.get(raw) || raw;
@@ -313,8 +334,9 @@ export function getSettingsHotkey() {
 
 export function getDeviceProfileAuto() {
   try {
-    const coarse = window.matchMedia?.("(pointer: coarse)")?.matches === true;
-    const small = window.matchMedia?.("(max-width: 900px)")?.matches === true;
+    const mm = window.matchMedia;
+    const coarse = (mm && mm("(pointer: coarse)") && mm("(pointer: coarse)").matches === true);
+    const small = (mm && mm("(max-width: 900px)") && mm("(max-width: 900px)").matches === true);
     const uaMobile = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent);
     return (coarse || (small && uaMobile)) ? "mobile" : "desktop";
   } catch {
@@ -331,7 +353,7 @@ export function getAdminTargetProfile() {
 async function __fetchGlobalOverride(force = false) {
   if (!force && __globalOverride !== null) return __globalOverride;
   const managed = getManagedStorageBridge();
-  if (!force && managed?.bootstrapOverride) {
+  if (!force && managed && managed.bootstrapOverride) {
     __globalOverride = managed.bootstrapOverride;
     return __globalOverride;
   }
@@ -434,7 +456,7 @@ function readSmartAutoPause() {
 }
 
 export function getConfig() {
-  const forceGlobal = __globalOverride?.forceGlobal === true;
+  const forceGlobal = (__globalOverride && __globalOverride.forceGlobal === true);
   if (window.__JMS_GLOBAL_CONFIG__) {
     return window.__JMS_GLOBAL_CONFIG__;
   }
@@ -1210,19 +1232,14 @@ export function getConfig() {
 
     currentUserIsAdmin: (() => {
       try {
-        const pol =
-          window.ApiClient?._currentUser?.Policy ||
-          window.ApiClient?._currentUser?.UserPolicy ||
-          null;
+        const apiClient = window.ApiClient;
+        const user = (apiClient && apiClient._currentUser) || null;
+        const pol = (user && (user.Policy || user.UserPolicy)) || null;
 
         if (pol) {
-          const liveAdminFlag = [pol.IsAdministrator, pol.IsAdmin, pol.IsAdminUser]
-            .find(value =>
-              value === true ||
-              value === false ||
-              value === 'true' ||
-              value === 'false'
-            );
+          const liveAdminFlag = (pol.IsAdministrator !== undefined) ? pol.IsAdministrator :
+                                (pol.IsAdmin !== undefined) ? pol.IsAdmin :
+                                (pol.IsAdminUser !== undefined) ? pol.IsAdminUser : undefined;
 
           if (liveAdminFlag !== undefined) {
             return liveAdminFlag === true || liveAdminFlag === 'true';
@@ -1231,7 +1248,7 @@ export function getConfig() {
 
         const ls = localStorage.getItem('currentUserIsAdmin');
         if (ls === 'true' || ls === 'false') return ls === 'true';
-      } catch {}
+      } catch (e) {}
       return false;
     })(),
     forceGlobalUserSettings: forceGlobal
@@ -1248,18 +1265,18 @@ export function getConfig() {
   return resolvedConfig;
 }
 
-export function isHomeSectionsMasterEnabled(source = null) {
+export function isHomeSectionsMasterEnabled(source) {
   const cfg = source || getConfig();
-  return cfg?.enableHomeSectionsMaster !== false;
+  return (cfg && cfg.enableHomeSectionsMaster !== false);
 }
 
-export function getHomeSectionsRuntimeConfig(source = null) {
+export function getHomeSectionsRuntimeConfig(source) {
   const cfg = source || getConfig() || {};
   const masterEnabled = isHomeSectionsMasterEnabled(cfg);
   const enabledMap = buildManagedHomeSectionEnabledMap(cfg);
 
   return {
-    masterEnabled,
+    masterEnabled: masterEnabled,
     enableStudioHubs: enabledMap.studioHubs,
     enablePersonalRecommendations: enabledMap.personalRecommendations,
     enableTop10SeriesRowsSection: enabledMap.top10SeriesRows,
@@ -1275,24 +1292,24 @@ export function getHomeSectionsRuntimeConfig(source = null) {
     enableContinueMovies: masterEnabled && cfg.enableContinueMovies !== false,
     enableContinueSeries: masterEnabled && cfg.enableContinueSeries !== false,
     enableOtherLibRows: masterEnabled && !!cfg.enableOtherLibRows,
-    managedSectionOrder: normalizeManagedHomeSectionOrder(cfg?.managedHomeSectionOrder)
+    managedSectionOrder: normalizeManagedHomeSectionOrder(cfg.managedHomeSectionOrder)
       .filter((key) => enabledMap[key]),
   };
 }
 
-export function isPauseFeaturesMasterEnabled(source = null) {
+export function isPauseFeaturesMasterEnabled(source) {
   const cfg = source || getConfig();
-  return cfg?.enablePauseFeaturesMaster !== false;
+  return (cfg && cfg.enablePauseFeaturesMaster !== false);
 }
 
-export function getPauseFeaturesRuntimeConfig(source = null) {
+export function getPauseFeaturesRuntimeConfig(source) {
   const cfg = source || getConfig() || {};
   const masterEnabled = isPauseFeaturesMasterEnabled(cfg);
-  const pauseOverlayCfg = cfg?.pauseOverlay || {};
-  const smartAutoPauseCfg = cfg?.smartAutoPause || {};
+  const pauseOverlayCfg = cfg.pauseOverlay || {};
+  const smartAutoPauseCfg = cfg.smartAutoPause || {};
 
   return {
-    masterEnabled,
+    masterEnabled: masterEnabled,
     enablePauseOverlay: masterEnabled && pauseOverlayCfg.enabled !== false,
     enableSmartAutoPause: masterEnabled && smartAutoPauseCfg.enabled !== false,
     enablePauseAgeBadge: masterEnabled && pauseOverlayCfg.showAgeBadge !== false,
@@ -1300,27 +1317,27 @@ export function getPauseFeaturesRuntimeConfig(source = null) {
   };
 }
 
-export function isSubtitleCustomizerModuleEnabled(source = null) {
+export function isSubtitleCustomizerModuleEnabled(source) {
   const cfg = source || getConfig();
-  return cfg?.enableSubtitleCustomizerModule !== false;
+  return (cfg && cfg.enableSubtitleCustomizerModule !== false);
 }
 
-export function isParentalPinModuleEnabled(source = null) {
+export function isParentalPinModuleEnabled(source) {
   const cfg = source || getConfig();
-  return cfg?.enableParentalPinModule !== false;
+  return (cfg && cfg.enableParentalPinModule !== false);
 }
 
-export function isDetailsModalModuleEnabled(source = null) {
+export function isDetailsModalModuleEnabled(source) {
   const cfg = source || getConfig();
-  return cfg?.enableDetailsModalModule !== false;
+  return (cfg && cfg.enableDetailsModalModule !== false);
 }
 
-export function getDetailsModalRuntimeConfig(source = null) {
+export function getDetailsModalRuntimeConfig(source) {
   const cfg = source || getConfig() || {};
   const enabled = isDetailsModalModuleEnabled(cfg);
 
   return {
-    enabled,
+    enabled: enabled,
     showTmdbReviews: enabled && cfg.detailsModalTmdbReviewsEnabled !== false,
     showLocalComments: enabled && cfg.detailsModalLocalCommentsEnabled === true
   };
@@ -1354,24 +1371,21 @@ function pruneGlobalConfig(cfg) {
 export async function publishAdminSnapshotIfForced() {
   try {
     const cfg = getConfig();
-    if (!cfg?.currentUserIsAdmin) {
+    if (!cfg || !cfg.currentUserIsAdmin) {
       return { attempted: false, forced: false, ok: true, reason: "not-admin" };
     }
 
     const targetProfile = getAdminTargetProfile();
-    const r = await fetch(`/Plugins/NexusPobreFlix/UserSettings?ts=${Date.now()}&profile=${targetProfile}`, {
-      cache: "no-store"
-    });
     const j = r.ok ? await r.json() : null;
-    if (!j?.forceGlobal) {
+    if (!j || !j.forceGlobal) {
       return { attempted: false, forced: false, ok: true, reason: "not-forced", profile: targetProfile };
     }
 
     const globalConfig = pruneGlobalConfig(cfg);
-    const token =
-      window.ApiClient?.accessToken?.() ||
-      window.ApiClient?._accessToken ||
-      "";
+    const apiClient = window.ApiClient;
+    const token = (apiClient && typeof apiClient.accessToken === "function")
+      ? apiClient.accessToken()
+      : (apiClient ? (apiClient._accessToken || "") : "");
 
     if (!token) {
       console.warn("[NexusPobreFlix] Auto publish skipped (no token).");
@@ -1402,7 +1416,7 @@ export async function publishAdminSnapshotIfForced() {
       forced: true,
       ok: false,
       reason: "exception",
-      error: e?.message || String(e)
+      error: (e && e.message) || String(e)
     };
   }
 }
@@ -1455,7 +1469,7 @@ export function buildJfUrl(pathOrUrl) {
     maybeBootstrapManagedStorage(pruneGlobalConfig(getConfig()));
     const managedStorageActive = !!getManagedStorageBridge();
 
-    if (!data?.forceGlobal) {
+    if (!data || !data.forceGlobal) {
       if (!managedStorageActive && _restoreBackupIfAny()) {
         console.log("[NexusPobreFlix] Restored user settings (global off).");
       }
