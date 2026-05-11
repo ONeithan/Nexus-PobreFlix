@@ -31,22 +31,33 @@ body:not(.configPage) {
     background-color: rgba(0,0,0,0.75) !important;
 }
 
-/* 2. HEADER - NEXUS LOGO & CLEANUP */
+/* 2. HEADER - NEXUS LOGO & CLEANUP (Industrial) */
 .headerLogoWithText, 
 .headerLogo,
 .headerLogo img,
-.section0 .headerLogo {
+.section0 .headerLogo,
+.mainDrawer-header .headerLogo {
     background-image: none !important;
     content: "" !important;
+    font-size: 0 !important; /* Purga de texto Jellyfin/Nexus Jellyfin */
 }
 
-/* Injetar Logo Nexus PobreFlix Local */
+/* Ocultar Texto "Jellyfin" e variantes em todos os estados */
+.headerLogoWithText:before,
+.headerLogo:before,
+.mainDrawer-header .headerLogo:before,
+.mainDrawer-header .headerLogoWithText:before {
+    display: none !important;
+}
+
+/* Injetar Logo Nexus PobreFlix Local - Industrial */
 .headerLogoWithText:after,
-.headerLogo:after {
+.headerLogo:after,
+.mainDrawer-header .headerLogo:after {
     content: "";
     display: block;
-    width: 180px;
-    height: 50px;
+    width: 250px;
+    height: 65px;
     background-image: url('./slider/src/images/logo_pobreflix.png') !important;
     background-size: contain !important;
     background-repeat: no-repeat !important;
@@ -63,6 +74,19 @@ body:not(.configPage) {
     height: 64px !important;
     border-bottom: none !important;
     box-shadow: none !important;
+    top: 0 !important;
+    position: absolute !important;
+    width: 100% !important;
+    z-index: 999 !important;
+}
+
+/* Remover Linha Cinza e Quadrado Enorme do Header */
+.headerTop, .header-item, .header-section, .mainPageContainer, .page, body {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
 }
 
 /* Ajuste do Header em Scroll */
@@ -109,9 +133,13 @@ body:not(.configPage) {
 .hub-card:hover .hub-logo-img,
 .hub-card:hover .hub-title-text,
 .hub-card:hover .monwui-hub-card-title,
-.hub-card:hover .hub-static-image {
+.hub-card:hover .hub-static-image,
+.hub-card:hover .hub-logo,
+.hub-card:hover .hub-card-title,
+#studio-hubs .hub-card:hover .hub-title-text {
     opacity: 0 !important;
     visibility: hidden !important;
+    display: none !important;
     transition: opacity 0.3s ease !important;
 }
 
@@ -174,9 +202,9 @@ body:not(.configPage) {
 
 .monwui-meta-badge, .monwui-status-item, .monwui-status-container > span {
     background: rgba(255,255,255,0.1) !important;
-    padding: 6px 14px !important;
-    border-radius: 15px !important;
-    font-size: 0.8rem !important;
+    padding: 4px 10px !important;
+    border-radius: 12px !important;
+    font-size: 0.65rem !important;
     font-weight: 700 !important;
     color: rgba(255,255,255,0.9) !important;
     border: 1px solid rgba(255,255,255,0.1) !important;
@@ -184,7 +212,7 @@ body:not(.configPage) {
     letter-spacing: 0.5px !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 4px !important;
 }
 
 .monwui-meta-badge.accent, .monwui-status-container > span.type {
@@ -292,8 +320,8 @@ body:not(.configPage) {
 #loginPage .readOnlyContent:before {
     content: "";
     display: block;
-    width: 200px;
-    height: 70px;
+    width: 250px;
+    height: 80px;
     background-image: url('./slider/src/images/logo_pobreflix.png') !important;
     background-size: contain !important;
     background-repeat: no-repeat !important;

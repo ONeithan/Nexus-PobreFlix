@@ -4,6 +4,17 @@ Este documento é a **Fonte da Verdade** para auditoria industrial do projeto.
 
 ---
 
+## 🚀 v1.0.0.18 (07/05/2026)
+### INDUSTRIALIZAÇÃO E PURGA TOTAL
+- **[URGENTE] Purga Sistêmica**: Remoção total de referências ao branding "Jellyfin" em toda a interface (Header, Side Nav, Configurações).
+- **[Branding] Logo Oficial**: Implementação do logo industrial `logo_pobreflix.png` em alta resolução no Header, Login e Drawer.
+- **[UI/UX] Imersão Premium**: Ajuste agressivo nos Studio Hubs para ocultar textos e overlays durante o hover, focando 100% no vídeo/animação.
+- **[Layout] Normalização de Topo**: Eliminação de espaçamentos residuais ("quadrado enorme") e linhas cinzas no topo da interface via injeção CSS de alta prioridade.
+- **[Metadata] Refinamento Visual**: Redução do tamanho da fonte dos metadados no slider principal para 0.65rem, garantindo uma estética limpa e profissional.
+- **[Localização] Nexus Standard**: Atualização do dicionário PT-BR para remover menções ao ecossistema Jellyfin, consolidando o Nexus PobreFlix como interface definitiva.
+
+---
+
 ## 🛡️ v1.0.0.11 (10/05/2026)
 ### COMPATIBILIDADE E ESTABILIDADE LEGACY
 
