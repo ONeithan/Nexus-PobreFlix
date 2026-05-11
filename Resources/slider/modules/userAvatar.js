@@ -192,7 +192,7 @@ export async function updateHeaderUserAvatar() {
 
     cleanAvatars(headerButton);
     avatarElement.classList.add("custom-user-avatar");
-    const label = (user?.Name || "Usuário") + " avatar";
+    const label = (user?.Name || config.languageLabels.unknownUser || "Usuário") + " avatar";
     avatarElement.setAttribute('role','img');
     avatarElement.setAttribute('aria-label', label);
     headerButton.appendChild(avatarElement);
@@ -303,7 +303,7 @@ async function createDicebearAvatar(user, options = {}) {
     svgElement.style.position = fixedPosition ? 'fixed' : 'relative';
     svgElement.style.pointerEvents = 'none';
     svgElement.setAttribute('role','img');
-    svgElement.setAttribute('aria-label', (user?.Name || 'Usuário') + ' avatar');
+    svgElement.setAttribute('aria-label', (user?.Name || config.languageLabels.unknownUser || 'Usuário') + ' avatar');
 
     if (config.dicebearBackgroundEnabled && config.dicebearBackgroundColor && config.dicebearBackgroundColor !== 'transparent') {
       const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -327,7 +327,7 @@ function createInitialsAvatar(user, options = {}) {
   initialsDiv.textContent = initials;
   initialsDiv.dataset.userId = user.Id;
   initialsDiv.setAttribute('role','img');
-  initialsDiv.setAttribute('aria-label', (user?.Name || 'Usuário') + ' avatar');
+  initialsDiv.setAttribute('aria-label', (user?.Name || config.languageLabels.unknownUser || 'Usuário') + ' avatar');
 
   const { config, widthCss, heightCss, scale, fontSize, animate } = resolveAvatarRenderOptions(options);
   const avatarColor = getAvatarColor(user.Id);

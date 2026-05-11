@@ -150,11 +150,11 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
     const typeSpan = document.createElement("span");
     typeSpan.className = "type";
     const typeTranslations = {
-      Series: { text: config.languageLabels.dizi, icon: '<i class="fas fa-tv "></i>' },
+      Series: { text: config.languageLabels.series, icon: '<i class="fas fa-tv "></i>' },
       Season: { text: config.languageLabels.season, icon: '<i class="fas fa-tv "></i>' },
       Episode: { text: config.languageLabels.episode, icon: '<i class="fas fa-tv "></i>' },
       BoxSet: { text: config.languageLabels.boxset, icon: '<i class="fas fa-film "></i>' },
-      Movie: { text: config.languageLabels.film, icon: '<i class="fas fa-film "></i>' }
+      Movie: { text: config.languageLabels.movie, icon: '<i class="fas fa-film "></i>' }
     };
     const typeInfo = typeTranslations[itemType] || { text: itemType, icon: "" };
     let typeText = typeInfo.text || itemType;
@@ -162,7 +162,7 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
       typeText += ` (${ChildCount} ${config.languageLabels.season || "Temporadas"})`;
     }
     if (itemType === "BoxSet" && ChildCount) {
-      typeText += ` (${ChildCount} ${config.languageLabels.seri || "Séries"})`;
+      typeText += ` (${ChildCount} ${config.languageLabels.seriesPlural || "Séries"})`;
     }
     typeSpan.innerHTML = `${typeInfo.icon}${buildMetaTextSpan(typeText, "monwui-type-text")}`;
     statusContainer.appendChild(typeSpan);
@@ -175,8 +175,8 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
       ? `<i class="fa-regular fa-circle-check"></i>`
       : `<i class="fa-regular fa-circle-xmark"></i>`;
     let watchedText = UserData.Played
-      ? config.languageLabels.izlendi
-      : config.languageLabels.izlenmedi;
+      ? config.languageLabels.watched
+      : config.languageLabels.unwatched;
     if (UserData.Played && UserData.PlayCount > 0) {
       watchedText += ` (${UserData.PlayCount})`;
     }
@@ -193,8 +193,8 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
       const hours = Math.floor(totalMinutes / 60);
       const minutes = totalMinutes % 60;
       return hours > 0
-        ? `${hours}${config.languageLabels.sa || "h"} ${minutes}${config.languageLabels.dk || "min"}`
-        : `${minutes}${config.languageLabels.dk || "min"}`;
+        ? `${hours}${config.languageLabels.hoursShort || "h"} ${minutes}${config.languageLabels.minutesShort || "min"}`
+        : `${minutes}${config.languageLabels.minutesShort || "min"}`;
     };
 
     const formatEndTimeLocalized = (ticks) => {
@@ -298,7 +298,7 @@ export async function createActorSlider(People, config, item) {
         actualPeople = parent.People;
       }
     } catch (e) {
-      console.warn("Ana dizi bilgileri alınamadı:", e);
+      console.warn("Não foi possível obter informações da série:", e);
     }
   }
 
@@ -472,8 +472,8 @@ export async function createDirectorContainer({ config, People, item }) {
       if (directors.length) {
         const directorNames = directors.map(d => d.Name).join(", ");
         const directorSpan = document.createElement("span");
-        directorSpan.className = "monwui-yonetmen";
-        directorSpan.textContent = `${config.languageLabels.yonetmen}: ${directorNames}`;
+        directorSpan.className = "monwui-director";
+        directorSpan.textContent = `${config.languageLabels.director}: ${directorNames}`;
         container.appendChild(directorSpan);
       }
     }
@@ -490,7 +490,7 @@ export async function createDirectorContainer({ config, People, item }) {
         const writerNames = matchingWriters.map(w => w.Name).join(", ");
         const writerSpan = document.createElement("span");
         writerSpan.className = "writer";
-        writerSpan.textContent = `${writerNames} ${config.languageLabels.yazar} ...`;
+        writerSpan.textContent = `${writerNames} ${config.languageLabels.writer} ...`;
         container.appendChild(writerSpan);
       }
     }

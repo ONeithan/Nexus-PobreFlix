@@ -1,0 +1,341 @@
+/* 
+  Nexus PobreFlix - Premium Build v1.0.0.16 (Scyfin Industrial)
+  Author: Antigravity & ONeithan
+  Identity: Nexus Purple, Immersive Backdrops, Zero Branding, Netflix-Style Grid
+*/
+
+/* 1. GLOBAL PURGE & TRANSPARENCY */
+:root {
+    --nexus-purple: #7B2FBE;
+    --nexus-purple-hover: #9d3eff;
+    --nexus-bg: #050505;
+    --nexus-glass: rgba(15, 15, 15, 0.7);
+    --nexus-blur: blur(25px);
+}
+
+body:not(.configPage) {
+    background-color: var(--nexus-bg) !important;
+    color: #eee !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* Remove Grey Areas & Standard Jellyfin Backgrounds */
+.backgroundContainer, 
+.mainDrawer,
+.skinHeader,
+.pageContainer {
+    background-color: transparent !important;
+}
+
+.backgroundContainer.withBackdrop {
+    background-color: rgba(0,0,0,0.75) !important;
+}
+
+/* 2. HEADER - NEXUS LOGO & CLEANUP */
+.headerLogoWithText, 
+.headerLogo,
+.headerLogo img,
+.section0 .headerLogo {
+    background-image: none !important;
+    content: "" !important;
+}
+
+/* Injetar Logo Nexus PobreFlix Local */
+.headerLogoWithText:after,
+.headerLogo:after {
+    content: "";
+    display: block;
+    width: 180px;
+    height: 50px;
+    background-image: url('./slider/src/images/logo_pobreflix.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center left;
+    margin-left: 10px;
+}
+
+/* Navbar Glassmorphism */
+.skinHeader {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: var(--nexus-blur) !important;
+    -webkit-backdrop-filter: var(--nexus-blur) !important;
+    height: 64px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Profile Icon Adjustment */
+.headerButton.headerButtonWithUser .headerUserButtonInner {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 6px !important;
+    border: 1.5px solid var(--nexus-purple) !important;
+}
+
+/* 3. STUDIO HUBS - TOTAL HOVER IMMERSION */
+.hub-card {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    background: #111 !important;
+}
+
+.hub-card:hover {
+    transform: scale(1.1) !important;
+    z-index: 100 !important;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.9) !important;
+    border-color: var(--nexus-purple) !important;
+}
+
+.hub-card:hover .hub-overlay,
+.hub-card:hover .hub-logo-img,
+.hub-card:hover .hub-title-text,
+.hub-card:hover .monwui-hub-card-title,
+.hub-card:hover .hub-static-image {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: opacity 0.3s ease !important;
+}
+
+.hub-card video {
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    border-radius: 12px !important;
+    object-fit: cover !important;
+}
+
+.hub-card:hover video {
+    opacity: 1 !important;
+}
+
+/* 4. CONTENT DETAILS - SCYFIN INDUSTRIAL STYLE */
+.itemDetailPage {
+    background: var(--nexus-bg) !important;
+}
+
+.itemBackdrop {
+    height: 100vh !important;
+    width: 100% !important;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    filter: brightness(0.5) saturate(1.1) !important;
+    background-size: cover !important;
+    background-position: center top !important;
+}
+
+.itemDetailPage:before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0) 100%),
+                linear-gradient(to top, var(--nexus-bg) 0%, rgba(5,5,5,0) 70%) !important;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.itemDetailsContainer {
+    position: relative !important;
+    z-index: 10 !important;
+    margin-top: 25vh !important;
+    padding: 0 6% !important;
+}
+
+/* Metadata Line & Pills */
+.jmsdm-status-line, .monwui-status-container {
+    display: flex !important;
+    gap: 10px !important;
+    margin-bottom: 25px !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+}
+
+.monwui-meta-badge, .monwui-status-item, .monwui-status-container > span {
+    background: rgba(255,255,255,0.1) !important;
+    padding: 6px 14px !important;
+    border-radius: 15px !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    color: rgba(255,255,255,0.9) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.monwui-meta-badge.accent, .monwui-status-container > span.type {
+    border-color: var(--nexus-purple) !important;
+    background: rgba(123, 47, 190, 0.25) !important;
+    color: #e0b0ff !important;
+}
+
+/* Quality Icons */
+.jmsdm-quality-pills, .video-quality {
+    display: flex !important;
+    gap: 8px !important;
+    align-items: center !important;
+}
+
+.quality-icon, .range-icon, .codec-icon, .video-quality img {
+    height: 20px !important;
+    filter: brightness(0) invert(1) drop-shadow(0 0 2px rgba(0,0,0,0.5)) !important;
+    opacity: 1 !important;
+}
+
+/* 5. BUTTONS (Nexus Premium) */
+.btnPlay, .btnResume, .button-flat, .button-accent {
+    background-color: var(--nexus-purple) !important;
+    color: white !important;
+    border-radius: 8px !important;
+    font-weight: 800 !important;
+    padding: 12px 30px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(123, 47, 190, 0.3) !important;
+}
+
+.btnPlay:hover, .btnResume:hover {
+    background-color: var(--nexus-purple-hover) !important;
+    transform: translateY(-3px) scale(1.02) !important;
+    box-shadow: 0 8px 25px rgba(123, 47, 190, 0.5) !important;
+}
+
+/* 6. PROFILE CHOOSER - NETFLIX GRID */
+.jf-profile-overlay {
+    background: #080808 !important;
+    z-index: 100000 !important;
+}
+
+.jf-profile-shell {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.jf-profile-title {
+    font-size: 3.5rem !important;
+    font-weight: 800 !important;
+    color: white !important;
+    margin-bottom: 10px !important;
+    text-shadow: 0 0 20px rgba(0,0,0,0.5) !important;
+}
+
+.jf-profile-avatar {
+    width: 150px !important;
+    height: 150px !important;
+    border-radius: 8px !important;
+    border: 3px solid transparent !important;
+    transition: all 0.3s ease !important;
+}
+
+.jf-profile-item:hover .jf-profile-avatar {
+    border-color: #fff !important;
+    transform: scale(1.1) !important;
+}
+
+.jf-profile-name {
+    margin-top: 15px !important;
+    font-size: 1.2rem !important;
+    color: #999 !important;
+}
+
+.jf-profile-item:hover .jf-profile-name {
+    color: #fff !important;
+}
+
+/* 7. LOGIN PAGE - NEXUS FIXES */
+#loginPage {
+    background: linear-gradient(135deg, #050505 0%, #11051a 100%) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#loginPage .readOnlyContent {
+    background: var(--nexus-glass) !important;
+    backdrop-filter: blur(40px) !important;
+    -webkit-backdrop-filter: blur(40px) !important;
+    border-radius: 24px !important;
+    border: 1px solid rgba(123, 47, 190, 0.3) !important;
+    padding: 50px !important;
+    max-width: 450px !important;
+    width: 90% !important;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8) !important;
+}
+
+#loginPage .readOnlyContent:before {
+    content: "";
+    display: block;
+    width: 200px;
+    height: 70px;
+    background-image: url('./slider/src/images/logo_pobreflix.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center;
+    margin: 0 auto 30px !important;
+}
+
+#loginPage h1 { display: none !important; }
+
+#loginPage .inputContainer {
+    margin-bottom: 20px !important;
+}
+
+#loginPage .emby-input {
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 10px !important;
+    color: #fff !important;
+    padding: 12px 15px !important;
+    transition: all 0.3s ease !important;
+}
+
+#loginPage .emby-input:focus {
+    border-color: var(--nexus-purple) !important;
+    background: rgba(123, 47, 190, 0.1) !important;
+}
+
+/* 8. SCROLLBARS */
+::-webkit-scrollbar {
+    width: 8px !important;
+    height: 8px !important;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.2) !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--nexus-purple) !important;
+    border-radius: 10px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--nexus-purple-hover) !important;
+}
+
+/* 9. MODAL & DETAILS (Z-INDEX FIX) */
+.jmsdm-modal {
+    z-index: 100001 !important;
+}
+
+.jmsdm-shell {
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+/* 10. CONFIG PAGE SAFETY */
+.configPage .skinHeader,
+.configPage .backgroundContainer {
+    backdrop-filter: none !important;
+    background-color: #1a1a1a !important;
+}

@@ -171,16 +171,30 @@
     display: none !important; /* Usamos o logo em vez do texto */
 }
 
-/* 7. PURGE GREY ARTIFACTS */
+/* 7. PURGE GREY ARTIFACTS & METADATA LAYOUT */
 .detailRibbon, 
 .itemDetailsGroup,
-.cardPadder {
+.cardPadder,
+.detailPageWrapperContainer {
     background: transparent !important;
     box-shadow: none !important;
 }
 
+.monwui-status-container {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+    align-items: center !important;
+    margin-top: 15px !important;
+    background: rgba(0,0,0,0.3) !important;
+    padding: 8px 15px !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+}
+
 .monwui-info-container {
-    background: rgba(123, 47, 190, 0.1) !important; /* Sutil roxo */
+    background: rgba(123, 47, 190, 0.1) !important;
     padding: 12px 20px !important;
     border-radius: 12px !important;
     border: 1px solid rgba(123, 47, 190, 0.3) !important;
@@ -190,8 +204,37 @@
     flex-wrap: wrap !important;
 }
 
-/* 8. FIX "UNDEFINED" ARTIFACTS */
+/* 8. STUDIO HUBS - VIDEO ONLY ON HOVER */
+.hub-card {
+    transition: transform 0.3s ease !important;
+}
+
+.hub-card:hover {
+    transform: scale(1.05) !important;
+}
+
+.hub-card:hover .hub-title-text,
+.hub-card:hover .hub-logo-img,
+.hub-card:hover .hub-overlay,
+.hub-card:hover .monwui-hub-card-title {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: opacity 0.3s ease !important;
+}
+
+.hub-card video {
+    border-radius: 12px !important;
+}
+
+/* 9. FIX "UNDEFINED" & ARTIFACTS */
 .monwui-meta-text:empty,
-.monwui-type-text:empty {
+.monwui-type-text:empty,
+[data-type="undefined"] {
     display: none !important;
+}
+
+.monwui-baslik {
+    font-size: 2.8rem !important;
+    font-weight: 800 !important;
+    text-shadow: 0 4px 12px rgba(0,0,0,0.8) !important;
 }

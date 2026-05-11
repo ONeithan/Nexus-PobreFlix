@@ -12,9 +12,7 @@ export function loadCSS() {
   const expected = new Map([
     ["base", resolveSliderAssetHref(`/slider/src/${playerStyle}-${theme}.css`)],
     ["settings", resolveSliderAssetHref("/slider/src/settings.css")],
-    ["nexus-patch", resolveSliderAssetHref("/slider/src/nexus_patch.css")],
-    ["nexus-login", resolveSliderAssetHref("/slider/src/nexus_login.css")],
-    ["nexus-v15-fixes", resolveSliderAssetHref("/slider/src/nexus_v15_fixes.css")],
+    ["nexus-v16-premium", resolveSliderAssetHref("/slider/src/nexus_v16_premium.css")],
   ]);
 
   document.documentElement?.setAttribute?.("data-jellyfin-player-theme", theme);

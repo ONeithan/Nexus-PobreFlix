@@ -8,6 +8,7 @@ import { getGlobalTmdbApiKey, sanitizeTmdbApiKey } from "./jmsPluginConfig.js";
 import { ensureStudioHubLogoFromTmdb, ensureStudioHubManualEntry, JMS_STUDIO_HUB_MANUAL_ENTRY_ADDED_EVENT } from "./studioHubsShared.js";
 import { showNotification } from "./player/ui/notification.js";
 import { WATCHLIST_MODAL_ID, getWatchlistButtonText, getWatchlistTabKey, getWatchlistToast, openWatchlistModal } from "./watchlist.js";
+import { getVideoQualityText, getPrimaryVideoStream } from "./containerUtils.js";
 
 const config = getConfig();
 const labels =
@@ -3563,8 +3564,8 @@ export async function openDetailsModal({ itemId, serverId = "", preferBackdropIn
     root.innerHTML = `
       <div class="jmsdm-backdrop" role="dialog" aria-modal="true">
         <div class="jmsdm-card" tabindex="-1">
-          <div class="jmsdm-topbar"><button class="jmsdm-close" aria-label="${config.languageLabels.close || "Kapat"}">✕</button></div>
-          <div style="padding:20px;color:rgba(255,255,255,.9);">${config.languageLabels.detailsFetchFailed || "Detaylar alınamadı."}</div>
+          <div class="jmsdm-topbar"><button class="jmsdm-close" aria-label="${config.languageLabels.close || "Fechar"}">✕</button></div>
+          <div style="padding:20px;color:rgba(255,255,255,.9);">${config.languageLabels.detailsFetchFailed || "Não foi possível carregar os detalhes."}</div>
         </div>
       </div>
     `;
@@ -3587,7 +3588,7 @@ export async function openDetailsModal({ itemId, serverId = "", preferBackdropIn
   }
 
   const displayItem = seriesItem || baseItem;
-  const nameBase = safeText(displayItem.Name, config.languageLabels.untitled || "İsimsiz");
+  const nameBase = safeText(displayItem.Name, config.languageLabels.untitled || "Sem título");
 
   try {
     window.__jms_lastDisplayItemName = safeText(displayItem.Name, "");
@@ -3596,7 +3597,7 @@ export async function openDetailsModal({ itemId, serverId = "", preferBackdropIn
   const epName = isEpisode ? safeText(baseItem.Name, "") : "";
   const name = (isEpisode && epName && epName !== nameBase) ? `${nameBase} — ${epName}` : nameBase;
 
-  const overview = safeText(displayItem.Overview, config.languageLabels.noDescription || "Açıklama yok.");
+  const overview = safeText(displayItem.Overview, config.languageLabels.noDescription || "Sem descrição disponível.");
   const year = displayItem.ProductionYear ? String(displayItem.ProductionYear) : "";
   const rating = formatOfficialRatingLabel(displayItem.OfficialRating) || "";
   const community = displayItem.CommunityRating ? String(displayItem.CommunityRating.toFixed?.(1) ?? displayItem.CommunityRating) : "";
@@ -3742,12 +3743,12 @@ export async function openDetailsModal({ itemId, serverId = "", preferBackdropIn
     } : null
   ].filter((chip) => safeText(chip?.text)).slice(0, 4);
   const stats = [
-    { label: label("sure", "Süre"), value: runtime },
-    { label: label("watchlistPreviewRemaining", "Kalan"), value: remaining },
-    { label: label("watchlistPreviewFinishAt", "Bitiş"), value: finishTime },
-    { label: label("watchlistPreviewVideoQuality", "Video"), value: videoQuality || safeText(baseItem?.MediaType || displayItem?.MediaType) },
-    { label: label("yonetmen", "Yönetmen"), value: directors.join(", ") },
-    { label: label("watchlistPreviewStudio", "Stüdyo"), value: studioNames.join(", ") || albumArtist || albumName }
+    { label: config.languageLabels.duration || "Duração", value: runtime },
+    { label: config.languageLabels.watchlistPreviewRemaining || "Restante", value: remaining },
+    { label: config.languageLabels.watchlistPreviewFinishAt || "Termina às", value: finishTime },
+    { label: config.languageLabels.watchlistPreviewVideoQuality || "Qualidade", value: videoQuality || safeText(baseItem?.MediaType || displayItem?.MediaType) },
+    { label: config.languageLabels.director || "Diretor", value: directors.join(", ") },
+    { label: config.languageLabels.watchlistPreviewStudio || "Estúdio", value: studioNames.join(", ") || albumArtist || albumName }
   ].filter((entry) => safeText(entry?.value));
   const mediaFields = isBoxSet
     ? []
@@ -3810,15 +3811,15 @@ wireMiniCardDelegation();
   function renderEpisodesHtml() {
     const items = pageSlice();
     if (!items.length) {
-      return `<div style="color:rgba(255,255,255,.75);font-size:13px;line-height:1.5;">${config.languageLabels.episodeNotFound || "Nenhum episódio encontrado."}</div>`;
+      return `<div class="v16-empty-state">${config.languageLabels.noEpisodesFound || "Nenhum episódio encontrado."}</div>`;
     }
     return `
-      <div class="jmsdm-episodes">
+      <div class="v16-episodes-list">
         ${items.map((ep, i) => {
           const s = ep.ParentIndexNumber ?? "";
           const e = ep.IndexNumber ?? "";
           const num = (s !== "" && e !== "") ? `S${s} · E${e}` : String((page - 1) * perPage + i + 1);
-          const epName = safeText(ep.Name, config.languageLabels.episode || "Bölüm");
+          const epName = safeText(ep.Name, config.languageLabels.episode || "Episódio");
           const img = getEpisodeImageUrlMini(ep, { maxWidth: 260 });
           const epOver = safeText(ep.Overview, "");
           return `
@@ -3851,7 +3852,7 @@ wireMiniCardDelegation();
       const collectionLabel =
         config.languageLabels.collectionTitle ||
         config.languageLabels.collection ||
-        "Koleksiyon";
+        "Coleção";
 
       return `
         <div class="jmsdm-section-title">${similarTitle}</div>
@@ -3908,12 +3909,12 @@ wireMiniCardDelegation();
 
     if (isMusicType) {
       const tracksTitle = isAudio
-        ? (config.languageLabels.albumTracksTitle || "Albümdeki Şarkılar")
-        : (config.languageLabels.tracksTitle || "Şarkılar");
+        ? (config.languageLabels.albumTracksTitle || "Músicas no Álbum")
+        : (config.languageLabels.tracksTitle || "Músicas");
       const otherAlbumsTitle =
         isAudio
-          ? (config.languageLabels.artistAlbumsTitle || "Sanatçının Albümleri")
-          : (config.languageLabels.otherAlbumsTitle || "Diğer Albümler");
+          ? (config.languageLabels.artistAlbumsTitle || "Álbuns do Artista")
+          : (config.languageLabels.otherAlbumsTitle || "Outros Álbuns");
 
       return `
         <div class="jmsdm-section-title">${tracksTitle}</div>
@@ -3937,14 +3938,14 @@ wireMiniCardDelegation();
 
     const showSeasonUi = seasons.length > 0;
     return `
-      <div class="jmsdm-section-title">${seriesId ? (config.languageLabels.episodesTitle || "Bölümler") : (config.languageLabels.infoTitle || "Bilgi")}</div>
+      <div class="jmsdm-section-title">${seriesId ? (config.languageLabels.episodesTitle || "Episódios") : (config.languageLabels.infoTitle || "Informações")}</div>
 
       ${showSeasonUi ? `
         <div class="jmsdm-toolbar">
           <div class="jmsdm-select-wrap">
             <select class="jmsdm-select" aria-label="${config.languageLabels.seasonSelect || "Sezon Seç"}">
               ${seasons.map(s => {
-                const n = safeText(s.Name, `${config.languageLabels.season || "Sezon"} ${s.IndexNumber ?? ""}`.trim());
+                const n = safeText(s.Name, `${config.languageLabels.season || "Temporada"} ${s.IndexNumber ?? ""}`.trim());
                 const sel = String(s.Id) === String(selectedSeasonId) ? "selected" : "";
                 return `<option value="${s.Id}" ${sel}>${n}</option>`;
               }).join("")}
@@ -3981,7 +3982,7 @@ wireMiniCardDelegation();
           <div class="jmsdm-hero">
             ${heroImageUrl ? `<img src="${heroImageUrl}" alt="">` : ""}
             <div class="jmsdm-topbar">
-              <button class="jmsdm-close" aria-label="${labels.kapat || "Fechar"}">✕</button>
+              <button class="jmsdm-close" aria-label="${config.languageLabels.close || "Fechar"}">✕</button>
             </div>
 
             <div class="jmsdm-heroTitleWrap" aria-hidden="true">

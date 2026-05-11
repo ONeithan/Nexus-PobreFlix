@@ -500,7 +500,7 @@ async function fetchLatestAll() {
       `/Users/${userId}/Items?SortBy=DateCreated&SortOrder=Descending&IncludeItemTypes=Audio&Recursive=true&Limit=50`
     );
   } catch (e) {
-    console.error("[notif] Latest(Audio) isteği hata:", e);
+    console.error("[notif] Erro na requisição de Áudios Recentes:", e);
     latestAudioResp = {};
   }
 
@@ -663,8 +663,8 @@ function ensureUI() {
             <button id="jfNotifThemeToggle" class="jf-notif-theme-toggle" title="${liveConfig.languageLabels.themeToggleTooltip}">
               <i class="fa-solid fa-paintbrush"></i>
             </button>
-            <button id="jfNotifClearAll" class="jf-notif-clearall">${liveConfig.languageLabels.clearAll}</button>
-            <button class="jf-notif-close" data-close>×</button>
+            <button id="jfNotifClearAll" class="jf-notif-clearall">${liveConfig.languageLabels.clearAll || "Limpar Tudo"}</button>
+            <button class="jf-notif-close" data-close aria-label="${liveConfig.languageLabels.close || "Fechar"}">✕</button>
           </div>
         </div>
         <div class="jf-notif-tabs">
@@ -774,7 +774,7 @@ async function mountCastTabPanel() {
   host.innerHTML = `<div class="jf-loading">${escapeHtml(getLiveLabels()?.loadingText || "Carregando...")}</div>`;
   const { mountCastViewerPanel } = await getCastModule();
   __castTabMount = await mountCastViewerPanel(host, { refreshMs: 4000, variant: "notification" }).catch((error) => {
-    host.innerHTML = `<div class="jf-error">${escapeHtml(String(error?.message || getLiveLabels()?.listError || "Não foi possível carregar a lista."))}</div>`;
+    host.innerHTML = `<div class="jf-error">${escapeHtml(String(error?.message || getLiveLabels()?.watchlistLoadError || "Não foi possível carregar a lista."))}</div>`;
     return null;
   });
 }
