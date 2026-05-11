@@ -1,12 +1,12 @@
 import { getLanguageLabels, getDefaultLanguage, getStoredLanguagePreference } from '../language/index.js';
 
-var __globalOverride =
-  (typeof window !== "undefined" && window.__JMS_MANAGED_STORAGE__ && window.__JMS_MANAGED_STORAGE__.bootstrapOverride)
+let __globalOverride =
+  (typeof window !== "undefined" && window.__JMS_MANAGED_STORAGE__?.bootstrapOverride)
     ? window.__JMS_MANAGED_STORAGE__.bootstrapOverride
     : null;
-var __globalApplied = false;
-export var SETTINGS_HOTKEY_DEFAULT = "F2";
-export var DEFAULT_MANAGED_HOME_SECTION_ORDER = Object.freeze([
+let __globalApplied = false;
+export const SETTINGS_HOTKEY_DEFAULT = "F2";
+export const DEFAULT_MANAGED_HOME_SECTION_ORDER = Object.freeze([
   "studioHubs",
   "personalRecommendations",
   "top10SeriesRows",
@@ -19,11 +19,11 @@ export var DEFAULT_MANAGED_HOME_SECTION_ORDER = Object.freeze([
   "genreHubs",
   "directorRows"
 ]);
-export var NATIVE_HOME_SECTION_ORDER_PREFIX = "native:";
+export const NATIVE_HOME_SECTION_ORDER_PREFIX = "native:";
 
-var MANAGED_HOME_SECTION_ORDER_SET = new Set(DEFAULT_MANAGED_HOME_SECTION_ORDER);
+const MANAGED_HOME_SECTION_ORDER_SET = new Set(DEFAULT_MANAGED_HOME_SECTION_ORDER);
 
-var SETTINGS_HOTKEY_ALIASES = new Map([
+const SETTINGS_HOTKEY_ALIASES = new Map([
   [" ", "Space"],
   ["Spacebar", "Space"],
   ["Esc", "Escape"],
@@ -34,7 +34,7 @@ var SETTINGS_HOTKEY_ALIASES = new Map([
   ["Down", "ArrowDown"]
 ]);
 
-var SETTINGS_HOTKEY_ALLOWED_KEYS = new Set([
+const SETTINGS_HOTKEY_ALLOWED_KEYS = new Set([
   "Backspace",
   "Delete",
   "End",
@@ -51,7 +51,7 @@ var SETTINGS_HOTKEY_ALLOWED_KEYS = new Set([
   "ArrowUp"
 ]);
 
-var SETTINGS_HOTKEY_MODIFIER_KEYS = new Set([
+const SETTINGS_HOTKEY_MODIFIER_KEYS = new Set([
   "Alt",
   "AltGraph",
   "CapsLock",
@@ -72,7 +72,7 @@ export function isNativeHomeSectionOrderKey(value) {
 }
 
 export function normalizeManagedCardTitleDisplayMode(value) {
-  var raw = String(value || "").trim().toLowerCase();
+  const raw = String(value || "").trim().toLowerCase();
   switch (raw) {
     case "logo":
     case "logoonly":
@@ -96,7 +96,7 @@ export function normalizeManagedCardTitleDisplayMode(value) {
 }
 
 function isRecognizedManagedHomeSectionOrderKey(value) {
-  var key = String(value || "").trim();
+  const key = String(value || "").trim();
   return !!key && (
     MANAGED_HOME_SECTION_ORDER_SET.has(key) ||
     isNativeHomeSectionOrderKey(key)
@@ -104,24 +104,25 @@ function isRecognizedManagedHomeSectionOrderKey(value) {
 }
 
 export function normalizeManagedHomeSectionOrder(value = null, { nativeEntries } = {}) {
-  var hasNativeEntries = Array.isArray(nativeEntries);
-  var nativeEntryKeys = hasNativeEntries
-    ? new Setfunction(nativeEntries
-          .map((entry) (
+  const hasNativeEntries = Array.isArray(nativeEntries);
+  const nativeEntryKeys = hasNativeEntries
+    ? new Set(
+        nativeEntries
+          .map((entry) => (
             typeof entry === "string"
               ? entry
               : (entry && typeof entry === "object" ? entry.name : "")
           ))
-          .mapfunction((entry) String(entry || "").trim())
-          .filterfunction((entry) isNativeHomeSectionOrderKey(entry))
+          .map((entry) => String(entry || "").trim())
+          .filter((entry) => isNativeHomeSectionOrderKey(entry))
       )
     : null;
-  var out = [];
-  var seen = new Set();
-  var explicit = new Set();
+  const out = [];
+  const seen = new Set();
+  const explicit = new Set();
 
-  var push = function(entry, fromExplicit = false) {
-    var key = String(entry || "").trim();
+  const push = (entry, fromExplicit = false) => {
+    const key = String(entry || "").trim();
     if (
       !key ||
       seen.has(key) ||
@@ -136,23 +137,23 @@ export function normalizeManagedHomeSectionOrder(value = null, { nativeEntries }
   };
 
   if (Array.isArray(value)) {
-    value.forEach(function((entry) push(entry, true));
+    value.forEach((entry) => push(entry, true));
   } else if (typeof value === "string" && value.trim()) {
     try {
-      var parsed = JSON.parse(value);
+      const parsed = JSON.parse(value);
       if (Array.isArray(parsed)) {
-        parsed.forEach(function((entry) push(entry, true));
+        parsed.forEach((entry) => push(entry, true));
       } else {
-        value.split(",").forEach(function((entry) push(entry, true));
+        value.split(",").forEach((entry) => push(entry, true));
       }
     } catch {
-      value.split(",").forEach(function((entry) push(entry, true));
+      value.split(",").forEach((entry) => push(entry, true));
     }
   }
 
   if (hasNativeEntries) {
-    nativeEntries.forEach(function((entry) {
-      var key = (typeof entry === "string")
+    nativeEntries.forEach((entry) => {
+      const key = (typeof entry === "string")
         ? entry
         : (entry && typeof entry === "object" ? entry.name : "");
       push(key, false);
@@ -167,72 +168,60 @@ export function normalizeManagedHomeSectionOrder(value = null, { nativeEntries }
   return out;
 }
 
-function isRecentRowsSectionEnabled(cfg, masterEnabled) {
-  if (cfg === undefined) cfg = {};
-  if (masterEnabled === undefined) masterEnabled = cfg.enableHomeSectionsMaster !== false;
-  var recentMasterEnabled = masterEnabled && cfg.enableRecentRows !== false;
-  var hasRecentContent =
+function isRecentRowsSectionEnabled(cfg = {}, masterEnabled = cfg?.enableHomeSectionsMaster !== false) {
+  const recentMasterEnabled = masterEnabled && cfg?.enableRecentRows !== false;
+  const hasRecentContent =
     recentMasterEnabled &&
     (
-      cfg.enableRecentMoviesRow !== false ||
-      cfg.enableRecentSeriesRow !== false ||
-      cfg.enableRecentEpisodesRow !== false ||
-      cfg.enableRecentMusicRow !== false
+      cfg?.enableRecentMoviesRow !== false ||
+      cfg?.enableRecentSeriesRow !== false ||
+      cfg?.enableRecentEpisodesRow !== false ||
+      cfg?.enableRecentMusicRow !== false
     );
 
-  return hasRecentContent || (masterEnabled && cfg.enableOtherLibRows === true);
+  return hasRecentContent || (masterEnabled && cfg?.enableOtherLibRows === true);
 }
 
-function isTop10SeriesRowsSectionEnabled(cfg, masterEnabled) {
-  if (cfg === undefined) cfg = {};
-  if (masterEnabled === undefined) masterEnabled = cfg.enableHomeSectionsMaster !== false;
-  return masterEnabled && cfg.enableRecentRows !== false && cfg.enableTop10SeriesRow !== false;
+function isTop10SeriesRowsSectionEnabled(cfg = {}, masterEnabled = cfg?.enableHomeSectionsMaster !== false) {
+  return masterEnabled && cfg?.enableRecentRows !== false && cfg?.enableTop10SeriesRow !== false;
 }
 
-function isTop10MovieRowsSectionEnabled(cfg, masterEnabled) {
-  if (cfg === undefined) cfg = {};
-  if (masterEnabled === undefined) masterEnabled = cfg.enableHomeSectionsMaster !== false;
-  return masterEnabled && cfg.enableRecentRows !== false && cfg.enableTop10MoviesRow !== false;
+function isTop10MovieRowsSectionEnabled(cfg = {}, masterEnabled = cfg?.enableHomeSectionsMaster !== false) {
+  return masterEnabled && cfg?.enableRecentRows !== false && cfg?.enableTop10MoviesRow !== false;
 }
 
-function isTmdbTopMoviesRowsSectionEnabled(cfg, masterEnabled) {
-  if (cfg === undefined) cfg = {};
-  if (masterEnabled === undefined) masterEnabled = cfg.enableHomeSectionsMaster !== false;
-  return masterEnabled && cfg.enableRecentRows !== false && cfg.enableTmdbTopMoviesRow !== false;
+function isTmdbTopMoviesRowsSectionEnabled(cfg = {}, masterEnabled = cfg?.enableHomeSectionsMaster !== false) {
+  return masterEnabled && cfg?.enableRecentRows !== false && cfg?.enableTmdbTopMoviesRow !== false;
 }
 
-function isContinueRowsSectionEnabled(cfg, masterEnabled) {
-  if (cfg === undefined) cfg = {};
-  if (masterEnabled === undefined) masterEnabled = cfg.enableHomeSectionsMaster !== false;
-  var recentMasterEnabled = masterEnabled && cfg.enableRecentRows !== false;
-  var hasRecentTracks = recentMasterEnabled && cfg.enableRecentMusicTracksRow !== false;
-  var hasContinueContent =
+function isContinueRowsSectionEnabled(cfg = {}, masterEnabled = cfg?.enableHomeSectionsMaster !== false) {
+  const recentMasterEnabled = masterEnabled && cfg?.enableRecentRows !== false;
+  const hasRecentTracks = recentMasterEnabled && cfg?.enableRecentMusicTracksRow !== false;
+  const hasContinueContent =
     masterEnabled &&
     (
-      cfg.enableContinueMovies !== false ||
-      cfg.enableContinueSeries !== false
+      cfg?.enableContinueMovies !== false ||
+      cfg?.enableContinueSeries !== false
     );
 
-  return hasRecentTracks || hasContinueContent || (masterEnabled && cfg.enableOtherLibRows === true);
+  return hasRecentTracks || hasContinueContent || (masterEnabled && cfg?.enableOtherLibRows === true);
 }
 
-function isNextUpRowsSectionEnabled(cfg, masterEnabled) {
-  if (cfg === undefined) cfg = {};
-  if (masterEnabled === undefined) masterEnabled = cfg.enableHomeSectionsMaster !== false;
-  var recentMasterEnabled = masterEnabled && cfg.enableRecentRows !== false;
-  return recentMasterEnabled && cfg.enableNextUpRow !== false;
+function isNextUpRowsSectionEnabled(cfg = {}, masterEnabled = cfg?.enableHomeSectionsMaster !== false) {
+  const recentMasterEnabled = masterEnabled && cfg?.enableRecentRows !== false;
+  return recentMasterEnabled && cfg?.enableNextUpRow !== false;
 }
 
 function ensureImplicitManagedFollowerOrder(out, explicit, anchorKey, followerKey) {
   if (explicit.has(followerKey)) return;
-  var anchorIndex = out.indexOf(anchorKey);
-  var followerIndex = out.indexOf(followerKey);
+  const anchorIndex = out.indexOf(anchorKey);
+  const followerIndex = out.indexOf(followerKey);
   if (anchorIndex < 0 || followerIndex < 0 || followerIndex === (anchorIndex + 1)) {
     return;
   }
 
   out.splice(followerIndex, 1);
-  var nextAnchorIndex = out.indexOf(anchorKey);
+  const nextAnchorIndex = out.indexOf(anchorKey);
   if (nextAnchorIndex < 0) {
     out.push(followerKey);
     return;
@@ -240,34 +229,32 @@ function ensureImplicitManagedFollowerOrder(out, explicit, anchorKey, followerKe
   out.splice(nextAnchorIndex + 1, 0, followerKey);
 }
 
-function buildManagedHomeSectionEnabledMap(cfg) {
-  if (cfg === undefined) cfg = {};
-  var masterEnabled = cfg.enableHomeSectionsMaster !== false;
+function buildManagedHomeSectionEnabledMap(cfg = {}) {
+  const masterEnabled = cfg?.enableHomeSectionsMaster !== false;
   return {
-    studioHubs: masterEnabled && cfg.enableStudioHubs !== false,
-    personalRecommendations: masterEnabled && cfg.enablePersonalRecommendations !== false,
+    studioHubs: masterEnabled && cfg?.enableStudioHubs !== false,
+    personalRecommendations: masterEnabled && cfg?.enablePersonalRecommendations !== false,
     top10SeriesRows: isTop10SeriesRowsSectionEnabled(cfg, masterEnabled),
     top10MovieRows: isTop10MovieRowsSectionEnabled(cfg, masterEnabled),
     tmdbTopMoviesRows: isTmdbTopMoviesRowsSectionEnabled(cfg, masterEnabled),
     recentRows: isRecentRowsSectionEnabled(cfg, masterEnabled),
     continueRows: isContinueRowsSectionEnabled(cfg, masterEnabled),
     nextUpRows: isNextUpRowsSectionEnabled(cfg, masterEnabled),
-    becauseYouWatched: masterEnabled && cfg.enableBecauseYouWatched !== false,
-    genreHubs: masterEnabled && cfg.enableGenreHubs !== false,
-    directorRows: masterEnabled && cfg.enableDirectorRows !== false,
+    becauseYouWatched: masterEnabled && cfg?.enableBecauseYouWatched !== false,
+    genreHubs: masterEnabled && cfg?.enableGenreHubs !== false,
+    directorRows: masterEnabled && cfg?.enableDirectorRows !== false,
   };
 }
 
-export function getManagedHomeSectionRuntimeOrder(source, options) {
-  var enabledOnly = (options && options.enabledOnly === true);
-  var cfg = source || getConfig() || {};
-  var order = normalizeManagedHomeSectionOrder(cfg.managedHomeSectionOrder);
+export function getManagedHomeSectionRuntimeOrder(source = null, { enabledOnly = false } = {}) {
+  const cfg = source || getConfig() || {};
+  const order = normalizeManagedHomeSectionOrder(cfg?.managedHomeSectionOrder);
   if (!enabledOnly) {
     return order;
   }
 
-  var enabledMap = buildManagedHomeSectionEnabledMap(cfg);
-  return order.filterfunction((key) enabledMap[key] === true);
+  const enabledMap = buildManagedHomeSectionEnabledMap(cfg);
+  return order.filter((key) => enabledMap[key] === true);
 }
 
 function getManagedStorageBridge() {
@@ -280,32 +267,25 @@ function getManagedStorageBridge() {
   }
 }
 
-function registerManagedStorageKeys(keys) {
-  if (keys === undefined) keys = [];
+function registerManagedStorageKeys(keys = []) {
   try {
-    var bridge = getManagedStorageBridge();
-    if (bridge && typeof bridge.registerKeys === "function") {
-      bridge.registerKeys(keys);
-    }
-  } catch (e) {}
+    getManagedStorageBridge()?.registerKeys?.(keys);
+  } catch {}
 }
 
 function maybeBootstrapManagedStorage(snapshot) {
   try {
-    var bridge = getManagedStorageBridge();
-    if (bridge && typeof bridge.maybeBootstrapFromLocal === "function") {
-      bridge.maybeBootstrapFromLocal(snapshot);
-    }
-  } catch (e) {}
+    getManagedStorageBridge()?.maybeBootstrapFromLocal?.(snapshot);
+  } catch {}
 }
 
 export function normalizeSettingsHotkey(value, fallback = SETTINGS_HOTKEY_DEFAULT) {
   if (value === " ") return "Space";
 
-  var raw = String((value === null || value === undefined) ? "" : value).trim();
+  const raw = String(value ?? "").trim();
   if (!raw) return fallback;
 
-  var aliased = SETTINGS_HOTKEY_ALIASES.get(raw) || raw;
+  const aliased = SETTINGS_HOTKEY_ALIASES.get(raw) || raw;
   if (SETTINGS_HOTKEY_MODIFIER_KEYS.has(aliased)) return fallback;
 
   if (/^F(?:[1-9]|1[0-9]|2[0-4])$/i.test(aliased)) {
@@ -333,10 +313,9 @@ export function getSettingsHotkey() {
 
 export function getDeviceProfileAuto() {
   try {
-    var mm = window.matchMedia;
-    var coarse = (mm && mm("(pointer: coarse)") && mm("(pointer: coarse)").matches === true);
-    var small = (mm && mm("(max-width: 900px)") && mm("(max-width: 900px)").matches === true);
-    var uaMobile = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const coarse = window.matchMedia?.("(pointer: coarse)")?.matches === true;
+    const small = window.matchMedia?.("(max-width: 900px)")?.matches === true;
+    const uaMobile = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent);
     return (coarse || (small && uaMobile)) ? "mobile" : "desktop";
   } catch {
     return "desktop";
@@ -344,24 +323,24 @@ export function getDeviceProfileAuto() {
 }
 
 export function getAdminTargetProfile() {
-  var v = (localStorage.getItem("jms:settingsTargetProfile") || "auto").toLowerCase();
+  const v = (localStorage.getItem("jms:settingsTargetProfile") || "auto").toLowerCase();
   if (v === "mobile" || v === "desktop") return v;
   return getDeviceProfileAuto();
 }
 
-function __fetchGlobalOverride(force = false) {
+async function __fetchGlobalOverride(force = false) {
   if (!force && __globalOverride !== null) return __globalOverride;
-  var managed = getManagedStorageBridge();
-  if (!force && managed && managed.bootstrapOverride) {
+  const managed = getManagedStorageBridge();
+  if (!force && managed?.bootstrapOverride) {
     __globalOverride = managed.bootstrapOverride;
     return __globalOverride;
   }
   try {
-    var profile = getDeviceProfileAuto();
-    var r = fetch("/Plugins/NexusPobreFlix/UserSettings?ts=" + (Date.now()) + "&profile=" + (profile), {
+    const profile = getDeviceProfileAuto();
+    const r = await fetch(`/Plugins/NexusPobreFlix/UserSettings?ts=${Date.now()}&profile=${profile}`, {
     });
     if (!r.ok) throw new Error();
-    __globalOverride = r.json();
+    __globalOverride = await r.json();
   } catch {
     __globalOverride = { forceGlobal: false };
   }
@@ -370,10 +349,10 @@ function __fetchGlobalOverride(force = false) {
 
 function _takeBackupOnce(keys) {
   try {
-    var key = "jf:globalBackup:v2";
+    const key = "jf:globalBackup:v2";
     if (localStorage.getItem(key)) return;
-    var snap = {};
-    (keys || []).forEach(function(k) {
+    const snap = {};
+    (keys || []).forEach(k => {
       snap[k] = localStorage.getItem(k);
     });
     localStorage.setItem(key, JSON.stringify(snap));
@@ -382,12 +361,12 @@ function _takeBackupOnce(keys) {
 
 function _restoreBackupIfAny() {
   try {
-    var key = "jf:globalBackup:v2";
-    var raw = localStorage.getItem(key);
+    const key = "jf:globalBackup:v2";
+    const raw = localStorage.getItem(key);
     if (!raw) return false;
-    var snap = JSON.parse(raw || "{}");
+    const snap = JSON.parse(raw || "{}");
 
-    for (var [k, v] of Object.entries(snap)) {
+    for (const [k, v] of Object.entries(snap)) {
       if (v === null || v === undefined) localStorage.removeItem(k);
       else localStorage.setItem(k, String(v));
     }
@@ -414,15 +393,15 @@ function _setLsSmart(k, v) {
   }
 }
 
-function _num(v, d=0){ var n = Number(v); return Number.isFinite(n) ? n : d; }
+function _num(v, d=0){ const n = Number(v); return Number.isFinite(n) ? n : d; }
 function _bool(v, d=false){ return v === 'true' ? true : (v === 'false' ? false : d); }
 function _trimSlashesEnd(s){ return String(s || '').replace(/\/+$/, ''); }
 
 function readSmartAutoPause() {
-  var raw = localStorage.getItem('smartAutoPause');
+  const raw = localStorage.getItem('smartAutoPause');
   if (raw && raw.trim().startsWith('{') && raw !== '[object Object]') {
     try {
-      var j = JSON.parse(raw);
+      const j = JSON.parse(raw);
       return {
         enabled: j.enabled !== false,
         blurMinutes: _num(j.blurMinutes, 0.5),
@@ -434,14 +413,14 @@ function readSmartAutoPause() {
       };
     } catch {}
   }
-  var idleMs = _num(localStorage.getItem('idleThresholdMs'), 0);
-  var unfocusMs = _num(localStorage.getItem('unfocusedThresholdMs'), 0);
-  var offscreenMs = _num(localStorage.getItem('offscreenThresholdMs'), 0);
-  var useIdle = _bool(localStorage.getItem('useIdleDetection'), true);
-  var respectPiP = _bool(localStorage.getItem('respectPiP'), true);
-  var ignoreShort = _num(localStorage.getItem('ignoreShortUnderSec'), 300);
+  const idleMs = _num(localStorage.getItem('idleThresholdMs'), 0);
+  const unfocusMs = _num(localStorage.getItem('unfocusedThresholdMs'), 0);
+  const offscreenMs = _num(localStorage.getItem('offscreenThresholdMs'), 0);
+  const useIdle = _bool(localStorage.getItem('useIdleDetection'), true);
+  const respectPiP = _bool(localStorage.getItem('respectPiP'), true);
+  const ignoreShort = _num(localStorage.getItem('ignoreShortUnderSec'), 300);
 
-  var sapLegacy = {
+  const sapLegacy = {
     enabled: true,
     blurMinutes: unfocusMs > 0 ? (unfocusMs / 60000) : (500 / 60000),
     hiddenMinutes: offscreenMs > 0 ? (offscreenMs / 60000) : (500 / 60000),
@@ -455,21 +434,21 @@ function readSmartAutoPause() {
 }
 
 export function getConfig() {
-  var forceGlobal = (__globalOverride && __globalOverride.forceGlobal === true);
+  const forceGlobal = __globalOverride?.forceGlobal === true;
   if (window.__JMS_GLOBAL_CONFIG__) {
     return window.__JMS_GLOBAL_CONFIG__;
   }
 
-  function readShowcaseMode() {
-  var variant = (localStorage.getItem('cssVariant') || 'normalslider').toLowerCase();
-  var isShowcaseLike = ['peak', 'showcase', 'peak-skin'].includes(variant);
-  if (variant) return isShowcaseLike;
-  var explicit = localStorage.getItem('peakSlider');
+  function readPeakSlider() {
+  const variant = (localStorage.getItem('cssVariant') || 'normalslider').toLowerCase();
+  const isPeakLike = ['peak', 'peakslider', 'peak-skin'].includes(variant);
+  if (variant) return isPeakLike;
+  const explicit = localStorage.getItem('peakSlider');
   return explicit === 'true';
 }
   function readDotPreviewMode() {
     try {
-      var v = localStorage.getItem('dotPreviewPlaybackMode');
+      const v = localStorage.getItem('dotPreviewPlaybackMode');
       if (!v || v === '[object Object]') return null;
       if (v === 'trailer' || v === 'video' || v === 'onlyTrailer') return v;
       localStorage.removeItem('dotPreviewPlaybackMode');
@@ -491,14 +470,14 @@ export function getConfig() {
   }
   function readPreviewPlaybackMode() {
     try {
-      var stored = localStorage.getItem('previewPlaybackMode');
-      var normalizedStored = normalizePreviewPlaybackMode(stored);
+      const stored = localStorage.getItem('previewPlaybackMode');
+      const normalizedStored = normalizePreviewPlaybackMode(stored);
       if (normalizedStored) return normalizedStored;
       if (stored && stored !== '[object Object]') {
         localStorage.removeItem('previewPlaybackMode');
       }
 
-      var fallback = null;
+      let fallback = null;
       if (localStorage.getItem('disableAllPlayback') === 'true') {
         fallback = 'none';
       } else if (localStorage.getItem('enableTrailerThenVideo') === 'true') {
@@ -508,12 +487,12 @@ export function getConfig() {
       } else if (localStorage.getItem('enableVideoPlayback') === 'true') {
         fallback = 'video';
       } else {
-        var legacy = localStorage.getItem('previewTrailerEnabled');
+        const legacy = localStorage.getItem('previewTrailerEnabled');
         if (legacy === 'true') fallback = 'trailer';
         else if (legacy === 'false') fallback = 'video';
       }
 
-      var resolved = fallback || 'video';
+      const resolved = fallback || 'video';
       localStorage.setItem('previewPlaybackMode', resolved);
       return resolved;
     } catch {
@@ -521,25 +500,25 @@ export function getConfig() {
     }
   }
   function readPauseOverlay() {
-  var fallbackShowOsdHeaderRatings = localStorage.getItem('showRatingInfo') !== 'false';
-  var fallbackShowOsdHeaderCommunityRating = localStorage.getItem('showCommunityRating') !== 'false';
-  var fallbackShowOsdHeaderCriticRating = localStorage.getItem('showCriticRating') !== 'false';
-  var fallbackShowOsdHeaderOfficialRating = localStorage.getItem('showOfficialRating') !== 'false';
-  var normalizePauseOverlayCssHref = function(value)
-    String(value || '').trim() === 'moduloPausa2' ? 'moduloPausa2' : 'moduloPausa';
-  var readPauseBool = function(obj, key, fallback)
+  const fallbackShowOsdHeaderRatings = localStorage.getItem('showRatingInfo') !== 'false';
+  const fallbackShowOsdHeaderCommunityRating = localStorage.getItem('showCommunityRating') !== 'false';
+  const fallbackShowOsdHeaderCriticRating = localStorage.getItem('showCriticRating') !== 'false';
+  const fallbackShowOsdHeaderOfficialRating = localStorage.getItem('showOfficialRating') !== 'false';
+  const normalizePauseOverlayCssVariant = (value) =>
+    String(value || '').trim() === 'pauseModul2' ? 'pauseModul2' : 'pauseModul';
+  const readPauseBool = (obj, key, fallback) =>
     Object.prototype.hasOwnProperty.call(obj || {}, key)
       ? obj[key] !== false
       : fallback;
-  var raw = localStorage.getItem('pauseOverlay');
+  const raw = localStorage.getItem('pauseOverlay');
   if (raw && raw.trim().startsWith('{') && raw !== '[object Object]') {
     try {
-      var j = JSON.parse(raw);
-      var mv = _num(j.minVideoMinutes, 5);
-      var safeMin = Math.max(1, mv);
-      var cfg = {
+      const j = JSON.parse(raw);
+      const mv = _num(j.minVideoMinutes, 5);
+      const safeMin = Math.max(1, mv);
+      const cfg = {
         enabled: j.enabled !== false,
-        cssVariant: normalizePauseOverlayCssHref(j.cssVariant),
+        cssVariant: normalizePauseOverlayCssVariant(j.cssVariant),
         imagePreference: j.imagePreference || 'auto',
         showPlot: j.showPlot !== false,
         debug: j.debug !== false,
@@ -560,16 +539,16 @@ export function getConfig() {
         badgeDelayResumeMs: _num(j.badgeDelayResumeMs, 2000),
         ageBadgeDurationResumeMs: _num(j.ageBadgeDurationResumeMs, 10000),
       };
-      var missingOsdRatingKeys = [
+      const missingOsdRatingKeys = [
         'showOsdHeaderRatings',
         'showOsdHeaderCommunityRating',
         'showOsdHeaderCriticRating',
         'showOsdHeaderOfficialRating'
-      ].some(function(key) !Object.prototype.hasOwnProperty.call(j, key));
+      ].some(key => !Object.prototype.hasOwnProperty.call(j, key));
       if (
         safeMin !== mv ||
         missingOsdRatingKeys ||
-        normalizePauseOverlayCssHref(j.cssVariant) !== String(j.cssVariant || '')
+        normalizePauseOverlayCssVariant(j.cssVariant) !== String(j.cssVariant || '')
       ) {
         try { localStorage.setItem('pauseOverlay', JSON.stringify(cfg)); } catch {}
       }
@@ -577,23 +556,23 @@ export function getConfig() {
     } catch {}
   }
 
-  var rawCssVariant = localStorage.getItem('pauseOverlayCssVariant');
-  var rawImagePref = localStorage.getItem('pauseOverlayImagePreference');
-  var rawShowPlot = localStorage.getItem('pauseOverlayShowPlot');
-  var rawShowMeta = localStorage.getItem('pauseOverlayShowMetadata');
-  var rawShowLogo = localStorage.getItem('pauseOverlayShowLogo');
-  var rawDebug = localStorage.getItem('pauseOverlayDebug');
-  var rawShowBackdrop = localStorage.getItem('pauseOverlayShowBackdrop');
-  var rawRequireWebSocket = localStorage.getItem('pauseOverlayRequireWebSocket');
-  var rawMinVideoMin = localStorage.getItem('pauseOverlayMinVideoMinutes');
-  var rawCloseOnMouse = localStorage.getItem('closeOnMouseMove');
+  const rawCssVariant = localStorage.getItem('pauseOverlayCssVariant');
+  const rawImagePref = localStorage.getItem('pauseOverlayImagePreference');
+  const rawShowPlot = localStorage.getItem('pauseOverlayShowPlot');
+  const rawShowMeta = localStorage.getItem('pauseOverlayShowMetadata');
+  const rawShowLogo = localStorage.getItem('pauseOverlayShowLogo');
+  const rawDebug = localStorage.getItem('pauseOverlayDebug');
+  const rawShowBackdrop = localStorage.getItem('pauseOverlayShowBackdrop');
+  const rawRequireWebSocket = localStorage.getItem('pauseOverlayRequireWebSocket');
+  const rawMinVideoMin = localStorage.getItem('pauseOverlayMinVideoMinutes');
+  const rawCloseOnMouse = localStorage.getItem('closeOnMouseMove');
 
-  var mvLegacy = _num(rawMinVideoMin, 5);
-  var safeMinLegacy = Math.max(1, mvLegacy);
+  const mvLegacy = _num(rawMinVideoMin, 5);
+  const safeMinLegacy = Math.max(1, mvLegacy);
 
-  var legacy = {
+  const legacy = {
     enabled: raw !== 'false',
-    cssVariant: normalizePauseOverlayCssHref(rawCssVariant),
+    cssVariant: normalizePauseOverlayCssVariant(rawCssVariant),
     imagePreference: rawImagePref || 'auto',
     showPlot: rawShowPlot !== 'false',
     debug: rawDebug !== 'false',
@@ -619,21 +598,21 @@ export function getConfig() {
   return legacy;
 }
 
-  var defaultLanguage = getDefaultLanguage();
-  var previewPlaybackMode = readPreviewPlaybackMode();
-  var disableAllPlayback = previewPlaybackMode === 'none';
-  var enableTrailerPlayback = previewPlaybackMode === 'trailer';
-  var enableVideoPlayback = previewPlaybackMode === 'video';
-  var enableTrailerThenVideo = previewPlaybackMode === 'trailerThenVideo';
+  const defaultLanguage = getDefaultLanguage();
+  const previewPlaybackMode = readPreviewPlaybackMode();
+  const disableAllPlayback = previewPlaybackMode === 'none';
+  const enableTrailerPlayback = previewPlaybackMode === 'trailer';
+  const enableVideoPlayback = previewPlaybackMode === 'video';
+  const enableTrailerThenVideo = previewPlaybackMode === 'trailerThenVideo';
   try { localStorage.removeItem('enableHls'); } catch {}
-  var resolvedConfig = {
+  const resolvedConfig = {
     customQueryString: localStorage.getItem('customQueryString') || 'IncludeItemTypes=Movie,Series&Recursive=true&hasOverview=true&imageTypes=Logo,Backdrop&sortBy=DateCreated&sortOrder=Descending',
-    sortingKeywords: function(() {
-      var raw = localStorage.getItem('sortingKeywords');
+    sortingKeywords: (() => {
+      const raw = localStorage.getItem('sortingKeywords');
       try {
         return raw ? JSON.parse(raw) : ["DateCreated","PremiereDate","ProductionYear","Random"];
       } catch {
-        return raw ? raw.split(',').map(function(k) k.trim()) : ["DateCreated","PremiereDate","ProductionYear","Random"];
+        return raw ? raw.split(',').map(k => k.trim()) : ["DateCreated","PremiereDate","ProductionYear","Random"];
       }
     })(),
     enableSlider: localStorage.getItem('enableSlider') !== 'false',
@@ -698,14 +677,14 @@ export function getConfig() {
     enableTrailerPlayback,
     enableVideoPlayback,
     dotBackgroundImageType: localStorage.getItem('dotBackgroundImageType') || 'none',
-    dotVisibleCount: function(() {
-      var v = localStorage.getItem('dotVisibleCount');
-      var n = parseInt(v, 10);
+    dotVisibleCount: (() => {
+      const v = localStorage.getItem('dotVisibleCount');
+      const n = parseInt(v, 10);
       return Number.isFinite(n) ? Math.max(0, n) : 0;
     })(),
     trailerBackgroundImageType: localStorage.getItem('trailerBackgroundImageType') || 'trailerBgImage',
     watchBackgroundImageType: localStorage.getItem('watchBackgroundImageType') || 'watchBgImage',
-    favoriteBackgroundImageType: localStorage.getItem('favoriteBackgroundImageType') || 'favoriteBgImage',
+    favoriteBackgroundImageType: localStorage.getItem('favoriteBackgroundImageType') || 'favoriBgImage',
     playedBackgroundImageType: localStorage.getItem('playedBackgroundImageType') || 'playedBgImage',
     manualListIds: localStorage.getItem('manualListIds') || '',
     useManualList: localStorage.getItem('useManualList') === 'true',
@@ -713,7 +692,7 @@ export function getConfig() {
     useRandomContent: localStorage.getItem('useRandomContent') !== 'false',
     fullscreenMode: localStorage.getItem('fullscreenMode') === 'true' ? true : false,
     listLimit: 20,
-    version: "v1.0.0.9",
+    version: "v0.0.1",
     historySize: 20,
     updateInterval: 300000,
     nextTracksSource: localStorage.getItem('nextTracksSource') || 'playlist',
@@ -721,29 +700,26 @@ export function getConfig() {
     languageLabels: getLanguageLabels(defaultLanguage),
     sliderDuration: parseInt(localStorage.getItem('sliderDuration'), 10) || 15000,
     artistLimit: parseInt(localStorage.getItem('artistLimit'), 10) || 10,
-    atrasoTrailer: parseInt(localStorage.getItem('atrasoTrailer'), 10) || 500,
+    gecikmeSure: parseInt(localStorage.getItem('gecikmeSure'), 10) || 500,
     limit: parseInt(localStorage.getItem('limit'), 10) || 15,
     onlyUnwatchedRandom: localStorage.getItem('onlyUnwatchedRandom') === 'true',
     maxShufflingLimit: parseInt(localStorage.getItem('maxShufflingLimit'), 10) || 10000,
     excludeEpisodesFromPlaying: localStorage.getItem('excludeEpisodesFromPlaying') !== 'false',
     showPlaybackProgress: localStorage.getItem('showPlaybackProgress') !== 'false',
-    limiteMusica: parseInt(localStorage.getItem('limiteMusica'), 10) || 30,
-    limiteAlbum: parseInt(localStorage.getItem('limiteAlbum'), 10) || 20,
-    limiteFaixa: parseInt(localStorage.getItem('limiteFaixa'), 10) || 200,
-    limiteLote: parseInt(localStorage.getItem('limiteLote'), 10) || 100,
-    limiteId3: parseInt(localStorage.getItem('limiteId3'), 10) || 5,
-    limiteHistorico: parseInt(localStorage.getItem('limiteHistorico'), 10) || 10,
-    limiteCacheTagsId3: parseInt(localStorage.getItem('limiteCacheTagsId3'), 10) || parseInt(localStorage.getItem('id3TagsCacheLimit'), 10) || 500,
-    limiteCacheImagensId3: parseInt(localStorage.getItem('limiteCacheImagensId3'), 10) || parseInt(localStorage.getItem('id3ImagesCacheLimit'), 10) || 200,
-    usarBase64ImagensId3: localStorage.getItem('usarBase64ImagensId3') === 'true' || localStorage.getItem('id3UseBase64Images') === 'true',
+    muziklimit: parseInt(localStorage.getItem('muziklimit'), 10) || 30,
+    albumlimit: parseInt(localStorage.getItem('albumlimit'), 10) || 20,
+    sarkilimit: parseInt(localStorage.getItem('sarkilimit'), 10) || 200,
+    gruplimit: parseInt(localStorage.getItem('gruplimit'), 10) || 100,
+    id3limit: parseInt(localStorage.getItem('id3limit'), 10) || 5,
+    historylimit: parseInt(localStorage.getItem('historylimit'), 10) || 10,
     playerTheme: localStorage.getItem('playerTheme') || 'dark',
     playerStyle: localStorage.getItem('playerStyle') || 'player',
     dateLocale: localStorage.getItem('dateLocale') || 'pt-BR',
     maxExcludeIdsForUri: parseInt(localStorage.getItem('maxExcludeIdsForUri'), 10) || 100,
     nextTrack: parseInt(localStorage.getItem('nextTrack'), 10) || 100,
     topTrack: parseInt(localStorage.getItem('topTrack'), 10) || 30,
-    tempoAtivo: parseInt(localStorage.getItem('tempoAtivo'), 10) || 5000,
-    tempoEntrada: parseInt(localStorage.getItem('tempoEntrada'), 10) || 1000,
+    aktifSure: parseInt(localStorage.getItem('aktifSure'), 10) || 5000,
+    girisSure: parseInt(localStorage.getItem('girisSure'), 10) || 1000,
     homeSectionsTop: parseInt(localStorage.getItem('homeSectionsTop'), 10) || 0,
     dotPosterMode: localStorage.getItem('dotPosterMode') === 'true',
     shuffleSeedLimit: parseInt(localStorage.getItem('shuffleSeedLimit'), 10) || 1000,
@@ -773,14 +749,14 @@ export function getConfig() {
     dotPreviewPlaybackMode: readDotPreviewMode(),
     preferTrailersInPreviewModal: localStorage.getItem('preferTrailersInPreviewModal') !== 'false',
     onlyTrailerInPreviewModal: localStorage.getItem('onlyTrailerInPreviewModal') === 'true' ? true : false,
-    hoverVolume: (function(v) isNaN(v) ? 80 : v)(parseInt(localStorage.getItem('hoverVolume'), 10)),
+    hoverVolume: (v => isNaN(v) ? 80 : v)(parseInt(localStorage.getItem('hoverVolume'), 10)),
     enabledGmmp: localStorage.getItem('enabledGmmp') !== 'false',
     enableQualityBadges: localStorage.getItem('enableQualityBadges') !== 'false',
     enableTrailerThenVideo,
     disableAllPlayback,
-    dicebearParams: function(() {
+    dicebearParams: (() => {
   try {
-    var raw = localStorage.getItem('dicebearParams');
+    const raw = localStorage.getItem('dicebearParams');
     if (raw === '[object Object]') {
       localStorage.removeItem('dicebearParams');
       return {};
@@ -850,12 +826,12 @@ export function getConfig() {
     otherLibrariesRecentCardCount: parseInt(localStorage.getItem('otherLibrariesRecentCardCount'), 10) || 10,
     otherLibrariesContinueCardCount: parseInt(localStorage.getItem('otherLibrariesContinueCardCount'), 10) || 10,
     otherLibrariesEpisodesCardCount: parseInt(localStorage.getItem('otherLibrariesEpisodesCardCount'), 10) || 10,
-    otherLibrariesIds: function(() {
+    otherLibrariesIds: (() => {
       try {
-        var raw = localStorage.getItem('otherLibrariesIds');
+        const raw = localStorage.getItem('otherLibrariesIds');
         if (!raw || raw === '[object Object]') return [];
-        var arr = JSON.parse(raw);
-        return Array.isArray(arr) ? arr.map(function(x)String(x||'').trim()).filter(Boolean) : [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr.map(x=>String(x||'').trim()).filter(Boolean) : [];
       } catch { return []; }
     })(),
 
@@ -877,37 +853,37 @@ export function getConfig() {
     recentRowsSplitTvLibs: (localStorage.getItem('recentRowsSplitTvLibs') || 'true') !== 'false',
     recentRowsSplitMovieLibs: localStorage.getItem('recentRowsSplitMovieLibs') === 'true',
 
-    recentMoviesLibIds: function(() {
+    recentMoviesLibIds: (() => {
       try {
-        var raw = localStorage.getItem('recentMoviesLibIds');
+        const raw = localStorage.getItem('recentMoviesLibIds');
         if (!raw || raw === '[object Object]') return [];
-        var arr = JSON.parse(raw);
-        return Array.isArray(arr) ? arr.map(function(x)String(x||'').trim()).filter(Boolean) : [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr.map(x=>String(x||'').trim()).filter(Boolean) : [];
       } catch { return []; }
     })(),
 
-    recentSeriesTvLibIds: function(() {
+    recentSeriesTvLibIds: (() => {
       try {
-        var raw = localStorage.getItem('recentSeriesTvLibIds');
+        const raw = localStorage.getItem('recentSeriesTvLibIds');
         if (!raw || raw === '[object Object]') return [];
-        var arr = JSON.parse(raw);
-        return Array.isArray(arr) ? arr.map(function(x)String(x||'').trim()).filter(Boolean) : [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr.map(x=>String(x||'').trim()).filter(Boolean) : [];
       } catch { return []; }
     })(),
-    recentEpisodesTvLibIds: function(() {
+    recentEpisodesTvLibIds: (() => {
       try {
-        var raw = localStorage.getItem('recentEpisodesTvLibIds');
+        const raw = localStorage.getItem('recentEpisodesTvLibIds');
         if (!raw || raw === '[object Object]') return [];
-        var arr = JSON.parse(raw);
-        return Array.isArray(arr) ? arr.map(function(x)String(x||'').trim()).filter(Boolean) : [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr.map(x=>String(x||'').trim()).filter(Boolean) : [];
       } catch { return []; }
     })(),
-    continueSeriesTvLibIds: function(() {
+    continueSeriesTvLibIds: (() => {
       try {
-        var raw = localStorage.getItem('continueSeriesTvLibIds');
+        const raw = localStorage.getItem('continueSeriesTvLibIds');
         if (!raw || raw === '[object Object]') return [];
-        var arr = JSON.parse(raw);
-        return Array.isArray(arr) ? arr.map(function(x)String(x||'').trim()).filter(Boolean) : [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr.map(x=>String(x||'').trim()).filter(Boolean) : [];
       } catch { return []; }
     })(),
 
@@ -934,18 +910,18 @@ export function getConfig() {
     studioMiniTrailerPopover: (localStorage.getItem("studioMiniTrailerPopover") || "false") === "true",
     studioHubsMinRating: parseFloat(localStorage.getItem('studioHubsMinRating')) || 6.5,
     studioHubsCardCount: parseInt(localStorage.getItem('studioHubsCardCount'), 10) || 10,
-    studioHubsVolume: function(() {
-      var v = localStorage.getItem('studioHubsVolume');
+    studioHubsVolume: (() => {
+      const v = localStorage.getItem('studioHubsVolume');
       if (v === 'muted' || v === '0') return 'muted';
-      var n = parseInt(v, 10);
+      const n = parseInt(v, 10);
       return isNaN(n) ? 20 : n;
     })(),
     personalRecsCardCount: parseInt(localStorage.getItem('personalRecsCardCount'), 10) || 9,
-    studioHubsOrder: function(() {
+    studioHubsOrder: (() => {
       try {
-       var raw = localStorage.getItem('studioHubsOrder');
+       const raw = localStorage.getItem('studioHubsOrder');
         if (raw && raw !== '[object Object]') {
-          var arr = JSON.parse(raw);
+          const arr = JSON.parse(raw);
          if (Array.isArray(arr) && arr.length) return arr;
         }
      } catch {}
@@ -954,21 +930,21 @@ export function getConfig() {
         "Warner Bros. Pictures","Lucasfilm Ltd.","Columbia Pictures","Paramount Pictures","Netflix"
       ];
     })(),
-    studioHubsHidden: function(() {
+    studioHubsHidden: (() => {
       try {
-        var raw = localStorage.getItem('studioHubsHidden');
+        const raw = localStorage.getItem('studioHubsHidden');
         if (!raw || raw === '[object Object]') return [];
-        var arr = JSON.parse(raw);
+        const arr = JSON.parse(raw);
         return Array.isArray(arr)
-          ? arr.map(function(x) String(x || '').trim()).filter(Boolean)
+          ? arr.map(x => String(x || '').trim()).filter(Boolean)
           : [];
       } catch {
         return [];
       }
     })(),
-    managedHomeSectionOrder: function(() {
+    managedHomeSectionOrder: (() => {
       try {
-        var raw = localStorage.getItem('managedHomeSectionOrder');
+        const raw = localStorage.getItem('managedHomeSectionOrder');
         if (raw && raw !== '[object Object]') {
           return normalizeManagedHomeSectionOrder(raw);
         }
@@ -1141,36 +1117,36 @@ export function getConfig() {
 
     notificationsEnabled: localStorage.getItem('notificationsEnabled') !== 'false',
     useAlbumArtAsBackground: localStorage.getItem('useAlbumArtAsBackground') === 'true',
-    buttonBackgroundBlur: function(() {
-      var v = localStorage.getItem('buttonBackgroundBlur');
+    buttonBackgroundBlur: (() => {
+      const v = localStorage.getItem('buttonBackgroundBlur');
       return v !== null ? parseInt(v, 10) : 5;
     })(),
-    buttonBackgroundOpacity: function(() {
-    var v = localStorage.getItem('buttonBackgroundOpacity');
+    buttonBackgroundOpacity: (() => {
+    const v = localStorage.getItem('buttonBackgroundOpacity');
     return v !== null ? parseFloat(v) : 0.5;
 })(),
-    albumArtBackgroundBlur: function(() {
-      var v = localStorage.getItem('albumArtBackgroundBlur');
+    albumArtBackgroundBlur: (() => {
+      const v = localStorage.getItem('albumArtBackgroundBlur');
       return v !== null ? parseInt(v, 10) : 5;
     })(),
-    albumArtBackgroundOpacity: function(() {
-      var v = localStorage.getItem('albumArtBackgroundOpacity');
+    albumArtBackgroundOpacity: (() => {
+      const v = localStorage.getItem('albumArtBackgroundOpacity');
       return v !== null ? parseFloat(v) : 0.5;
     })(),
-    dotBackgroundBlur: function(() {
-      var v = localStorage.getItem('dotBackgroundBlur');
+    dotBackgroundBlur: (() => {
+      const v = localStorage.getItem('dotBackgroundBlur');
       return v !== null ? parseInt(v, 10) : 5;
     })(),
-    dotBackgroundOpacity: function(() {
-    var v = localStorage.getItem('dotBackgroundOpacity');
+    dotBackgroundOpacity: (() => {
+    const v = localStorage.getItem('dotBackgroundOpacity');
     return v !== null ? parseFloat(v) : 0.5;
 })(),
-      playingLimit: function(() {
-      var v = localStorage.getItem('playingLimit');
+      playingLimit: (() => {
+      const v = localStorage.getItem('playingLimit');
       return v !== null ? parseInt(v, 10) : 0;
     })(),
-    allowedWriters: function(() {
-      var defaultWriters = [
+    allowedWriters: (() => {
+      const defaultWriters = [
         "quentin tarantino",
         "fernando meirelles",
         "jose padilha",
@@ -1183,9 +1159,9 @@ export function getConfig() {
         "glauber rocha",
         "thomas harris"
       ];
-      var storedWriters = [];
+      let storedWriters = [];
       try {
-        var stored = localStorage.getItem('allowedWriters');
+        const stored = localStorage.getItem('allowedWriters');
         storedWriters = stored ? JSON.parse(stored) : [];
       } catch (e) {
         storedWriters = [];
@@ -1197,8 +1173,8 @@ export function getConfig() {
     minPixelCount: parseInt(localStorage.getItem("minPixelCount"), 10) || (1920 * 1080),
     cssVariant: localStorage.getItem('cssVariant') || 'normalslider',
     peakSlider: readPeakSlider(),
-    peakDiagonal: function(() {
-      var v = localStorage.getItem('peakDiagonal');
+    peakDiagonal: (() => {
+      const v = localStorage.getItem('peakDiagonal');
       if (v === 'true' || v === 'false') return v === 'true';
       return readPeakSlider();
     })(),
@@ -1215,46 +1191,51 @@ export function getConfig() {
     showGenreHubsHeroCards: (localStorage.getItem('showGenreHubsHeroCards') || 'true') !== 'false',
     studioHubsGenreCardCount: parseInt(localStorage.getItem("studioHubsGenreCardCount"), 10) || 10,
     studioHubsGenreRowsCount: parseInt(localStorage.getItem("studioHubsGenreRowsCount"), 10) || 4,
-    genreHubsOrder: function(() {
+    genreHubsOrder: (() => {
       try {
-        var raw = localStorage.getItem('genreHubsOrder');
+        const raw = localStorage.getItem('genreHubsOrder');
         if (raw && raw !== '[object Object]') {
-          var arr = JSON.parse(raw);
+          const arr = JSON.parse(raw);
           if (Array.isArray(arr) && arr.length) {
-            var blacklist = ['audio','podcast','audiobook','soundtrack','radio','talk','interview','music'];
-            return arr.filter(function(g) g && !blacklist.includes(String(g).toLowerCase()));
+            const blacklist = ['audio','podcast','audiobook','soundtrack','radio','talk','interview','music'];
+            return arr.filter(g => g && !blacklist.includes(String(g).toLowerCase()));
           }
         }
       } catch {}
       return null;
     })(),
 
-    currentUserIsAdmin: function(() {
+    currentUserIsAdmin: (() => {
       try {
-        var apiClient = window.ApiClient;
-        var user = (apiClient && apiClient._currentUser) || null;
-        var pol = (user && (user.Policy || user.UserPolicy)) || null;
+        const pol =
+          window.ApiClient?._currentUser?.Policy ||
+          window.ApiClient?._currentUser?.UserPolicy ||
+          null;
 
         if (pol) {
-          var liveAdminFlag = (pol.IsAdministrator !== undefined) ? pol.IsAdministrator :
-                                (pol.IsAdmin !== undefined) ? pol.IsAdmin :
-                                (pol.IsAdminUser !== undefined) ? pol.IsAdminUser : undefined;
+          const liveAdminFlag = [pol.IsAdministrator, pol.IsAdmin, pol.IsAdminUser]
+            .find(value =>
+              value === true ||
+              value === false ||
+              value === 'true' ||
+              value === 'false'
+            );
 
           if (liveAdminFlag !== undefined) {
             return liveAdminFlag === true || liveAdminFlag === 'true';
           }
         }
 
-        var ls = localStorage.getItem('currentUserIsAdmin');
+        const ls = localStorage.getItem('currentUserIsAdmin');
         if (ls === 'true' || ls === 'false') return ls === 'true';
-      } catch (e) {}
+      } catch {}
       return false;
     })(),
     forceGlobalUserSettings: forceGlobal
   };
 
   registerManagedStorageKeys([
-    ...Object.keys(resolvedConfig).filterfunction((key) key !== "settingsHotkey"),
+    ...Object.keys(resolvedConfig).filter((key) => key !== "settingsHotkey"),
     "jms:settingsTargetProfile",
     "settings.allowedTabs.v1",
     "lyricsMode",
@@ -1264,18 +1245,18 @@ export function getConfig() {
   return resolvedConfig;
 }
 
-export function isHomeSectionsMasterEnabled(source) {
-  var cfg = source || getConfig();
-  return (cfg && cfg.enableHomeSectionsMaster !== false);
+export function isHomeSectionsMasterEnabled(source = null) {
+  const cfg = source || getConfig();
+  return cfg?.enableHomeSectionsMaster !== false;
 }
 
-export function getHomeSectionsRuntimeConfig(source) {
-  var cfg = source || getConfig() || {};
-  var masterEnabled = isHomeSectionsMasterEnabled(cfg);
-  var enabledMap = buildManagedHomeSectionEnabledMap(cfg);
+export function getHomeSectionsRuntimeConfig(source = null) {
+  const cfg = source || getConfig() || {};
+  const masterEnabled = isHomeSectionsMasterEnabled(cfg);
+  const enabledMap = buildManagedHomeSectionEnabledMap(cfg);
 
   return {
-    masterEnabled: masterEnabled,
+    masterEnabled,
     enableStudioHubs: enabledMap.studioHubs,
     enablePersonalRecommendations: enabledMap.personalRecommendations,
     enableTop10SeriesRowsSection: enabledMap.top10SeriesRows,
@@ -1291,24 +1272,24 @@ export function getHomeSectionsRuntimeConfig(source) {
     enableContinueMovies: masterEnabled && cfg.enableContinueMovies !== false,
     enableContinueSeries: masterEnabled && cfg.enableContinueSeries !== false,
     enableOtherLibRows: masterEnabled && !!cfg.enableOtherLibRows,
-    managedSectionOrder: normalizeManagedHomeSectionOrder(cfg.managedHomeSectionOrder)
-      .filterfunction((key) enabledMap[key]),
+    managedSectionOrder: normalizeManagedHomeSectionOrder(cfg?.managedHomeSectionOrder)
+      .filter((key) => enabledMap[key]),
   };
 }
 
-export function isPauseFeaturesMasterEnabled(source) {
-  var cfg = source || getConfig();
-  return (cfg && cfg.enablePauseFeaturesMaster !== false);
+export function isPauseFeaturesMasterEnabled(source = null) {
+  const cfg = source || getConfig();
+  return cfg?.enablePauseFeaturesMaster !== false;
 }
 
-export function getPauseFeaturesRuntimeConfig(source) {
-  var cfg = source || getConfig() || {};
-  var masterEnabled = isPauseFeaturesMasterEnabled(cfg);
-  var pauseOverlayCfg = cfg.pauseOverlay || {};
-  var smartAutoPauseCfg = cfg.smartAutoPause || {};
+export function getPauseFeaturesRuntimeConfig(source = null) {
+  const cfg = source || getConfig() || {};
+  const masterEnabled = isPauseFeaturesMasterEnabled(cfg);
+  const pauseOverlayCfg = cfg?.pauseOverlay || {};
+  const smartAutoPauseCfg = cfg?.smartAutoPause || {};
 
   return {
-    masterEnabled: masterEnabled,
+    masterEnabled,
     enablePauseOverlay: masterEnabled && pauseOverlayCfg.enabled !== false,
     enableSmartAutoPause: masterEnabled && smartAutoPauseCfg.enabled !== false,
     enablePauseAgeBadge: masterEnabled && pauseOverlayCfg.showAgeBadge !== false,
@@ -1316,34 +1297,34 @@ export function getPauseFeaturesRuntimeConfig(source) {
   };
 }
 
-export function isSubtitleCustomizerModuleEnabled(source) {
-  var cfg = source || getConfig();
-  return (cfg && cfg.enableSubtitleCustomizerModule !== false);
+export function isSubtitleCustomizerModuleEnabled(source = null) {
+  const cfg = source || getConfig();
+  return cfg?.enableSubtitleCustomizerModule !== false;
 }
 
-export function isParentalPinModuleEnabled(source) {
-  var cfg = source || getConfig();
-  return (cfg && cfg.enableParentalPinModule !== false);
+export function isParentalPinModuleEnabled(source = null) {
+  const cfg = source || getConfig();
+  return cfg?.enableParentalPinModule !== false;
 }
 
-export function isDetailsModalModuleEnabled(source) {
-  var cfg = source || getConfig();
-  return (cfg && cfg.enableDetailsModalModule !== false);
+export function isDetailsModalModuleEnabled(source = null) {
+  const cfg = source || getConfig();
+  return cfg?.enableDetailsModalModule !== false;
 }
 
-export function getDetailsModalRuntimeConfig(source) {
-  var cfg = source || getConfig() || {};
-  var enabled = isDetailsModalModuleEnabled(cfg);
+export function getDetailsModalRuntimeConfig(source = null) {
+  const cfg = source || getConfig() || {};
+  const enabled = isDetailsModalModuleEnabled(cfg);
 
   return {
-    enabled: enabled,
+    enabled,
     showTmdbReviews: enabled && cfg.detailsModalTmdbReviewsEnabled !== false,
     showLocalComments: enabled && cfg.detailsModalLocalCommentsEnabled === true
   };
 }
 
 function pruneGlobalConfig(cfg) {
-  var deny = new Set([
+  const deny = new Set([
     "languageLabels",
     "currentUserIsAdmin",
     "settingsHotkey",
@@ -1353,13 +1334,13 @@ function pruneGlobalConfig(cfg) {
     "listLimit"
   ]);
 
-  var out = {};
-  for (var [k, v] of Object.entries(cfg || {})) {
+  const out = {};
+  for (const [k, v] of Object.entries(cfg || {})) {
     if (deny.has(k)) continue;
     out[k] = v;
   }
 
-  var storedLanguagePreference = getStoredLanguagePreference();
+  const storedLanguagePreference = getStoredLanguagePreference();
   if (storedLanguagePreference !== null && storedLanguagePreference !== undefined) {
     out.defaultLanguage = storedLanguagePreference;
   }
@@ -1367,31 +1348,34 @@ function pruneGlobalConfig(cfg) {
   return out;
 }
 
-export function publishAdminSnapshotIfForced() {
+export async function publishAdminSnapshotIfForced() {
   try {
-    var cfg = getConfig();
-    if (!cfg || !cfg.currentUserIsAdmin) {
+    const cfg = getConfig();
+    if (!cfg?.currentUserIsAdmin) {
       return { attempted: false, forced: false, ok: true, reason: "not-admin" };
     }
 
-    var targetProfile = getAdminTargetProfile();
-    var j = r.ok ? r.json() : null;
-    if (!j || !j.forceGlobal) {
+    const targetProfile = getAdminTargetProfile();
+    const r = await fetch(`/Plugins/NexusPobreFlix/UserSettings?ts=${Date.now()}&profile=${targetProfile}`, {
+      cache: "no-store"
+    });
+    const j = r.ok ? await r.json() : null;
+    if (!j?.forceGlobal) {
       return { attempted: false, forced: false, ok: true, reason: "not-forced", profile: targetProfile };
     }
 
-    var globalConfig = pruneGlobalConfig(cfg);
-    var apiClient = window.ApiClient;
-    var token = (apiClient && typeof apiClient.accessToken === "function")
-      ? apiClient.accessToken()
-      : (apiClient ? (apiClient._accessToken || "") : "");
+    const globalConfig = pruneGlobalConfig(cfg);
+    const token =
+      window.ApiClient?.accessToken?.() ||
+      window.ApiClient?._accessToken ||
+      "";
 
     if (!token) {
       console.warn("[NexusPobreFlix] Auto publish skipped (no token).");
       return { attempted: true, forced: true, ok: false, reason: "no-token", profile: targetProfile };
     }
 
-    var pr = fetch("/Plugins/NexusPobreFlix/UserSettings/Publish?ts=" + (Date.now()) + "&profile=" + (targetProfile), {
+    const pr = await fetch(`/Plugins/NexusPobreFlix/UserSettings/Publish?ts=${Date.now()}&profile=${targetProfile}`, {
       method: "POST",
       cache: "no-store",
       headers: {
@@ -1415,14 +1399,14 @@ export function publishAdminSnapshotIfForced() {
       forced: true,
       ok: false,
       reason: "exception",
-      error: (e && e.message) || String(e)
+      error: e?.message || String(e)
     };
   }
 }
 
 export function getServerAddress() {
-  var raw =
-    (window.serverConfig.address) ||
+  let raw =
+    (window.serverConfig?.address) ||
     (sessionStorage.getItem('serverAddress')) ||
     (localStorage.getItem('serverAddress')) ||
     '';
@@ -1441,55 +1425,55 @@ export function getServerAddress() {
 
   if (!raw) return _trimSlashesEnd(window.location.origin);
 
-  var s = String(raw).trim();
+  const s = String(raw).trim();
   if (!s) return _trimSlashesEnd(window.location.origin);
   if (/^https?:\/\//i.test(s)) return _trimSlashesEnd(s);
-  if (s.startsWith('//')) return _trimSlashesEnd((window.location.protocol) + (s));
+  if (s.startsWith('//')) return _trimSlashesEnd(`${window.location.protocol}${s}`);
   if (s.startsWith('/')) {
-    return _trimSlashesEnd((window.location.origin) + (s));
+    return _trimSlashesEnd(`${window.location.origin}${s}`);
   }
-  return _trimSlashesEnd((window.location.protocol) + "//" + (s));
+  return _trimSlashesEnd(`${window.location.protocol}//${s}`);
  }
 
 export function buildJfUrl(pathOrUrl) {
-  var base = getServerAddress();
-  var p = String(pathOrUrl || '').trim();
+  const base = getServerAddress();
+  const p = String(pathOrUrl || '').trim();
   if (!p) return base;
   if (/^https?:\/\//i.test(p)) return p;
-  if (p.startsWith('//')) return (window.location.protocol) + (p);
-  if (p.startsWith('/')) return (base) + (p);
-  return (base) + "/" + (p);
+  if (p.startsWith('//')) return `${window.location.protocol}${p}`;
+  if (p.startsWith('/')) return `${base}${p}`;
+  return `${base}/${p}`;
 }
 
-function(() {
+(async () => {
   try {
-    var data = __fetchGlobalOverride(true);
+    const data = await __fetchGlobalOverride(true);
     window.__JMS_GLOBAL_OVERRIDE__ = data;
     maybeBootstrapManagedStorage(pruneGlobalConfig(getConfig()));
-    var managedStorageActive = !!getManagedStorageBridge();
+    const managedStorageActive = !!getManagedStorageBridge();
 
-    if (!data || !data.forceGlobal) {
+    if (!data?.forceGlobal) {
       if (!managedStorageActive && _restoreBackupIfAny()) {
         console.log("[NexusPobreFlix] Restored user settings (global off).");
       }
       return;
     }
 
-    var isAdmin =
-      window.ApiClient._currentUser.Policy.IsAdministrator === true;
+    const isAdmin =
+      window.ApiClient?._currentUser?.Policy?.IsAdministrator === true;
 
     if (isAdmin) {
       console.log("[NexusPobreFlix] Admin user – skipping forced global apply.");
       return;
     }
 
-    if (!data.global || __globalApplied) return;
+    if (!data?.global || __globalApplied) return;
 
-    var g = data.global;
-    var keys = Object.keys(g || {});
+    const g = data.global;
+    const keys = Object.keys(g || {});
     _takeBackupOnce(keys);
 
-    for (var k of keys) {
+    for (const k of keys) {
       _setLsSmart(k, g[k]);
     }
 

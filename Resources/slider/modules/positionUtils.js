@@ -1,17 +1,17 @@
 import { getConfig } from "./config.js";
 import { forceHomeSectionsTop } from './positionOverrides.js';
 
-var config = getConfig();
-var HEADER_OFFSET_VAR = '--jms-slider-header-offset-px';
-var sliderHeaderBaselineByElement = new WeakMap();
+const config = getConfig();
+const HEADER_OFFSET_VAR = '--jms-slider-header-offset-px';
+const sliderHeaderBaselineByElement = new WeakMap();
 
-var sliderHeaderResizeObserver = null;
-var sliderHeaderObservedEl = null;
-var sliderHeaderLifecycleBound = false;
-var sliderHeaderRafId = 0;
+let sliderHeaderResizeObserver = null;
+let sliderHeaderObservedEl = null;
+let sliderHeaderLifecycleBound = false;
+let sliderHeaderRafId = 0;
 
 function normalizeSliderVariant(value) {
-  var variant = String(value || '').trim().toLowerCase();
+  const variant = String(value ?? '').trim().toLowerCase();
   if (!variant) return 'normalslider';
   if (variant.includes('full')) return 'fullslider';
   if (variant.includes('peak')) return 'peakslider';
@@ -22,9 +22,9 @@ function normalizeSliderVariant(value) {
 
 function getActiveSliderVariant(config = getConfig()) {
   return normalizeSliderVariant(
-    config.cssVariant ||
-    document.documentElement.dataset.cssVariant ||
-    window.__cssVariant ||
+    config?.cssVariant ??
+    document.documentElement?.dataset?.cssVariant ??
+    window.__cssVariant ??
     'normalslider'
   );
 }
@@ -34,7 +34,7 @@ function usesDynamicHeaderOffset(variant = getActiveSliderVariant()) {
 }
 
 function getSliderViewportBucket() {
-  return window.matchMedia.('(max-width: 768px)').matches ? 'mobile' : 'desktop';
+  return window.matchMedia?.('(max-width: 768px)')?.matches ? 'mobile' : 'desktop';
 }
 
 function findActiveSlidesContainer() {
@@ -44,16 +44,16 @@ function findActiveSlidesContainer() {
 }
 
 function isElementVisible(element) {
-  if (!element.isConnected) return false;
-  var rect = element.getBoundingClientRect.();
+  if (!element?.isConnected) return false;
+  const rect = element.getBoundingClientRect?.();
   if (!rect || rect.height <= 0 || rect.width <= 0) return false;
-  var style = window.getComputedStyle.(element);
-  return style.display !== 'none' && style.visibility !== 'hidden';
+  const style = window.getComputedStyle?.(element);
+  return style?.display !== 'none' && style?.visibility !== 'hidden';
 }
 
 function findVisibleSkinHeader() {
-  var candidates = document.querySelectorAll('.skinHeader:not(.osdHeader)');
-  for (var header of candidates) {
+  const candidates = document.querySelectorAll('.skinHeader:not(.osdHeader)');
+  for (const header of candidates) {
     if (isElementVisible(header)) return header;
   }
   return null;
@@ -61,8 +61,8 @@ function findVisibleSkinHeader() {
 
 function setSliderHeaderOffsetVar(container, offsetPx) {
   if (!container) return;
-  var roundedOffset = Number.isFinite(offsetPx) ? Math.round(offsetPx) : 0;
-  var value = (roundedOffset) + "px";
+  const roundedOffset = Number.isFinite(offsetPx) ? Math.round(offsetPx) : 0;
+  const value = `${roundedOffset}px`;
   if (container.style.getPropertyValue(HEADER_OFFSET_VAR) !== value) {
     container.style.setProperty(HEADER_OFFSET_VAR, value);
   }
@@ -76,7 +76,7 @@ function clearSliderHeaderObserver() {
 
 function scheduleSliderHeaderOffsetSync() {
   if (sliderHeaderRafId) return;
-  sliderHeaderRafId = requestAnimationFramefunction(() {
+  sliderHeaderRafId = requestAnimationFrame(() => {
     sliderHeaderRafId = 0;
     try { syncSliderHeaderOffset(); } catch {}
   });
@@ -90,7 +90,7 @@ function bindSliderHeaderLifecycle() {
   window.addEventListener('pageshow', scheduleSliderHeaderOffsetSync);
   window.addEventListener('hashchange', scheduleSliderHeaderOffsetSync);
   window.addEventListener('popstate', scheduleSliderHeaderOffsetSync);
-  document.addEventListenerfunction('visibilitychange', () {
+  document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'hidden') {
       scheduleSliderHeaderOffsetSync();
     }
@@ -98,11 +98,11 @@ function bindSliderHeaderLifecycle() {
 }
 
 function ensureSliderHeaderObserver(header) {
-  if (!header.isConnected || typeof ResizeObserver !== 'function') return;
+  if (!header?.isConnected || typeof ResizeObserver !== 'function') return;
   bindSliderHeaderLifecycle();
 
   if (!sliderHeaderResizeObserver) {
-    sliderHeaderResizeObserver = new ResizeObserverfunction(() {
+    sliderHeaderResizeObserver = new ResizeObserver(() => {
       scheduleSliderHeaderOffsetSync();
     });
   }
@@ -115,41 +115,41 @@ function ensureSliderHeaderObserver(header) {
 }
 
 function computeSliderHeaderOffsetPx(header) {
-  var rect = header.getBoundingClientRect.();
-  var currentHeight = Number(rect.height || 0);
+  const rect = header?.getBoundingClientRect?.();
+  const currentHeight = Number(rect?.height || 0);
   if (!Number.isFinite(currentHeight) || currentHeight <= 0) return 0;
 
-  var viewportBucket = getSliderViewportBucket();
-  var baselineState = sliderHeaderBaselineByElement.get(header) || {
+  const viewportBucket = getSliderViewportBucket();
+  const baselineState = sliderHeaderBaselineByElement.get(header) || {
     mobile: null,
     desktop: null,
   };
 
-  var previousBaseline = baselineState[viewportBucket];
-  var nextBaseline = Number.isFinite(previousBaseline) && previousBaseline > 0
+  const previousBaseline = baselineState[viewportBucket];
+  const nextBaseline = Number.isFinite(previousBaseline) && previousBaseline > 0
     ? Math.min(previousBaseline, currentHeight)
     : currentHeight;
 
   baselineState[viewportBucket] = nextBaseline;
   sliderHeaderBaselineByElement.set(header, baselineState);
 
-  var offsetPx = currentHeight - nextBaseline;
+  const offsetPx = currentHeight - nextBaseline;
   return Math.abs(offsetPx) < 1 ? 0 : offsetPx;
 }
 
 function resolveTopStyleValue(prefix, rawTopValue, config = getConfig()) {
-  var numericTopValue = Number(rawTopValue);
+  const numericTopValue = Number(rawTopValue);
   if (!Number.isFinite(numericTopValue) || numericTopValue === 0) return '';
 
-  var topValue = (numericTopValue) + "%";
+  let topValue = `${numericTopValue}%`;
   if (prefix === 'slide' && usesDynamicHeaderOffset(getActiveSliderVariant(config))) {
-    topValue = "calc(" + (topValue) + " + var(" + (HEADER_OFFSET_VAR) + ", 0px))";
+    topValue = `calc(${topValue} + var(${HEADER_OFFSET_VAR}, 0px))`;
   }
   return topValue;
 }
 
 export function syncSliderHeaderOffset(container = findActiveSlidesContainer()) {
-  var variant = getActiveSliderVariant();
+  const variant = getActiveSliderVariant();
 
   if (!container || !usesDynamicHeaderOffset(variant)) {
     if (container) {
@@ -161,7 +161,7 @@ export function syncSliderHeaderOffset(container = findActiveSlidesContainer()) 
     return;
   }
 
-  var header = findVisibleSkinHeader();
+  const header = findVisibleSkinHeader();
   if (!header) {
     setSliderHeaderOffsetVar(container, 0);
     clearSliderHeaderObserver();
@@ -183,37 +183,37 @@ function setImportantStyle(element, property, value) {
 }
 
 export function applyContainerStyles(container, type = '') {
-  var config = getConfig();
-  var prefix;
+  const config = getConfig();
+  let prefix;
 
   if (type === 'progress') {
     prefix = 'progressBar';
   } else if (type === 'progressSeconds') {
     prefix = 'progressSeconds';
   } else if (type) {
-    prefix = (type) + "Container";
+    prefix = `${type}Container`;
   } else {
     prefix = 'slide';
   }
 
-  setImportantStyle(container, 'top',    resolveTopStyleValue(prefix, config[(prefix) + "Top"], config));
-  setImportantStyle(container, 'left',   config[(prefix) + "Left"]   ? "${config["${prefix}Left"]}%"   : '');
-  setImportantStyle(container, 'width',  config[(prefix) + "Width"]  ? "${config["${prefix}Width"]}%"  : '');
-  setImportantStyle(container, 'height', config[(prefix) + "Height"] ? "${config["${prefix}Height"]}%" : '');
+  setImportantStyle(container, 'top',    resolveTopStyleValue(prefix, config[`${prefix}Top`], config));
+  setImportantStyle(container, 'left',   config[`${prefix}Left`]   ? `${config[`${prefix}Left`]}%`   : '');
+  setImportantStyle(container, 'width',  config[`${prefix}Width`]  ? `${config[`${prefix}Width`]}%`  : '');
+  setImportantStyle(container, 'height', config[`${prefix}Height`] ? `${config[`${prefix}Height`]}%` : '');
 
   if (type && type !== 'slide' && type !== 'progressSeconds' && type !== 'progress') {
-    setImportantStyle(container, 'display',         config[(prefix) + "Display"]        || '');
-    setImportantStyle(container, 'flex-direction',  config[(prefix) + "FlexDirection"]  || '');
-    setImportantStyle(container, 'justify-content', config[(prefix) + "JustifyContent"] || '');
-    setImportantStyle(container, 'align-items',     config[(prefix) + "AlignItems"]     || '');
-    setImportantStyle(container, 'flex-wrap',       config[(prefix) + "FlexWrap"]       || '');
+    setImportantStyle(container, 'display',         config[`${prefix}Display`]        || '');
+    setImportantStyle(container, 'flex-direction',  config[`${prefix}FlexDirection`]  || '');
+    setImportantStyle(container, 'justify-content', config[`${prefix}JustifyContent`] || '');
+    setImportantStyle(container, 'align-items',     config[`${prefix}AlignItems`]     || '');
+    setImportantStyle(container, 'flex-wrap',       config[`${prefix}FlexWrap`]       || '');
   }
 }
 
 export function updateSlidePosition() {
-  var config = getConfig();
+  const config = getConfig();
 
-  var slidesContainer = document.querySelector("#monwui-slides-container");
+  const slidesContainer = document.querySelector("#monwui-slides-container");
   if (slidesContainer) {
     syncSliderHeaderOffset(slidesContainer);
     applyContainerStyles(slidesContainer);
@@ -221,36 +221,36 @@ export function updateSlidePosition() {
     clearSliderHeaderObserver();
   }
 
-  var containerTypes = [
+  const containerTypes = [
     'logo', 'meta', 'status', 'rating', 'plot',
     'title', 'director', 'info', 'button',
     'existingDot', 'provider', 'providericons'
   ];
 
-  containerTypes.forEach(function(type) {
-    document.querySelectorAll(".monwui-" + (type) + "-container").forEach(function(container) {
+  containerTypes.forEach(type => {
+    document.querySelectorAll(`.monwui-${type}-container`).forEach(container => {
       applyContainerStyles(container, type);
     });
   });
 
-  var sliderWrapper = document.querySelector(".monwui-slider-wrapper");
+  const sliderWrapper = document.querySelector(".monwui-slider-wrapper");
   if (sliderWrapper) applyContainerStyles(sliderWrapper, 'slider');
 
-  var progressBar = document.querySelector(".monwui-slide-progress-bar");
+  const progressBar = document.querySelector(".monwui-slide-progress-bar");
   if (progressBar) applyContainerStyles(progressBar, 'progress');
 
-  var progressSeconds = document.querySelector(".monwui-slide-progress-seconds");
+  const progressSeconds = document.querySelector(".monwui-slide-progress-seconds");
   if (progressSeconds) applyContainerStyles(progressSeconds, 'progressSeconds');
 
-  var homeSectionsContainers = document.querySelectorAll(".homeSectionsContainer");
+  const homeSectionsContainers = document.querySelectorAll(".homeSectionsContainer");
   if (homeSectionsContainers.length) {
-    var explicitHomeTop = Number(config.homeSectionsTop);
+    const explicitHomeTop = Number(config.homeSectionsTop);
     if (Number.isFinite(explicitHomeTop) && explicitHomeTop !== 0) {
-      homeSectionsContainers.forEach(function(container) {
-        setImportantStyle(container, 'top', (explicitHomeTop) + "vh");
+      homeSectionsContainers.forEach(container => {
+        setImportantStyle(container, 'top', `${explicitHomeTop}vh`);
       });
     } else {
-      homeSectionsContainers.forEach(function(container) {
+      homeSectionsContainers.forEach(container => {
         setImportantStyle(container, 'top', '');
       });
       try { forceHomeSectionsTop(); } catch {}

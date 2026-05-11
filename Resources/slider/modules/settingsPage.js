@@ -28,16 +28,16 @@ import { enhanceFormAccessibility } from './accessibility.js';
 
 export { isLocalStorageAvailable, updateConfig };
 
-var settingsModal = null;
-var SETTINGS_OVERLAY_CLASS = 'jms-settings-overlay-shell';
-var SETTINGS_EMBEDDED_CLASS = 'jms-settings-page-shell';
+let settingsModal = null;
+const SETTINGS_OVERLAY_CLASS = 'jms-settings-overlay-shell';
+const SETTINGS_EMBEDDED_CLASS = 'jms-settings-page-shell';
 
 export function createSettingsModal() {
-    if (settingsModal && settingsModal.isConnected) {
+    if (settingsModal?.isConnected) {
         return settingsModal;
     }
 
-    var existing = document.getElementById('settings-modal');
+    const existing = document.getElementById('settings-modal');
     if (existing) {
         settingsModal = existing;
         return existing;
@@ -47,57 +47,57 @@ export function createSettingsModal() {
         return settingsModal;
     }
 
-    var config = getConfig();
-    var currentLang = config.defaultLanguage || getDefaultLanguage();
-    var labels = getLanguageLabels(currentLang) || {};
-    var monwuiTabLabel = labels.sliderSettings || 'Configurações Nexus';
-    var sliderTabLabel = labels.sliderPageLabel || 'Configurações do Slider';
+    const config = getConfig();
+    const currentLang = config.defaultLanguage || getDefaultLanguage();
+    const labels = getLanguageLabels(currentLang) || {};
+    const monwuiTabLabel = labels.sliderSettings || 'Configurações Nexus';
+    const sliderTabLabel = labels.sliderPageLabel || 'Configurações do Slider';
 
-    var modal = document.createElement('div');
+    const modal = document.createElement('div');
     modal.id = 'settings-modal';
-    modal.className = 'settings-modal ' + String(SETTINGS_EMBEDDED_CLASS);
+    modal.className = `settings-modal ${SETTINGS_EMBEDDED_CLASS}`;
     modal.setAttribute('data-jms-settings-page', 'true');
 
-    var modalContent = document.createElement('div');
+    const modalContent = document.createElement('div');
     modalContent.className = 'settings-modal-content';
 
-    var title = document.createElement('h2');
+    const title = document.createElement('h2');
     title.textContent = monwuiTabLabel;
 
     function createProfileSelector(labels) {
-      var wrap = document.createElement("div");
+      const wrap = document.createElement("div");
       wrap.className = "setting-item";
       wrap.style.marginBottom = "10px";
 
-      var lab = document.createElement("label");
-      lab.textContent = (labels && labels.profileTarget) ? labels.profileTarget : "Perfil de Destino";
+      const lab = document.createElement("label");
+      lab.textContent = labels?.profileTarget || "Perfil de Destino";
       lab.style.marginRight = "10px";
       lab.htmlFor = "jmsProfileTarget";
 
-      var select = document.createElement("select");
+      const select = document.createElement("select");
       select.id = "jmsProfileTarget";
       select.name = "jmsProfileTarget";
 
-      var autoProfile = getDeviceProfileAuto();
-      var profileNameMap = {
-        desktop: (labels && labels.profileDesktop) ? labels.profileDesktop : "Perfil Desktop",
-        mobile: (labels && labels.profileMobile) ? labels.profileMobile : "Perfil Mobile"
+      const autoProfile = getDeviceProfileAuto();
+      const profileNameMap = {
+        desktop: labels?.profileDesktop || "Perfil Desktop",
+        mobile: labels?.profileMobile || "Perfil Mobile"
       };
 
-      var autoProfileLabel =
-        profileNameMap[autoProfile] || ((labels && labels.profileAutoUnknown) ? labels.profileAutoUnknown : autoProfile);
+      const autoProfileLabel =
+        profileNameMap[autoProfile] || (labels?.profileAutoUnknown || autoProfile);
 
-      var opts = [
+      const opts = [
         {
           v: "auto",
-          t: String((labels && labels.profileAuto) ? labels.profileAuto : "Seleção Automática") + " (" + String(autoProfileLabel) + ")"
+          t: `${labels?.profileAuto || "Seleção Automática"} (${autoProfileLabel})`
         },
-        { v: "desktop", t: (labels && labels.profileDesktop) ? labels.profileDesktop : "Perfil Desktop" },
-        { v: "mobile", t: (labels && labels.profileMobile) ? labels.profileMobile : "Perfil Mobile" }
+        { v: "desktop", t: labels?.profileDesktop || "Perfil Desktop" },
+        { v: "mobile", t: labels?.profileMobile || "Perfil Mobile" }
       ];
 
-      opts.forEach(function(o) {
-        var opt = document.createElement("option");
+      opts.forEach(o => {
+        const opt = document.createElement("option");
         opt.value = o.v;
         opt.textContent = o.t;
         select.appendChild(opt);
@@ -105,10 +105,12 @@ export function createSettingsModal() {
 
       select.value = localStorage.getItem("jms:settingsTargetProfile") || "auto";
 
-      select.addEventListenerfunction() {
+      select.addEventListener("change", () => {
         localStorage.setItem("jms:settingsTargetProfile", select.value);
         showNotification(
-          '<i class="fas fa-layer-group" style="margin-right:8px;"></i> ' + String((labels && labels.profileChanged) ? labels.profileChanged : "Perfil selecionado. Ao salvar, as configurações serão publicadas neste perfil."),
+          `<i class="fas fa-layer-group" style="margin-right:8px;"></i> ${
+            labels?.profileChanged || "Perfil selecionado. Ao salvar, as configurações serão publicadas neste perfil."
+          }`,
           2500,
           "info"
         );
@@ -118,87 +120,87 @@ export function createSettingsModal() {
       return wrap;
     }
 
-    if (config && config.currentUserIsAdmin) {
+    if (config?.currentUserIsAdmin) {
       try {
-        var profSel = createProfileSelector(labels);
+        const profSel = createProfileSelector(labels);
         modalContent.appendChild(profSel);
       } catch {}
     }
 
-    if (config && config.currentUserIsAdmin && config.forceGlobalUserSettings) {
-      var forcedHint = document.createElement('div');
+    if (config?.currentUserIsAdmin && config?.forceGlobalUserSettings) {
+      const forcedHint = document.createElement('div');
       forcedHint.className = 'description-text2';
       forcedHint.style.margin = '0 0 12px';
       forcedHint.textContent =
-        (labels && labels.forceGlobalAdminHint) ? labels.forceGlobalAdminHint :
+        labels?.forceGlobalAdminHint ||
         'Forçar Configurações Globais está ativo. Salvar/Aplicar publica o perfil de configurações selecionado globalmente para todos os usuários.';
       modalContent.appendChild(forcedHint);
     }
 
-    var tabContainer = document.createElement('div');
+    const tabContainer = document.createElement('div');
     tabContainer.className = 'settings-tabs';
 
-    var tabContent = document.createElement('div');
+    const tabContent = document.createElement('div');
     tabContent.className = 'settings-tab-content';
 
-    var mainTab = createTab('monwui', 'fa-sliders', monwuiTabLabel, true);
-    var sliderTab = createTab('slider', 'fa-gear', sliderTabLabel, false);
-    var queryTab = createTab('query', 'fa-code', labels.queryStringInput || 'Configurações de Consulta API');
-    var musicTab = createTab('music', 'fa-music', labels.gmmpSettings || 'Configurações GMMP');
-    var studioTab = createTab('studio', 'fa-building', labels.studioHubsSettings || 'Configurações de Coleções de Estúdios');
-    var profileChooserTab = createTab('profile-chooser', 'fa-user-group', labels.profileChooserHeader || 'Configurações de Quem Está Assistindo');
-    var pauseTab = createTab('pause', 'fa-pause', labels.pauseSettings || 'Configurações da Tela de Pausa');
-    var watchlistSettingsTab = createTab('watchlist-settings', 'fa-bookmark', labels.watchlistSettingsTab || 'Configurações da Lista de Desejos');
-    var hoverTab = createTab('hover', 'fa-play-circle', labels.hoverTrailer || 'Configurações HoverTrailer');
-    var trailersTab = createTab('trailers', 'fa-video', labels.trailersHeader || 'Download de Trailers / NFO');
-    var notificationsTab = createTab('notifications', 'fa-bell', labels.notificationsSettings || 'Configurações de Notificação');
-    var detailsModalTab = createTab('details-modal', 'fa-circle-info', labels.detailsModalSettingsTab || 'Configurações do Módulo de Detalhes');
-    var avatarTab = createTab('avatar', 'fa-user', labels.avatarCreateInput || 'Configurações de Avatar');
-    var parentalPinTab = (config && config.currentUserIsAdmin)
+    const mainTab = createTab('monwui', 'fa-sliders', monwuiTabLabel, true);
+    const sliderTab = createTab('slider', 'fa-gear', sliderTabLabel, false);
+    const queryTab = createTab('query', 'fa-code', labels.queryStringInput || 'Configurações de Consulta API');
+    const musicTab = createTab('music', 'fa-music', labels.gmmpSettings || 'Configurações GMMP');
+    const studioTab = createTab('studio', 'fa-building', labels.studioHubsSettings || 'Configurações de Coleções de Estúdios');
+    const profileChooserTab = createTab('profile-chooser', 'fa-user-group', labels.profileChooserHeader || 'Configurações de Quem Está Assistindo');
+    const pauseTab = createTab('pause', 'fa-pause', labels.pauseSettings || 'Configurações da Tela de Pausa');
+    const watchlistSettingsTab = createTab('watchlist-settings', 'fa-bookmark', labels.watchlistSettingsTab || 'Configurações da Lista de Desejos');
+    const hoverTab = createTab('hover', 'fa-play-circle', labels.hoverTrailer || 'Configurações HoverTrailer');
+    const trailersTab = createTab('trailers', 'fa-video', labels.trailersHeader || 'Download de Trailers / NFO');
+    const notificationsTab = createTab('notifications', 'fa-bell', labels.notificationsSettings || 'Configurações de Notificação');
+    const detailsModalTab = createTab('details-modal', 'fa-circle-info', labels.detailsModalSettingsTab || 'Configurações do Módulo de Detalhes');
+    const avatarTab = createTab('avatar', 'fa-user', labels.avatarCreateInput || 'Configurações de Avatar');
+    const parentalPinTab = config?.currentUserIsAdmin
       ? createTab('parental-pin', 'fa-key', labels.parentalPinTab || 'Configurações de PIN Parental')
       : null;
-    var positionTab = createTab('position', 'fa-arrows-up-down-left-right', labels.positionSettings || 'Configurações de Posicionamento');
-    var dbManagementTab = createTab('db-management', 'fa-database', labels.dbManagementTab || 'Gerenciamento de DB');
-    var exporterTab = createTab('exporter', 'fa-download', labels.backupRestore || 'Backup e Restauração');
-    var aboutTab = createTab('about', 'fa-circle-info', labels.aboutHeader || 'Sobre');
+    const positionTab = createTab('position', 'fa-arrows-up-down-left-right', labels.positionSettings || 'Configurações de Posicionamento');
+    const dbManagementTab = createTab('db-management', 'fa-database', labels.dbManagementTab || 'Gerenciamento de DB');
+    const exporterTab = createTab('exporter', 'fa-download', labels.backupRestore || 'Backup e Restauração');
+    const aboutTab = createTab('about', 'fa-circle-info', labels.aboutHeader || 'Sobre');
 
-    var tabs = [
+    const tabs = [
         mainTab, sliderTab, queryTab, musicTab, studioTab, profileChooserTab,
         pauseTab, watchlistSettingsTab, hoverTab, trailersTab, notificationsTab, detailsModalTab,
         avatarTab, parentalPinTab, positionTab, dbManagementTab, exporterTab, aboutTab
     ].filter(Boolean);
     tabContainer.append(...tabs);
 
-    var sliderPanel = createSliderPanel(config, labels);
-    var animationPanel = createAnimationPanel(config, labels);
-    var profileChooserPanel = createProfileChooserPanel(config, labels);
-    var musicPanel = createMusicPanel(config, labels);
-    var pausePanel = createPausePanel(config, labels);
-    var positionPanel = createPositionPanel(config, labels);
-    var queryPanel = createQueryPanel(config, labels);
-    var hoverPanel = createHoverTrailerPanel(config, labels);
-    var trailersPanel = createTrailersPanel(config, labels);
-    var studioPanel = createStudioHubsPanel(config, labels);
-    var avatarPanel = createAvatarPanel(config, labels);
-    var statusRatingPanel = createStatusRatingPanel(config, labels);
-    var actorPanel = createActorPanel(config, labels);
-    var directorPanel = createDirectorPanel(config, labels);
-    var languagePanel = createLanguagePanel(config, labels);
-    var logoTitlePanel = createLogoTitlePanel(config, labels);
-    var descriptionPanel = createDescriptionPanel(config, labels);
-    var providerPanel = createProviderPanel(config, labels);
-    var buttonsPanel = createButtonsPanel(config, labels);
-    var infoPanel = createInfoPanel(config, labels);
-    var exporterPanel = createExporterPanel(config, labels);
-    var aboutPanel = createAboutPanel(labels);
-    var notificationsPanel = createNotificationsPanel(config, labels);
-    var detailsModalPanel = createDetailsModalPanel(config, labels);
-    var watchlistSettingsPanel = createWatchlistPanel(config, labels);
-    var dbManagementPanel = createDbManagementPanel(config, labels);
-    var parentalPinPanel = (config && config.currentUserIsAdmin)
+    const sliderPanel = createSliderPanel(config, labels);
+    const animationPanel = createAnimationPanel(config, labels);
+    const profileChooserPanel = createProfileChooserPanel(config, labels);
+    const musicPanel = createMusicPanel(config, labels);
+    const pausePanel = createPausePanel(config, labels);
+    const positionPanel = createPositionPanel(config, labels);
+    const queryPanel = createQueryPanel(config, labels);
+    const hoverPanel = createHoverTrailerPanel(config, labels);
+    const trailersPanel = createTrailersPanel(config, labels);
+    const studioPanel = createStudioHubsPanel(config, labels);
+    const avatarPanel = createAvatarPanel(config, labels);
+    const statusRatingPanel = createStatusRatingPanel(config, labels);
+    const actorPanel = createActorPanel(config, labels);
+    const directorPanel = createDirectorPanel(config, labels);
+    const languagePanel = createLanguagePanel(config, labels);
+    const logoTitlePanel = createLogoTitlePanel(config, labels);
+    const descriptionPanel = createDescriptionPanel(config, labels);
+    const providerPanel = createProviderPanel(config, labels);
+    const buttonsPanel = createButtonsPanel(config, labels);
+    const infoPanel = createInfoPanel(config, labels);
+    const exporterPanel = createExporterPanel(config, labels);
+    const aboutPanel = createAboutPanel(labels);
+    const notificationsPanel = createNotificationsPanel(config, labels);
+    const detailsModalPanel = createDetailsModalPanel(config, labels);
+    const watchlistSettingsPanel = createWatchlistPanel(config, labels);
+    const dbManagementPanel = createDbManagementPanel(config, labels);
+    const parentalPinPanel = config?.currentUserIsAdmin
       ? createParentalPinPanel(config, labels)
       : null;
-    var mainPanel = createMainSettingsPanel(labels, {
+    const mainPanel = createMainSettingsPanel(labels, {
         sliderPanel,
         profileChooserPanel,
         musicPanel,
@@ -211,17 +213,17 @@ export function createSettingsModal() {
     });
 
     [
-        { panel: infoPanel, title: labels.infoHeader || 'Informações de Gênero, Ano e País' },
-        { panel: buttonsPanel, title: labels.buttons || 'Configurações de Botões' },
-        { panel: logoTitlePanel, title: labels.logoOrTitleHeader || 'Configurações de Logo / Título' },
-        { panel: descriptionPanel, title: labels.descriptionsHeader || 'Configurações de Descrição' },
-        { panel: providerPanel, title: labels.providerHeader || 'Links Externos / Configurações de Provedores' },
-        { panel: languagePanel, title: labels.languageInfoHeader || 'Informações de Áudio e Legendas' },
-        { panel: statusRatingPanel, title: labels.statusRatingInfo || 'Configurações de Status, Avaliação e Qualidade' },
-        { panel: actorPanel, title: labels.actorInfo || 'Configurações de Exibição de Atores' },
-        { panel: directorPanel, title: labels.directorWriter || 'Configurações de Diretor e Escritor' },
-        { panel: animationPanel, title: labels.animationSettings || 'Configurações de Animação' }
-    ].forEach(function() {
+        { panel: infoPanel, title: labels.infoHeader || 'Tür, Yıl ve Ülke Bilgileri' },
+        { panel: buttonsPanel, title: labels.buttons || 'Buton Ayarları' },
+        { panel: logoTitlePanel, title: labels.logoOrTitleHeader || 'Logo / Başlık Ayarları' },
+        { panel: descriptionPanel, title: labels.descriptionsHeader || 'Açıklama Ayarları' },
+        { panel: providerPanel, title: labels.providerHeader || 'Dış Bağlantılar / Sağlayıcı Ayarları' },
+        { panel: languagePanel, title: labels.languageInfoHeader || 'Ses ve Altyazı Bilgileri' },
+        { panel: statusRatingPanel, title: labels.statusRatingInfo || 'Durum, Puanlama ve Kalite Rozeti Ayarları' },
+        { panel: actorPanel, title: labels.actorInfo || 'Aktör Gösterim Ayarları' },
+        { panel: directorPanel, title: labels.directorWriter || 'Yönetmen ve Yazar Ayarları' },
+        { panel: animationPanel, title: labels.animationSettings || 'Animasyon Ayarları' }
+    ].forEach(({ panel, title }) => {
         appendMergedPanelToSlider(sliderPanel, panel, title);
     });
 
@@ -229,29 +231,29 @@ export function createSettingsModal() {
         mainPanel, sliderPanel, queryPanel, musicPanel, studioPanel, profileChooserPanel,
         pausePanel, watchlistSettingsPanel, hoverPanel, trailersPanel, notificationsPanel, detailsModalPanel,
         avatarPanel, parentalPinPanel, positionPanel, dbManagementPanel, exporterPanel, aboutPanel
-    ].filter(Boolean).forEach(function(panel) {
+    ].filter(Boolean).forEach(panel => {
         panel.style.display = 'none';
     });
     mainPanel.style.display = 'block';
 
-    var panels = [
+    const panels = [
         mainPanel, sliderPanel, queryPanel, musicPanel, studioPanel, profileChooserPanel,
         pausePanel, watchlistSettingsPanel, hoverPanel, trailersPanel, notificationsPanel, detailsModalPanel,
         avatarPanel, parentalPinPanel, positionPanel, dbManagementPanel, exporterPanel, aboutPanel
     ].filter(Boolean);
     tabContent.append(...panels);
 
-    var interactiveTabs = [
+    const interactiveTabs = [
         mainTab, sliderTab, queryTab, musicTab, studioTab, profileChooserTab,
         pauseTab, watchlistSettingsTab, hoverTab, trailersTab, notificationsTab, detailsModalTab,
         avatarTab, parentalPinTab, positionTab, dbManagementTab, exporterTab, aboutTab
     ].filter(Boolean);
-    interactiveTabs.forEach(function(tab) {
-        tab.addEventListenerfunction() {
-            var panelId = tab.getAttribute('data-tab');
+    interactiveTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const panelId = tab.getAttribute('data-tab');
             activateSettingsPanel(modal, panelId);
 
-            setTimeoutfunction() {
+            setTimeout(() => {
                 tab.scrollIntoView({
                     behavior: 'smooth',
                     block: 'nearest',
@@ -261,25 +263,25 @@ export function createSettingsModal() {
         });
     });
 
-    var form = document.createElement('form');
+    const form = document.createElement('form');
     form.append(tabContainer, tabContent);
 
-    var btnDiv = document.createElement('div');
+    const btnDiv = document.createElement('div');
     btnDiv.className = 'btn-item';
 
-    var saveBtn = document.createElement('button');
+    const saveBtn = document.createElement('button');
     saveBtn.type = 'submit';
     saveBtn.textContent = labels.saveSettings || 'Salvar';
 
-    var applyBtn = document.createElement('button');
+    const applyBtn = document.createElement('button');
     applyBtn.type = 'button';
-    applyBtn.textContent = labels.apply || 'Aplicar';
+    applyBtn.textContent = labels.uygula || 'Aplicar';
 
-    var resetBtn = document.createElement('button');
+    const resetBtn = document.createElement('button');
     resetBtn.type = 'button';
     resetBtn.textContent = labels.resetToDefaults || 'Redefinir';
     resetBtn.className = 'reset-btn';
-    resetBtn.onclick = function() {
+    resetBtn.onclick = () => {
         createConfirmationModal(
             labels.resetConfirm || 'Tem certeza que deseja redefinir todas as configurações para os valores padrão?',
             resetAllSettings,
@@ -287,14 +289,14 @@ export function createSettingsModal() {
         );
     };
 
-    var saveLabel = saveBtn.textContent;
-    var applyLabel = applyBtn.textContent;
-    var resetLabel = resetBtn.textContent;
-    var settingsActionBusy = false;
+    const saveLabel = saveBtn.textContent;
+    const applyLabel = applyBtn.textContent;
+    const resetLabel = resetBtn.textContent;
+    let settingsActionBusy = false;
 
     function setBusyState(isBusy) {
-      var controls = [saveBtn, applyBtn, resetBtn, themeToggleBtn].filter(Boolean);
-      controls.forEach(function() {
+      const controls = [saveBtn, applyBtn, resetBtn, themeToggleBtn].filter(Boolean);
+      controls.forEach((btn) => {
         if (!btn) return;
         if (isBusy) {
           if (btn.__busyPrevDisabled === undefined) {
@@ -318,33 +320,32 @@ export function createSettingsModal() {
         }
       });
 
-      saveBtn.textContent = isBusy ? ((labels && labels.saving) ? labels.saving : 'Salvando...') : saveLabel;
-      applyBtn.textContent = isBusy ? ((labels && labels.applying) ? labels.applying : 'Aplicando...') : applyLabel;
+      saveBtn.textContent = isBusy ? (labels?.saving || 'Salvando...') : saveLabel;
+      applyBtn.textContent = isBusy ? (labels?.applying || 'Aplicando...') : applyLabel;
       resetBtn.textContent = resetLabel;
     }
 
-    function runSaveAction(reload = false) {
+    async function runSaveAction(reload = false) {
       if (settingsActionBusy) return;
       settingsActionBusy = true;
       setBusyState(true);
 
       try {
-        var panelSaveHooks = (parentalPinPanel && typeof parentalPinPanel.__jmsSave === 'function') ? [parentalPinPanel.__jmsSave] : [];
-        for (var i = 0; i < panelSaveHooks.length; i++) {
-          var saveHook = panelSaveHooks[i];
-          saveHook({ reload: reload });
+        const panelSaveHooks = [parentalPinPanel?.__jmsSave].filter(fn => typeof fn === 'function');
+        for (const saveHook of panelSaveHooks) {
+          await saveHook({ reload });
         }
 
-        var result = applySettings(reload);
-        if (reload || (result && result.ok === false)) return result;
+        const result = await applySettings(reload);
+        if (reload || result?.ok === false) return result;
 
-        if (result && result.forcedAdminPublish && result.publishResult && result.publishResult.attempted && result.publishResult.ok) {
-          var profileLabel =
-            result.publishResult.profile === 'mobile'
-              ? (labels.profileMobile || 'Perfil Mobile')
-              : (labels.profileDesktop || 'Perfil Desktop');
+        if (result?.forcedAdminPublish && result?.publishResult?.attempted && result?.publishResult?.ok) {
+          const profileLabel =
+            result?.publishResult?.profile === 'mobile'
+              ? (labels?.profileMobile || 'Perfil Mobile')
+              : (labels?.profileDesktop || 'Perfil Desktop');
           showNotification(
-            '<i class="fas fa-globe" style="margin-right: 8px;"></i> ' + String((labels && labels.forceGlobalPublishOk) ? labels.forceGlobalPublishOk : "Configurações globais publicadas para o perfil " + String(profileLabel) + "."),
+            `<i class="fas fa-globe" style="margin-right: 8px;"></i> ${labels?.forceGlobalPublishOk || `Configurações globais publicadas para o perfil ${profileLabel}.`}`,
             3200,
             'info'
           );
@@ -352,19 +353,19 @@ export function createSettingsModal() {
         }
 
         showNotification(
-          "<i class=\"fas fa-floppy-disk\" style=\"margin-right: 8px;\"></i> " + (config.languageLabels.settingsSavedModal || "Configurações salvas. Atualize a página do slider para aplicar as alterações."),
+          `<i class="fas fa-floppy-disk" style="margin-right: 8px;"></i> ${config.languageLabels.settingsSavedModal || "Configurações salvas. Atualize a página do slider para aplicar as alterações."}`,
           3000,
           'info'
         );
         return result;
       } catch (err) {
         console.error('Settings save failed:', err);
-        var errText =
-          String(err.message || '').trim() ||
-          labels.settingsSaveFailed ||
+        const errText =
+          String(err?.message || '').trim() ||
+          labels?.settingsSaveFailed ||
           'Não foi possível salvar as configurações.';
         showNotification(
-          '<i class="fas fa-triangle-exclamation" style="margin-right: 8px;"></i> ' + String(errText),
+          `<i class="fas fa-triangle-exclamation" style="margin-right: 8px;"></i> ${errText}`,
           4200,
           'error'
         );
@@ -375,48 +376,48 @@ export function createSettingsModal() {
       }
     }
 
-    form.onsubmit = function() {
+    form.onsubmit = async (e) => {
         e.preventDefault();
-        runSaveAction(true);
+        await runSaveAction(true);
     };
 
-    applyBtn.onclick = function() {
-        runSaveAction(false);
+    applyBtn.onclick = async () => {
+        await runSaveAction(false);
     };
 
     btnDiv.append(saveBtn, applyBtn, resetBtn);
     form.appendChild(btnDiv);
 
-    var themeToggleBtn = document.createElement('button');
+    const themeToggleBtn = document.createElement('button');
     themeToggleBtn.type = 'button';
     themeToggleBtn.className = 'theme-toggle-btn';
 
 function setSettingsThemeToggleVisuals() {
-  var cfg = getConfig();
-  var currentLang = cfg.defaultLanguage || (typeof getDefaultLanguage === 'function' ? getDefaultLanguage() : null);
-  var labels = (typeof getLanguageLabels === 'function' ? getLanguageLabels(currentLang) : {}) || cfg.languageLabels || {};
+  const cfg = getConfig();
+  const currentLang = cfg.defaultLanguage || getDefaultLanguage?.();
+  const labels = (typeof getLanguageLabels === 'function' ? getLanguageLabels(currentLang) : {}) || cfg.languageLabels || {};
 
-  themeToggleBtn.innerHTML = "<i class=\"fas fa-" + (cfg.playerTheme === 'light' ? 'moon' : 'sun') + "\"></i>";
+  themeToggleBtn.innerHTML = `<i class="fas fa-${cfg.playerTheme === 'light' ? 'moon' : 'sun'}"></i>`;
   themeToggleBtn.title = cfg.playerTheme === 'light'
     ? (labels.darkTheme || 'Tema Escuro')
     : (labels.lightTheme || 'Tema Claro');
 }
 
-themeToggleBtn.onclick = function() {
+themeToggleBtn.onclick = async () => {
   if (themeToggleBtn.dataset.busy === '1') return;
   themeToggleBtn.dataset.busy = '1';
   themeToggleBtn.disabled = true;
-  var cfg = getConfig();
-  var newTheme = cfg.playerTheme === 'light' ? 'dark' : 'light';
+  const cfg = getConfig();
+  const newTheme = cfg.playerTheme === 'light' ? 'dark' : 'light';
 
   try {
     updateConfig({ ...cfg, playerTheme: newTheme });
     loadCSS();
 
-    var playerThemeBtn = document.querySelector('#modern-music-player .theme-toggle-btn');
+    const playerThemeBtn = document.querySelector('#modern-music-player .theme-toggle-btn');
     if (playerThemeBtn) {
-      playerThemeBtn.innerHTML = "<i class=\"fas fa-" + (newTheme === 'light' ? 'moon' : 'sun') + "\"></i>";
-      var labels = cfg.languageLabels || {};
+      playerThemeBtn.innerHTML = `<i class="fas fa-${newTheme === 'light' ? 'moon' : 'sun'}"></i>`;
+      const labels = cfg.languageLabels || {};
       playerThemeBtn.title = newTheme === 'light'
         ? (labels.darkTheme || 'Tema Escuro')
         : (labels.lightTheme || 'Tema Claro');
@@ -424,26 +425,26 @@ themeToggleBtn.onclick = function() {
 
     setSettingsThemeToggleVisuals();
 
-    var labels = cfg.languageLabels || {};
+    const labels = cfg.languageLabels || {};
       showNotification(
-        '<i class="fas fa-' + String(newTheme === 'light' ? 'sun' : 'moon') + '"></i> ' + String(
+        `<i class="fas fa-${newTheme === 'light' ? 'sun' : 'moon'}"></i> ${
           newTheme === 'light'
             ? (labels.lightThemeEnabled || 'Tema claro ativado')
             : (labels.darkThemeEnabled || 'Tema escuro ativado')
-        ),
+        }`,
         2000,
         'info'
       );
       try {
         window.dispatchEvent(new CustomEvent('app:theme-changed', { detail: { theme: newTheme } }));
-        var themeSelect = document.getElementById('themeSelect');
+        const themeSelect = document.getElementById('themeSelect');
         if (themeSelect) themeSelect.value = newTheme;
       } catch {}
 
-    var publishResult = publishAdminSnapshotIfForced();
-    if (cfg && cfg.forceGlobalUserSettings && cfg.currentUserIsAdmin && publishResult && publishResult.attempted && !publishResult.ok) {
+    const publishResult = await publishAdminSnapshotIfForced();
+    if (cfg?.forceGlobalUserSettings && cfg?.currentUserIsAdmin && publishResult?.attempted && !publishResult?.ok) {
       showNotification(
-        '<i class="fas fa-triangle-exclamation" style="margin-right: 8px;"></i> ' + String((labels && labels.forceGlobalPublishFailed) ? labels.forceGlobalPublishFailed : 'Não foi possível publicar as configurações globais.'),
+        `<i class="fas fa-triangle-exclamation" style="margin-right: 8px;"></i> ${labels?.forceGlobalPublishFailed || 'Não foi possível publicar as configurações globais.'}`,
         4200,
         'error'
       );
@@ -471,13 +472,13 @@ themeToggleBtn.onclick = function() {
 
 
     function resetAllSettings() {
-        Object.keys(config).forEach(function(key) {
+        Object.keys(config).forEach(key => {
             localStorage.removeItem(key);
         });
         location.reload();
     }
 
-     setTimeoutfunction() {
+     setTimeout(() => {
       setupMobileTextareaBehavior();
     }, 100);
 
@@ -486,8 +487,8 @@ themeToggleBtn.onclick = function() {
 }
 
 function setDocumentScrollLocked(lock) {
-  var html = document.documentElement;
-  var body = document.body;
+  const html = document.documentElement;
+  const body = document.body;
   if (!html || !body) return;
 
   if (lock) {
@@ -524,8 +525,8 @@ function closeLocalSettingsShell(modal) {
     delete modal.__overlayClickHandler;
   }
 
-  var modalContent = modal.querySelector('.settings-modal-content');
-  if (modalContent && modalContent.__overlayStopPropagationHandler) {
+  const modalContent = modal.querySelector('.settings-modal-content');
+  if (modalContent?.__overlayStopPropagationHandler) {
     modalContent.removeEventListener('click', modalContent.__overlayStopPropagationHandler);
     delete modalContent.__overlayStopPropagationHandler;
   }
@@ -541,14 +542,14 @@ function closeLocalSettingsShell(modal) {
 function prepareModalForLocalShell(modal) {
   if (!modal) return modal;
 
-  var modalContent = modal.querySelector('.settings-modal-content');
-  var title = modalContent.querySelector('h2');
+  const modalContent = modal.querySelector('.settings-modal-content');
+  const title = modalContent?.querySelector('h2');
 
   modal.classList.add(SETTINGS_OVERLAY_CLASS);
   modal.classList.remove(SETTINGS_EMBEDDED_CLASS);
   modal.removeAttribute('data-jms-settings-page');
 
-  var closeBtn = modalContent ? modalContent.querySelector('.settings-close') : null;
+  let closeBtn = modalContent?.querySelector('.settings-close');
   if (!closeBtn && modalContent) {
     closeBtn = document.createElement('button');
     closeBtn.type = 'button';
@@ -559,11 +560,11 @@ function prepareModalForLocalShell(modal) {
   }
 
   if (closeBtn) {
-    closeBtn.onclick = function() closeLocalSettingsShell(modal);
+    closeBtn.onclick = () => closeLocalSettingsShell(modal);
   }
 
   if (!modal.__overlayClickHandler) {
-    modal.__overlayClickHandler = function() {
+    modal.__overlayClickHandler = (event) => {
       if (event.target === modal) {
         closeLocalSettingsShell(modal);
       }
@@ -572,14 +573,14 @@ function prepareModalForLocalShell(modal) {
   }
 
   if (modalContent && !modalContent.__overlayStopPropagationHandler) {
-    modalContent.__overlayStopPropagationHandler = function() {
+    modalContent.__overlayStopPropagationHandler = (event) => {
       event.stopPropagation();
     };
     modalContent.addEventListener('click', modalContent.__overlayStopPropagationHandler);
   }
 
   if (!modal.__overlayEscapeHandler) {
-    modal.__overlayEscapeHandler = function() {
+    modal.__overlayEscapeHandler = (event) => {
       if (event.key === 'Escape') {
         event.preventDefault();
         closeLocalSettingsShell(modal);
@@ -600,8 +601,8 @@ function prepareModalForLocalShell(modal) {
 function prepareModalForEmbeddedPage(modal) {
   if (!modal) return modal;
 
-  var modalContent = modal.querySelector('.settings-modal-content');
-  var title = modalContent.querySelector('h2');
+  const modalContent = modal.querySelector('.settings-modal-content');
+  const title = modalContent?.querySelector('h2');
 
   if (modal.__overlayEscapeHandler) {
     window.removeEventListener('keydown', modal.__overlayEscapeHandler);
@@ -611,7 +612,7 @@ function prepareModalForEmbeddedPage(modal) {
     modal.removeEventListener('click', modal.__overlayClickHandler);
     delete modal.__overlayClickHandler;
   }
-  if (modalContent.__overlayStopPropagationHandler) {
+  if (modalContent?.__overlayStopPropagationHandler) {
     modalContent.removeEventListener('click', modalContent.__overlayStopPropagationHandler);
     delete modalContent.__overlayStopPropagationHandler;
   }
@@ -621,8 +622,7 @@ function prepareModalForEmbeddedPage(modal) {
   modal.classList.add(SETTINGS_EMBEDDED_CLASS);
   modal.classList.remove(SETTINGS_OVERLAY_CLASS);
   modal.setAttribute('data-jms-settings-page', 'true');
-  var existingClose = modal.querySelector('.settings-close');
-  if (existingClose) existingClose.remove();
+  modal.querySelector('.settings-close')?.remove();
 
   if (title) {
     title.style.display = 'none';
@@ -635,16 +635,16 @@ function prepareModalForEmbeddedPage(modal) {
 function activateSettingsPanel(modal, tab = 'monwui') {
     if (!modal) return null;
 
-    var tabs = modal.querySelectorAll('.settings-tab');
-    var tabContent = modal.querySelector('.settings-tab-content');
-    var panels = tabContent ? Array.from(tabContent.children) : [];
-    tabs.forEach(function(tabElement) tabElement.classList.remove('active'));
-    panels.forEach(function(panel) {
+    const tabs = modal.querySelectorAll('.settings-tab');
+    const tabContent = modal.querySelector('.settings-tab-content');
+    const panels = tabContent ? Array.from(tabContent.children) : [];
+    tabs.forEach(tabElement => tabElement.classList.remove('active'));
+    panels.forEach(panel => {
         panel.style.display = 'none';
     });
 
-    var targetTab = modal.querySelector(".settings-tab[data-tab=\"" + (tab) + "\"]");
-    var targetPanel = modal.querySelector("#" + (tab) + "-panel");
+    const targetTab = modal.querySelector(`.settings-tab[data-tab="${tab}"]`);
+    const targetPanel = modal.querySelector(`#${tab}-panel`);
 
     if (targetTab && targetPanel) {
         targetTab.classList.add('active');
@@ -656,9 +656,9 @@ function activateSettingsPanel(modal, tab = 'monwui') {
         return targetPanel;
     }
 
-    var fallbackTab = modal.querySelector('.settings-tab[data-tab="monwui"]')
+    const fallbackTab = modal.querySelector('.settings-tab[data-tab="monwui"]')
         || modal.querySelector('.settings-tab[data-tab="slider"]');
-    var fallbackPanel = modal.querySelector('#monwui-panel')
+    const fallbackPanel = modal.querySelector('#monwui-panel')
         || modal.querySelector('#slider-panel');
 
     if (fallbackTab) fallbackTab.classList.add('active');
@@ -671,31 +671,31 @@ function activateSettingsPanel(modal, tab = 'monwui') {
 }
 
 function createConfirmationModal(message, callback, labels) {
-        var modal = document.createElement('div');
+        const modal = document.createElement('div');
         modal.className = 'confirmation-modal';
         modal.style.display = 'block';
 
-        var modalContent = document.createElement('div');
+        const modalContent = document.createElement('div');
         modalContent.className = 'confirmation-modal-content';
 
-        var messageEl = document.createElement('p');
+        const messageEl = document.createElement('p');
         messageEl.textContent = message;
 
-        var btnContainer = document.createElement('div');
+        const btnContainer = document.createElement('div');
         btnContainer.className = 'confirmation-btn-container';
 
-        var confirmBtn = document.createElement('button');
+        const confirmBtn = document.createElement('button');
         confirmBtn.className = 'confirm-btn';
         confirmBtn.textContent = labels.yes || 'Sim';
-        confirmBtn.onclick = function() {
+        confirmBtn.onclick = () => {
             callback();
             modal.remove();
         };
 
-        var cancelBtn = document.createElement('button');
+        const cancelBtn = document.createElement('button');
         cancelBtn.className = 'cancel-btn';
         cancelBtn.textContent = labels.no || 'Não';
-        cancelBtn.onclick = function() modal.remove();
+        cancelBtn.onclick = () => modal.remove();
 
         btnContainer.append(confirmBtn, cancelBtn);
         modalContent.append(messageEl, btnContainer);
@@ -705,9 +705,285 @@ function createConfirmationModal(message, callback, labels) {
         return modal;
     }
 
+function createSliderPage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'slider-panel';
+  panel.className = 'slider-panel';
+
+  const section = createSection();
+  const sliderPanel = createSliderPanel(config, labels);
+  sliderPanel.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createPositionPage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'animation-panel';
+  panel.className = 'animation-panel';
+
+  const section = createSection();
+  const positionPage = createAnimationPanel(config, labels);
+  positionPage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createStatusRatingPage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'status-panel';
+  panel.className = 'status-panel';
+
+  const section = createSection();
+  const statusPage = createStatusRatingPanel(config, labels);
+  statusPage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createActorPage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'actor-panel';
+  panel.className = 'actor-panel';
+
+  const section = createSection();
+  const actorPage = createActorPanel(config, labels);
+  actorPage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createDirectorPage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'director-panel';
+  panel.className = 'director-panel';
+
+  const section = createSection();
+  const directorPage = createDirectorPanel(config, labels);
+  directorPage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createMusicPage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'music-panel';
+  panel.className = 'music-panel';
+
+  const section = createSection();
+  const musicPage = createMusicPanel(config, labels);
+  musicPage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createNotificationsPage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'notifications-panel';
+  panel.className = 'notifications-panel';
+
+  const section = createSection();
+  const notificationsPage = createNotificationsPanel(config, labels);
+  notificationsPage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createQueryPage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'query-panel';
+  panel.className = 'query-panel';
+
+  const section = createSection();
+  const queryPage = createQueryPanel(config, labels);
+  queryPage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createHoverTrailerPage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'hovertrailer-panel';
+  panel.className = 'hovertrailer-panel';
+
+  const section = createSection();
+  const hoverPage = createHoverTrailerPanel(config, labels);
+  hoverPage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createStudioHubsPage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'studiohubs-panel';
+  panel.className = 'studiohubs-panel';
+
+  const section = createSection();
+  const studioPage = createStudioHubsPanel(config, labels);
+  studioPage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createTrailersPage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'trailers-panel';
+  panel.className = 'trailers-panel';
+
+  const section = createSection();
+  const trailersPage = createTrailersPanel(config, labels);
+  trailersPage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createLanguagePanel(config, labels) {
+    const panel = document.createElement('div');
+    panel.id = 'language-panel';
+    panel.className = 'settings-panel';
+
+    const section = createSection(labels.languageInfoHeader || 'Informações de Áudio e Legendas');
+    section.appendChild(createCheckbox('showLanguageInfo', labels.languageInfo || 'Mostrar Informações de Áudio e Legendas', config.showLanguageInfo));
+
+    const description = document.createElement('div');
+    description.className = 'description-text';
+    description.textContent = labels.languageInfoDescription || 'Quando habilitado, informações de áudio para o idioma selecionado serão exibidas se disponíveis. Caso contrário, serão buscadas informações de legendas.';
+    section.appendChild(description);
+
+    panel.appendChild(section);
+    return panel;
+}
+
+function createAvatarPage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'avatar-panel';
+  panel.className = 'avatar-panel';
+
+  const section = createSection();
+  const avatarPage = createAvatarPanel(config, labels);
+  avatarPage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createLogoTitlePage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'logoTitle-panel';
+  panel.className = 'logoTitle-panel';
+
+  const section = createSection();
+  const logoTitlePage = createLogoTitlePanel(config, labels);
+  logoTitlePage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createDescriptionPage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'description-panel';
+  panel.className = 'description-panel';
+
+  const section = createSection();
+  const descriptionPage = createDescriptionPanel(config, labels);
+  descriptionPage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createProviderPage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'provider-panel';
+  panel.className = 'provider-panel';
+
+  const section = createSection();
+  const providerPage = createProviderPanel(config, labels);
+  providerPage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createAboutPage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'about-panel';
+  panel.className = 'about-panel';
+
+  const section = createSection();
+  const aboutPage = createAboutPanel(labels);
+  aboutPage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createButtonsPage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'buttons-panel';
+  panel.className = 'buttons-panel';
+
+  const section = createSection();
+  const buttonsPage = createButtonsPanel(config, labels);
+  buttonsPage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createInfoPage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'info-panel';
+  panel.className = 'info-panel';
+
+  const section = createSection();
+  const infoPage = createInfoPanel(config, labels);
+  infoPage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createPositionPanel(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'position-panel';
+  panel.className = 'position-panel';
+
+  const section = createSection();
+  const positionEditor = createPositionEditor(config, labels, section);
+  positionEditor.render();
+
+  panel.appendChild(section);
+  return panel;
+}
+
+function createPausePage(config, labels) {
+  const panel = document.createElement('div');
+  panel.id = 'pause-panel';
+  panel.className = 'pause-panel';
+
+  const section = createSection();
+  const pausePage = createPausePanel(config, labels);
+  pausePage.render();
+
+  panel.appendChild(section);
+  return panel;
+}
 
 function createExporterPanel(config, labels) {
-  var panel = document.createElement('div');
+  const panel = document.createElement('div');
   panel.id = 'exporter-panel';
   panel.className = 'exporter-panel';
 
@@ -715,17 +991,17 @@ function createExporterPanel(config, labels) {
 
   document.documentElement.style.setProperty(
     '--file-select-text',
-    "\"" + (config.languageLabels.chooseBackup || 'Escolher Arquivo') + "\""
+    `"${config.languageLabels.yedekSec || 'Escolher Arquivo'}"`
   );
 
   return panel;
 }
 
 function createTab(id, icon, label, isActive = false, isDisabled = false) {
-    var tab = document.createElement('div');
-    tab.className = "settings-tab " + (isActive ? 'active' : '') + " " + (isDisabled ? 'disabled-tab' : '');
+    const tab = document.createElement('div');
+    tab.className = `settings-tab ${isActive ? 'active' : ''} ${isDisabled ? 'disabled-tab' : ''}`;
     tab.setAttribute('data-tab', id);
-    tab.innerHTML = "<i class=\"fas " + (icon) + "\"></i> <span class=\"jmstab-label\">" + (label) + "</span>";
+    tab.innerHTML = `<i class="fas ${icon}"></i> <span class="jmstab-label">${label}</span>`;
 
     if (isDisabled) {
         tab.style.opacity = '0.5';
@@ -736,30 +1012,27 @@ function createTab(id, icon, label, isActive = false, isDisabled = false) {
     return tab;
 }
 
-function extractContainerByInput(root, inputName, closestSelector) {
-    if (closestSelector === undefined) closestSelector = '.setting-item';
-    var input = root ? root.querySelector('input[name="' + String(inputName) + '"]') : null;
-    return (input && typeof input.closest === "function") ? input.closest(closestSelector) : null;
+function extractContainerByInput(root, inputName, closestSelector = '.setting-item') {
+    const input = root?.querySelector(`input[name="${inputName}"]`);
+    return input?.closest(closestSelector) || null;
 }
 
-function extractContainerBySelect(root, selectName, closestSelector) {
-    if (closestSelector === undefined) closestSelector = '.setting-item';
-    var select = root ? root.querySelector('select[name="' + String(selectName) + '"]') : null;
-    return (select && typeof select.closest === "function") ? select.closest(closestSelector) : null;
+function extractContainerBySelect(root, selectName, closestSelector = '.setting-item') {
+    const select = root?.querySelector(`select[name="${selectName}"]`);
+    return select?.closest(closestSelector) || null;
 }
 
 function extractTmdbGroup(root) {
-    var keyInput = root ? root.querySelector('#tmdbKeyForReviews') : null;
-    var item = (keyInput && typeof keyInput.closest === "function") ? keyInput.closest('.fsetting-item') : null;
-    return item ? item.parentElement : null;
+    const keyInput = root?.querySelector('#tmdbKeyForReviews');
+    return keyInput?.closest('.fsetting-item')?.parentElement || null;
 }
 
 function extractCheckboxPair(root, inputName) {
-    var input = root ? root.querySelector('input[name="' + String(inputName) + '"]') : null;
+    const input = root?.querySelector(`input[name="${inputName}"]`);
     if (!input) return null;
 
-    var label = root.querySelector("label[for=\"" + (input.id) + "\"]");
-    var wrap = document.createElement('div');
+    const label = root.querySelector(`label[for="${input.id}"]`);
+    const wrap = document.createElement('div');
     wrap.className = 'setting-item';
     wrap.appendChild(input);
     if (label) {
@@ -769,7 +1042,7 @@ function extractCheckboxPair(root, inputName) {
 }
 
 function createSettingsHotkeyField(labels, currentValue) {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     container.className = 'hotkey-input-container';
 
     container.style.display = 'flex';
@@ -777,18 +1050,18 @@ function createSettingsHotkeyField(labels, currentValue) {
     container.style.alignItems = 'center';
     container.style.gap = '5px';
 
-    var label = document.createElement('label');
+    const label = document.createElement('label');
     label.htmlFor = 'settingsHotkey';
     label.textContent = labels.settingsHotkeyLabel || 'Atalho para Configurações';
 
-    var controls = document.createElement('div');
+    const controls = document.createElement('div');
     controls.style.display = 'flex';
     controls.style.flexWrap = 'wrap';
     controls.style.gap = '10px';
     controls.style.alignItems = 'center';
     controls.style.width = '100%';
 
-    var input = document.createElement('input');
+    const input = document.createElement('input');
     input.type = 'text';
     input.id = 'settingsHotkey';
     input.name = 'settingsHotkey';
@@ -798,16 +1071,16 @@ function createSettingsHotkeyField(labels, currentValue) {
     input.value = normalizeSettingsHotkey(currentValue || getSettingsHotkey(), SETTINGS_HOTKEY_DEFAULT);
     input.style.flex = '1 1 180px';
 
-    input.addEventListenerfunction() {
+    input.addEventListener('click', () => {
         input.focus();
         input.select();
     });
 
-    input.addEventListenerfunction() {
+    input.addEventListener('focus', () => {
         input.select();
     });
 
-    input.addEventListenerfunction() {
+    input.addEventListener('keydown', (event) => {
         if (event.key === 'Tab') return;
 
         event.preventDefault();
@@ -815,24 +1088,24 @@ function createSettingsHotkeyField(labels, currentValue) {
 
         if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
 
-        var normalizedKey = normalizeSettingsHotkey(event.key, '');
+        const normalizedKey = normalizeSettingsHotkey(event.key, '');
         if (!normalizedKey) return;
 
         input.value = normalizedKey;
         localStorage.setItem('settingsHotkey', normalizedKey);
     });
 
-    var resetButton = document.createElement('button');
+    const resetButton = document.createElement('button');
     resetButton.type = 'button';
     resetButton.id = 'settingsHotkeyReset';
     resetButton.className = 'reset-button';
     resetButton.textContent = labels.settingsHotkeyReset || "Redefinir para F2";
-    resetButton.addEventListenerfunction() {
+    resetButton.addEventListener('click', () => {
         input.value = SETTINGS_HOTKEY_DEFAULT;
         localStorage.setItem('settingsHotkey', SETTINGS_HOTKEY_DEFAULT);
     });
 
-    var help = document.createElement('div');
+    const help = document.createElement('div');
     help.className = 'description-text';
     help.textContent =
         labels.settingsHotkeyHelp ||
@@ -845,32 +1118,32 @@ function createSettingsHotkeyField(labels, currentValue) {
 }
 
 function createMainSettingsPanel(labels, panels) {
-    var panel = document.createElement('div');
+    const panel = document.createElement('div');
     panel.id = 'monwui-panel';
     panel.className = 'settings-panel';
 
-    var config = getConfig();
-    var basicsSection = createSection(labels.mainCoreSettings || 'Configurações Básicas');
-    var enablesSection = createSection(labels.mainEnableSettings || 'Habilitações Principais');
-    var hotkeySection = createSection(labels.settingsHotkeySection || 'Atalho de Configurações');
+    const config = getConfig();
+    const basicsSection = createSection(labels.mainCoreSettings || 'Configurações Básicas');
+    const enablesSection = createSection(labels.mainEnableSettings || 'Habilitações Principais');
+    const hotkeySection = createSection(labels.settingsHotkeySection || 'Atalho de Configurações');
 
     [
         extractContainerBySelect(panels.sliderPanel, 'defaultLanguage', '.setting-item'),
         extractTmdbGroup(panels.sliderPanel),
         extractContainerByInput(panels.sliderPanel, 'enableSlider', '.setting-item'),
         extractContainerByInput(panels.sliderPanel, 'onlyShowSliderOnHomeTab', '.setting-item')
-    ].filter(Boolean).forEach(function() {
+    ].filter(Boolean).forEach((node) => {
         basicsSection.appendChild(node);
     });
 
-    var homeSectionsMaster = createCheckbox(
+    const homeSectionsMaster = createCheckbox(
         'enableHomeSectionsMaster',
         labels.enableHomeSectionsMaster || 'Habilitar cartões da interface Nexus',
         config.enableHomeSectionsMaster !== false
     );
     enablesSection.appendChild(homeSectionsMaster);
 
-    var pauseFeaturesMaster = createCheckbox(
+    const pauseFeaturesMaster = createCheckbox(
         'enablePauseFeaturesMaster',
         labels.enablePauseFeaturesMaster || 'Habilitar recursos da tela de pausa',
         config.enablePauseFeaturesMaster !== false
@@ -895,7 +1168,7 @@ function createMainSettingsPanel(labels, panels) {
         config.enableDetailsModalModule !== false
     ));
 
-    var castModuleSetting = extractContainerByInput(
+    const castModuleSetting = extractContainerByInput(
         panels.providerPanel,
         'enableCastModule',
         '.setting-item'
@@ -904,21 +1177,21 @@ function createMainSettingsPanel(labels, panels) {
         enablesSection.appendChild(castModuleSetting);
     }
 
-    var sharedCastViewerSetting = extractContainerByInput(
+    const sharedCastViewerSetting = extractContainerByInput(
         panels.providerPanel,
         'allowSharedCastViewerForUsers',
         '.setting-item'
     );
     if (sharedCastViewerSetting) {
-        var castModuleSubOptions = document.createElement('div');
+        const castModuleSubOptions = document.createElement('div');
         castModuleSubOptions.className = 'sub-options cast-module-main-sub-options';
         castModuleSubOptions.appendChild(sharedCastViewerSetting);
         enablesSection.appendChild(castModuleSubOptions);
         bindCheckboxKontrol('#enableCastModule', '.cast-module-main-sub-options');
     }
 
-    if (config && config.currentUserIsAdmin !== true && (castModuleSetting || sharedCastViewerSetting)) {
-        var castAdminHint = document.createElement('div');
+    if (config?.currentUserIsAdmin !== true && (castModuleSetting || sharedCastViewerSetting)) {
+        const castAdminHint = document.createElement('div');
         castAdminHint.className = 'description-text';
         castAdminHint.textContent =
             labels.castModuleAdminOnlySettings ||
@@ -943,7 +1216,7 @@ function createMainSettingsPanel(labels, panels) {
         extractContainerByInput(panels.hoverPanel, 'allPreviewModal', '.setting-item'),
         extractContainerByInput(panels.avatarPanel, 'createAvatar', '.setting-item'),
         extractContainerByInput(panels.notificationsPanel, 'enableNotifications', '.setting-item')
-    ].filter(Boolean).forEach(function() {
+    ].filter(Boolean).forEach((node) => {
         enablesSection.appendChild(node);
     });
 
@@ -964,11 +1237,11 @@ function appendMergedPanelToSlider(targetPanel, sourcePanel, title) {
     sourcePanel.classList.add('merged-settings-panel');
     sourcePanel.style.display = '';
 
-    var hasSingleSection =
+    const hasSingleSection =
         sourcePanel.childElementCount === 1 &&
-        (sourcePanel.firstElementChild && sourcePanel.firstElementChild.classList && sourcePanel.firstElementChild.classList.contains('settings-section'));
+        sourcePanel.firstElementChild?.classList?.contains('settings-section');
 
-    var existingTitle = (hasSingleSection && sourcePanel.firstElementChild.firstElementChild && sourcePanel.firstElementChild.firstElementChild.tagName === 'H3')
+    const existingTitle = hasSingleSection && sourcePanel.firstElementChild?.firstElementChild?.tagName === 'H3'
         ? normalizeSectionTitle(sourcePanel.firstElementChild.firstElementChild.textContent)
         : '';
 
@@ -977,17 +1250,17 @@ function appendMergedPanelToSlider(targetPanel, sourcePanel, title) {
         return;
     }
 
-    var wrapperSection = createSection(title);
+    const wrapperSection = createSection(title);
     wrapperSection.appendChild(sourcePanel);
     targetPanel.appendChild(wrapperSection);
 }
 
 export function createSection(title) {
-    var section = document.createElement('div');
+    const section = document.createElement('div');
     section.className = 'settings-section';
 
     if (title) {
-        var sectionTitle = document.createElement('h3');
+        const sectionTitle = document.createElement('h3');
         sectionTitle.textContent = title;
         section.appendChild(sectionTitle);
     }
@@ -996,20 +1269,20 @@ export function createSection(title) {
 }
 
 export function createCheckbox(name, label, isChecked) {
-  var container = document.createElement('div');
+  const container = document.createElement('div');
   container.className = 'setting-item';
 
-  var checkbox = document.createElement('input');
+  const checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
   checkbox.name = name;
   checkbox.id = name;
 
-  var storedValue = localStorage.getItem(name);
+  const storedValue = localStorage.getItem(name);
 
   if (storedValue !== null) {
     if (storedValue.trim().startsWith('{') && storedValue !== '[object Object]') {
       try {
-        var obj = JSON.parse(storedValue);
+        const obj = JSON.parse(storedValue);
         checkbox.checked = obj.enabled !== false;
       } catch {
         checkbox.checked = storedValue === 'true';
@@ -1021,7 +1294,7 @@ export function createCheckbox(name, label, isChecked) {
     checkbox.checked = isChecked === true || isChecked === undefined;
   }
 
-  var checkboxLabel = document.createElement('label');
+  const checkboxLabel = document.createElement('label');
   checkboxLabel.htmlFor = name;
   checkboxLabel.textContent = label;
 
@@ -1031,14 +1304,14 @@ export function createCheckbox(name, label, isChecked) {
 
 
 export function createImageTypeSelect(name, selectedValue, includeExtended = false, includeUseSlide = false) {
-    var select = document.createElement('select');
+    const select = document.createElement('select');
     select.name = name;
 
-    var config = getConfig();
-    var currentLang = config.defaultLanguage || getDefaultLanguage();
-    var labels = getLanguageLabels(currentLang) || {};
+    const config = getConfig();
+    const currentLang = config.defaultLanguage || getDefaultLanguage();
+    const labels = getLanguageLabels(currentLang) || {};
 
-    var options = [
+    const options = [
         {
             value: 'none',
             label: labels.imageTypeNone || 'Nenhum'
@@ -1073,11 +1346,11 @@ export function createImageTypeSelect(name, selectedValue, includeExtended = fal
         }
     ];
 
-    var storedValue = localStorage.getItem(name);
-    var finalSelectedValue = storedValue !== null ? storedValue : selectedValue;
+    const storedValue = localStorage.getItem(name);
+    const finalSelectedValue = storedValue !== null ? storedValue : selectedValue;
 
-    options.forEach(function(option) {
-        var optionElement = document.createElement('option');
+    options.forEach(option => {
+        const optionElement = document.createElement('option');
         optionElement.value = option.value;
         optionElement.textContent = option.label;
         if (option.value === finalSelectedValue) {
@@ -1095,12 +1368,12 @@ export function bindCheckboxKontrol(
     disabledOpacity = 0.5,
     additionalElements = []
 ) {
-    setTimeoutfunction() {
-        var mainCheckbox = document.querySelector(mainCheckboxSelector);
-        var subContainer = document.querySelector(subContainerSelector);
+    setTimeout(() => {
+        const mainCheckbox = document.querySelector(mainCheckboxSelector);
+        const subContainer = document.querySelector(subContainerSelector);
 
         if (!mainCheckbox) return;
-        var allElements = [];
+        const allElements = [];
         if (subContainer) {
             allElements.push(
                 ...subContainer.querySelectorAll('input'),
@@ -1109,12 +1382,12 @@ export function bindCheckboxKontrol(
                 ...subContainer.querySelectorAll('label')
             );
         }
-        additionalElements.forEach(function(el) el && allElements.push(el));
+        additionalElements.forEach(el => el && allElements.push(el));
 
-        var updateElementsState = function() {
-            var isMainChecked = mainCheckbox.checked;
+        const updateElementsState = () => {
+            const isMainChecked = mainCheckbox.checked;
 
-            allElements.forEach(function(element) {
+            allElements.forEach(element => {
                 if (element.tagName === 'LABEL') {
                     element.style.opacity = isMainChecked ? '1' : disabledOpacity;
                 } else {
@@ -1138,12 +1411,12 @@ export function bindTersCheckboxKontrol(
     disabledOpacity = 0.6,
     targetElements = []
 ) {
-    setTimeoutfunction() {
-        var mainCheckbox = document.querySelector(mainCheckboxSelector);
-        var targetContainer = document.querySelector(targetContainerSelector);
+    setTimeout(() => {
+        const mainCheckbox = document.querySelector(mainCheckboxSelector);
+        const targetContainer = document.querySelector(targetContainerSelector);
 
         if (!mainCheckbox) return;
-        var allElements = targetElements.slice();
+        const allElements = targetElements.slice();
         if (targetContainer) {
             allElements.push(
                 ...targetContainer.querySelectorAll('input'),
@@ -1152,9 +1425,9 @@ export function bindTersCheckboxKontrol(
             );
         }
 
-        var updateElementsState = function() {
-            var isMainChecked = mainCheckbox.checked;
-            allElements.forEach(function(element) {
+        const updateElementsState = () => {
+            const isMainChecked = mainCheckbox.checked;
+            allElements.forEach(element => {
                 element.disabled = isMainChecked;
                 element.style.opacity = isMainChecked ? disabledOpacity : '1';
             });
@@ -1169,49 +1442,44 @@ export function bindTersCheckboxKontrol(
     }, 50);
 }
 
-export function initSettings(defaultTab) {
-    if (defaultTab === undefined) defaultTab = 'monwui';
-    var modal = createSettingsModal();
+export function initSettings(defaultTab = 'monwui') {
+    const modal = createSettingsModal();
 
     return {
         element: modal,
-        open: function(tab) {
-            if (tab === undefined) tab = defaultTab;
+        open: (tab = defaultTab) => {
             prepareModalForLocalShell(modal);
             return activateSettingsPanel(modal, tab);
         },
-        close: function() { return closeLocalSettingsShell(modal); }
+        close: () => closeLocalSettingsShell(modal)
     };
 }
 
-export function mountNexusPobreFlixSettingsPage(host, options) {
+export function mountNexusPobreFlixSettingsPage(host, { defaultTab = 'monwui', force = false } = {}) {
     if (!host) return null;
-    var defaultTab = (options && options.defaultTab) ? options.defaultTab : 'monwui';
-    var force = (options && options.force === true);
 
     if (force) {
-        var existing = host.querySelector('#settings-modal');
+        const existing = host.querySelector('#settings-modal');
         if (existing) existing.remove();
-        if (settingsModal && settingsModal.isConnected) settingsModal.remove();
+        if (settingsModal?.isConnected) settingsModal.remove();
         settingsModal = null;
     }
 
-    var existingModal = !force ? host.querySelector('#settings-modal') : null;
-    var modal = existingModal || createSettingsModal();
+    const existingModal = !force ? host.querySelector('#settings-modal') : null;
+    const modal = existingModal || createSettingsModal();
     prepareModalForEmbeddedPage(modal);
 
     if (modal.parentElement !== host) {
         host.replaceChildren(modal);
     }
 
-    var api = {
+    const api = {
         element: modal,
-        open: function(tab) {
-            if (tab === undefined) tab = defaultTab;
+        open: (tab = defaultTab) => {
             prepareModalForEmbeddedPage(modal);
             return activateSettingsPanel(modal, tab);
         },
-        close: function() {}
+        close: () => {}
     };
 
     host.__nexusPobreFlixSettingsApi = api;
@@ -1220,12 +1488,12 @@ export function mountNexusPobreFlixSettingsPage(host, options) {
 }
 
 function setupMobileTextareaBehavior() {
-  var modal = document.getElementById('settings-modal');
+  const modal = document.getElementById('settings-modal');
   if (!modal) return;
 
-  var textareas = modal.querySelectorAll('textarea');
+  const textareas = modal.querySelectorAll('textarea');
 
-  textareas.forEach(function(textarea) {
+  textareas.forEach(textarea => {
     textarea.addEventListener('focus', function() {
       if (!isMobileDevice()) return;
       this.style.position = 'fixed';
@@ -1235,7 +1503,7 @@ function setupMobileTextareaBehavior() {
       this.style.zIndex = '10000';
       this.style.height = '30vh';
 
-      setTimeoutfunction() {
+      setTimeout(() => {
         this.scrollIntoView({
           behavior: 'smooth',
           block: 'center'
@@ -1260,15 +1528,15 @@ function isMobileDevice() {
 }
 
 export function createNumberInput(key, label, value, min = 0, max = 100, step = 1) {
-  var container = document.createElement('div');
+  const container = document.createElement('div');
   container.className = 'input-container';
 
-  var labelElement = document.createElement('label');
+  const labelElement = document.createElement('label');
   labelElement.textContent = label;
   labelElement.htmlFor = key;
   container.appendChild(labelElement);
 
-  var input = document.createElement('input');
+  const input = document.createElement('input');
   input.type = 'number';
   input.id = key;
   input.name = key;
@@ -1279,27 +1547,27 @@ export function createNumberInput(key, label, value, min = 0, max = 100, step = 
   input.setAttribute('inputmode', 'decimal');
   input.setAttribute('pattern', '[0-9]+([\\.,][0-9]+)?');
 
-  var normalize = function(v) { return String((v !== null && v !== undefined) ? v : '').replace(',', '.'); };
-  var clamp = function(num, lo, hi) { return Math.min(Math.max(num, lo), hi); };
+  const normalize = (v) => String(v ?? '').replace(',', '.');
+  const clamp = (num, lo, hi) => Math.min(Math.max(num, lo), hi);
 
   input.value = normalize(value);
 
-  input.addEventListenerfunction() {
+  input.addEventListener('input', () => {
     if (input.value.includes(',')) {
-      var pos = input.selectionStart;
+      const pos = input.selectionStart;
       input.value = input.value.replace(',', '.');
       if (pos != null) input.setSelectionRange(pos, pos);
     }
   });
 
-  input.addEventListenerfunction() {
-    var num = Number.parseFloat(normalize(input.value));
+  input.addEventListener('blur', () => {
+    const num = Number.parseFloat(normalize(input.value));
     if (!Number.isFinite(num)) return;
 
-    var val = clamp(num, Number(input.min), Number(input.max));
-    var stepNum = Number(input.step);
+    let val = clamp(num, Number(input.min), Number(input.max));
+    const stepNum = Number(input.step);
     if (Number.isFinite(stepNum) && stepNum > 0 && stepNum !== 1) {
-      var decimals = (String(stepNum).split('.')[1] || '').length;
+      const decimals = (String(stepNum).split('.')[1] || '').length;
       val = Number(val.toFixed(decimals));
       input.value = val.toFixed(decimals);
     } else {
@@ -1309,8 +1577,8 @@ export function createNumberInput(key, label, value, min = 0, max = 100, step = 
     localStorage.setItem(key, input.value);
   });
 
-  input.addEventListenerfunction() {
-    var v = normalize(e.target.value);
+  input.addEventListener('change', (e) => {
+    const v = normalize(e.target.value);
     localStorage.setItem(key, v);
   });
 
@@ -1319,20 +1587,20 @@ export function createNumberInput(key, label, value, min = 0, max = 100, step = 
 }
 
 export function createTextInput(key, label, value) {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     container.className = 'input-container';
 
-    var labelElement = document.createElement('label');
+    const labelElement = document.createElement('label');
     labelElement.textContent = label;
     labelElement.htmlFor = key;
     container.appendChild(labelElement);
 
-    var input = document.createElement('input');
+    const input = document.createElement('input');
     input.type = 'text';
     input.id = key;
     input.name = key;
     input.value = value;
-    input.addEventListenerfunction() {
+    input.addEventListener('change', (e) => {
         localStorage.setItem(key, e.target.value);
     });
     container.appendChild(input);
@@ -1341,20 +1609,20 @@ export function createTextInput(key, label, value) {
 }
 
 export function createSelect(key, label, options, selectedValue) {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     container.className = 'input-container';
 
-    var labelElement = document.createElement('label');
+    const labelElement = document.createElement('label');
     labelElement.textContent = label;
     labelElement.htmlFor = key;
     container.appendChild(labelElement);
 
-    var select = document.createElement('select');
+    const select = document.createElement('select');
     select.id = key;
     select.name = key;
 
-    options.forEach(function(option) {
-        var optionElement = document.createElement('option');
+    options.forEach(option => {
+        const optionElement = document.createElement('option');
         optionElement.value = option.value;
         optionElement.textContent = option.text;
         if (option.value === selectedValue) {
@@ -1363,7 +1631,7 @@ export function createSelect(key, label, options, selectedValue) {
         select.appendChild(optionElement);
     });
 
-    select.addEventListenerfunction() {
+    select.addEventListener('change', (e) => {
         localStorage.setItem(key, e.target.value);
     });
     container.appendChild(select);
@@ -1371,34 +1639,28 @@ export function createSelect(key, label, options, selectedValue) {
     return container;
 }
 
-var __isAdminCached = null;
+let __isAdminCached = null;
 
 function getJfRootFromLocation() {
   try {
-    var baseEl = document.querySelector("base[href]");
-    var baseHref = baseEl ? baseEl.getAttribute("href") : null;
+    const baseHref = document.querySelector("base[href]")?.getAttribute("href");
     if (baseHref) {
-      var url = new URL(baseHref, window.location.href);
+      const url = new URL(baseHref, window.location.href);
       return String(url.pathname || "")
         .replace(/\/web\/?$/i, "")
         .replace(/\/+$/, "");
     }
-  } catch (e) {}
+  } catch {}
 
-  var path = String(window.location.pathname || "/");
-  var match = path.match(/^(.*?)(?:\/web(?:\/|$).*)$/i);
-  return (match && match[1]) ? match[1].replace(/\/+$/, "") : "";
+  const path = String(window.location.pathname || "/");
+  const match = path.match(/^(.*?)(?:\/web(?:\/|$).*)$/i);
+  return match?.[1] ? match[1].replace(/\/+$/, "") : "";
 }
 
 function getEmbyTokenSafe() {
   try {
-    var apiClient = window.ApiClient;
-    if (!apiClient) return "";
-    var token = (typeof apiClient.accessToken === "function")
-      ? apiClient.accessToken()
-      : (apiClient._accessToken || "");
-    return token || "";
-  } catch (e) {
+    return window.ApiClient?.accessToken?.() || window.ApiClient?._accessToken || "";
+  } catch {
     return "";
   }
 }
@@ -1412,9 +1674,9 @@ function readBooleanish(value) {
 function readAdminFlagFromPolicy(policy) {
   if (!policy || typeof policy !== "object") return null;
 
-  var candidates = [policy.IsAdministrator, policy.IsAdmin, policy.IsAdminUser];
-  for (var candidate of candidates) {
-    var normalized = readBooleanish(candidate);
+  const candidates = [policy.IsAdministrator, policy.IsAdmin, policy.IsAdminUser];
+  for (const candidate of candidates) {
+    const normalized = readBooleanish(candidate);
     if (normalized !== null) return normalized;
   }
 
@@ -1424,62 +1686,59 @@ function readAdminFlagFromPolicy(policy) {
 function readAdminFlagFromUser(user) {
   if (!user || typeof user !== "object") return null;
 
-  var policyFlag = readAdminFlagFromPolicy(user.Policy || user.UserPolicy);
+  const policyFlag = readAdminFlagFromPolicy(user.Policy || user.UserPolicy);
   if (policyFlag !== null) return policyFlag;
 
-  var candidates = [user.IsAdministrator, user.isAdministrator, user.IsAdmin, user.isAdmin];
-  for (var candidate of candidates) {
-    var normalized = readBooleanish(candidate);
+  const candidates = [user.IsAdministrator, user.isAdministrator, user.IsAdmin, user.isAdmin];
+  for (const candidate of candidates) {
+    const normalized = readBooleanish(candidate);
     if (normalized !== null) return normalized;
   }
 
   return null;
 }
 
-function resolveLiveAdminFlag() {
-  var liveCandidates = [];
+async function resolveLiveAdminFlag() {
+  const liveCandidates = [];
 
   try {
-    var sessionInfo = typeof getSessionInfo === "function" ? getSessionInfo() : null;
-    if (sessionInfo && sessionInfo.User) liveCandidates.push(sessionInfo.User);
-    if (sessionInfo && sessionInfo.user) liveCandidates.push(sessionInfo.user);
+    const sessionInfo = typeof getSessionInfo === "function" ? getSessionInfo() : null;
+    if (sessionInfo?.User) liveCandidates.push(sessionInfo.User);
+    if (sessionInfo?.user) liveCandidates.push(sessionInfo.user);
     if (sessionInfo) liveCandidates.push(sessionInfo);
-  } catch (e) {}
+  } catch {}
 
   try {
-    if (window.ApiClient._currentUser) {
+    if (window.ApiClient?._currentUser) {
       liveCandidates.push(window.ApiClient._currentUser);
     }
   } catch {}
 
-  for (var candidate of liveCandidates) {
-    var flag = readAdminFlagFromUser(candidate);
+  for (const candidate of liveCandidates) {
+    const flag = readAdminFlagFromUser(candidate);
     if (flag !== null) return flag;
   }
 
   try {
-    var apiClient = window.ApiClient;
-    if (apiClient && typeof apiClient.getCurrentUser === "function") {
-        var currentUser = apiClient.getCurrentUser();
-        var currentFlag = readAdminFlagFromUser(currentUser);
-        if (currentFlag !== null) return currentFlag;
-    }
-  } catch (e) {}
+    const currentUser = await window.ApiClient?.getCurrentUser?.();
+    const currentFlag = readAdminFlagFromUser(currentUser);
+    if (currentFlag !== null) return currentFlag;
+  } catch {}
 
   try {
-    var cachedFlag = readBooleanish(localStorage.getItem("currentUserIsAdmin"));
+    const cachedFlag = readBooleanish(localStorage.getItem("currentUserIsAdmin"));
     if (cachedFlag !== null) return cachedFlag;
-  } catch (e) {}
+  } catch {}
 
   return null;
 }
 
 function buildAdminProbeHeaders(token) {
-  var headers = { Accept: "application/json" };
+  const headers = { Accept: "application/json" };
   if (token) headers["X-Emby-Token"] = token;
 
   try {
-    var authHeader = String(
+    const authHeader = String(
       (typeof getAuthHeader === "function" ? getAuthHeader() : "") || ""
     ).trim();
     if (authHeader) headers.Authorization = authHeader;
@@ -1488,27 +1747,27 @@ function buildAdminProbeHeaders(token) {
   return headers;
 }
 
-function isAdminUser() {
+async function isAdminUser() {
   if (__isAdminCached !== null) return __isAdminCached;
 
   try {
-    var liveAdmin = resolveLiveAdminFlag();
+    const liveAdmin = await resolveLiveAdminFlag();
     if (liveAdmin === true) {
       __isAdminCached = true;
       return true;
     }
 
-    var token = getEmbyTokenSafe();
+    const token = getEmbyTokenSafe();
     if (token) {
-      var jfRoot = getJfRootFromLocation();
-      var r = fetch((jfRoot) + "/Users/Me", {
+      const jfRoot = getJfRootFromLocation();
+      const r = await fetch(`${jfRoot}/Users/Me`, {
         cache: "no-store",
         headers: buildAdminProbeHeaders(token)
       });
 
       if (r.ok) {
-        var me = r.json();
-        var fetchedAdmin = readAdminFlagFromUser(me);
+        const me = await r.json();
+        const fetchedAdmin = readAdminFlagFromUser(me);
         if (fetchedAdmin !== null) {
           __isAdminCached = fetchedAdmin;
           return fetchedAdmin;
@@ -1530,31 +1789,31 @@ function isAdminUser() {
 }
 
 export function isGlobalSettingsLockedForUser() {
-  var cfg = getConfig();
-  var forced = (cfg && cfg.forceGlobalUserSettings === true);
+  const cfg = getConfig();
+  const forced = !!cfg?.forceGlobalUserSettings;
 
   if (!forced) return false;
   return true;
 }
 
-function applyGlobalSettingsLockUI(args) {
-  var labels = args.labels;
-  var saveBtn = args.saveBtn;
-  var applyBtn = args.applyBtn;
-  var resetBtn = args.resetBtn;
-  var themeToggleBtn = args.themeToggleBtn;
+async function applyGlobalSettingsLockUI({
+  labels,
+  saveBtn,
+  applyBtn,
+  resetBtn,
+  themeToggleBtn
+}) {
+  const cfg = getConfig();
+  if (!cfg?.forceGlobalUserSettings) return;
 
-  var cfg = getConfig();
-  if (!cfg || !cfg.forceGlobalUserSettings) return;
-
-  var admin = isAdminUser();
+  const admin = await isAdminUser();
   if (admin) return;
 
-  var lockMsg =
-    labels.forceGlobalLockedTitle ||
+  const lockMsg =
+    labels?.forceGlobalLockedTitle ||
     "As configurações foram impostas globalmente pelo administrador neste servidor.";
 
-  [saveBtn, applyBtn, resetBtn].forEach(function(btn) {
+  [saveBtn, applyBtn, resetBtn].forEach(btn => {
     if (!btn) return;
     btn.disabled = true;
     btn.style.pointerEvents = "none";
@@ -1566,21 +1825,21 @@ function applyGlobalSettingsLockUI(args) {
     themeToggleBtn.style.opacity = "";
   }
 
-  var modal = document.getElementById('settings-modal');
+  const modal = document.getElementById('settings-modal');
   if (modal) {
-    var avatarPanel = modal.querySelector('#avatar-panel');
-    var avatarAllowed = new Set();
+    const avatarPanel = modal.querySelector('#avatar-panel');
+    const avatarAllowed = new Set();
     if (avatarPanel) {
-      avatarPanel.querySelectorAll('input, select, textarea, button').forEach(function(el) avatarAllowed.add(el));
+      avatarPanel.querySelectorAll('input, select, textarea, button').forEach(el => avatarAllowed.add(el));
     }
 
     if (themeToggleBtn) avatarAllowed.add(themeToggleBtn);
-    var settingsHotkeyInput = modal.querySelector('#settingsHotkey');
-    var settingsHotkeyReset = modal.querySelector('#settingsHotkeyReset');
+    const settingsHotkeyInput = modal.querySelector('#settingsHotkey');
+    const settingsHotkeyReset = modal.querySelector('#settingsHotkeyReset');
     if (settingsHotkeyInput) avatarAllowed.add(settingsHotkeyInput);
     if (settingsHotkeyReset) avatarAllowed.add(settingsHotkeyReset);
 
-    modal.querySelectorAll('input, select, textarea, button').forEach(function(el) {
+    modal.querySelectorAll('input, select, textarea, button').forEach(el => {
       if (el.classList.contains('settings-close')) return;
       if (avatarAllowed.has(el)) return;
       el.disabled = true;
@@ -1590,7 +1849,7 @@ function applyGlobalSettingsLockUI(args) {
   }
 
   showNotification(
-    '<i class="fas fa-lock" style="margin-right:8px;"></i> ' + String(lockMsg),
+    `<i class="fas fa-lock" style="margin-right:8px;"></i> ${lockMsg}`,
     5000,
     "warning"
   );

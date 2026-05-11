@@ -3,28 +3,28 @@ import { createCheckbox, createImageTypeSelect, bindCheckboxKontrol, bindTersChe
 import { applySettings, applyRawConfig } from "./applySettings.js";
 
 export function createAnimationPanel(config, labels) {
-    var panel = document.createElement('div');
+    const panel = document.createElement('div');
     panel.id = 'animation-panel';
     panel.className = 'settings-panel';
 
-    var slideAnimDiv = document.createElement('div');
+    const slideAnimDiv = document.createElement('div');
     slideAnimDiv.className = 'fsetting-item';
 
-    var slideAnimCheckbox = createCheckbox(
+    const slideAnimCheckbox = createCheckbox(
         'enableSlideAnimations',
         labels.enableSlideAnimations || 'Slayt Animasyonlarını Etkinleştir',
         config.enableSlideAnimations
     );
     slideAnimDiv.appendChild(slideAnimCheckbox);
 
-    var slideTypeDiv = document.createElement('div');
+    const slideTypeDiv = document.createElement('div');
     slideTypeDiv.className = 'fsetting-item slide-anim-container';
-    var slideTypeLabel = document.createElement('label');
+    const slideTypeLabel = document.createElement('label');
     slideTypeLabel.textContent = labels.slideTransitionType || 'Slayt Geçiş Türü:';
-    var slideTypeSelect = document.createElement('select');
+    const slideTypeSelect = document.createElement('select');
     slideTypeSelect.name = 'slideTransitionType';
 
-    var slideTypes = [
+    const slideTypes = [
         { value: 'flip', label: labels.flipAnimation || '3D Flip' },
         { value: 'glitch', label: labels.glitchAnimation || 'Glitch Etkisi' },
         { value: 'morph', label: labels.morphAnimation || 'Morph' },
@@ -45,8 +45,8 @@ export function createAnimationPanel(config, labels) {
         { value: 'eye', label: labels.eye || 'Göz'},
     ];
 
-    slideTypes.forEach(function(type) {
-        var option = document.createElement('option');
+    slideTypes.forEach(type => {
+        const option = document.createElement('option');
         option.value = type.value;
         option.textContent = type.label;
         if (type.value === config.slideTransitionType) {
@@ -59,11 +59,11 @@ export function createAnimationPanel(config, labels) {
     slideTypeSelect.id = 'slideTypeSelect';
     slideTypeDiv.append(slideTypeLabel, slideTypeSelect);
 
-    var slideDurationDiv = document.createElement('div');
+    const slideDurationDiv = document.createElement('div');
     slideDurationDiv.className = 'fsetting-item slide-anim-container';
-    var slideDurationLabel = document.createElement('label');
+    const slideDurationLabel = document.createElement('label');
     slideDurationLabel.textContent = labels.slideAnimationDuration || 'Slayt Animasyon Süresi (ms):';
-    var slideDurationInput = document.createElement('input');
+    const slideDurationInput = document.createElement('input');
     slideDurationInput.type = 'number';
     slideDurationInput.value = config.slideAnimationDuration || 800;
     slideDurationInput.name = 'slideAnimationDuration';
@@ -74,10 +74,10 @@ export function createAnimationPanel(config, labels) {
     slideDurationInput.id = 'slideDurationInput';
     slideDurationDiv.append(slideDurationLabel, slideDurationInput);
 
-    var dotAnimDiv = document.createElement('div');
+    const dotAnimDiv = document.createElement('div');
     dotAnimDiv.className = 'fsetting-item';
 
-    var dotAnimCheckbox = createCheckbox(
+    const dotAnimCheckbox = createCheckbox(
         'enableDotPosterAnimations',
         labels.enableDotPosterAnimations || 'Nokta Navigasyon Poster Animasyonlarını Etkinleştir',
         config.enableDotPosterAnimations
@@ -85,14 +85,14 @@ export function createAnimationPanel(config, labels) {
 
     dotAnimDiv.appendChild(dotAnimCheckbox);
 
-    var dotTypeDiv = document.createElement('div');
+    const dotTypeDiv = document.createElement('div');
     dotTypeDiv.className = 'fsetting-item dot-anim-container';
-    var dotTypeLabel = document.createElement('label');
+    const dotTypeLabel = document.createElement('label');
     dotTypeLabel.textContent = labels.dotPosterTransitionType || 'Dot Geçiş Türü:';
-    var dotTypeSelect = document.createElement('select');
+    const dotTypeSelect = document.createElement('select');
     dotTypeSelect.name = 'dotPosterTransitionType';
 
-    var dotTypes = [
+    const dotTypes = [
         { value: 'scale', label: labels.scaleAnimation || 'Ölçekleme' },
         { value: 'bounce', label: labels.bounceAnimation || 'Zıplama' },
         { value: 'rotate', label: labels.rotateAnimation || 'Döndürme' },
@@ -109,8 +109,8 @@ export function createAnimationPanel(config, labels) {
         { value: 'wobble', label: labels.wobble || 'Salla' },
     ];
 
-    dotTypes.forEach(function(type) {
-        var option = document.createElement('option');
+    dotTypes.forEach(type => {
+        const option = document.createElement('option');
         option.value = type.value;
         option.textContent = type.label;
         if (type.value === config.dotPosterTransitionType) {
@@ -123,11 +123,11 @@ export function createAnimationPanel(config, labels) {
     dotTypeSelect.id = 'dotTypeSelect';
     dotTypeDiv.append(dotTypeLabel, dotTypeSelect);
 
-    var dotDurationDiv = document.createElement('div');
+    const dotDurationDiv = document.createElement('div');
     dotDurationDiv.className = 'fsetting-item dot-anim-container';
-    var dotDurationLabel = document.createElement('label');
+    const dotDurationLabel = document.createElement('label');
     dotDurationLabel.textContent = labels.dotPosterAnimationDuration || 'Dot Animasyon Süresi (ms):';
-    var dotDurationInput = document.createElement('input');
+    const dotDurationInput = document.createElement('input');
     dotDurationInput.type = 'number';
     dotDurationInput.value = config.dotPosterAnimationDuration || 500;
     dotDurationInput.name = 'dotPosterAnimationDuration';

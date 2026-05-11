@@ -1,32 +1,32 @@
 import { musicPlayerState } from "./state.js";
 
-var DEFAULT_MAX_ENTRIES = 500;
-var DEFAULT_TTL_MS = 1000 * 60 * 60 * 24 * 7;
+const DEFAULT_MAX_ENTRIES = 500;
+const DEFAULT_TTL_MS = 1000 * 60 * 60 * 24 * 7;
 
-var store = new Map();
-var LIMITS = { maxEntries: DEFAULT_MAX_ENTRIES, ttlMs: DEFAULT_TTL_MS };
+let store = new Map();
+let LIMITS = { maxEntries: DEFAULT_MAX_ENTRIES, ttlMs: DEFAULT_TTL_MS };
 
-var maintenanceTimer = null;
+let maintenanceTimer = null;
 function ensureMaintenanceTimer() {
   if (maintenanceTimer) return;
   maintenanceTimer = setInterval(maintain, 60_000);
 }
 
 function maintain() {
-  var now = Date.now();
-  for (var [id, rec] of store) {
+  const now = Date.now();
+  for (const [id, rec] of store) {
     if (LIMITS.ttlMs > 0 && now - (rec.at || 0) > LIMITS.ttlMs) {
       store.delete(id);
     }
   }
   while (store.size > LIMITS.maxEntries) {
-    var oldestKey = store.keys().next().value;
+    const oldestKey = store.keys().next().value;
     store.delete(oldestKey);
   }
 }
 
 function touch(id) {
-  var rec = store.get(id);
+  const rec = store.get(id);
   if (!rec) return;
   store.delete(id);
   rec.at = Date.now();
@@ -34,7 +34,7 @@ function touch(id) {
 }
 
 function upsert(id) {
-  var rec = store.get(id);
+  let rec = store.get(id);
   if (!rec) {
     rec = { at: Date.now(), lyrics: undefined, artwork: undefined };
     store.set(id, rec);
@@ -62,18 +62,18 @@ export function purgeOfflineCache({ onlyExpired = false } = {}) {
 }
 
 function isCacheEnabled() {
-  return !!(musicPlayerState.offlineCache.enabled);
+  return !!(musicPlayerState?.offlineCache?.enabled);
 }
 
-export function cacheForOffline(trackId, type, data) {
+export async function cacheForOffline(trackId, type, data) {
   if (!isCacheEnabled()) return;
 
   try {
     ensureMaintenanceTimer();
     if (typeof trackId !== "string" && typeof trackId !== "number") return;
 
-    var id = String(trackId);
-    var rec = upsert(id);
+    const id = String(trackId);
+    const rec = upsert(id);
 
     if (type === "lyrics") {
       rec.lyrics = data;
@@ -86,13 +86,13 @@ export function cacheForOffline(trackId, type, data) {
   }
 }
 
-export function getFromOfflineCache(trackId, type) {
+export async function getFromOfflineCache(trackId, type) {
   if (!isCacheEnabled()) return null;
 
   try {
     ensureMaintenanceTimer();
-    var id = String(trackId);
-    var rec = store.get(id);
+    const id = String(trackId);
+    const rec = store.get(id);
     if (!rec) return null;
 
     if (LIMITS.ttlMs > 0 && Date.now() - (rec.at || 0) > LIMITS.ttlMs) {

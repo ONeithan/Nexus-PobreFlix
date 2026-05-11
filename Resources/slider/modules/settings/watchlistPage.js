@@ -1,16 +1,16 @@
 import { bindCheckboxKontrol, createCheckbox, createSection } from "./shared.js";
 
 export function createWatchlistPanel(config, labels) {
-    var panel = document.createElement("div");
+    const panel = document.createElement("div");
     panel.id = "watchlist-settings-panel";
     panel.className = "settings-panel";
 
-    var section = createSection(labels.watchlistSettingsTab || "Configurações da Minha Lista");
+    const section = createSection(labels.watchlistSettingsTab || "İzleme Listesi Ayarları");
 
     section.appendChild(
         createCheckbox(
             "watchlistTabsSliderEnabled",
-            labels.watchlistTabsSliderEnabled || "Mostrar botão na barra de abas superior",
+            labels.watchlistTabsSliderEnabled || "İzleme listesi butonunu .emby-tabs-slider içine ekle",
             config.watchlistTabsSliderEnabled
         )
     );
@@ -18,33 +18,33 @@ export function createWatchlistPanel(config, labels) {
     section.appendChild(
         createCheckbox(
             "watchlistAutoRemovePlayed",
-            labels.watchlistAutoRemovePlayed || "Remover automaticamente conteúdos assistidos da lista",
+            labels.watchlistAutoRemovePlayed || "İzlenenleri otomatik olarak izleme listesinden kaldır",
             config.watchlistAutoRemovePlayed
         )
     );
 
-    var autoRemoveFavoriteCheckbox = createCheckbox(
+    const autoRemoveFavoriteCheckbox = createCheckbox(
         "watchlistAutoRemovePlayedFromFavorites",
-        labels.watchlistAutoRemovePlayedFromFavorites || "Remover também dos favoritos do Jellyfin durante a remoção automática",
+        labels.watchlistAutoRemovePlayedFromFavorites || "Otomatik kaldırırken Jellyfin favorilerinden de çıkar",
         config.watchlistAutoRemovePlayedFromFavorites
     );
     autoRemoveFavoriteCheckbox.classList.add("watchlist-auto-remove-favorite-container");
     section.appendChild(autoRemoveFavoriteCheckbox);
 
-    var importFavoritesCheckbox = createCheckbox(
+    const importFavoritesCheckbox = createCheckbox(
         "watchlistImportFavoritesOnStartup",
-        labels.watchlistImportFavoritesOnStartup || "Importar favoritos do Jellyfin ao iniciar",
+        labels.watchlistImportFavoritesOnStartup || "Açılışta mevcut Jellyfin favorilerini izleme listesine aktar",
         config.watchlistImportFavoritesOnStartup
     );
 
     importFavoritesCheckbox.classList.add("watchlist-import-favorites-container");
 
-    var importFavoritesDescription = document.createElement("div");
+    const importFavoritesDescription = document.createElement("div");
     importFavoritesDescription.className = "description-text";
     importFavoritesDescription.textContent = labels.watchlistImportFavoritesOnStartupDescription
-        || "Ative isso durante a primeira instalação ou quando quiser importar seus favoritos.";
+        || "İlk kurulumda veya favorilerinizi içe aktarmak istediğinizde etkinleştirin. İçe aktarma tamamlandıktan sonra açık kalmasına gerek yoktur.";
 
-    var importFavoritesWrapper = document.createElement("div");
+    const importFavoritesWrapper = document.createElement("div");
     importFavoritesWrapper.className = "watchlist-import-wrapper";
 
     importFavoritesWrapper.appendChild(importFavoritesCheckbox);

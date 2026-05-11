@@ -3,15 +3,15 @@ import { handleSongEnd } from "./playback.js";
 import { updateSyncedLyrics } from "../lyrics/lyrics.js";
 import { getConfig } from "../../config.js";
 
-var uiEvtCtrl = null;
-var isDragging = false;
-var isClick = false;
-var dragStartX = 0;
-var dragStartTime = 0;
-var lastUpdateTime = 0;
+let uiEvtCtrl = null;
+let isDragging = false;
+let isClick = false;
+let dragStartX = 0;
+let dragStartTime = 0;
+let lastUpdateTime = 0;
 
 function getLiveLabel() {
-  return getConfig().languageLabels.radioLiveLabel || "LIVE";
+  return getConfig()?.languageLabels?.radioLiveLabel || "LIVE";
 }
 
 function resetUiEvtCtrl() {
@@ -23,9 +23,9 @@ function resetUiEvtCtrl() {
 }
 export function formatTime(seconds) {
   if (!isFinite(seconds)) return "0:00";
-  var minutes = Math.floor(Math.min(seconds, 5999) / 60);
-  var secs = Math.floor(Math.min(seconds, 5999) % 60);
-  return (minutes) + ":" + (secs < 10 ? "0" : "") + (secs);
+  const minutes = Math.floor(Math.min(seconds, 5999) / 60);
+  const secs = Math.floor(Math.min(seconds, 5999) % 60);
+  return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
 }
 
 function getEffectiveDuration() {
@@ -33,7 +33,7 @@ function getEffectiveDuration() {
     return Number.NaN;
   }
 
-  var { audio } = musicPlayerState;
+  const { audio } = musicPlayerState;
 
   if (audio && isFinite(audio.duration) && audio.duration > 0) {
     return audio.duration;
@@ -47,14 +47,14 @@ function getEffectiveDuration() {
 function updateMediaPositionState() {
   if (!("mediaSession" in navigator) || !navigator.mediaSession.setPositionState) return;
 
-  var audio = musicPlayerState.audio;
+  const audio = musicPlayerState.audio;
   if (!audio || musicPlayerState.isLiveStream) return;
 
-  var duration = getEffectiveDuration();
+  const duration = getEffectiveDuration();
   if (!isFinite(duration) || duration <= 0) return;
 
-  var currentTime = Number(audio.currentTime);
-  var position = Math.max(0, Math.min(isFinite(currentTime) ? currentTime : 0, duration));
+  const currentTime = Number(audio.currentTime);
+  const position = Math.max(0, Math.min(isFinite(currentTime) ? currentTime : 0, duration));
 
   try {
     navigator.mediaSession.setPositionState({
@@ -71,24 +71,24 @@ export function setupAudioListeners() {
   if (musicPlayerState.__audioCtrl && !musicPlayerState.__audioCtrl.signal.aborted) {
     try { musicPlayerState.__audioCtrl.abort(); } catch {}
   }
-  var ctrl = new AbortController();
+  const ctrl = new AbortController();
   musicPlayerState.__audioCtrl = ctrl;
-  var signal = ctrl.signal;
+  const signal = ctrl.signal;
 
-  var { audio } = musicPlayerState;
+  const { audio } = musicPlayerState;
   if (!audio) return;
 
-  var timeupdateCombined = function() {
+  const timeupdateCombined = () => {
     updateProgress();
     updateMediaPositionState();
   };
-  var onLyricsTimeUpdate = function() {
+  const onLyricsTimeUpdate = () => {
     updateSyncedLyrics(audio.currentTime);
   };
 
   audio.addEventListener("timeupdate", timeupdateCombined, { signal });
   audio.addEventListener("timeupdate", onLyricsTimeUpdate, { signal });
-  var onEnded = function() {
+  const onEnded = () => {
     try {
       if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "none";
     } catch {}
@@ -96,16 +96,16 @@ export function setupAudioListeners() {
   };
   audio.addEventListener("ended", onEnded, { signal, once: true });
 
-  audio.addEventListenerfunction("loadedmetadata", () {
+  audio.addEventListener("loadedmetadata", () => {
     updateDuration();
     updateMediaPositionState();
   }, { signal });
 }
 
 export function setupProgressControls() {
-  var { progressBar, progressHandle } = musicPlayerState;
+  const { progressBar, progressHandle } = musicPlayerState;
   if (!progressBar || !progressHandle) return;
-  var signal = resetUiEvtCtrl();
+  const signal = resetUiEvtCtrl();
 
   progressBar.addEventListener("mousedown", handleMouseDown, { signal });
   progressBar.addEventListener("touchstart", handleTouchStart, { signal, passive: false });
@@ -119,7 +119,7 @@ export function setupProgressControls() {
   document.addEventListener("touchend", handleTouchEnd, { signal });
 
   progressBar.addEventListener("wheel", handleWheel, { signal, passive: false });
-  signal.addEventListenerfunction("abort", () {
+  signal.addEventListener("abort", () => {
     isDragging = false;
     isClick = false;
   });
@@ -152,8 +152,8 @@ function handleClick(e) {
 function handleMouseMove(e) {
   if (!isDragging) return;
 
-  var movedDistance = Math.abs(e.clientX - dragStartX);
-  var elapsedTime = Date.now() - dragStartTime;
+  const movedDistance = Math.abs(e.clientX - dragStartX);
+  const elapsedTime = Date.now() - dragStartTime;
 
   if (isClick && (movedDistance > 5 || elapsedTime > 100)) {
     isClick = false;
@@ -163,8 +163,8 @@ function handleMouseMove(e) {
 function handleTouchMove(e) {
   if (!isDragging) return;
 
-  var movedDistance = Math.abs(e.touches[0].clientX - dragStartX);
-  var elapsedTime = Date.now() - dragStartTime;
+  const movedDistance = Math.abs(e.touches[0].clientX - dragStartX);
+  const elapsedTime = Date.now() - dragStartTime;
 
   if (isClick && (movedDistance > 5 || elapsedTime > 100)) {
     isClick = false;
@@ -186,47 +186,47 @@ function endDrag() {
 }
 
 function seekToPosition(clientX) {
-  var { audio, progressBar, progressHandle, durationEl } = musicPlayerState;
+  const { audio, progressBar, progressHandle, durationEl } = musicPlayerState;
   if (!audio || !progressBar) return;
   if (musicPlayerState.isLiveStream) return;
 
-  var rect = progressBar.getBoundingClientRect();
-  var x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-  var percent = (x / rect.width) * 100;
-  var dur = getEffectiveDuration();
-  var seekTime = (percent / 100) * dur;
+  const rect = progressBar.getBoundingClientRect();
+  const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
+  const percent = (x / rect.width) * 100;
+  const dur = getEffectiveDuration();
+  const seekTime = (percent / 100) * dur;
 
   if (isFinite(seekTime)) {
     audio.currentTime = seekTime;
-    if (progressHandle) progressHandle.style.left = (percent) + "%";
+    if (progressHandle) progressHandle.style.left = `${percent}%`;
     updateProgress();
     updateMediaPositionState();
 
-    var remaining = Math.max(0, dur - audio.currentTime);
-    if (durationEl) durationEl.textContent = "-" + (formatTime(remaining));
+    const remaining = Math.max(0, dur - audio.currentTime);
+    if (durationEl) durationEl.textContent = `-${formatTime(remaining)}`;
   }
 }
 
 export function updateProgress() {
-  var now = Date.now();
+  const now = Date.now();
   if (now - lastUpdateTime < 200 && !isDragging) return;
   lastUpdateTime = now;
 
-  var { audio, progress, currentTimeEl, progressHandle, durationEl, showRemaining } = musicPlayerState;
-  var dur = getEffectiveDuration();
+  const { audio, progress, currentTimeEl, progressHandle, durationEl, showRemaining } = musicPlayerState;
+  const dur = getEffectiveDuration();
 
   if (!progress || !currentTimeEl || !durationEl) return;
 
   if (musicPlayerState.isLiveStream) {
-    progress.style.width = "100%";
+    progress.style.width = `100%`;
     if (progressHandle) {
-      progressHandle.style.left = "100%";
-      progressHandle.style.display = "none";
+      progressHandle.style.left = `100%`;
+      progressHandle.style.display = `none`;
     }
     if (musicPlayerState.progressBar) {
       musicPlayerState.progressBar.style.cursor = "default";
     }
-    currentTimeEl.textContent = formatTime(audio.currentTime || 0);
+    currentTimeEl.textContent = formatTime(audio?.currentTime || 0);
     durationEl.textContent = getLiveLabel();
     return;
   }
@@ -239,35 +239,35 @@ export function updateProgress() {
   }
 
   if (!isFinite(dur) || dur <= 0) {
-    progress.style.width = "0%";
-    if (progressHandle) progressHandle.style.left = "0%";
-    currentTimeEl.textContent = formatTime(audio.currentTime || 0);
+    progress.style.width = `0%`;
+    if (progressHandle) progressHandle.style.left = `0%`;
+    currentTimeEl.textContent = formatTime(audio?.currentTime || 0);
     durationEl.textContent = formatTime(dur);
     return;
   }
 
-  var current = Math.min(dur, (audio.currentTime || 0));
-  var percent = Math.min(100, (current / dur) * 100);
-  progress.style.width = (percent) + "%";
-  if (progressHandle) progressHandle.style.left = (percent) + "%";
+  const current = Math.min(dur, (audio?.currentTime || 0));
+  const percent = Math.min(100, (current / dur) * 100);
+  progress.style.width = `${percent}%`;
+  if (progressHandle) progressHandle.style.left = `${percent}%`;
 
   currentTimeEl.textContent = formatTime(current);
   if (showRemaining) {
-    var remaining = Math.max(0, dur - current);
-    durationEl.textContent = "-" + (formatTime(remaining));
+    const remaining = Math.max(0, dur - current);
+    durationEl.textContent = `-${formatTime(remaining)}`;
   } else {
     durationEl.textContent = formatTime(dur);
   }
 }
 
 export function updateDuration() {
-  var { durationEl } = musicPlayerState;
+  const { durationEl } = musicPlayerState;
   if (!durationEl) return;
   if (musicPlayerState.isLiveStream) {
     durationEl.textContent = getLiveLabel();
     return;
   }
-  var dur = getEffectiveDuration();
+  const dur = getEffectiveDuration();
   durationEl.textContent = formatTime(dur);
 }
 
@@ -286,21 +286,21 @@ export function cleanupProgressControls() {
 
 function handleWheel(e) {
   e.preventDefault();
-  var { audio } = musicPlayerState;
+  const { audio } = musicPlayerState;
   if (!audio) return;
   if (musicPlayerState.isLiveStream) return;
 
-  var delta = e.deltaY > 0 ? -1 : 1;
-  var seekAmount = 1;
+  const delta = e.deltaY > 0 ? -1 : 1;
+  const seekAmount = 1;
 
   audio.currentTime = Math.max(0, Math.min(audio.currentTime + (delta * seekAmount), getEffectiveDuration()));
 
   updateProgress();
   updateMediaPositionState();
 
-  var { progressHandle } = musicPlayerState;
+  const { progressHandle } = musicPlayerState;
   if (progressHandle) {
-    setTimeoutfunction(() {
+    setTimeout(() => {
       progressHandle.style.transform = "";
     }, 200);
   }

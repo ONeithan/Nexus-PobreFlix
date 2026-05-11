@@ -2,11 +2,11 @@ import { getConfig } from "../config.js";
 import { getLanguageLabels, getDefaultLanguage } from "../../language/index.js";
 
 export function createSection(title) {
-  var section = document.createElement("div");
+  const section = document.createElement("div");
   section.className = "settings-section";
 
   if (title) {
-    var sectionTitle = document.createElement("h3");
+    const sectionTitle = document.createElement("h3");
     sectionTitle.textContent = title;
     section.appendChild(sectionTitle);
   }
@@ -15,20 +15,20 @@ export function createSection(title) {
 }
 
 export function createCheckbox(name, label, isChecked) {
-  var container = document.createElement("div");
+  const container = document.createElement("div");
   container.className = "setting-item";
 
-  var checkbox = document.createElement("input");
+  const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
   checkbox.name = name;
   checkbox.id = name;
 
-  var storedValue = localStorage.getItem(name);
+  const storedValue = localStorage.getItem(name);
 
   if (storedValue !== null) {
     if (storedValue.trim().startsWith("{") && storedValue !== "[object Object]") {
       try {
-        var obj = JSON.parse(storedValue);
+        const obj = JSON.parse(storedValue);
         checkbox.checked = obj.enabled !== false;
       } catch {
         checkbox.checked = storedValue === "true";
@@ -40,7 +40,7 @@ export function createCheckbox(name, label, isChecked) {
     checkbox.checked = isChecked === true || isChecked === undefined;
   }
 
-  var checkboxLabel = document.createElement("label");
+  const checkboxLabel = document.createElement("label");
   checkboxLabel.htmlFor = name;
   checkboxLabel.textContent = label;
 
@@ -49,53 +49,53 @@ export function createCheckbox(name, label, isChecked) {
 }
 
 export function createImageTypeSelect(name, selectedValue, includeExtended = false, includeUseSlide = false) {
-  var select = document.createElement("select");
+  const select = document.createElement("select");
   select.name = name;
 
-  var config = getConfig();
-  var currentLang = config.defaultLanguage || getDefaultLanguage();
-  var labels = getLanguageLabels(currentLang) || {};
+  const config = getConfig();
+  const currentLang = config.defaultLanguage || getDefaultLanguage();
+  const labels = getLanguageLabels(currentLang) || {};
 
-  var options = [
+  const options = [
     {
       value: "none",
-      label: labels.imageTypeNone || "Nenhum"
+      label: labels.imageTypeNone || "Hiçbiri"
     },
     {
       value: "backdropUrl",
-      label: labels.imageTypeBackdrop || "Imagem Backdrop"
+      label: labels.imageTypeBackdrop || "Backdrop Görseli"
     },
     {
       value: "landscapeUrl",
-      label: labels.imageTypeLandscape || "Imagem Landscape"
+      label: labels.imageTypeLandscape || "Landscape Görseli"
     },
     {
       value: "primaryUrl",
-      label: labels.imageTypePoster || "Imagem Poster"
+      label: labels.imageTypePoster || "Poster Görseli"
     },
     {
       value: "logoUrl",
-      label: labels.imageTypeLogo || "Imagem Logo"
+      label: labels.imageTypeLogo || "Logo Görseli"
     },
     {
       value: "bannerUrl",
-      label: labels.imageTypeBanner || "Imagem Banner"
+      label: labels.imageTypeBanner || "Banner Görseli"
     },
     {
       value: "artUrl",
-      label: labels.imageTypeArt || "Imagem Art"
+      label: labels.imageTypeArt || "Art Görseli"
     },
     {
       value: "discUrl",
-      label: labels.imageTypeDisc || "Imagem Disco"
+      label: labels.imageTypeDisc || "Disk Görseli"
     }
   ];
 
-  var storedValue = localStorage.getItem(name);
-  var finalSelectedValue = storedValue !== null ? storedValue : selectedValue;
+  const storedValue = localStorage.getItem(name);
+  const finalSelectedValue = storedValue !== null ? storedValue : selectedValue;
 
-  options.forEach(function((option) {
-    var optionElement = document.createElement("option");
+  options.forEach((option) => {
+    const optionElement = document.createElement("option");
     optionElement.value = option.value;
     optionElement.textContent = option.label;
     if (option.value === finalSelectedValue) {
@@ -113,12 +113,12 @@ export function bindCheckboxKontrol(
   disabledOpacity = 0.5,
   additionalElements = []
 ) {
-  setTimeoutfunction(() {
-    var mainCheckbox = document.querySelector(mainCheckboxSelector);
-    var subContainer = document.querySelector(subContainerSelector);
+  setTimeout(() => {
+    const mainCheckbox = document.querySelector(mainCheckboxSelector);
+    const subContainer = document.querySelector(subContainerSelector);
 
     if (!mainCheckbox) return;
-    var allElements = [];
+    const allElements = [];
     if (subContainer) {
       allElements.push(
         ...subContainer.querySelectorAll("input"),
@@ -127,12 +127,12 @@ export function bindCheckboxKontrol(
         ...subContainer.querySelectorAll("label")
       );
     }
-    additionalElements.forEach(function((el) el && allElements.push(el));
+    additionalElements.forEach((el) => el && allElements.push(el));
 
-    var updateElementsState = function() {
-      var isMainChecked = mainCheckbox.checked;
+    const updateElementsState = () => {
+      const isMainChecked = mainCheckbox.checked;
 
-      allElements.forEach(function((element) {
+      allElements.forEach((element) => {
         if (element.tagName === "LABEL") {
           element.style.opacity = isMainChecked ? "1" : disabledOpacity;
         } else {
@@ -156,12 +156,12 @@ export function bindTersCheckboxKontrol(
   disabledOpacity = 0.6,
   targetElements = []
 ) {
-  setTimeoutfunction(() {
-    var mainCheckbox = document.querySelector(mainCheckboxSelector);
-    var targetContainer = document.querySelector(targetContainerSelector);
+  setTimeout(() => {
+    const mainCheckbox = document.querySelector(mainCheckboxSelector);
+    const targetContainer = document.querySelector(targetContainerSelector);
 
     if (!mainCheckbox) return;
-    var allElements = targetElements.slice();
+    const allElements = targetElements.slice();
     if (targetContainer) {
       allElements.push(
         ...targetContainer.querySelectorAll("input"),
@@ -170,9 +170,9 @@ export function bindTersCheckboxKontrol(
       );
     }
 
-    var updateElementsState = function() {
-      var isMainChecked = mainCheckbox.checked;
-      allElements.forEach(function((element) {
+    const updateElementsState = () => {
+      const isMainChecked = mainCheckbox.checked;
+      allElements.forEach((element) => {
         element.disabled = isMainChecked;
         element.style.opacity = isMainChecked ? disabledOpacity : "1";
       });
@@ -188,15 +188,15 @@ export function bindTersCheckboxKontrol(
 }
 
 export function createNumberInput(key, label, value, min = 0, max = 100, step = 1) {
-  var container = document.createElement("div");
+  const container = document.createElement("div");
   container.className = "input-container";
 
-  var labelElement = document.createElement("label");
+  const labelElement = document.createElement("label");
   labelElement.textContent = label;
   labelElement.htmlFor = key;
   container.appendChild(labelElement);
 
-  var input = document.createElement("input");
+  const input = document.createElement("input");
   input.type = "number";
   input.id = key;
   input.name = key;
@@ -207,27 +207,27 @@ export function createNumberInput(key, label, value, min = 0, max = 100, step = 
   input.setAttribute("inputmode", "decimal");
   input.setAttribute("pattern", "[0-9]+([\\.,][0-9]+)?");
 
-  var normalize = function(v) String(v || "").replace(",", ".");
-  var clamp = function(num, lo, hi) Math.min(Math.max(num, lo), hi);
+  const normalize = (v) => String(v ?? "").replace(",", ".");
+  const clamp = (num, lo, hi) => Math.min(Math.max(num, lo), hi);
 
   input.value = normalize(value);
 
-  input.addEventListenerfunction("input", () {
+  input.addEventListener("input", () => {
     if (input.value.includes(",")) {
-      var pos = input.selectionStart;
+      const pos = input.selectionStart;
       input.value = input.value.replace(",", ".");
       if (pos != null) input.setSelectionRange(pos, pos);
     }
   });
 
-  input.addEventListenerfunction("blur", () {
-    var num = Number.parseFloat(normalize(input.value));
+  input.addEventListener("blur", () => {
+    const num = Number.parseFloat(normalize(input.value));
     if (!Number.isFinite(num)) return;
 
-    var val = clamp(num, Number(input.min), Number(input.max));
-    var stepNum = Number(input.step);
+    let val = clamp(num, Number(input.min), Number(input.max));
+    const stepNum = Number(input.step);
     if (Number.isFinite(stepNum) && stepNum > 0 && stepNum !== 1) {
-      var decimals = (String(stepNum).split(".")[1] || "").length;
+      const decimals = (String(stepNum).split(".")[1] || "").length;
       val = Number(val.toFixed(decimals));
       input.value = val.toFixed(decimals);
     } else {
@@ -237,8 +237,8 @@ export function createNumberInput(key, label, value, min = 0, max = 100, step = 
     localStorage.setItem(key, input.value);
   });
 
-  input.addEventListenerfunction("change", (e) {
-    var v = normalize(e.target.value);
+  input.addEventListener("change", (e) => {
+    const v = normalize(e.target.value);
     localStorage.setItem(key, v);
   });
 
@@ -247,20 +247,20 @@ export function createNumberInput(key, label, value, min = 0, max = 100, step = 
 }
 
 export function createTextInput(key, label, value) {
-  var container = document.createElement("div");
+  const container = document.createElement("div");
   container.className = "input-container";
 
-  var labelElement = document.createElement("label");
+  const labelElement = document.createElement("label");
   labelElement.textContent = label;
   labelElement.htmlFor = key;
   container.appendChild(labelElement);
 
-  var input = document.createElement("input");
+  const input = document.createElement("input");
   input.type = "text";
   input.id = key;
   input.name = key;
   input.value = value;
-  input.addEventListenerfunction("change", (e) {
+  input.addEventListener("change", (e) => {
     localStorage.setItem(key, e.target.value);
   });
   container.appendChild(input);
@@ -269,20 +269,20 @@ export function createTextInput(key, label, value) {
 }
 
 export function createSelect(key, label, options, selectedValue) {
-  var container = document.createElement("div");
+  const container = document.createElement("div");
   container.className = "input-container";
 
-  var labelElement = document.createElement("label");
+  const labelElement = document.createElement("label");
   labelElement.textContent = label;
   labelElement.htmlFor = key;
   container.appendChild(labelElement);
 
-  var select = document.createElement("select");
+  const select = document.createElement("select");
   select.id = key;
   select.name = key;
 
-  options.forEach(function((option) {
-    var optionElement = document.createElement("option");
+  options.forEach((option) => {
+    const optionElement = document.createElement("option");
     optionElement.value = option.value;
     optionElement.textContent = option.text;
     if (option.value === selectedValue) {
@@ -291,7 +291,7 @@ export function createSelect(key, label, options, selectedValue) {
     select.appendChild(optionElement);
   });
 
-  select.addEventListenerfunction("change", (e) {
+  select.addEventListener("change", (e) => {
     localStorage.setItem(key, e.target.value);
   });
   container.appendChild(select);
@@ -300,30 +300,30 @@ export function createSelect(key, label, options, selectedValue) {
 }
 
 export function createRangeInput(key, label, value, min = 0, max = 100, step = 1, unit = "") {
-  var container = document.createElement("div");
+  const container = document.createElement("div");
   container.className = "input-container";
 
-  var labelWrap = document.createElement("div");
+  const labelWrap = document.createElement("div");
   labelWrap.className = "range-label-wrap";
   labelWrap.style.display = "flex";
   labelWrap.style.justifyContent = "space-between";
   labelWrap.style.alignItems = "center";
   labelWrap.style.marginBottom = "6px";
 
-  var labelElement = document.createElement("label");
+  const labelElement = document.createElement("label");
   labelElement.textContent = label;
   labelElement.htmlFor = key;
 
-  var valueDisplay = document.createElement("span");
+  const valueDisplay = document.createElement("span");
   valueDisplay.className = "range-value-display";
-  valueDisplay.textContent = (value) + (unit);
+  valueDisplay.textContent = `${value}${unit}`;
   valueDisplay.style.fontWeight = "bold";
   valueDisplay.style.color = "var(--jms-primary-color, #7B2FBE)";
 
   labelWrap.append(labelElement, valueDisplay);
   container.appendChild(labelWrap);
 
-  var input = document.createElement("input");
+  const input = document.createElement("input");
   input.type = "range";
   input.id = key;
   input.name = key;
@@ -334,13 +334,13 @@ export function createRangeInput(key, label, value, min = 0, max = 100, step = 1
   input.style.width = "100%";
   input.style.cursor = "pointer";
 
-  input.addEventListenerfunction("input", (e) {
-    var v = e.target.value;
-    valueDisplay.textContent = (v) + (unit);
+  input.addEventListener("input", (e) => {
+    const v = e.target.value;
+    valueDisplay.textContent = `${v}${unit}`;
   });
 
-  input.addEventListenerfunction("change", (e) {
-    var v = e.target.value;
+  input.addEventListener("change", (e) => {
+    const v = e.target.value;
     localStorage.setItem(key, v);
   });
 

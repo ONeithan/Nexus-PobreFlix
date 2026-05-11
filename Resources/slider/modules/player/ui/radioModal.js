@@ -19,13 +19,13 @@ import {
   submitStationToDirectory
 } from "../core/radio.js";
 
-var DEFAULT_RADIO_ART_CSS = "url('./slider/src/images/defaultArt.png')";
-var SEARCH_DEBOUNCE_MS = 250;
-var SEARCH_CACHE_LIMIT = 24;
-var SEARCH_PAGE_SIZE = 50;
-var SEARCH_SCROLL_THRESHOLD = 280;
+const DEFAULT_RADIO_ART_CSS = "url('./slider/src/images/defaultArt.png')";
+const SEARCH_DEBOUNCE_MS = 250;
+const SEARCH_CACHE_LIMIT = 24;
+const SEARCH_PAGE_SIZE = 50;
+const SEARCH_SCROLL_THRESHOLD = 280;
 
-var modalState = {
+const modalState = {
   root: null,
   results: null,
   status: null,
@@ -53,11 +53,11 @@ var modalState = {
 };
 
 function labels() {
-  return getConfig().languageLabels || {};
+  return getConfig()?.languageLabels || {};
 }
 
 function text(value, fallback = "") {
-  var out = String(value || "").trim();
+  const out = String(value ?? "").trim();
   return out || fallback;
 }
 
@@ -73,7 +73,7 @@ function clearSearchDebounce() {
 
 function readCachedSearchResults(searchKey) {
   if (!searchKey || !modalState.searchCache.has(searchKey)) return null;
-  var cached = modalState.searchCache.get(searchKey);
+  const cached = modalState.searchCache.get(searchKey);
   modalState.searchCache.delete(searchKey);
   modalState.searchCache.set(searchKey, cached);
   if (Array.isArray(cached)) {
@@ -92,7 +92,7 @@ function readCachedSearchResults(searchKey) {
 
 function storeCachedSearchResults(searchKey, limit, results, hasMore = false) {
   if (!searchKey) return;
-  var cachedResults = Array.isArray(results) ? results : [];
+  const cachedResults = Array.isArray(results) ? results : [];
   if (modalState.searchCache.has(searchKey)) {
     modalState.searchCache.delete(searchKey);
   }
@@ -103,7 +103,7 @@ function storeCachedSearchResults(searchKey, limit, results, hasMore = false) {
   });
 
   while (modalState.searchCache.size > SEARCH_CACHE_LIMIT) {
-    var oldestKey = modalState.searchCache.keys().next().value;
+    const oldestKey = modalState.searchCache.keys().next().value;
     modalState.searchCache.delete(oldestKey);
   }
 }
@@ -116,7 +116,7 @@ function scheduleSearch() {
   clearSearchDebounce();
   if (modalState.isSearchComposing) return;
 
-  modalState.searchDebounceId = window.setTimeoutfunction(() {
+  modalState.searchDebounceId = window.setTimeout(() => {
     modalState.searchDebounceId = 0;
     runSearch();
   }, SEARCH_DEBOUNCE_MS);
@@ -125,9 +125,526 @@ function scheduleSearch() {
 function ensureStyles() {
   if (document.getElementById("gmmp-radio-modal-styles")) return;
 
-  var style = document.createElement("style");
+  const style = document.createElement("style");
   style.id = "gmmp-radio-modal-styles";
-  style.textContent = "\n    #gmmp-radio-modal-styles {\n      display: none;\n    }\n\n    .gmmp-radio-modal {\n      --gmmp-radio-radius-sm: 8px;\n      --gmmp-radio-radius-md: 12px;\n      --gmmp-radio-radius-lg: 20px;\n      --gmmp-radio-radius-xl: 24px;\n      --gmmp-radio-surface-0: var(--gmmp-bg-primary, var(--background-color, linear-gradient(180deg, #151924, #0a0c12)));\n      --gmmp-radio-surface-1: var(--gmmp-bg-secondary, var(--modal-bg, rgba(20, 28, 40, 0.85)));\n      --gmmp-radio-surface-2: var(--gmmp-bg-surface, rgba(30, 38, 50, 0.6));\n      --gmmp-radio-surface-3: var(--gmmp-bg-surface-hover, rgba(40, 48, 62, 0.8));\n      --gmmp-radio-surface-elevated: var(--gmmp-bg-elevated, rgba(35, 45, 60, 0.9));\n      --gmmp-radio-border: var(--gmmp-border-light, rgba(255, 255, 255, 0.08));\n      --gmmp-radio-border-medium: var(--gmmp-border-medium, rgba(255, 255, 255, 0.12));\n      --gmmp-radio-border-strong: var(--gmmp-accent-primary-soft, var(--gmmp-border-strong, rgba(255, 255, 255, 0.2)));\n      --gmmp-radio-text-primary: var(--gmmp-text-primary, var(--ptext-color, #ffffff));\n      --gmmp-radio-text-secondary: var(--gmmp-text-secondary, var(--lighter-text, rgba(255, 255, 255, 0.85)));\n      --gmmp-radio-text-muted: var(--gmmp-text-tertiary, var(--light-text, rgba(255, 255, 255, 0.6)));\n      --gmmp-radio-text-subtle: var(--gmmp-text-muted, rgba(255, 255, 255, 0.45));\n      --gmmp-radio-accent: var(--gmmp-accent-primary, var(--primary-color, #10b981));\n      --gmmp-radio-accent-strong: var(--gmmp-accent-primary-dark, var(--secondary-color, #059669));\n      --gmmp-radio-accent-soft: var(--gmmp-accent-primary-soft, rgba(16, 185, 129, 0.15));\n      --gmmp-radio-danger-bg: var(--gmmp-accent-danger-soft, rgba(239, 68, 68, 0.15));\n      --gmmp-radio-danger-text: var(--gmmp-accent-danger, #ef4444);\n      --gmmp-radio-shadow-sm: var(--gmmp-shadow-sm, 0 4px 6px -1px rgba(0, 0, 0, 0.1));\n      --gmmp-radio-shadow-md: var(--gmmp-shadow-md, 0 10px 25px -5px rgba(0, 0, 0, 0.15));\n      --gmmp-radio-shadow-lg: var(--gmmp-shadow-lg, 0 25px 50px -12px rgba(0, 0, 0, 0.25));\n      --gmmp-radio-shadow-glow: var(--gmmp-shadow-glow, 0 0 0 2px var(--gmmp-radio-accent-soft));\n      position: fixed;\n      inset: 0;\n      z-index: 2147483647;\n      display: none;\n      place-items: center;\n      padding: 18px;\n      color: var(--gmmp-radio-text-primary);\n      font-family: inherit;\n    }\n\n    .gmmp-radio-modal.visible {\n      display: grid;\n    }\n\n    .gmmp-radio-modal,\n    .gmmp-radio-modal * {\n      box-sizing: border-box;\n    }\n\n    .gmmp-radio-backdrop {\n      position: absolute;\n      inset: 0;\n      background:\n        radial-gradient(circle at top left, var(--gmmp-radio-accent-soft), transparent 28%),\n        linear-gradient(180deg, rgba(15, 23, 42, 0.28), rgba(15, 23, 42, 0.44));\n      backdrop-filter: var(--gmmp-blur, blur(14px));\n    }\n\n    .gmmp-radio-dialog {\n      position: relative;\n      z-index: 1;\n      width: min(1180px, calc(100vw - 36px));\n      max-height: min(92vh, 900px);\n      display: flex;\n      flex-direction: column;\n      gap: 18px;\n      overflow: hidden;\n      border-radius: var(--gmmp-radio-radius-xl);\n      border: 1px solid var(--gmmp-radio-border);\n      background: var(--gmmp-radio-surface-0);\n      color: var(--gmmp-radio-text-primary);\n      box-shadow: var(--gmmp-radio-shadow-lg);\n    }\n\n    .gmmp-radio-header {\n      display: flex;\n      align-items: flex-start;\n      justify-content: space-between;\n      gap: 18px;\n      padding: 24px 24px 14px;\n      border-bottom: 1px solid var(--gmmp-radio-border);\n      background: linear-gradient(180deg, var(--gmmp-radio-surface-2), transparent);\n    }\n\n    .gmmp-radio-title {\n      margin: 0 0 6px;\n      font-size: 28px;\n      font-weight: 800;\n      letter-spacing: -0.03em;\n      color: var(--gmmp-radio-text-primary);\n    }\n\n    .gmmp-radio-status {\n      margin: 0;\n      max-width: 720px;\n      color: var(--gmmp-radio-text-muted);\n      font-size: 13px;\n      line-height: 1.56;\n    }\n\n    .gmmp-radio-actions {\n      display: flex;\n      align-items: center;\n      gap: 10px;\n      flex-shrink: 0;\n    }\n\n    .gmmp-radio-btn,\n    .gmmp-radio-iconbtn,\n    .gmmp-radio-cardbtn,\n    .gmmp-radio-linkbtn {\n      appearance: none;\n      border: 1px solid transparent;\n      cursor: pointer;\n      color: var(--gmmp-radio-text-secondary);\n      font: inherit;\n      font-size: 12px;\n      font-weight: 800;\n      line-height: 1.2;\n      transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease, opacity .18s ease;\n    }\n\n    .gmmp-radio-btn:disabled,\n    .gmmp-radio-iconbtn:disabled,\n    .gmmp-radio-cardbtn:disabled,\n    .gmmp-radio-linkbtn:disabled {\n      cursor: not-allowed;\n      opacity: 0.55;\n    }\n\n    .gmmp-radio-btn,\n    .gmmp-radio-cardbtn,\n    .gmmp-radio-linkbtn {\n      display: inline-flex;\n      align-items: center;\n      justify-content: center;\n      min-height: 38px;\n      padding: 10px 12px;\n      border-radius: var(--gmmp-radio-radius-sm);\n      background: var(--gmmp-radio-surface-2);\n      border-color: var(--gmmp-radio-border);\n    }\n\n    .gmmp-radio-btn.primary,\n    .gmmp-radio-cardbtn.primary {\n      background: linear-gradient(135deg, var(--gmmp-radio-accent), var(--gmmp-radio-accent-strong));\n      border-color: transparent;\n      color: #fff;\n    }\n\n    .gmmp-radio-btn.secondary,\n    .gmmp-radio-cardbtn.secondary,\n    .gmmp-radio-linkbtn {\n      background: var(--gmmp-radio-surface-2);\n      color: var(--gmmp-radio-text-secondary);\n    }\n\n    .gmmp-radio-cardbtn.danger {\n      background: var(--gmmp-radio-danger-bg);\n      color: var(--gmmp-radio-danger-text);\n      border-color: transparent;\n    }\n\n    .gmmp-radio-linkbtn:disabled {\n      opacity: 1;\n      cursor: default;\n      background: var(--gmmp-radio-accent-soft);\n      border-color: transparent;\n      color: var(--gmmp-radio-accent);\n    }\n\n    .gmmp-radio-btn:hover:not(:disabled),\n    .gmmp-radio-iconbtn:hover:not(:disabled),\n    .gmmp-radio-cardbtn:hover:not(:disabled),\n    .gmmp-radio-linkbtn:hover:not(:disabled) {\n      transform: translateY(-1px);\n    }\n\n    .gmmp-radio-btn:focus-visible,\n    .gmmp-radio-iconbtn:focus-visible,\n    .gmmp-radio-cardbtn:focus-visible,\n    .gmmp-radio-linkbtn:focus-visible,\n    .gmmp-radio-input:focus-visible {\n      outline: 2px solid var(--gmmp-radio-accent);\n      outline-offset: 2px;\n    }\n\n    .gmmp-radio-iconbtn {\n      width: 44px;\n      height: 44px;\n      border-radius: var(--gmmp-radio-radius-sm);\n      background: var(--gmmp-radio-surface-2);\n      border-color: var(--gmmp-radio-border);\n      color: var(--gmmp-radio-text-secondary);\n      display: inline-flex;\n      align-items: center;\n      justify-content: center;\n      flex-shrink: 0;\n    }\n\n    .gmmp-radio-iconbtn i {\n      padding: 0 !important;\n      font-size: 18px;\n    }\n\n    .gmmp-radio-searchrow {\n      display: flex;\n      flex-wrap: wrap;\n      gap: 10px;\n      align-items: center;\n      margin: 0 24px;\n      padding: 14px;\n      border-radius: 16px;\n      border: 1px solid var(--gmmp-radio-border);\n      background: var(--gmmp-radio-surface-2);\n      box-shadow: inset 0 1px 0 var(--gmmp-radio-border);\n    }\n\n    .gmmp-radio-searchrow .gmmp-radio-input {\n      flex: 1 1 260px;\n      min-width: 220px;\n    }\n\n    .gmmp-radio-searchrow button {\n      flex-shrink: 0;\n    }\n\n    .gmmp-radio-addform {\n      display: grid;\n      gap: 12px;\n      align-items: end;\n      grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr) 160px;\n      max-width: 100%;\n      margin: 0 24px;\n      padding: 6px;\n    }\n\n    .gmmp-radio-input {\n      width: 100%;\n      border: 1px solid var(--gmmp-radio-border-medium);\n      border-radius: var(--gmmp-radio-radius-md);\n      background: var(--gmmp-radio-surface-elevated);\n      color: var(--gmmp-radio-text-primary);\n      outline: none;\n      font: inherit;\n      font-size: 13px;\n      transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;\n      align-items: center;\n      min-height: 38px;\n      padding: 10px 12px;\n    }\n\n    .gmmp-radio-input::placeholder {\n      color: var(--gmmp-radio-text-subtle);\n    }\n\n    .gmmp-radio-input:focus {\n      border-color: var(--gmmp-radio-accent);\n      box-shadow: var(--gmmp-radio-shadow-glow);\n      background: var(--gmmp-radio-surface-3);\n    }\n\n    .gmmp-radio-hint {\n      margin: -6px 24px 0;\n      color: var(--gmmp-radio-text-muted);\n      font-size: 13px;\n      line-height: 1.56;\n    }\n\n    .gmmp-radio-results {\n      flex: 1;\n      min-height: 0;\n      overflow-y: auto;\n      display: flex;\n      flex-direction: column;\n      gap: 24px;\n      padding: 0 24px 24px;\n      scrollbar-color: var(--gmmp-radio-accent) transparent;\n      overscroll-behavior: contain;\n      -webkit-overflow-scrolling: touch;\n      touch-action: pan-y;\n    }\n\n    .gmmp-radio-section {\n      display: flex;\n      flex-direction: column;\n      gap: 12px;\n    }\n\n    .gmmp-radio-section-head {\n      display: flex;\n      align-items: center;\n      justify-content: space-between;\n      gap: 14px;\n      padding: 0 4px;\n    }\n\n    .gmmp-radio-section-title {\n      margin: 0;\n      font-size: 16px;\n      font-weight: 800;\n      letter-spacing: -0.02em;\n      color: var(--gmmp-radio-text-primary);\n      min-width: 0;\n    }\n\n    .gmmp-radio-section-note {\n      color: var(--gmmp-radio-text-subtle);\n      font-size: 12px;\n      line-height: 1.5;\n      text-align: right;\n    }\n\n    .gmmp-radio-grid {\n      display: grid;\n      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));\n      gap: 14px;\n    }\n\n    .gmmp-radio-card {\n      display: grid;\n      grid-template-columns: 110px minmax(0, 1fr);\n      min-height: 206px;\n      border-radius: var(--gmmp-radio-radius-lg);\n      overflow: hidden;\n      border: 1px solid var(--gmmp-radio-border);\n      background: var(--gmmp-radio-surface-2);\n      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;\n    }\n\n    .gmmp-radio-card:hover,\n    .gmmp-radio-card:focus-within {\n      transform: translateY(-2px);\n      border-color: var(--gmmp-radio-border-strong);\n      box-shadow: var(--gmmp-radio-shadow-md);\n    }\n\n    .gmmp-radio-art {\n      position: relative;\n      min-height: 100%;\n      background-color: var(--gmmp-radio-surface-1);\n      background-size: cover;\n      background-position: center;\n      overflow: hidden;\n    }\n\n    .gmmp-radio-art::after {\n      content: \"\";\n      position: absolute;\n      inset: 0;\n      background:\n        linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.32)),\n        linear-gradient(160deg, var(--gmmp-radio-accent-soft), transparent 72%);\n      pointer-events: none;\n    }\n\n    .gmmp-radio-card-body {\n      min-width: 0;\n      display: flex;\n      flex-direction: column;\n      gap: 10px;\n      padding: 14px 14px 12px;\n    }\n\n    .gmmp-radio-name {\n      margin: 0;\n      font-size: 17px;\n      font-weight: 800;\n      line-height: 1.22;\n      letter-spacing: -0.02em;\n      color: var(--gmmp-radio-text-primary);\n      word-break: break-word;\n    }\n\n    .gmmp-radio-meta,\n    .gmmp-radio-tags,\n    .gmmp-radio-contributor {\n      color: var(--gmmp-radio-text-muted);\n      font-size: 12px;\n      line-height: 1.5;\n      word-break: break-word;\n    }\n\n    .gmmp-radio-contributor {\n      color: var(--gmmp-radio-accent);\n      font-weight: 700;\n    }\n\n    .gmmp-radio-card-actions {\n      display: flex;\n      gap: 8px;\n      flex-wrap: wrap;\n      align-items: center;\n      margin-top: auto;\n    }\n\n    .gmmp-radio-card-actions button {\n      min-height: 36px;\n      padding: 9px 12px;\n      font-size: 12px;\n    }\n\n    .gmmp-radio-section-actions {\n      display: flex;\n      justify-content: center;\n      padding-top: 4px;\n    }\n\n    .gmmp-radio-section-actions button {\n      min-width: 180px;\n    }\n\n    .gmmp-radio-empty,\n    .gmmp-radio-loading {\n      padding: 24px;\n      border: 1px dashed var(--gmmp-radio-border-medium);\n      border-radius: 18px;\n      background: var(--gmmp-radio-surface-2);\n      text-align: center;\n      color: var(--gmmp-radio-text-muted);\n      font-size: 14px;\n      line-height: 1.6;\n    }\n\n    @media (max-width: 920px) {\n      .gmmp-radio-dialog {\n        width: min(100vw, calc(100vw - 20px));\n        max-height: 94vh;\n      }\n\n      .gmmp-radio-header {\n        align-items: flex-start;\n      }\n\n      .gmmp-radio-actions {\n        justify-content: space-between;\n      }\n\n      .gmmp-radio-addform {\n        grid-template-columns: repeat(4, minmax(0, 1fr));\n      }\n\n      .gmmp-radio-addform .gmmp-radio-input, .gmmp-radio-addform button {\n        grid-column: span 2;\n      }\n    }\n\n    @media (max-width: 760px) {\n      .gmmp-radio-modal {\n        padding: 0;\n      }\n\n      .gmmp-radio-dialog {\n        width: 100%;\n        max-height: 100vh;\n        height: 100vh;\n        border-radius: 0;\n      }\n\n      .gmmp-radio-header {\n        padding: 18px 16px 12px;\n      }\n\n      .gmmp-radio-searchrow,\n      .gmmp-radio-addform {\n        margin: 0 16px;\n      }\n\n      .gmmp-radio-hint,\n      .gmmp-radio-results {\n        margin-left: 16px;\n        margin-right: 16px;\n      }\n\n      .gmmp-radio-results {\n        padding-left: 0;\n        padding-right: 0;\n        padding-bottom: 20px;\n      }\n\n      .gmmp-radio-card {\n        grid-template-columns: 92px minmax(0, 1fr);\n        min-height: 184px;\n      }\n    }\n\n    @media (max-width: 520px) {\n      .gmmp-radio-title {\n        font-size: 22px;\n      }\n\n      .gmmp-radio-actions .gmmp-radio-btn {\n        flex: 1 1 180px;\n      }\n\n      .gmmp-radio-searchrow .gmmp-radio-input {\n        min-width: 100%;\n      }\n\n      .gmmp-radio-card {\n        grid-template-columns: 1fr;\n      }\n\n      .gmmp-radio-art {\n        min-height: 140px;\n      }\n\n      .gmmp-radio-section-head {\n        flex-direction: column;\n        align-items: flex-start;\n      }\n\n      .gmmp-radio-section-note {\n        text-align: left;\n      }\n    }\n  ";
+  style.textContent = `
+    #gmmp-radio-modal-styles {
+      display: none;
+    }
+
+    .gmmp-radio-modal {
+      --gmmp-radio-radius-sm: 8px;
+      --gmmp-radio-radius-md: 12px;
+      --gmmp-radio-radius-lg: 20px;
+      --gmmp-radio-radius-xl: 24px;
+      --gmmp-radio-surface-0: var(--gmmp-bg-primary, var(--background-color, linear-gradient(180deg, #151924, #0a0c12)));
+      --gmmp-radio-surface-1: var(--gmmp-bg-secondary, var(--modal-bg, rgba(20, 28, 40, 0.85)));
+      --gmmp-radio-surface-2: var(--gmmp-bg-surface, rgba(30, 38, 50, 0.6));
+      --gmmp-radio-surface-3: var(--gmmp-bg-surface-hover, rgba(40, 48, 62, 0.8));
+      --gmmp-radio-surface-elevated: var(--gmmp-bg-elevated, rgba(35, 45, 60, 0.9));
+      --gmmp-radio-border: var(--gmmp-border-light, rgba(255, 255, 255, 0.08));
+      --gmmp-radio-border-medium: var(--gmmp-border-medium, rgba(255, 255, 255, 0.12));
+      --gmmp-radio-border-strong: var(--gmmp-accent-primary-soft, var(--gmmp-border-strong, rgba(255, 255, 255, 0.2)));
+      --gmmp-radio-text-primary: var(--gmmp-text-primary, var(--ptext-color, #ffffff));
+      --gmmp-radio-text-secondary: var(--gmmp-text-secondary, var(--lighter-text, rgba(255, 255, 255, 0.85)));
+      --gmmp-radio-text-muted: var(--gmmp-text-tertiary, var(--light-text, rgba(255, 255, 255, 0.6)));
+      --gmmp-radio-text-subtle: var(--gmmp-text-muted, rgba(255, 255, 255, 0.45));
+      --gmmp-radio-accent: var(--gmmp-accent-primary, var(--primary-color, #10b981));
+      --gmmp-radio-accent-strong: var(--gmmp-accent-primary-dark, var(--secondary-color, #059669));
+      --gmmp-radio-accent-soft: var(--gmmp-accent-primary-soft, rgba(16, 185, 129, 0.15));
+      --gmmp-radio-danger-bg: var(--gmmp-accent-danger-soft, rgba(239, 68, 68, 0.15));
+      --gmmp-radio-danger-text: var(--gmmp-accent-danger, #ef4444);
+      --gmmp-radio-shadow-sm: var(--gmmp-shadow-sm, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+      --gmmp-radio-shadow-md: var(--gmmp-shadow-md, 0 10px 25px -5px rgba(0, 0, 0, 0.15));
+      --gmmp-radio-shadow-lg: var(--gmmp-shadow-lg, 0 25px 50px -12px rgba(0, 0, 0, 0.25));
+      --gmmp-radio-shadow-glow: var(--gmmp-shadow-glow, 0 0 0 2px var(--gmmp-radio-accent-soft));
+      position: fixed;
+      inset: 0;
+      z-index: 2147483647;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      color: var(--gmmp-radio-text-primary);
+      font-family: inherit;
+    }
+
+    .gmmp-radio-modal.visible {
+      display: grid;
+    }
+
+    .gmmp-radio-modal,
+    .gmmp-radio-modal * {
+      box-sizing: border-box;
+    }
+
+    .gmmp-radio-backdrop {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top left, var(--gmmp-radio-accent-soft), transparent 28%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.28), rgba(15, 23, 42, 0.44));
+      backdrop-filter: var(--gmmp-blur, blur(14px));
+    }
+
+    .gmmp-radio-dialog {
+      position: relative;
+      z-index: 1;
+      width: min(1180px, calc(100vw - 36px));
+      max-height: min(92vh, 900px);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      overflow: hidden;
+      border-radius: var(--gmmp-radio-radius-xl);
+      border: 1px solid var(--gmmp-radio-border);
+      background: var(--gmmp-radio-surface-0);
+      color: var(--gmmp-radio-text-primary);
+      box-shadow: var(--gmmp-radio-shadow-lg);
+    }
+
+    .gmmp-radio-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 24px 24px 14px;
+      border-bottom: 1px solid var(--gmmp-radio-border);
+      background: linear-gradient(180deg, var(--gmmp-radio-surface-2), transparent);
+    }
+
+    .gmmp-radio-title {
+      margin: 0 0 6px;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--gmmp-radio-text-primary);
+    }
+
+    .gmmp-radio-status {
+      margin: 0;
+      max-width: 720px;
+      color: var(--gmmp-radio-text-muted);
+      font-size: 13px;
+      line-height: 1.56;
+    }
+
+    .gmmp-radio-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .gmmp-radio-btn,
+    .gmmp-radio-iconbtn,
+    .gmmp-radio-cardbtn,
+    .gmmp-radio-linkbtn {
+      appearance: none;
+      border: 1px solid transparent;
+      cursor: pointer;
+      color: var(--gmmp-radio-text-secondary);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.2;
+      transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease, opacity .18s ease;
+    }
+
+    .gmmp-radio-btn:disabled,
+    .gmmp-radio-iconbtn:disabled,
+    .gmmp-radio-cardbtn:disabled,
+    .gmmp-radio-linkbtn:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .gmmp-radio-btn,
+    .gmmp-radio-cardbtn,
+    .gmmp-radio-linkbtn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 10px 12px;
+      border-radius: var(--gmmp-radio-radius-sm);
+      background: var(--gmmp-radio-surface-2);
+      border-color: var(--gmmp-radio-border);
+    }
+
+    .gmmp-radio-btn.primary,
+    .gmmp-radio-cardbtn.primary {
+      background: linear-gradient(135deg, var(--gmmp-radio-accent), var(--gmmp-radio-accent-strong));
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .gmmp-radio-btn.secondary,
+    .gmmp-radio-cardbtn.secondary,
+    .gmmp-radio-linkbtn {
+      background: var(--gmmp-radio-surface-2);
+      color: var(--gmmp-radio-text-secondary);
+    }
+
+    .gmmp-radio-cardbtn.danger {
+      background: var(--gmmp-radio-danger-bg);
+      color: var(--gmmp-radio-danger-text);
+      border-color: transparent;
+    }
+
+    .gmmp-radio-linkbtn:disabled {
+      opacity: 1;
+      cursor: default;
+      background: var(--gmmp-radio-accent-soft);
+      border-color: transparent;
+      color: var(--gmmp-radio-accent);
+    }
+
+    .gmmp-radio-btn:hover:not(:disabled),
+    .gmmp-radio-iconbtn:hover:not(:disabled),
+    .gmmp-radio-cardbtn:hover:not(:disabled),
+    .gmmp-radio-linkbtn:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    .gmmp-radio-btn:focus-visible,
+    .gmmp-radio-iconbtn:focus-visible,
+    .gmmp-radio-cardbtn:focus-visible,
+    .gmmp-radio-linkbtn:focus-visible,
+    .gmmp-radio-input:focus-visible {
+      outline: 2px solid var(--gmmp-radio-accent);
+      outline-offset: 2px;
+    }
+
+    .gmmp-radio-iconbtn {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--gmmp-radio-radius-sm);
+      background: var(--gmmp-radio-surface-2);
+      border-color: var(--gmmp-radio-border);
+      color: var(--gmmp-radio-text-secondary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .gmmp-radio-iconbtn i {
+      padding: 0 !important;
+      font-size: 18px;
+    }
+
+    .gmmp-radio-searchrow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin: 0 24px;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid var(--gmmp-radio-border);
+      background: var(--gmmp-radio-surface-2);
+      box-shadow: inset 0 1px 0 var(--gmmp-radio-border);
+    }
+
+    .gmmp-radio-searchrow .gmmp-radio-input {
+      flex: 1 1 260px;
+      min-width: 220px;
+    }
+
+    .gmmp-radio-searchrow button {
+      flex-shrink: 0;
+    }
+
+    .gmmp-radio-addform {
+      display: grid;
+      gap: 12px;
+      align-items: end;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr) 160px;
+      max-width: 100%;
+      margin: 0 24px;
+      padding: 6px;
+    }
+
+    .gmmp-radio-input {
+      width: 100%;
+      border: 1px solid var(--gmmp-radio-border-medium);
+      border-radius: var(--gmmp-radio-radius-md);
+      background: var(--gmmp-radio-surface-elevated);
+      color: var(--gmmp-radio-text-primary);
+      outline: none;
+      font: inherit;
+      font-size: 13px;
+      transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+      align-items: center;
+      min-height: 38px;
+      padding: 10px 12px;
+    }
+
+    .gmmp-radio-input::placeholder {
+      color: var(--gmmp-radio-text-subtle);
+    }
+
+    .gmmp-radio-input:focus {
+      border-color: var(--gmmp-radio-accent);
+      box-shadow: var(--gmmp-radio-shadow-glow);
+      background: var(--gmmp-radio-surface-3);
+    }
+
+    .gmmp-radio-hint {
+      margin: -6px 24px 0;
+      color: var(--gmmp-radio-text-muted);
+      font-size: 13px;
+      line-height: 1.56;
+    }
+
+    .gmmp-radio-results {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding: 0 24px 24px;
+      scrollbar-color: var(--gmmp-radio-accent) transparent;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+    }
+
+    .gmmp-radio-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .gmmp-radio-section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 0 4px;
+    }
+
+    .gmmp-radio-section-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--gmmp-radio-text-primary);
+      min-width: 0;
+    }
+
+    .gmmp-radio-section-note {
+      color: var(--gmmp-radio-text-subtle);
+      font-size: 12px;
+      line-height: 1.5;
+      text-align: right;
+    }
+
+    .gmmp-radio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 14px;
+    }
+
+    .gmmp-radio-card {
+      display: grid;
+      grid-template-columns: 110px minmax(0, 1fr);
+      min-height: 206px;
+      border-radius: var(--gmmp-radio-radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--gmmp-radio-border);
+      background: var(--gmmp-radio-surface-2);
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .gmmp-radio-card:hover,
+    .gmmp-radio-card:focus-within {
+      transform: translateY(-2px);
+      border-color: var(--gmmp-radio-border-strong);
+      box-shadow: var(--gmmp-radio-shadow-md);
+    }
+
+    .gmmp-radio-art {
+      position: relative;
+      min-height: 100%;
+      background-color: var(--gmmp-radio-surface-1);
+      background-size: cover;
+      background-position: center;
+      overflow: hidden;
+    }
+
+    .gmmp-radio-art::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.32)),
+        linear-gradient(160deg, var(--gmmp-radio-accent-soft), transparent 72%);
+      pointer-events: none;
+    }
+
+    .gmmp-radio-card-body {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px 14px 12px;
+    }
+
+    .gmmp-radio-name {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1.22;
+      letter-spacing: -0.02em;
+      color: var(--gmmp-radio-text-primary);
+      word-break: break-word;
+    }
+
+    .gmmp-radio-meta,
+    .gmmp-radio-tags,
+    .gmmp-radio-contributor {
+      color: var(--gmmp-radio-text-muted);
+      font-size: 12px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .gmmp-radio-contributor {
+      color: var(--gmmp-radio-accent);
+      font-weight: 700;
+    }
+
+    .gmmp-radio-card-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: auto;
+    }
+
+    .gmmp-radio-card-actions button {
+      min-height: 36px;
+      padding: 9px 12px;
+      font-size: 12px;
+    }
+
+    .gmmp-radio-section-actions {
+      display: flex;
+      justify-content: center;
+      padding-top: 4px;
+    }
+
+    .gmmp-radio-section-actions button {
+      min-width: 180px;
+    }
+
+    .gmmp-radio-empty,
+    .gmmp-radio-loading {
+      padding: 24px;
+      border: 1px dashed var(--gmmp-radio-border-medium);
+      border-radius: 18px;
+      background: var(--gmmp-radio-surface-2);
+      text-align: center;
+      color: var(--gmmp-radio-text-muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 920px) {
+      .gmmp-radio-dialog {
+        width: min(100vw, calc(100vw - 20px));
+        max-height: 94vh;
+      }
+
+      .gmmp-radio-header {
+        align-items: flex-start;
+      }
+
+      .gmmp-radio-actions {
+        justify-content: space-between;
+      }
+
+      .gmmp-radio-addform {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .gmmp-radio-addform .gmmp-radio-input, .gmmp-radio-addform button {
+        grid-column: span 2;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .gmmp-radio-modal {
+        padding: 0;
+      }
+
+      .gmmp-radio-dialog {
+        width: 100%;
+        max-height: 100vh;
+        height: 100vh;
+        border-radius: 0;
+      }
+
+      .gmmp-radio-header {
+        padding: 18px 16px 12px;
+      }
+
+      .gmmp-radio-searchrow,
+      .gmmp-radio-addform {
+        margin: 0 16px;
+      }
+
+      .gmmp-radio-hint,
+      .gmmp-radio-results {
+        margin-left: 16px;
+        margin-right: 16px;
+      }
+
+      .gmmp-radio-results {
+        padding-left: 0;
+        padding-right: 0;
+        padding-bottom: 20px;
+      }
+
+      .gmmp-radio-card {
+        grid-template-columns: 92px minmax(0, 1fr);
+        min-height: 184px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .gmmp-radio-title {
+        font-size: 22px;
+      }
+
+      .gmmp-radio-actions .gmmp-radio-btn {
+        flex: 1 1 180px;
+      }
+
+      .gmmp-radio-searchrow .gmmp-radio-input {
+        min-width: 100%;
+      }
+
+      .gmmp-radio-card {
+        grid-template-columns: 1fr;
+      }
+
+      .gmmp-radio-art {
+        min-height: 140px;
+      }
+
+      .gmmp-radio-section-head {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .gmmp-radio-section-note {
+        text-align: left;
+      }
+    }
+  `;
 
   document.head.appendChild(style);
 }
@@ -139,16 +656,17 @@ function setStatus(message = "") {
 
 function updateHintText() {
   if (!modalState.hint) return;
-  var labelsMap = labels();
-  var info = getRadioPersistenceInfo();
+  const labelsMap = labels();
+  const info = getRadioPersistenceInfo();
 
   if (info.mode === "NexusPobreFlix") {
-    modalState.hint.textContent = labelsMap.radioSharedHint || "Estações salvas estão disponíveis para todos";
+    modalState.hint.textContent = labelsMap.radioSharedHint || "Kaydedilen istasyonlar herkes tarafindan kullanilabilir";
     return;
   }
 
   modalState.hint.textContent =
-    "Modo de configuração manual: as estações adicionadas são armazenadas neste navegador. Para uma lista comum, use o arquivo radio-stations.json.";
+    labelsMap.radioManualModeHint ||
+    "Manuel kurulum modu: eklenen istasyonlar bu tarayicida saklanir. Ortak liste icin radio-stations.json dosyasi kullanilir.";
 }
 
 function sameStation(a, b) {
@@ -157,16 +675,16 @@ function sameStation(a, b) {
 }
 
 function isSharedStation(station) {
-  return modalState.sharedStations.somefunction((item) sameStation(item, station));
+  return modalState.sharedStations.some((item) => sameStation(item, station));
 }
 
 function openStationHomepage(station) {
-  if (!station.homepage) return;
+  if (!station?.homepage) return;
   window.open(station.homepage, "_blank", "noopener,noreferrer");
 }
 
 function playStationGroup(stations, index) {
-  var playableIndex = activateRadioPlaylist(stations, index);
+  const playableIndex = activateRadioPlaylist(stations, index);
   if (playableIndex < 0) return;
   playTrack(playableIndex);
 }
@@ -176,62 +694,72 @@ function maybeLoadMoreSearchResults() {
     return;
   }
 
-  var remaining = modalState.results.scrollHeight - modalState.results.scrollTop - modalState.results.clientHeight;
+  const remaining = modalState.results.scrollHeight - modalState.results.scrollTop - modalState.results.clientHeight;
   if (remaining <= SEARCH_SCROLL_THRESHOLD) {
     loadMoreSearchResults();
   }
 }
 
-function shareStation(station) {
-  var labelsMap = labels();
-  setStatus(labelsMap.radioAdding || "Salvando estação...");
+async function shareStation(station) {
+  const labelsMap = labels();
+  setStatus(labelsMap.radioAdding || "Istasyon kaydediliyor...");
 
   try {
-    var merged = saveSharedRadioStation(station);
-    var info = getRadioPersistenceInfo();
+    const merged = await saveSharedRadioStation(station);
+    const info = getRadioPersistenceInfo();
     modalState.sharedStations = Array.isArray(merged) ? merged : modalState.sharedStations;
     updateHintText();
-    setStatus(labelsMap.radioReady || "Pronto");
+    setStatus(labelsMap.radioReady || "Hazir");
     showNotification(
-      "<i class=\"fas fa-check-circle\"></i> " + (info.supportsServerWrite ? (labelsMap.radioSharedSaved || "Estação adicionada à lista compartilhada") : (labelsMap.radioLocalSaved || "Estação salva neste navegador")),
+      `<i class="fas fa-check-circle"></i> ${info.supportsServerWrite ? (labelsMap.radioSharedSaved || "Istasyon paylasilan listeye eklendi") : (labelsMap.radioLocalSaved || "Istasyon bu tarayiciya kaydedildi")}`,
       2200,
       "success"
     );
     renderResults();
-    submitStationToDirectory(station).catchfunction(() {});
+    submitStationToDirectory(station).catch(() => {});
   } catch (error) {
     console.error("[radio] Paylasilan kayit hatasi:", error);
-    setStatus(labelsMap.radioSharedSaveError || "Não foi possível adicionar a estação à lista compartilhada");
+    showNotification(
+      `<i class="fas fa-exclamation-circle"></i> ${labelsMap.radioSharedSaveError || "Istasyon paylasilan listeye eklenemedi"}`,
+      3000,
+      "error"
+    );
+    setStatus(labelsMap.radioSharedSaveError || "Istasyon paylasilan listeye eklenemedi");
   }
 }
 
-function unshareStation(station) {
-  var labelsMap = labels();
-  setStatus(labelsMap.radioRemoving || "Removendo estação...");
+async function unshareStation(station) {
+  const labelsMap = labels();
+  setStatus(labelsMap.radioRemoving || "Istasyon kaldiriliyor...");
 
   try {
-    var merged = removeSharedRadioStation(station);
+    const merged = await removeSharedRadioStation(station);
     modalState.sharedStations = Array.isArray(merged) ? merged : modalState.sharedStations;
     updateHintText();
-    setStatus(labelsMap.radioReady || "Pronto");
+    setStatus(labelsMap.radioReady || "Hazir");
     showNotification(
-      "<i class=\"fas fa-check-circle\"></i> " + (labelsMap.radioRemoved || "Estação removida da lista compartilhada"),
+      `<i class="fas fa-check-circle"></i> ${labelsMap.radioRemoved || "Istasyon paylasilan listeden kaldirildi"}`,
       2200,
       "success"
     );
     renderResults();
   } catch (error) {
     console.error("[radio] silme hatasi:", error);
-    setStatus(labelsMap.radioRemoveError || "Não foi possível remover a estação");
+    showNotification(
+      `<i class="fas fa-exclamation-circle"></i> ${labelsMap.radioRemoveError || "Istasyon kaldirilamadi"}`,
+      3000,
+      "error"
+    );
+    setStatus(labelsMap.radioRemoveError || "Istasyon kaldirilamadi");
   }
 }
 
 function createCardButton(className, labelText, onClick) {
-  var btn = document.createElement("button");
+  const btn = document.createElement("button");
   btn.type = "button";
-  btn.className = "gmmp-radio-cardbtn " + (className).trim();
+  btn.className = `gmmp-radio-cardbtn ${className}`.trim();
   btn.textContent = labelText;
-  btn.addEventListenerfunction("click", (event) onClick.(event, btn));
+  btn.addEventListener("click", (event) => onClick?.(event, btn));
   return btn;
 }
 
@@ -242,18 +770,18 @@ function setDefaultStationArt(art) {
 
 function applyStationArt(art, imageUrl) {
   if (!art || !imageUrl) return;
-  art.style.backgroundImage = "url(" + (JSON.stringify(imageUrl)) + ")";
+  art.style.backgroundImage = `url(${JSON.stringify(imageUrl)})`;
 }
 
-function loadStationArt(art, station) {
+async function loadStationArt(art, station) {
   if (!art) return;
   setDefaultStationArt(art);
 
-  var requestId = String((Number(art.dataset.artRequestId) || 0) + 1);
+  const requestId = String((Number(art.dataset.artRequestId) || 0) + 1);
   art.dataset.artRequestId = requestId;
 
   try {
-    var imageUrl = resolveRadioStationArtUrl(station);
+    const imageUrl = await resolveRadioStationArtUrl(station);
     if (art.dataset.artRequestId !== requestId || !imageUrl) return;
     applyStationArt(art, imageUrl);
   } catch {
@@ -261,53 +789,53 @@ function loadStationArt(art, station) {
 }
 
 function getStationContributorText(station) {
-  var addedBy = text(station.addedBy || station.AddedBy);
+  const addedBy = text(station?.addedBy || station?.AddedBy);
   if (!addedBy) return "";
-  return (labels().radioAddedBy || "Adicionado por") + ": " + (addedBy);
+  return `${labels().radioAddedBy || "Ekleyen"}: ${addedBy}`;
 }
 
 function renderStationCard(station, stations, index, { shared = false, onPlay = null } = {}) {
-  var labelsMap = labels();
-  var card = document.createElement("article");
+  const labelsMap = labels();
+  const card = document.createElement("article");
   card.className = "gmmp-radio-card";
 
-  var art = document.createElement("div");
+  const art = document.createElement("div");
   art.className = "gmmp-radio-art";
   setDefaultStationArt(art);
   loadStationArt(art, station);
 
-  var body = document.createElement("div");
+  const body = document.createElement("div");
   body.className = "gmmp-radio-card-body";
 
-  var name = document.createElement("div");
+  const name = document.createElement("div");
   name.className = "gmmp-radio-name";
   name.textContent = station.name;
 
-  var meta = document.createElement("div");
+  const meta = document.createElement("div");
   meta.className = "gmmp-radio-meta";
   meta.textContent = getRadioStationSubtitle(station);
 
-  var contributorText = getStationContributorText(station);
-  var contributor = document.createElement("div");
+  const contributorText = getStationContributorText(station);
+  const contributor = document.createElement("div");
   contributor.className = "gmmp-radio-contributor";
   contributor.textContent = contributorText;
   if (!contributorText) contributor.hidden = true;
 
-  var tags = document.createElement("div");
+  const tags = document.createElement("div");
   tags.className = "gmmp-radio-tags";
   tags.textContent = [
     station.tags,
-    station.clickcount > 0 ? (labelsMap.radioClicks || "Tik") + ": " + (station.clickcount) : "",
-    station.votes > 0 ? (labelsMap.radioVotes || "Oy") + ": " + (station.votes) : ""
+    station.clickcount > 0 ? `${labelsMap.radioClicks || "Tik"}: ${station.clickcount}` : "",
+    station.votes > 0 ? `${labelsMap.radioVotes || "Oy"}: ${station.votes}` : ""
   ].filter(Boolean).join(" • ");
 
-  var actions = document.createElement("div");
+  const actions = document.createElement("div");
   actions.className = "gmmp-radio-card-actions";
-  actions.appendChildfunction(createCardButton("primary", labelsMap.radioListen || "Ouvir", (_event, btn) {
+  actions.appendChild(createCardButton("primary", labelsMap.radioListen || "Dinle", async (_event, btn) => {
     btn.disabled = true;
     try {
       if (typeof onPlay === "function") {
-        onPlay(station, stations, index);
+        await onPlay(station, stations, index);
       } else {
         playStationGroup(stations, index);
       }
@@ -317,32 +845,32 @@ function renderStationCard(station, stations, index, { shared = false, onPlay = 
   }));
 
   if (shared) {
-    var sharedBtn = document.createElement("button");
+    const sharedBtn = document.createElement("button");
     sharedBtn.type = "button";
     sharedBtn.className = "gmmp-radio-linkbtn";
-    sharedBtn.textContent = labelsMap.radioSharedLabel || "Compartilhada";
+    sharedBtn.textContent = labelsMap.radioSharedLabel || "Paylasilan";
     sharedBtn.disabled = true;
     actions.appendChild(sharedBtn);
 
     if (canRemoveSharedRadioStation(station)) {
-      actions.appendChildfunction(createCardButton("danger", labelsMap.radioRemove || "Remover", (_event, btn) {
+      actions.appendChild(createCardButton("danger", labelsMap.radioRemove || "Kaldir", async (_event, btn) => {
         btn.disabled = true;
         try {
-          unshareStation(station);
+          await unshareStation(station);
         } finally {
           btn.disabled = false;
         }
       }));
     }
   } else {
-    var actionLabel = isSharedStation(station)
-      ? labelsMap.radioSharedLabel || "Compartilhada"
-      : labelsMap.radioShare || "Compartilhar";
-    var shareBtn = createCardButtonfunction("secondary", actionLabel, (_event, btn) {
+    const actionLabel = isSharedStation(station)
+      ? labelsMap.radioSharedLabel || "Paylasilan"
+      : labelsMap.radioShare || "Paylas";
+    const shareBtn = createCardButton("secondary", actionLabel, async (_event, btn) => {
       if (isSharedStation(station)) return;
       btn.disabled = true;
       try {
-        shareStation(station);
+        await shareStation(station);
       } finally {
         btn.disabled = isSharedStation(station);
       }
@@ -352,11 +880,11 @@ function renderStationCard(station, stations, index, { shared = false, onPlay = 
   }
 
   if (station.homepage) {
-    var linkBtn = document.createElement("button");
+    const linkBtn = document.createElement("button");
     linkBtn.type = "button";
     linkBtn.className = "gmmp-radio-linkbtn";
     linkBtn.textContent = labelsMap.radioHomepage || "Site";
-    linkBtn.addEventListenerfunction("click", () openStationHomepage(station));
+    linkBtn.addEventListener("click", () => openStationHomepage(station));
     actions.appendChild(linkBtn);
   }
 
@@ -366,17 +894,17 @@ function renderStationCard(station, stations, index, { shared = false, onPlay = 
 }
 
 function renderSection(title, stations, options = {}) {
-  var section = document.createElement("section");
+  const section = document.createElement("section");
   section.className = "gmmp-radio-section";
 
-  var head = document.createElement("div");
+  const head = document.createElement("div");
   head.className = "gmmp-radio-section-head";
 
-  var heading = document.createElement("h4");
+  const heading = document.createElement("h4");
   heading.className = "gmmp-radio-section-title";
   heading.textContent = title;
 
-  var note = document.createElement("div");
+  const note = document.createElement("div");
   note.className = "gmmp-radio-section-note";
   note.textContent = options.note || "";
 
@@ -384,16 +912,16 @@ function renderSection(title, stations, options = {}) {
   section.appendChild(head);
 
   if (!stations.length) {
-    var empty = document.createElement("div");
+    const empty = document.createElement("div");
     empty.className = "gmmp-radio-empty";
-    empty.textContent = options.emptyText || (labels().radioNoStations || "Nenhuma estação encontrada");
+    empty.textContent = options.emptyText || (labels().radioNoStations || "Istasyon bulunamadi");
     section.appendChild(empty);
     return section;
   }
 
-  var grid = document.createElement("div");
+  const grid = document.createElement("div");
   grid.className = "gmmp-radio-grid";
-  stations.forEach(function((station, index) {
+  stations.forEach((station, index) => {
     grid.appendChild(renderStationCard(station, stations, index, {
       shared: options.shared === true,
       onPlay: options.onPlay
@@ -402,7 +930,7 @@ function renderSection(title, stations, options = {}) {
   section.appendChild(grid);
 
   if (options.footerText) {
-    var footer = document.createElement("div");
+    const footer = document.createElement("div");
     footer.className = "gmmp-radio-loading";
     footer.textContent = options.footerText;
     section.appendChild(footer);
@@ -412,18 +940,19 @@ function renderSection(title, stations, options = {}) {
 }
 
 function getSearchStatusText(count) {
-  var labelsMap = labels();
-    ? (count) + " " + (labelsMap.radioStationPlural || "estações")
-    : labelsMap.radioSearchEmpty || "Nenhuma estação encontrada para sua busca";
+  const labelsMap = labels();
+  return count
+    ? `${count} ${labelsMap.radioStationPlural || "istasyon"}`
+    : labelsMap.radioSearchEmpty || "Aramana uygun istasyon bulunamadi";
 }
 
-function resolveSearchPlaybackStations(targetStation) {
-  var query = text(modalState.searchInput.value);
-  var searchKey = normalizeSearchKey(query);
+async function resolveSearchPlaybackStations(targetStation) {
+  const query = text(modalState.searchInput?.value);
+  const searchKey = normalizeSearchKey(query);
   if (!query || !searchKey) return modalState.searchResults;
 
-  var cached = readCachedSearchResults(searchKey);
-  if (cached.hasMore === false && cached.results.length) {
+  const cached = readCachedSearchResults(searchKey);
+  if (cached?.hasMore === false && cached.results.length) {
     return cached.results;
   }
 
@@ -431,13 +960,13 @@ function resolveSearchPlaybackStations(targetStation) {
     return modalState.searchResults;
   }
 
-  var labelsMap = labels();
+  const labelsMap = labels();
   modalState.searchPlaybackLoading = true;
-  setStatus(labelsMap.radioPreparingPlaylist || "Preparando lista de reprodução com todos os resultados...");
+  setStatus(labelsMap.radioPreparingPlaylist || "Tum arama sonuclari oynatma listesine hazirlaniyor...");
 
   try {
-    var allResults = searchAllRadioStations({ query, order: "clickcount", reverse: true });
-    var isSameQuery = modalState.view === "search" && normalizeSearchKey(text(modalState.searchInput.value)) === searchKey;
+    const allResults = await searchAllRadioStations({ query, order: "clickcount", reverse: true });
+    const isSameQuery = modalState.view === "search" && normalizeSearchKey(text(modalState.searchInput?.value)) === searchKey;
 
     storeCachedSearchResults(searchKey, allResults.length || SEARCH_PAGE_SIZE, allResults, false);
 
@@ -450,7 +979,7 @@ function resolveSearchPlaybackStations(targetStation) {
       renderResults();
     }
 
-    var targetIndex = allResults.findIndexfunction((entry) sameStation(entry, targetStation));
+    const targetIndex = allResults.findIndex((entry) => sameStation(entry, targetStation));
     return targetIndex >= 0 ? allResults : modalState.searchResults;
   } catch (error) {
     console.error("[radio] tum arama sonuclari yuklenemedi:", error);
@@ -460,9 +989,9 @@ function resolveSearchPlaybackStations(targetStation) {
   }
 }
 
-function playSearchResultStation(station) {
-  var playlistStations = resolveSearchPlaybackStations(station);
-  var targetIndex = Math.maxfunction(0, playlistStations.findIndex((entry) sameStation(entry, station)));
+async function playSearchResultStation(station) {
+  const playlistStations = await resolveSearchPlaybackStations(station);
+  const targetIndex = Math.max(0, playlistStations.findIndex((entry) => sameStation(entry, station)));
   playStationGroup(playlistStations, targetIndex);
 }
 
@@ -470,30 +999,30 @@ function renderResults() {
   if (!modalState.results) return;
   modalState.results.innerHTML = "";
 
-  var labelsMap = labels();
+  const labelsMap = labels();
 
   if (modalState.view === "search") {
     modalState.results.appendChild(renderSection(
-      labelsMap.radioSearchResults || "Resultados da Busca",
+      labelsMap.radioSearchResults || "Arama Sonuclari",
       modalState.searchResults,
       {
         note: modalState.searchResults.length
-          ? (modalState.searchResults.length) + " " + (labelsMap.radioStationPlural || "estações")
+          ? `${modalState.searchResults.length} ${labelsMap.radioStationPlural || "istasyon"}`
           : "",
-        emptyText: labelsMap.radioSearchEmpty || "Nenhuma estação encontrada para sua busca",
+        emptyText: labelsMap.radioSearchEmpty || "Aramana uygun istasyon bulunamadi",
         footerText: modalState.searchLoadingMore
-          ? (labelsMap.radioLoadingMore || "Carregando mais estações...")
+          ? (labelsMap.radioLoadingMore || "Daha fazla istasyon yukleniyor...")
           : "",
         onPlay: playSearchResultStation
       }
     ));
     if (modalState.sharedStations.length) {
       modalState.results.appendChild(renderSection(
-        labelsMap.radioSharedStations || "Estações Compartilhadas",
+        labelsMap.radioSharedStations || "Paylasilan Istasyonlar",
         modalState.sharedStations,
         {
           shared: true,
-          note: labelsMap.radioSharedHint || "Estações salvas estão disponíveis para todos"
+          note: labelsMap.radioSharedHint || "Kaydedilen istasyonlar herkes tarafindan kullanilabilir"
         }
       ));
     }
@@ -503,30 +1032,30 @@ function renderResults() {
 
   if (modalState.sharedStations.length) {
     modalState.results.appendChild(renderSection(
-      labelsMap.radioSharedStations || "Estações Compartilhadas",
+      labelsMap.radioSharedStations || "Paylasilan Istasyonlar",
       modalState.sharedStations,
       {
         shared: true,
         note: getRadioPersistenceInfo().supportsServerWrite
-          ? (labelsMap.radioSharedHint || "Estações salvas estão disponíveis para todos")
-          : (labelsMap.radioManualSharedHint || "Arquivos estáticos e salvos neste navegador são mostrados juntos")
+          ? (labelsMap.radioSharedHint || "Kaydedilen istasyonlar herkes tarafindan kullanilabilir")
+          : (labelsMap.radioManualSharedHint || "Statik dosya ve bu tarayicidaki kayitlar birlikte gosterilir")
       }
     ));
   }
 
   modalState.results.appendChild(renderSection(
-    (modalState.countryCode) + " " + (labelsMap.radioNearbyStations || "destaques para"),
+    `${modalState.countryCode} ${labelsMap.radioNearbyStations || "icin on plana cikanlar"}`,
     modalState.nearbyStations,
     {
-      note: labelsMap.radioAutoDiscoveryHint || "Descoberta automática de estações"
+      note: labelsMap.radioAutoDiscoveryHint || "Otomatik istasyon kesfi"
     }
   ));
 
   modalState.results.appendChild(renderSection(
-    labelsMap.radioPopularStations || "Populares no mundo",
+    labelsMap.radioPopularStations || "Dunyada populer",
     modalState.popularStations,
     {
-      note: labelsMap.radioPopularHint || "Por contagem de cliques e votos"
+      note: labelsMap.radioPopularHint || "Yuksek tik ve oy sayisina gore"
     }
   ));
 }
@@ -534,15 +1063,15 @@ function renderResults() {
 function setLoading(message = "") {
   if (!modalState.results) return;
   modalState.results.innerHTML = "";
-  var loading = document.createElement("div");
+  const loading = document.createElement("div");
   loading.className = "gmmp-radio-loading";
-  loading.textContent = message || (labels().loading || "Carregando...");
+  loading.textContent = message || (labels().loading || "Yukleniyor...");
   modalState.results.appendChild(loading);
 }
 
-function loadDiscoverView() {
-  var labelsMap = labels();
-  var requestId = ++modalState.requestId;
+async function loadDiscoverView() {
+  const labelsMap = labels();
+  const requestId = ++modalState.requestId;
   modalState.view = "discover";
   modalState.lastSearchKey = "";
   modalState.searchLimit = SEARCH_PAGE_SIZE;
@@ -551,11 +1080,11 @@ function loadDiscoverView() {
   modalState.searchPlaybackLoading = false;
   musicPlayerState.radioSearchResults = [];
   updateHintText();
-  setStatus(labelsMap.radioAutoDiscovering || "Buscando estações automaticamente...");
-  setLoading(labelsMap.radioAutoDiscovering || "Buscando estações automaticamente...");
+  setStatus(labelsMap.radioAutoDiscovering || "Istasyonlar otomatik bulunuyor...");
+  setLoading(labelsMap.radioAutoDiscovering || "Istasyonlar otomatik bulunuyor...");
 
   try {
-    var data = getAutoDiscoveredStations({ limit: 18 });
+    const data = await getAutoDiscoveredStations({ limit: 18 });
     if (requestId !== modalState.requestId) return;
 
     modalState.countryCode = data.countryCode || modalState.countryCode;
@@ -563,24 +1092,24 @@ function loadDiscoverView() {
     modalState.nearbyStations = data.nearby || [];
     modalState.popularStations = data.popular || [];
     updateHintText();
-    setStatus(labelsMap.radioReady || "Pronto");
+    setStatus(labelsMap.radioReady || "Hazir");
     renderResults();
   } catch (error) {
     console.error("[radio] kesif hatasi:", error);
     if (requestId !== modalState.requestId) return;
-    setStatus(labelsMap.radioLoadError || "Não foi possível carregar as estações");
-    setLoading(labelsMap.radioLoadError || "Não foi possível carregar as estações");
+    setStatus(labelsMap.radioLoadError || "Istasyonlar yuklenemedi");
+    setLoading(labelsMap.radioLoadError || "Istasyonlar yuklenemedi");
   }
 }
 
-function loadMoreSearchResults() {
+async function loadMoreSearchResults() {
   if (modalState.searchLoadingMore || modalState.searchPlaybackLoading || !modalState.searchHasMore) return;
   modalState.searchLoadingMore = true;
-  setStatus(labels().radioLoadingMore || "Carregando mais estações...");
+  setStatus(labels().radioLoadingMore || "Daha fazla istasyon yukleniyor...");
   renderResults();
 
   try {
-    runSearch({
+    await runSearch({
       force: true,
       requestedLimit: modalState.searchLimit + SEARCH_PAGE_SIZE,
       preserveResults: true
@@ -591,11 +1120,11 @@ function loadMoreSearchResults() {
   }
 }
 
-function runSearch({ force = false, requestedLimit, preserveResults = false } = {}) {
-  var query = text(modalState.searchInput.value);
-  var searchKey = normalizeSearchKey(query);
-  var isSameQuery = searchKey === modalState.lastSearchKey;
-  var searchLimit = normalizeSearchLimit(isSameQuery ? requestedLimit : SEARCH_PAGE_SIZE);
+async function runSearch({ force = false, requestedLimit, preserveResults = false } = {}) {
+  const query = text(modalState.searchInput?.value);
+  const searchKey = normalizeSearchKey(query);
+  const isSameQuery = searchKey === modalState.lastSearchKey;
+  const searchLimit = normalizeSearchLimit(isSameQuery ? requestedLimit : SEARCH_PAGE_SIZE);
   if (!query) {
     modalState.lastSearchKey = "";
     modalState.searchLimit = SEARCH_PAGE_SIZE;
@@ -604,7 +1133,7 @@ function runSearch({ force = false, requestedLimit, preserveResults = false } = 
     modalState.searchPlaybackLoading = false;
     musicPlayerState.radioSearchResults = [];
     if (!force && modalState.view === "discover") return;
-    loadDiscoverView();
+    await loadDiscoverView();
     return;
   }
 
@@ -612,9 +1141,9 @@ function runSearch({ force = false, requestedLimit, preserveResults = false } = 
     return;
   }
 
-  var labelsMap = labels();
-  var requestId = ++modalState.requestId;
-  var cachedResults = readCachedSearchResults(searchKey);
+  const labelsMap = labels();
+  const requestId = ++modalState.requestId;
+  const cachedResults = readCachedSearchResults(searchKey);
   modalState.lastSearchKey = searchKey;
   modalState.searchLimit = searchLimit;
   modalState.view = "search";
@@ -630,14 +1159,14 @@ function runSearch({ force = false, requestedLimit, preserveResults = false } = 
   }
 
   if (preserveResults) {
-    setStatus(labelsMap.radioLoadingMore || "Carregando mais estações...");
+    setStatus(labelsMap.radioLoadingMore || "Daha fazla istasyon yukleniyor...");
   } else {
-    setStatus(labelsMap.radioSearching || "Buscando estação...");
-    setLoading(labelsMap.radioSearching || "Buscando estação...");
+    setStatus(labelsMap.radioSearching || "Istasyon aranıyor...");
+    setLoading(labelsMap.radioSearching || "Istasyon aranıyor...");
   }
 
   try {
-    var { results, hasMore } = searchRadioStationsDetailed({
+    const { results, hasMore } = await searchRadioStationsDetailed({
       query,
       limit: searchLimit,
       order: "clickcount",
@@ -654,28 +1183,28 @@ function runSearch({ force = false, requestedLimit, preserveResults = false } = 
   } catch (error) {
     console.error("[radio] arama hatasi:", error);
     if (requestId !== modalState.requestId) return;
-    setStatus(labelsMap.radioLoadError || "Não foi possível carregar as estações");
+    setStatus(labelsMap.radioLoadError || "Istasyonlar yuklenemedi");
     if (!preserveResults) {
-      setLoading(labelsMap.radioLoadError || "Não foi possível carregar as estações");
+      setLoading(labelsMap.radioLoadError || "Istasyonlar yuklenemedi");
     }
   }
 }
 
-function handleAddStation(event) {
+async function handleAddStation(event) {
   event.preventDefault();
 
-  var labelsMap = labels();
-  var form = modalState.addForm;
+  const labelsMap = labels();
+  const form = modalState.addForm;
   if (!form) return;
 
-  var formData = new FormData(form);
-  var name = text(formData.get("name"));
-  var url = text(formData.get("url"));
-  var homepage = text(formData.get("homepage"));
+  const formData = new FormData(form);
+  const name = text(formData.get("name"));
+  const url = text(formData.get("url"));
+  const homepage = text(formData.get("homepage"));
 
   if (!url) {
     showNotification(
-      "<i class=\"fas fa-exclamation-circle\"></i> " + (labelsMap.radioUrlRequired || "Endereço de transmissão é necessário"),
+      `<i class="fas fa-exclamation-circle"></i> ${labelsMap.radioUrlRequired || "Yayin adresi gerekli"}`,
       2200,
       "warning"
     );
@@ -686,39 +1215,44 @@ function handleAddStation(event) {
   setStatus(labelsMap.radioAdding || "Istasyon kaydediliyor...");
 
   try {
-    var existing = findStationByUrl(url).catchfunction(() null);
-    var station = normalizeRadioStation({
+    const existing = await findStationByUrl(url).catch(() => null);
+    const station = normalizeRadioStation({
       ...(existing || {}),
-      name: name || existing.name || undefined,
+      name: name || existing?.name || undefined,
       url,
-      homepage: homepage || existing.homepage || undefined
+      homepage: homepage || existing?.homepage || undefined
     }, { source: "shared" });
 
     if (!station) {
-      throw new Error(labelsMap.radioInvalidStation || "Estação inválida");
+      throw new Error(labelsMap.radioInvalidStation || "Gecersiz istasyon");
     }
 
-    var merged = saveSharedRadioStation(station);
-    var info = getRadioPersistenceInfo();
+    const merged = await saveSharedRadioStation(station);
+    const info = getRadioPersistenceInfo();
     modalState.sharedStations = Array.isArray(merged) ? merged : modalState.sharedStations;
     form.reset();
 
     showNotification(
-      "<i class=\"fas fa-check-circle\"></i> " + (info.supportsServerWrite ? (labelsMap.radioSharedSaved || "Estação adicionada à lista compartilhada") : (labelsMap.radioLocalSaved || "Estação salva neste navegador")),
+      `<i class="fas fa-check-circle"></i> ${info.supportsServerWrite ? (labelsMap.radioSharedSaved || "Istasyon paylasilan listeye eklendi") : (labelsMap.radioLocalSaved || "Istasyon bu tarayiciya kaydedildi")}`,
       2500,
       "success"
     );
 
-    submitStationToDirectory(station).catchfunction(() {});
+    submitStationToDirectory(station).catch(() => {});
     if (modalState.view !== "discover") {
       modalState.view = "discover";
     }
     updateHintText();
-    setStatus(labelsMap.radioReady || "Pronto");
+    setStatus(labelsMap.radioReady || "Hazir");
     renderResults();
   } catch (error) {
     console.error("[radio] ekleme hatasi:", error);
-    setStatus(labelsMap.radioSharedSaveError || "Não foi possível adicionar a estação à lista compartilhada");
+    showNotification(
+      `<i class="fas fa-exclamation-circle"></i> ${labelsMap.radioSharedSaveError || "Istasyon paylasilan listeye eklenemedi"}`,
+      3200,
+      "error"
+    );
+    setStatus(labelsMap.radioSharedSaveError || "Istasyon paylasilan listeye eklenemedi");
   } finally {
     if (modalState.addBtn) modalState.addBtn.disabled = false;
   }
@@ -737,10 +1271,39 @@ function ensureModal() {
 
   ensureStyles();
 
-  var root = document.createElement("div");
+  const root = document.createElement("div");
   root.id = "gmmp-radio-modal";
   root.className = "gmmp-radio-modal";
-  root.innerHTML = "\n    <div class=\"gmmp-radio-backdrop\"></div>\n    <div class=\"gmmp-radio-dialog\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"gmmp-radio-title\">\n      <div class=\"gmmp-radio-header\">\n        <div>\n          <h3 id=\"gmmp-radio-title\" class=\"gmmp-radio-title\">" + (labels().radioStations || "Rádios") + "</h3>\n          <p class=\"gmmp-radio-status\"></p>\n        </div>\n        <div class=\"gmmp-radio-actions\">\n          <button type=\"button\" class=\"gmmp-radio-btn secondary\" data-action=\"discover\">" + (labels().radioAutoDiscover || "Busca Automática") + "</button>\n          <button type=\"button\" class=\"gmmp-radio-iconbtn\" data-action=\"close\" aria-label=\"" + (labels().close || "Fechar") + "\">\n            <i class=\"fas fa-times\"></i>\n          </button>\n        </div>\n      </div>\n      <form class=\"gmmp-radio-searchrow\">\n        <input class=\"gmmp-radio-input\" name=\"query\" placeholder=\"" + (labels().radioSearchPlaceholder || "Buscar estação, país ou estilo") + "\" autocomplete=\"off\" />\n        <button type=\"submit\" class=\"gmmp-radio-btn primary\">" + (labels().ara || "Buscar") + "</button>\n        <button type=\"button\" class=\"gmmp-radio-btn secondary\" data-action=\"reset\">" + (labels().radioResetSearch || "Voltar à Descoberta") + "</button>\n      </form>\n      <div class=\"gmmp-radio-hint\">" + (labels().radioSharedHint || "Estações salvas estão disponíveis para todos") + "</div>\n      <form class=\"gmmp-radio-addform\">\n        <input class=\"gmmp-radio-input\" name=\"name\" placeholder=\"" + (labels().radioNameOptional || "Nome da estação (opcional)") + "\" autocomplete=\"off\" />\n        <input class=\"gmmp-radio-input\" name=\"url\" placeholder=\"" + (labels().radioUrlPlaceholder || "https://exemplo.com/stream.mp3") + "\" autocomplete=\"off\" />\n        <input class=\"gmmp-radio-input\" name=\"homepage\" placeholder=\"" + (labels().radioHomepageOptional || "Página inicial (opcional)") + "\" autocomplete=\"off\" />\n        <button type=\"submit\" class=\"gmmp-radio-btn primary\">" + (labels().radioAddUrl || "Adicionar URL") + "</button>\n      </form>\n      <div class=\"gmmp-radio-results\"></div>\n    </div>\n  ";
+  root.innerHTML = `
+    <div class="gmmp-radio-backdrop"></div>
+    <div class="gmmp-radio-dialog" role="dialog" aria-modal="true" aria-labelledby="gmmp-radio-title">
+      <div class="gmmp-radio-header">
+        <div>
+          <h3 id="gmmp-radio-title" class="gmmp-radio-title">${labels().radioStations || "Radyolar"}</h3>
+          <p class="gmmp-radio-status"></p>
+        </div>
+        <div class="gmmp-radio-actions">
+          <button type="button" class="gmmp-radio-btn secondary" data-action="discover">${labels().radioAutoDiscover || "Otomatik Bul"}</button>
+          <button type="button" class="gmmp-radio-iconbtn" data-action="close" aria-label="${labels().close || "Kapat"}">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      <form class="gmmp-radio-searchrow">
+        <input class="gmmp-radio-input" name="query" placeholder="${labels().radioSearchPlaceholder || "Istasyon, ulke veya tarz ara"}" autocomplete="off" />
+        <button type="submit" class="gmmp-radio-btn primary">${labels().ara || "Ara"}</button>
+        <button type="button" class="gmmp-radio-btn secondary" data-action="reset">${labels().radioResetSearch || "Kesfe Don"}</button>
+      </form>
+      <div class="gmmp-radio-hint">${labels().radioSharedHint || "Kaydedilen istasyonlar herkes tarafindan kullanilabilir"}</div>
+      <form class="gmmp-radio-addform">
+        <input class="gmmp-radio-input" name="name" placeholder="${labels().radioNameOptional || "Istasyon adi (opsiyonel)"}" autocomplete="off" />
+        <input class="gmmp-radio-input" name="url" placeholder="${labels().radioUrlPlaceholder || "https://ornek.com/stream.mp3"}" autocomplete="off" />
+        <input class="gmmp-radio-input" name="homepage" placeholder="${labels().radioHomepageOptional || "Anasayfa (opsiyonel)"}" autocomplete="off" />
+        <button type="submit" class="gmmp-radio-btn primary">${labels().radioAddUrl || "URL Ekle"}</button>
+      </form>
+      <div class="gmmp-radio-results"></div>
+    </div>
+  `;
 
   document.body.appendChild(root);
 
@@ -758,45 +1321,45 @@ function ensureModal() {
 
   root.querySelector(".gmmp-radio-backdrop").addEventListener("click", closeRadioModal);
   root.querySelector('[data-action="close"]').addEventListener("click", closeRadioModal);
-  root.querySelector('[data-action="reset"]').addEventListenerfunction("click", () {
+  root.querySelector('[data-action="reset"]').addEventListener("click", () => {
     clearSearchDebounce();
     modalState.lastSearchKey = "";
     if (modalState.searchInput) modalState.searchInput.value = "";
     loadDiscoverView();
   });
-  modalState.discoverBtn.addEventListenerfunction("click", () {
+  modalState.discoverBtn.addEventListener("click", () => {
     clearSearchDebounce();
     loadDiscoverView();
   });
-  modalState.searchInput.addEventListenerfunction("input", () {
+  modalState.searchInput?.addEventListener("input", () => {
     scheduleSearch();
   });
-  modalState.searchInput.addEventListenerfunction("compositionstart", () {
+  modalState.searchInput?.addEventListener("compositionstart", () => {
     modalState.isSearchComposing = true;
     clearSearchDebounce();
   });
-  modalState.searchInput.addEventListenerfunction("compositionend", () {
+  modalState.searchInput?.addEventListener("compositionend", () => {
     modalState.isSearchComposing = false;
     scheduleSearch();
   });
-  modalState.results.addEventListener("scroll", maybeLoadMoreSearchResults, { passive: true });
-  root.querySelector(".gmmp-radio-searchrow").addEventListenerfunction("submit", (event) {
+  modalState.results?.addEventListener("scroll", maybeLoadMoreSearchResults, { passive: true });
+  root.querySelector(".gmmp-radio-searchrow").addEventListener("submit", (event) => {
     event.preventDefault();
     clearSearchDebounce();
     runSearch({ force: true });
   });
   modalState.addForm.addEventListener("submit", handleAddStation);
 
-  document.addEventListenerfunction("keydown", (event) {
-    if (event.key === "Escape" && modalState.root.classList.contains("visible")) {
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && modalState.root?.classList.contains("visible")) {
       closeRadioModal();
     }
   });
 }
 
-export function showRadioModal() {
+export async function showRadioModal() {
   ensureModal();
   modalState.root.classList.add("visible");
-  modalState.searchInput.focus();
-  loadDiscoverView();
+  modalState.searchInput?.focus();
+  await loadDiscoverView();
 }

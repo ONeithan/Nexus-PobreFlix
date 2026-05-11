@@ -5,28 +5,28 @@ export function isMobileDevice() {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-export var isPlayerCssMobileDevice = isMobileDevice;
+export const isPlayerCssMobileDevice = isMobileDevice;
 
 export function loadCSS() {
-  var { playerTheme: theme = "dark", playerStyle = "player" } = getConfig();
-  var expected = new Map([
-    ["base", resolveSliderAssetHref("/slider/src/" + (playerStyle) + "-" + (theme) + ".css")],
+  const { playerTheme: theme = "dark", playerStyle = "player" } = getConfig();
+  const expected = new Map([
+    ["base", resolveSliderAssetHref(`/slider/src/${playerStyle}-${theme}.css`)],
     ["settings", resolveSliderAssetHref("/slider/src/settings.css")],
     ["nexus-patch", resolveSliderAssetHref("/slider/src/nexus_patch.css")],
     ["nexus-login", resolveSliderAssetHref("/slider/src/nexus_login.css")],
   ]);
 
-  document.documentElement.setAttribute.("data-jellyfin-player-theme", theme);
-  document.documentElement.setAttribute.("data-jellyfin-player-style", playerStyle);
-  document.body.setAttribute.("data-jellyfin-player-theme", theme);
-  document.body.setAttribute.("data-jellyfin-player-style", playerStyle);
+  document.documentElement?.setAttribute?.("data-jellyfin-player-theme", theme);
+  document.documentElement?.setAttribute?.("data-jellyfin-player-style", playerStyle);
+  document.body?.setAttribute?.("data-jellyfin-player-theme", theme);
+  document.body?.setAttribute?.("data-jellyfin-player-style", playerStyle);
 
   if (isPlayerCssMobileDevice()) {
     expected.set("fullscreen", resolveSliderAssetHref("/slider/src/fullscreen.css"));
   }
 
-  expected.forEach(function((href, key) {
-    var link = document.querySelector("link[data-jellyfin-player-css=\"" + (key) + "\"]");
+  expected.forEach((href, key) => {
+    let link = document.querySelector(`link[data-jellyfin-player-css="${key}"]`);
 
     if (!link) {
       link = document.createElement("link");
@@ -40,7 +40,7 @@ export function loadCSS() {
     }
   });
 
-  document.querySelectorAll("link[data-jellyfin-player-css]").forEach(function((link) {
+  document.querySelectorAll("link[data-jellyfin-player-css]").forEach((link) => {
     if (!expected.has(link.getAttribute("data-jellyfin-player-css"))) {
       link.remove();
     }

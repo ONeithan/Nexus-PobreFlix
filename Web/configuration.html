@@ -1,7 +1,5 @@
-<div id="NexusPobreFlixConfigPage"
-     data-role="page"
-     class="page type-interior pluginConfigurationPage"
-     translate="no" data-jf-no-translate="1">
+<div id="NexusPobreFlixConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" translate="no"
+  data-jf-no-translate="1">
 
   <div class="content-primary">
     <section class="nexus-hero-card">
@@ -9,7 +7,8 @@
         <div class="nexus-eyebrow" id="heroEyebrow">Configuração do Plugin</div>
         <h2 id="pageTitle">Painel de Controle Nexus PobreFlix</h2>
         <p id="pageIntro">
-          Gerencie a fonte de ativos do motor <code>/slider</code>, publique configurações globais, inspecione o status do sistema
+          Gerencie a fonte de ativos do motor <code>/slider</code>, publique configurações globais, inspecione o status
+          do sistema
           e revise detalhes de injeção HTML e permissões em uma interface premium.
         </p>
       </div>
@@ -27,48 +26,26 @@
     </section>
 
     <div class="nexus-tabbar" role="tablist" aria-label="Seções de configuração">
-      <button id="tabNexusPobreFlix"
-              type="button"
-              class="nexus-tab is-active"
-              role="tab"
-              aria-selected="true"
-              aria-controls="panelNexusPobreFlix"
-              data-tab="NexusPobreFlix">Nexus PobreFlix</button>
-      <button id="tabNexusPobreFlixSettings"
-              type="button"
-              class="nexus-tab"
-              role="tab"
-              aria-selected="false"
-              aria-controls="panelNexusPobreFlixSettings"
-              data-tab="NexusPobreFlix-settings">Configurações do Tema</button>
-      <button id="tabStatus"
-              type="button"
-              class="nexus-tab"
-              role="tab"
-              aria-selected="false"
-              aria-controls="panelStatus"
-              data-tab="status">Status do Sistema</button>
-      <button id="tabSnippet"
-              type="button"
-              class="nexus-tab"
-              role="tab"
-              aria-selected="false"
-              aria-controls="panelSnippet"
-              data-tab="snippet">Injeção HTML e Permissões</button>
+      <button id="tabNexusPobreFlix" type="button" class="nexus-tab is-active" role="tab" aria-selected="true"
+        aria-controls="panelNexusPobreFlix" data-tab="NexusPobreFlix">Nexus PobreFlix</button>
+      <button id="tabNexusPobreFlixSettings" type="button" class="nexus-tab" role="tab" aria-selected="false"
+        aria-controls="panelNexusPobreFlixSettings" data-tab="NexusPobreFlix-settings">Configurações do Tema</button>
+      <button id="tabStatus" type="button" class="nexus-tab" role="tab" aria-selected="false"
+        aria-controls="panelStatus" data-tab="status">Status do Sistema</button>
+      <button id="tabSnippet" type="button" class="nexus-tab" role="tab" aria-selected="false"
+        aria-controls="panelSnippet" data-tab="snippet">Injeção HTML e Permissões</button>
     </div>
 
     <div id="msg" class="fieldDescription" style="min-height:24px;"></div>
 
-    <section id="panelNexusPobreFlix"
-             class="nexus-panel is-active"
-             data-panel="NexusPobreFlix"
-             role="tabpanel"
-             aria-labelledby="tabNexusPobreFlix">
+    <section id="panelNexusPobreFlix" class="nexus-panel is-active" data-panel="NexusPobreFlix" role="tabpanel"
+      aria-labelledby="tabNexusPobreFlix">
       <div class="nexus-grid nexus-grid--split">
         <div class="nexus-card">
           <div class="nexus-card-head">
             <h3 id="configCardTitle">Configurações Principais</h3>
-            <p id="configCardBody">Escolha de onde o Nexus PobreFlix carrega os ativos do slider e como o caminho do player é resolvido.</p>
+            <p id="configCardBody">Escolha de onde o Nexus PobreFlix carrega os ativos do slider e como o caminho do
+              player é resolvido.</p>
           </div>
 
           <form id="configForm" onsubmit="return false;">
@@ -78,14 +55,16 @@
                 <span id="forceGlobalLabel">Forçar configurações globais de usuário</span>
               </label>
               <div class="fieldDescription" id="forceGlobalHint">
-                Ativado: todos os usuários recebem as configurações do administrador automaticamente. Desativado: usuários mantém suas próprias configurações locais.
+                Ativado: todos os usuários recebem as configurações do administrador automaticamente. Desativado:
+                usuários mantém suas próprias configurações locais.
               </div>
             </div>
 
             <div class="inputContainer">
               <label class="inputLabel" id="scriptDirLabel" for="scriptDir">Diretório de Scripts</label>
               <input id="scriptDir" type="text" class="emby-input" placeholder="/home/nexus/slider">
-              <div class="fieldDescription" id="scriptDirHint">Deixe vazio para usar os ativos embutidos em <code>/Resources/slider</code>.</div>
+              <div class="fieldDescription" id="scriptDirHint">Deixe vazio para usar os ativos embutidos em
+                <code>/Resources/slider</code>.</div>
             </div>
 
             <div class="inputContainer">
@@ -98,7 +77,8 @@
         <div class="nexus-card">
           <div class="nexus-card-head">
             <h3 id="actionsCardTitle">Ações do Administrador</h3>
-            <p id="actionsCardBody">Salve as configurações do plugin ou publique as configurações atuais globalmente para todos os perfis.</p>
+            <p id="actionsCardBody">Salve as configurações do plugin ou publique as configurações atuais globalmente
+              para todos os perfis.</p>
           </div>
 
           <div class="buttonContainer">
@@ -109,17 +89,14 @@
       </div>
     </section>
 
-    <section id="panelStatus"
-             class="nexus-panel"
-             data-panel="status"
-             role="tabpanel"
-             aria-labelledby="tabStatus"
-             hidden>
+    <section id="panelStatus" class="nexus-panel" data-panel="status" role="tabpanel" aria-labelledby="tabStatus"
+      hidden>
       <div class="nexus-grid nexus-grid--split">
         <div class="nexus-card">
           <div class="nexus-card-head">
             <h3 id="statusCardTitle">Status de Execução</h3>
-            <p id="statusCardBody">Verificação rápida do estado da configuração, resolução de caminhos e fallback de ativos.</p>
+            <p id="statusCardBody">Verificação rápida do estado da configuração, resolução de caminhos e fallback de
+              ativos.</p>
           </div>
           <div id="status" class="nexus-status-list">
             <div class="nexus-empty" id="statusPlaceholder">O status ainda não foi carregado.</div>
@@ -129,7 +106,8 @@
         <div class="nexus-card">
           <div class="nexus-card-head">
             <h3 id="inmemCardTitle">Injeção em Memória</h3>
-            <p id="inmemCardBody">Verifica se o index.html está sendo reescrito em tempo de resposta sem tocar nos arquivos em disco.</p>
+            <p id="inmemCardBody">Verifica se o index.html está sendo reescrito em tempo de resposta sem tocar nos
+              arquivos em disco.</p>
           </div>
           <div id="inmem" class="nexus-inline-state">
             Verificando injeção em memória...
@@ -138,19 +116,16 @@
       </div>
     </section>
 
-    <section id="panelNexusPobreFlixSettings"
-             class="nexus-panel"
-             data-panel="NexusPobreFlix-settings"
-             role="tabpanel"
-             aria-labelledby="tabNexusPobreFlixSettings"
-             hidden>
+    <section id="panelNexusPobreFlixSettings" class="nexus-panel" data-panel="NexusPobreFlix-settings" role="tabpanel"
+      aria-labelledby="tabNexusPobreFlixSettings" hidden>
       <div class="nexus-card">
         <div class="nexus-card-head">
           <h3 id="NexusPobreFlixSettingsCardTitle">Personalização do Tema</h3>
         </div>
 
         <div class="buttonContainer buttonContainer--tight">
-          <button id="reloadNexusPobreFlixSettingsBtn" type="button" class="raised">Recarregar Configurações do Tema</button>
+          <button id="reloadNexusPobreFlixSettingsBtn" type="button" class="raised">Recarregar Configurações do
+            Tema</button>
         </div>
 
         <div id="NexusPobreFlixSettingsHost" class="nexus-settings-page-host">
@@ -159,12 +134,8 @@
       </div>
     </section>
 
-    <section id="panelSnippet"
-             class="nexus-panel"
-             data-panel="snippet"
-             role="tabpanel"
-             aria-labelledby="tabSnippet"
-             hidden>
+    <section id="panelSnippet" class="nexus-panel" data-panel="snippet" role="tabpanel" aria-labelledby="tabSnippet"
+      hidden>
       <div id="snippetGrid" class="nexus-grid nexus-grid--split">
         <div class="nexus-card">
           <div class="nexus-card-head">
@@ -227,568 +198,582 @@
   </div>
 
   <style>
-#NexusPobreFlixConfigPage {
-  --nexus-accent: #8A2BE2;
-  --nexus-accent-strong: #BF40BF;
-  --nexus-accent-soft: rgba(138, 43, 226, 0.15);
-  --nexus-purple-glow: rgba(191, 64, 191, 0.4);
-  --nexus-danger: #ff4d4d;
-  --nexus-danger-soft: rgba(255, 77, 77, 0.15);
-  --nexus-success: #00ff88;
-  --nexus-success-soft: rgba(0, 255, 136, 0.15);
-  --nexus-border: rgba(127, 140, 141, 0.24);
-  --nexus-shadow: 0 24px 48px rgba(7, 14, 24, 0.12);
-  --nexus-radius-xl: 24px;
-  --nexus-radius-lg: 18px;
-  --nexus-radius-md: 14px;
-}
-
-.theme-dark #NexusPobreFlixConfigPage {
-  --nexus-border: rgba(235, 245, 246, 0.12);
-  --nexus-shadow: 0 24px 48px rgba(0, 0, 0, 0.32);
-}
-
-#NexusPobreFlixConfigPage .content-primary {
-  padding: 24px;
-}
-
-#NexusPobreFlixConfigPage .nexus-hero-card,
-#NexusPobreFlixConfigPage .nexus-card {
-  background: var(--cardBackgroundColor);
-  border: 1px solid var(--nexus-border);
-  border-radius: var(--nexus-radius-xl);
-  box-shadow: var(--nexus-shadow);
-}
-
-#NexusPobreFlixConfigPage .nexus-hero-card {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
-  gap: 24px;
-  padding: 28px;
-  background-image:
-    radial-gradient(circle at top right, rgba(138, 43, 226, 0.2), transparent 45%),
-    radial-gradient(circle at left bottom, rgba(191, 64, 191, 0.15), transparent 45%);
-}
-
-#NexusPobreFlixConfigPage .nexus-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--nexus-accent-strong);
-}
-
-#NexusPobreFlixConfigPage .nexus-eyebrow::before {
-  content: "";
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--nexus-accent-strong), var(--nexus-accent));
-  box-shadow: 0 0 10px var(--nexus-purple-glow);
-  animation: nexus-pulse 2s infinite;
-}
-
-@keyframes nexus-pulse {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 var(--nexus-accent-soft); }
-  70% { transform: scale(1.1); box-shadow: 0 0 0 10px transparent; }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
-}
-
-#NexusPobreFlixConfigPage #pageTitle {
-  margin: 14px 0 10px;
-  font-size: clamp(28px, 3vw, 42px);
-  line-height: 1.04;
-  color: var(--textColor);
-}
-
-#NexusPobreFlixConfigPage #pageIntro {
-  margin: 0;
-  max-width: 760px;
-  color: var(--labelTextColor);
-  line-height: 1.7;
-  font-size: 15px;
-}
-
-#NexusPobreFlixConfigPage #pageIntro code {
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: var(--nexus-accent-soft);
-  color: var(--textColor);
-}
-
-#NexusPobreFlixConfigPage .nexus-hero-meta {
-  display: grid;
-  gap: 14px;
-  align-content: center;
-}
-
-#NexusPobreFlixConfigPage .nexus-hero-pill {
-  padding: 16px 18px;
-  border-radius: var(--nexus-radius-lg);
-  border: 1px solid var(--nexus-border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent);
-}
-
-#NexusPobreFlixConfigPage .nexus-hero-pill__label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--labelTextColor);
-}
-
-#NexusPobreFlixConfigPage .nexus-hero-pill strong {
-  display: block;
-  font-size: 16px;
-  color: var(--textColor);
-  word-break: break-word;
-}
-
-#NexusPobreFlixConfigPage .nexus-tabbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 20px 0 14px;
-}
-
-#NexusPobreFlixConfigPage .nexus-tab {
-  appearance: none;
-  border: 1px solid var(--nexus-border);
-  border-radius: 999px;
-  background: var(--cardBackgroundColor);
-  color: var(--textColor);
-  padding: 12px 18px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
-}
-
-#NexusPobreFlixConfigPage .nexus-tab:hover {
-  transform: translateY(-1px);
-  border-color: var(--nexus-accent-strong);
-  background: var(--nexus-accent-soft);
-}
-
-#NexusPobreFlixConfigPage .nexus-tab.is-active {
-  color: #ffffff;
-  border-color: transparent;
-  background: linear-gradient(135deg, var(--nexus-accent), var(--nexus-accent-strong));
-  box-shadow: 0 10px 25px rgba(138, 43, 226, 0.4);
-}
-
-#NexusPobreFlixConfigPage .nexus-panel {
-  margin-top: 10px;
-}
-
-#NexusPobreFlixConfigPage .nexus-panel[hidden] {
-  display: none !important;
-}
-
-#NexusPobreFlixConfigPage .nexus-grid {
-  display: grid;
-  gap: 18px;
-}
-
-#NexusPobreFlixConfigPage .nexus-grid--split {
-  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-}
-
-#NexusPobreFlixConfigPage .nexus-grid--single {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-#NexusPobreFlixConfigPage .nexus-card {
-  padding: 22px;
-}
-
-#NexusPobreFlixConfigPage .nexus-card-head {
-  margin-bottom: 18px;
-}
-
-#NexusPobreFlixConfigPage .nexus-card-head h3 {
-  margin: 0 0 8px;
-  font-size: 20px;
-  color: var(--textColor);
-}
-
-#NexusPobreFlixConfigPage .nexus-card-head p {
-  margin: 0;
-  color: var(--labelTextColor);
-  line-height: 1.6;
-}
-
-#NexusPobreFlixConfigPage .inputContainer {
-  margin-bottom: 16px;
-  padding: 18px;
-  border-radius: var(--nexus-radius-lg);
-  border: 1px solid var(--nexus-border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
-}
-
-#NexusPobreFlixConfigPage .inputContainer:last-child {
-  margin-bottom: 0;
-}
-
-#NexusPobreFlixConfigPage .inputLabel {
-  display: block;
-  margin-bottom: 10px;
-  color: var(--textColor);
-  font-weight: 700;
-}
-
-#NexusPobreFlixConfigPage .inputLabel--checkbox {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 0;
-}
-
-#NexusPobreFlixConfigPage .inputLabel--checkbox input {
-  margin-top: 2px;
-}
-
-#NexusPobreFlixConfigPage .emby-input {
-  width: 100%;
-  min-height: 46px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--nexus-border);
-  background: var(--inputBackgroundColor);
-  color: var(--textColor);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
-}
-
-#NexusPobreFlixConfigPage .emby-input:focus {
-  outline: none;
-  border-color: rgba(123, 47, 190, 0.45);
-  box-shadow: 0 0 0 4px rgba(123, 47, 190, 0.14);
-}
-
-#NexusPobreFlixConfigPage .fieldDescription {
-  margin-top: 10px;
-  color: var(--labelTextColor);
-  line-height: 1.55;
-  font-size: 13px;
-}
-
-#NexusPobreFlixConfigPage #msg {
-  padding: 12px 16px;
-  border-radius: 14px;
-  border: 1px solid transparent;
-  background: var(--cardBackgroundColor);
-}
-
-#NexusPobreFlixConfigPage #msg.ok {
-  color: var(--nexus-success);
-  background: var(--nexus-success-soft);
-  border-color: rgba(31, 157, 104, 0.22);
-}
-
-#NexusPobreFlixConfigPage #msg.warn {
-  color: var(--nexus-gold);
-  background: var(--nexus-gold-soft);
-  border-color: rgba(240, 180, 41, 0.22);
-}
-
-#NexusPobreFlixConfigPage #msg.err {
-  color: var(--nexus-danger);
-  background: var(--nexus-danger-soft);
-  border-color: rgba(214, 69, 80, 0.22);
-}
-
-#NexusPobreFlixConfigPage .buttonContainer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-#NexusPobreFlixConfigPage .buttonContainer--tight {
-  margin-bottom: 18px;
-}
-
-#NexusPobreFlixConfigPage .raised {
-  appearance: none;
-  border: 1px solid var(--nexus-border);
-  border-radius: 14px;
-  min-height: 46px;
-  padding: 11px 16px;
-  cursor: pointer;
-  font-weight: 700;
-  background: var(--buttonBackgroundColor);
-  color: var(--buttonTextColor);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-}
-
-#NexusPobreFlixConfigPage .raised:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
-  border-color: rgba(123, 47, 190, 0.3);
-}
-
-#NexusPobreFlixConfigPage .button-submit {
-  color: #ffffff;
-  border-color: transparent;
-  background: linear-gradient(135deg, var(--nexus-accent-strong), var(--nexus-accent));
-}
-
-#NexusPobreFlixConfigPage .nexus-status-list {
-  display: grid;
-  gap: 12px;
-}
-
-#NexusPobreFlixConfigPage .nexus-status-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
-  align-items: center;
-  padding: 14px 16px;
-  border-radius: 14px;
-  border: 1px solid var(--nexus-border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
-}
-
-#NexusPobreFlixConfigPage .nexus-status-label {
-  color: var(--textColor);
-  font-weight: 600;
-}
-
-#NexusPobreFlixConfigPage .nexus-status-value {
-  color: var(--labelTextColor);
-  text-align: right;
-}
-
-#NexusPobreFlixConfigPage .nexus-status-value code {
-  word-break: break-all;
-}
-
-#NexusPobreFlixConfigPage .nexus-inline-state,
-#NexusPobreFlixConfigPage .nexus-empty {
-  padding: 16px;
-  border-radius: 14px;
-  border: 1px dashed var(--nexus-border);
-  color: var(--labelTextColor);
-  line-height: 1.6;
-}
-
-#NexusPobreFlixConfigPage .nexus-inline-state.ok {
-  border-style: solid;
-  color: var(--nexus-success);
-  background: var(--nexus-success-soft);
-}
-
-#NexusPobreFlixConfigPage .nexus-inline-state.warn {
-  border-style: solid;
-  color: var(--nexus-gold);
-  background: var(--nexus-gold-soft);
-}
-
-#NexusPobreFlixConfigPage .nexus-inline-toggle {
-  display: grid;
-  gap: 10px;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--nexus-border);
-}
-
-#NexusPobreFlixConfigPage .nexus-inline-toggle .inputLabel--checkbox,
-#NexusPobreFlixConfigPage .nexus-inline-toggle .fieldDescription {
-  color: inherit;
-}
-
-#NexusPobreFlixConfigPage .nexus-inline-toggle .fieldDescription {
-  margin-top: 0;
-  opacity: 0.92;
-}
-
-#NexusPobreFlixConfigPage .nexus-empty--error {
-  border-style: solid;
-  color: var(--nexus-danger);
-  background: var(--nexus-danger-soft);
-}
-
-#NexusPobreFlixConfigPage .nexus-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 28px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-#NexusPobreFlixConfigPage .nexus-badge.is-good {
-  color: var(--nexus-success);
-  background: var(--nexus-success-soft);
-}
-
-#NexusPobreFlixConfigPage .nexus-badge.is-bad {
-  color: var(--nexus-danger);
-  background: var(--nexus-danger-soft);
-}
-
-#NexusPobreFlixConfigPage .nexus-badge.is-warn {
-  color: var(--nexus-gold);
-  background: var(--nexus-gold-soft);
-}
-
-#NexusPobreFlixConfigPage .nexus-code-shell,
-#NexusPobreFlixConfigPage .nexus-env-box,
-#NexusPobreFlixConfigPage pre.preformatted {
-  border-radius: 16px;
-  border: 1px solid var(--nexus-border);
-  background: var(--inputBackgroundColor);
-}
-
-#NexusPobreFlixConfigPage .nexus-code-shell {
-  overflow: hidden;
-}
-
-#NexusPobreFlixConfigPage .nexus-code-shell pre,
-#NexusPobreFlixConfigPage .nexus-code-shell code,
-#NexusPobreFlixConfigPage pre.preformatted {
-  margin: 0;
-  padding: 16px;
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-family: Consolas, Monaco, monospace;
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--textColor);
-}
-
-#NexusPobreFlixConfigPage .nexus-env-box {
-  display: grid;
-  gap: 16px;
-  padding: 18px;
-}
-
-#NexusPobreFlixConfigPage .nexus-env-item {
-  display: grid;
-  gap: 8px;
-}
-
-#NexusPobreFlixConfigPage .nexus-env-label {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--labelTextColor);
-  font-weight: 700;
-}
-
-#NexusPobreFlixConfigPage .nexus-env-item code,
-#NexusPobreFlixConfigPage .nexus-env-file-row code {
-  padding: 3px 6px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--textColor);
-  font-family: Consolas, Monaco, monospace;
-}
-
-#NexusPobreFlixConfigPage .nexus-env-files {
-  display: grid;
-  gap: 12px;
-}
-
-#NexusPobreFlixConfigPage .nexus-env-file-row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
-}
-
-#NexusPobreFlixConfigPage .nexus-env-file-row span {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-#NexusPobreFlixConfigPage .ok {
-  color: var(--nexus-success);
-}
-
-#NexusPobreFlixConfigPage .warn {
-  color: var(--nexus-gold);
-}
-
-#NexusPobreFlixConfigPage .nexus-settings-page-host {
-  min-height: 360px;
-}
-
-#NexusPobreFlixConfigPage .nexus-settings-page-host > #settings-modal.nexus-settings-page-shell {
-  display: block !important;
-  position: relative !important;
-  inset: auto !important;
-  padding: 0 !important;
-  background: transparent !important;
-  animation: none !important;
-}
-
-#NexusPobreFlixConfigPage .nexus-settings-page-host > #settings-modal.nexus-settings-page-shell .settings-modal-content {
-  width: 100% !important;
-  max-width: none !important;
-  height: min(94vh, 980px) !important;
-  max-height: min(94vh, 980px) !important;
-  box-shadow: none !important;
-}
-
-#NexusPobreFlixConfigPage .nexus-settings-page-host > #settings-modal.nexus-settings-page-shell .settings-modal-content h2 {
-  display: none !important;
-}
-
-#NexusPobreFlixConfigPage .nexus-settings-page-host > #settings-modal.nexus-settings-page-shell form,
-#NexusPobreFlixConfigPage .nexus-settings-page-host > #settings-modal.nexus-settings-page-shell .settings-tabs,
-#NexusPobreFlixConfigPage .nexus-settings-page-host > #settings-modal.nexus-settings-page-shell .settings-tab-content {
-  min-height: 0 !important;
-}
-
-@media (max-width: 900px) {
-  #NexusPobreFlixConfigPage .nexus-hero-card,
-  #NexusPobreFlixConfigPage .nexus-grid--split {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 720px) {
-  #NexusPobreFlixConfigPage .content-primary {
-    padding: 14px;
-  }
-
-  #NexusPobreFlixConfigPage .nexus-hero-card,
-  #NexusPobreFlixConfigPage .nexus-card {
-    padding: 18px;
-    border-radius: 18px;
-  }
-
-  #NexusPobreFlixConfigPage .buttonContainer {
-    flex-direction: column;
-  }
-
-  #NexusPobreFlixConfigPage .raised,
-  #NexusPobreFlixConfigPage .nexus-tab {
-    width: 100%;
-  }
-
-  #NexusPobreFlixConfigPage .nexus-status-row,
-  #NexusPobreFlixConfigPage .nexus-env-file-row {
-    grid-template-columns: 1fr;
-  }
-
-  #NexusPobreFlixConfigPage .nexus-status-value {
-    text-align: left;
-  }
-
-  #NexusPobreFlixConfigPage .nexus-settings-page-host > #settings-modal.nexus-settings-page-shell .settings-modal-content {
-    height: min(86vh, 1100px) !important;
-    max-height: min(86vh, 1100px) !important;
-  }
-}
-</style>
+    #NexusPobreFlixConfigPage {
+      --nexus-accent: #8A2BE2;
+      --nexus-accent-strong: #BF40BF;
+      --nexus-accent-soft: rgba(138, 43, 226, 0.15);
+      --nexus-purple-glow: rgba(191, 64, 191, 0.4);
+      --nexus-danger: #ff4d4d;
+      --nexus-danger-soft: rgba(255, 77, 77, 0.15);
+      --nexus-success: #00ff88;
+      --nexus-success-soft: rgba(0, 255, 136, 0.15);
+      --nexus-border: rgba(127, 140, 141, 0.24);
+      --nexus-shadow: 0 24px 48px rgba(7, 14, 24, 0.12);
+      --nexus-radius-xl: 24px;
+      --nexus-radius-lg: 18px;
+      --nexus-radius-md: 14px;
+    }
+
+    .theme-dark #NexusPobreFlixConfigPage {
+      --nexus-border: rgba(235, 245, 246, 0.12);
+      --nexus-shadow: 0 24px 48px rgba(0, 0, 0, 0.32);
+    }
+
+    #NexusPobreFlixConfigPage .content-primary {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-hero-card,
+    #NexusPobreFlixConfigPage .nexus-card {
+      background: var(--cardBackgroundColor);
+      border: 1px solid var(--nexus-border);
+      border-radius: var(--nexus-radius-xl);
+      box-shadow: var(--nexus-shadow);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-hero-card {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
+      gap: 24px;
+      padding: 28px;
+      background-image:
+        radial-gradient(circle at top right, rgba(138, 43, 226, 0.2), transparent 45%),
+        radial-gradient(circle at left bottom, rgba(191, 64, 191, 0.15), transparent 45%);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--nexus-accent-strong);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-eyebrow::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--nexus-accent-strong), var(--nexus-accent));
+      box-shadow: 0 0 10px var(--nexus-purple-glow);
+      animation: nexus-pulse 2s infinite;
+    }
+
+    @keyframes nexus-pulse {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 var(--nexus-accent-soft);
+      }
+
+      70% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 10px transparent;
+      }
+
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 transparent;
+      }
+    }
+
+    #NexusPobreFlixConfigPage #pageTitle {
+      margin: 14px 0 10px;
+      font-size: clamp(28px, 3vw, 42px);
+      line-height: 1.04;
+      color: var(--textColor);
+    }
+
+    #NexusPobreFlixConfigPage #pageIntro {
+      margin: 0;
+      max-width: 760px;
+      color: var(--labelTextColor);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    #NexusPobreFlixConfigPage #pageIntro code {
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: var(--nexus-accent-soft);
+      color: var(--textColor);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-hero-meta {
+      display: grid;
+      gap: 14px;
+      align-content: center;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-hero-pill {
+      padding: 16px 18px;
+      border-radius: var(--nexus-radius-lg);
+      border: 1px solid var(--nexus-border);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-hero-pill__label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--labelTextColor);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-hero-pill strong {
+      display: block;
+      font-size: 16px;
+      color: var(--textColor);
+      word-break: break-word;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-tabbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 20px 0 14px;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-tab {
+      appearance: none;
+      border: 1px solid var(--nexus-border);
+      border-radius: 999px;
+      background: var(--cardBackgroundColor);
+      color: var(--textColor);
+      padding: 12px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-tab:hover {
+      transform: translateY(-1px);
+      border-color: var(--nexus-accent-strong);
+      background: var(--nexus-accent-soft);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-tab.is-active {
+      color: #ffffff;
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--nexus-accent), var(--nexus-accent-strong));
+      box-shadow: 0 10px 25px rgba(138, 43, 226, 0.4);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-panel {
+      margin-top: 10px;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-panel[hidden] {
+      display: none !important;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-grid--split {
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-grid--single {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-card {
+      padding: 22px;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-card-head {
+      margin-bottom: 18px;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-card-head h3 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      color: var(--textColor);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-card-head p {
+      margin: 0;
+      color: var(--labelTextColor);
+      line-height: 1.6;
+    }
+
+    #NexusPobreFlixConfigPage .inputContainer {
+      margin-bottom: 16px;
+      padding: 18px;
+      border-radius: var(--nexus-radius-lg);
+      border: 1px solid var(--nexus-border);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+    }
+
+    #NexusPobreFlixConfigPage .inputContainer:last-child {
+      margin-bottom: 0;
+    }
+
+    #NexusPobreFlixConfigPage .inputLabel {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--textColor);
+      font-weight: 700;
+    }
+
+    #NexusPobreFlixConfigPage .inputLabel--checkbox {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 0;
+    }
+
+    #NexusPobreFlixConfigPage .inputLabel--checkbox input {
+      margin-top: 2px;
+    }
+
+    #NexusPobreFlixConfigPage .emby-input {
+      width: 100%;
+      min-height: 46px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--nexus-border);
+      background: var(--inputBackgroundColor);
+      color: var(--textColor);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    #NexusPobreFlixConfigPage .emby-input:focus {
+      outline: none;
+      border-color: rgba(123, 47, 190, 0.45);
+      box-shadow: 0 0 0 4px rgba(123, 47, 190, 0.14);
+    }
+
+    #NexusPobreFlixConfigPage .fieldDescription {
+      margin-top: 10px;
+      color: var(--labelTextColor);
+      line-height: 1.55;
+      font-size: 13px;
+    }
+
+    #NexusPobreFlixConfigPage #msg {
+      padding: 12px 16px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      background: var(--cardBackgroundColor);
+    }
+
+    #NexusPobreFlixConfigPage #msg.ok {
+      color: var(--nexus-success);
+      background: var(--nexus-success-soft);
+      border-color: rgba(31, 157, 104, 0.22);
+    }
+
+    #NexusPobreFlixConfigPage #msg.warn {
+      color: var(--nexus-gold);
+      background: var(--nexus-gold-soft);
+      border-color: rgba(240, 180, 41, 0.22);
+    }
+
+    #NexusPobreFlixConfigPage #msg.err {
+      color: var(--nexus-danger);
+      background: var(--nexus-danger-soft);
+      border-color: rgba(214, 69, 80, 0.22);
+    }
+
+    #NexusPobreFlixConfigPage .buttonContainer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    #NexusPobreFlixConfigPage .buttonContainer--tight {
+      margin-bottom: 18px;
+    }
+
+    #NexusPobreFlixConfigPage .raised {
+      appearance: none;
+      border: 1px solid var(--nexus-border);
+      border-radius: 14px;
+      min-height: 46px;
+      padding: 11px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      background: var(--buttonBackgroundColor);
+      color: var(--buttonTextColor);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+
+    #NexusPobreFlixConfigPage .raised:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+      border-color: rgba(123, 47, 190, 0.3);
+    }
+
+    #NexusPobreFlixConfigPage .button-submit {
+      color: #ffffff;
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--nexus-accent-strong), var(--nexus-accent));
+    }
+
+    #NexusPobreFlixConfigPage .nexus-status-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-status-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--nexus-border);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-status-label {
+      color: var(--textColor);
+      font-weight: 600;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-status-value {
+      color: var(--labelTextColor);
+      text-align: right;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-status-value code {
+      word-break: break-all;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-inline-state,
+    #NexusPobreFlixConfigPage .nexus-empty {
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px dashed var(--nexus-border);
+      color: var(--labelTextColor);
+      line-height: 1.6;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-inline-state.ok {
+      border-style: solid;
+      color: var(--nexus-success);
+      background: var(--nexus-success-soft);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-inline-state.warn {
+      border-style: solid;
+      color: var(--nexus-gold);
+      background: var(--nexus-gold-soft);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-inline-toggle {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--nexus-border);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-inline-toggle .inputLabel--checkbox,
+    #NexusPobreFlixConfigPage .nexus-inline-toggle .fieldDescription {
+      color: inherit;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-inline-toggle .fieldDescription {
+      margin-top: 0;
+      opacity: 0.92;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-empty--error {
+      border-style: solid;
+      color: var(--nexus-danger);
+      background: var(--nexus-danger-soft);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-badge.is-good {
+      color: var(--nexus-success);
+      background: var(--nexus-success-soft);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-badge.is-bad {
+      color: var(--nexus-danger);
+      background: var(--nexus-danger-soft);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-badge.is-warn {
+      color: var(--nexus-gold);
+      background: var(--nexus-gold-soft);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-code-shell,
+    #NexusPobreFlixConfigPage .nexus-env-box,
+    #NexusPobreFlixConfigPage pre.preformatted {
+      border-radius: 16px;
+      border: 1px solid var(--nexus-border);
+      background: var(--inputBackgroundColor);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-code-shell {
+      overflow: hidden;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-code-shell pre,
+    #NexusPobreFlixConfigPage .nexus-code-shell code,
+    #NexusPobreFlixConfigPage pre.preformatted {
+      margin: 0;
+      padding: 16px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--textColor);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-env-box {
+      display: grid;
+      gap: 16px;
+      padding: 18px;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-env-item {
+      display: grid;
+      gap: 8px;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-env-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--labelTextColor);
+      font-weight: 700;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-env-item code,
+    #NexusPobreFlixConfigPage .nexus-env-file-row code {
+      padding: 3px 6px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--textColor);
+      font-family: Consolas, Monaco, monospace;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-env-files {
+      display: grid;
+      gap: 12px;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-env-file-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-env-file-row span {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    #NexusPobreFlixConfigPage .ok {
+      color: var(--nexus-success);
+    }
+
+    #NexusPobreFlixConfigPage .warn {
+      color: var(--nexus-gold);
+    }
+
+    #NexusPobreFlixConfigPage .nexus-settings-page-host {
+      min-height: 360px;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-settings-page-host>#settings-modal.nexus-settings-page-shell {
+      display: block !important;
+      position: relative !important;
+      inset: auto !important;
+      padding: 0 !important;
+      background: transparent !important;
+      animation: none !important;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-settings-page-host>#settings-modal.nexus-settings-page-shell .settings-modal-content {
+      width: 100% !important;
+      max-width: none !important;
+      height: min(94vh, 980px) !important;
+      max-height: min(94vh, 980px) !important;
+      box-shadow: none !important;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-settings-page-host>#settings-modal.nexus-settings-page-shell .settings-modal-content h2 {
+      display: none !important;
+    }
+
+    #NexusPobreFlixConfigPage .nexus-settings-page-host>#settings-modal.nexus-settings-page-shell form,
+    #NexusPobreFlixConfigPage .nexus-settings-page-host>#settings-modal.nexus-settings-page-shell .settings-tabs,
+    #NexusPobreFlixConfigPage .nexus-settings-page-host>#settings-modal.nexus-settings-page-shell .settings-tab-content {
+      min-height: 0 !important;
+    }
+
+    @media (max-width: 900px) {
+
+      #NexusPobreFlixConfigPage .nexus-hero-card,
+      #NexusPobreFlixConfigPage .nexus-grid--split {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      #NexusPobreFlixConfigPage .content-primary {
+        padding: 14px;
+      }
+
+      #NexusPobreFlixConfigPage .nexus-hero-card,
+      #NexusPobreFlixConfigPage .nexus-card {
+        padding: 18px;
+        border-radius: 18px;
+      }
+
+      #NexusPobreFlixConfigPage .buttonContainer {
+        flex-direction: column;
+      }
+
+      #NexusPobreFlixConfigPage .raised,
+      #NexusPobreFlixConfigPage .nexus-tab {
+        width: 100%;
+      }
+
+      #NexusPobreFlixConfigPage .nexus-status-row,
+      #NexusPobreFlixConfigPage .nexus-env-file-row {
+        grid-template-columns: 1fr;
+      }
+
+      #NexusPobreFlixConfigPage .nexus-status-value {
+        text-align: left;
+      }
+
+      #NexusPobreFlixConfigPage .nexus-settings-page-host>#settings-modal.nexus-settings-page-shell .settings-modal-content {
+        height: min(86vh, 1100px) !important;
+        max-height: min(86vh, 1100px) !important;
+      }
+    }
+  </style>
   <script src="../Plugins/NexusPobreFlix/assets/ui.js" type="text/javascript" data-jf-no-translate="1"></script>
 </div>

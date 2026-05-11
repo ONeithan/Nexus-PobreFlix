@@ -2,27 +2,27 @@ import { getConfig } from "../../config.js";
 import { getEmbyHeaders, getSessionInfo } from "../../../../Plugins/NexusPobreFlix/runtime/api.js";
 import { musicPlayerState } from "./state.js";
 
-var RADIO_BROWSER_MIRRORS = [
+const RADIO_BROWSER_MIRRORS = [
   "https://all.api.radio-browser.info",
   "https://de1.api.radio-browser.info",
   "https://nl1.api.radio-browser.info"
 ];
 
-var RADIO_STATIONS_KEYS = [
+const RADIO_STATIONS_KEYS = [
   "RadioStations",
   "radioStations",
   "SharedRadioStations",
   "sharedRadioStations"
 ];
 
-var STATIC_SHARED_RADIO_PATH = "./slider/radio-stations.json";
-var LOCAL_SHARED_RADIO_KEY = "gmmp:radioStations:v1";
-var BACKEND_MODE_KEY = "gmmp:radioBackendMode";
-var RADIO_ART_PROBE_CACHE_MAX = 600;
-var RADIO_ART_RESOLVE_CACHE_MAX = 400;
-var RADIO_BROWSER_SEARCH_PAGE_LIMIT = 100;
+const STATIC_SHARED_RADIO_PATH = "./slider/radio-stations.json";
+const LOCAL_SHARED_RADIO_KEY = "gmmp:radioStations:v1";
+const BACKEND_MODE_KEY = "gmmp:radioBackendMode";
+const RADIO_ART_PROBE_CACHE_MAX = 600;
+const RADIO_ART_RESOLVE_CACHE_MAX = 400;
+const RADIO_BROWSER_SEARCH_PAGE_LIMIT = 100;
 
-var sharedBackendMode = function(() {
+let sharedBackendMode = (() => {
   try {
     return sessionStorage.getItem(BACKEND_MODE_KEY) || "unknown";
   } catch {
@@ -36,20 +36,20 @@ function setSharedBackendMode(mode) {
 }
 
 function getCurrentRadioUser() {
-  var session = getSessionInfo.() || {};
-  var apiUser = window.ApiClient._currentUser || {};
+  const session = getSessionInfo?.() || {};
+  const apiUser = window.ApiClient?._currentUser || {};
 
   return {
     userId: text(
       session.userId ||
       session.UserId ||
       apiUser.Id ||
-      window.ApiClient.getCurrentUserId.()
+      window.ApiClient?.getCurrentUserId?.()
     ),
     userName: text(
       session.UserName ||
       session.userName ||
-      session.User.Name ||
+      session.User?.Name ||
       apiUser.Name ||
       apiUser.userName ||
       localStorage.getItem("currentUserName") ||
@@ -59,7 +59,7 @@ function getCurrentRadioUser() {
 }
 
 function text(value, fallback = "") {
-  var out = String(value || "").trim();
+  const out = String(value ?? "").trim();
   return out || fallback;
 }
 
@@ -75,18 +75,18 @@ function normalizeSearchToken(value) {
 
 function pruneMap(map, maxSize) {
   while (map.size > maxSize) {
-    var firstKey = map.keys().next().value;
+    const firstKey = map.keys().next().value;
     map.delete(firstKey);
   }
 }
 
 function toNumber(value, fallback = 0) {
-  var parsed = Number(value);
+  const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 function normalizeUrl(url) {
-  var value = text(url);
+  const value = text(url);
   if (!value) return "";
   try {
     return new URL(value).toString();
@@ -96,7 +96,7 @@ function normalizeUrl(url) {
 }
 
 function normalizeAssetUrl(url) {
-  var value = text(url);
+  const value = text(url);
   if (!value) return "";
   try {
     return new URL(value, window.location.href).toString();
@@ -150,7 +150,7 @@ function getRadioStationLogoCandidate(station) {
 }
 
 export function getRadioStationLogoUrl(station) {
-  var logoUrl = normalizeAssetUrl(getRadioStationLogoCandidate(station));
+  const logoUrl = normalizeAssetUrl(getRadioStationLogoCandidate(station));
   return logoUrl || null;
 }
 
@@ -161,7 +161,7 @@ export function getRadioStationArtUrl(station) {
 export function getRadioStationArtCandidates(station) {
   if (!station || typeof station !== "object") return [];
 
-  var rawCandidates = [
+  const rawCandidates = [
     getRadioStationLogoCandidate(station),
     station.logo,
     station.Logo,
@@ -202,11 +202,11 @@ export function getRadioStationArtCandidates(station) {
     station.Thumbnail
   ];
 
-  var seen = new Set();
-  var out = [];
+  const seen = new Set();
+  const out = [];
 
-  for (var rawCandidate of rawCandidates) {
-    var normalized = normalizeAssetUrl(rawCandidate);
+  for (const rawCandidate of rawCandidates) {
+    const normalized = normalizeAssetUrl(rawCandidate);
     if (!normalized || seen.has(normalized)) continue;
     seen.add(normalized);
     out.push(normalized);
@@ -215,12 +215,12 @@ export function getRadioStationArtCandidates(station) {
   return out;
 }
 
-var radioArtProbeCache = new Map();
-var radioArtResolveCache = new Map();
-var radioArtResolveInflight = new Map();
+const radioArtProbeCache = new Map();
+const radioArtResolveCache = new Map();
+const radioArtResolveInflight = new Map();
 
 function getRadioArtResolveKey(station, candidates = []) {
-  var stationIdentity = stationKey(station);
+  const stationIdentity = stationKey(station);
   return stationIdentity || candidates.join("|");
 }
 
@@ -228,9 +228,9 @@ function probeRadioArtUrl(url) {
   if (!url) return Promise.resolve(false);
   if (radioArtProbeCache.has(url)) return Promise.resolve(radioArtProbeCache.get(url));
 
-  return new Promisefunction((resolve) {
-    var img = new Image();
-    var finish = function(ok) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const finish = (ok) => {
       try { img.onload = null; } catch {}
       try { img.onerror = null; } catch {}
       try { img.src = ""; } catch {}
@@ -239,17 +239,17 @@ function probeRadioArtUrl(url) {
       resolve(ok);
     };
 
-    img.onload = function() finish(true);
-    img.onerror = function() finish(false);
+    img.onload = () => finish(true);
+    img.onerror = () => finish(false);
     img.src = url;
   });
 }
 
-export function resolveRadioStationArtUrl(station) {
-  var candidates = getRadioStationArtCandidates(station);
+export async function resolveRadioStationArtUrl(station) {
+  const candidates = getRadioStationArtCandidates(station);
   if (!candidates.length) return null;
 
-  var cacheKey = getRadioArtResolveKey(station, candidates);
+  const cacheKey = getRadioArtResolveKey(station, candidates);
   if (cacheKey && radioArtResolveCache.has(cacheKey)) {
     return radioArtResolveCache.get(cacheKey) || null;
   }
@@ -257,9 +257,9 @@ export function resolveRadioStationArtUrl(station) {
     return radioArtResolveInflight.get(cacheKey);
   }
 
-  var pending = function(() {
-    for (var candidate of candidates) {
-      if (probeRadioArtUrl(candidate)) {
+  const pending = (async () => {
+    for (const candidate of candidates) {
+      if (await probeRadioArtUrl(candidate)) {
         if (cacheKey) {
           radioArtResolveCache.set(cacheKey, candidate);
           pruneMap(radioArtResolveCache, RADIO_ART_RESOLVE_CACHE_MAX);
@@ -273,7 +273,7 @@ export function resolveRadioStationArtUrl(station) {
       pruneMap(radioArtResolveCache, RADIO_ART_RESOLVE_CACHE_MAX);
     }
     return null;
-  })().finallyfunction(() {
+  })().finally(() => {
     if (cacheKey) radioArtResolveInflight.delete(cacheKey);
   });
 
@@ -285,11 +285,11 @@ function normalizeCountryCode(value) {
   return text(value).toUpperCase().slice(0, 2);
 }
 
-var countrySearchAliasMap = null;
+let countrySearchAliasMap = null;
 
 function addCountrySearchAlias(map, alias, code) {
-  var normalizedAlias = normalizeSearchToken(alias);
-  var normalizedCode = normalizeCountryCode(code);
+  const normalizedAlias = normalizeSearchToken(alias);
+  const normalizedCode = normalizeCountryCode(code);
   if (!normalizedAlias || !normalizedCode || map.has(normalizedAlias)) return;
   map.set(normalizedAlias, normalizedCode);
 }
@@ -297,36 +297,36 @@ function addCountrySearchAlias(map, alias, code) {
 function getCountrySearchAliasMap() {
   if (countrySearchAliasMap) return countrySearchAliasMap;
 
-  var map = new Map();
-  var locales = Array.from(new Set([
+  const map = new Map();
+  const locales = Array.from(new Set([
     "en",
     "tr",
-    getConfig().timeLocale,
+    getConfig()?.timeLocale,
     ...(Array.isArray(navigator.languages) ? navigator.languages : []),
     navigator.language
-  ].filter(Boolean).mapfunction((value) String(value).trim())));
+  ].filter(Boolean).map((value) => String(value).trim())));
 
-  var codes = [];
-  for (var first = 65; first <= 90; first += 1) {
-    for (var second = 65; second <= 90; second += 1) {
-      codes.push((String.fromCharCode(first)) + (String.fromCharCode(second)));
+  const codes = [];
+  for (let first = 65; first <= 90; first += 1) {
+    for (let second = 65; second <= 90; second += 1) {
+      codes.push(`${String.fromCharCode(first)}${String.fromCharCode(second)}`);
     }
   }
 
-  for (var code of codes) {
+  for (const code of codes) {
     addCountrySearchAlias(map, code, code);
   }
 
-  for (var locale of locales) {
-    var displayNames = null;
+  for (const locale of locales) {
+    let displayNames = null;
     try {
       displayNames = new Intl.DisplayNames([locale], { type: "region" });
     } catch {
       continue;
     }
 
-    for (var code of codes) {
-      var name = text(displayNames.of(code));
+    for (const code of codes) {
+      const name = text(displayNames.of(code));
       if (!name || name === code) continue;
       addCountrySearchAlias(map, name, code);
     }
@@ -341,13 +341,13 @@ function getCountrySearchAliasMap() {
 }
 
 function inferCountryCodeFromQuery(query) {
-  var normalizedQuery = normalizeSearchToken(query);
+  const normalizedQuery = normalizeSearchToken(query);
   if (!normalizedQuery) return "";
   return getCountrySearchAliasMap().get(normalizedQuery) || "";
 }
 
 function getSearchRequestLimit(value, fallback = 24) {
-  var parsed = Number(value);
+  const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
   return Math.max(1, Math.floor(parsed));
 }
@@ -361,12 +361,12 @@ function getSearchBaseOptions(options = {}) {
 }
 
 function getSearchTaskOptions(options = {}) {
-  var cleanQuery = text(options.query);
-  var cleanCountryCode = normalizeCountryCode(options.countryCode);
-  var cleanCountry = text(options.country);
-  var cleanTag = text(options.tag);
-  var hasExplicitFilters = !!(cleanCountryCode || cleanCountry || cleanTag);
-  var baseOptions = getSearchBaseOptions(options);
+  const cleanQuery = text(options.query);
+  const cleanCountryCode = normalizeCountryCode(options.countryCode);
+  const cleanCountry = text(options.country);
+  const cleanTag = text(options.tag);
+  const hasExplicitFilters = !!(cleanCountryCode || cleanCountry || cleanTag);
+  const baseOptions = getSearchBaseOptions(options);
 
   if (!cleanQuery || hasExplicitFilters) {
     return [{
@@ -378,8 +378,8 @@ function getSearchTaskOptions(options = {}) {
     }];
   }
 
-  var inferredCountryCode = inferCountryCodeFromQuery(cleanQuery);
-  var tasks = [
+  const inferredCountryCode = inferCountryCodeFromQuery(cleanQuery);
+  const tasks = [
     { ...baseOptions, query: cleanQuery }
   ];
 
@@ -399,16 +399,16 @@ function getSearchTaskOptions(options = {}) {
 }
 
 function mergeSearchStationLists(lists = [], limit = Infinity) {
-  var seen = new Set();
-  var out = [];
-  var maxItems = Number.isFinite(limit) ? Math.max(1, Math.floor(limit)) : Infinity;
+  const seen = new Set();
+  const out = [];
+  const maxItems = Number.isFinite(limit) ? Math.max(1, Math.floor(limit)) : Infinity;
 
-  for (var list of lists) {
-    for (var entry of Array.isArray(list) ? list : []) {
-      var station = normalizeRadioStation(entry);
+  for (const list of lists) {
+    for (const entry of Array.isArray(list) ? list : []) {
+      const station = normalizeRadioStation(entry);
       if (!station) continue;
 
-      var key = stationKey(station);
+      const key = stationKey(station);
       if (!key || seen.has(key)) continue;
 
       seen.add(key);
@@ -421,8 +421,8 @@ function mergeSearchStationLists(lists = [], limit = Infinity) {
   return out;
 }
 
-function fetchSearchTaskChunk(taskOptions = {}, limit) {
-  var data = fetchRadioBrowser(buildSearchPath({
+async function fetchSearchTaskChunk(taskOptions = {}, limit) {
+  const data = await fetchRadioBrowser(buildSearchPath({
     ...taskOptions,
     limit: Math.min(RADIO_BROWSER_SEARCH_PAGE_LIMIT, getSearchRequestLimit(limit)),
     offset: Math.max(0, Number(taskOptions.offset) || 0)
@@ -431,20 +431,20 @@ function fetchSearchTaskChunk(taskOptions = {}, limit) {
   return normalizeRadioStations(data);
 }
 
-function fetchSearchTaskResults(taskOptions = {}, limit) {
-  var targetLimit = getSearchRequestLimit(limit);
-  var out = [];
-  var seen = new Set();
-  var offset = Math.max(0, Number(taskOptions.offset) || 0);
+async function fetchSearchTaskResults(taskOptions = {}, limit) {
+  const targetLimit = getSearchRequestLimit(limit);
+  const out = [];
+  const seen = new Set();
+  let offset = Math.max(0, Number(taskOptions.offset) || 0);
 
   while (out.length < targetLimit) {
-    var remaining = targetLimit - out.length;
-    var batchSize = Math.min(RADIO_BROWSER_SEARCH_PAGE_LIMIT, remaining);
-    var batch = fetchSearchTaskChunk({ ...taskOptions, offset }, batchSize);
-    var beforeLength = out.length;
+    const remaining = targetLimit - out.length;
+    const batchSize = Math.min(RADIO_BROWSER_SEARCH_PAGE_LIMIT, remaining);
+    const batch = await fetchSearchTaskChunk({ ...taskOptions, offset }, batchSize);
+    const beforeLength = out.length;
 
-    for (var station of batch) {
-      var key = stationKey(station);
+    for (const station of batch) {
+      const key = stationKey(station);
       if (!key || seen.has(key)) continue;
       seen.add(key);
       out.push(station);
@@ -460,17 +460,17 @@ function fetchSearchTaskResults(taskOptions = {}, limit) {
   return { results: out, exhausted: false };
 }
 
-function fetchAllSearchTaskResults(taskOptions = {}) {
-  var out = [];
-  var seen = new Set();
-  var offset = Math.max(0, Number(taskOptions.offset) || 0);
+async function fetchAllSearchTaskResults(taskOptions = {}) {
+  const out = [];
+  const seen = new Set();
+  let offset = Math.max(0, Number(taskOptions.offset) || 0);
 
   while (true) {
-    var batch = fetchSearchTaskChunk({ ...taskOptions, offset }, RADIO_BROWSER_SEARCH_PAGE_LIMIT);
-    var beforeLength = out.length;
+    const batch = await fetchSearchTaskChunk({ ...taskOptions, offset }, RADIO_BROWSER_SEARCH_PAGE_LIMIT);
+    const beforeLength = out.length;
 
-    for (var station of batch) {
-      var key = stationKey(station);
+    for (const station of batch) {
+      const key = stationKey(station);
       if (!key || seen.has(key)) continue;
       seen.add(key);
       out.push(station);
@@ -485,9 +485,9 @@ function fetchAllSearchTaskResults(taskOptions = {}) {
 }
 
 function hashString(value) {
-  var hash = 0;
-  var input = text(value);
-  for (var i = 0; i < input.length; i += 1) {
+  let hash = 0;
+  const input = text(value);
+  for (let i = 0; i < input.length; i += 1) {
     hash = ((hash << 5) - hash) + input.charCodeAt(i);
     hash |= 0;
   }
@@ -496,10 +496,10 @@ function hashString(value) {
 
 function readLocalSharedStations() {
   try {
-    var raw = localStorage.getItem(LOCAL_SHARED_RADIO_KEY);
+    const raw = localStorage.getItem(LOCAL_SHARED_RADIO_KEY);
     if (!raw) return [];
-    var parsed = JSON.parse(raw);
-    return normalizeRadioStations(Array.isArray(parsed) ? parsed : parsed.stations || [], { source: "manual-local" });
+    const parsed = JSON.parse(raw);
+    return normalizeRadioStations(Array.isArray(parsed) ? parsed : parsed?.stations || [], { source: "manual-local" });
   } catch {
     return [];
   }
@@ -524,7 +524,7 @@ export function stationKey(station) {
 
 function inferNameFromUrl(url) {
   try {
-    var parsed = new URL(url);
+    const parsed = new URL(url);
     return parsed.hostname.replace(/^www\./i, "");
   } catch {
     return "";
@@ -540,30 +540,30 @@ function getUrlPathname(url) {
 }
 
 function isRadioPlaylistUrl(url) {
-  var pathname = getUrlPathname(url);
-  return [".pls", ".m3u", ".asx", ".xspf"].somefunction((ext) pathname.endsWith(ext));
+  const pathname = getUrlPathname(url);
+  return [".pls", ".m3u", ".asx", ".xspf"].some((ext) => pathname.endsWith(ext));
 }
 
 function normalizeTags(value) {
-  var raw = Array.isArray(value) ? value.join(",") : text(value);
+  const raw = Array.isArray(value) ? value.join(",") : text(value);
   if (!raw) return "";
   return raw
     .split(",")
-    .mapfunction((entry) entry.trim())
+    .map((entry) => entry.trim())
     .filter(Boolean)
     .slice(0, 8)
     .join(", ");
 }
 
 function firstText(...values) {
-  for (var value of values) {
-    var out = text(value);
+  for (const value of values) {
+    const out = text(value);
     if (out) return out;
   }
   return "";
 }
 
-var CP1252_EXTENDED_BYTES = new Map([
+const CP1252_EXTENDED_BYTES = new Map([
   ["€", 0x80],
   ["‚", 0x82],
   ["ƒ", 0x83],
@@ -598,17 +598,17 @@ function getMojibakeScore(value) {
 }
 
 function repairUtf8Mojibake(value) {
-  var input = text(value);
+  const input = text(value);
   if (!input || getMojibakeScore(input) === 0) return input;
 
-  var bytes = [];
-  for (var char of input) {
+  const bytes = [];
+  for (const char of input) {
     if (CP1252_EXTENDED_BYTES.has(char)) {
       bytes.push(CP1252_EXTENDED_BYTES.get(char));
       continue;
     }
 
-    var codePoint = char.codePointAt(0);
+    const codePoint = char.codePointAt(0);
     if (codePoint == null || codePoint > 0xff) {
       return input;
     }
@@ -616,7 +616,7 @@ function repairUtf8Mojibake(value) {
   }
 
   try {
-    var repaired = new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(bytes)).trim();
+    const repaired = new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(bytes)).trim();
     return repaired && getMojibakeScore(repaired) < getMojibakeScore(input)
       ? repaired
       : input;
@@ -636,7 +636,7 @@ function parseRadioNowPlaying(rawStation) {
     return { artist: "", title: "", displayText: "", rawText: "" };
   }
 
-  var artist = firstText(
+  const artist = firstText(
     rawStation.currentArtist,
     rawStation.CurrentArtist,
     rawStation.artist,
@@ -646,9 +646,9 @@ function parseRadioNowPlaying(rawStation) {
     rawStation.trackArtist,
     rawStation.TrackArtist
   );
-  var cleanArtist = repairUtf8Mojibake(artist);
+  const cleanArtist = repairUtf8Mojibake(artist);
 
-  var title = firstText(
+  const title = firstText(
     rawStation.currentTitle,
     rawStation.CurrentTitle,
     rawStation.songTitle,
@@ -664,9 +664,9 @@ function parseRadioNowPlaying(rawStation) {
     rawStation.title,
     rawStation.Title
   );
-  var cleanTitle = repairUtf8Mojibake(title);
+  const cleanTitle = repairUtf8Mojibake(title);
 
-  var rawText = repairUtf8Mojibake(cleanRadioNowPlayingText(firstText(
+  const rawText = repairUtf8Mojibake(cleanRadioNowPlayingText(firstText(
     rawStation.nowPlayingText,
     rawStation.NowPlayingText,
     rawStation.nowPlaying,
@@ -682,20 +682,20 @@ function parseRadioNowPlaying(rawStation) {
     return {
       artist: cleanArtist,
       title: cleanTitle,
-      displayText: (cleanArtist) + " - " + (cleanTitle),
-      rawText: rawText || (cleanArtist) + " - " + (cleanTitle)
+      displayText: `${cleanArtist} - ${cleanTitle}`,
+      rawText: rawText || `${cleanArtist} - ${cleanTitle}`
     };
   }
 
   if (rawText) {
-    for (var separator of [" - ", " – ", " — ", " | ", " / ", ": "]) {
-      var parts = rawText.split(separator).mapfunction((part) part.trim()).filter(Boolean);
+    for (const separator of [" - ", " – ", " — ", " | ", " / ", ": "]) {
+      const parts = rawText.split(separator).map((part) => part.trim()).filter(Boolean);
       if (parts.length !== 2) continue;
 
       return {
         artist: parts[0],
         title: parts[1],
-        displayText: (parts[0]) + " - " + (parts[1]),
+        displayText: `${parts[0]} - ${parts[1]}`,
         rawText
       };
     }
@@ -707,34 +707,34 @@ function parseRadioNowPlaying(rawStation) {
 }
 
 export function getRadioTrackArtistLine(station) {
-  var labels = getConfig().languageLabels || {};
-  var nowPlaying = parseRadioNowPlaying(station);
+  const labels = getConfig()?.languageLabels || {};
+  const nowPlaying = parseRadioNowPlaying(station);
   return nowPlaying.displayText
-    || text(station.country || station.Country)
-    || text(station.language || station.Language)
+    || text(station?.country || station?.Country)
+    || text(station?.language || station?.Language)
     || labels.radioDefaultArtist
     || "Internet Radio";
 }
 
 export function getRadioTrackDisplayInfo(station) {
-  var labels = getConfig().languageLabels || {};
-  var stationName = text(
-    station.name || station.Name,
+  const labels = getConfig()?.languageLabels || {};
+  const stationName = text(
+    station?.name || station?.Name,
     labels.unknownTrack || "Unknown Track"
   );
-  var fallbackArtist = text(station.country || station.Country)
-    || text(station.language || station.Language)
+  const fallbackArtist = text(station?.country || station?.Country)
+    || text(station?.language || station?.Language)
     || labels.radioDefaultArtist
     || "Internet Radio";
-  var nowPlaying = parseRadioNowPlaying(station);
-  var buildPlayerTitle = function(titleText) {
-    var cleanTitle = text(titleText);
+  const nowPlaying = parseRadioNowPlaying(station);
+  const buildPlayerTitle = (titleText) => {
+    const cleanTitle = text(titleText);
     if (!cleanTitle) return stationName;
     if (!stationName) return cleanTitle;
     if (cleanTitle.toLocaleLowerCase() === stationName.toLocaleLowerCase()) {
       return cleanTitle;
     }
-    return (cleanTitle) + " • " + (stationName);
+    return `${cleanTitle} • ${stationName}`;
   };
 
   if (nowPlaying.artist && nowPlaying.title) {
@@ -772,7 +772,7 @@ export function getRadioTrackDisplayInfo(station) {
 export function applyRadioNowPlaying(target, rawMetadata = {}) {
   if (!target || typeof target !== "object") return false;
 
-  var normalizedMetadata = rawMetadata && typeof rawMetadata === "object"
+  const normalizedMetadata = rawMetadata && typeof rawMetadata === "object"
     ? {
         ...rawMetadata,
         nowPlayingText: firstText(
@@ -784,8 +784,8 @@ export function applyRadioNowPlaying(target, rawMetadata = {}) {
       }
     : rawMetadata;
 
-  var nowPlayingFromMetadata = parseRadioNowPlaying(normalizedMetadata);
-  var nowPlaying = nowPlayingFromMetadata.displayText
+  const nowPlayingFromMetadata = parseRadioNowPlaying(normalizedMetadata);
+  const nowPlaying = nowPlayingFromMetadata.displayText
     ? nowPlayingFromMetadata
     : parseRadioNowPlaying({
         ...target,
@@ -794,9 +794,9 @@ export function applyRadioNowPlaying(target, rawMetadata = {}) {
 
   if (!nowPlaying.displayText) return false;
 
-  var nextArtist = text(nowPlaying.artist);
-  var nextTitle = text(nowPlaying.title);
-  var nextNowPlayingText = text(nowPlaying.rawText || nowPlaying.displayText);
+  const nextArtist = text(nowPlaying.artist);
+  const nextTitle = text(nowPlaying.title);
+  const nextNowPlayingText = text(nowPlaying.rawText || nowPlaying.displayText);
 
   if (
     text(target.currentArtist || target.CurrentArtist) === nextArtist
@@ -818,16 +818,16 @@ export function applyRadioNowPlaying(target, rawMetadata = {}) {
 }
 
 function asciiFromBytes(bytes = []) {
-  return Array.fromfunction(bytes, (value) String.fromCharCode(value)).join("");
+  return Array.from(bytes, (value) => String.fromCharCode(value)).join("");
 }
 
 function concatUint8Arrays(chunks = []) {
-  var totalLength = chunks.reducefunction((sum, chunk) sum + (chunk.length || 0), 0);
-  var out = new Uint8Array(totalLength);
-  var offset = 0;
+  const totalLength = chunks.reduce((sum, chunk) => sum + (chunk?.length || 0), 0);
+  const out = new Uint8Array(totalLength);
+  let offset = 0;
 
-  for (var chunk of chunks) {
-    if (!chunk.length) continue;
+  for (const chunk of chunks) {
+    if (!chunk?.length) continue;
     out.set(chunk, offset);
     offset += chunk.length;
   }
@@ -854,7 +854,7 @@ function readUint32(bytes, offset) {
 }
 
 function decodeTextBytes(bytes, encodingByte = 3) {
-  if (!bytes.length) return "";
+  if (!bytes?.length) return "";
 
   try {
     switch (encodingByte) {
@@ -866,9 +866,9 @@ function decodeTextBytes(bytes, encodingByte = 3) {
             return new TextDecoder("utf-16le").decode(bytes.slice(2)).replace(/\0+$/g, "").trim();
           }
           if (bytes[0] === 0xfe && bytes[1] === 0xff) {
-            var swapped = new Uint8Array(bytes.length - 2);
-            for (var index = 2; index < bytes.length; index += 2) {
-              swapped[index - 2] = bytes[index + 1] || 0;
+            const swapped = new Uint8Array(bytes.length - 2);
+            for (let index = 2; index < bytes.length; index += 2) {
+              swapped[index - 2] = bytes[index + 1] ?? 0;
               swapped[index - 1] = bytes[index];
             }
             return new TextDecoder("utf-16le").decode(swapped).replace(/\0+$/g, "").trim();
@@ -876,9 +876,9 @@ function decodeTextBytes(bytes, encodingByte = 3) {
         }
         return new TextDecoder("utf-16le").decode(bytes).replace(/\0+$/g, "").trim();
       case 2: {
-        var swapped = new Uint8Array(bytes.length);
-        for (var index = 0; index < bytes.length; index += 2) {
-          swapped[index] = bytes[index + 1] || 0;
+        const swapped = new Uint8Array(bytes.length);
+        for (let index = 0; index < bytes.length; index += 2) {
+          swapped[index] = bytes[index + 1] ?? 0;
           swapped[index + 1] = bytes[index];
         }
         return new TextDecoder("utf-16le").decode(swapped).replace(/\0+$/g, "").trim();
@@ -893,46 +893,46 @@ function decodeTextBytes(bytes, encodingByte = 3) {
 }
 
 function extractNowPlayingTextCandidate(value) {
-  var rawText = cleanRadioNowPlayingText(text(value));
+  const rawText = cleanRadioNowPlayingText(text(value));
   if (!rawText) return "";
 
-  var streamTitleMatch =
+  const streamTitleMatch =
     rawText.match(/StreamTitle=['"]([^'"]*)['"]/i)
     || rawText.match(/title=['"]([^'"]*)['"]/i);
 
-  return cleanRadioNowPlayingText(streamTitleMatch.[1] || rawText);
+  return cleanRadioNowPlayingText(streamTitleMatch?.[1] || rawText);
 }
 
 function parseId3Metadata(data) {
-  var bytes = data instanceof Uint8Array ? data : new Uint8Array(data || []);
+  const bytes = data instanceof Uint8Array ? data : new Uint8Array(data || []);
   if (bytes.length < 10 || asciiFromBytes(bytes.slice(0, 3)) !== "ID3") return null;
 
-  var version = bytes[3];
-  var tagSize = readSynchsafeInteger(bytes, 6);
-  var offset = 10;
-  var endOffset = Math.min(bytes.length, 10 + tagSize);
-  var frames = new Map();
+  const version = bytes[3];
+  const tagSize = readSynchsafeInteger(bytes, 6);
+  let offset = 10;
+  const endOffset = Math.min(bytes.length, 10 + tagSize);
+  const frames = new Map();
 
   while (offset + 10 <= endOffset) {
-    var frameId = asciiFromBytes(bytes.slice(offset, offset + 4));
+    const frameId = asciiFromBytes(bytes.slice(offset, offset + 4));
     if (!frameId.trim() || /^\x00+$/.test(frameId)) break;
 
-    var frameSize = version === 4
+    const frameSize = version === 4
       ? readSynchsafeInteger(bytes, offset + 4)
       : readUint32(bytes, offset + 4);
 
     if (!frameSize || offset + 10 + frameSize > bytes.length) break;
 
-    var payload = bytes.slice(offset + 10, offset + 10 + frameSize);
-    var frameValue = "";
+    const payload = bytes.slice(offset + 10, offset + 10 + frameSize);
+    let frameValue = "";
 
     if (frameId === "TXXX") {
-      var encoding = payload[0] || 3;
-      var decoded = decodeTextBytes(payload.slice(1), encoding);
-      var parts = decoded.split("\u0000").mapfunction((part) part.trim()).filter(Boolean);
+      const encoding = payload[0] ?? 3;
+      const decoded = decodeTextBytes(payload.slice(1), encoding);
+      const parts = decoded.split("\u0000").map((part) => part.trim()).filter(Boolean);
       frameValue = parts[parts.length - 1] || "";
     } else if (frameId.startsWith("T")) {
-      frameValue = decodeTextBytes(payload.slice(1), payload[0] || 3);
+      frameValue = decodeTextBytes(payload.slice(1), payload[0] ?? 3);
     } else {
       frameValue = decodeTextBytes(payload, 3);
     }
@@ -941,24 +941,24 @@ function parseId3Metadata(data) {
     offset += 10 + frameSize;
   }
 
-  var artist = firstText(
+  const artist = firstText(
     frames.get("TPE1"),
     frames.get("TOPE"),
     frames.get("TPE2")
   );
-  var title = firstText(
+  const title = firstText(
     frames.get("TIT2"),
     frames.get("TIT1"),
     frames.get("TIT3")
   );
-  var nowPlayingText = extractNowPlayingTextCandidate(firstText(
+  const nowPlayingText = extractNowPlayingTextCandidate(firstText(
     frames.get("TXXX"),
     frames.get("WXXX"),
     frames.get("TIT2"),
-    Array.from(frames.values()).findfunction((entry) /[-–—|/:]/.test(entry))
+    Array.from(frames.values()).find((entry) => /[-–—|/:]/.test(entry))
   ));
 
-  var parsed = parseRadioNowPlaying({
+  const parsed = parseRadioNowPlaying({
     currentArtist: artist,
     currentTitle: title,
     nowPlayingText
@@ -968,23 +968,23 @@ function parseId3Metadata(data) {
 }
 
 function parseIcyMetadata(metadataText) {
-  var parsed = parseRadioNowPlaying({
+  const parsed = parseRadioNowPlaying({
     nowPlayingText: extractNowPlayingTextCandidate(metadataText)
   });
   return parsed.displayText ? parsed : null;
 }
 
 function parseRadioPlaylistContent(content, sourceUrl) {
-  var raw = text(content);
+  const raw = text(content);
   if (!raw) return "";
 
-  var plsMatch = raw.match(/^File\d+\s*=\s*(.+)$/im);
-  if (plsMatch.[1]) return normalizeUrl(plsMatch[1]);
+  const plsMatch = raw.match(/^File\d+\s*=\s*(.+)$/im);
+  if (plsMatch?.[1]) return normalizeUrl(plsMatch[1]);
 
-  var m3uLine = raw
+  const m3uLine = raw
     .split(/\r?\n/)
-    .mapfunction((line) line.trim())
-    .findfunction((line) line && !line.startsWith("#"));
+    .map((line) => line.trim())
+    .find((line) => line && !line.startsWith("#"));
   if (m3uLine) {
     try {
       return new URL(m3uLine, sourceUrl).toString();
@@ -992,16 +992,16 @@ function parseRadioPlaylistContent(content, sourceUrl) {
     }
   }
 
-  var asxMatch = raw.match(/<ref[^>]+href=["']([^"']+)["']/i);
-  if (asxMatch.[1]) {
+  const asxMatch = raw.match(/<ref[^>]+href=["']([^"']+)["']/i);
+  if (asxMatch?.[1]) {
     try {
       return new URL(asxMatch[1], sourceUrl).toString();
     } catch {
     }
   }
 
-  var xspfMatch = raw.match(/<location>([^<]+)<\/location>/i);
-  if (xspfMatch.[1]) {
+  const xspfMatch = raw.match(/<location>([^<]+)<\/location>/i);
+  if (xspfMatch?.[1]) {
     try {
       return new URL(xspfMatch[1].trim(), sourceUrl).toString();
     } catch {
@@ -1013,18 +1013,18 @@ function parseRadioPlaylistContent(content, sourceUrl) {
 
 function inferRadioStreamFromPlaylistUrl(url) {
   try {
-    var parsed = new URL(url);
-    var origin = parsed.origin;
-    var sid = text(parsed.searchParams.get("sid"), "1");
-    var pathname = parsed.pathname.toLowerCase();
+    const parsed = new URL(url);
+    const origin = parsed.origin;
+    const sid = text(parsed.searchParams.get("sid"), "1");
+    const pathname = parsed.pathname.toLowerCase();
 
     if (/\/listen\.(pls|m3u|asx|xspf)$/.test(pathname)) {
       return [
-        (origin) + "/stream/" + (encodeURIComponent(sid)) + "/",
-        (origin) + "/;stream/" + (encodeURIComponent(sid)),
-        sid === "1" ? (origin) + "/stream" : "",
-        sid === "1" ? (origin) + "/;" : "",
-        sid === "1" ? (origin) + "/" : ""
+        `${origin}/stream/${encodeURIComponent(sid)}/`,
+        `${origin}/;stream/${encodeURIComponent(sid)}`,
+        sid === "1" ? `${origin}/stream` : "",
+        sid === "1" ? `${origin}/;` : "",
+        sid === "1" ? `${origin}/` : ""
       ].filter(Boolean);
     }
   } catch {
@@ -1033,8 +1033,8 @@ function inferRadioStreamFromPlaylistUrl(url) {
   return [];
 }
 
-function unwrapRadioPlaylistUrl(url) {
-  var normalized = normalizeUrl(url);
+async function unwrapRadioPlaylistUrl(url) {
+  const normalized = normalizeUrl(url);
   if (!normalized || !isRadioPlaylistUrl(normalized)) {
     return {
       url: normalized,
@@ -1043,12 +1043,12 @@ function unwrapRadioPlaylistUrl(url) {
   }
 
   try {
-    var response = fetch(normalized, {
+    const response = await fetch(normalized, {
       method: "GET",
       cache: "no-store"
     });
     if (response.ok) {
-      var parsed = parseRadioPlaylistContent(response.text(), normalized);
+      const parsed = parseRadioPlaylistContent(await response.text(), normalized);
       if (parsed) {
         return {
           url: parsed,
@@ -1059,7 +1059,7 @@ function unwrapRadioPlaylistUrl(url) {
   } catch {
   }
 
-  var inferred = inferRadioStreamFromPlaylistUrl(normalized)[0] || normalized;
+  const inferred = inferRadioStreamFromPlaylistUrl(normalized)[0] || normalized;
   return {
     url: inferred,
     metadataReaderDisabled: true
@@ -1068,27 +1068,27 @@ function unwrapRadioPlaylistUrl(url) {
 
 function stopRadioMetadataReader(audio) {
   if (!audio) return;
-  try { audio._radioMetaAbort.abort(); } catch {}
+  try { audio._radioMetaAbort?.abort(); } catch {}
   try {
-    var cancelPromise = audio._radioMetaReader.cancel.();
+    const cancelPromise = audio._radioMetaReader?.cancel?.();
     if (cancelPromise && typeof cancelPromise.catch === "function") {
-      cancelPromise.catchfunction(() {});
+      cancelPromise.catch(() => {});
     }
   } catch {}
   delete audio._radioMetaAbort;
   delete audio._radioMetaReader;
 }
 
-function startIcyMetadataReader(audio, streamUrl, onMetadata) {
+async function startIcyMetadataReader(audio, streamUrl, onMetadata) {
   if (!audio || typeof onMetadata !== "function") return;
 
   stopRadioMetadataReader(audio);
 
-  var abortController = new AbortController();
+  const abortController = new AbortController();
   audio._radioMetaAbort = abortController;
 
   try {
-    var response = fetch(streamUrl, {
+    const response = await fetch(streamUrl, {
       cache: "no-store",
       headers: {
         "Icy-MetaData": "1"
@@ -1096,27 +1096,27 @@ function startIcyMetadataReader(audio, streamUrl, onMetadata) {
       signal: abortController.signal
     });
 
-    var metaInt = Number(response.headers.get("icy-metaint"));
+    const metaInt = Number(response.headers.get("icy-metaint"));
     if (!response.ok || !response.body || !Number.isFinite(metaInt) || metaInt <= 0) {
       stopRadioMetadataReader(audio);
       return;
     }
 
-    var reader = response.body.getReader();
+    const reader = response.body.getReader();
     audio._radioMetaReader = reader;
 
-    var bytesUntilMetadata = metaInt;
-    var metadataBytesRemaining = -1;
-    var metadataChunks = [];
+    let bytesUntilMetadata = metaInt;
+    let metadataBytesRemaining = -1;
+    let metadataChunks = [];
 
     while (!abortController.signal.aborted) {
-      var { value, done } = reader.read();
-      if (done || !value.length) break;
+      const { value, done } = await reader.read();
+      if (done || !value?.length) break;
 
-      var offset = 0;
+      let offset = 0;
       while (offset < value.length && !abortController.signal.aborted) {
         if (bytesUntilMetadata > 0) {
-          var chunkSize = Math.min(bytesUntilMetadata, value.length - offset);
+          const chunkSize = Math.min(bytesUntilMetadata, value.length - offset);
           bytesUntilMetadata -= chunkSize;
           offset += chunkSize;
           if (bytesUntilMetadata > 0) continue;
@@ -1136,15 +1136,15 @@ function startIcyMetadataReader(audio, streamUrl, onMetadata) {
           continue;
         }
 
-        var chunkSize = Math.min(metadataBytesRemaining, value.length - offset);
+        const chunkSize = Math.min(metadataBytesRemaining, value.length - offset);
         metadataChunks.push(value.slice(offset, offset + chunkSize));
         metadataBytesRemaining -= chunkSize;
         offset += chunkSize;
 
         if (metadataBytesRemaining === 0) {
-          var metadataBlock = decodeTextBytes(concatUint8Arrays(metadataChunks), 0);
-          var parsed = parseIcyMetadata(metadataBlock);
-          if (parsed.displayText) onMetadata(parsed);
+          const metadataBlock = decodeTextBytes(concatUint8Arrays(metadataChunks), 0);
+          const parsed = parseIcyMetadata(metadataBlock);
+          if (parsed?.displayText) onMetadata(parsed);
           bytesUntilMetadata = metaInt;
           metadataBytesRemaining = -1;
           metadataChunks = [];
@@ -1165,7 +1165,7 @@ function startIcyMetadataReader(audio, streamUrl, onMetadata) {
 export function normalizeRadioStation(rawStation, { source = "radio-browser" } = {}) {
   if (!rawStation || typeof rawStation !== "object") return null;
 
-  var url = normalizeUrl(
+  const url = normalizeUrl(
     rawStation.url ||
     rawStation.Url ||
     rawStation.StreamUrl ||
@@ -1174,20 +1174,20 @@ export function normalizeRadioStation(rawStation, { source = "radio-browser" } =
     rawStation.url_resolved
   );
 
-  var urlResolved = normalizeUrl(
+  const urlResolved = normalizeUrl(
     rawStation.url_resolved ||
     rawStation.UrlResolved ||
     rawStation.ResolvedUrl ||
     url
   );
-  var stationuuid = text(rawStation.stationuuid || rawStation.stationUuid || rawStation.StationUuid);
-  var name = text(rawStation.name || rawStation.Name, inferNameFromUrl(url || urlResolved));
-  var nowPlaying = parseRadioNowPlaying(rawStation);
+  const stationuuid = text(rawStation.stationuuid || rawStation.stationUuid || rawStation.StationUuid);
+  const name = text(rawStation.name || rawStation.Name, inferNameFromUrl(url || urlResolved));
+  const nowPlaying = parseRadioNowPlaying(rawStation);
 
   if (!name || (!url && !urlResolved && !stationuuid)) return null;
 
-  var station = {
-    id: text(rawStation.id || rawStation.Id, stationuuid || "radio:" + (hashString(url || urlResolved || name))),
+  const station = {
+    id: text(rawStation.id || rawStation.Id, stationuuid || `radio:${hashString(url || urlResolved || name)}`),
     stationuuid,
     name,
     url,
@@ -1234,14 +1234,14 @@ export function normalizeRadioStation(rawStation, { source = "radio-browser" } =
 
 export function normalizeRadioStations(list = [], options = {}) {
   if (!Array.isArray(list)) return [];
-  var seen = new Set();
-  var out = [];
+  const seen = new Set();
+  const out = [];
 
-  for (var entry of list) {
-    var station = normalizeRadioStation(entry, options);
+  for (const entry of list) {
+    const station = normalizeRadioStation(entry, options);
     if (!station) continue;
 
-    var key = stationKey(station);
+    const key = stationKey(station);
     if (!key || seen.has(key)) continue;
     seen.add(key);
     out.push(station);
@@ -1251,29 +1251,29 @@ export function normalizeRadioStations(list = [], options = {}) {
 }
 
 export function getRadioStationSubtitle(station) {
-  var labels = getConfig().languageLabels || {};
+  const labels = getConfig()?.languageLabels || {};
   if (!station) return "";
 
-  var country = text(station.country || station.Country);
-  var state = text(station.state || station.State);
-  var language = text(station.language || station.Language);
-  var codec = text(station.codec || station.Codec);
-  var bitrate = toNumber(station.bitrate || station.Bitrate, 0);
-  var tagsText = text(station.tags || station.Tags || station.TagsText);
+  const country = text(station.country || station.Country);
+  const state = text(station.state || station.State);
+  const language = text(station.language || station.Language);
+  const codec = text(station.codec || station.Codec);
+  const bitrate = toNumber(station.bitrate || station.Bitrate, 0);
+  const tagsText = text(station.tags || station.Tags || station.TagsText);
 
-  var parts = [];
-  var place = [country, state].filter(Boolean).join(" / ");
+  const parts = [];
+  const place = [country, state].filter(Boolean).join(" / ");
   if (place) parts.push(place);
   else if (language) parts.push(language);
 
-  var technical = [
+  const technical = [
     codec,
-    bitrate > 0 ? (bitrate) + " kbps" : ""
+    bitrate > 0 ? `${bitrate} kbps` : ""
   ].filter(Boolean).join(" • ");
   if (technical) parts.push(technical);
 
-  var firstTag = tagsText
-    ? tagsText.split(",").mapfunction((tag) tag.trim()).filter(Boolean)[0]
+  const firstTag = tagsText
+    ? tagsText.split(",").map((tag) => tag.trim()).filter(Boolean)[0]
     : "";
   if (firstTag) parts.push(firstTag);
 
@@ -1281,15 +1281,15 @@ export function getRadioStationSubtitle(station) {
 }
 
 export function toRadioTrack(station) {
-  var normalized = normalizeRadioStation(station);
+  const normalized = normalizeRadioStation(station);
   if (!normalized) return null;
 
-  var labels = getConfig().languageLabels || {};
-  var artistLine = getRadioTrackArtistLine(normalized);
-  var albumLine = normalized.tags || normalized.codec || labels.radioLiveLabel || "LIVE";
+  const labels = getConfig()?.languageLabels || {};
+  const artistLine = getRadioTrackArtistLine(normalized);
+  const albumLine = normalized.tags || normalized.codec || labels.radioLiveLabel || "LIVE";
 
   return {
-    Id: "radio:" + (normalized.stationuuid || hashString(normalized.url || normalized.name)),
+    Id: `radio:${normalized.stationuuid || hashString(normalized.url || normalized.name)}`,
     Name: normalized.name,
     Artists: [artistLine],
     AlbumArtist: artistLine,
@@ -1323,12 +1323,12 @@ export function toRadioTrack(station) {
 }
 
 export function isRadioTrack(track) {
-  return !!(track.IsRadioStation || String(track.Id || "").startsWith("radio:"));
+  return !!(track?.IsRadioStation || String(track?.Id || "").startsWith("radio:"));
 }
 
 function getLocaleCandidates() {
-  var cfg = getConfig() || {};
-  var localeCandidates = [];
+  const cfg = getConfig() || {};
+  const localeCandidates = [];
   if (cfg.timeLocale) localeCandidates.push(cfg.timeLocale);
   if (Array.isArray(navigator.languages)) localeCandidates.push(...navigator.languages);
   if (navigator.language) localeCandidates.push(navigator.language);
@@ -1336,7 +1336,7 @@ function getLocaleCandidates() {
 }
 
 export function guessCountryCode() {
-  var byLang = {
+  const byLang = {
     tr: "TR",
     en: "US",
     de: "DE",
@@ -1344,34 +1344,34 @@ export function guessCountryCode() {
     ru: "RU"
   };
 
-  for (var locale of getLocaleCandidates()) {
-    var value = String(locale).trim();
-    var match = value.match(/[-_]([A-Za-z]{2})$/);
+  for (const locale of getLocaleCandidates()) {
+    const value = String(locale).trim();
+    const match = value.match(/[-_]([A-Za-z]{2})$/);
     if (match) return match[1].toUpperCase();
 
-    var lang = value.split(/[-_]/)[0].toLowerCase();
+    const lang = value.split(/[-_]/)[0]?.toLowerCase();
     if (lang && byLang[lang]) return byLang[lang];
   }
 
   return "TR";
 }
 
-function fetchRadioBrowser(path, options = {}) {
-  var lastError = null;
+async function fetchRadioBrowser(path, options = {}) {
+  let lastError = null;
 
-  for (var base of RADIO_BROWSER_MIRRORS) {
+  for (const base of RADIO_BROWSER_MIRRORS) {
     try {
-      var response = fetch((base) + (path), {
+      const response = await fetch(`${base}${path}`, {
         cache: "no-store",
         ...options
       });
 
       if (!response.ok) {
-        lastError = new Error("HTTP " + (response.status));
+        lastError = new Error(`HTTP ${response.status}`);
         continue;
       }
 
-      return response.json();
+      return await response.json();
     } catch (error) {
       lastError = error;
     }
@@ -1390,11 +1390,11 @@ function buildSearchPath({
   order = "clickcount",
   reverse = true
 } = {}) {
-  var qs = new URLSearchParams();
-  var cleanQuery = text(query);
-  var cleanCountry = normalizeCountryCode(countryCode);
-  var cleanCountryName = text(country);
-  var cleanTag = text(tag);
+  const qs = new URLSearchParams();
+  const cleanQuery = text(query);
+  const cleanCountry = normalizeCountryCode(countryCode);
+  const cleanCountryName = text(country);
+  const cleanTag = text(tag);
 
   if (cleanQuery) qs.set("name", cleanQuery);
   if (cleanCountry) {
@@ -1410,48 +1410,48 @@ function buildSearchPath({
   qs.set("order", order || "clickcount");
   qs.set("reverse", reverse ? "true" : "false");
 
-  return "/json/stations/search?" + (qs.toString());
+  return `/json/stations/search?${qs.toString()}`;
 }
 
-export function searchRadioStationsDetailed(options = {}) {
-  var targetLimit = getSearchRequestLimit(options.limit);
-  var searchTasks = getSearchTaskOptions(options);
-  var taskResults = Promise.allfunction(searchTasks.map((task) fetchSearchTaskResults(task, targetLimit)));
+export async function searchRadioStationsDetailed(options = {}) {
+  const targetLimit = getSearchRequestLimit(options.limit);
+  const searchTasks = getSearchTaskOptions(options);
+  const taskResults = await Promise.all(searchTasks.map((task) => fetchSearchTaskResults(task, targetLimit)));
 
   return {
-    results: mergeSearchStationListsfunction(taskResults.map((entry) entry.results), targetLimit),
-    hasMore: taskResults.somefunction((entry) entry.exhausted === false)
+    results: mergeSearchStationLists(taskResults.map((entry) => entry.results), targetLimit),
+    hasMore: taskResults.some((entry) => entry.exhausted === false)
   };
 }
 
-export function searchRadioStations(options = {}) {
-  var { results } = searchRadioStationsDetailed(options);
+export async function searchRadioStations(options = {}) {
+  const { results } = await searchRadioStationsDetailed(options);
   return results;
 }
 
-export function searchAllRadioStations(options = {}) {
-  var searchTasks = getSearchTaskOptions(options);
-  var taskResults = Promise.allfunction(searchTasks.map((task) fetchAllSearchTaskResults(task)));
+export async function searchAllRadioStations(options = {}) {
+  const searchTasks = getSearchTaskOptions(options);
+  const taskResults = await Promise.all(searchTasks.map((task) => fetchAllSearchTaskResults(task)));
   return mergeSearchStationLists(taskResults);
 }
 
-export function findStationByUrl(url) {
-  var normalizedUrl = normalizeUrl(url);
+export async function findStationByUrl(url) {
+  const normalizedUrl = normalizeUrl(url);
   if (!normalizedUrl) return null;
 
-  var qs = new URLSearchParams({ url: normalizedUrl });
-  var data = fetchRadioBrowser("/json/stations/byurl?" + (qs.toString()));
+  const qs = new URLSearchParams({ url: normalizedUrl });
+  const data = await fetchRadioBrowser(`/json/stations/byurl?${qs.toString()}`);
   return normalizeRadioStations(data)[0] || null;
 }
 
-export function getAutoDiscoveredStations({ limit = 18 } = {}) {
-  var countryCode = guessCountryCode();
-  var safeLimit = Math.max(6, Math.min(40, Number(limit) || 18));
+export async function getAutoDiscoveredStations({ limit = 18 } = {}) {
+  const countryCode = guessCountryCode();
+  const safeLimit = Math.max(6, Math.min(40, Number(limit) || 18));
 
-  var [shared, nearby, popular] = Promise.all([
-    fetchSharedRadioStations().catchfunction(() []),
-    searchRadioStations({ countryCode, limit: safeLimit, order: "clickcount", reverse: true }).catchfunction(() []),
-    searchRadioStations({ limit: safeLimit, order: "votes", reverse: true }).catchfunction(() [])
+  const [shared, nearby, popular] = await Promise.all([
+    fetchSharedRadioStations().catch(() => []),
+    searchRadioStations({ countryCode, limit: safeLimit, order: "clickcount", reverse: true }).catch(() => []),
+    searchRadioStations({ limit: safeLimit, order: "votes", reverse: true }).catch(() => [])
   ]);
 
   return {
@@ -1462,17 +1462,17 @@ export function getAutoDiscoveredStations({ limit = 18 } = {}) {
   };
 }
 
-export function resolveRadioStream(track) {
-  var station = normalizeRadioStation(track, { source: track.Source || "radio" });
+export async function resolveRadioStream(track) {
+  const station = normalizeRadioStation(track, { source: track?.Source || "radio" });
   if (!station) {
-    throw new Error(getConfig().languageLabels.radioInvalidStation || "Gecersiz radyo istasyonu");
+    throw new Error(getConfig()?.languageLabels?.radioInvalidStation || "Gecersiz radyo istasyonu");
   }
 
   if (station.stationuuid) {
     try {
-      var data = fetchRadioBrowser("/json/url/" + (encodeURIComponent(station.stationuuid)));
-      var resolved = unwrapRadioPlaylistUrl(data.url_resolved || data.url);
-      if (resolved.url) {
+      const data = await fetchRadioBrowser(`/json/url/${encodeURIComponent(station.stationuuid)}`);
+      const resolved = await unwrapRadioPlaylistUrl(data?.url_resolved || data?.url);
+      if (resolved?.url) {
         return {
           url: resolved.url,
           station: {
@@ -1486,16 +1486,16 @@ export function resolveRadioStream(track) {
     }
   }
 
-  var fallback = unwrapRadioPlaylistUrl(station.url_resolved || station.url);
-  if (!fallback.url) {
-    throw new Error(getConfig().languageLabels.radioStreamNotFound || "Yayin adresi bulunamadi");
+  const fallback = await unwrapRadioPlaylistUrl(station.url_resolved || station.url);
+  if (!fallback?.url) {
+    throw new Error(getConfig()?.languageLabels?.radioStreamNotFound || "Yayin adresi bulunamadi");
   }
 
-  var matchedStation =
-    findStationByUrl(fallback.url).catchfunction(() null)
-    || findStationByUrl(station.url).catchfunction(() null);
+  const matchedStation =
+    await findStationByUrl(fallback.url).catch(() => null)
+    || await findStationByUrl(station.url).catch(() => null);
 
-  var mergedStation = matchedStation
+  const mergedStation = matchedStation
     ? {
         ...station,
         ...matchedStation,
@@ -1546,15 +1546,15 @@ function toSharedRecord(station) {
 }
 
 function readSharedStationsFromConfig(configData) {
-  for (var key of RADIO_STATIONS_KEYS) {
-    var list = configData.[key];
+  for (const key of RADIO_STATIONS_KEYS) {
+    const list = configData?.[key];
     if (Array.isArray(list)) return normalizeRadioStations(list, { source: "shared" });
   }
   return [];
 }
 
-function fetchJmsConfig() {
-  var response = fetch("/NexusPobreFlix/config", {
+async function fetchJmsConfig() {
+  const response = await fetch("/NexusPobreFlix/config", {
     method: "GET",
     cache: "no-store",
     headers: getEmbyHeaders({
@@ -1566,19 +1566,19 @@ function fetchJmsConfig() {
     if (response.status === 404) {
       setSharedBackendMode("manual");
     }
-    throw new Error("HTTP " + (response.status));
+    throw new Error(`HTTP ${response.status}`);
   }
 
   setSharedBackendMode("NexusPobreFlix");
-  return response.json().thenfunction((data) {
-    var unwrapped = data.cfg;
+  return response.json().then((data) => {
+    const unwrapped = data?.cfg;
     return unwrapped && typeof unwrapped === "object" ? unwrapped : (data || {});
-  }).catchfunction(() ({}));
+  }).catch(() => ({}));
 }
 
-function fetchStaticSharedRadioStations() {
+async function fetchStaticSharedRadioStations() {
   try {
-    var response = fetch(STATIC_SHARED_RADIO_PATH, {
+    const response = await fetch(STATIC_SHARED_RADIO_PATH, {
       method: "GET",
       cache: "no-store"
     });
@@ -1587,17 +1587,17 @@ function fetchStaticSharedRadioStations() {
       return [];
     }
 
-    var parsed = response.json().catchfunction(() []);
-    var list = Array.isArray(parsed) ? parsed : parsed.stations || [];
+    const parsed = await response.json().catch(() => []);
+    const list = Array.isArray(parsed) ? parsed : parsed?.stations || [];
     return normalizeRadioStations(list, { source: "manual-static" });
   } catch {
     return [];
   }
 }
 
-function loadManualSharedStations() {
-  var mergedManual = normalizeRadioStations([
-    ...fetchStaticSharedRadioStations(),
+async function loadManualSharedStations() {
+  const mergedManual = normalizeRadioStations([
+    ...await fetchStaticSharedRadioStations(),
     ...readLocalSharedStations()
   ]);
   musicPlayerState.radioSharedStations = mergedManual;
@@ -1620,7 +1620,7 @@ export function canRemoveSharedRadioStation(station) {
 
 function withContributorMetadata(station) {
   if (!station) return station;
-  var { userId, userName } = getCurrentRadioUser();
+  const { userId, userName } = getCurrentRadioUser();
 
   return {
     ...station,
@@ -1629,10 +1629,10 @@ function withContributorMetadata(station) {
   };
 }
 
-function persistSharedRadioStations(stations) {
-  var sharedRecords = stations.map(toSharedRecord);
+async function persistSharedRadioStations(stations) {
+  const sharedRecords = stations.map(toSharedRecord);
 
-  var response = fetch("/NexusPobreFlix/config", {
+  const response = await fetch("/NexusPobreFlix/config", {
     method: "POST",
     cache: "no-store",
     headers: getEmbyHeaders({
@@ -1645,15 +1645,15 @@ function persistSharedRadioStations(stations) {
   });
 
   if (!response.ok) {
-    var details = response.text().catchfunction(() "");
-    throw new Error(details || "HTTP " + (response.status));
+    const details = await response.text().catch(() => "");
+    throw new Error(details || `HTTP ${response.status}`);
   }
 }
 
-export function fetchSharedRadioStations() {
+export async function fetchSharedRadioStations() {
   try {
-    var configData = fetchJmsConfig();
-    var stations = readSharedStationsFromConfig(configData);
+    const configData = await fetchJmsConfig();
+    const stations = readSharedStationsFromConfig(configData);
     musicPlayerState.radioSharedStations = stations;
     return stations;
   } catch (error) {
@@ -1668,62 +1668,62 @@ export function fetchSharedRadioStations() {
   }
 }
 
-export function saveSharedRadioStation(rawStation) {
-  var station = withContributorMetadata(normalizeRadioStation(rawStation, { source: "shared" }));
+export async function saveSharedRadioStation(rawStation) {
+  const station = withContributorMetadata(normalizeRadioStation(rawStation, { source: "shared" }));
   if (!station) {
-    throw new Error(getConfig().languageLabels.radioInvalidStation || "Gecersiz radyo istasyonu");
+    throw new Error(getConfig()?.languageLabels?.radioInvalidStation || "Gecersiz radyo istasyonu");
   }
 
-  var configData = fetchJmsConfig().catchfunction(() ({}));
+  const configData = await fetchJmsConfig().catch(() => ({}));
   if (sharedBackendMode === "manual") {
-    var localOnly = readLocalSharedStations();
-    var nextLocal = normalizeRadioStations([station, ...localOnly], { source: "manual-local" }).slice(0, 300);
+    const localOnly = readLocalSharedStations();
+    const nextLocal = normalizeRadioStations([station, ...localOnly], { source: "manual-local" }).slice(0, 300);
     writeLocalSharedStations(nextLocal.map(toSharedRecord));
     return loadManualSharedStations();
   }
-  var currentStations = readSharedStationsFromConfig(configData);
-  var merged = normalizeRadioStations([station, ...currentStations], { source: "shared" }).slice(0, 300);
-  persistSharedRadioStations(merged);
+  const currentStations = readSharedStationsFromConfig(configData);
+  const merged = normalizeRadioStations([station, ...currentStations], { source: "shared" }).slice(0, 300);
+  await persistSharedRadioStations(merged);
 
   musicPlayerState.radioSharedStations = merged;
   return merged;
 }
 
-export function removeSharedRadioStation(rawStation) {
-  var station = normalizeRadioStation(rawStation, {
-    source: text(rawStation.source || rawStation.Source, "shared")
+export async function removeSharedRadioStation(rawStation) {
+  const station = normalizeRadioStation(rawStation, {
+    source: text(rawStation?.source || rawStation?.Source, "shared")
   });
   if (!station) {
-    throw new Error(getConfig().languageLabels.radioInvalidStation || "Gecersiz radyo istasyonu");
+    throw new Error(getConfig()?.languageLabels?.radioInvalidStation || "Gecersiz radyo istasyonu");
   }
 
-  var targetKey = stationKey(station);
+  const targetKey = stationKey(station);
   if (!targetKey) {
-    throw new Error(getConfig().languageLabels.radioInvalidStation || "Gecersiz radyo istasyonu");
+    throw new Error(getConfig()?.languageLabels?.radioInvalidStation || "Gecersiz radyo istasyonu");
   }
 
-  var configData = fetchJmsConfig().catchfunction(() ({}));
+  const configData = await fetchJmsConfig().catch(() => ({}));
   if (sharedBackendMode === "manual") {
-    var nextLocal = readLocalSharedStations().filterfunction((item) stationKey(item) !== targetKey);
+    const nextLocal = readLocalSharedStations().filter((item) => stationKey(item) !== targetKey);
     writeLocalSharedStations(nextLocal.map(toSharedRecord));
     return loadManualSharedStations();
   }
 
-  var currentStations = readSharedStationsFromConfig(configData);
-  var nextStations = currentStations.filterfunction((item) stationKey(item) !== targetKey);
-  persistSharedRadioStations(nextStations);
+  const currentStations = readSharedStationsFromConfig(configData);
+  const nextStations = currentStations.filter((item) => stationKey(item) !== targetKey);
+  await persistSharedRadioStations(nextStations);
 
   musicPlayerState.radioSharedStations = nextStations;
   return nextStations;
 }
 
-export function submitStationToDirectory(rawStation) {
-  var station = normalizeRadioStation(rawStation);
+export async function submitStationToDirectory(rawStation) {
+  const station = normalizeRadioStation(rawStation);
   if (!station) {
-    throw new Error(getConfig().languageLabels.radioInvalidStation || "Gecersiz radyo istasyonu");
+    throw new Error(getConfig()?.languageLabels?.radioInvalidStation || "Gecersiz radyo istasyonu");
   }
 
-  var payload = {
+  const payload = {
     name: station.name,
     url: station.url_resolved || station.url,
     homepage: station.homepage,
@@ -1744,13 +1744,13 @@ export function submitStationToDirectory(rawStation) {
 }
 
 export function activateRadioPlaylist(stations, startIndex = 0) {
-  var tracks = normalizeRadioStations(stations)
+  const tracks = normalizeRadioStations(stations)
     .map(toRadioTrack)
     .filter(Boolean);
 
   if (!tracks.length) return -1;
 
-  var nextIndex = Math.max(0, Math.min(tracks.length - 1, Number(startIndex) || 0));
+  const nextIndex = Math.max(0, Math.min(tracks.length - 1, Number(startIndex) || 0));
 
   musicPlayerState.playlist = tracks;
   musicPlayerState.originalPlaylist = [...tracks];
@@ -1769,17 +1769,17 @@ export function cleanupAttachedRadioStream(audio) {
   stopRadioMetadataReader(audio);
 }
 
-export function attachRadioStream(audio, url, options = {}) {
+export async function attachRadioStream(audio, url, options = {}) {
   if (!audio) throw new Error("Audio elementi bulunamadi");
 
-  var onMetadata = typeof options.onMetadata === "function"
+  const onMetadata = typeof options.onMetadata === "function"
     ? options.onMetadata
     : null;
-  var disableMetadataReader = options.disableMetadataReader === true;
+  const disableMetadataReader = options.disableMetadataReader === true;
 
-  var streamUrl = normalizeUrl(url);
+  const streamUrl = normalizeUrl(url);
   if (!streamUrl) {
-    throw new Error(getConfig().languageLabels.radioStreamNotFound || "Yayin adresi bulunamadi");
+    throw new Error(getConfig()?.languageLabels?.radioStreamNotFound || "Yayin adresi bulunamadi");
   }
 
   cleanupAttachedRadioStream(audio);
@@ -1787,7 +1787,7 @@ export function attachRadioStream(audio, url, options = {}) {
   audio.src = streamUrl;
   audio.load();
   if (onMetadata && !disableMetadataReader && !isRadioPlaylistUrl(streamUrl)) {
-    startIcyMetadataReader(audio, streamUrl, onMetadata).catchfunction(() {});
+    startIcyMetadataReader(audio, streamUrl, onMetadata).catch(() => {});
   }
   return { url: streamUrl };
 }

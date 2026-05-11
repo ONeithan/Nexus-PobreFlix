@@ -2,51 +2,51 @@ import { getConfig } from "../config.js";
 import { createCheckbox, createImageTypeSelect, bindCheckboxKontrol, bindTersCheckboxKontrol, createSection } from "./shared.js";
 import { applySettings, applyRawConfig } from "./applySettings.js";
 
-var LYRICS_JOB_KEY = 'jmsf_lyrics_job_running';
+const LYRICS_JOB_KEY = 'jmsf_lyrics_job_running';
 
-var __lyricsLabels = {};
+let __lyricsLabels = {};
 
 function createLyricsSummaryModal(labels) {
     if (document.getElementById('lyrics-summary-modal')) return;
 
-    var modal = document.createElement('div');
+    const modal = document.createElement('div');
     modal.id = 'lyrics-summary-modal';
     modal.className = 'settings-modal';
     modal.style.display = 'none';
 
-    modal.addEventListenerfunction('click', (e) {
+    modal.addEventListener('click', (e) => {
         if (e.target === modal) modal.style.display = 'none';
     });
 
-    var content = document.createElement('div');
+    const content = document.createElement('div');
     content.className = 'settings-modal-content';
     content.style.maxWidth = '500px';
 
-    var close = document.createElement('span');
+    const close = document.createElement('span');
     close.className = 'settings-close';
     close.innerHTML = '&times;';
-    close.onclick = function() modal.style.display = 'none';
+    close.onclick = () => modal.style.display = 'none';
 
-    var h2 = document.createElement('h2');
-    h2.textContent = labels.lyricsSummaryTitle || "Resumo das Letras";
+    const h2 = document.createElement('h2');
+    h2.textContent = labels.lyricsSummaryTitle || "Şarkı Sözleri Özeti";
 
-    var summaryContent = document.createElement('div');
+    const summaryContent = document.createElement('div');
     summaryContent.id = 'lyricsSummaryContent';
     summaryContent.style.lineHeight = '1.6';
     summaryContent.style.margin = '15px 0';
 
-    var note = document.createElement('div');
+    const note = document.createElement('div');
     note.className = 'setting-item';
     note.style.marginTop = '20px';
     note.style.padding = '10px';
     note.style.background = 'rgba(255, 193, 7, 0.1)';
     note.style.borderLeft = '4px solid #ffc107';
-    note.innerHTML = labels.lyricsSyncNote || '<strong>Nota:</strong> Lembre-se de sincronizar as letras!';
+    note.innerHTML = labels.lyricsSyncNote || '<strong>Not:</strong> Şarkı sözlerini senkronize etmeyi unutmayın!';
 
-    var closeBtn = document.createElement('button');
-    closeBtn.textContent = labels.close || 'Fechar';
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = labels.close || 'Kapat';
     closeBtn.style.marginTop = '15px';
-    closeBtn.onclick = function() modal.style.display = 'none';
+    closeBtn.onclick = () => modal.style.display = 'none';
 
     content.append(close, h2, summaryContent, note, closeBtn);
     modal.appendChild(content);
@@ -55,31 +55,44 @@ function createLyricsSummaryModal(labels) {
 
 function showLyricsSummaryModal(summary, labels) {
     createLyricsSummaryModal(labels);
-    var modal = document.getElementById('lyrics-summary-modal');
-    var content = document.getElementById('lyricsSummaryContent');
+    const modal = document.getElementById('lyrics-summary-modal');
+    const content = document.getElementById('lyricsSummaryContent');
 
     if (!modal || !content) return;
 
-    var L = labels || {};
-    var tOk = L.lyricsSummaryOk || "Sucesso";
-    var tSyn = L.lyricsSummarySynced || "Sincronizada";
-    var tPln = L.lyricsSummaryPlain || "Simples";
-    var tFail = L.lyricsSummaryFail || "Falha";
+    const L = labels || {};
+    const tOk = L.lyricsSummaryOk || "Başarılı";
+    const tSyn = L.lyricsSummarySynced || "Senkronize";
+    const tPln = L.lyricsSummaryPlain || "Düz";
+    const tFail = L.lyricsSummaryFail || "Başarısız";
 
-    var ok = (summary.ok || ((summary.synced || 0) + (summary.plain || 0)));
-    var synced = summary.synced || 0;
-    var plain = summary.plain || 0;
-    var fail = summary.fail || 0;
+    const ok = (summary.ok ?? ((summary.synced || 0) + (summary.plain || 0)));
+    const synced = summary.synced || 0;
+    const plain = summary.plain || 0;
+    const fail = summary.fail || 0;
 
-    content.innerHTML = "\n        <div style=\"margin-bottom: 10px;\">\n            " + (tOk) + ": <b style=\"color: #27ae60;\">" + (ok) + "</b>\n        </div>\n        <div style=\"margin-bottom: 10px;\">\n            " + (tSyn) + ": <b>" + (synced) + "</b>\n        </div>\n        <div style=\"margin-bottom: 10px;\">\n            " + (tPln) + ": <b>" + (plain) + "</b>\n        </div>\n        <div style=\"margin-bottom: 10px;\">\n            " + (tFail) + ": <b style=\"color: #e74c3c;\">" + (fail) + "</b>\n        </div>\n    ";
+    content.innerHTML = `
+        <div style="margin-bottom: 10px;">
+            ${tOk}: <b style="color: #27ae60;">${ok}</b>
+        </div>
+        <div style="margin-bottom: 10px;">
+            ${tSyn}: <b>${synced}</b>
+        </div>
+        <div style="margin-bottom: 10px;">
+            ${tPln}: <b>${plain}</b>
+        </div>
+        <div style="margin-bottom: 10px;">
+            ${tFail}: <b style="color: #e74c3c;">${fail}</b>
+        </div>
+    `;
 
     modal.style.display = 'block';
 }
 
 function getJFHeaders() {
-  var token = null, userId = null;
-  try { token = window.ApiClient._serverInfo.AccessToken || window.ApiClient.accessToken.(); } catch (e) {}
-  try { userId = window.ApiClient._serverInfo.UserId || window.ApiClient._currentUserId; } catch (e) {}
+  let token = null, userId = null;
+  try { token = window.ApiClient?._serverInfo?.AccessToken || window.ApiClient?.accessToken?.(); } catch (e) {}
+  try { userId = window.ApiClient?._serverInfo?.UserId || window.ApiClient?._currentUserId; } catch (e) {}
   return {
     'Content-Type': 'application/json',
     ...(token ? { 'X-Emby-Token': token } : {}),
@@ -96,34 +109,34 @@ function readAdminValue(value) {
 function readAdminFromUser(user) {
   if (!user || typeof user !== "object") return null;
 
-  var policy = user.Policy || user.UserPolicy || null;
-  var candidates = [
-    policy.IsAdministrator,
-    policy.IsAdmin,
-    policy.IsAdminUser,
-    user.IsAdministrator,
-    user.isAdministrator,
-    user.IsAdmin,
-    user.isAdmin,
+  const policy = user.Policy || user.UserPolicy || null;
+  const candidates = [
+    policy?.IsAdministrator,
+    policy?.IsAdmin,
+    policy?.IsAdminUser,
+    user?.IsAdministrator,
+    user?.isAdministrator,
+    user?.IsAdmin,
+    user?.isAdmin,
   ];
 
-  for (var candidate of candidates) {
-    var normalized = readAdminValue(candidate);
+  for (const candidate of candidates) {
+    const normalized = readAdminValue(candidate);
     if (normalized !== null) return normalized;
   }
 
   return null;
 }
 
-function detectIsAdmin() {
+async function detectIsAdmin() {
   try {
     if (!window.ApiClient) return true;
 
-    var liveAdmin = readAdminFromUser(window.ApiClient._currentUser);
+    const liveAdmin = readAdminFromUser(window.ApiClient?._currentUser);
     if (liveAdmin !== null) return liveAdmin;
 
-    var user = window.ApiClient.getCurrentUser();
-    var currentAdmin = readAdminFromUser(user);
+    const user = await window.ApiClient.getCurrentUser();
+    const currentAdmin = readAdminFromUser(user);
     return currentAdmin !== false;
   } catch (e) { return true; }
 }
@@ -131,68 +144,68 @@ function detectIsAdmin() {
 function attachLyricsModal(labels) {
   if (document.getElementById('lyrics-modal')) return;
 
-  var modal = document.createElement('div');
+  const modal = document.createElement('div');
   modal.id = 'lyrics-modal';
   modal.className = 'settings-modal';
   modal.style.display = 'none';
 
-  modal.addEventListenerfunction('click', (e) {
+  modal.addEventListener('click', (e) => {
     if (e.target === modal) modal.style.display = 'none';
   });
 
-  var content = document.createElement('div');
+  const content = document.createElement('div');
   content.className = 'settings-modal-content';
   content.style.maxWidth = '680px';
 
-  var close = document.createElement('span');
+  const close = document.createElement('span');
   close.className = 'settings-close';
   close.innerHTML = '&times;';
-  close.onclick = function() modal.style.display = 'none';
+  close.onclick = () => modal.style.display = 'none';
 
-  var h2 = document.createElement('h2');
-  h2.textContent = labels.lyricsHeader || "Letras das Músicas";
+  const h2 = document.createElement('h2');
+  h2.textContent = labels.lyricsHeader || "Şarkı Sözleri";
 
-  var progWrap = document.createElement('div');
+  const progWrap = document.createElement('div');
   progWrap.className = 'setting-item';
-  var progLbl = document.createElement('div');
-  progLbl.textContent = (labels.lyricsProgress || "Progresso") + ": ";
-  var progBarOuter = document.createElement('div');
+  const progLbl = document.createElement('div');
+  progLbl.textContent = (labels.lyricsProgress || "İlerleme") + ": ";
+  const progBarOuter = document.createElement('div');
   progBarOuter.style.height = '10px';
   progBarOuter.style.background = 'rgba(255,255,255,0.15)';
   progBarOuter.style.borderRadius = '6px';
-  var progBar = document.createElement('div');
+  const progBar = document.createElement('div');
   progBar.id = 'lyricsProgressBar';
   progBar.style.height = '10px';
   progBar.style.width = '0%';
   progBar.style.borderRadius = '6px';
   progBar.style.transition = 'width 0.3s ease';
   progBarOuter.appendChild(progBar);
-  var progTxt = document.createElement('div');
+  const progTxt = document.createElement('div');
   progTxt.id = 'lyricsProgressText';
   progTxt.style.marginTop = '6px';
   progWrap.append(progLbl, progBarOuter, progTxt);
 
-  var status = document.createElement('div');
+  const status = document.createElement('div');
   status.id = 'lyricsStatus';
   status.className = 'setting-item';
-  status.textContent = labels.lyricsIdle || "Pronto";
+  status.textContent = labels.lyricsIdle || "Hazır";
 
-  var btnRow = document.createElement('div');
+  const btnRow = document.createElement('div');
   btnRow.className = 'btn-item';
-  var startBtn = document.createElement('button');
+  const startBtn = document.createElement('button');
   startBtn.id = 'lyricsStart';
-  startBtn.textContent = labels.lyricsStart || "Iniciar";
-  var cancelBtn = document.createElement('button');
+  startBtn.textContent = labels.lyricsStart || "Başlat";
+  const cancelBtn = document.createElement('button');
   cancelBtn.id = 'lyricsCancel';
-  cancelBtn.textContent = labels.lyricsCancel || "Cancelar";
+  cancelBtn.textContent = labels.lyricsCancel || "İptal";
   cancelBtn.disabled = true;
   btnRow.append(startBtn, cancelBtn);
 
-  var logWrap = document.createElement('div');
+  const logWrap = document.createElement('div');
   logWrap.className = 'setting-item';
-  var logLabel = document.createElement('div');
+  const logLabel = document.createElement('div');
   logLabel.textContent = labels.lyricsLog || "Log";
-  var logBox = document.createElement('pre');
+  const logBox = document.createElement('pre');
   logBox.id = 'lyricsLog';
   logBox.style.maxHeight = '400px';
   logBox.style.overflow = 'auto';
@@ -203,31 +216,31 @@ function attachLyricsModal(labels) {
   modal.appendChild(content);
   document.body.appendChild(modal);
 
-  startBtn.addEventListenerfunction('click', () startLyricsJob(labels, { startBtn, cancelBtn, status, progBar, progTxt, logBox }));
-  cancelBtn.addEventListenerfunction('click', () cancelLyricsJob(labels));
+  startBtn.addEventListener('click', () => startLyricsJob(labels, { startBtn, cancelBtn, status, progBar, progTxt, logBox }));
+  cancelBtn.addEventListener('click', () => cancelLyricsJob(labels));
 }
 
 function openLyricsModal(labels, opts = {}) {
   __lyricsLabels = labels || {};
-  var { autoStart = false } = opts;
+  const { autoStart = false } = opts;
 
-  var modal = document.getElementById('lyrics-modal');
+  const modal = document.getElementById('lyrics-modal');
   if (!modal) return;
   modal.style.display = 'block';
 
-  var { startBtn, cancelBtn, status, progBar, progTxt, logBox } = grabLyricsModalRefs();
-  function(() {
+  const { startBtn, cancelBtn, status, progBar, progTxt, logBox } = grabLyricsModalRefs();
+  (async () => {
     try {
-      var r = fetch('/NexusPobreFlix/lyrics/status', { headers: getJFHeaders() });
-      var j = r.json();
+      const r = await fetch('/NexusPobreFlix/lyrics/status', { headers: getJFHeaders() });
+      const j = await r.json();
 
-      if (j.running) {
-        status.textContent = (labels.lyricsRunning || "Executando") + (j.currentStep ? " • " + (j.currentStep) : '');
+      if (j?.running) {
+        status.textContent = (labels.lyricsRunning || "Çalışıyor") + (j.currentStep ? ` • ${j.currentStep}` : '');
         if (cancelBtn) cancelBtn.disabled = false;
         if (startBtn)  startBtn.disabled  = true;
 
         if (typeof j.progress === 'number') {
-          var p = Math.max(0, Math.min(100, j.progress));
+          const p = Math.max(0, Math.min(100, j.progress));
           progBar.style.width = p + '%';
           progTxt.textContent = p.toFixed(1) + '%';
         }
@@ -239,25 +252,25 @@ function openLyricsModal(labels, opts = {}) {
         pollLyricsStatus({ startBtn, cancelBtn, status, progBar, progTxt, logBox });
       } else {
         if (autoStart) {
-          startLyricsJob(labels, { startBtn, cancelBtn, status, progBar, progTxt, logBox });
+          await startLyricsJob(labels, { startBtn, cancelBtn, status, progBar, progTxt, logBox });
         } else {
           if (cancelBtn) cancelBtn.disabled = true;
           if (startBtn)  startBtn.disabled  = false;
-          status.textContent = labels.lyricsIdle || "Pronto";
+          status.textContent = labels.lyricsIdle || "Hazır";
         }
       }
     } catch {
       if (cancelBtn) cancelBtn.disabled = true;
       if (startBtn)  startBtn.disabled  = false;
       if (autoStart) {
-        startLyricsJob(labels, { startBtn, cancelBtn, status, progBar, progTxt, logBox });
+        await startLyricsJob(labels, { startBtn, cancelBtn, status, progBar, progTxt, logBox });
       }
     }
   })();
 
-  var jobStamp = getLyricsJobFlag();
+  const jobStamp = getLyricsJobFlag();
   if (jobStamp) {
-    status.textContent = (labels.lyricsRunning || "Executando") + " • " + (labels.lyricsResumeHint || "Tarefa em andamento detectada.");
+    status.textContent = (labels.lyricsRunning || "Çalışıyor") + " • " + (labels.lyricsResumeHint || "Devam eden bir iş var, modal açıldı.");
   }
 }
 
@@ -279,19 +292,19 @@ function getLyricsJobFlag() {
   try { return localStorage.getItem(LYRICS_JOB_KEY); } catch { return null; }
 }
 
-function startLyricsJob(labels, refs) {
-  var { startBtn, cancelBtn, status, progBar, progTxt, logBox } = refs;
+async function startLyricsJob(labels, refs) {
+  const { startBtn, cancelBtn, status, progBar, progTxt, logBox } = refs;
   startBtn.disabled = true;
   cancelBtn.disabled = false;
-  status.textContent = labels.lyricsRunning || "Executando";
+  status.textContent = labels.lyricsRunning || "Çalışıyor";
 
-  var body = {
+  const body = {
     mode: localStorage.getItem('lyricsMode') || 'prefer-synced',
     overwrite: localStorage.getItem('lyricsOverwrite') || 'skip'
   };
 
   try {
-    var r = fetch('/NexusPobreFlix/lyrics/run', {
+    const r = await fetch('/NexusPobreFlix/lyrics/run', {
       method: 'POST',
       headers: getJFHeaders(),
       body: JSON.stringify(body)
@@ -299,8 +312,8 @@ function startLyricsJob(labels, refs) {
     if (!r.ok) {
       startBtn.disabled = false;
       cancelBtn.disabled = true;
-      var j = r.json().catchfunction(()({}));
-      status.textContent = j.error || "Erro: " + (r.status);
+      const j = await r.json().catch(()=>({}));
+      status.textContent = j?.error || `Hata: ${r.status}`;
       return;
     }
     setLyricsJobFlag(true);
@@ -308,30 +321,30 @@ function startLyricsJob(labels, refs) {
   } catch (e) {
     startBtn.disabled = false;
     cancelBtn.disabled = true;
-    status.textContent = 'Erro de rede';
+    status.textContent = 'Ağ hatası';
   }
 }
 
-function cancelLyricsJob(labels) {
-  var { startBtn, cancelBtn, status } = grabLyricsModalRefs();
+async function cancelLyricsJob(labels) {
+  const { startBtn, cancelBtn, status } = grabLyricsModalRefs();
   try {
-    fetch('/NexusPobreFlix/lyrics/cancel', { method: 'POST', headers: getJFHeaders() });
+    await fetch('/NexusPobreFlix/lyrics/cancel', { method: 'POST', headers: getJFHeaders() });
   } catch {}
-  status.textContent = labels.lyricsCancel || 'Cancelar';
+  status.textContent = labels.lyricsCancel || 'İptal';
 }
 
-var lyricsPollTimer = null;
+let lyricsPollTimer = null;
 
-function pollLyricsStatus(refs) {
-    var { startBtn, cancelBtn, status, progBar, progTxt, logBox } = refs;
-    var L = __lyricsLabels || {};
+async function pollLyricsStatus(refs) {
+    const { startBtn, cancelBtn, status, progBar, progTxt, logBox } = refs;
+    const L = __lyricsLabels || {};
 
     clearTimeout(lyricsPollTimer);
 
     try {
-        var r = fetch('/NexusPobreFlix/lyrics/status', { headers: getJFHeaders() });
-        var j = r.json();
-        if (!j.ok) throw new Error('status not ok');
+        const r = await fetch('/NexusPobreFlix/lyrics/status', { headers: getJFHeaders() });
+        const j = await r.json();
+        if (!j?.ok) throw new Error('status not ok');
 
         if (Array.isArray(j.log)) {
             logBox.textContent = j.log.join('\n');
@@ -339,72 +352,72 @@ function pollLyricsStatus(refs) {
         }
 
         if (typeof j.progress === 'number') {
-            var p = Math.max(0, Math.min(100, j.progress));
+            const p = Math.max(0, Math.min(100, j.progress));
             progBar.style.width = p + '%';
             progTxt.textContent = p.toFixed(1) + '%';
         }
 
         if (j.running) {
-            status.textContent = (L.lyricsRunning || "Executando") + (j.currentStep ? " • " + (j.currentStep) : '');
+            status.textContent = (L.lyricsRunning || "Çalışıyor") + (j.currentStep ? ` • ${j.currentStep}` : '');
             if (cancelBtn) cancelBtn.disabled = false;
             if (startBtn) startBtn.disabled = true;
-            lyricsPollTimer = setTimeoutfunction(() pollLyricsStatus(refs), 1500);
+            lyricsPollTimer = setTimeout(() => pollLyricsStatus(refs), 1500);
         } else {
             setLyricsJobFlag(false);
             if (cancelBtn) cancelBtn.disabled = true;
             if (startBtn) startBtn.disabled = false;
-            status.textContent = (L.lyricsCompleted || "Concluído");
+            status.textContent = (L.lyricsCompleted || "Bitti");
 
-            var S = j.summary || null;
+            const S = j.summary || null;
             if (S) {
                 showLyricsSummaryModal(S, L);
             }
         }
     } catch (e) {
-        lyricsPollTimer = setTimeoutfunction(() pollLyricsStatus(refs), 2000);
+        lyricsPollTimer = setTimeout(() => pollLyricsStatus(refs), 2000);
     }
 }
 
 export function createMusicPanel(config, labels) {
-    var panel = document.createElement('div');
+    const panel = document.createElement('div');
     panel.id = 'music-panel';
     panel.className = 'settings-panel';
 
-    var section = createSection(labels.gmmpSettings || 'Configurações do Nexus Music');
+    const section = createSection(labels.gmmpSettings || 'GMMP Ayarları');
 
-    var notificationToggleDiv = document.createElement('div');
+    const notificationToggleDiv = document.createElement('div');
     notificationToggleDiv.className = 'setting-item';
 
-    var enabledGmmpInput = document.createElement('input');
+    const enabledGmmpInput = document.createElement('input');
     enabledGmmpInput.type = 'checkbox';
     enabledGmmpInput.checked = config.enabledGmmp !== false;
     enabledGmmpInput.name = 'enabledGmmp';
     enabledGmmpInput.id = 'enabledGmmp';
 
-    var enabledGmmpLabel = document.createElement('label');
-    enabledGmmpLabel.textContent = labels.enabledGmmp || 'Habilitar Nexus Music';
+    const enabledGmmpLabel = document.createElement('label');
+    enabledGmmpLabel.textContent = labels.enabledGmmp || 'Müzik Çaları Aktif Et';
     enabledGmmpLabel.htmlFor = 'enabledGmmp';
 
-    var notificationToggleInput = document.createElement('input');
+    const notificationToggleInput = document.createElement('input');
     notificationToggleInput.type = 'checkbox';
     notificationToggleInput.checked = config.notificationsEnabled !== false;
     notificationToggleInput.name = 'notificationsEnabled';
     notificationToggleInput.id = 'notificationsEnabled';
 
-    var notificationToggleLabel = document.createElement('label');
-    notificationToggleLabel.textContent = labels.notificationsEnabled || 'Mostrar Notificações:';
+    const notificationToggleLabel = document.createElement('label');
+    notificationToggleLabel.textContent = labels.notificationsEnabled || 'Bildirimleri Göster:';
     notificationToggleLabel.htmlFor = 'notificationsEnabled';
 
     notificationToggleDiv.append(enabledGmmpInput, enabledGmmpLabel, notificationToggleInput, notificationToggleLabel);
     section.appendChild(notificationToggleDiv);
 
-    var albumArtBgDiv = document.createElement('div');
+    const albumArtBgDiv = document.createElement('div');
     albumArtBgDiv.className = 'setting-item';
 
-    var albumArtBgLabel = document.createElement('label');
-    albumArtBgLabel.textContent = labels.useAlbumArtAsBackground || 'Usar capa do álbum como fundo:';
+    const albumArtBgLabel = document.createElement('label');
+    albumArtBgLabel.textContent = labels.useAlbumArtAsBackground || 'Albüm kapağını arka plan yap:';
 
-    var albumArtBgInput = document.createElement('input');
+    const albumArtBgInput = document.createElement('input');
     albumArtBgInput.type = 'checkbox';
     albumArtBgInput.checked = config.useAlbumArtAsBackground || false;
     albumArtBgInput.name = 'useAlbumArtAsBackground';
@@ -415,74 +428,74 @@ export function createMusicPanel(config, labels) {
     albumArtBgDiv.append(albumArtBgLabel, albumArtBgInput);
     section.appendChild(albumArtBgDiv);
 
-    var blurDiv = document.createElement('div');
+    const blurDiv = document.createElement('div');
     blurDiv.className = 'setting-item';
 
-    var blurLabel = document.createElement('label');
-    blurLabel.textContent = labels.backgroundBlur || 'Desfoque do fundo:';
+    const blurLabel = document.createElement('label');
+    blurLabel.textContent = labels.backgroundBlur || 'Arka plan bulanıklığı:';
     blurLabel.htmlFor = 'albumArtBackgroundBlur';
 
-    var blurInput = document.createElement('input');
+    const blurInput = document.createElement('input');
     blurInput.type = 'range';
     blurInput.min = '0';
     blurInput.max = '20';
     blurInput.step = '1';
-    blurInput.value = config.albumArtBackgroundBlur || 10;
+    blurInput.value = config.albumArtBackgroundBlur ?? 10;
     blurInput.name = 'albumArtBackgroundBlur';
     blurInput.id = 'albumArtBackgroundBlur';
 
-    var blurValue = document.createElement('span');
+    const blurValue = document.createElement('span');
     blurValue.className = 'range-value';
     blurValue.textContent = blurInput.value + 'px';
 
-    blurInput.addEventListenerfunction('input', () {
+    blurInput.addEventListener('input', () => {
         blurValue.textContent = blurInput.value + 'px';
     });
 
     blurDiv.append(blurLabel, blurInput, blurValue);
     section.appendChild(blurDiv);
 
-    var opacityDiv = document.createElement('div');
+    const opacityDiv = document.createElement('div');
     opacityDiv.className = 'setting-item';
 
-    var opacityLabel = document.createElement('label');
-    opacityLabel.textContent = labels.backgroundOpacity || 'Opacidade do fundo:';
+    const opacityLabel = document.createElement('label');
+    opacityLabel.textContent = labels.backgroundOpacity || 'Arka plan şeffaflığı:';
     opacityLabel.htmlFor = 'albumArtBackgroundOpacity';
 
-    var opacityInput = document.createElement('input');
+    const opacityInput = document.createElement('input');
     opacityInput.type = 'range';
     opacityInput.min = '0';
     opacityInput.max = '1';
     opacityInput.step = '0.1';
-    opacityInput.value = config.albumArtBackgroundOpacity || 0.5;
+    opacityInput.value = config.albumArtBackgroundOpacity ?? 0.5;
     opacityInput.name = 'albumArtBackgroundOpacity';
     opacityInput.id = 'albumArtBackgroundOpacity';
 
-    var opacityValue = document.createElement('span');
+    const opacityValue = document.createElement('span');
     opacityValue.className = 'range-value';
     opacityValue.textContent = opacityInput.value;
 
-    opacityInput.addEventListenerfunction('input', () {
+    opacityInput.addEventListener('input', () => {
         opacityValue.textContent = opacityInput.value;
     });
 
     opacityDiv.append(opacityLabel, opacityInput, opacityValue);
     section.appendChild(opacityDiv);
 
-    var styleDiv = document.createElement('div');
+    const styleDiv = document.createElement('div');
     styleDiv.className = 'setting-item';
-    var styleLabel = document.createElement('label');
-    styleLabel.textContent = labels.playerStyle || 'Estilo do Player:';
-    var styleSelect = document.createElement('select');
+    const styleLabel = document.createElement('label');
+    styleLabel.textContent = labels.playerStyle || 'Player Stili:';
+    const styleSelect = document.createElement('select');
     styleSelect.name = 'playerStyle';
 
-    var styles = [
-        { value: 'player', label: labels.estiloHorizontal || 'Estilo Horizontal' },
-        { value: 'newplayer', label: labels.estiloVertical || 'Estilo Vertical' }
+    const styles = [
+        { value: 'player', label: labels.yatayStil || 'Yatay Stil' },
+        { value: 'newplayer', label: labels.dikeyStil || 'Dikey Stil' }
     ];
 
-    styles.forEach(function(style) {
-        var option = document.createElement('option');
+    styles.forEach(style => {
+        const option = document.createElement('option');
         option.value = style.value;
         option.textContent = style.label;
         if (style.value === (config.playerStyle || 'player')) {
@@ -496,20 +509,20 @@ export function createMusicPanel(config, labels) {
     styleDiv.append(styleLabel, styleSelect);
     section.appendChild(styleDiv);
 
-    var themeDiv = document.createElement('div');
+    const themeDiv = document.createElement('div');
     themeDiv.className = 'setting-item';
-    var themeLabel = document.createElement('label');
-    themeLabel.textContent = labels.playerTheme || 'Tema do Player:';
-    var themeSelect = document.createElement('select');
+    const themeLabel = document.createElement('label');
+    themeLabel.textContent = labels.playerTheme || 'Player Teması:';
+    const themeSelect = document.createElement('select');
     themeSelect.name = 'playerTheme';
 
-    var themes = [
-        { value: 'dark', label: labels.darkTheme || 'Tema Escuro' },
-        { value: 'light', label: labels.lightTheme || 'Tema Claro' }
+    const themes = [
+        { value: 'dark', label: labels.darkTheme || 'Karanlık Tema' },
+        { value: 'light', label: labels.lightTheme || 'Aydınlık Tema' }
     ];
 
-    themes.forEach(function(theme) {
-        var option = document.createElement('option');
+    themes.forEach(theme => {
+        const option = document.createElement('option');
         option.value = theme.value;
         option.textContent = theme.label;
         if (theme.value === (config.playerTheme || 'dark')) {
@@ -523,14 +536,15 @@ export function createMusicPanel(config, labels) {
     themeDiv.append(themeLabel, themeSelect);
     section.appendChild(themeDiv);
 
-    var dateLocaleDiv = document.createElement('div');
+    const dateLocaleDiv = document.createElement('div');
     dateLocaleDiv.className = 'setting-item';
-    var dateLocaleLabel = document.createElement('label');
-    dateLocaleLabel.textContent = labels.dateLocale || 'Formato de Data:';
-    var dateLocaleSelect = document.createElement('select');
+    const dateLocaleLabel = document.createElement('label');
+    dateLocaleLabel.textContent = labels.dateLocale || 'Tarih Formatı:';
+    const dateLocaleSelect = document.createElement('select');
     dateLocaleSelect.name = 'dateLocale';
 
-    var locales = [
+    const locales = [
+    { value: 'tr-TR', label: '🇹🇷 Türkçe' },
     { value: 'en-US', label: '🇺🇸 English (US)' },
     { value: 'en-GB', label: '🇬🇧 English (UK)' },
     { value: 'de-DE', label: '🇩🇪 Deutsch' },
@@ -552,8 +566,8 @@ export function createMusicPanel(config, labels) {
     { value: 'fa-IR', label: '🇮🇷 فارسی' },
 ];
 
-    locales.forEach(function(locale) {
-        var option = document.createElement('option');
+    locales.forEach(locale => {
+        const option = document.createElement('option');
         option.value = locale.value;
         option.textContent = locale.label;
         if (locale.value === config.dateLocale) {
@@ -567,25 +581,25 @@ export function createMusicPanel(config, labels) {
     dateLocaleDiv.append(dateLocaleLabel, dateLocaleSelect);
     section.appendChild(dateLocaleDiv);
 
-    var musicLimitDiv = document.createElement('div');
+    const musicLimitDiv = document.createElement('div');
     musicLimitDiv.className = 'setting-item';
-    var musicLimitLabel = document.createElement('label');
-    musicLimitLabel.textContent = labels.limiteMusica || 'Itens na Playlist:';
-    var musicLimitInput = document.createElement('input');
+    const musicLimitLabel = document.createElement('label');
+    musicLimitLabel.textContent = labels.muziklimit || 'Oynatma Listesi Öğe Sayısı:';
+    const musicLimitInput = document.createElement('input');
     musicLimitInput.type = 'number';
-    musicLimitInput.value = config.limiteMusica || 30;
-    musicLimitInput.name = 'limiteMusica';
+    musicLimitInput.value = config.muziklimit || 30;
+    musicLimitInput.name = 'muziklimit';
     musicLimitInput.min = 1;
     musicLimitLabel.htmlFor = 'musicLimitInput';
     musicLimitInput.id = 'musicLimitInput';
     musicLimitDiv.append(musicLimitLabel, musicLimitInput);
     section.appendChild(musicLimitDiv);
 
-    var nextTrackDiv = document.createElement('div');
+    const nextTrackDiv = document.createElement('div');
     nextTrackDiv.className = 'setting-item';
-    var nextTrackLabel = document.createElement('label');
-    nextTrackLabel.textContent = labels.nextTrack || 'Limite de Músicas da Fila';
-    var nextTrackInput = document.createElement('input');
+    const nextTrackLabel = document.createElement('label');
+    nextTrackLabel.textContent = labels.nextTrack || 'Sıradaki Şarkılar Limiti';
+    const nextTrackInput = document.createElement('input');
     nextTrackInput.type = 'number';
     nextTrackInput.value = config.nextTrack || 30;
     nextTrackInput.name = 'nextTrack';
@@ -595,95 +609,57 @@ export function createMusicPanel(config, labels) {
     nextTrackDiv.append(nextTrackLabel, nextTrackInput);
     section.appendChild(nextTrackDiv);
 
-    var songLimitDiv = document.createElement('div');
+    const songLimitDiv = document.createElement('div');
     songLimitDiv.className = 'setting-item';
-    var songLimitLabel = document.createElement('label');
-    songLimitLabel.textContent = labels.limiteFaixa || 'Músicas por página:';
-    var songLimitInput = document.createElement('input');
+    const songLimitLabel = document.createElement('label');
+    songLimitLabel.textContent = labels.sarkilimit || 'Sayfa başına şarkı sayısı:';
+    const songLimitInput = document.createElement('input');
     songLimitInput.type = 'number';
-    songLimitInput.value = config.limiteFaixa || 200;
-    songLimitInput.name = 'limiteFaixa';
+    songLimitInput.value = config.sarkilimit || 200;
+    songLimitInput.name = 'sarkilimit';
     songLimitInput.min = 1;
     songLimitLabel.htmlFor = 'songLimitInput';
     songLimitInput.id = 'songLimitInput';
     songLimitDiv.append(songLimitLabel, songLimitInput);
     section.appendChild(songLimitDiv);
 
-    var albumLimitDiv = document.createElement('div');
+    const albumLimitDiv = document.createElement('div');
     albumLimitDiv.className = 'setting-item';
-    var albumLimitLabel = document.createElement('label');
-    albumLimitLabel.textContent = labels.limiteAlbum || 'Álbuns por página:';
-    var albumLimitInput = document.createElement('input');
+    const albumLimitLabel = document.createElement('label');
+    albumLimitLabel.textContent = labels.albumlimit || 'Sayfa başına albüm sayısı:';
+    const albumLimitInput = document.createElement('input');
     albumLimitInput.type = 'number';
-    albumLimitInput.value = config.limiteAlbum || 20;
-    albumLimitInput.name = 'limiteAlbum';
+    albumLimitInput.value = config.albumlimit || 20;
+    albumLimitInput.name = 'albumlimit';
     albumLimitInput.min = 1;
     albumLimitLabel.htmlFor = 'albumLimitInput';
     albumLimitInput.id = 'albumLimitInput';
     albumLimitDiv.append(albumLimitLabel, albumLimitInput);
     section.appendChild(albumLimitDiv);
 
-    var id3LimitDiv = document.createElement('div');
+    const id3LimitDiv = document.createElement('div');
     id3LimitDiv.className = 'setting-item';
-    var id3LimitLabel = document.createElement('label');
-    id3LimitLabel.textContent = labels.limiteId3 || 'Limite de Grupos:';
-    id3LimitLabel.title = labels.limiteId3Title || 'Limite de consultas ID3 simultâneas.';
-    var id3LimitInput = document.createElement('input');
+    const id3LimitLabel = document.createElement('label');
+    id3LimitLabel.textContent = labels.id3limit || 'Gruplama Limiti:';
+    id3LimitLabel.title = labels.id3limitTitle || 'Id3 etiket sorgulamanın eş zamanlı olarak kaç tane yapılacağı belirleyen değer';
+    const id3LimitInput = document.createElement('input');
     id3LimitInput.type = 'number';
-    id3LimitInput.value = config.limiteId3 || 5;
-    id3LimitInput.name = 'limiteId3';
+    id3LimitInput.value = config.id3limit || 5;
+    id3LimitInput.name = 'id3limit';
     id3LimitInput.min = 1;
     id3LimitInput.max = 200;
-    id3LimitInput.title = labels.limiteId3Title || 'Id3 etiket sorgulamanın eş zamanlı olarak kaç tane yapılacağı belirleyen değer';
+    id3LimitInput.title = labels.id3limitTitle || 'Id3 etiket sorgulamanın eş zamanlı olarak kaç tane yapılacağı belirleyen değer';
     id3LimitLabel.htmlFor = 'id3LimitInput';
     id3LimitInput.id = 'id3LimitInput';
     id3LimitDiv.append(id3LimitLabel, id3LimitInput);
     section.appendChild(id3LimitDiv);
 
-    var cacheTagsDiv = document.createElement('div');
-    cacheTagsDiv.className = 'setting-item';
-    var cacheTagsLabel = document.createElement('label');
-    cacheTagsLabel.textContent = labels.limiteCacheTagsId3 || 'Cache de Tags:';
-    var cacheTagsInput = document.createElement('input');
-    cacheTagsInput.type = 'number';
-    cacheTagsInput.value = config.limiteCacheTagsId3 || 500;
-    cacheTagsInput.name = 'limiteCacheTagsId3';
-    cacheTagsInput.min = 50;
-    cacheTagsInput.id = 'cacheTagsInput';
-    cacheTagsDiv.append(cacheTagsLabel, cacheTagsInput);
-    section.appendChild(cacheTagsDiv);
-
-    var cacheImagesDiv = document.createElement('div');
-    cacheImagesDiv.className = 'setting-item';
-    var cacheImagesLabel = document.createElement('label');
-    cacheImagesLabel.textContent = labels.limiteCacheImagensId3 || 'Cache de Imagens:';
-    var cacheImagesInput = document.createElement('input');
-    cacheImagesInput.type = 'number';
-    cacheImagesInput.value = config.limiteCacheImagensId3 || 200;
-    cacheImagesInput.name = 'limiteCacheImagensId3';
-    cacheImagesInput.min = 20;
-    cacheImagesInput.id = 'cacheImagesInput';
-    cacheImagesDiv.append(cacheImagesLabel, cacheImagesInput);
-    section.appendChild(cacheImagesDiv);
-
-    var useBase64Div = document.createElement('div');
-    useBase64Div.className = 'setting-item';
-    var useBase64Label = document.createElement('label');
-    useBase64Label.textContent = labels.usarBase64ImagensId3 || 'Usar Base64 para Imagens:';
-    var useBase64Input = document.createElement('input');
-    useBase64Input.type = 'checkbox';
-    useBase64Input.checked = config.usarBase64ImagensId3 === true;
-    useBase64Input.name = 'usarBase64ImagensId3';
-    useBase64Input.id = 'useBase64Input';
-    useBase64Div.append(useBase64Label, useBase64Input);
-    section.appendChild(useBase64Div);
-
-    var maxExcludeIdsForUriDiv = document.createElement('div');
+    const maxExcludeIdsForUriDiv = document.createElement('div');
     maxExcludeIdsForUriDiv.className = 'setting-item';
-    var maxExcludeIdsForUriLabel = document.createElement('label');
-    maxExcludeIdsForUriLabel.textContent = labels.maxExcludeIdsForUri || 'Máximo de IDs';
-    maxExcludeIdsForUriLabel.title = labels.maxExcludeIdsForTitle || 'Limite para evitar URLs gigantes na API. Recomendado: 50-200.';
-    var maxExcludeIdsForUriInput = document.createElement('input');
+    const maxExcludeIdsForUriLabel = document.createElement('label');
+    maxExcludeIdsForUriLabel.textContent = labels.maxExcludeIdsForUri || 'Maksimum ID Sayısı';
+    maxExcludeIdsForUriLabel.title = labels.maxExcludeIdsForTitle || 'Bu değer, Liste yenilemek için API isteğinde aynı anda gönderilebilecek "Hariç Tutulacak Geçmiş Liste Sayısı" listesinin maksimum uzunluğunu belirler. Büyük değerler sunucu isteklerinin boyutunu aşarak hatalara neden olabilir. İsteklerin hatasız çalışması için genellikle 50-200 arası bir değer önerilir.';
+    const maxExcludeIdsForUriInput = document.createElement('input');
     maxExcludeIdsForUriInput.type = 'number';
     maxExcludeIdsForUriInput.value = config.maxExcludeIdsForUri || 100;
     maxExcludeIdsForUriInput.title = labels.maxExcludeIdsForTitle || 'Bu değer, Liste yenilemek için API isteğinde aynı anda gönderilebilecek "Hariç Tutulacak Geçmiş Liste Sayısı" listesinin maksimum uzunluğunu belirler. Büyük değerler sunucu isteklerinin boyutunu aşarak hatalara neden olabilir. İsteklerin hatasız çalışması için genellikle 50-200 arası bir değer önerilir.';
@@ -694,56 +670,56 @@ export function createMusicPanel(config, labels) {
     maxExcludeIdsForUriDiv.append(maxExcludeIdsForUriLabel, maxExcludeIdsForUriInput);
     section.appendChild(maxExcludeIdsForUriDiv);
 
-    var historyLimitDiv = document.createElement('div');
+    const historyLimitDiv = document.createElement('div');
     historyLimitDiv.className = 'setting-item';
-    var historyLimitLabel = document.createElement('label');
-    historyLimitLabel.textContent = labels.limiteHistorico || 'Ignorar Histórico';
-    historyLimitLabel.title = labels.limiteHistoricoTitle || 'Evita repetir músicas já tocadas recentemente.';
-    var historyLimitInput = document.createElement('input');
+    const historyLimitLabel = document.createElement('label');
+    historyLimitLabel.textContent = labels.historylimit || 'Hariç Tutulacak Geçmiş Liste Sayısı';
+    historyLimitLabel.title = labels.historylimitTitle || 'Yeni listelere, geçmiş listeler içerisindeki şarkıları dahil etmemek için limit belirleyin';
+    const historyLimitInput = document.createElement('input');
     historyLimitInput.type = 'number';
-    historyLimitInput.value = config.limiteHistorico || 10;
-    historyLimitInput.name = 'limiteHistorico';
-    historyLimitInput.title = labels.limiteHistoricoTitle || 'Yeni listelere, geçmiş listeler içerisindeki şarkıları dahil etmemek için limit belirleyin';
+    historyLimitInput.value = config.historylimit || 10;
+    historyLimitInput.name = 'historylimit';
+    historyLimitInput.title = labels.historylimitTitle || 'Yeni listelere, geçmiş listeler içerisindeki şarkıları dahil etmemek için limit belirleyin';
     historyLimitInput.min = 1;
     historyLimitLabel.htmlFor = 'historyLimitInput';
     historyLimitInput.id = 'historyLimitInput';
     historyLimitDiv.append(historyLimitLabel, historyLimitInput);
     section.appendChild(historyLimitDiv);
 
-    var groupLimitDiv = document.createElement('div');
+    const groupLimitDiv = document.createElement('div');
     groupLimitDiv.className = 'setting-item';
-    var groupLimitLabel = document.createElement('label');
-    groupLimitLabel.textContent = labels.limiteLote || 'Limite de Lote:';
-    groupLimitLabel.title = labels.limiteLoteTitle || 'Limite de itens por lote na playlist.';
-    var groupLimitInput = document.createElement('input');
+    const groupLimitLabel = document.createElement('label');
+    groupLimitLabel.textContent = labels.gruplimit || 'Gruplama Limiti:';
+    groupLimitLabel.title = labels.gruplimitTitle || 'Mevcut oynatma listesine ekleme yapılırken gruplama limiti';
+    const groupLimitInput = document.createElement('input');
     groupLimitInput.type = 'number';
-    groupLimitInput.value = config.limiteLote || 100;
-    groupLimitInput.name = 'limiteLote';
+    groupLimitInput.value = config.gruplimit || 100;
+    groupLimitInput.name = 'gruplimit';
     groupLimitInput.min = 1;
     groupLimitInput.max = 400;
-    groupLimitInput.title = labels.limiteLoteTitle || 'Mevcut oynatma listesine ekleme yapılırken gruplama limiti';
+    groupLimitInput.title = labels.gruplimitTitle || 'Mevcut oynatma listesine ekleme yapılırken gruplama limiti';
     groupLimitLabel.htmlFor = 'groupLimitInput';
     groupLimitInput.id = 'groupLimitInput';
     groupLimitDiv.append(groupLimitLabel, groupLimitInput);
     section.appendChild(groupLimitDiv);
 
-    var nextTracksSourceDiv = document.createElement('div');
+    const nextTracksSourceDiv = document.createElement('div');
     nextTracksSourceDiv.className = 'setting-item';
-    var nextTracksSourceLabel = document.createElement('label');
-    nextTracksSourceLabel.textContent = labels.nextTracksSource || 'Fonte da Fila:';
-    var nextTracksSourceSelect = document.createElement('select');
+    const nextTracksSourceLabel = document.createElement('label');
+    nextTracksSourceLabel.textContent = labels.nextTracksSource || 'Sıradaki Şarkılar Kaynağı:';
+    const nextTracksSourceSelect = document.createElement('select');
     nextTracksSourceSelect.name = 'nextTracksSource';
 
-    var sources = [
-        { value: 'playlist', label: labels.playlist || 'Playlist' },
-        { value: 'top', label: labels.topTracks || 'Mais Tocadas' },
-        { value: 'recent', label: labels.recentTracks || 'Recentes' },
-        { value: 'latest', label: labels.latestTracks || 'Novidades' },
-        { value: 'favorites', label: labels.favorites || 'Favoritos' }
+    const sources = [
+        { value: 'playlist', label: labels.playlist || 'Oynatma Listesi' },
+        { value: 'top', label: labels.topTracks || 'En Çok Dinlenenler' },
+        { value: 'recent', label: labels.recentTracks || 'Son Dinlenenler' },
+        { value: 'latest', label: labels.latestTracks || 'Son Eklenenler' },
+        { value: 'favorites', label: labels.favorites || 'Favorilerim' }
     ];
 
-    sources.forEach(function(source) {
-    var option = document.createElement('option');
+    sources.forEach(source => {
+    const option = document.createElement('option');
     option.value = source.value;
     option.textContent = source.label;
     if (source.value === (config.nextTracksSource || 'playlist')) {
@@ -757,11 +733,11 @@ export function createMusicPanel(config, labels) {
     nextTracksSourceDiv.append(nextTracksSourceLabel, nextTracksSourceSelect);
     section.appendChild(nextTracksSourceDiv);
 
-    var topTrackDiv = document.createElement('div');
+    const topTrackDiv = document.createElement('div');
     topTrackDiv.className = 'setting-item';
-    var topTrackLabel = document.createElement('label');
-    topTrackLabel.textContent = labels.topLimit || 'Limite da Pool';
-    var topTrackInput = document.createElement('input');
+    const topTrackLabel = document.createElement('label');
+    topTrackLabel.textContent = labels.topLimit || 'Sıradaki Şarkılar Limiti';
+    const topTrackInput = document.createElement('input');
     topTrackInput.type = 'number';
     topTrackInput.value = config.topTrack || 30;
     topTrackInput.name = 'topTrack';
@@ -773,74 +749,74 @@ export function createMusicPanel(config, labels) {
 
     panel.appendChild(section);
 
-    var lyricsSection = createSection(labels.lyricsHeader || "Letras das Músicas");
-    var adminWarn = document.createElement('div');
+    const lyricsSection = createSection(labels.lyricsHeader || "Şarkı Sözleri");
+    const adminWarn = document.createElement('div');
     adminWarn.className = 'setting-item';
     adminWarn.style.display = 'none';
     adminWarn.style.color = '#c0392b';
-    adminWarn.textContent = labels.lyricsAdminOnly || "Apenas administradores podem usar.";
+    adminWarn.textContent = labels.lyricsAdminOnly || "Sadece yöneticiler kullanabilir";
     lyricsSection.appendChild(adminWarn);
 
-    var modeDiv = document.createElement('div');
+    const modeDiv = document.createElement('div');
     modeDiv.className = 'setting-item';
-    var modeLabel = document.createElement('label');
-    modeLabel.textContent = labels.lyricsType || "Tipo de Download";
+    const modeLabel = document.createElement('label');
+    modeLabel.textContent = labels.lyricsType || "İndirme Türü";
     modeLabel.htmlFor = 'lyricsMode';
-    var modeSelect = document.createElement('select');
+    const modeSelect = document.createElement('select');
     modeSelect.name = 'lyricsMode';
     modeSelect.id = 'lyricsMode';
 
     [
-      { v: 'synced', t: labels.lyricsSynced || 'Sincronizada (.lrc)' },
-      { v: 'plain', t: labels.lyricsPlain || 'Simples (.txt)' },
-      { v: 'prefer-synced', t: labels.lyricsPreferSynced || 'Prefere Sincronizada' },
-      { v: 'prefer-plain', t: labels.lyricsPreferPlain || 'Prefere Simples' },
-    ].forEach(function(o) {
-      var opt = document.createElement('option');
+      { v: 'synced', t: labels.lyricsSynced || 'Senkronize (.lrc)' },
+      { v: 'plain', t: labels.lyricsPlain || 'Düz Metin (.txt)' },
+      { v: 'prefer-synced', t: labels.lyricsPreferSynced || 'Önce Senkronize, yoksa Düz' },
+      { v: 'prefer-plain', t: labels.lyricsPreferPlain || 'Önce Düz, yoksa Senkronize' },
+    ].forEach(o => {
+      const opt = document.createElement('option');
       opt.value = o.v;
       opt.textContent = o.t;
       if ((localStorage.getItem('lyricsMode') || 'prefer-synced') === o.v) opt.selected = true;
       modeSelect.appendChild(opt);
     });
-    modeSelect.addEventListener('change', function(e) localStorage.setItem('lyricsMode', e.target.value));
+    modeSelect.addEventListener('change', e => localStorage.setItem('lyricsMode', e.target.value));
     modeDiv.append(modeLabel, modeSelect);
     lyricsSection.appendChild(modeDiv);
 
-    var owDiv = document.createElement('div');
+    const owDiv = document.createElement('div');
     owDiv.className = 'setting-item';
-    var owLabel = document.createElement('label');
-    owLabel.textContent = labels.lyricsOverwrite || "Se o arquivo existir";
+    const owLabel = document.createElement('label');
+    owLabel.textContent = labels.lyricsOverwrite || "Eğer dosya varsa";
     owLabel.htmlFor = 'lyricsOverwrite';
-    var owSelect = document.createElement('select');
+    const owSelect = document.createElement('select');
     owSelect.name = 'lyricsOverwrite';
     owSelect.id = 'lyricsOverwrite';
 
     [
-      { v: 'skip', t: labels.lyricsOverwriteSkip || 'Pular (recomendado)' },
-      { v: 'replace', t: labels.lyricsOverwriteReplace || 'Substituir' },
-    ].forEach(function(o) {
-      var opt = document.createElement('option');
+      { v: 'skip', t: labels.lyricsOverwriteSkip || 'Atla (önerilen)' },
+      { v: 'replace', t: labels.lyricsOverwriteReplace || 'Üzerine yaz' },
+    ].forEach(o => {
+      const opt = document.createElement('option');
       opt.value = o.v;
       opt.textContent = o.t;
       if ((localStorage.getItem('lyricsOverwrite') || 'skip') === o.v) opt.selected = true;
       owSelect.appendChild(opt);
     });
-    owSelect.addEventListener('change', function(e) localStorage.setItem('lyricsOverwrite', e.target.value));
+    owSelect.addEventListener('change', e => localStorage.setItem('lyricsOverwrite', e.target.value));
     owDiv.append(owLabel, owSelect);
     lyricsSection.appendChild(owDiv);
 
-    var runDiv = document.createElement('div');
+    const runDiv = document.createElement('div');
     runDiv.className = 'setting-item';
-    var runBtn = document.createElement('button');
+    const runBtn = document.createElement('button');
     runBtn.type = 'button';
     runBtn.id = 'lyricsRunBtn';
-    runBtn.textContent = labels.lyricsFindButton || "Baixar letras das músicas";
+    runBtn.textContent = labels.lyricsFindButton || "Şarkı sözlerini indir";
     runDiv.appendChild(runBtn);
     lyricsSection.appendChild(runDiv);
 
     section.appendChild(lyricsSection);
     attachLyricsModal(labels);
-    detectIsAdmin().then(function(isAdmin) {
+    detectIsAdmin().then(isAdmin => {
       if (!isAdmin) {
         adminWarn.style.display = 'block';
         runBtn.disabled = true;
@@ -848,18 +824,18 @@ export function createMusicPanel(config, labels) {
       }
     });
 
-    runBtn.addEventListenerfunction('click', () {
+    runBtn.addEventListener('click', () => {
       openLyricsModal(labels, { autoStart: true });
     });
 
-    var onThemeChanged = function() {
-      var cfgNow = getConfig();
-      var sel = panel.querySelector('#themeSelect');
+    const onThemeChanged = () => {
+      const cfgNow = getConfig();
+      const sel = panel.querySelector('#themeSelect');
       if (sel) sel.value = cfgNow.playerTheme || 'dark';
     };
     window.addEventListener('app:theme-changed', onThemeChanged);
 
-    var obs = new MutationObserverfunction(() {
+    const obs = new MutationObserver(() => {
       if (!document.body.contains(panel)) {
         window.removeEventListener('app:theme-changed', onThemeChanged);
         obs.disconnect();

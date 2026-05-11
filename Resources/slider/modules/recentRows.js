@@ -2,7 +2,7 @@ import { getSessionInfo, makeApiRequest, playNow, waitForAuthReadyStrict, getCac
 import { getConfig, getHomeSectionsRuntimeConfig, getManagedHomeSectionRuntimeOrder } from "./config.js";
 import { getLanguageLabels } from "../language/index.js";
 import { attachMiniPosterHover } from "./studioHubsUtils.js";
-import { REOPEN_COOLDOWN_MS, getOpenHoverDelay } from "./hoverTrailerModal.js";
+import { REOPEN_COOLDOWN_MS, OPEN_HOVER_DELAY_MS } from "./hoverTrailerModal.js";
 import { createTrailerIframe, formatOfficialRatingLabel } from "./utils.js";
 import {
   cleanupManagedImage,
@@ -31,57 +31,57 @@ import {
   waitForManagedHomeRowRelease
 } from "./homeSectionChain.js";
 
-var config = getConfig();
-var labels = getLanguageLabels.() || {};
-var IS_MOBILE = (navigator.maxTouchPoints > 0) || (window.innerWidth <= 820);
-var UNIFIED_ROW_ITEM_LIMIT = 20;
-var PLACEHOLDER_URL = resolveSliderAssetHref(
+const config = getConfig();
+const labels = getLanguageLabels?.() || {};
+const IS_MOBILE = (navigator.maxTouchPoints > 0) || (window.innerWidth <= 820);
+const UNIFIED_ROW_ITEM_LIMIT = 20;
+const PLACEHOLDER_URL = resolveSliderAssetHref(
   config.placeholderImage || "/slider/src/images/placeholder.png"
 );
-var ENABLE_RECENT_MASTER = (config.enableRecentRows !== false);
-var SHOW_RECENT_ROWS_HERO_CARDS = (config.showRecentRowsHeroCards !== false);
-var ENABLE_RECENT_MOVIES   = ENABLE_RECENT_MASTER && (config.enableRecentMoviesRow !== false);
-var ENABLE_RECENT_SERIES   = ENABLE_RECENT_MASTER && (config.enableRecentSeriesRow !== false);
-var ENABLE_RECENT_EPISODES = ENABLE_RECENT_MASTER && (config.enableRecentEpisodesRow !== false);
-var ENABLE_RECENT_MUSIC    = ENABLE_RECENT_MASTER && (config.enableRecentMusicRow !== false);
-var ENABLE_RECENT_TRACKS   = ENABLE_RECENT_MASTER && (config.enableRecentMusicTracksRow !== false);
-var DEFAULT_RECENT_ROWS_COUNT = 15;
-var TOP10_ROW_CARD_COUNT = 10;
-var ENABLE_OTHER_LIB_ROWS = !!config.enableOtherLibRows;
-var OTHER_RECENT_CARD_COUNT   = UNIFIED_ROW_ITEM_LIMIT;
-var OTHER_CONTINUE_CARD_COUNT = UNIFIED_ROW_ITEM_LIMIT;
-var OTHER_EP_CARD_COUNT       = UNIFIED_ROW_ITEM_LIMIT;
-var RECENT_MOVIES_CARD_COUNT  = UNIFIED_ROW_ITEM_LIMIT;
-var RECENT_SERIES_CARD_COUNT  = UNIFIED_ROW_ITEM_LIMIT;
-var RECENT_EP_CARD_COUNT      = UNIFIED_ROW_ITEM_LIMIT;
-var RECENT_MUSIC_CARD_COUNT   = UNIFIED_ROW_ITEM_LIMIT;
-var RECENT_TRACKS_CARD_COUNT  = UNIFIED_ROW_ITEM_LIMIT;
+const ENABLE_RECENT_MASTER = (config.enableRecentRows !== false);
+const SHOW_RECENT_ROWS_HERO_CARDS = (config.showRecentRowsHeroCards !== false);
+const ENABLE_RECENT_MOVIES   = ENABLE_RECENT_MASTER && (config.enableRecentMoviesRow !== false);
+const ENABLE_RECENT_SERIES   = ENABLE_RECENT_MASTER && (config.enableRecentSeriesRow !== false);
+const ENABLE_RECENT_EPISODES = ENABLE_RECENT_MASTER && (config.enableRecentEpisodesRow !== false);
+const ENABLE_RECENT_MUSIC    = ENABLE_RECENT_MASTER && (config.enableRecentMusicRow !== false);
+const ENABLE_RECENT_TRACKS   = ENABLE_RECENT_MASTER && (config.enableRecentMusicTracksRow !== false);
+const DEFAULT_RECENT_ROWS_COUNT = 15;
+const TOP10_ROW_CARD_COUNT = 10;
+const ENABLE_OTHER_LIB_ROWS = !!config.enableOtherLibRows;
+const OTHER_RECENT_CARD_COUNT   = UNIFIED_ROW_ITEM_LIMIT;
+const OTHER_CONTINUE_CARD_COUNT = UNIFIED_ROW_ITEM_LIMIT;
+const OTHER_EP_CARD_COUNT       = UNIFIED_ROW_ITEM_LIMIT;
+const RECENT_MOVIES_CARD_COUNT  = UNIFIED_ROW_ITEM_LIMIT;
+const RECENT_SERIES_CARD_COUNT  = UNIFIED_ROW_ITEM_LIMIT;
+const RECENT_EP_CARD_COUNT      = UNIFIED_ROW_ITEM_LIMIT;
+const RECENT_MUSIC_CARD_COUNT   = UNIFIED_ROW_ITEM_LIMIT;
+const RECENT_TRACKS_CARD_COUNT  = UNIFIED_ROW_ITEM_LIMIT;
 
-var ENABLE_CONTINUE_MOVIES  = (config.enableContinueMovies !== false);
-var CONT_MOVIES_CARD_COUNT  = UNIFIED_ROW_ITEM_LIMIT;
-var ENABLE_CONTINUE_SERIES  = (config.enableContinueSeries !== false);
-var CONT_SERIES_CARD_COUNT  = UNIFIED_ROW_ITEM_LIMIT;
-var EFFECTIVE_RECENT_MOVIES_COUNT = UNIFIED_ROW_ITEM_LIMIT;
-var EFFECTIVE_RECENT_SERIES_COUNT = UNIFIED_ROW_ITEM_LIMIT;
-var EFFECTIVE_CONT_MOV_CNT  = UNIFIED_ROW_ITEM_LIMIT;
-var EFFECTIVE_CONT_SER_CNT  = UNIFIED_ROW_ITEM_LIMIT;
-var EFFECTIVE_RECENT_EP_CNT = UNIFIED_ROW_ITEM_LIMIT;
-var EFFECTIVE_RECENT_MUSIC_COUNT = UNIFIED_ROW_ITEM_LIMIT;
-var EFFECTIVE_RECENT_TRACKS_COUNT = UNIFIED_ROW_ITEM_LIMIT;
-var EFFECTIVE_OTHER_RECENT_CNT   = UNIFIED_ROW_ITEM_LIMIT;
-var EFFECTIVE_OTHER_CONTINUE_CNT = UNIFIED_ROW_ITEM_LIMIT;
-var EFFECTIVE_OTHER_EP_CNT       = UNIFIED_ROW_ITEM_LIMIT;
+const ENABLE_CONTINUE_MOVIES  = (config.enableContinueMovies !== false);
+const CONT_MOVIES_CARD_COUNT  = UNIFIED_ROW_ITEM_LIMIT;
+const ENABLE_CONTINUE_SERIES  = (config.enableContinueSeries !== false);
+const CONT_SERIES_CARD_COUNT  = UNIFIED_ROW_ITEM_LIMIT;
+const EFFECTIVE_RECENT_MOVIES_COUNT = UNIFIED_ROW_ITEM_LIMIT;
+const EFFECTIVE_RECENT_SERIES_COUNT = UNIFIED_ROW_ITEM_LIMIT;
+const EFFECTIVE_CONT_MOV_CNT  = UNIFIED_ROW_ITEM_LIMIT;
+const EFFECTIVE_CONT_SER_CNT  = UNIFIED_ROW_ITEM_LIMIT;
+const EFFECTIVE_RECENT_EP_CNT = UNIFIED_ROW_ITEM_LIMIT;
+const EFFECTIVE_RECENT_MUSIC_COUNT = UNIFIED_ROW_ITEM_LIMIT;
+const EFFECTIVE_RECENT_TRACKS_COUNT = UNIFIED_ROW_ITEM_LIMIT;
+const EFFECTIVE_OTHER_RECENT_CNT   = UNIFIED_ROW_ITEM_LIMIT;
+const EFFECTIVE_OTHER_CONTINUE_CNT = UNIFIED_ROW_ITEM_LIMIT;
+const EFFECTIVE_OTHER_EP_CNT       = UNIFIED_ROW_ITEM_LIMIT;
 
-var HOVER_MODE = (config.recentRowsHoverPreviewMode === "studioMini" || config.recentRowsHoverPreviewMode === "modal")
+const HOVER_MODE = (config.recentRowsHoverPreviewMode === "studioMini" || config.recentRowsHoverPreviewMode === "modal")
   ? config.recentRowsHoverPreviewMode
   : "inherit";
-var HOME_DEBUG_STORAGE_KEY = "jms:debug:home-sections";
-var HOME_TRACE_STORAGE_KEY = "jms:trace:home-sections";
+const HOME_DEBUG_STORAGE_KEY = "jms:debug:home-sections";
+const HOME_TRACE_STORAGE_KEY = "jms:trace:home-sections";
 // Recent rows can expand into many sub-sections. The generic release gate is
 // useful for very long home pages, but on this module it can stall lower rows
 // behind the first visible ones and make them appear nondeterministic.
-var RECENT_ROWS_EAGER_RELEASE_COUNT = 1024;
-var RECENT_ROWS_RELEASE_ROOT_MARGIN = IS_MOBILE
+const RECENT_ROWS_EAGER_RELEASE_COUNT = 1024;
+const RECENT_ROWS_RELEASE_ROOT_MARGIN = IS_MOBILE
   ? "0px 0px 60% 0px"
   : "0px 0px 22% 0px";
 
@@ -102,9 +102,9 @@ function getEffectiveRowCount(value) {
 }
 
 function getRecentRowsRuntimeConfig(source = getLiveConfig()) {
-  var cfg = source || {};
-  var homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
-  var enableRecentMaster = homeSectionsConfig.enableRecentRows;
+  const cfg = source || {};
+  const homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
+  const enableRecentMaster = homeSectionsConfig.enableRecentRows;
 
   return {
     showHeroCards: cfg.showRecentRowsHeroCards !== false,
@@ -147,7 +147,7 @@ function isRecentRowsDebugEnabled() {
   try {
     if (window.__JMS_DEBUG_HOME_SECTIONS === true) return true;
     if (window.__JMS_DEBUG_HOME_SECTIONS === false) return false;
-    var raw = localStorage.getItem(HOME_DEBUG_STORAGE_KEY);
+    const raw = localStorage.getItem(HOME_DEBUG_STORAGE_KEY);
     return raw === "1" || raw === "true" || raw === "on";
   } catch {
     return window.__JMS_DEBUG_HOME_SECTIONS === true;
@@ -155,13 +155,13 @@ function isRecentRowsDebugEnabled() {
 }
 
 function buildRecentRowsDebugPayload(payload) {
-  var extra = payload && typeof payload === "object" && !Array.isArray(payload)
+  const extra = payload && typeof payload === "object" && !Array.isArray(payload)
     ? payload
     : { value: payload };
   return {
     at: new Date().toISOString(),
     hash: String(window.location.hash || ""),
-    page: getActiveHomePage.().id || null,
+    page: getActiveHomePage?.()?.id || null,
     ...extra,
   };
 }
@@ -180,7 +180,7 @@ function isRecentRowsTraceEnabled() {
   try {
     if (window.__JMS_TRACE_HOME_SECTIONS === true) return true;
     if (window.__JMS_TRACE_HOME_SECTIONS === false) return false;
-    var raw = localStorage.getItem(HOME_TRACE_STORAGE_KEY);
+    const raw = localStorage.getItem(HOME_TRACE_STORAGE_KEY);
     return raw === "1" || raw === "true" || raw === "on";
   } catch {
     return false;
@@ -194,13 +194,13 @@ function recentRowsTrace(event, payload = {}) {
 
 function buildTraceStack(limit = 6) {
   try {
-    return new Error().stack.split("\n").slice(0, Math.max(2, limit | 0)).join("\n") || "";
+    return new Error().stack?.split("\n").slice(0, Math.max(2, limit | 0)).join("\n") || "";
   } catch {
     return "";
   }
 }
 
-var STATE = {
+const STATE = {
     started: false,
     wrapEl: null,
     hostEl: null,
@@ -217,15 +217,15 @@ var STATE = {
     hadMountedSections: false,
 };
 
-var __albumPreviewTrackCache = new Map();
+const __albumPreviewTrackCache = new Map();
 
-var __recentMountPromise = null;
-var __recentRowsRetryTo = null;
-var __recentRowsSelfHealObserver = null;
-var __recentRowsSelfHealTimer = null;
-var __recentRowsSelfHealPending = false;
+let __recentMountPromise = null;
+let __recentRowsRetryTo = null;
+let __recentRowsSelfHealObserver = null;
+let __recentRowsSelfHealTimer = null;
+let __recentRowsSelfHealPending = false;
 
-var RECENT_ROW_SECTION_META = Object.freeze({
+const RECENT_ROW_SECTION_META = Object.freeze({
   top10SeriesRows: {
     id: "top10-series-rows",
     flag: "__jmsTop10SeriesRowsDone",
@@ -258,25 +258,25 @@ var RECENT_ROW_SECTION_META = Object.freeze({
   }
 });
 
-var TTL_RECENT_MS   = Number.isFinite(config.recentRowsCacheTTLms) ? Math.max(5_000, config.recentRowsCacheTTLms|0) : 90_000;
-var TTL_CONTINUE_MS = Number.isFinite(config.continueRowsCacheTTLms) ? Math.max(5_000, config.continueRowsCacheTTLms|0) : 45_000;
-var TTL_TOP10_MS    = 2 * 60 * 60 * 1000;
-var TOP10_CACHE_POOL_SIZE = 20;
-var TOP_RANK_QUERY_POOL_MULTIPLIER = 4;
-var TMDB_TOP_MOVIE_POOL_SIZE = 240;
-var TMDB_TOP_RATED_PAGE_LIMIT = 8;
-var TOP_RANK_PROFILE_TTL_MS = 10 * 60 * 1000;
-var TOP_RANK_GENRE_WEIGHTS = Object.freeze([1, 0.86, 0.74, 0.62, 0.5]);
-var FAMILY_FRIENDLY_RATINGS = new Set(["G", "PG", "TV-G", "TV-PG"]);
+const TTL_RECENT_MS   = Number.isFinite(config.recentRowsCacheTTLms) ? Math.max(5_000, config.recentRowsCacheTTLms|0) : 90_000;
+const TTL_CONTINUE_MS = Number.isFinite(config.continueRowsCacheTTLms) ? Math.max(5_000, config.continueRowsCacheTTLms|0) : 45_000;
+const TTL_TOP10_MS    = 2 * 60 * 60 * 1000;
+const TOP10_CACHE_POOL_SIZE = 20;
+const TOP_RANK_QUERY_POOL_MULTIPLIER = 4;
+const TMDB_TOP_MOVIE_POOL_SIZE = 240;
+const TMDB_TOP_RATED_PAGE_LIMIT = 8;
+const TOP_RANK_PROFILE_TTL_MS = 10 * 60 * 1000;
+const TOP_RANK_GENRE_WEIGHTS = Object.freeze([1, 0.86, 0.74, 0.62, 0.5]);
+const FAMILY_FRIENDLY_RATINGS = new Set(["G", "PG", "TV-G", "TV-PG"]);
 
-var __topRankProfileCache = new Map();
+const __topRankProfileCache = new Map();
 
-function metaKey(kind, type){ return "rr:" + (kind) + ":" + (type); }
-function movieLibMetaSuffix(movieLibId){ return movieLibId ? "@movie:" + (movieLibId) : ""; }
-function tvLibMetaSuffix(tvLibId){ return tvLibId ? "@tv:" + (tvLibId) : ""; }
+function metaKey(kind, type){ return `rr:${kind}:${type}`; }
+function movieLibMetaSuffix(movieLibId){ return movieLibId ? `@movie:${movieLibId}` : ""; }
+function tvLibMetaSuffix(tvLibId){ return tvLibId ? `@tv:${tvLibId}` : ""; }
 
 function isRecentRowsHomeRoute() {
-  var h = String(window.location.hash || "").toLowerCase();
+  const h = String(window.location.hash || "").toLowerCase();
   return h.startsWith("#/home") || h.startsWith("#/index") || h === "" || h === "#";
 }
 
@@ -285,31 +285,31 @@ function getRecentRowSectionMeta(sectionKey = "recentRows") {
 }
 
 function getManagedRecentRowsSectionPrefix(sectionKey = "recentRows") {
-  return (getRecentRowSectionMeta(sectionKey).id) + "--";
+  return `${getRecentRowSectionMeta(sectionKey).id}--`;
 }
 
 function makeManagedRecentRowsSectionId(sectionKey = "recentRows", index = 0) {
-  return (getManagedRecentRowsSectionPrefix(sectionKey)) + (Math.max(0, index | 0));
+  return `${getManagedRecentRowsSectionPrefix(sectionKey)}${Math.max(0, index | 0)}`;
 }
 
 function getManagedRecentRowsSections(sectionKey = "recentRows", root = getActiveHomePage() || document) {
-  var prefix = getManagedRecentRowsSectionPrefix(sectionKey);
-  return Array.from(root.querySelectorAll.("[id^=\"" + (prefix) + "\"]") || [])
-    .filterfunction((el) el.isConnected)
-    .sortfunction((left, right) {
-      var li = Number(String(left.id || "").slice(prefix.length)) || 0;
-      var ri = Number(String(right.id || "").slice(prefix.length)) || 0;
+  const prefix = getManagedRecentRowsSectionPrefix(sectionKey);
+  return Array.from(root?.querySelectorAll?.(`[id^="${prefix}"]`) || [])
+    .filter((el) => el?.isConnected)
+    .sort((left, right) => {
+      const li = Number(String(left.id || "").slice(prefix.length)) || 0;
+      const ri = Number(String(right.id || "").slice(prefix.length)) || 0;
       return li - ri;
     });
 }
 
 function cleanupManagedRecentRowsSections(sectionKey = "recentRows", root = getActiveHomePage() || document) {
-  for (var section of getManagedRecentRowsSections(sectionKey, root)) {
+  for (const section of getManagedRecentRowsSections(sectionKey, root)) {
     try {
-      section.querySelectorAll(".personal-recs-card, .dir-row-hero").forEach(function((el) {
+      section.querySelectorAll(".personal-recs-card, .dir-row-hero").forEach((el) => {
         try { el.dispatchEvent(new CustomEvent("jms:cleanup")); } catch {}
       });
-      section.querySelectorAll(".personal-recs-row").forEach(function((row) {
+      section.querySelectorAll(".personal-recs-row").forEach((row) => {
         try { row.dispatchEvent(new CustomEvent("jms:cleanup")); } catch {}
       });
     } catch {}
@@ -318,34 +318,34 @@ function cleanupManagedRecentRowsSections(sectionKey = "recentRows", root = getA
 }
 
 function getMountedRecentRowsPage() {
-  var visiblePage =
-    getActiveHomePageEl.() ||
+  const visiblePage =
+    getActiveHomePageEl?.() ||
     document.querySelector("#indexPage:not(.hide)") ||
     document.querySelector("#homePage:not(.hide)") ||
     null;
-  if (visiblePage.isConnected) {
-    var visibleHasManagedRows = Object.values(RECENT_ROW_SECTION_META).somefunction((meta) (
-      !!visiblePage.querySelector.("#" + (meta.id) + ", [id^=\"" + (meta.id) + "--\"]")
+  if (visiblePage?.isConnected) {
+    const visibleHasManagedRows = Object.values(RECENT_ROW_SECTION_META).some((meta) => (
+      !!visiblePage.querySelector?.(`#${meta.id}, [id^="${meta.id}--"]`)
     ));
     if (visibleHasManagedRows) return visiblePage;
   }
 
-  for (var meta of Object.values(RECENT_ROW_SECTION_META)) {
-    var wrap = document.getElementById(meta.id);
-    var wrapPage = wrap.closest.("#indexPage, #homePage");
-    if (wrapPage.isConnected) return wrapPage;
+  for (const meta of Object.values(RECENT_ROW_SECTION_META)) {
+    const wrap = document.getElementById(meta.id);
+    const wrapPage = wrap?.closest?.("#indexPage, #homePage");
+    if (wrapPage?.isConnected) return wrapPage;
 
-    var section = document.querySelector("[id^=\"" + (meta.id) + "--\"]");
-    var sectionPage = section.closest.("#indexPage, #homePage");
-    if (sectionPage.isConnected) return sectionPage;
+    const section = document.querySelector(`[id^="${meta.id}--"]`);
+    const sectionPage = section?.closest?.("#indexPage, #homePage");
+    if (sectionPage?.isConnected) return sectionPage;
   }
-  return visiblePage.isConnected ? visiblePage : null;
+  return visiblePage?.isConnected ? visiblePage : null;
 }
 
 function setManagedRecentRowsDone(sectionKey, done) {
-  var meta = getRecentRowSectionMeta(sectionKey);
-  var next = !!done;
-  var prev = false;
+  const meta = getRecentRowSectionMeta(sectionKey);
+  const next = !!done;
+  let prev = false;
   try { prev = window[meta.flag] === true; } catch {}
   try { window[meta.flag] = next; } catch {}
   if (next && !prev) {
@@ -405,7 +405,7 @@ function hasNextUpRowsSectionEnabled(runtimeCfg) {
 }
 
 function getOrderedRecentRowSectionKeys(cfg, runtimeCfg) {
-  var enabled = new Set();
+  const enabled = new Set();
   if (hasTop10SeriesRowsSectionEnabled(runtimeCfg)) enabled.add("top10SeriesRows");
   if (hasTop10MovieRowsSectionEnabled(runtimeCfg)) enabled.add("top10MovieRows");
   if (hasTmdbTopMoviesRowsSectionEnabled(runtimeCfg)) enabled.add("tmdbTopMoviesRows");
@@ -414,15 +414,15 @@ function getOrderedRecentRowSectionKeys(cfg, runtimeCfg) {
   if (hasNextUpRowsSectionEnabled(runtimeCfg)) enabled.add("nextUpRows");
   if (!enabled.size) return [];
 
-  var ordered = getManagedHomeSectionRuntimeOrder(cfg, { enabledOnly: true })
-    .filterfunction((key) enabled.has(key));
+  const ordered = getManagedHomeSectionRuntimeOrder(cfg, { enabledOnly: true })
+    .filter((key) => enabled.has(key));
   return ordered.length ? ordered : Array.from(enabled);
 }
 
-function ensureRecentDb() {
+async function ensureRecentDb() {
   if (STATE.db && STATE.scope) return;
   try {
-    var db = openDirRowsDB();
+    const db = await openDirRowsDB();
     STATE.db = db;
     STATE.scope = makeScope({ serverId: STATE.serverId, userId: STATE.userId });
   } catch (e) {
@@ -432,23 +432,23 @@ function ensureRecentDb() {
   }
 }
 
-function readCachedList(kind, type, ttlMs, {
+async function readCachedList(kind, type, ttlMs, {
   validateIds = true
 } = {}) {
   if (!STATE.db || !STATE.scope) return { ids: [], fresh: false };
   try {
-    var rec = getMeta(STATE.db, metaKey(kind, type) + "|" + STATE.scope);
-    var ids = Array.isArray(rec.ids) ? Array.from(new Set(rec.ids.filter(Boolean))) : [];
-    var updatedAt = Number(rec.updatedAt) || 0;
-    var fresh = (Date.now() - updatedAt) <= ttlMs;
+    const rec = await getMeta(STATE.db, metaKey(kind, type) + "|" + STATE.scope);
+    const ids = Array.isArray(rec?.ids) ? Array.from(new Set(rec.ids.filter(Boolean))) : [];
+    const updatedAt = Number(rec?.updatedAt) || 0;
+    const fresh = (Date.now() - updatedAt) <= ttlMs;
 
-    var liveIds = ids;
+    let liveIds = ids;
     if (validateIds) {
       try {
-        var reconciled = filterExistingCachedIds(ids);
+        const reconciled = await filterExistingCachedIds(ids);
         liveIds = reconciled.ids;
         if (reconciled.validated && !sameIdList(ids, liveIds)) {
-          writeCachedList(kind, type, liveIds);
+          await writeCachedList(kind, type, liveIds);
         }
       } catch {}
     }
@@ -457,34 +457,34 @@ function readCachedList(kind, type, ttlMs, {
   } catch { return { ids: [], fresh: false }; }
 }
 
-function writeCachedList(kind, type, ids) {
+async function writeCachedList(kind, type, ids) {
   if (!STATE.db || !STATE.scope) return;
   try {
-    setMeta(STATE.db, metaKey(kind, type) + "|" + STATE.scope, {
+    await setMeta(STATE.db, metaKey(kind, type) + "|" + STATE.scope, {
       ids: (ids || []).filter(Boolean),
       updatedAt: Date.now(),
     });
   } catch {}
 }
 
-function loadCachedRowItems(kind, type, ttlMs, {
+async function loadCachedRowItems(kind, type, ttlMs, {
   limit = 0,
   afterLoad = null,
   refreshUserData = false,
   validateIds = true,
   transformItems = null
 } = {}) {
-  var { ids, fresh } = readCachedList(kind, type, ttlMs, { validateIds });
+  const { ids, fresh } = await readCachedList(kind, type, ttlMs, { validateIds });
   if (!ids.length) return { items: [], fresh: false };
 
-  var take = limit > 0 ? Math.max(1, limit | 0) : ids.length;
-  var items = fetchItemsByIds(ids.slice(0, take), { refreshUserData });
+  const take = limit > 0 ? Math.max(1, limit | 0) : ids.length;
+  let items = await fetchItemsByIds(ids.slice(0, take), { refreshUserData });
   if (typeof afterLoad === "function") {
-    afterLoad(items);
+    await afterLoad(items);
   }
   if (typeof transformItems === "function") {
     try {
-      var nextItems = transformItems(items);
+      const nextItems = await transformItems(items);
       if (Array.isArray(nextItems)) {
         items = nextItems;
       }
@@ -500,12 +500,12 @@ function loadCachedRowItems(kind, type, ttlMs, {
 function filterCachedTop10PlayableItems(items = []) {
   return uniqById(
     (Array.isArray(items) ? items : [])
-      .filterfunction((item) item.Id && !hasPlaybackActivity(item))
+      .filter((item) => item?.Id && !hasPlaybackActivity(item))
   );
 }
 
-function loadCachedLocalTop10Items(kind, type, ttlMs) {
-  var cached = loadCachedRowItems(kind, type, ttlMs, {
+async function loadCachedLocalTop10Items(kind, type, ttlMs) {
+  const cached = await loadCachedRowItems(kind, type, ttlMs, {
     limit: TOP10_CACHE_POOL_SIZE,
     refreshUserData: true,
     validateIds: false,
@@ -513,42 +513,42 @@ function loadCachedLocalTop10Items(kind, type, ttlMs) {
   });
 
   return {
-    items: (Array.isArray(cached.items) ? cached.items : []).slice(0, TOP10_ROW_CARD_COUNT),
-    fresh: !!cached.fresh && ((Array.isArray(cached.items) ? cached.items.length : 0) > 0),
+    items: (Array.isArray(cached?.items) ? cached.items : []).slice(0, TOP10_ROW_CARD_COUNT),
+    fresh: !!cached?.fresh && ((Array.isArray(cached?.items) ? cached.items.length : 0) > 0),
   };
 }
 
-function filterExistingCachedIds(ids) {
-  var clean = Array.isArray(ids)
-    ? Array.fromfunction(new Set(ids.map((x) String(x || "").trim()).filter(Boolean)))
+async function filterExistingCachedIds(ids) {
+  const clean = Array.isArray(ids)
+    ? Array.from(new Set(ids.map((x) => String(x || "").trim()).filter(Boolean)))
     : [];
   if (!clean.length || !STATE.userId) return { ids: clean, validated: false };
 
-  var out = new Set();
-  var failed = new Set();
-  var validated = false;
-  var chunkSize = 80;
+  const out = new Set();
+  const failed = new Set();
+  let validated = false;
+  const chunkSize = 80;
 
-  for (var i = 0; i < clean.length; i += chunkSize) {
-    var chunk = clean.slice(i, i + chunkSize);
-    var url =
-      "/Users/" + (encodeURIComponent(STATE.userId)) + "/Items?" +
-      "Ids=" + (encodeURIComponent(chunk.join(","))) + "&Fields=Id";
+  for (let i = 0; i < clean.length; i += chunkSize) {
+    const chunk = clean.slice(i, i + chunkSize);
+    const url =
+      `/Users/${encodeURIComponent(STATE.userId)}/Items?` +
+      `Ids=${encodeURIComponent(chunk.join(","))}&Fields=Id`;
     try {
-      var data = makeApiRequest(url);
-      var items = Array.isArray(data.Items) ? data.Items : (Array.isArray(data) ? data : []);
+      const data = await makeApiRequest(url);
+      const items = Array.isArray(data?.Items) ? data.Items : (Array.isArray(data) ? data : []);
       validated = true;
-      for (var it of items) {
-        if (it.Id) out.add(String(it.Id));
+      for (const it of items) {
+        if (it?.Id) out.add(String(it.Id));
       }
     } catch {
-      for (var id of chunk) failed.add(id);
+      for (const id of chunk) failed.add(id);
     }
   }
 
   if (!validated) return { ids: clean, validated: false };
   return {
-    ids: clean.filterfunction((id) out.has(id) || failed.has(id)),
+    ids: clean.filter((id) => out.has(id) || failed.has(id)),
     validated: true,
   };
 }
@@ -557,16 +557,16 @@ function sameIdList(a, b) {
   if (a === b) return true;
   if (!Array.isArray(a) || !Array.isArray(b)) return false;
   if (a.length !== b.length) return false;
-  for (var i=0;i<a.length;i++) if (a[i] !== b[i]) return false;
+  for (let i=0;i<a.length;i++) if (a[i] !== b[i]) return false;
   return true;
 }
 
 (function ensurePerfCssOnce(){
   if (document.getElementById("recent-rows-perf-css")) return;
-  var st = document.createElement("style");
+  const st = document.createElement("style");
 })();
 
-var COMMON_FIELDS = [
+const COMMON_FIELDS = [
   "Type",
   "PrimaryImageAspectRatio",
   "ImageTags",
@@ -597,86 +597,86 @@ var COMMON_FIELDS = [
 ].join(",");
 
 function getRecentRowsCardTypeBadge(itemType) {
-  var ll = config.languageLabels || {};
+  const ll = config.languageLabels || {};
   switch (itemType) {
     case "Photo":
-      return { label: ll.photo || labels.photo || "Foto", icon: "image" };
+      return { label: ll.photo || labels.photo || "Fotoğraf", icon: "image" };
     case "PhotoAlbum":
-      return { label: ll.photoAlbum || labels.photoAlbum || "Álbum", icon: "images" };
+      return { label: ll.photoAlbum || labels.photoAlbum || "Albüm", icon: "images" };
     case "Video":
-      return { label: ll.video || labels.video || "Vídeo", icon: "video" };
+      return { label: ll.video || labels.video || "Video", icon: "video" };
     case "Folder":
-      return { label: ll.folder || labels.folder || "Pasta", icon: "folder" };
+      return { label: ll.folder || labels.folder || "Klasör", icon: "folder" };
     case "Episode":
-      return { label: ll.episode || labels.episode || "Episódio", icon: "tv" };
+      return { label: ll.episode || labels.episode || "Bölüm", icon: "tv" };
     case "Season":
-      return { label: ll.season || labels.season || "Temporada", icon: "layerGroup" };
+      return { label: ll.season || labels.season || "Sezon", icon: "layerGroup" };
     case "Series":
-      return { label: ll.dizi || labels.dizi || "Série", icon: "tv" };
+      return { label: ll.dizi || labels.dizi || "Dizi", icon: "tv" };
     case "MusicAlbum":
-      return { label: ll.album || labels.album || "Álbum", icon: "compactDisc" };
+      return { label: ll.album || labels.album || "Albüm", icon: "compactDisc" };
     case "Audio":
-      return { label: ll.track || labels.track || "Faixa", icon: "music" };
+      return { label: ll.track || labels.track || "Parça", icon: "music" };
     case "BoxSet":
       return {
-        label: ll.collectionTitle || ll.boxset || labels.collectionTitle || labels.boxset || "Coleção",
+        label: ll.collectionTitle || ll.boxset || labels.collectionTitle || labels.boxset || "Collection",
         icon: "layerGroup"
       };
     default:
-      return { label: ll.film || labels.film || "Filme", icon: "film" };
+      return { label: ll.film || labels.film || "Film", icon: "film" };
   }
 }
 
 function shouldPreferTaglessImages(item) {
-  return item.__preferTaglessImages === true;
+  return item?.__preferTaglessImages === true;
 }
 
 function sanitizeResolvedId(value) {
   if (value == null) return null;
-  var out = String(value).trim();
+  const out = String(value).trim();
   if (!out || out === "undefined" || out === "null") return null;
   return out;
 }
 
 function resolveItemId(item) {
   return (
-    sanitizeResolvedId(item.Id) ||
-    sanitizeResolvedId(item.itemId) ||
-    sanitizeResolvedId(item.id) ||
-    sanitizeResolvedId(item.__posterSource.Id) ||
-    sanitizeResolvedId(item.__posterSource.itemId) ||
-    sanitizeResolvedId(item.__posterSource.id) ||
-    sanitizeResolvedId(item.AlbumId) ||
-    sanitizeResolvedId(item.ParentBackdropItemId) ||
-    sanitizeResolvedId(item.ParentId) ||
-    sanitizeResolvedId(item.SeriesId) ||
+    sanitizeResolvedId(item?.Id) ||
+    sanitizeResolvedId(item?.itemId) ||
+    sanitizeResolvedId(item?.id) ||
+    sanitizeResolvedId(item?.__posterSource?.Id) ||
+    sanitizeResolvedId(item?.__posterSource?.itemId) ||
+    sanitizeResolvedId(item?.__posterSource?.id) ||
+    sanitizeResolvedId(item?.AlbumId) ||
+    sanitizeResolvedId(item?.ParentBackdropItemId) ||
+    sanitizeResolvedId(item?.ParentId) ||
+    sanitizeResolvedId(item?.SeriesId) ||
     null
   );
 }
 
 function resolveItemName(item) {
   return String(
-    item.Name ||
-    item.SeriesName ||
-    item.__posterSource.Name ||
-    item.__posterSource.SeriesName ||
+    item?.Name ||
+    item?.SeriesName ||
+    item?.__posterSource?.Name ||
+    item?.__posterSource?.SeriesName ||
     ""
   ).trim();
 }
 
 function primeItemIdentity(item) {
   if (!item || typeof item !== "object") return { item, itemId: null, itemName: "" };
-  var itemId = resolveItemId(item);
-  var itemName = resolveItemName(item);
-  if (itemId && !sanitizeResolvedId(item.Id)) {
+  const itemId = resolveItemId(item);
+  const itemName = resolveItemName(item);
+  if (itemId && !sanitizeResolvedId(item?.Id)) {
     try { item.Id = itemId; } catch {}
   }
-  if (itemName && !item.Name) {
+  if (itemName && !item?.Name) {
     try { item.Name = itemName; } catch {}
   }
-  if (item.__posterSource && typeof item.__posterSource === "object") {
-    var posterId = resolveItemId(item.__posterSource);
-    if (posterId && !sanitizeResolvedId(item.__posterSource.Id)) {
+  if (item?.__posterSource && typeof item.__posterSource === "object") {
+    const posterId = resolveItemId(item.__posterSource);
+    if (posterId && !sanitizeResolvedId(item.__posterSource?.Id)) {
       try { item.__posterSource.Id = posterId; } catch {}
     }
   }
@@ -684,31 +684,31 @@ function primeItemIdentity(item) {
 }
 
 function getPrimaryImageCandidate(item) {
-  var itemId = item.Id || item.AlbumId || null;
-  var tag =
-    item.ImageTags.Primary ||
-    item.PrimaryImageTag ||
-    item.AlbumPrimaryImageTag ||
+  const itemId = item?.Id || item?.AlbumId || null;
+  const tag =
+    item?.ImageTags?.Primary ||
+    item?.PrimaryImageTag ||
+    item?.AlbumPrimaryImageTag ||
     null;
   if (!itemId || !tag) return null;
   return { itemId, imageType: "Primary", tag };
 }
 
 function getThumbImageCandidate(item) {
-  var itemId = item.Id || null;
-  var tag = item.ImageTags.Thumb || item.ThumbImageTag || null;
+  const itemId = item?.Id || null;
+  const tag = item?.ImageTags?.Thumb || item?.ThumbImageTag || null;
   if (!itemId || !tag) return null;
   return { itemId, imageType: "Thumb", tag, aspectRatio: 16 / 9 };
 }
 
 function getBackdropImageCandidate(item) {
-  var itemId = item.ParentBackdropItemId || item.Id || null;
-  var tag =
-    (Array.isArray(item.ParentBackdropImageTags) && item.ParentBackdropImageTags[0]) ||
-    (Array.isArray(item.BackdropImageTags) && item.BackdropImageTags[0]) ||
-    item.SeriesBackdropImageTag ||
-    item.BackdropImageTag ||
-    item.ImageTags.Backdrop ||
+  const itemId = item?.ParentBackdropItemId || item?.Id || null;
+  const tag =
+    (Array.isArray(item?.ParentBackdropImageTags) && item.ParentBackdropImageTags[0]) ||
+    (Array.isArray(item?.BackdropImageTags) && item.BackdropImageTags[0]) ||
+    item?.SeriesBackdropImageTag ||
+    item?.BackdropImageTag ||
+    item?.ImageTags?.Backdrop ||
     null;
   if (!itemId || !tag) return null;
   return { itemId, imageType: "Backdrop", tag, aspectRatio: 16 / 9 };
@@ -724,25 +724,25 @@ function getPosterLikeImageCandidate(item) {
 }
 
 function buildCandidateImageUrl(item, candidate, height = 540, quality = 72, { omitTag = false } = {}) {
-  if (!candidate.itemId || !candidate.imageType) return null;
-  var skipTag = omitTag || shouldPreferTaglessImages(item);
+  if (!candidate?.itemId || !candidate?.imageType) return null;
+  const skipTag = omitTag || shouldPreferTaglessImages(item);
 
-  var parts = [];
-  if (!skipTag && candidate.tag) parts.push("tag=" + (encodeURIComponent(candidate.tag)));
+  const parts = [];
+  if (!skipTag && candidate.tag) parts.push(`tag=${encodeURIComponent(candidate.tag)}`);
   if (candidate.imageType === "Primary") {
-    parts.push("maxHeight=" + (height));
+    parts.push(`maxHeight=${height}`);
   } else {
-    var aspectRatio = Number(candidate.aspectRatio) || (16 / 9);
-    parts.push("maxWidth=" + (Math.max(96, Math.round(height * aspectRatio))));
+    const aspectRatio = Number(candidate.aspectRatio) || (16 / 9);
+    parts.push(`maxWidth=${Math.max(96, Math.round(height * aspectRatio))}`);
   }
-  parts.push("quality=" + (quality));
-  parts.push("EnableImageEnhancers=false");
+  parts.push(`quality=${quality}`);
+  parts.push(`EnableImageEnhancers=false`);
 
-  return withServer("/Items/" + (candidate.itemId) + "/Images/" + (candidate.imageType) + "?" + (parts.join("&")));
+  return withServer(`/Items/${candidate.itemId}/Images/${candidate.imageType}?${parts.join("&")}`);
 }
 
 function buildPosterUrl(item, height = 540, quality = 72, { omitTag = false } = {}) {
-  var candidate = getPosterLikeImageCandidate(item);
+  const candidate = getPosterLikeImageCandidate(item);
   return buildCandidateImageUrl(item, candidate, height, quality, { omitTag });
 }
 
@@ -753,40 +753,40 @@ function buildPosterImageUrl(item) {
 function buildLogoUrl(item, width = 220, quality = 80) {
   if (!item) return null;
 
-  var tag =
+  const tag =
     (item.ImageTags && (item.ImageTags.Logo || item.ImageTags.logo || item.ImageTags.LogoImageTag)) ||
     item.LogoImageTag ||
     null;
 
-  if (!item.Id) return null;
+  if (!item?.Id) return null;
   if (!tag) return null;
-  var omitTag = shouldPreferTaglessImages(item);
+  const omitTag = shouldPreferTaglessImages(item);
 
-  var base = "/Items/" + (item.Id) + "/Images/Logo";
-  var parts = [];
-  if (!omitTag) parts.push("tag=" + (encodeURIComponent(tag)));
-  parts.push("maxWidth=" + (width));
-  parts.push("quality=" + (quality));
-  parts.push("EnableImageEnhancers=false");
-  var qs = "?" + (parts.join("&"));
-  var path = base + qs;
+  const base = `/Items/${item.Id}/Images/Logo`;
+  const parts = [];
+  if (!omitTag) parts.push(`tag=${encodeURIComponent(tag)}`);
+  parts.push(`maxWidth=${width}`);
+  parts.push(`quality=${quality}`);
+  parts.push(`EnableImageEnhancers=false`);
+  const qs = `?${parts.join("&")}`;
+  const path = base + qs;
 
   return withServer(path);
 }
 
 function buildBackdropUrl(item, width = 1920, quality = 80) {
   if (!item) return null;
-  var candidate = getBackdropImageCandidate(item);
+  const candidate = getBackdropImageCandidate(item);
   if (!candidate) return null;
-  var omitTag = shouldPreferTaglessImages(item);
-  var base = "/Items/" + (candidate.itemId) + "/Images/Backdrop";
-  var parts = [];
-  if (!omitTag && candidate.tag) parts.push("tag=" + (encodeURIComponent(candidate.tag)));
-  parts.push("maxWidth=" + (width));
-  parts.push("quality=" + (quality));
-  parts.push("EnableImageEnhancers=false");
-  var qs = "?" + (parts.join("&"));
-  var path = base + qs;
+  const omitTag = shouldPreferTaglessImages(item);
+  const base = `/Items/${candidate.itemId}/Images/Backdrop`;
+  const parts = [];
+  if (!omitTag && candidate.tag) parts.push(`tag=${encodeURIComponent(candidate.tag)}`);
+  parts.push(`maxWidth=${width}`);
+  parts.push(`quality=${quality}`);
+  parts.push(`EnableImageEnhancers=false`);
+  const qs = `?${parts.join("&")}`;
+  const path = base + qs;
 
   return withServer(path);
 }
@@ -797,22 +797,22 @@ function buildBackdropImageUrl(item) {
 
 function formatRuntime(ticks) {
   if (!ticks) return null;
-  var minutes = Math.floor(ticks / 600000000);
-  if (minutes < 60) return (minutes) + "d";
-  var hours = Math.floor(minutes / 60);
-  var remainingMinutes = minutes % 60;
-  return remainingMinutes > 0 ? (hours) + "s " + (remainingMinutes) + "d" : (hours) + "s";
+  const minutes = Math.floor(ticks / 600000000);
+  if (minutes < 60) return `${minutes}d`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes > 0 ? `${hours}s ${remainingMinutes}d` : `${hours}s`;
 }
 
 function getRuntimeWithIcons(runtime) {
   if (!runtime) return "";
   return runtime
-    .replace(/(\d+)s/g, "$1" + ((config.languageLabels && config.languageLabels.sa) || "sa"))
-    .replace(/(\d+)d/g, "$1" + ((config.languageLabels && config.languageLabels.dk) || "dk"));
+    .replace(/(\d+)s/g, `$1${(config.languageLabels && config.languageLabels.sa) || "sa"}`)
+    .replace(/(\d+)d/g, `$1${(config.languageLabels && config.languageLabels.dk) || "dk"}`);
 }
 
 function clampText(s, max = 220) {
-  var t0 = String(s || "").replace(/\s+/g, " ").trim();
+  const t0 = String(s || "").replace(/\s+/g, " ").trim();
   if (!t0) return "";
   return t0.length > max ? (t0.slice(0, max - 1) + "…") : t0;
 }
@@ -826,54 +826,54 @@ function escapeHtml(s){
 }
 
 function getDetailsUrl(itemId, serverId) {
-  return "#/details?id=" + (itemId) + "&serverId=" + (encodeURIComponent(serverId));
+  return `#/details?id=${itemId}&serverId=${encodeURIComponent(serverId)}`;
 }
 
 function clamp01(x){ return Math.max(0, Math.min(1, x)); }
 
 function getPlaybackRuntimeTicks(item) {
   return (
-    (item.Type === "Series" ? Number(item.CumulativeRunTimeTicks) : Number(item.RunTimeTicks)) ||
-    Number(item.RunTimeTicks) ||
-    Number(item.CumulativeRunTimeTicks) ||
+    (item?.Type === "Series" ? Number(item?.CumulativeRunTimeTicks) : Number(item?.RunTimeTicks)) ||
+    Number(item?.RunTimeTicks) ||
+    Number(item?.CumulativeRunTimeTicks) ||
     0
   );
 }
 
 function isPlaybackCompleted(item, runtimeOverride = 0) {
-  var ud = item.UserData || item.UserDataDto || null;
+  const ud = item?.UserData || item?.UserDataDto || null;
   if (!ud) return false;
   if (ud.Played === true) return true;
 
-  var playedPercentage = Number(ud.PlayedPercentage);
+  const playedPercentage = Number(ud.PlayedPercentage);
   if (Number.isFinite(playedPercentage) && playedPercentage >= 100) return true;
 
-  var positionTicks = Number(ud.PlaybackPositionTicks || 0);
-  var runtimeTicks = Number(runtimeOverride || getPlaybackRuntimeTicks(item) || 0);
+  const positionTicks = Number(ud.PlaybackPositionTicks || 0);
+  const runtimeTicks = Number(runtimeOverride || getPlaybackRuntimeTicks(item) || 0);
   return positionTicks > 0 && runtimeTicks > 0 && positionTicks >= runtimeTicks;
 }
 
 function isPartialPlaybackItem(item, runtimeOverride = 0) {
-  var ud = item.UserData || item.UserDataDto || null;
+  const ud = item?.UserData || item?.UserDataDto || null;
   if (!ud || isPlaybackCompleted(item, runtimeOverride)) return false;
 
-  var positionTicks = Number(ud.PlaybackPositionTicks || 0);
+  const positionTicks = Number(ud.PlaybackPositionTicks || 0);
   if (!(positionTicks > 0)) return false;
 
-  var runtimeTicks = Number(runtimeOverride || getPlaybackRuntimeTicks(item) || 0);
+  const runtimeTicks = Number(runtimeOverride || getPlaybackRuntimeTicks(item) || 0);
   return runtimeTicks > 0 ? positionTicks < runtimeTicks : true;
 }
 
 function getPlaybackPercent(item) {
-  var ud = item.UserData || item.UserDataDto || null;
+  const ud = item?.UserData || item?.UserDataDto || null;
   if (!ud) return 0;
-  var durTicks = getPlaybackRuntimeTicks(item);
+  const durTicks = getPlaybackRuntimeTicks(item);
   if (isPlaybackCompleted(item, durTicks)) return 0;
 
-  var p = Number(ud.PlayedPercentage);
+  const p = Number(ud.PlayedPercentage);
   if (Number.isFinite(p) && p > 0) return clamp01(p / 100);
 
-  var pos = Number(ud.PlaybackPositionTicks);
+  const pos = Number(ud.PlaybackPositionTicks);
   if (!Number.isFinite(pos) || pos <= 0) return 0;
 
   if (!Number.isFinite(durTicks) || durTicks <= 0) return 0;
@@ -881,59 +881,59 @@ function getPlaybackPercent(item) {
 }
 
 function hasPlaybackActivity(item) {
-  var ud = item.UserData || item.UserDataDto || null;
+  const ud = item?.UserData || item?.UserDataDto || null;
   if (!ud) return false;
   if (ud.Played === true) return true;
 
-  var playedPct = Number(ud.PlayedPercentage);
+  const playedPct = Number(ud.PlayedPercentage);
   if (Number.isFinite(playedPct) && playedPct > 0) return true;
 
-  var pos = Number(ud.PlaybackPositionTicks);
+  const pos = Number(ud.PlaybackPositionTicks);
   if (Number.isFinite(pos) && pos > 0) return true;
 
-  var lastPlayedTs = getLastPlayedTs(item);
+  const lastPlayedTs = getLastPlayedTs(item);
   return lastPlayedTs > 0;
 }
 
 function samePlaybackProgressByOrder(a, b, limit) {
-  var left = Array.isArray(a) ? a : [];
-  var right = Array.isArray(b) ? b : [];
-  var cap = Number.isFinite(limit) ? Math.max(0, limit | 0) : Math.max(left.length, right.length);
-  var n = Math.min(cap, left.length, right.length);
-  for (var i = 0; i < n; i++) {
-    var pa = Math.round(getPlaybackPercent(left[i]) * 1000);
-    var pb = Math.round(getPlaybackPercent(right[i]) * 1000);
+  const left = Array.isArray(a) ? a : [];
+  const right = Array.isArray(b) ? b : [];
+  const cap = Number.isFinite(limit) ? Math.max(0, limit | 0) : Math.max(left.length, right.length);
+  const n = Math.min(cap, left.length, right.length);
+  for (let i = 0; i < n; i++) {
+    const pa = Math.round(getPlaybackPercent(left[i]) * 1000);
+    const pb = Math.round(getPlaybackPercent(right[i]) * 1000);
     if (pa !== pb) return false;
   }
   return true;
 }
 
-var __hoverIntent = new WeakMap();
-var __enterTimers = new WeakMap();
-var __enterSeq     = new WeakMap();
-var __cooldownUntil= new WeakMap();
-var __openTokenMap = new WeakMap();
-var __boundPreview = new WeakMap();
+const __hoverIntent = new WeakMap();
+const __enterTimers = new WeakMap();
+const __enterSeq     = new WeakMap();
+const __cooldownUntil= new WeakMap();
+const __openTokenMap = new WeakMap();
+const __boundPreview = new WeakMap();
 
-var __lastMoveTS = 0;
-var __pmLast = 0;
-window.addEventListenerfunction("pointermove", () {
-  var now = Date.now();
+let __lastMoveTS = 0;
+let __pmLast = 0;
+window.addEventListener("pointermove", () => {
+  const now = Date.now();
   if (now - __pmLast > 100) { __pmLast = now; __lastMoveTS = now; }
 }, {passive:true});
 
-var __touchStickyOpen = false;
-var __touchLastOpenTS = 0;
-var TOUCH_STICKY_GRACE_MS = 1200;
+let __touchStickyOpen = false;
+let __touchLastOpenTS = 0;
+const TOUCH_STICKY_GRACE_MS = 1200;
 
 function hardWipeHoverModalDom() {
-  var modal = document.querySelector(".video-preview-modal");
+  const modal = document.querySelector(".video-preview-modal");
   if (!modal) return;
   try { modal.dataset.itemId = ""; } catch {}
-  modal.querySelectorAll("img").forEach(function(img) {
+  modal.querySelectorAll("img").forEach(img => {
     try { img.removeAttribute("src"); img.removeAttribute("srcset"); } catch {}
   });
-  modal.querySelectorAll('[data-field="title"],[data-field="subtitle"],[data-field="meta"],[data-field="genres"]').forEach(function(el) {
+  modal.querySelectorAll('[data-field="title"],[data-field="subtitle"],[data-field="meta"],[data-field="genres"]').forEach(el => {
     el.textContent = "";
   });
 }
@@ -941,15 +941,15 @@ function hardWipeHoverModalDom() {
 (function ensureGlobalTouchOutsideCloser(){
   if (window.__jmsTouchCloserBound_recent) return;
   window.__jmsTouchCloserBound_recent = true;
-  document.addEventListenerfunction("pointerdown", (e) {
+  document.addEventListener("pointerdown", (e) => {
     if (!__touchStickyOpen) return;
-    var inModal = e.target.closest.(".video-preview-modal");
+    const inModal = e.target?.closest?.(".video-preview-modal");
     if (!inModal) {
       try { safeCloseHoverModal(); } catch {}
       __touchStickyOpen = false;
     }
   }, { passive: true });
-  document.addEventListenerfunction("keydown", (e) {
+  document.addEventListener("keydown", (e) => {
     if (!__touchStickyOpen) return;
     if (e.key === "Escape") {
       try { safeCloseHoverModal(); } catch {}
@@ -960,14 +960,14 @@ function hardWipeHoverModalDom() {
 
 function isHoveringCardOrModal(cardEl) {
   try {
-    var overCard  = cardEl.isConnected && cardEl.matches(":hover");
-    var overModal = !!document.querySelector(".video-preview-modal:hover");
+    const overCard  = cardEl?.isConnected && cardEl.matches(":hover");
+    const overModal = !!document.querySelector(".video-preview-modal:hover");
     return !!(overCard || overModal);
   } catch { return false; }
 }
 
 function schedulePostOpenGuard(cardEl, token, delay=300) {
-  setTimeoutfunction(() {
+  setTimeout(() => {
     if (__openTokenMap.get(cardEl) !== token) return;
     if (!isHoveringCardOrModal(cardEl)) {
       try { safeCloseHoverModal(); } catch {}
@@ -976,8 +976,8 @@ function schedulePostOpenGuard(cardEl, token, delay=300) {
 }
 
 function scheduleClosePollingGuard(cardEl, tries=4, interval=120) {
-  var count = 0;
-  var iid = setIntervalfunction(() {
+  let count = 0;
+  const iid = setInterval(() => {
     count++;
     if (isHoveringCardOrModal(cardEl)) { clearInterval(iid); return; }
     if (Date.now() - __lastMoveTS > 120 || count >= tries) {
@@ -988,7 +988,7 @@ function scheduleClosePollingGuard(cardEl, tries=4, interval=120) {
 }
 
 function clearEnterTimer(cardEl) {
-  var t = __enterTimers.get(cardEl);
+  const t = __enterTimers.get(cardEl);
   if (t) { clearTimeout(t); __enterTimers.delete(cardEl); }
 }
 
@@ -1014,22 +1014,22 @@ function safeCloseHoverModal() {
 }
 
 function attachHoverTrailer(cardEl, itemLike) {
-  var itemId = resolveItemId(itemLike) || sanitizeResolvedId(cardEl.dataset.itemId);
+  const itemId = resolveItemId(itemLike) || sanitizeResolvedId(cardEl?.dataset?.itemId);
   if (!cardEl || !itemId) return;
   if (!__enterSeq.has(cardEl)) __enterSeq.set(cardEl, 0);
 
-  var onEnter = function(e) {
-    var isTouch = e.pointerType === "touch";
-    var until = __cooldownUntil.get(cardEl) || 0;
+  const onEnter = (e) => {
+    const isTouch = e?.pointerType === "touch";
+    const until = __cooldownUntil.get(cardEl) || 0;
     if (Date.now() < until) return;
 
     __hoverIntent.set(cardEl, true);
     clearEnterTimer(cardEl);
 
-    var seq = (__enterSeq.get(cardEl) || 0) + 1;
+    const seq = (__enterSeq.get(cardEl) || 0) + 1;
     __enterSeq.set(cardEl, seq);
 
-    var timer = setTimeoutfunction(() {
+    const timer = setTimeout(() => {
       if ((__enterSeq.get(cardEl) || 0) !== seq) return;
       if (!__hoverIntent.get(cardEl)) return;
       if (!isTouch) {
@@ -1037,7 +1037,7 @@ function attachHoverTrailer(cardEl, itemLike) {
       }
       try { window.dispatchEvent(new Event("closeAllMiniPopovers")); } catch {}
 
-      var token = (Date.now() ^ Math.random()*1e9) | 0;
+      const token = (Date.now() ^ Math.random()*1e9) | 0;
       __openTokenMap.set(cardEl, token);
 
       try { hardWipeHoverModalDom(); } catch {}
@@ -1048,13 +1048,13 @@ function attachHoverTrailer(cardEl, itemLike) {
         __touchLastOpenTS = Date.now();
       }
       if (!isTouch) schedulePostOpenGuard(cardEl, token, 300);
-    }, getOpenHoverDelay());
+    }, OPEN_HOVER_DELAY_MS);
 
     __enterTimers.set(cardEl, timer);
   };
 
-  var onLeave = function(e) {
-    var isTouch = e.pointerType === "touch";
+  const onLeave = (e) => {
+    const isTouch = e?.pointerType === "touch";
     __hoverIntent.set(cardEl, false);
     clearEnterTimer(cardEl);
     __enterSeq.set(cardEl, (__enterSeq.get(cardEl) || 0) + 1);
@@ -1064,8 +1064,8 @@ function attachHoverTrailer(cardEl, itemLike) {
       return;
     }
 
-    var rt = e.relatedTarget || null;
-    var goingToModal = !!(rt && (rt.closest ? rt.closest(".video-preview-modal") : null));
+    const rt = e?.relatedTarget || null;
+    const goingToModal = !!(rt && (rt.closest ? rt.closest(".video-preview-modal") : null));
     if (goingToModal) return;
 
     try { safeCloseHoverModal(); } catch {}
@@ -1075,13 +1075,13 @@ function attachHoverTrailer(cardEl, itemLike) {
   };
 
   cardEl.addEventListener("pointerenter", onEnter, { passive: true });
-  cardEl.addEventListenerfunction("pointerdown", (e) { if (e.pointerType === "touch") onEnter(e); }, { passive: true });
+  cardEl.addEventListener("pointerdown", (e) => { if (e.pointerType === "touch") onEnter(e); }, { passive: true });
   cardEl.addEventListener("pointerleave", onLeave,  { passive: true });
   __boundPreview.set(cardEl, { mode: "modal", onEnter, onLeave });
 }
 
 function detachPreviewHandlers(cardEl) {
-  var rec = __boundPreview.get(cardEl);
+  const rec = __boundPreview.get(cardEl);
   if (!rec) return;
   try { cardEl.removeEventListener("pointerenter", rec.onEnter); } catch {}
   try { cardEl.removeEventListener("pointerleave", rec.onLeave); } catch {}
@@ -1093,20 +1093,20 @@ function detachPreviewHandlers(cardEl) {
 
 function attachPreviewByMode(cardEl, itemLike, mode) {
   detachPreviewHandlers(cardEl);
-  var itemId = resolveItemId(itemLike) || sanitizeResolvedId(cardEl.dataset.itemId);
+  const itemId = resolveItemId(itemLike) || sanitizeResolvedId(cardEl?.dataset?.itemId);
   if (!itemId) return;
-  var normalizedItem = { ...(itemLike || {}), Id: itemId, Name: resolveItemName(itemLike) };
+  const normalizedItem = { ...(itemLike || {}), Id: itemId, Name: resolveItemName(itemLike) };
   if (mode === "studioMini") {
     attachMiniPosterHover(cardEl, normalizedItem);
-    __boundPreview.setfunction(cardEl, { mode: "studioMini", onEnter: (){}, onLeave: function(){} });
+    __boundPreview.set(cardEl, { mode: "studioMini", onEnter: ()=>{}, onLeave: ()=>{} });
   } else {
     attachHoverTrailer(cardEl, normalizedItem);
   }
 }
 
 function gotoHash(hash) {
-  var sid = (STATE.serverId || getSessionInfo().serverId || "").toString();
-  var fixed = ensureServerIdInHash(hash, sid);
+  const sid = (STATE.serverId || getSessionInfo()?.serverId || "").toString();
+  const fixed = ensureServerIdInHash(hash, sid);
   try { window.location.hash = fixed; }
   catch { try { window.location.href = fixed; } catch {} }
 }
@@ -1116,58 +1116,58 @@ function ensureServerIdInHash(hash, serverId) {
   if (!serverId) return hash;
   if (/\bserverId=/.test(hash)) return hash;
   if (!hash.startsWith("#/")) return hash;
-  var sep = hash.includes("?") ? "&" : "?";
-  return (hash) + (sep) + "serverId=" + (encodeURIComponent(serverId));
+  const sep = hash.includes("?") ? "&" : "?";
+  return `${hash}${sep}serverId=${encodeURIComponent(serverId)}`;
 }
 
-var DEFAULT_TV_PAGE = "#/tv";
-var DEFAULT_MOVIES_PAGE = "#/movies";
-var DEFAULT_MUSIC_PAGE = "#/music";
+const DEFAULT_TV_PAGE = "#/tv";
+const DEFAULT_MOVIES_PAGE = "#/movies";
+const DEFAULT_MUSIC_PAGE = "#/music";
 
-function resolveDefaultPages(userId) {
+async function resolveDefaultPages(userId) {
   try {
-    var data = makeApiRequest("/Users/" + (userId) + "/Views");
-    var items = Array.isArray(data.Items) ? data.Items : [];
+    const data = await makeApiRequest(`/Users/${userId}/Views`);
+    const items = Array.isArray(data?.Items) ? data.Items : [];
 
-    var movieLibs = items.filter(function(x) (x.CollectionType === "movies")).map(function(x) ({
-      Id: x.Id,
-      Name: x.Name || "",
-      CollectionType: x.CollectionType
-    })).filter(function(x) x.Id);
+    const movieLibs = items.filter(x => (x?.CollectionType === "movies")).map(x => ({
+      Id: x?.Id,
+      Name: x?.Name || "",
+      CollectionType: x?.CollectionType
+    })).filter(x => x.Id);
     STATE.movieLibs = movieLibs;
 
-    var tvLibs = items.filter(function(x) (x.CollectionType === "tvshows")).map(function(x) ({
-      Id: x.Id,
-      Name: x.Name || "",
-      CollectionType: x.CollectionType
-    })).filter(function(x) x.Id);
+    const tvLibs = items.filter(x => (x?.CollectionType === "tvshows")).map(x => ({
+      Id: x?.Id,
+      Name: x?.Name || "",
+      CollectionType: x?.CollectionType
+    })).filter(x => x.Id);
     STATE.tvLibs = tvLibs;
 
-    var other = items
-      .filter(function(x) x.Id)
-      .map(function(x) ({
+    const other = items
+      .filter(x => x?.Id)
+      .map(x => ({
         Id: x.Id,
         Name: x.Name || "",
         CollectionType: (x.CollectionType || "").toString()
       }))
-      .filter(function(x) {
-        var ct = (x.CollectionType || "").toLowerCase();
+      .filter(x => {
+        const ct = (x.CollectionType || "").toLowerCase();
         return ct !== "movies" && ct !== "tvshows" && ct !== "music";
       });
     STATE.otherLibs = other;
 
-    var tvLib = tvLibs[0] || null;
-    var movLib = movieLibs[0] || null;
-    var musicLib = items.find(function(x) (x.CollectionType === "music")) || null;
+    const tvLib = tvLibs[0] || null;
+    const movLib = movieLibs[0] || null;
+    const musicLib = items.find(x => (x?.CollectionType === "music")) || null;
 
-    if (tvLib.Id) {
-      STATE.defaultTvHash = "#/tv?topParentId=" + (encodeURIComponent(tvLib.Id)) + "&collectionType=tvshows&tab=1";
+    if (tvLib?.Id) {
+      STATE.defaultTvHash = `#/tv?topParentId=${encodeURIComponent(tvLib.Id)}&collectionType=tvshows&tab=1`;
     }
-    if (movLib.Id) {
-      STATE.defaultMoviesHash = "#/movies?topParentId=" + (encodeURIComponent(movLib.Id)) + "&collectionType=movies&tab=1";
+    if (movLib?.Id) {
+      STATE.defaultMoviesHash = `#/movies?topParentId=${encodeURIComponent(movLib.Id)}&collectionType=movies&tab=1`;
     }
-    if (musicLib.Id) {
-      STATE.defaultMusicHash = "#/music?topParentId=" + (encodeURIComponent(musicLib.Id)) + "&collectionType=music&tab=1";
+    if (musicLib?.Id) {
+      STATE.defaultMusicHash = `#/music?topParentId=${encodeURIComponent(musicLib.Id)}&collectionType=music&tab=1`;
     }
   } catch (e) {
     console.warn("recentRows: resolveDefaultPages error:", e);
@@ -1176,74 +1176,74 @@ function resolveDefaultPages(userId) {
 
 function readJsonArrayLs(key) {
   try {
-    var raw = localStorage.getItem(key);
+    const raw = localStorage.getItem(key);
     if (!raw || raw === "[object Object]") return null;
-    var arr = JSON.parse(raw);
+    const arr = JSON.parse(raw);
     if (!Array.isArray(arr)) return null;
-    return arr.map(function(x) String(x || "").trim()).filter(Boolean);
+    return arr.map(x => String(x || "").trim()).filter(Boolean);
   } catch {
     return null;
   }
 }
 
 function getSelectedTvLibIds(kind) {
-  var k =
+  const k =
     kind === "recentSeries"   ? "recentSeriesTvLibIds" :
     kind === "recentEpisodes" ? "recentEpisodesTvLibIds" :
     kind === "continueSeries" ? "continueSeriesTvLibIds" :
     "";
   if (!k) return [];
 
-  var fromLs = readJsonArrayLs(k);
+  const fromLs = readJsonArrayLs(k);
   if (fromLs && fromLs.length) return fromLs;
 
-  var cfg = getConfig.() || {};
-  var fromCfg =
+  const cfg = getConfig?.() || {};
+  const fromCfg =
     kind === "recentSeries"   ? cfg.recentSeriesTvLibIds :
     kind === "recentEpisodes" ? cfg.recentEpisodesTvLibIds :
     kind === "continueSeries" ? cfg.continueSeriesTvLibIds :
     null;
-  return Array.isArray(fromCfg) ? fromCfg.map(function(x) String(x||"").trim()).filter(Boolean) : [];
+  return Array.isArray(fromCfg) ? fromCfg.map(x => String(x||"").trim()).filter(Boolean) : [];
 }
 
 function getSelectedMovieLibIds() {
-  var fromLs = readJsonArrayLs("recentMoviesLibIds");
+  const fromLs = readJsonArrayLs("recentMoviesLibIds");
   if (fromLs && fromLs.length) return fromLs;
 
-  var cfg = getConfig.() || {};
-  var fromCfg = cfg.recentMoviesLibIds;
-  return Array.isArray(fromCfg) ? fromCfg.map(function(x) String(x || "").trim()).filter(Boolean) : [];
+  const cfg = getConfig?.() || {};
+  const fromCfg = cfg.recentMoviesLibIds;
+  return Array.isArray(fromCfg) ? fromCfg.map(x => String(x || "").trim()).filter(Boolean) : [];
 }
 
 function resolveMovieLibSelection() {
-  var all = (STATE.movieLibs || []).map(function(x) x.Id).filter(Boolean);
+  const all = (STATE.movieLibs || []).map(x => x.Id).filter(Boolean);
   if (!all.length) return [];
-  var sel = getSelectedMovieLibIds();
-  var filtered = sel.filter(function(id) all.includes(id));
+  const sel = getSelectedMovieLibIds();
+  const filtered = sel.filter(id => all.includes(id));
   return filtered.length ? filtered : all;
 }
 
 function resolveTvLibSelection(kind) {
-  var all = (STATE.tvLibs || []).map(function(x) x.Id).filter(Boolean);
+  const all = (STATE.tvLibs || []).map(x => x.Id).filter(Boolean);
   if (!all.length) return [];
-  var sel = getSelectedTvLibIds(kind);
-  var filtered = sel.filter(function(id) all.includes(id));
+  const sel = getSelectedTvLibIds(kind);
+  const filtered = sel.filter(id => all.includes(id));
   return filtered.length ? filtered : all;
 }
 
 function getSelectedOtherLibIds() {
-  var fromLs = readJsonArrayLs("otherLibrariesIds");
+  const fromLs = readJsonArrayLs("otherLibrariesIds");
   if (fromLs && fromLs.length) return fromLs;
-  var cfg = getConfig.() || {};
-  var fromCfg = cfg.otherLibrariesIds || cfg.otherLibIds || null;
-  return Array.isArray(fromCfg) ? fromCfg.map(function(x) String(x||"").trim()).filter(Boolean) : [];
+  const cfg = getConfig?.() || {};
+  const fromCfg = cfg.otherLibrariesIds || cfg.otherLibIds || null;
+  return Array.isArray(fromCfg) ? fromCfg.map(x => String(x||"").trim()).filter(Boolean) : [];
 }
 
 function resolveOtherLibSelection() {
-  var all = (STATE.otherLibs || []).map(function(x) x.Id).filter(Boolean);
+  const all = (STATE.otherLibs || []).map(x => x.Id).filter(Boolean);
   if (!all.length) return [];
-  var sel = getSelectedOtherLibIds();
-  var filtered = sel.filter(function(id) all.includes(id));
+  const sel = getSelectedOtherLibIds();
+  const filtered = sel.filter(id => all.includes(id));
   return filtered.length ? filtered : all;
 }
 
@@ -1251,17 +1251,17 @@ function normalizeIdList(ids) {
   return Array.from(
     new Set(
       (Array.isArray(ids) ? ids : [])
-        .mapfunction((id) String(id || "").trim())
+        .map((id) => String(id || "").trim())
         .filter(Boolean)
     )
   );
 }
 
 function resolveScopedParentIds(allIds, selectedIds) {
-  var all = normalizeIdList(allIds);
+  const all = normalizeIdList(allIds);
   if (!all.length) return [];
 
-  var selected = normalizeIdList(selectedIds).filterfunction((id) all.includes(id));
+  const selected = normalizeIdList(selectedIds).filter((id) => all.includes(id));
   if (!selected.length || selected.length >= all.length) {
     return [];
   }
@@ -1269,26 +1269,26 @@ function resolveScopedParentIds(allIds, selectedIds) {
 }
 
 function buildTopRowMetaType(type, parentIds = []) {
-  var scoped = normalizeIdList(parentIds).sort();
-  return scoped.length ? (type) + "@top:" + (scoped.join(",")) : type;
+  const scoped = normalizeIdList(parentIds).sort();
+  return scoped.length ? `${type}@top:${scoped.join(",")}` : type;
 }
 
 function clampNumber(value, min, max) {
-  var num = Number(value);
+  const num = Number(value);
   if (!Number.isFinite(num)) return min;
   return Math.min(max, Math.max(min, num));
 }
 
 function toTimestamp(value) {
   if (!value) return 0;
-  var ts = Date.parse(value);
+  const ts = Date.parse(value);
   return Number.isFinite(ts) ? ts : 0;
 }
 
 function getProviderIdValue(item, key) {
-  var bag = item.ProviderIds || item.Providerids || item.providerIds || null;
+  const bag = item?.ProviderIds || item?.Providerids || item?.providerIds || null;
   if (!bag || !key) return "";
-  var candidates = [
+  const candidates = [
     bag[key],
     bag[String(key).toLowerCase()],
     bag[String(key).toUpperCase()],
@@ -1309,46 +1309,46 @@ function normalizeComparableText(value) {
 }
 
 function getItemYear(item) {
-  var year = Number(item.ProductionYear);
+  const year = Number(item?.ProductionYear);
   if (Number.isFinite(year) && year > 0) return year | 0;
-  var premiereTs = toTimestamp(item.PremiereDate);
+  const premiereTs = toTimestamp(item?.PremiereDate);
   if (!premiereTs) return 0;
   return new Date(premiereTs).getUTCFullYear();
 }
 
 function buildTitleYearKey(title, year) {
-  var normalizedTitle = normalizeComparableText(title);
-  var normalizedYear = Number(year);
+  const normalizedTitle = normalizeComparableText(title);
+  const normalizedYear = Number(year);
   if (!normalizedTitle || !Number.isFinite(normalizedYear) || normalizedYear <= 0) return "";
-  return (normalizedTitle) + "|" + (normalizedYear | 0);
+  return `${normalizedTitle}|${normalizedYear | 0}`;
 }
 
 function getTmdbResultYear(result) {
   return getItemYear({
-    ProductionYear: result.release_date ? new Date(result.release_date).getUTCFullYear() : null,
-    PremiereDate: result.release_date || null
+    ProductionYear: result?.release_date ? new Date(result.release_date).getUTCFullYear() : null,
+    PremiereDate: result?.release_date || null
   });
 }
 
-function getTopRankUserProfile(userId) {
-  var cacheKey = String(userId || STATE.userId || "").trim() || "default";
-  var now = Date.now();
-  var cached = __topRankProfileCache.get(cacheKey);
-  if (cached.value && cached.expiresAt > now) {
+async function getTopRankUserProfile(userId) {
+  const cacheKey = String(userId || STATE.userId || "").trim() || "default";
+  const now = Date.now();
+  const cached = __topRankProfileCache.get(cacheKey);
+  if (cached?.value && cached.expiresAt > now) {
     return cached.value;
   }
-  if (cached.pending) {
+  if (cached?.pending) {
     return cached.pending;
   }
 
-  var pending = function(() {
-    var rawTopGenres = getCachedUserTopGenres(5).catchfunction(() []);
-    var topGenres = Array.isArray(rawTopGenres) ? rawTopGenres : [];
-    var normalizedGenres = [];
-    var queryGenres = [];
-    var seen = new Set();
-    for (var genre of topGenres) {
-      var key = normalizeComparableText(genre);
+  const pending = (async () => {
+    const rawTopGenres = await getCachedUserTopGenres(5).catch(() => []);
+    const topGenres = Array.isArray(rawTopGenres) ? rawTopGenres : [];
+    const normalizedGenres = [];
+    const queryGenres = [];
+    const seen = new Set();
+    for (const genre of topGenres) {
+      const key = normalizeComparableText(genre);
       if (!key || seen.has(key)) continue;
       seen.add(key);
       normalizedGenres.push(key);
@@ -1356,9 +1356,9 @@ function getTopRankUserProfile(userId) {
       if (normalizedGenres.length >= TOP_RANK_GENRE_WEIGHTS.length) break;
     }
 
-    var genreWeights = new Map();
-    normalizedGenres.forEach(function((genre, index) {
-      genreWeights.set(genre, TOP_RANK_GENRE_WEIGHTS[index] || 0.4);
+    const genreWeights = new Map();
+    normalizedGenres.forEach((genre, index) => {
+      genreWeights.set(genre, TOP_RANK_GENRE_WEIGHTS[index] ?? 0.4);
     });
 
     return {
@@ -1368,7 +1368,7 @@ function getTopRankUserProfile(userId) {
       genreWeights,
     };
   })()
-    .thenfunction((value) {
+    .then((value) => {
       __topRankProfileCache.set(cacheKey, {
         value,
         expiresAt: Date.now() + TOP_RANK_PROFILE_TTL_MS,
@@ -1376,33 +1376,33 @@ function getTopRankUserProfile(userId) {
       });
       return value;
     })
-    .catchfunction((error) {
+    .catch((error) => {
       __topRankProfileCache.delete(cacheKey);
       throw error;
     });
 
   __topRankProfileCache.set(cacheKey, {
-    value: cached.value || null,
-    expiresAt: cached.expiresAt || 0,
+    value: cached?.value || null,
+    expiresAt: cached?.expiresAt || 0,
     pending
   });
   return pending;
 }
 
 function getTopRankGenreMatch(item, profile) {
-  var itemGenres = Array.isArray(item.Genres) ? item.Genres : [];
-  if (!itemGenres.length || !(profile.genreWeights instanceof Map) || !profile.genreWeights.size) {
+  const itemGenres = Array.isArray(item?.Genres) ? item.Genres : [];
+  if (!itemGenres.length || !(profile?.genreWeights instanceof Map) || !profile.genreWeights.size) {
     return { score: 0, matches: 0 };
   }
 
-  var score = 0;
-  var matches = 0;
-  var matched = new Set();
+  let score = 0;
+  let matches = 0;
+  const matched = new Set();
 
-  for (var genre of itemGenres) {
-    var key = normalizeComparableText(genre);
+  for (const genre of itemGenres) {
+    const key = normalizeComparableText(genre);
     if (!key || matched.has(key)) continue;
-    var weight = profile.genreWeights.get(key);
+    const weight = profile.genreWeights.get(key);
     if (!Number.isFinite(weight)) continue;
     matched.add(key);
     matches++;
@@ -1415,7 +1415,7 @@ function getTopRankGenreMatch(item, profile) {
 }
 
 function scoreTopRankCommunityRating(rating) {
-  var value = clampNumber(rating, 0, 10);
+  const value = clampNumber(rating, 0, 10);
   if (value >= 9.2) return 18;
   if (value >= 8.7) return 15;
   if (value >= 8.2) return 11;
@@ -1425,7 +1425,7 @@ function scoreTopRankCommunityRating(rating) {
 }
 
 function scoreTopRankCriticRating(critic) {
-  var value = clampNumber(critic, 0, 100);
+  const value = clampNumber(critic, 0, 100);
   if (value >= 95) return 16;
   if (value >= 90) return 13;
   if (value >= 82) return 10;
@@ -1435,14 +1435,14 @@ function scoreTopRankCriticRating(critic) {
 }
 
 function getTopRankMatchPercentage(item, profile, sourceCount = 1) {
-  var playedPct = clampNumber(item.UserData.PlayedPercentage, 0, 100);
-  var rating = clampNumber(item.CommunityRating, 0, 10);
-  var critic = clampNumber(item.CriticRating, 0, 100);
-  var year = getItemYear(item);
-  var age = year > 0 && profile.currentYear ? Math.max(0, profile.currentYear - year) : null;
-  var genreMatch = getTopRankGenreMatch(item, profile);
+  const playedPct = clampNumber(item?.UserData?.PlayedPercentage, 0, 100);
+  const rating = clampNumber(item?.CommunityRating, 0, 10);
+  const critic = clampNumber(item?.CriticRating, 0, 100);
+  const year = getItemYear(item);
+  const age = year > 0 && profile?.currentYear ? Math.max(0, profile.currentYear - year) : null;
+  const genreMatch = getTopRankGenreMatch(item, profile);
 
-  var score = 38;
+  let score = 38;
   score += genreMatch.score;
   score += scoreTopRankCommunityRating(rating);
   score += scoreTopRankCriticRating(critic);
@@ -1453,15 +1453,15 @@ function getTopRankMatchPercentage(item, profile, sourceCount = 1) {
     else if (age <= 15) score += 2;
   }
 
-  if (item.UserData.IsFavorite === true) score += 6;
+  if (item?.UserData?.IsFavorite === true) score += 6;
   if (playedPct > 0 && playedPct < 85) score += 4;
-  if (FAMILY_FRIENDLY_RATINGS.has(String(item.OfficialRating || "").trim())) score += 2;
+  if (FAMILY_FRIENDLY_RATINGS.has(String(item?.OfficialRating || "").trim())) score += 2;
   if (sourceCount >= 4) score += 8;
   else if (sourceCount === 3) score += 6;
   else if (sourceCount === 2) score += 3;
 
   if (hasPlaybackActivity(item)) score -= 8;
-  if (!String(item.Overview || "").trim()) score -= 2;
+  if (!String(item?.Overview || "").trim()) score -= 2;
 
   if (rating >= 9 && critic < 70 && genreMatch.matches === 0 && sourceCount < 2) {
     score -= 16;
@@ -1473,12 +1473,12 @@ function getTopRankMatchPercentage(item, profile, sourceCount = 1) {
 }
 
 function getTopRankCompositeBoost(entry, profile) {
-  var sourceCount = entry.sources instanceof Set ? entry.sources.size : 1;
-  var matchPercentage = getTopRankMatchPercentage(entry.item, profile, sourceCount);
-  var critic = clampNumber(entry.item.CriticRating, 0, 100);
-  var community = clampNumber(entry.item.CommunityRating, 0, 10);
+  const sourceCount = entry?.sources instanceof Set ? entry.sources.size : 1;
+  const matchPercentage = getTopRankMatchPercentage(entry?.item, profile, sourceCount);
+  const critic = clampNumber(entry?.item?.CriticRating, 0, 100);
+  const community = clampNumber(entry?.item?.CommunityRating, 0, 10);
 
-  var boost = matchPercentage * 6.2;
+  let boost = matchPercentage * 6.2;
   if (critic >= 85 && community >= 7.8) boost += 22;
   if (sourceCount >= 3) boost += 10;
   if (sourceCount === 1 && community >= 8.8 && critic <= 0) boost -= 18;
@@ -1486,40 +1486,40 @@ function getTopRankCompositeBoost(entry, profile) {
 }
 
 function getTopRankSignals(item, index = 0, modeKey = "rating", queryWeight = 1) {
-  var playedPct = clampNumber(item.UserData.PlayedPercentage, 0, 100);
-  var year = getItemYear(item);
-  var now = Date.now();
-  var premiereAgeDays = function(() {
-    var ts = toTimestamp(item.PremiereDate);
+  const playedPct = clampNumber(item?.UserData?.PlayedPercentage, 0, 100);
+  const year = getItemYear(item);
+  const now = Date.now();
+  const premiereAgeDays = (() => {
+    const ts = toTimestamp(item?.PremiereDate);
     if (!ts) return null;
     return Math.max(0, (now - ts) / 86400000);
   })();
-  var createdAgeDays = function(() {
-    var ts = toTimestamp(item.DateCreated);
+  const createdAgeDays = (() => {
+    const ts = toTimestamp(item?.DateCreated);
     if (!ts) return null;
     return Math.max(0, (now - ts) / 86400000);
   })();
 
-  var orderBias =
+  const orderBias =
     modeKey === "playCount" ? 1.08 :
     modeKey === "profile" ? 0.98 :
     modeKey === "premiere" ? 0.96 :
     modeKey === "created" ? 0.9 :
     0.72;
-  var orderScore = Math.max(0, 64 - index) * 4.15 * queryWeight * orderBias;
-  var ratingScore = scoreTopRankCommunityRating(item.CommunityRating) * 1.3;
-  var criticScore = scoreTopRankCriticRating(item.CriticRating) * 1.15;
-  var yearScore = year > 0 ? Math.max(0, year - 1998) * 0.18 : 0;
-  var freshnessScore = hasPlaybackActivity(item) ? 0 : 12;
-  var favoriteScore = item.UserData.IsFavorite === true ? 10 : 0;
-  var progressScore = (
+  const orderScore = Math.max(0, 64 - index) * 4.15 * queryWeight * orderBias;
+  const ratingScore = scoreTopRankCommunityRating(item?.CommunityRating) * 1.3;
+  const criticScore = scoreTopRankCriticRating(item?.CriticRating) * 1.15;
+  const yearScore = year > 0 ? Math.max(0, year - 1998) * 0.18 : 0;
+  const freshnessScore = hasPlaybackActivity(item) ? 0 : 12;
+  const favoriteScore = item?.UserData?.IsFavorite === true ? 10 : 0;
+  const progressScore = (
     Number.isFinite(playedPct) && playedPct > 0 && playedPct < 95
       ? Math.max(0, 10 - Math.abs(50 - playedPct) * 0.14)
       : 0
   );
-  var premiereScore = premiereAgeDays == null ? 0 : Math.max(0, 2400 - premiereAgeDays) * 0.0065;
-  var createdScore = createdAgeDays == null ? 0 : Math.max(0, 540 - createdAgeDays) * 0.014;
-  var modeBonus =
+  const premiereScore = premiereAgeDays == null ? 0 : Math.max(0, 2400 - premiereAgeDays) * 0.0065;
+  const createdScore = createdAgeDays == null ? 0 : Math.max(0, 540 - createdAgeDays) * 0.014;
+  const modeBonus =
     modeKey === "playCount" ? 24 :
     modeKey === "profile" ? 16 :
     modeKey === "rating" ? 5 :
@@ -1529,14 +1529,14 @@ function getTopRankSignals(item, index = 0, modeKey = "rating", queryWeight = 1)
   return orderScore + ratingScore + criticScore + yearScore + freshnessScore + favoriteScore + progressScore + premiereScore + createdScore + modeBonus;
 }
 
-var TOP_RANK_SORT_MODES = Object.freeze([
+const TOP_RANK_SORT_MODES = Object.freeze([
   { key: "playCount", sortBy: "PlayCount,CommunityRating,PremiereDate,DateCreated", weight: 1.0 },
   { key: "rating", sortBy: "CommunityRating,PremiereDate,DateCreated", weight: 0.56 },
   { key: "premiere", sortBy: "PremiereDate,CommunityRating,DateCreated", weight: 0.76 },
   { key: "created", sortBy: "DateCreated,CommunityRating,PremiereDate", weight: 0.62 }
 ]);
 
-var TOP_RANK_FIELDS = [
+const TOP_RANK_FIELDS = [
   COMMON_FIELDS,
   "CriticRating",
   "DateCreated",
@@ -1546,15 +1546,15 @@ var TOP_RANK_FIELDS = [
 ].join(",");
 
 function mergeRankedEntry(map, item, score, sourceKey) {
-  if (!item.Id || !Number.isFinite(score)) return;
-  var prev = map.get(item.Id);
+  if (!item?.Id || !Number.isFinite(score)) return;
+  const prev = map.get(item.Id);
   if (!prev) {
     map.set(item.Id, { item, score, sources: new Set([sourceKey]) });
     return;
   }
 
   if (!prev.sources.has(sourceKey)) {
-    var previousScore = prev.score;
+    const previousScore = prev.score;
     prev.score = Math.max(previousScore, score) + (Math.min(previousScore, score) * 0.35);
     prev.sources.add(sourceKey);
     if (score >= previousScore) prev.item = item;
@@ -1567,25 +1567,25 @@ function mergeRankedEntry(map, item, score, sourceKey) {
   }
 }
 
-function fetchTopRankedEntryPool(userId, type, poolSize, parentId, { filters = "" } = {}) {
-  var want = Math.max(24, poolSize | 0);
-  var merged = new Map();
-  var lastError = null;
-  var profile = getTopRankUserProfile(userId).catchfunction(() null);
+async function fetchTopRankedEntryPool(userId, type, poolSize, parentId, { filters = "" } = {}) {
+  const want = Math.max(24, poolSize | 0);
+  const merged = new Map();
+  let lastError = null;
+  const profile = await getTopRankUserProfile(userId).catch(() => null);
 
-  for (var mode of TOP_RANK_SORT_MODES) {
-    var url =
-      "/Users/" + (userId) + "/Items?" +
-      "IncludeItemTypes=" + (encodeURIComponent(type)) + "&Recursive=true&Fields=" + (encodeURIComponent(TOP_RANK_FIELDS)) + "&" +
-      "EnableUserData=true&" +
-      (filters ? "Filters=" + (encodeURIComponent(filters)) + "&" : "") +
-      (parentId ? "ParentId=" + (encodeURIComponent(parentId)) + "&" : "") +
-      "SortBy=" + (encodeURIComponent(mode.sortBy)) + "&SortOrder=Descending&Limit=" + (want) + "&" +
-      "ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo";
+  for (const mode of TOP_RANK_SORT_MODES) {
+    const url =
+      `/Users/${userId}/Items?` +
+      `IncludeItemTypes=${encodeURIComponent(type)}&Recursive=true&Fields=${encodeURIComponent(TOP_RANK_FIELDS)}&` +
+      `EnableUserData=true&` +
+      (filters ? `Filters=${encodeURIComponent(filters)}&` : ``) +
+      (parentId ? `ParentId=${encodeURIComponent(parentId)}&` : ``) +
+      `SortBy=${encodeURIComponent(mode.sortBy)}&SortOrder=Descending&Limit=${want}&` +
+      `ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo`;
     try {
-      var data = makeApiRequest(url);
-      var items = uniqById(Array.isArray(data.Items) ? data.Items : [])
-        .filterfunction((it) it.Type === type)
+      const data = await makeApiRequest(url);
+      const items = uniqById(Array.isArray(data?.Items) ? data.Items : [])
+        .filter((it) => it?.Type === type)
         .slice(0, want);
       if (!items.length) continue;
 
@@ -1595,9 +1595,9 @@ function fetchTopRankedEntryPool(userId, type, poolSize, parentId, { filters = "
         }
       } catch {}
 
-      for (var i = 0; i < items.length; i++) {
-        var item = items[i];
-        var score = getTopRankSignals(item, i, mode.key, mode.weight);
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const score = getTopRankSignals(item, i, mode.key, mode.weight);
         mergeRankedEntry(merged, item, score, mode.key);
       }
     } catch (e) {
@@ -1605,24 +1605,24 @@ function fetchTopRankedEntryPool(userId, type, poolSize, parentId, { filters = "
     }
   }
 
-  if (profile.queryGenres.length) {
-    var url =
-      "/Users/" + (userId) + "/Items?" +
-      "IncludeItemTypes=" + (encodeURIComponent(type)) + "&Recursive=true&Fields=" + (encodeURIComponent(TOP_RANK_FIELDS)) + "&" +
-      "EnableUserData=true&" +
-      (filters ? "Filters=" + (encodeURIComponent(filters)) + "&" : "") +
-      (parentId ? "ParentId=" + (encodeURIComponent(parentId)) + "&" : "") +
-      "Genres=" + (encodeURIComponent(profile.queryGenres.join("|"))) + "&" +
-      "SortBy=" + (encodeURIComponent("CommunityRating,PremiereDate,DateCreated")) + "&SortOrder=Descending&Limit=" + (want) + "&" +
-      "ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo";
+  if (profile?.queryGenres?.length) {
+    const url =
+      `/Users/${userId}/Items?` +
+      `IncludeItemTypes=${encodeURIComponent(type)}&Recursive=true&Fields=${encodeURIComponent(TOP_RANK_FIELDS)}&` +
+      `EnableUserData=true&` +
+      (filters ? `Filters=${encodeURIComponent(filters)}&` : ``) +
+      (parentId ? `ParentId=${encodeURIComponent(parentId)}&` : ``) +
+      `Genres=${encodeURIComponent(profile.queryGenres.join("|"))}&` +
+      `SortBy=${encodeURIComponent("CommunityRating,PremiereDate,DateCreated")}&SortOrder=Descending&Limit=${want}&` +
+      `ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo`;
     try {
-      var data = makeApiRequest(url);
-      var items = uniqById(Array.isArray(data.Items) ? data.Items : [])
-        .filterfunction((it) it.Type === type)
+      const data = await makeApiRequest(url);
+      const items = uniqById(Array.isArray(data?.Items) ? data.Items : [])
+        .filter((it) => it?.Type === type)
         .slice(0, want);
-      for (var i = 0; i < items.length; i++) {
-        var item = items[i];
-        var score = getTopRankSignals(item, i, "profile", 0.88);
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const score = getTopRankSignals(item, i, "profile", 0.88);
         mergeRankedEntry(merged, item, score, "profile");
       }
     } catch (e) {
@@ -1632,11 +1632,11 @@ function fetchTopRankedEntryPool(userId, type, poolSize, parentId, { filters = "
 
   if (merged.size) {
     return Array.from(merged.values())
-      .mapfunction((entry) ({
+      .map((entry) => ({
         ...entry,
         score: entry.score + getTopRankCompositeBoost(entry, profile)
       }))
-      .sortfunction((a, b) b.score - a.score);
+      .sort((a, b) => b.score - a.score);
   }
 
   if (lastError) {
@@ -1645,8 +1645,8 @@ function fetchTopRankedEntryPool(userId, type, poolSize, parentId, { filters = "
   return [];
 }
 
-function fetchTopRankedEntryPoolAcrossParents(userId, type, poolSize, parentIds = [], { filters = "" } = {}) {
-  var scopedParents = normalizeIdList(parentIds);
+async function fetchTopRankedEntryPoolAcrossParents(userId, type, poolSize, parentIds = [], { filters = "" } = {}) {
+  const scopedParents = normalizeIdList(parentIds);
   if (!scopedParents.length) {
     return fetchTopRankedEntryPool(userId, type, poolSize, null, { filters });
   }
@@ -1654,66 +1654,67 @@ function fetchTopRankedEntryPoolAcrossParents(userId, type, poolSize, parentIds 
     return fetchTopRankedEntryPool(userId, type, poolSize, scopedParents[0], { filters });
   }
 
-  var candidateLists = Promise.allfunction(scopedParents.map((parentId) ({
+  const candidateLists = await Promise.all(
+    scopedParents.map(async (parentId) => ({
       parentId,
-      entries: fetchTopRankedEntryPool(userId, type, poolSize, parentId, { filters })
+      entries: await fetchTopRankedEntryPool(userId, type, poolSize, parentId, { filters })
     }))
   );
 
-  var merged = new Map();
-  for (var entry of candidateLists) {
-    for (var i = 0; i < entry.entries.length; i++) {
-      var ranked = entry.entries[i];
-      if (!ranked.item.Id) continue;
-      var libraryScore = ranked.score + Math.max(0, 36 - i) * 2.6;
-      mergeRankedEntry(merged, ranked.item, libraryScore, "lib:" + (entry.parentId));
+  const merged = new Map();
+  for (const entry of candidateLists) {
+    for (let i = 0; i < entry.entries.length; i++) {
+      const ranked = entry.entries[i];
+      if (!ranked?.item?.Id) continue;
+      const libraryScore = ranked.score + Math.max(0, 36 - i) * 2.6;
+      mergeRankedEntry(merged, ranked.item, libraryScore, `lib:${entry.parentId}`);
     }
   }
 
-  var out = Array.from(merged.values()).sortfunction((a, b) b.score - a.score);
+  const out = Array.from(merged.values()).sort((a, b) => b.score - a.score);
   if (out.length) return out;
   return fetchTopRankedEntryPool(userId, type, poolSize, null, { filters });
 }
 
-function fetchTopRankedAcrossParents(userId, type, limit, parentIds = [], { poolSize = null } = {}) {
-  var resolvedPoolSize = Math.max(limit, poolSize || (limit * TOP_RANK_QUERY_POOL_MULTIPLIER));
-  var entries = fetchTopRankedEntryPoolAcrossParents(userId, type, resolvedPoolSize, parentIds);
-  var items = entries.mapfunction((entry) entry.item);
+async function fetchTopRankedAcrossParents(userId, type, limit, parentIds = [], { poolSize = null } = {}) {
+  const resolvedPoolSize = Math.max(limit, poolSize || (limit * TOP_RANK_QUERY_POOL_MULTIPLIER));
+  const entries = await fetchTopRankedEntryPoolAcrossParents(userId, type, resolvedPoolSize, parentIds);
+  const items = entries.map((entry) => entry.item);
   return items.slice(0, limit);
 }
 
-function fetchTopRankedUnplayedFirstAcrossParents(userId, type, limit, parentIds = [], { poolSize = null } = {}) {
-  var resolvedPoolSize = Math.max(limit, poolSize || (limit * TOP_RANK_QUERY_POOL_MULTIPLIER));
-  var unseenEntries = fetchTopRankedEntryPoolAcrossParents(
+async function fetchTopRankedUnplayedFirstAcrossParents(userId, type, limit, parentIds = [], { poolSize = null } = {}) {
+  const resolvedPoolSize = Math.max(limit, poolSize || (limit * TOP_RANK_QUERY_POOL_MULTIPLIER));
+  const unseenEntries = await fetchTopRankedEntryPoolAcrossParents(
     userId,
     type,
     resolvedPoolSize,
     parentIds,
     { filters: "IsUnplayed" }
   );
-  var unseenItems = unseenEntries
-    .mapfunction((entry) entry.item)
-    .filterfunction((item) item && !hasPlaybackActivity(item));
+  const unseenItems = unseenEntries
+    .map((entry) => entry.item)
+    .filter((item) => item && !hasPlaybackActivity(item));
   if (unseenItems.length >= limit) {
     return unseenItems.slice(0, limit);
   }
 
-  var fallbackEntries = fetchTopRankedEntryPoolAcrossParents(userId, type, resolvedPoolSize, parentIds);
-  var seenIds = new Setfunction(unseenItems.map((item) item.Id).filter(Boolean));
-  var fallbackItems = fallbackEntries
-    .mapfunction((entry) entry.item)
-    .filterfunction((item) item.Id && !seenIds.has(item.Id));
+  const fallbackEntries = await fetchTopRankedEntryPoolAcrossParents(userId, type, resolvedPoolSize, parentIds);
+  const seenIds = new Set(unseenItems.map((item) => item?.Id).filter(Boolean));
+  const fallbackItems = fallbackEntries
+    .map((entry) => entry.item)
+    .filter((item) => item?.Id && !seenIds.has(item.Id));
 
   return [...unseenItems, ...fallbackItems].slice(0, limit);
 }
 
 function buildTmdbMovieLookup(items = []) {
-  var byTmdbId = new Map();
-  var byTitleYear = new Map();
+  const byTmdbId = new Map();
+  const byTitleYear = new Map();
 
-  for (var item of items) {
-    if (!item.Id) continue;
-    var tmdbId =
+  for (const item of items) {
+    if (!item?.Id) continue;
+    const tmdbId =
       getProviderIdValue(item, "Tmdb") ||
       getProviderIdValue(item, "TMDb") ||
       getProviderIdValue(item, "MovieDb");
@@ -1721,9 +1722,9 @@ function buildTmdbMovieLookup(items = []) {
       byTmdbId.set(tmdbId, item);
     }
 
-    var year = getItemYear(item);
-    for (var title of [item.Name, item.OriginalTitle]) {
-      var key = buildTitleYearKey(title, year);
+    const year = getItemYear(item);
+    for (const title of [item?.Name, item?.OriginalTitle]) {
+      const key = buildTitleYearKey(title, year);
       if (key && !byTitleYear.has(key)) {
         byTitleYear.set(key, item);
       }
@@ -1734,19 +1735,19 @@ function buildTmdbMovieLookup(items = []) {
 }
 
 function resolveTmdbResultToLocalMovie(result, lookup) {
-  var tmdbId = String(result.id || "").trim();
-  if (tmdbId && lookup.byTmdbId.has(tmdbId)) {
+  const tmdbId = String(result?.id || "").trim();
+  if (tmdbId && lookup?.byTmdbId?.has(tmdbId)) {
     return lookup.byTmdbId.get(tmdbId) || null;
   }
 
-  var releaseYear = getTmdbResultYear(result);
-  var years = releaseYear > 0 ? [releaseYear, releaseYear - 1, releaseYear + 1] : [];
-  var titles = [result.title, result.original_title];
+  const releaseYear = getTmdbResultYear(result);
+  const years = releaseYear > 0 ? [releaseYear, releaseYear - 1, releaseYear + 1] : [];
+  const titles = [result?.title, result?.original_title];
 
-  for (var title of titles) {
-    for (var year of years) {
-      var key = buildTitleYearKey(title, year);
-      if (key && lookup.byTitleYear.has(key)) {
+  for (const title of titles) {
+    for (const year of years) {
+      const key = buildTitleYearKey(title, year);
+      if (key && lookup?.byTitleYear?.has(key)) {
         return lookup.byTitleYear.get(key) || null;
       }
     }
@@ -1755,26 +1756,26 @@ function resolveTmdbResultToLocalMovie(result, lookup) {
   return null;
 }
 
-function tmdbFetchJson(path, { signal } = {}) {
-  var apiKey = getGlobalTmdbApiKey().catchfunction(() "");
+async function tmdbFetchJson(path, { signal } = {}) {
+  const apiKey = await getGlobalTmdbApiKey().catch(() => "");
   if (!apiKey) throw new Error("TMDb API key missing");
 
-  var url = new URL("https://api.themoviedb.org/3" + (path));
+  const url = new URL(`https://api.themoviedb.org/3${path}`);
   url.searchParams.set("api_key", apiKey);
 
-  var res = fetch(url.toString(), {
+  const res = await fetch(url.toString(), {
     method: "GET",
     signal
   });
   if (!res.ok) {
-    var text = res.text().catchfunction(() "");
-    throw new Error("TMDb HTTP " + (res.status) + ": " + (text));
+    const text = await res.text().catch(() => "");
+    throw new Error(`TMDb HTTP ${res.status}: ${text}`);
   }
   return res.json();
 }
 
-function fetchTmdbTopRatedMoviesInLibraries(userId, limit, parentIds = []) {
-  var apiKey = getGlobalTmdbApiKey().catchfunction(() "");
+async function fetchTmdbTopRatedMoviesInLibraries(userId, limit, parentIds = []) {
+  const apiKey = await getGlobalTmdbApiKey().catch(() => "");
   if (!apiKey) {
     return {
       items: [],
@@ -1782,13 +1783,13 @@ function fetchTmdbTopRatedMoviesInLibraries(userId, limit, parentIds = []) {
     };
   }
 
-  var rankedPool = fetchTopRankedEntryPoolAcrossParents(
+  const rankedPool = await fetchTopRankedEntryPoolAcrossParents(
     userId,
     "Movie",
     TMDB_TOP_MOVIE_POOL_SIZE,
     parentIds
   );
-  var lookup = buildTmdbMovieLookupfunction(rankedPool.map((entry) entry.item));
+  const lookup = buildTmdbMovieLookup(rankedPool.map((entry) => entry.item));
   if (!lookup.byTmdbId.size && !lookup.byTitleYear.size) {
     return {
       items: [],
@@ -1796,14 +1797,14 @@ function fetchTmdbTopRatedMoviesInLibraries(userId, limit, parentIds = []) {
     };
   }
 
-  var matched = [];
-  var seenIds = new Set();
-  var language = String(navigator.language || "en-US").trim() || "en-US";
+  const matched = [];
+  const seenIds = new Set();
+  const language = String(navigator.language || "en-US").trim() || "en-US";
 
-  for (var page = 1; page <= TMDB_TOP_RATED_PAGE_LIMIT && matched.length < limit; page++) {
-    var data = null;
+  for (let page = 1; page <= TMDB_TOP_RATED_PAGE_LIMIT && matched.length < limit; page++) {
+    let data = null;
     try {
-      data = tmdbFetchJson("/movie/top_rated?language=" + (encodeURIComponent(language)) + "&page=" + (page));
+      data = await tmdbFetchJson(`/movie/top_rated?language=${encodeURIComponent(language)}&page=${page}`);
     } catch (e) {
       console.warn("recentRows: tmdb top rated fetch error:", e);
       return {
@@ -1812,12 +1813,12 @@ function fetchTmdbTopRatedMoviesInLibraries(userId, limit, parentIds = []) {
       };
     }
 
-    var results = Array.isArray(data.results) ? data.results : [];
+    const results = Array.isArray(data?.results) ? data.results : [];
     if (!results.length) break;
 
-    for (var result of results) {
-      var localItem = resolveTmdbResultToLocalMovie(result, lookup);
-      if (!localItem.Id || seenIds.has(localItem.Id)) continue;
+    for (const result of results) {
+      const localItem = resolveTmdbResultToLocalMovie(result, lookup);
+      if (!localItem?.Id || seenIds.has(localItem.Id)) continue;
       seenIds.add(localItem.Id);
       matched.push(localItem);
       if (matched.length >= limit) break;
@@ -1832,14 +1833,14 @@ function fetchTmdbTopRatedMoviesInLibraries(userId, limit, parentIds = []) {
 
 function getTopMovieParentIds() {
   return resolveScopedParentIds(
-    (STATE.movieLibs || []).mapfunction((lib) lib.Id),
+    (STATE.movieLibs || []).map((lib) => lib.Id),
     resolveMovieLibSelection()
   );
 }
 
 function getTopSeriesParentIds() {
   return resolveScopedParentIds(
-    (STATE.tvLibs || []).mapfunction((lib) lib.Id),
+    (STATE.tvLibs || []).map((lib) => lib.Id),
     resolveTvLibSelection("recentSeries")
   );
 }
@@ -1863,7 +1864,7 @@ function getMoviesHashFallback() {
 }
 
 function getMoviesLibraryHash(libId) {
-  return "#/movies?topParentId=" + (encodeURIComponent(libId)) + "&collectionType=movies&tab=1";
+  return `#/movies?topParentId=${encodeURIComponent(libId)}&collectionType=movies&tab=1`;
 }
 
 function getMusicHashFallback() {
@@ -1897,11 +1898,11 @@ function openResumePage(type) {
 function queueEnterAnimation(el) {
   if (!el) return el;
   el.classList.add("is-entering");
-  var clear = function() {
+  const clear = () => {
     try { el.classList.remove("is-entering"); } catch {}
   };
   try {
-    requestAnimationFramefunction(() {
+    requestAnimationFrame(() => {
       requestAnimationFrame(clear);
     });
   } catch {
@@ -1916,102 +1917,170 @@ function createRecommendationCard(item, serverId, {
   variant = "default",
   rank = null
 } = {}) {
-  var { itemId, itemName } = primeItemIdentity(item);
-  var card = document.createElement("div");
+  const { itemId, itemName } = primeItemIdentity(item);
+  const card = document.createElement("div");
   card.className = "card personal-recs-card";
-  var isTop10 = variant === "top10";
+  const isTop10 = variant === "top10";
   if (isTop10) card.classList.add("top10-card");
   queueEnterAnimation(card);
   if (itemId) card.dataset.itemId = itemId;
   if (isTop10 && Number.isFinite(rank)) card.dataset.rank = String(rank);
 
-  var posterSource = item.__posterSource || item;
+  const posterSource = item?.__posterSource || item;
 
-  var posterUrlStatic = buildPosterImageUrl(posterSource);
+  const posterUrlStatic = buildPosterImageUrl(posterSource);
 
-  var year = item.ProductionYear || posterSource.ProductionYear || "";
-  var ageChip = formatOfficialRatingLabel(item.OfficialRating || posterSource.OfficialRating || "");
+  const year = item.ProductionYear || posterSource.ProductionYear || "";
+  const ageChip = formatOfficialRatingLabel(item.OfficialRating || posterSource.OfficialRating || "");
 
-  var runtimeTicks =
+  const runtimeTicks =
     item.Type === "Series" ? item.CumulativeRunTimeTicks :
     item.Type === "Episode" ? item.RunTimeTicks :
     item.RunTimeTicks;
 
-  var runtime = formatRuntime(runtimeTicks);
+  const runtime = formatRuntime(runtimeTicks);
 
-  var genres = Array.isArray(posterSource.Genres) ? posterSource.Genres.slice(0, 2).join(", ") : "";
-  var isEpisode = item.Type === "Episode";
-  var isSeason  = item.Type === "Season";
-  var { label: typeLabel, icon: typeIcon } = getRecentRowsCardTypeBadge(item.Type);
-  var top10IsFresh = isTop10 && !hasPlaybackActivity(item);
+  const genres = Array.isArray(posterSource.Genres) ? posterSource.Genres.slice(0, 2).join(", ") : "";
+  const isEpisode = item.Type === "Episode";
+  const isSeason  = item.Type === "Season";
+  const { label: typeLabel, icon: typeIcon } = getRecentRowsCardTypeBadge(item.Type);
+  const top10IsFresh = isTop10 && !hasPlaybackActivity(item);
 
-  var community = Number.isFinite(posterSource.CommunityRating)
-    ? "<div class=\"community-rating\" title=\"" + (escapeHtml(config.languageLabels.communityRating || "Community Rating")) + "\">⭐ " + (posterSource.CommunityRating.toFixed(1)) + "</div>"
+  const community = Number.isFinite(posterSource.CommunityRating)
+    ? `<div class="community-rating" title="${escapeHtml(config.languageLabels.communityRating || "Community Rating")}">⭐ ${posterSource.CommunityRating.toFixed(1)}</div>`
     : "";
-  var top10RankHtml = (isTop10 && Number.isFinite(rank))
-    ? "<div class=\"top10-rank\" aria-hidden=\"true\">" + (Math.max(1, rank | 0)) + "</div>"
+  const top10RankHtml = (isTop10 && Number.isFinite(rank))
+    ? `<div class="top10-rank" aria-hidden="true">${Math.max(1, rank | 0)}</div>`
     : "";
-  var top10FreshBadgeHtml = top10IsFresh
-    ? "<div class=\"top10-fresh-badge\">" + (escapeHtml(getBadgeText("new"))) + "</div>"
+  const top10FreshBadgeHtml = top10IsFresh
+    ? `<div class="top10-fresh-badge">${escapeHtml(getBadgeText("new"))}</div>`
     : "";
-  var topBadgesHtml = isTop10
-    ? "\n      <div class=\"prc-top-badges top10-top-badges\">\n        <div class=\"prc-type-badge top10-type-badge\">\n          " + (faIconHtml(typeIcon, "prc-type-icon")) + "\n          " + (typeLabel) + "\n        </div>\n      </div>\n    "
-    : "\n      <div class=\"prc-top-badges\">\n        " + (community) + "\n        <div class=\"prc-type-badge\">\n          " + (faIconHtml(typeIcon, "prc-type-icon")) + "\n          " + (typeLabel) + "\n        </div>\n      </div>\n    ";
+  const topBadgesHtml = isTop10
+    ? `
+      <div class="prc-top-badges top10-top-badges">
+        <div class="prc-type-badge top10-type-badge">
+          ${faIconHtml(typeIcon, "prc-type-icon")}
+          ${typeLabel}
+        </div>
+      </div>
+    `
+    : `
+      <div class="prc-top-badges">
+        ${community}
+        <div class="prc-type-badge">
+          ${faIconHtml(typeIcon, "prc-type-icon")}
+          ${typeLabel}
+        </div>
+      </div>
+    `;
 
-  var progress = showProgress ? getPlaybackPercent(item) : 0;
-  var progressHtml = (showProgress && progress > 0.02 && progress < 0.999)
-    ? "<div class=\"rr-progress-wrap\" aria-label=\"" + (escapeHtml(config.languageLabels.progress || "Progresso")) + "\">\n         <div class=\"rr-progress-bar\" style=\"width:" + (Math.round(progress*100)) + "%\"></div>\n       </div>"
+  const progress = showProgress ? getPlaybackPercent(item) : 0;
+  const progressHtml = (showProgress && progress > 0.02 && progress < 0.999)
+    ? `<div class="rr-progress-wrap" aria-label="${escapeHtml(config.languageLabels.progress || "İlerleme")}">
+         <div class="rr-progress-bar" style="width:${Math.round(progress*100)}%"></div>
+       </div>`
     : "";
 
-  var mainTitle =
+  const mainTitle =
     (isEpisode || isSeason)
       ? (item.Name || posterSource.Name || item.SeriesName || "")
       : (item.Name || "");
 
-  var subTitle =
+  const subTitle =
     isEpisode ? formatEpisodeSubline(item) :
     isSeason  ? formatSeasonSubline(item) :
     "";
-  var logoUrl =
+  const logoUrl =
     buildLogoUrl(item) ||
     (posterSource !== item ? buildLogoUrl(posterSource) : null);
-  var escapedTitleHtml = escapeHtml(clampText(mainTitle, isTop10 ? 38 : 42));
-  var escapedSubTitle = isEpisode && subTitle ? escapeHtml(subTitle) : "";
-  var logoAltSuffix = (config.languageLabels && config.languageLabels.logoAltSuffix) || "logo";
-  var fallbackTitleHtml = isTop10
-    ? "\n      <div class=\"prc-titleline\">\n        " + (escapedTitleHtml) + "\n        ${escapedSubTitle ? "<div class="prc-subtitleline">${escapedSubTitle}</div>" : ""}\n      </div>\n    "
+  const escapedTitleHtml = escapeHtml(clampText(mainTitle, isTop10 ? 38 : 42));
+  const escapedSubTitle = isEpisode && subTitle ? escapeHtml(subTitle) : "";
+  const logoAltSuffix = (config.languageLabels && config.languageLabels.logoAltSuffix) || "logo";
+  const fallbackTitleHtml = isTop10
+    ? `
+      <div class="prc-titleline">
+        ${escapedTitleHtml}
+        ${escapedSubTitle ? `<div class="prc-subtitleline">${escapedSubTitle}</div>` : ``}
+      </div>
+    `
     : "";
-  var managedTitleRender = isTop10
+  const managedTitleRender = isTop10
     ? null
     : resolveManagedCardTitleRender({
         titleText: mainTitle,
         subtitleText: subTitle,
         logoUrl,
-        logoAltText: (mainTitle) + " " + (logoAltSuffix).trim(),
+        logoAltText: `${mainTitle} ${logoAltSuffix}`.trim(),
         aboveFold,
         maxTitleLength: 42,
       });
-  var titleBlockHtml = isTop10
+  const titleBlockHtml = isTop10
     ? (logoUrl
-      ? "\n        <div class=\"prc-card-logo\">\n          <img src=\"" + (escapeHtml(logoUrl)) + "\"\n            alt=\"${escapeHtml("${mainTitle} ${logoAltSuffix}".trim())}\"\n            loading=\"" + (aboveFold ? "eager" : "lazy") + "\"\n            decoding=\"async\"\n            " + (aboveFold ? 'fetchpriority="high"' : "") + ">\n        </div>\n        ${escapedSubTitle ? "<div class="prc-subtitleline prc-logo-subtitle">${escapedSubTitle}</div>" : ""}\n      "
+      ? `
+        <div class="prc-card-logo">
+          <img src="${escapeHtml(logoUrl)}"
+            alt="${escapeHtml(`${mainTitle} ${logoAltSuffix}`.trim())}"
+            loading="${aboveFold ? "eager" : "lazy"}"
+            decoding="async"
+            ${aboveFold ? 'fetchpriority="high"' : ""}>
+        </div>
+        ${escapedSubTitle ? `<div class="prc-subtitleline prc-logo-subtitle">${escapedSubTitle}</div>` : ``}
+      `
       : fallbackTitleHtml)
     : managedTitleRender.html;
 
-  var metaHtml = isTop10
-    ? "\n      <div class=\"prc-meta\">\n        ${ageChip ? "<span class="prc-age">${ageChip}</span><span class="prc-dot">•</span>" : \"\"}\n        ${year ? "<span class="prc-year">${year}</span>" : \"\"}\n      </div>\n    "
-    : "\n      <div class=\"prc-meta\">\n        ${ageChip ? "<span class="prc-age">${ageChip}</span><span class="prc-dot">•</span>" : \"\"}\n        ${year ? "<span class="prc-year">${year}</span><span class="prc-dot">•</span>" : \"\"}\n        ${runtime ? "<span class="prc-runtime">${getRuntimeWithIcons(runtime)}</span>" : \"\"}\n      </div>\n    ";
+  const metaHtml = isTop10
+    ? `
+      <div class="prc-meta">
+        ${ageChip ? `<span class="prc-age">${ageChip}</span><span class="prc-dot">•</span>` : ""}
+        ${year ? `<span class="prc-year">${year}</span>` : ""}
+      </div>
+    `
+    : `
+      <div class="prc-meta">
+        ${ageChip ? `<span class="prc-age">${ageChip}</span><span class="prc-dot">•</span>` : ""}
+        ${year ? `<span class="prc-year">${year}</span><span class="prc-dot">•</span>` : ""}
+        ${runtime ? `<span class="prc-runtime">${getRuntimeWithIcons(runtime)}</span>` : ""}
+      </div>
+    `;
 
-  card.innerHTML = "\n    <div class=\"cardBox\">\n      <a class=\"cardLink\" href=\"" + (itemId ? getDetailsUrl(itemId, serverId) : '#') + "\">\n        <div class=\"cardImageContainer\" style=\"position:relative;\">\n          " + (top10RankHtml) + "\n          <img class=\"cardImage\"\n            alt=\"" + (escapeHtml(mainTitle)) + "\"\n            loading=\"" + (aboveFold ? "eager" : "lazy") + "\"\n            decoding=\"async\"\n            " + (aboveFold ? 'fetchpriority="high"' : "") + ">\n          " + (topBadgesHtml) + "\n          " + (top10FreshBadgeHtml) + "\n          <div class=\"prc-gradient" + (isTop10 ? " top10-gradient" : "") + "\"></div>\n          <div class=\"prc-overlay" + (isTop10 ? " top10-overlay" : "") + "\">\n            " + (titleBlockHtml) + "\n\n            " + (metaHtml) + "\n\n            <div class=\"prc-genres\">\n              " + ((!isEpisode && genres) ? escapeHtml(genres) : "") + "\n            </div>\n          </div>\n          " + (progressHtml) + "\n        </div>\n      </a>\n    </div>\n  ";
+  card.innerHTML = `
+    <div class="cardBox">
+      <a class="cardLink" href="${itemId ? getDetailsUrl(itemId, serverId) : '#'}">
+        <div class="cardImageContainer" style="position:relative;">
+          ${top10RankHtml}
+          <img class="cardImage"
+            alt="${escapeHtml(mainTitle)}"
+            loading="${aboveFold ? "eager" : "lazy"}"
+            decoding="async"
+            ${aboveFold ? 'fetchpriority="high"' : ""}>
+          ${topBadgesHtml}
+          ${top10FreshBadgeHtml}
+          <div class="prc-gradient${isTop10 ? " top10-gradient" : ""}"></div>
+          <div class="prc-overlay${isTop10 ? " top10-overlay" : ""}">
+            ${titleBlockHtml}
 
-  var logoImg = card.querySelector(".prc-card-logo img");
+            ${metaHtml}
+
+            <div class="prc-genres">
+              ${(!isEpisode && genres) ? escapeHtml(genres) : ""}
+            </div>
+          </div>
+          ${progressHtml}
+        </div>
+      </a>
+    </div>
+  `;
+
+  const logoImg = card.querySelector(".prc-card-logo img");
   if (logoImg) {
-    logoImg.addEventListenerfunction("error", () {
+    logoImg.addEventListener("error", () => {
       try {
-        var logoWrap = logoImg.closest(".prc-card-logo");
-        if (!logoWrap.isConnected) return;
+        const logoWrap = logoImg.closest(".prc-card-logo");
+        if (!logoWrap?.isConnected) return;
         if (isTop10) {
           logoWrap.outerHTML = fallbackTitleHtml;
-          var logoSubtitle = card.querySelector(".prc-logo-subtitle");
+          const logoSubtitle = card.querySelector(".prc-logo-subtitle");
           if (logoSubtitle) logoSubtitle.remove();
           return;
         }
@@ -2020,14 +2089,14 @@ function createRecommendationCard(item, serverId, {
     }, { once: true });
   }
 
-  var img = card.querySelector(".cardImage");
+  const img = card.querySelector(".cardImage");
   try {
-    var sizesMobile = isTop10
+    const sizesMobile = isTop10
       ? "(max-width: 640px) 48vw, (max-width: 820px) 42vw, 300px"
       : showProgress
         ? "(max-width: 640px) 78vw, (max-width: 820px) 72vw, 320px"
         : "(max-width: 640px) 44vw, (max-width: 820px) 38vw, 262px";
-    var sizesDesk = isTop10
+    const sizesDesk = isTop10
       ? "(max-width: 1200px) 27vw, 300px"
       : showProgress
         ? "(max-width: 1200px) 34vw, 390px"
@@ -2035,20 +2104,20 @@ function createRecommendationCard(item, serverId, {
     img.setAttribute("sizes", IS_MOBILE ? sizesMobile : sizesDesk);
   } catch {}
 
-  var cardLink = card.querySelector(".cardLink");
+  const cardLink = card.querySelector(".cardLink");
   if (cardLink) {
-    cardLink.addEventListenerfunction("click", (e) {
+    cardLink.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
       if (!itemId) return;
-      var hostEl = card.querySelector(".cardImageContainer");
-      var backdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
+      const hostEl = card.querySelector(".cardImageContainer");
+      const backdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
       try {
-        openDetailsModal({
+        await openDetailsModal({
           itemId,
           serverId,
           preferBackdropIndex: backdropIndex,
-          originEl: hostEl.querySelector.("img.cardImage") || hostEl || card,
+          originEl: hostEl?.querySelector?.("img.cardImage") || hostEl || card,
           originEvent: e,
         });
       } catch (err) {
@@ -2061,9 +2130,9 @@ function createRecommendationCard(item, serverId, {
     setManagedImageSource(img, posterUrlStatic, { fallback: PLACEHOLDER_URL });
   } else {
     try { img.style.display = "none"; } catch {}
-    var noImg = document.createElement("div");
+    const noImg = document.createElement("div");
     noImg.className = "prc-noimg-label";
-    noImg.textContent = config.languageLabels.noImage || "Sem imagem";
+    noImg.textContent = config.languageLabels.noImage || "Görsel yok";
     noImg.style.minHeight = "100%";
     noImg.style.height = "100%";
     noImg.style.display = "flex";
@@ -2072,18 +2141,18 @@ function createRecommendationCard(item, serverId, {
     noImg.style.textAlign = "center";
     noImg.style.padding = "12px";
     noImg.style.fontWeight = "600";
-    card.querySelector(".cardImageContainer").prepend(noImg);
+    card.querySelector(".cardImageContainer")?.prepend(noImg);
   }
 
-  var mode = (HOVER_MODE === "inherit")
-    ? (getConfig().globalPreviewMode === "studioMini" ? "studioMini" : "modal")
+  const mode = (HOVER_MODE === "inherit")
+    ? (getConfig()?.globalPreviewMode === "studioMini" ? "studioMini" : "modal")
     : HOVER_MODE;
 
-  setTimeoutfunction(() {
+  setTimeout(() => {
     if (card.isConnected) attachPreviewByMode(card, { ...item, Id: itemId, Name: itemName }, mode);
   }, 500);
 
-  card.addEventListenerfunction("dblclick", (e) {
+  card.addEventListener("dblclick", (e) => {
     try {
       e.preventDefault();
       e.stopPropagation();
@@ -2091,53 +2160,53 @@ function createRecommendationCard(item, serverId, {
     } catch {}
   });
 
-  card.addEventListenerfunction("jms:cleanup", () { cleanupManagedImage(img); }, { once:true });
+  card.addEventListener("jms:cleanup", () => { cleanupManagedImage(img); }, { once:true });
   return card;
 }
 
 function formatEpisodeLabel(ep) {
   if (!ep) return "";
-  var s = Number(ep.ParentIndexNumber);
-  var e = Number(ep.IndexNumber);
-  var sTxt = Number.isFinite(s) && s > 0 ? "S" + (String(s).padStart(2,"0")) : "";
-  var eTxt = Number.isFinite(e) && e > 0 ? "E" + (String(e).padStart(2,"0")) : "";
-  var se = (sTxt || eTxt) ? (sTxt) + "${eTxt ? " • ${eTxt}" : \"\"}" : "";
-  var name = ep.Name ? clampText(ep.Name, 38) : "";
-  return se && name ? (se) + " • " + (name) : (se || name || "");
+  const s = Number(ep.ParentIndexNumber);
+  const e = Number(ep.IndexNumber);
+  const sTxt = Number.isFinite(s) && s > 0 ? `S${String(s).padStart(2,"0")}` : "";
+  const eTxt = Number.isFinite(e) && e > 0 ? `E${String(e).padStart(2,"0")}` : "";
+  const se = (sTxt || eTxt) ? `${sTxt}${eTxt ? ` • ${eTxt}` : ""}` : "";
+  const name = ep.Name ? clampText(ep.Name, 38) : "";
+  return se && name ? `${se} • ${name}` : (se || name || "");
 }
 
 function formatSeasonLabel(season) {
   if (!season) return "";
-  var s = Number(season.IndexNumber);
-  var sTxt = Number.isFinite(s) && s > 0 ? "T" + (String(s).padStart(2,"0")) : "";
-  var name = season.Name ? clampText(season.Name, 38) : "";
-  return sTxt && name ? (sTxt) + " • " + (name) : (sTxt || name || "");
+  const s = Number(season.IndexNumber);
+  const sTxt = Number.isFinite(s) && s > 0 ? `S${String(s).padStart(2,"0")}` : "";
+  const name = season.Name ? clampText(season.Name, 38) : "";
+  return sTxt && name ? `${sTxt} • ${name}` : (sTxt || name || "");
 }
 
 function formatEpisodeSubline(ep) {
   if (!ep) return "";
 
-  var s = Number(ep.ParentIndexNumber);
-  var e = Number(ep.IndexNumber);
+  const s = Number(ep.ParentIndexNumber);
+  const e = Number(ep.IndexNumber);
 
-  var sTxt = Number.isFinite(s) && s > 0 ? "S" + (String(s).padStart(2,"0")) : "";
-  var eTxt = Number.isFinite(e) && e > 0 ? "E" + (String(e).padStart(2,"0")) : "";
+  const sTxt = Number.isFinite(s) && s > 0 ? `S${String(s).padStart(2,"0")}` : "";
+  const eTxt = Number.isFinite(e) && e > 0 ? `E${String(e).padStart(2,"0")}` : "";
 
-  var se = (sTxt || eTxt) ? (sTxt) + "${eTxt ? " • ${eTxt}" : \"\"}" : "";
-  var series = (ep.SeriesName || "").trim();
+  const se = (sTxt || eTxt) ? `${sTxt}${eTxt ? ` • ${eTxt}` : ""}` : "";
+  const series = (ep.SeriesName || "").trim();
 
-  if (series && se) return (series) + " • " + (se);
+  if (series && se) return `${series} • ${se}`;
   return series || se || "";
 }
 
 function formatSeasonSubline(season) {
   if (!season) return "";
 
-  var s = Number(season.IndexNumber);
-  var sTxt = Number.isFinite(s) && s > 0 ? "S" + (String(s).padStart(2,"0")) : "";
-  var series = (season.SeriesName || "").trim();
+  const s = Number(season.IndexNumber);
+  const sTxt = Number.isFinite(s) && s > 0 ? `S${String(s).padStart(2,"0")}` : "";
+  const series = (season.SeriesName || "").trim();
 
-  if (series && sTxt) return (series) + " • " + (sTxt);
+  if (series && sTxt) return `${series} • ${sTxt}`;
   return series || sTxt || "";
 }
 
@@ -2151,7 +2220,7 @@ function getSeriesIdFromItem(it) {
 
 function isAudioPreviewItem(item) {
   if (!item) return false;
-  var type = String(item.Type || "");
+  const type = String(item.Type || "");
   return type === "Audio" || type === "MusicVideo";
 }
 
@@ -2162,68 +2231,68 @@ function getMusicAlbumId(item) {
   return null;
 }
 
-function attachMusicPosterSources(items) {
-  var list = Array.isArray(items) ? items.filter(Boolean) : [];
+async function attachMusicPosterSources(items) {
+  const list = Array.isArray(items) ? items.filter(Boolean) : [];
   if (!list.length) return list;
 
-  var albumIds = [];
-  for (var it of list) {
-    if (!it.Id) continue;
+  const albumIds = [];
+  for (const it of list) {
+    if (!it?.Id) continue;
     if (it.Type === "MusicAlbum") {
       it.__posterSource = it;
       continue;
     }
     if (!isAudioPreviewItem(it)) continue;
-    var albumId = getMusicAlbumId(it);
+    const albumId = getMusicAlbumId(it);
     if (albumId) albumIds.push(albumId);
   }
 
-  var uniqAlbumIds = Array.from(new Set(albumIds.filter(Boolean)));
+  const uniqAlbumIds = Array.from(new Set(albumIds.filter(Boolean)));
   if (!uniqAlbumIds.length) return list;
 
-  var albums = [];
+  let albums = [];
   try {
-    albums = fetchItemsByIds(uniqAlbumIds);
+    albums = await fetchItemsByIds(uniqAlbumIds);
   } catch (e) {
     console.warn("recentRows: music poster source resolve error:", e);
     return list;
   }
 
-  var albumById = new Map((albums || []).filter(function(x) x.Id).map(function(x) [x.Id, x]));
-  for (var it of list) {
-    if (!it.Id || !isAudioPreviewItem(it) || it.__posterSource) continue;
-    var albumId = getMusicAlbumId(it);
-    var album = albumId ? albumById.get(albumId) : null;
+  const albumById = new Map((albums || []).filter(x => x?.Id).map(x => [x.Id, x]));
+  for (const it of list) {
+    if (!it?.Id || !isAudioPreviewItem(it) || it.__posterSource) continue;
+    const albumId = getMusicAlbumId(it);
+    const album = albumId ? albumById.get(albumId) : null;
     if (album) it.__posterSource = album;
   }
   return list;
 }
 
-function fetchAlbumPreviewTrackId(albumId) {
-  var key = String(albumId || "").trim();
+async function fetchAlbumPreviewTrackId(albumId) {
+  const key = String(albumId || "").trim();
   if (!key || !STATE.userId) return null;
   if (__albumPreviewTrackCache.has(key)) {
-    return __albumPreviewTrackCache.get(key);
+    return await __albumPreviewTrackCache.get(key);
   }
 
-  var task = function(() {
-    var url =
-      "/Users/" + (STATE.userId) + "/Items?" +
-      "ParentId=" + (encodeURIComponent(key)) + "&" +
-      "IncludeItemTypes=Audio&Recursive=true&" +
-      "Fields=" + (encodeURIComponent(COMMON_FIELDS)) + "&" +
-      "EnableUserData=true&" +
-      "SortBy=ParentIndexNumber,IndexNumber,SortName,DateCreated&SortOrder=Ascending&Limit=1&" +
-      "ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo";
+  const task = (async () => {
+    const url =
+      `/Users/${STATE.userId}/Items?` +
+      `ParentId=${encodeURIComponent(key)}&` +
+      `IncludeItemTypes=Audio&Recursive=true&` +
+      `Fields=${encodeURIComponent(COMMON_FIELDS)}&` +
+      `EnableUserData=true&` +
+      `SortBy=ParentIndexNumber,IndexNumber,SortName,DateCreated&SortOrder=Ascending&Limit=1&` +
+      `ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo`;
     try {
-      var data = makeApiRequest(url);
-      var best = Array.isArray(data.Items) ? data.Items.find(function(x) x.Id) : null;
+      const data = await makeApiRequest(url);
+      const best = Array.isArray(data?.Items) ? data.Items.find(x => x?.Id) : null;
       try {
-        if (best.Id && STATE.db && STATE.scope) {
+        if (best?.Id && STATE.db && STATE.scope) {
           upsertItemsBatchIdle(STATE.db, STATE.scope, [best], { timeout: 1500 });
         }
       } catch {}
-      return best.Id || null;
+      return best?.Id || null;
     } catch (e) {
       console.warn("recentRows: album preview track resolve error:", e);
       return null;
@@ -2231,74 +2300,79 @@ function fetchAlbumPreviewTrackId(albumId) {
   })();
 
   __albumPreviewTrackCache.set(key, task);
-  var resolved = task;
+  const resolved = await task;
   __albumPreviewTrackCache.set(key, resolved);
   return resolved;
 }
 
-function resolveHeroPreviewItemId(item) {
-  var itemId = resolveItemId(item);
+async function resolveHeroPreviewItemId(item) {
+  const itemId = resolveItemId(item);
   if (!itemId) return null;
   if (isAudioPreviewItem(item)) return itemId;
   if (item.Type === "MusicAlbum") {
-    return fetchAlbumPreviewTrackId(itemId);
+    return await fetchAlbumPreviewTrackId(itemId);
   }
   return itemId;
 }
 
-function createRowHeroCard(item, serverId, labelText, { showProgress = false } = {}) {
-  var { itemId } = primeItemIdentity(item);
-  var hero = document.createElement("div");
+async function createRowHeroCard(item, serverId, labelText, { showProgress = false } = {}) {
+  const { itemId } = primeItemIdentity(item);
+  const hero = document.createElement("div");
   hero.className = "dir-row-hero";
   if (itemId) hero.dataset.itemId = itemId;
 
   try {
-    attachMusicPosterSources([item]);
+    await attachMusicPosterSources([item]);
   } catch {}
 
-  var posterSource = item.__posterSource || item;
-  var bgSrc = buildBackdropImageUrl(posterSource);
-  var logo = buildLogoUrl(posterSource);
-  var year = posterSource.ProductionYear || "";
-  var plot = clampText(item.Overview || posterSource.Overview, 1200);
-  var ageChip = formatOfficialRatingLabel(posterSource.OfficialRating || "");
-  var isSeries = posterSource.Type === "Series";
-  var isEpisode = item.Type === "Episode";
-  var isSeason  = item.Type === "Season";
-  var isMusicAlbum = item.Type === "MusicAlbum";
-  var isAudio = isAudioPreviewItem(item);
-  var isPhoto = item.Type === "Photo";
-  var isPhotoAlbum = item.Type === "PhotoAlbum";
-  var isVideo = item.Type === "Video";
-  var isFolder = item.Type === "Folder";
+  const posterSource = item?.__posterSource || item;
+  const bgSrc = buildBackdropImageUrl(posterSource);
+  const logo = buildLogoUrl(posterSource);
+  const year = posterSource.ProductionYear || "";
+  const plot = clampText(item.Overview || posterSource.Overview, 1200);
+  const ageChip = formatOfficialRatingLabel(posterSource.OfficialRating || "");
+  const isSeries = posterSource.Type === "Series";
+  const isEpisode = item.Type === "Episode";
+  const isSeason  = item.Type === "Season";
+  const isMusicAlbum = item.Type === "MusicAlbum";
+  const isAudio = isAudioPreviewItem(item);
+  const isPhoto = item.Type === "Photo";
+  const isPhotoAlbum = item.Type === "PhotoAlbum";
+  const isVideo = item.Type === "Video";
+  const isFolder = item.Type === "Folder";
 
-  var runtimeTicks =
+  const runtimeTicks =
     item.Type === "Series" ? (item.CumulativeRunTimeTicks || posterSource.CumulativeRunTimeTicks) :
     item.Type === "Episode" ? (item.RunTimeTicks || posterSource.RunTimeTicks) :
     (item.RunTimeTicks || posterSource.RunTimeTicks);
 
-  var runtime = formatRuntime(runtimeTicks);
-  var heroProgress = showProgress ? getPlaybackPercent(item) : 0;
-  var heroProgressPct = Math.round(heroProgress * 100);
-  var heroProgressHtml = (showProgress && heroProgress > 0.02 && heroProgress < 0.999)
-    ? "\n      <div class=\"dir-hero-progress-wrap\" aria-label=\"" + (escapeHtml(config.languageLabels.progress || "İlerleme")) + "\">\n        <div class=\"dir-hero-progress-bar\" style=\"width:" + (heroProgressPct) + "%\"></div>\n      </div>\n      <div class=\"dir-hero-progress-pct\">" + (heroProgressPct) + "%</div>\n    "
+  const runtime = formatRuntime(runtimeTicks);
+  const heroProgress = showProgress ? getPlaybackPercent(item) : 0;
+  const heroProgressPct = Math.round(heroProgress * 100);
+  const heroProgressHtml = (showProgress && heroProgress > 0.02 && heroProgress < 0.999)
+    ? `
+      <div class="dir-hero-progress-wrap" aria-label="${escapeHtml(config.languageLabels.progress || "İlerleme")}">
+        <div class="dir-hero-progress-bar" style="width:${heroProgressPct}%"></div>
+      </div>
+      <div class="dir-hero-progress-pct">${heroProgressPct}%</div>
+    `
     : "";
 
-  var typeLabel =
-    isPhoto ? (config.languageLabels.photo || "Foto") :
-    isPhotoAlbum ? (config.languageLabels.photoAlbum || "Álbum") :
-    isMusicAlbum ? (config.languageLabels.album || "Álbum") :
-    isAudio ? (config.languageLabels.track || "Faixa") :
-    isVideo ? (config.languageLabels.video || "Vídeo") :
-    isFolder ? (config.languageLabels.folder || "Pasta") :
-    isEpisode ? (config.languageLabels.episode || "Episódio") :
-    isSeries ? (config.languageLabels.dizi || "Série") :
-    (config.languageLabels.film || "Filme");
+  const typeLabel =
+    isPhoto ? (config.languageLabels.photo || "Fotoğraf") :
+    isPhotoAlbum ? (config.languageLabels.photoAlbum || "Albüm") :
+    isMusicAlbum ? (config.languageLabels.album || "Albüm") :
+    isAudio ? (config.languageLabels.track || "Parça") :
+    isVideo ? (config.languageLabels.video || "Video") :
+    isFolder ? (config.languageLabels.folder || "Klasör") :
+    isEpisode ? (config.languageLabels.episode || "Bölüm") :
+    isSeries ? (config.languageLabels.dizi || "Dizi") :
+    (config.languageLabels.film || "Film");
 
-  var heroSub = isEpisode ? formatEpisodeLabel(item) : (isSeason ? formatSeasonLabel(item) : "");
-  var genres = Array.isArray(posterSource.Genres) ? posterSource.Genres.slice(0, 3).join(", ") : "";
-  var runtimeWithIcons = runtime ? getRuntimeWithIcons(runtime) : "";
-  var heroMetaItems = [];
+  const heroSub = isEpisode ? formatEpisodeLabel(item) : (isSeason ? formatSeasonLabel(item) : "");
+  const genres = Array.isArray(posterSource.Genres) ? posterSource.Genres.slice(0, 3).join(", ") : "";
+  const runtimeWithIcons = runtime ? getRuntimeWithIcons(runtime) : "";
+  const heroMetaItems = [];
   if (heroSub) {
     heroMetaItems.push({ text: heroSub, variant: "subline" });
   } else {
@@ -2307,32 +2381,56 @@ function createRowHeroCard(item, serverId, labelText, { showProgress = false } =
     if (runtimeWithIcons) heroMetaItems.push({ text: runtimeWithIcons, variant: "runtime" });
     if (genres) heroMetaItems.push({ text: genres, variant: "genres" });
   }
-  var metaHtml = heroMetaItems.length
+  const metaHtml = heroMetaItems.length
     ? heroMetaItems
-        .mapfunction(({ text, variant })
-          "<span class=\"dir-row-hero-meta dir-row-hero-meta--" + (variant) + "\">" + (escapeHtml(text)) + "</span>"
+        .map(({ text, variant }) =>
+          `<span class="dir-row-hero-meta dir-row-hero-meta--${variant}">${escapeHtml(text)}</span>`
         )
         .join("")
     : "";
-  var heroTitle =
+  const heroTitle =
     (isEpisode || isSeason)
       ? (item.SeriesName || posterSource.Name || item.Name)
       : (isAudio ? (item.Name || posterSource.Name || "") : (posterSource.Name || item.Name || ""));
-  var heroLogoAltSuffix = (config.languageLabels && config.languageLabels.logoAltSuffix) || "logo";
+  const heroLogoAltSuffix = (config.languageLabels && config.languageLabels.logoAltSuffix) || "logo";
 
-  hero.innerHTML = "\n    <div class=\"dir-row-hero-bg-wrap\">\n      <img class=\"dir-row-hero-bg\"\n           alt=\"" + (escapeHtml(heroTitle)) + "\"\n           decoding=\"async\"\n           loading=\"" + (IS_MOBILE ? "eager" : "lazy") + "\"\n           " + (IS_MOBILE ? 'fetchpriority="high"' : "") + ">\n    </div>\n\n    <div class=\"dir-row-hero-inner\">\n      <div class=\"dir-row-hero-meta-container\">\n        <div class=\"dir-row-hero-label\">" + (escapeHtml(labelText || "")) + "</div>\n\n        ${logo ? "
+  hero.innerHTML = `
+    <div class="dir-row-hero-bg-wrap">
+      <img class="dir-row-hero-bg"
+           alt="${escapeHtml(heroTitle)}"
+           decoding="async"
+           loading="${IS_MOBILE ? "eager" : "lazy"}"
+           ${IS_MOBILE ? 'fetchpriority="high"' : ""}>
+    </div>
+
+    <div class="dir-row-hero-inner">
+      <div class="dir-row-hero-meta-container">
+        <div class="dir-row-hero-label">${escapeHtml(labelText || "")}</div>
+
+        ${logo ? `
           <div class="dir-row-hero-logo">
-            <img src="${logo}" alt="${escapeHtml((heroTitle) + " " + (heroLogoAltSuffix).trim())}">
+            <img src="${logo}" alt="${escapeHtml(`${heroTitle} ${heroLogoAltSuffix}`.trim())}">
           </div>
-        " : ""}\n\n        <div class=\"dir-row-hero-title\">" + (escapeHtml(heroTitle)) + "</div>\n\n        ${metaHtml ? "<div class="dir-row-hero-submeta">${metaHtml}</div>" : \"\"}\n\n        ${plot ? "<div class="dir-row-hero-plot">${escapeHtml(plot)}</div>" : \"\"}\n\n      </div>\n    </div>\n    " + (heroProgressHtml) + "\n  ";
+        ` : ``}
 
-  var openDetails = function(e) {
-    try { e.preventDefault.(); e.stopPropagation.(); } catch {}
-    var backdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
-    var originEl = hero.querySelector(".dir-row-hero-bg") || hero;
+        <div class="dir-row-hero-title">${escapeHtml(heroTitle)}</div>
+
+        ${metaHtml ? `<div class="dir-row-hero-submeta">${metaHtml}</div>` : ""}
+
+        ${plot ? `<div class="dir-row-hero-plot">${escapeHtml(plot)}</div>` : ""}
+
+      </div>
+    </div>
+    ${heroProgressHtml}
+  `;
+
+  const openDetails = async (e) => {
+    try { e?.preventDefault?.(); e?.stopPropagation?.(); } catch {}
+    const backdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
+    const originEl = hero.querySelector(".dir-row-hero-bg") || hero;
     try {
       if (!itemId) return;
-      openDetailsModal({
+      await openDetailsModal({
         itemId,
         serverId,
         preferBackdropIndex: backdropIndex,
@@ -2345,12 +2443,12 @@ function createRowHeroCard(item, serverId, labelText, { showProgress = false } =
 
   hero.addEventListener("click", openDetails);
   hero.tabIndex = 0;
-  hero.addEventListenerfunction("keydown", (e) {
+  hero.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") openDetails(e);
   });
     hero.classList.add("active");
   try {
-    var backdropImg = hero.querySelector(".dir-row-hero-bg");
+    const backdropImg = hero.querySelector(".dir-row-hero-bg");
     if (backdropImg) {
       setManagedImageSource(backdropImg, bgSrc, { fallback: PLACEHOLDER_URL });
     }
@@ -2359,13 +2457,13 @@ function createRowHeroCard(item, serverId, labelText, { showProgress = false } =
   }
 
   try {
-    var backdropImg = hero.querySelector(".dir-row-hero-bg");
-    var RemoteTrailers =
+    const backdropImg = hero.querySelector(".dir-row-hero-bg");
+    const RemoteTrailers =
       posterSource.RemoteTrailers ||
       posterSource.RemoteTrailerItems ||
       posterSource.RemoteTrailerUrls ||
       [];
-    var previewItemId = resolveHeroPreviewItemId(item);
+    const previewItemId = await resolveHeroPreviewItemId(item);
 
     createTrailerIframe({
       config,
@@ -2376,16 +2474,16 @@ function createRowHeroCard(item, serverId, labelText, { showProgress = false } =
       previewItemId: previewItemId || itemId,
       serverId,
       detailsUrl: itemId ? getDetailsUrl(itemId, serverId) : "#",
-      detailsText: config.languageLabels.details || "Detalhes",
+      detailsText: config.languageLabels.details || "Ayrıntılar",
       showDetailsOverlay: false,
     });
   } catch (err) {
     console.error("RecentRows hero createTrailerIframe hata:", err);
   }
 
-  hero.addEventListenerfunction("jms:cleanup", () {
+  hero.addEventListener("jms:cleanup", () => {
     try {
-      var backdropImg = hero.querySelector(".dir-row-hero-bg");
+      const backdropImg = hero.querySelector(".dir-row-hero-bg");
       if (backdropImg) cleanupManagedImage(backdropImg);
     } catch {}
     detachPreviewHandlers(hero);
@@ -2395,10 +2493,10 @@ function createRowHeroCard(item, serverId, labelText, { showProgress = false } =
 }
 
 function uniqById(items) {
-  var seen = new Set();
-  var out = [];
-  for (var it of items || []) {
-    if (!it.Id) continue;
+  const seen = new Set();
+  const out = [];
+  for (const it of items || []) {
+    if (!it?.Id) continue;
     if (seen.has(it.Id)) continue;
     seen.add(it.Id);
     out.push(it);
@@ -2411,18 +2509,18 @@ function pickRandomIndex(n) {
   return Math.floor(Math.random() * n);
 }
 
-function fetchRecent(userId, type, limit, parentId) {
-  var url =
-    "/Users/" + (userId) + "/Items?" +
-    "IncludeItemTypes=" + (encodeURIComponent(type)) + "&Recursive=true&Fields=" + (encodeURIComponent(COMMON_FIELDS)) + "&" +
-    "EnableUserData=true&" +
-    (parentId ? "ParentId=" + (encodeURIComponent(parentId)) + "&" : "") +
-    "SortBy=DateCreated&SortOrder=Descending&Limit=" + (Math.max(10, limit * 2)) + "&" +
-    "ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo";
+async function fetchRecent(userId, type, limit, parentId) {
+  const url =
+    `/Users/${userId}/Items?` +
+    `IncludeItemTypes=${encodeURIComponent(type)}&Recursive=true&Fields=${encodeURIComponent(COMMON_FIELDS)}&` +
+    `EnableUserData=true&` +
+    (parentId ? `ParentId=${encodeURIComponent(parentId)}&` : ``) +
+    `SortBy=DateCreated&SortOrder=Descending&Limit=${Math.max(10, limit * 2)}&` +
+    `ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo`;
   try {
-    var data = makeApiRequest(url);
-    var items = Array.isArray(data.Items) ? data.Items : [];
-    var out = uniqById(items).slice(0, limit);
+    const data = await makeApiRequest(url);
+    const items = Array.isArray(data?.Items) ? data.Items : [];
+    const out = uniqById(items).slice(0, limit);
     try {
       if (STATE.db && STATE.scope) {
         upsertItemsBatchIdle(STATE.db, STATE.scope, out, { timeout: 1500 });
@@ -2435,20 +2533,21 @@ function fetchRecent(userId, type, limit, parentId) {
   }
 }
 
-function fetchContinue(userId, type, limit, parentId) {
-  var url =
-    "/Users/" + (userId) + "/Items?" +
-    "Filters=IsResumable&MediaTypes=Video&IncludeItemTypes=" + (encodeURIComponent(type)) + "&Recursive=true&Fields=" + (encodeURIComponent(COMMON_FIELDS)) + "&" +
-    "EnableUserData=true&" +
-    (parentId ? "ParentId=" + (encodeURIComponent(parentId)) + "&" : "") +
-    "SortBy=DatePlayed,DateCreated&SortOrder=Descending&Limit=" + (Math.max(10, limit * 3)) + "&" +
-    "ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo";
+async function fetchContinue(userId, type, limit, parentId) {
+  const url =
+    `/Users/${userId}/Items?` +
+    `Filters=IsResumable&MediaTypes=Video&IncludeItemTypes=${encodeURIComponent(type)}&Recursive=true&Fields=${encodeURIComponent(COMMON_FIELDS)}&` +
+    `EnableUserData=true&` +
+    (parentId ? `ParentId=${encodeURIComponent(parentId)}&` : ``) +
+    `SortBy=DatePlayed,DateCreated&SortOrder=Descending&Limit=${Math.max(10, limit * 3)}&` +
+    `ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo`;
   try {
-    var data = makeApiRequest(url);
-    var items = Array.isArray(data.Items) ? data.Items : [];
-    var out = uniqByIdfunction(items
-        .filter((it) isPartialPlaybackItem(it))
-        .sortfunction((a, b) getLastPlayedTs(b) - getLastPlayedTs(a))
+    const data = await makeApiRequest(url);
+    const items = Array.isArray(data?.Items) ? data.Items : [];
+    const out = uniqById(
+      items
+        .filter((it) => isPartialPlaybackItem(it))
+        .sort((a, b) => getLastPlayedTs(b) - getLastPlayedTs(a))
     ).slice(0, limit);
     try {
       if (STATE.db && STATE.scope) {
@@ -2463,39 +2562,39 @@ function fetchContinue(userId, type, limit, parentId) {
 }
 
 function getLastPlayedTs(it) {
-  var ud = it.UserData || it.UserDataDto || null;
-  var s = ud.LastPlayedDate || ud.LastPlayedDateUtc || it.DatePlayed || null;
-  var t = s ? Date.parse(s) : NaN;
+  const ud = it?.UserData || it?.UserDataDto || null;
+  const s = ud?.LastPlayedDate || ud?.LastPlayedDateUtc || it?.DatePlayed || null;
+  const t = s ? Date.parse(s) : NaN;
   return Number.isFinite(t) ? t : 0;
 }
 
-function fetchRecentlyPlayedTracks(userId, limit, parentId) {
-  var want = Math.max(30, limit * 6);
-  var base =
-    "/Users/" + (userId) + "/Items?" +
-    "IncludeItemTypes=Audio&Recursive=true&Fields=" + (encodeURIComponent(COMMON_FIELDS)) + "&" +
-    "EnableUserData=true&" +
-    (parentId ? "ParentId=" + (encodeURIComponent(parentId)) + "&" : "") +
-    "SortBy=DatePlayed&SortOrder=Descending&Limit=" + (want) + "&" +
-    "ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo";
+async function fetchRecentlyPlayedTracks(userId, limit, parentId) {
+  const want = Math.max(30, limit * 6);
+  const base =
+    `/Users/${userId}/Items?` +
+    `IncludeItemTypes=Audio&Recursive=true&Fields=${encodeURIComponent(COMMON_FIELDS)}&` +
+    `EnableUserData=true&` +
+    (parentId ? `ParentId=${encodeURIComponent(parentId)}&` : ``) +
+    `SortBy=DatePlayed&SortOrder=Descending&Limit=${want}&` +
+    `ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo`;
 
-  var urlPlayed = base + "&Filters=IsPlayed";
-  var normalize = function(data) {
-    var items = Array.isArray(data.Items) ? data.Items : [];
-    var played = items
-      .filter(function(it) getLastPlayedTs(it) > 0)
-      .sortfunction((a, b) getLastPlayedTs(b) - getLastPlayedTs(a));
+  const urlPlayed = base + `&Filters=IsPlayed`;
+  const normalize = async (data) => {
+    const items = Array.isArray(data?.Items) ? data.Items : [];
+    const played = items
+      .filter(it => getLastPlayedTs(it) > 0)
+      .sort((a, b) => getLastPlayedTs(b) - getLastPlayedTs(a));
 
     return uniqById(played).slice(0, limit);
   };
 
   try {
-    var data = makeApiRequest(urlPlayed);
-    var out = normalize(data);
+    let data = await makeApiRequest(urlPlayed);
+    let out = await normalize(data);
 
     if (out.length < Math.min(limit, 6)) {
-      data = makeApiRequest(base);
-      out = normalize(data);
+      data = await makeApiRequest(base);
+      out = await normalize(data);
     }
 
     try {
@@ -2511,38 +2610,38 @@ function fetchRecentlyPlayedTracks(userId, limit, parentId) {
   }
 }
 
-function fetchItemsByIds(ids, { refreshUserData = false } = {}) {
-  var clean = Array.isArray(ids) ? ids.map(function(x) String(x||"").trim()).filter(Boolean) : [];
+async function fetchItemsByIds(ids, { refreshUserData = false } = {}) {
+  const clean = Array.isArray(ids) ? ids.map(x => String(x||"").trim()).filter(Boolean) : [];
   if (!clean.length) return [];
 
-  var hydrated = [];
+  let hydrated = [];
   try {
-    if (!STATE.db || !STATE.scope) ensureRecentDb();
+    if (!STATE.db || !STATE.scope) await ensureRecentDb();
     if (STATE.db && STATE.scope) {
-      hydrated = getItemsByIds(STATE.db, STATE.scope, clean);
+      hydrated = await getItemsByIds(STATE.db, STATE.scope, clean);
     }
   } catch {}
 
-  var hydratedById = new Map((hydrated || []).filter(function(x)x.Id).map(function(x) [x.Id, x]));
-  var missing = clean.filter(function(id) !hydratedById.has(id));
-  var networkIds = refreshUserData ? clean.slice() : missing;
+  const hydratedById = new Map((hydrated || []).filter(x=>x?.Id).map(x => [x.Id, x]));
+  const missing = clean.filter(id => !hydratedById.has(id));
+  const networkIds = refreshUserData ? clean.slice() : missing;
 
-  var fetched = [];
+  let fetched = [];
   if (networkIds.length) {
-    var chunkSize = 100;
-    var out = [];
-    for (var i = 0; i < networkIds.length; i += chunkSize) {
-      var chunk = networkIds.slice(i, i + chunkSize);
-      var userScoped = !!STATE.userId;
-      var basePath = userScoped ? "/Users/" + (STATE.userId) + "/Items" : "/Items";
-      var url =
-        (basePath) + "?Ids=" + (encodeURIComponent(chunk.join(","))) +
-        "&Fields=" + (encodeURIComponent(COMMON_FIELDS)) +
-        (userScoped ? "&EnableUserData=true" : "") +
-        "&ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo";
+    const chunkSize = 100;
+    const out = [];
+    for (let i = 0; i < networkIds.length; i += chunkSize) {
+      const chunk = networkIds.slice(i, i + chunkSize);
+      const userScoped = !!STATE.userId;
+      const basePath = userScoped ? `/Users/${STATE.userId}/Items` : `/Items`;
+      const url =
+        `${basePath}?Ids=${encodeURIComponent(chunk.join(","))}` +
+        `&Fields=${encodeURIComponent(COMMON_FIELDS)}` +
+        (userScoped ? `&EnableUserData=true` : ``) +
+        `&ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo`;
       try {
-        var data = makeApiRequest(url);
-        var items = Array.isArray(data.Items) ? data.Items : (Array.isArray(data) ? data : []);
+        const data = await makeApiRequest(url);
+        const items = Array.isArray(data?.Items) ? data.Items : (Array.isArray(data) ? data : []);
         out.push(...items);
       } catch (e) {
         console.warn("recentRows: fetchItemsByIds missing fetch error:", e);
@@ -2551,25 +2650,25 @@ function fetchItemsByIds(ids, { refreshUserData = false } = {}) {
     fetched = uniqById(out);
 
     try {
-      if (fetched.length && STATE.db && STATE.scope) {
+      if (fetched?.length && STATE.db && STATE.scope) {
         upsertItemsBatchIdle(STATE.db, STATE.scope, fetched, { timeout: 1500 });
       }
     } catch {}
   }
 
-  var fetchedById = new Map((fetched || []).filter(function(x)x.Id).map(function(x) [x.Id, x]));
-  var final = [];
-  var seen = new Set();
-  for (var id of clean) {
-    var it = fetchedById.get(id) || hydratedById.get(id) || null;
-    if (!it.Id) continue;
+  const fetchedById = new Map((fetched || []).filter(x=>x?.Id).map(x => [x.Id, x]));
+  const final = [];
+  const seen = new Set();
+  for (const id of clean) {
+    const it = fetchedById.get(id) || hydratedById.get(id) || null;
+    if (!it?.Id) continue;
     if (seen.has(it.Id)) continue;
     seen.add(it.Id);
     final.push(it);
   }
 
-  for (var it of fetched || []) {
-    if (!it.Id) continue;
+  for (const it of fetched || []) {
+    if (!it?.Id) continue;
     if (seen.has(it.Id)) continue;
     seen.add(it.Id);
     final.push(it);
@@ -2580,31 +2679,31 @@ function fetchItemsByIds(ids, { refreshUserData = false } = {}) {
 function isRealTvEpisode(it) {
   if (!it) return false;
   if (it.Type !== "Episode") return false;
-  var hasSeries = !!(it.SeriesId || (it.SeriesName && String(it.SeriesName).trim()));
+  const hasSeries = !!(it.SeriesId || (it.SeriesName && String(it.SeriesName).trim()));
   if (!hasSeries) return false;
 
-  var epNo = Number(it.IndexNumber);
+  const epNo = Number(it.IndexNumber);
   if (!Number.isFinite(epNo) || epNo <= 0) return false;
 
   return true;
 }
 
-function fetchRecentEpisodes(userId, limit, parentId) {
-  var url =
-    "/Users/" + (userId) + "/Items?" +
-    "IncludeItemTypes=Episode&Recursive=true&Fields=" + (encodeURIComponent(COMMON_FIELDS)) + "&" +
-    "EnableUserData=true&" +
-    (parentId ? "ParentId=" + (encodeURIComponent(parentId)) + "&" : "") +
-    "ExcludeItemTypes=Playlist&" +
-    "SortBy=DateCreated&SortOrder=Descending&Limit=" + (Math.max(20, limit * 3)) + "&" +
-    "ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo";
+async function fetchRecentEpisodes(userId, limit, parentId) {
+  const url =
+    `/Users/${userId}/Items?` +
+    `IncludeItemTypes=Episode&Recursive=true&Fields=${encodeURIComponent(COMMON_FIELDS)}&` +
+    `EnableUserData=true&` +
+    (parentId ? `ParentId=${encodeURIComponent(parentId)}&` : ``) +
+    `ExcludeItemTypes=Playlist&` +
+    `SortBy=DateCreated&SortOrder=Descending&Limit=${Math.max(20, limit * 3)}&` +
+    `ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo`;
 
   try {
-    var data = makeApiRequest(url);
-    var eps = Array.isArray(data.Items) ? data.Items : [];
-    var uniqEps = uniqById(eps).filter(isRealTvEpisode);
+    const data = await makeApiRequest(url);
+    const eps = Array.isArray(data?.Items) ? data.Items : [];
+    const uniqEps = uniqById(eps).filter(isRealTvEpisode);
 
-    attachSeriesPosterSourceToEpsAndSeasons(uniqEps);
+    await attachSeriesPosterSourceToEpsAndSeasons(uniqEps);
 
     return uniqEps.slice(0, limit);
   } catch (e) {
@@ -2613,25 +2712,26 @@ function fetchRecentEpisodes(userId, limit, parentId) {
   }
 }
 
-function fetchContinueEpisodes(userId, limit, parentId) {
-  var url =
-    "/Users/" + (userId) + "/Items?" +
-    "Filters=IsResumable&MediaTypes=Video&IncludeItemTypes=Episode&Recursive=true&Fields=" + (encodeURIComponent(COMMON_FIELDS)) + "&" +
-    "EnableUserData=true&" +
-    (parentId ? "ParentId=" + (encodeURIComponent(parentId)) + "&" : "") +
-    "ExcludeItemTypes=Playlist&" +
-    "SortBy=DatePlayed,DateCreated&SortOrder=Descending&Limit=" + (Math.max(20, limit * 4)) + "&" +
-    "ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo";
+async function fetchContinueEpisodes(userId, limit, parentId) {
+  const url =
+    `/Users/${userId}/Items?` +
+    `Filters=IsResumable&MediaTypes=Video&IncludeItemTypes=Episode&Recursive=true&Fields=${encodeURIComponent(COMMON_FIELDS)}&` +
+    `EnableUserData=true&` +
+    (parentId ? `ParentId=${encodeURIComponent(parentId)}&` : ``) +
+    `ExcludeItemTypes=Playlist&` +
+    `SortBy=DatePlayed,DateCreated&SortOrder=Descending&Limit=${Math.max(20, limit * 4)}&` +
+    `ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo`;
 
   try {
-    var data = makeApiRequest(url);
-    var eps = Array.isArray(data.Items) ? data.Items : [];
-    var uniqEps = uniqByIdfunction(eps
-        .filter((it) isPartialPlaybackItem(it))
-        .sortfunction((a, b) getLastPlayedTs(b) - getLastPlayedTs(a))
+    const data = await makeApiRequest(url);
+    const eps = Array.isArray(data?.Items) ? data.Items : [];
+    const uniqEps = uniqById(
+      eps
+        .filter((it) => isPartialPlaybackItem(it))
+        .sort((a, b) => getLastPlayedTs(b) - getLastPlayedTs(a))
     ).filter(isRealTvEpisode);
 
-    attachSeriesPosterSourceToEpsAndSeasons(uniqEps);
+    await attachSeriesPosterSourceToEpsAndSeasons(uniqEps);
 
     return uniqEps.slice(0, limit);
   } catch (e) {
@@ -2640,21 +2740,21 @@ function fetchContinueEpisodes(userId, limit, parentId) {
   }
 }
 
-function fetchNextUpEpisodes(userId, limit) {
-  var url =
-    "/Shows/NextUp?" +
-    "UserId=" + (encodeURIComponent(userId)) + "&" +
-    "Fields=" + (encodeURIComponent(COMMON_FIELDS)) + "&" +
-    "EnableUserData=true&" +
-    "Limit=" + (Math.max(20, limit * 3)) + "&" +
-    "ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo";
+async function fetchNextUpEpisodes(userId, limit) {
+  const url =
+    `/Shows/NextUp?` +
+    `UserId=${encodeURIComponent(userId)}&` +
+    `Fields=${encodeURIComponent(COMMON_FIELDS)}&` +
+    `EnableUserData=true&` +
+    `Limit=${Math.max(20, limit * 3)}&` +
+    `ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo`;
 
   try {
-    var data = makeApiRequest(url);
-    var eps = Array.isArray(data.Items) ? data.Items : [];
-    var uniqEps = uniqById(eps).filter(isRealTvEpisode);
+    const data = await makeApiRequest(url);
+    const eps = Array.isArray(data?.Items) ? data.Items : [];
+    const uniqEps = uniqById(eps).filter(isRealTvEpisode);
 
-    attachSeriesPosterSourceToEpsAndSeasons(uniqEps);
+    await attachSeriesPosterSourceToEpsAndSeasons(uniqEps);
 
     return uniqEps.slice(0, limit);
   } catch (e) {
@@ -2663,28 +2763,28 @@ function fetchNextUpEpisodes(userId, limit) {
   }
 }
 
-function attachSeriesPosterSourceToEpsAndSeasons(items) {
-  var list = Array.isArray(items) ? items : [];
+async function attachSeriesPosterSourceToEpsAndSeasons(items) {
+  const list = Array.isArray(items) ? items : [];
   if (!list.length) return list;
 
-  var directSeriesIds = [];
-  var needParentResolve = [];
+  const directSeriesIds = [];
+  const needParentResolve = [];
 
-  for (var it of list) {
-    if (!it.Id) continue;
-    var sid = getSeriesIdFromItem(it);
+  for (const it of list) {
+    if (!it?.Id) continue;
+    const sid = getSeriesIdFromItem(it);
     if (sid) directSeriesIds.push(sid);
     else if (it.ParentId) needParentResolve.push(it.ParentId);
   }
 
-  var seasonToSeries = new Map();
-  var resolvedSeriesIds = [];
+  const seasonToSeries = new Map();
+  const resolvedSeriesIds = [];
   if (needParentResolve.length) {
-    var uniqParentIds = Array.from(new Set(needParentResolve.filter(Boolean)));
-    var parents = fetchItemsByIds(uniqParentIds);
-    for (var p of parents) {
-      if (!p.Id) continue;
-      var sid =
+    const uniqParentIds = Array.from(new Set(needParentResolve.filter(Boolean)));
+    const parents = await fetchItemsByIds(uniqParentIds);
+    for (const p of parents) {
+      if (!p?.Id) continue;
+      const sid =
         (p.Type === "Season") ? (p.SeriesId || p.ParentId || null) :
         (p.Type === "Series") ? p.Id :
         null;
@@ -2695,37 +2795,37 @@ function attachSeriesPosterSourceToEpsAndSeasons(items) {
     }
   }
 
-  var allSeriesIds = Array.from(new Set([...directSeriesIds, ...resolvedSeriesIds].filter(Boolean)));
+  const allSeriesIds = Array.from(new Set([...directSeriesIds, ...resolvedSeriesIds].filter(Boolean)));
   if (!allSeriesIds.length) return list;
 
-  var series = fetchItemsByIds(allSeriesIds);
-  var seriesById = new Map((series || []).filter(function(s)s.Id).map(function(s) [s.Id, s]));
+  const series = await fetchItemsByIds(allSeriesIds);
+  const seriesById = new Map((series || []).filter(s=>s?.Id).map(s => [s.Id, s]));
 
-  for (var it of list) {
+  for (const it of list) {
     if (!it) continue;
 
-    var sid = getSeriesIdFromItem(it);
+    let sid = getSeriesIdFromItem(it);
     if (!sid && it.ParentId) sid = seasonToSeries.get(it.ParentId) || null;
-    var s = sid ? seriesById.get(sid) : null;
+    const s = sid ? seriesById.get(sid) : null;
     if (s) it.__posterSource = s;
   }
 
   return list;
 }
 
-function fetchRecentGeneric(userId, limit, parentId) {
-  var url =
-    "/Users/" + (userId) + "/Items?" +
-    "Recursive=true&Fields=" + (encodeURIComponent(COMMON_FIELDS)) + "&" +
-    "EnableUserData=true&" +
-    (parentId ? "ParentId=" + (encodeURIComponent(parentId)) + "&" : "") +
-    "SortBy=DateCreated&SortOrder=Descending&Limit=" + (Math.max(10, limit * 2)) + "&" +
-    "ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo";
+async function fetchRecentGeneric(userId, limit, parentId) {
+  const url =
+    `/Users/${userId}/Items?` +
+    `Recursive=true&Fields=${encodeURIComponent(COMMON_FIELDS)}&` +
+    `EnableUserData=true&` +
+    (parentId ? `ParentId=${encodeURIComponent(parentId)}&` : ``) +
+    `SortBy=DateCreated&SortOrder=Descending&Limit=${Math.max(10, limit * 2)}&` +
+    `ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo`;
   try {
-    var data = makeApiRequest(url);
-    var items = Array.isArray(data.Items) ? data.Items : [];
-    var out = uniqById(items).slice(0, limit);
-    attachSeriesPosterSourceToEpsAndSeasons(out);
+    const data = await makeApiRequest(url);
+    const items = Array.isArray(data?.Items) ? data.Items : [];
+    const out = uniqById(items).slice(0, limit);
+    await attachSeriesPosterSourceToEpsAndSeasons(out);
     try {
       if (STATE.db && STATE.scope) {
         upsertItemsBatchIdle(STATE.db, STATE.scope, out, { timeout: 1500 });
@@ -2738,22 +2838,23 @@ function fetchRecentGeneric(userId, limit, parentId) {
   }
 }
 
-function fetchContinueGeneric(userId, limit, parentId) {
-  var url =
-    "/Users/" + (userId) + "/Items?" +
-    "Filters=IsResumable&MediaTypes=Video&Recursive=true&Fields=" + (encodeURIComponent(COMMON_FIELDS)) + "&" +
-    "EnableUserData=true&" +
-    (parentId ? "ParentId=" + (encodeURIComponent(parentId)) + "&" : "") +
-    "SortBy=DatePlayed,DateCreated&SortOrder=Descending&Limit=" + (Math.max(10, limit * 3)) + "&" +
-    "ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo";
+async function fetchContinueGeneric(userId, limit, parentId) {
+  const url =
+    `/Users/${userId}/Items?` +
+    `Filters=IsResumable&MediaTypes=Video&Recursive=true&Fields=${encodeURIComponent(COMMON_FIELDS)}&` +
+    `EnableUserData=true&` +
+    (parentId ? `ParentId=${encodeURIComponent(parentId)}&` : ``) +
+    `SortBy=DatePlayed,DateCreated&SortOrder=Descending&Limit=${Math.max(10, limit * 3)}&` +
+    `ImageTypeLimit=1&EnableImageTypes=Primary,Backdrop,Logo`;
   try {
-    var data = makeApiRequest(url);
-    var items = Array.isArray(data.Items) ? data.Items : [];
-    var out = uniqByIdfunction(items
-        .filter((it) isPartialPlaybackItem(it))
-        .sortfunction((a, b) getLastPlayedTs(b) - getLastPlayedTs(a))
+    const data = await makeApiRequest(url);
+    const items = Array.isArray(data?.Items) ? data.Items : [];
+    const out = uniqById(
+      items
+        .filter((it) => isPartialPlaybackItem(it))
+        .sort((a, b) => getLastPlayedTs(b) - getLastPlayedTs(a))
     ).slice(0, limit);
-    attachSeriesPosterSourceToEpsAndSeasons(out);
+    await attachSeriesPosterSourceToEpsAndSeasons(out);
     try {
       if (STATE.db && STATE.scope) {
         upsertItemsBatchIdle(STATE.db, STATE.scope, out, { timeout: 1500 });
@@ -2767,21 +2868,35 @@ function fetchContinueGeneric(userId, limit, parentId) {
 }
 
 function buildSectionSkeleton({ titleText, badgeType, onSeeAll }) {
-  var section = document.createElement("section");
+  const section = document.createElement("section");
   section.className = "homeSection recent-row-section dir-row-section";
 
-  var title = document.createElement("div");
+  const title = document.createElement("div");
   title.className = "sectionTitleContainer sectionTitleContainer-cards";
 
-  var seeAllText = config.languageLabels.seeAll || "Tümünü gör";
+  const seeAllText = config.languageLabels.seeAll || "Tümünü gör";
 
-  title.innerHTML = "\n    <h2 class=\"sectionTitle sectionTitle-cards dir-row-title\">\n      <span class=\"dir-row-title-text\" role=\"button\" tabindex=\"0\"\n        aria-label=\"" + (escapeHtml(seeAllText)) + ": " + (escapeHtml(titleText)) + "\">\n        " + (escapeHtml(titleText)) + "\n      </span>\n\n      <div class=\"dir-row-see-all\"\n          aria-label=\"" + (escapeHtml(seeAllText)) + "\"\n          title=\"" + (escapeHtml(seeAllText)) + "\">\n        " + (faIconHtml("chevronRight")) + "\n      </div>\n      <span class=\"dir-row-see-all-tip\">" + (escapeHtml(seeAllText)) + "</span>\n    </h2>\n  ";
+  title.innerHTML = `
+    <h2 class="sectionTitle sectionTitle-cards dir-row-title">
+      <span class="dir-row-title-text" role="button" tabindex="0"
+        aria-label="${escapeHtml(seeAllText)}: ${escapeHtml(titleText)}">
+        ${escapeHtml(titleText)}
+      </span>
 
-  var titleBtn = title.querySelector(".dir-row-title-text");
-  var seeAllBtn = title.querySelector(".dir-row-see-all");
+      <div class="dir-row-see-all"
+          aria-label="${escapeHtml(seeAllText)}"
+          title="${escapeHtml(seeAllText)}">
+        ${faIconHtml("chevronRight")}
+      </div>
+      <span class="dir-row-see-all-tip">${escapeHtml(seeAllText)}</span>
+    </h2>
+  `;
 
-  var doSeeAll = function(e) {
-    try { e.preventDefault.(); e.stopPropagation.(); } catch {}
+  const titleBtn = title.querySelector(".dir-row-title-text");
+  const seeAllBtn = title.querySelector(".dir-row-see-all");
+
+  const doSeeAll = (e) => {
+    try { e?.preventDefault?.(); e?.stopPropagation?.(); } catch {}
     if (typeof onSeeAll === "function") {
       try { onSeeAll(); } catch (err) { console.error("RecentRows seeAll error:", err); }
     }
@@ -2789,42 +2904,42 @@ function buildSectionSkeleton({ titleText, badgeType, onSeeAll }) {
 
   if (titleBtn) {
     titleBtn.addEventListener("click", doSeeAll, { passive: false });
-    titleBtn.addEventListenerfunction("keydown", (e) {
+    titleBtn.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") doSeeAll(e);
     });
   }
   if (seeAllBtn) seeAllBtn.addEventListener("click", doSeeAll, { passive: false });
 
-  var heroHost = document.createElement("div");
+  const heroHost = document.createElement("div");
   heroHost.className = "dir-row-hero-host";
   heroHost.style.display = getRecentRowsRuntimeConfig().showHeroCards ? "" : "none";
 
-  var scrollWrap = document.createElement("div");
+  const scrollWrap = document.createElement("div");
   scrollWrap.className = "personal-recs-scroll-wrap";
   try { scrollWrap.style.position = "relative"; } catch {}
   scrollWrap.classList.add("rr-scroll-pending");
 
-  var btnL = document.createElement("button");
+  const btnL = document.createElement("button");
   btnL.className = "hub-scroll-btn hub-scroll-left";
   btnL.setAttribute("aria-label", config.languageLabels.scrollLeft || "Sola kaydır");
   btnL.setAttribute("aria-disabled", "true");
   btnL.disabled = true;
   btnL.style.visibility = "hidden";
   btnL.style.pointerEvents = "none";
-  btnL.innerHTML = "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z\"/></svg>";
+  btnL.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>`;
 
-  var row = document.createElement("div");
+  const row = document.createElement("div");
   row.className = "itemsContainer personal-recs-row";
   row.setAttribute("role", "list");
 
-  var btnR = document.createElement("button");
+  const btnR = document.createElement("button");
   btnR.className = "hub-scroll-btn hub-scroll-right";
   btnR.setAttribute("aria-label", config.languageLabels.scrollRight || "Sağa kaydır");
   btnR.setAttribute("aria-disabled", "true");
   btnR.disabled = true;
   btnR.style.visibility = "hidden";
   btnR.style.pointerEvents = "none";
-  btnR.innerHTML = "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z\"/></svg>";
+  btnR.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>`;
 
   scrollWrap.appendChild(btnL);
   scrollWrap.appendChild(row);
@@ -2849,16 +2964,16 @@ function getBadgeText(type) {
 }
 
 function appendSection(sectionKey, sectionEl) {
-  var scopedHost =
-    STATE.hostEl.classList.contains.("homeSectionsContainer")
+  const scopedHost =
+    STATE.hostEl?.classList?.contains?.("homeSectionsContainer")
       ? STATE.hostEl
-      : (STATE.hostEl.querySelector.(".homeSectionsContainer") || null);
-  var parent = scopedHost || findRealHomeSectionsContainer() || getActiveHomePage() || document.body;
+      : (STATE.hostEl?.querySelector?.(".homeSectionsContainer") || null);
+  const parent = scopedHost || findRealHomeSectionsContainer() || getActiveHomePage() || document.body;
   if (!parent || !sectionEl) return;
 
-  var owned = getManagedRecentRowsSections(sectionKey, parent);
-  var lastOwned = owned[owned.length - 1] || null;
-  if (lastOwned.parentElement === parent) {
+  const owned = getManagedRecentRowsSections(sectionKey, parent);
+  const lastOwned = owned[owned.length - 1] || null;
+  if (lastOwned?.parentElement === parent) {
     lastOwned.insertAdjacentElement("afterend", sectionEl);
   } else {
     appendToParent(parent, sectionEl);
@@ -2868,12 +2983,12 @@ function appendSection(sectionKey, sectionEl) {
 }
 
 function hasAnyManagedRecentRowsSections(sectionKeys = []) {
-  return (sectionKeys || []).somefunction((sectionKey) getManagedRecentRowsSections(sectionKey).length > 0);
+  return (sectionKeys || []).some((sectionKey) => getManagedRecentRowsSections(sectionKey).length > 0);
 }
 
 function isRecentRowsSelfHealDisabled() {
   try {
-    var cfg = getConfig.() || config || {};
+    const cfg = getConfig?.() || config || {};
     return cfg.enableSlider === false;
   } catch {
     return false;
@@ -2894,7 +3009,7 @@ function scheduleRecentRowsSelfHeal(reason = "mutation", delayMs = 180) {
   }
   __recentRowsSelfHealPending = true;
   if (__recentRowsSelfHealTimer) return;
-  __recentRowsSelfHealTimer = setTimeoutfunction(() {
+  __recentRowsSelfHealTimer = setTimeout(() => {
     __recentRowsSelfHealTimer = null;
     if (!__recentRowsSelfHealPending) return;
     if (__recentMountPromise) {
@@ -2905,10 +3020,10 @@ function scheduleRecentRowsSelfHeal(reason = "mutation", delayMs = 180) {
     if (!STATE.hadMountedSections) return;
     if (!isRecentRowsHomeRoute() || !getActiveHomePage()) return;
 
-    var cfg = getConfig();
-    if (cfg.enableSlider === false) return;
-    var runtimeCfg = getRecentRowsRuntimeConfig(cfg);
-    var sectionKeys = getOrderedRecentRowSectionKeys(cfg, runtimeCfg);
+    const cfg = getConfig();
+    if (cfg?.enableSlider === false) return;
+    const runtimeCfg = getRecentRowsRuntimeConfig(cfg);
+    const sectionKeys = getOrderedRecentRowSectionKeys(cfg, runtimeCfg);
     if (!sectionKeys.length) return;
     if (hasAnyManagedRecentRowsSections(sectionKeys)) return;
 
@@ -2923,10 +3038,10 @@ function scheduleRecentRowsSelfHeal(reason = "mutation", delayMs = 180) {
 function bindRecentRowsSelfHealObserver() {
   if (isRecentRowsSelfHealDisabled()) return;
   if (__recentRowsSelfHealObserver || typeof MutationObserver !== "function") return;
-  var target = document.body || document.documentElement || null;
+  const target = document.body || document.documentElement || null;
   if (!target) return;
 
-  __recentRowsSelfHealObserver = new MutationObserverfunction(() {
+  __recentRowsSelfHealObserver = new MutationObserver(() => {
     scheduleRecentRowsSelfHeal("observer");
   });
 
@@ -2958,7 +3073,7 @@ function hasAcceptedRecentRowsMountState(sectionKey) {
   return hasMountedRecentRowsShell(sectionKey);
 }
 
-function fillSectionWithItems({
+async function fillSectionWithItems({
   sectionKey = "recentRows",
   sectionId = "",
   titleText,
@@ -2977,17 +3092,17 @@ function fillSectionWithItems({
   emptyMessage = "",
   deferNetworkRender = false,
 }) {
-  var { section, row, heroHost, scrollWrap, btnL, btnR } = buildSectionSkeleton({
+  const { section, row, heroHost, scrollWrap, btnL, btnR } = buildSectionSkeleton({
     titleText,
     badgeType,
     onSeeAll
   });
-  var resolveEmptyMessage = function() {
-    var raw = typeof emptyMessage === "function" ? emptyMessage() : emptyMessage;
+  const resolveEmptyMessage = () => {
+    const raw = typeof emptyMessage === "function" ? emptyMessage() : emptyMessage;
     return String(raw || config.languageLabels.noRecommendations || "Uygun içerik yok").trim();
   };
-  var runtimeCfg = getRecentRowsRuntimeConfig();
-  var useHero = runtimeCfg.showHeroCards && !hideHero;
+  const runtimeCfg = getRecentRowsRuntimeConfig();
+  const useHero = runtimeCfg.showHeroCards && !hideHero;
   if (sectionClassName) section.classList.add(...String(sectionClassName).split(/\s+/).filter(Boolean));
   if (rowClassName) row.classList.add(...String(rowClassName).split(/\s+/).filter(Boolean));
   if (!useHero) heroHost.style.display = "none";
@@ -2995,7 +3110,7 @@ function fillSectionWithItems({
   section.dataset.managedSectionKey = sectionKey;
 
   try {
-    waitForManagedHomeRowRelease({
+    await waitForManagedHomeRowRelease({
       anchor: getRecentRowsSectionAnchor(sectionKey, STATE.hostEl || getActiveHomePage() || document),
       eagerRows: RECENT_ROWS_EAGER_RELEASE_COUNT,
       timeoutMs: 25000,
@@ -3005,75 +3120,75 @@ function fillSectionWithItems({
   appendSection(sectionKey, section);
   try { registerManagedHomeRowAnchor(section); } catch {}
 
-  var __renderToken = (Date.now() ^ (Math.random()*1e9)) | 0;
+  let __renderToken = (Date.now() ^ (Math.random()*1e9)) | 0;
   section.__renderToken = __renderToken;
-  var __renderPass = 0;
-  var progressiveHandle = null;
+  let __renderPass = 0;
+  let progressiveHandle = null;
 
-  var isRenderCurrent = function() (
+  const isRenderCurrent = () => (
     section.__renderToken === __renderToken &&
     !!section.isConnected &&
     isRecentRowsHomeRoute() &&
-    !!section.closest.("#indexPage, #homePage").isConnected
+    !!section.closest?.("#indexPage, #homePage")?.isConnected
   );
 
-  var stopProgressiveRender = function() {
-    try { progressiveHandle.cancel.(); } catch {}
+  const stopProgressiveRender = () => {
+    try { progressiveHandle?.cancel?.(); } catch {}
     progressiveHandle = null;
   };
 
-  var finalizeScroller = function() {
+  const finalizeScroller = () => {
     setupScroller(row);
-    try { scrollWrap.classList.remove("rr-scroll-pending"); } catch {}
+    try { scrollWrap?.classList?.remove("rr-scroll-pending"); } catch {}
     try {
       if (btnL) { btnL.style.visibility = ""; btnL.style.pointerEvents = ""; btnL.disabled = false; }
       if (btnR) { btnR.style.visibility = ""; btnR.style.pointerEvents = ""; btnR.disabled = false; }
     } catch {}
   };
 
-  var renderEmptyState = function(message) {
+  const renderEmptyState = (message) => {
     stopProgressiveRender();
     if (!isRenderCurrent()) return false;
-    row.innerHTML = "<div class=\"no-recommendations\">" + (escapeHtml(message)) + "</div>";
+    row.innerHTML = `<div class="no-recommendations">${escapeHtml(message)}</div>`;
     finalizeScroller();
     return true;
   };
 
-  var removeSection = function() {
+  const removeSection = () => {
     stopProgressiveRender();
-    try { section.parentElement.removeChild(section); } catch {}
+    try { section.parentElement?.removeChild(section); } catch {}
     return false;
   };
 
-  var renderResolvedItems = function(sourceItems, { aboveFoldLimit = 2 } = {}) {
+  const renderResolvedItems = async (sourceItems, { aboveFoldLimit = 2 } = {}) => {
     stopProgressiveRender();
-    var renderPass = ++__renderPass;
-    var isPassCurrent = function() isRenderCurrent() && __renderPass === renderPass;
+    const renderPass = ++__renderPass;
+    const isPassCurrent = () => isRenderCurrent() && __renderPass === renderPass;
     if (!Array.isArray(sourceItems) || !sourceItems.length || !isRenderCurrent()) {
       return false;
     }
 
-    var pool = sourceItems.slice();
-    attachMusicPosterSources(pool);
+    const pool = sourceItems.slice();
+    await attachMusicPosterSources(pool);
     if (!isPassCurrent()) return false;
 
-    var best = null;
+    let best = null;
     if (useHero && pool.length) {
       if (randomHero) {
-        var idx = pickRandomIndex(pool.length);
+        const idx = pickRandomIndex(pool.length);
         best = idx >= 0 ? pool[idx] : pool[0];
       } else {
         best = pool[0];
       }
     }
 
-    var remaining = useHero && best
-      ? pool.filterfunction((x) x.Id && x.Id !== best.Id)
+    const remaining = useHero && best
+      ? pool.filter((x) => x?.Id && x.Id !== best.Id)
       : pool.slice();
 
     heroHost.innerHTML = "";
     if (useHero && best) {
-      var hero = createRowHeroCard(best, STATE.serverId, heroLabel, { showProgress });
+      const hero = await createRowHeroCard(best, STATE.serverId, heroLabel, { showProgress });
       if (!isPassCurrent()) return false;
       heroHost.appendChild(hero);
       queueEnterAnimation(hero);
@@ -3083,12 +3198,12 @@ function fillSectionWithItems({
     if (!remaining.length) {
       return renderEmptyState(config.languageLabels.noRecommendations || "Uygun içerik yok");
     }
-    var targetCount = Math.min(cardCount, remaining.length);
-    var scrollerReady = false;
-    var requestScrollSync = function() {
+    const targetCount = Math.min(cardCount, remaining.length);
+    let scrollerReady = false;
+    const requestScrollSync = () => {
       try {
         if (!row.__rrScrollRaf) {
-          row.__rrScrollRaf = requestAnimationFramefunction(() {
+          row.__rrScrollRaf = requestAnimationFrame(() => {
             row.__rrScrollRaf = 0;
             try { row.dispatchEvent(new Event("scroll")); } catch {}
           });
@@ -3096,7 +3211,7 @@ function fillSectionWithItems({
       } catch {}
     };
 
-    return new Promisefunction((resolve) {
+    return await new Promise((resolve) => {
       progressiveHandle = progressivelyRenderCardRow({
         row,
         items: remaining,
@@ -3110,13 +3225,13 @@ function fillSectionWithItems({
         chunkSize: IS_MOBILE ? 2 : 3,
         delayMs: IS_MOBILE ? 78 : 32,
         isCurrent: isPassCurrent,
-        appendCard: function(item, index) createRecommendationCard(item, STATE.serverId, {
+        appendCard: (item, index) => createRecommendationCard(item, STATE.serverId, {
           aboveFold: index < Math.max(1, Math.min(aboveFoldLimit, IS_MOBILE ? 2 : 4)),
           showProgress,
           variant: cardVariant,
           rank: cardVariant === "top10" ? (index + 1) : null
         }),
-        onAppend: function() {
+        onAppend: () => {
           if (!scrollerReady) {
             finalizeScroller();
             scrollerReady = true;
@@ -3124,7 +3239,7 @@ function fillSectionWithItems({
             requestScrollSync();
           }
         },
-        onComplete: function({ aborted = false } = {}) {
+        onComplete: ({ aborted = false } = {}) => {
           progressiveHandle = null;
           if (isPassCurrent()) {
             if (!scrollerReady) {
@@ -3139,23 +3254,23 @@ function fillSectionWithItems({
     });
   };
 
-  var cachedItems = [];
-  var cachedFresh = false;
+  let cachedItems = [];
+  let cachedFresh = false;
   try {
-    if (typeof fetcher.cachedItems === "function") {
-      var cached = fetcher.cachedItems();
+    if (typeof fetcher?.cachedItems === "function") {
+      const cached = await fetcher.cachedItems();
       if (Array.isArray(cached)) {
         cachedItems = cached;
       } else {
-        cachedItems = Array.isArray(cached.items) ? cached.items : [];
-        cachedFresh = !!cached.fresh;
+        cachedItems = Array.isArray(cached?.items) ? cached.items : [];
+        cachedFresh = !!cached?.fresh;
       }
     }
   } catch {}
 
-  if (cachedItems.length) {
+  if (cachedItems?.length) {
     try {
-      renderResolvedItems(cachedItems, { aboveFoldLimit: 2 });
+      await renderResolvedItems(cachedItems, { aboveFoldLimit: 2 });
     } catch {}
   }
 
@@ -3163,10 +3278,10 @@ function fillSectionWithItems({
     return true;
   }
 
-  var fetchAndRender = function() {
-    var items = [];
+  const fetchAndRender = async () => {
+    let items = [];
     try {
-      items = fetcher();
+      items = await fetcher();
     } catch (e) {
       console.warn("recentRows: fillSection fetcher error:", e);
       items = [];
@@ -3176,8 +3291,8 @@ function fillSectionWithItems({
       return false;
     }
 
-    if (!items.length) {
-      if (!cachedItems.length) {
+    if (!items?.length) {
+      if (!cachedItems?.length) {
         if (allowEmptyRow) {
           return renderEmptyState(resolveEmptyMessage());
         }
@@ -3186,12 +3301,12 @@ function fillSectionWithItems({
       return true;
     }
 
-    if (cachedItems.length) {
-      var compareCount = cardCount + (useHero ? 1 : 0);
-      var a = cachedItems.mapfunction((x) x.Id).filter(Boolean).slice(0, compareCount);
-      var b = items.mapfunction((x) x.Id).filter(Boolean).slice(0, compareCount);
+    if (cachedItems?.length) {
+      const compareCount = cardCount + (useHero ? 1 : 0);
+      const a = cachedItems.map((x) => x?.Id).filter(Boolean).slice(0, compareCount);
+      const b = items.map((x) => x?.Id).filter(Boolean).slice(0, compareCount);
       if (sameIdList(a, b)) {
-        var progressUnchanged =
+        const progressUnchanged =
           !showProgress ||
           samePlaybackProgressByOrder(cachedItems, items, compareCount);
         if (progressUnchanged) return true;
@@ -3212,38 +3327,38 @@ function fillSectionWithItems({
 }
 
 function getActiveHomePage() {
-  var visiblePage =
-    getActiveHomePageEl.() ||
+  const visiblePage =
+    getActiveHomePageEl?.() ||
     document.querySelector("#indexPage:not(.hide)") ||
     document.querySelector("#homePage:not(.hide)") ||
     null;
-  if (visiblePage.isConnected) {
+  if (visiblePage?.isConnected) {
     return visiblePage;
   }
-  var mountedPage = getMountedRecentRowsPage();
-  if (mountedPage.isConnected) {
+  const mountedPage = getMountedRecentRowsPage();
+  if (mountedPage?.isConnected) {
     return mountedPage;
   }
   return null;
 }
 
 function findRealHomeSectionsContainer() {
-  var page = getActiveHomePage();
+  const page = getActiveHomePage();
   if (!page) return null;
-  var hsc = page.querySelector(".homeSectionsContainer");
+  const hsc = page.querySelector(".homeSectionsContainer");
   return (hsc && hsc.isConnected) ? hsc : null;
 }
 
 function pickRecentRowsParentAndAnchor() {
-  var hsc = findRealHomeSectionsContainer();
+  const hsc = findRealHomeSectionsContainer();
   if (hsc) {
     return { parent: hsc, anchor: null, prepend: false };
   }
 
-  var homeSectionsConfig = getHomeSectionsRuntimeConfig(getLiveConfig());
-  var pr = document.getElementById("personal-recommendations");
+  const homeSectionsConfig = getHomeSectionsRuntimeConfig(getLiveConfig());
+  const pr = document.getElementById("personal-recommendations");
   if (homeSectionsConfig.enablePersonalRecommendations && pr) {
-    var titleEl =
+    const titleEl =
       pr.querySelector("h2.sectionTitle.sectionTitle-cards.prc-title") ||
       pr.querySelector(".sectionTitleContainer.sectionTitleContainer-cards") ||
       pr.querySelector(".prc-title") ||
@@ -3281,7 +3396,7 @@ function insertFirst(parent, node) {
 }
 
 function ensureRecentRowsPlacement(wrap) {
-  var { parent, anchor, prepend } = pickRecentRowsParentAndAnchor();
+  const { parent, anchor, prepend } = pickRecentRowsParentAndAnchor();
 
   if (wrap.parentElement !== parent) {
     if (prepend) insertFirst(parent, wrap);
@@ -3302,8 +3417,8 @@ function ensureRecentRowsPlacement(wrap) {
 }
 
 function cleanupLegacyRecentRowsWrap(sectionKey) {
-  var meta = getRecentRowSectionMeta(sectionKey);
-  var wrap = document.getElementById(meta.id);
+  const meta = getRecentRowSectionMeta(sectionKey);
+  const wrap = document.getElementById(meta.id);
   if (!wrap) return;
   try {
     wrap.replaceChildren();
@@ -3312,31 +3427,31 @@ function cleanupLegacyRecentRowsWrap(sectionKey) {
 }
 
 function hasRenderableRecentRowsContent(sectionKey) {
-  return getManagedRecentRowsSections(sectionKey).somefunction((section) !!section.querySelector(
+  return getManagedRecentRowsSections(sectionKey).some((section) => !!section.querySelector(
     ".personal-recs-card, .no-recommendations, .dir-row-hero"
   ));
 }
 
 function resolveRecentRowsMountState(homeParent = null, targetPage = null) {
-  var page =
-    (targetPage.isConnected ? targetPage : null) ||
+  const page =
+    (targetPage?.isConnected ? targetPage : null) ||
     getMountedRecentRowsPage() ||
     getActiveHomePage() ||
     null;
-  var container =
-    (homeParent.isConnected ? homeParent : null) ||
-    page.querySelector.(".homeSectionsContainer") ||
+  const container =
+    (homeParent?.isConnected ? homeParent : null) ||
+    page?.querySelector?.(".homeSectionsContainer") ||
     findRealHomeSectionsContainer() ||
     null;
   return { page, container };
 }
 
 function isRecentRowsMountStateValid(state) {
-  return !!state.page.isConnected && !!state.container.isConnected && isRecentRowsHomeRoute();
+  return !!state?.page?.isConnected && !!state?.container?.isConnected && isRecentRowsHomeRoute();
 }
 
 function getRecentRowsSectionAnchor(sectionKey, root = null) {
-  var sections = getManagedRecentRowsSections(sectionKey, root || getActiveHomePage() || document);
+  const sections = getManagedRecentRowsSections(sectionKey, root || getActiveHomePage() || document);
   return sections.length ? sections[sections.length - 1] : null;
 }
 
@@ -3352,17 +3467,17 @@ function scheduleRecentRowsRetry(ms = 1000, options = {}, reason = "retry") {
   recentRowsWarn("retry:scheduled", {
     delayMs: Math.max(120, ms | 0),
     reason,
-    force: options.force === true,
+    force: options?.force === true,
   });
-  __recentRowsRetryTo = setTimeoutfunction(() {
+  __recentRowsRetryTo = setTimeout(() => {
     __recentRowsRetryTo = null;
     void mountRecentRowsLazy(options);
   }, Math.max(120, ms | 0));
 }
 
-function mountRecentRowsSection(sectionKey, { force = false, options = {}, homeParent = null } = {}) {
-  var mountState = resolveRecentRowsMountState(homeParent);
-  if (mountState.container.isConnected) {
+async function mountRecentRowsSection(sectionKey, { force = false, options = {}, homeParent = null } = {}) {
+  const mountState = resolveRecentRowsMountState(homeParent);
+  if (mountState.container?.isConnected) {
     STATE.hostEl = mountState.container;
   }
 
@@ -3374,14 +3489,14 @@ function mountRecentRowsSection(sectionKey, { force = false, options = {}, homeP
     });
     clearRecentRowsRetry();
     setManagedRecentRowsDone(sectionKey, true);
-    try { mountState.container.__jmsManagedBelowNativeSchedule.(); } catch {}
+    try { mountState.container?.__jmsManagedBelowNativeSchedule?.(); } catch {}
     return true;
   }
 
   try {
     setManagedRecentRowsDone(sectionKey, false);
-    return enqueueManagedSectionRenderfunction(sectionKey, () {
-      var currentMountState = resolveRecentRowsMountState(homeParent, mountState.page);
+    return await enqueueManagedSectionRender(sectionKey, async () => {
+      const currentMountState = resolveRecentRowsMountState(homeParent, mountState.page);
       if (!isRecentRowsMountStateValid(currentMountState)) {
         recentRowsWarn("mount:retry:container-invalid", {
           force,
@@ -3389,7 +3504,7 @@ function mountRecentRowsSection(sectionKey, { force = false, options = {}, homeP
           hasPage: !!currentMountState.page,
           hasContainer: !!currentMountState.container,
         });
-        scheduleRecentRowsRetry(800, options, "container-invalid:" + (sectionKey));
+        scheduleRecentRowsRetry(800, options, `container-invalid:${sectionKey}`);
         return false;
       }
       STATE.hostEl = currentMountState.container;
@@ -3400,7 +3515,7 @@ function mountRecentRowsSection(sectionKey, { force = false, options = {}, homeP
       });
       cleanupManagedRecentRowsSections(sectionKey, currentMountState.container);
       cleanupLegacyRecentRowsWrap(sectionKey);
-      initAndRender({
+      await initAndRender({
         sectionKey,
         mountState: currentMountState,
       });
@@ -3410,7 +3525,7 @@ function mountRecentRowsSection(sectionKey, { force = false, options = {}, homeP
           sectionKey,
           sectionCount: getManagedRecentRowsSections(sectionKey).length,
         });
-        scheduleRecentRowsRetry(1400, options, "render-done-but-empty:" + (sectionKey));
+        scheduleRecentRowsRetry(1400, options, `render-done-but-empty:${sectionKey}`);
         return false;
       }
       recentRowsLog("render:success", {
@@ -3419,13 +3534,13 @@ function mountRecentRowsSection(sectionKey, { force = false, options = {}, homeP
         sectionCount: getManagedRecentRowsSections(sectionKey).length,
       });
       clearRecentRowsRetry();
-      try { currentMountState.container.__jmsManagedBelowNativeSchedule.(); } catch {}
+      try { currentMountState.container?.__jmsManagedBelowNativeSchedule?.(); } catch {}
       return true;
     }, {
       timeoutMs: 25000,
       force,
-      getAnchor: function() getRecentRowsSectionAnchor(sectionKey, mountState.container),
-      isStillValid: function() isRecentRowsMountStateValid(
+      getAnchor: () => getRecentRowsSectionAnchor(sectionKey, mountState.container),
+      isStillValid: () => isRecentRowsMountStateValid(
         resolveRecentRowsMountState(homeParent, mountState.page)
       ),
     });
@@ -3434,32 +3549,32 @@ function mountRecentRowsSection(sectionKey, { force = false, options = {}, homeP
     recentRowsWarn("render:error", {
       force,
       sectionKey,
-      error: e.message || String(e),
+      error: e?.message || String(e),
     });
-    scheduleRecentRowsRetry(1400, options, "render-error:" + (sectionKey));
+    scheduleRecentRowsRetry(1400, options, `render-error:${sectionKey}`);
     return false;
   }
 }
 
-export function mountRecentRowsLazy(options = {}) {
+export async function mountRecentRowsLazy(options = {}) {
   bindRecentRowsSelfHealObserver();
-  var force = options.force === true;
+  const force = options?.force === true;
   if (__recentMountPromise) {
     if (!force) {
       recentRowsLog("mount:skip:existing-promise", { force });
       return __recentMountPromise;
     }
     recentRowsWarn("mount:force:await-existing-promise", { force });
-    try { __recentMountPromise; } catch {}
+    try { await __recentMountPromise; } catch {}
   }
   if (!getActiveHomePage() && !isRecentRowsHomeRoute()) {
     recentRowsWarn("mount:skip:not-home", { force });
     return false;
   }
-  var cfg = getConfig();
-  var runtimeCfg = getRecentRowsRuntimeConfig(cfg);
-  var sectionKeys = getOrderedRecentRowSectionKeys(cfg, runtimeCfg);
-  var anyEnabled = sectionKeys.length > 0;
+  const cfg = getConfig();
+  const runtimeCfg = getRecentRowsRuntimeConfig(cfg);
+  const sectionKeys = getOrderedRecentRowSectionKeys(cfg, runtimeCfg);
+  const anyEnabled = sectionKeys.length > 0;
 
   if (!anyEnabled) {
     recentRowsLog("mount:skip:disabled", { force });
@@ -3483,29 +3598,29 @@ export function mountRecentRowsLazy(options = {}) {
     stack: force ? buildTraceStack() : "",
   });
 
-  var run = function(() {
+  const run = (async () => {
     if (force) {
       recentRowsWarn("mount:force:cleanup-before-render", { force });
       cleanupRecentRows();
     }
 
-    var host = waitForVisibleHomeSections({
+    const host = await waitForVisibleHomeSections({
       timeout: 12000
     });
-    if (!host.container || !getActiveHomePage()) {
+    if (!host?.container || !getActiveHomePage()) {
       recentRowsWarn("mount:retry:no-visible-home-sections", {
         force,
-        hostPageId: host.page.id || null,
-        hasContainer: !!host.container,
+        hostPageId: host?.page?.id || null,
+        hasContainer: !!host?.container,
       });
       scheduleRecentRowsRetry(1000, options, "no-visible-home-sections");
       return false;
     }
-    var homeParent = findRealHomeSectionsContainer();
+    const homeParent = findRealHomeSectionsContainer();
     if (!homeParent) {
       recentRowsWarn("mount:retry:no-homeSectionsContainer", {
         force,
-        hostPageId: host.page.id || null,
+        hostPageId: host?.page?.id || null,
       });
       scheduleRecentRowsRetry(900, options, "no-homeSectionsContainer");
       return false;
@@ -3514,11 +3629,11 @@ export function mountRecentRowsLazy(options = {}) {
     recentRowsTrace("mount:host-ready", {
       force,
       sectionKeys,
-      hostPageId: host.page.id || null,
-      activePageId: getActiveHomePage().id || null,
-      homeParentChildCount: homeParent.children.length || 0,
+      hostPageId: host?.page?.id || null,
+      activePageId: getActiveHomePage()?.id || null,
+      homeParentChildCount: homeParent?.children?.length || 0,
     });
-    for (var key of Object.keys(RECENT_ROW_SECTION_META)) {
+    for (const key of Object.keys(RECENT_ROW_SECTION_META)) {
       if (sectionKeys.includes(key)) continue;
       recentRowsTrace("mount:cleanup-disabled-section", {
         activeSectionKey: key,
@@ -3532,7 +3647,7 @@ export function mountRecentRowsLazy(options = {}) {
     // Queue every managed recent-row section up front so the global managed
     // render queue can see the full dependency chain before lower-priority
     // modules like directorRows are allowed to advance.
-    var scheduledSectionRuns = sectionKeys.mapfunction((sectionKey) {
+    const scheduledSectionRuns = sectionKeys.map((sectionKey) => {
       recentRowsTrace("mount:section:start", {
         sectionKey,
         force,
@@ -3544,9 +3659,9 @@ export function mountRecentRowsLazy(options = {}) {
       };
     });
 
-    var allOk = true;
-    for (var { sectionKey, promise } of scheduledSectionRuns) {
-      var ok = promise;
+    let allOk = true;
+    for (const { sectionKey, promise } of scheduledSectionRuns) {
+      const ok = await promise;
       recentRowsTrace("mount:section:done", {
         sectionKey,
         force,
@@ -3561,7 +3676,7 @@ export function mountRecentRowsLazy(options = {}) {
 
   __recentMountPromise = run;
   try {
-    return run;
+    return await run;
   } finally {
     if (__recentMountPromise === run) {
       __recentMountPromise = null;
@@ -3573,13 +3688,13 @@ export function mountRecentRowsLazy(options = {}) {
 }
 
 function getPinnedHomeContainer() {
-  var root = getActiveHomePage();
+  const root = getActiveHomePage();
   if (!root) return null;
-  var scroller = root.querySelector(
+  const scroller = root.querySelector(
     ".padded-top-focusscale.padded-bottom-focusscale.emby-scroller"
   );
   if (scroller) return { parent: scroller.parentElement || document.body, anchor: scroller };
-  var vertical = root.querySelector(
+  const vertical = root.querySelector(
     ".verticalSection.verticalSection-extrabottompadding"
   );
   if (vertical) return { parent: vertical, anchor: null };
@@ -3587,9 +3702,9 @@ function getPinnedHomeContainer() {
 }
 
 function yieldRecentRowsSectionStep(timeout = IS_MOBILE ? 96 : 40) {
-  return new Promisefunction((resolve) {
+  return new Promise((resolve) => {
     if (typeof window.requestIdleCallback === "function") {
-      window.requestIdleCallbackfunction(() resolve(), {
+      window.requestIdleCallback(() => resolve(), {
         timeout: Math.max(24, timeout | 0)
       });
       return;
@@ -3598,11 +3713,11 @@ function yieldRecentRowsSectionStep(timeout = IS_MOBILE ? 96 : 40) {
   });
 }
 
-function initAndRender({ sectionKey = "recentRows", mountState = null } = {}) {
+async function initAndRender({ sectionKey = "recentRows", mountState = null } = {}) {
   if (!isRecentRowsMountStateValid(mountState)) return;
-  var mountKey = mountState.page || mountState.container;
+  const mountKey = mountState.page || mountState.container;
   if (STATE.started) {
-    var stale =
+    const stale =
       !STATE.wrapEl ||
       !STATE.wrapEl.isConnected ||
       (mountKey && STATE.wrapEl !== mountKey);
@@ -3622,10 +3737,10 @@ function initAndRender({ sectionKey = "recentRows", mountState = null } = {}) {
   }
   try {
     if (typeof waitForAuthReadyStrict === "function") {
-      waitForAuthReadyStrict(5000);
+      await waitForAuthReadyStrict(5000);
     }
   } catch {}
-  var { userId, serverId } = getSessionInfo();
+  const { userId, serverId } = getSessionInfo();
   if (!userId) return;
 
   STATE.started = true;
@@ -3636,9 +3751,9 @@ function initAndRender({ sectionKey = "recentRows", mountState = null } = {}) {
   setManagedRecentRowsDone(sectionKey, false);
 
   try {
-    ensureRecentDb();
-    resolveDefaultPages(userId);
-    var runtimeCfg = getRecentRowsRuntimeConfig();
+    await ensureRecentDb();
+    await resolveDefaultPages(userId);
+    const runtimeCfg = getRecentRowsRuntimeConfig();
     recentRowsTrace("init:runtime", {
       sectionKey,
       userId,
@@ -3648,26 +3763,26 @@ function initAndRender({ sectionKey = "recentRows", mountState = null } = {}) {
       top10MovieEnabled: runtimeCfg.enableTop10Movies === true,
     });
 
-    var top10SeriesPlans = [];
-    var top10MoviePlans  = [];
-    var tmdbTopMoviePlans = [];
-    var recentPlans      = [];
-    var continuePlans    = [];
-    var nextUpPlans      = [];
-    var episodePlans     = [];
-    var pushPlan = function(bucket, fn) { if (typeof fn === "function") bucket.push(fn); };
-    var plannedSectionIndex = 0;
-    var buildManagedSection = function(options) fillSectionWithItems({
+    const top10SeriesPlans = [];
+    const top10MoviePlans  = [];
+    const tmdbTopMoviePlans = [];
+    const recentPlans      = [];
+    const continuePlans    = [];
+    const nextUpPlans      = [];
+    const episodePlans     = [];
+    const pushPlan = (bucket, fn) => { if (typeof fn === "function") bucket.push(fn); };
+    let plannedSectionIndex = 0;
+    const buildManagedSection = (options) => fillSectionWithItems({
       sectionKey,
       sectionId: makeManagedRecentRowsSectionId(sectionKey, plannedSectionIndex++),
       ...options,
     });
 
   if (runtimeCfg.enableTop10Series) {
-    var topSeriesParentIds = getTopSeriesParentIds();
-    var topSeriesMetaType = buildTopRowMetaType("Series", topSeriesParentIds);
-    pushPlanfunction(top10SeriesPlans, () buildManagedSectionfunction({
-      titleText: config.languageLabels.top10Series || "Top 10 Séries",
+    const topSeriesParentIds = getTopSeriesParentIds();
+    const topSeriesMetaType = buildTopRowMetaType("Series", topSeriesParentIds);
+    pushPlan(top10SeriesPlans, () => buildManagedSection({
+      titleText: config.languageLabels.top10Series || "Top 10 Diziler",
       badgeType: "series",
       heroLabel: "",
       cardCount: TOP10_ROW_CARD_COUNT,
@@ -3678,23 +3793,23 @@ function initAndRender({ sectionKey = "recentRows", mountState = null } = {}) {
       cardVariant: "top10",
       deferNetworkRender: false,
       fetcher: Object.assign(
-        () fetchTopRankedUnplayedFirstAcrossParents(userId, "Series", TOP10_CACHE_POOL_SIZE, topSeriesParentIds).thenfunction((items) {
-          writeCachedListfunction("top", topSeriesMetaType, items.map((x) x.Id).filter(Boolean));
+        () => fetchTopRankedUnplayedFirstAcrossParents(userId, "Series", TOP10_CACHE_POOL_SIZE, topSeriesParentIds).then(async (items) => {
+          await writeCachedList("top", topSeriesMetaType, items.map((x) => x?.Id).filter(Boolean));
           return items;
         }),
         {
-          cachedItems: function() loadCachedLocalTop10Items("top", topSeriesMetaType, TTL_TOP10_MS)
+          cachedItems: () => loadCachedLocalTop10Items("top", topSeriesMetaType, TTL_TOP10_MS)
         }
       ),
-      onSeeAll: function() openLatestPage("Series")
+      onSeeAll: () => openLatestPage("Series")
     }));
   }
 
   if (runtimeCfg.enableTop10Movies) {
-    var topMovieParentIds = getTopMovieParentIds();
-    var topMovieMetaType = buildTopRowMetaType("Movie", topMovieParentIds);
-    pushPlanfunction(top10MoviePlans, () buildManagedSectionfunction({
-      titleText: config.languageLabels.top10Movies || "Top 10 Filmes",
+    const topMovieParentIds = getTopMovieParentIds();
+    const topMovieMetaType = buildTopRowMetaType("Movie", topMovieParentIds);
+    pushPlan(top10MoviePlans, () => buildManagedSection({
+      titleText: config.languageLabels.top10Movies || "Top 10 Filmler",
       badgeType: "movie",
       heroLabel: "",
       cardCount: TOP10_ROW_CARD_COUNT,
@@ -3705,327 +3820,334 @@ function initAndRender({ sectionKey = "recentRows", mountState = null } = {}) {
       cardVariant: "top10",
       deferNetworkRender: false,
       fetcher: Object.assign(
-        () fetchTopRankedUnplayedFirstAcrossParents(userId, "Movie", TOP10_CACHE_POOL_SIZE, topMovieParentIds).thenfunction((items) {
-          writeCachedListfunction("top", topMovieMetaType, items.map((x) x.Id).filter(Boolean));
+        () => fetchTopRankedUnplayedFirstAcrossParents(userId, "Movie", TOP10_CACHE_POOL_SIZE, topMovieParentIds).then(async (items) => {
+          await writeCachedList("top", topMovieMetaType, items.map((x) => x?.Id).filter(Boolean));
           return items;
         }),
         {
-          cachedItems: function() loadCachedLocalTop10Items("top", topMovieMetaType, TTL_TOP10_MS)
+          cachedItems: () => loadCachedLocalTop10Items("top", topMovieMetaType, TTL_TOP10_MS)
         }
       ),
-      onSeeAll: function() openLatestPage("Movie")
+      onSeeAll: () => openLatestPage("Movie")
     }));
   }
 
   if (runtimeCfg.enableTmdbTopMovies) {
-    var tmdbMovieParentIds = getTopMovieParentIds();
-    var tmdbMovieMetaType = buildTopRowMetaType("TmdbMovie", tmdbMovieParentIds);
-    var tmdbEmptyMessage = "";
+    const tmdbMovieParentIds = getTopMovieParentIds();
+    const tmdbMovieMetaType = buildTopRowMetaType("TmdbMovie", tmdbMovieParentIds);
+    let tmdbEmptyMessage = "";
     recentRowsTrace("tmdb:plan", {
       sectionKey,
       tmdbMovieParentIds,
       tmdbMovieMetaType,
     });
-    pushPlanfunction(tmdbTopMoviePlans, () buildManagedSection({
-      titleText: config.languageLabels.tmdbTopMovies || "Melhores Filmes (TMDb)",
+    pushPlan(tmdbTopMoviePlans, () => buildManagedSection({
+      titleText: config.languageLabels.tmdbTopMovies || "TMDb En Iyi Filmler",
       badgeType: "movie",
       heroLabel: "",
       cardCount: TOP10_ROW_CARD_COUNT,
       showProgress: false,
       hideHero: true,
       allowEmptyRow: true,
-      emptyMessage: function() tmdbEmptyMessage,
+      emptyMessage: () => tmdbEmptyMessage,
       sectionClassName: "top10-section tmdb-top10-section",
       rowClassName: "top10-row tmdb-top10-row",
       cardVariant: "top10",
       deferNetworkRender: false,
-      fetcher: Object.assignfunction(() {
+      fetcher: Object.assign(
+        async () => {
           recentRowsTrace("tmdb:fetch:start", {
             sectionKey,
             tmdbMovieParentIds,
             limit: TOP10_ROW_CARD_COUNT,
           });
-          var result = fetchTmdbTopRatedMoviesInLibraries(
+          const result = await fetchTmdbTopRatedMoviesInLibraries(
             userId,
             TOP10_ROW_CARD_COUNT,
             tmdbMovieParentIds
           );
           tmdbEmptyMessage =
-            result.reason === "missingKey"
-              ? (config.languageLabels.tmdbKeyMissing || "Chave de API TMDb não configurada. Adicione nas configurações.")
-              : (config.languageLabels.tmdbTopMoviesEmpty || "Nenhuma correspondência encontrada nas bibliotecas selecionadas.");
-          var items = Array.isArray(result.items) ? result.items : [];
+            result?.reason === "missingKey"
+              ? (config.languageLabels.tmdbKeyMissing || "TMDb API key girilmemis. Ayarlardan ekleyebilirsin.")
+              : (config.languageLabels.tmdbTopMoviesEmpty || "Secili film kutuphanelerinde TMDb top rated eslesmesi bulunamadi.");
+          const items = Array.isArray(result?.items) ? result.items : [];
           recentRowsTrace("tmdb:fetch:done", {
             sectionKey,
-            reason: result.reason || "",
+            reason: result?.reason || "",
             itemCount: items.length,
             emptyMessage: tmdbEmptyMessage,
           });
-          writeCachedListfunction("tmdb_top", tmdbMovieMetaType, items.map((x) x.Id).filter(Boolean));
+          await writeCachedList("tmdb_top", tmdbMovieMetaType, items.map((x) => x?.Id).filter(Boolean));
           return items;
         },
         {
-          cachedItems: function() loadCachedRowItems("tmdb_top", tmdbMovieMetaType, TTL_TOP10_MS, {
+          cachedItems: () => loadCachedRowItems("tmdb_top", tmdbMovieMetaType, TTL_TOP10_MS, {
             limit: TOP10_ROW_CARD_COUNT,
             refreshUserData: false,
             validateIds: false
           })
         }
       ),
-      onSeeAll: function() openLatestPage("Movie")
+      onSeeAll: () => openLatestPage("Movie")
     }));
   }
 
   if (runtimeCfg.enableRecentMovies) {
-    var split = getConfig().recentRowsSplitMovieLibs === true;
-    var movieLibIds = resolveMovieLibSelection();
+    const split = getConfig()?.recentRowsSplitMovieLibs === true;
+    const movieLibIds = resolveMovieLibSelection();
 
     if (!split || !movieLibIds.length) {
-      pushPlanfunction(recentPlans, () buildManagedSectionfunction({
-        titleText: config.languageLabels.recentMovies || "Filmes adicionados recentemente",
+      pushPlan(recentPlans, () => buildManagedSection({
+        titleText: config.languageLabels.recentMovies || "Son eklenen filmler",
         badgeType: "new",
-        heroLabel: config.languageLabels.recentMoviesHero || "Filme adicionado recentemente",
+        heroLabel: config.languageLabels.recentMoviesHero || "Son eklenen film",
         cardCount: runtimeCfg.effectiveRecentMoviesCount,
         showProgress: false,
         hideHero: runtimeCfg.showRecentMoviesHeroCards === false,
         fetcher: Object.assign(
-            () fetchRecent(userId, "Movie", runtimeCfg.effectiveRecentMoviesCount + 1).thenfunction((items) {
-            writeCachedList("recent", "Movie", items.map(function(x)x.Id).filter(Boolean));
+            () => fetchRecent(userId, "Movie", runtimeCfg.effectiveRecentMoviesCount + 1).then(async (items) => {
+            await writeCachedList("recent", "Movie", items.map(x=>x?.Id).filter(Boolean));
             return items;
           }),
           {
-            cachedItems: function() loadCachedRowItems("recent", "Movie", TTL_RECENT_MS, {
+            cachedItems: () => loadCachedRowItems("recent", "Movie", TTL_RECENT_MS, {
               limit: runtimeCfg.effectiveRecentMoviesCount + 1
             })
           }
         ),
-        onSeeAll: function() openLatestPage("Movie")
+        onSeeAll: () => openLatestPage("Movie")
       }));
     } else {
-      for (var movieLibId of movieLibIds) {
-        var libName = (STATE.movieLibs || []).find(function(x) x.Id === movieLibId).Name || "";
-        pushPlanfunction(recentPlans, () buildManagedSection({
-          titleText: (config.languageLabels.recentMovies || "Filmes adicionados recentemente") + (libName ? " • " + (libName) : ""),
+      for (const movieLibId of movieLibIds) {
+        const libName = (STATE.movieLibs || []).find(x => x.Id === movieLibId)?.Name || "";
+        pushPlan(recentPlans, () => buildManagedSection({
+          titleText: (config.languageLabels.recentMovies || "Son eklenen filmler") + (libName ? ` • ${libName}` : ""),
           badgeType: "new",
-          heroLabel: (config.languageLabels.recentMoviesHero || "Filme adicionado recentemente") + (libName ? " • " + (libName) : ""),
+          heroLabel: (config.languageLabels.recentMoviesHero || "Son eklenen film") + (libName ? ` • ${libName}` : ""),
           cardCount: runtimeCfg.effectiveRecentMoviesCount,
           showProgress: false,
           hideHero: runtimeCfg.showRecentMoviesHeroCards === false,
-          fetcher: Object.assignfunction(() fetchRecent(userId, "Movie", runtimeCfg.effectiveRecentMoviesCount + 1, movieLibId).thenfunction((items) {
-              writeCachedList("recent", "Movie" + movieLibMetaSuffix(movieLibId), items.map(function(x)x.Id).filter(Boolean));
+          fetcher: Object.assign(
+              () => fetchRecent(userId, "Movie", runtimeCfg.effectiveRecentMoviesCount + 1, movieLibId).then(async (items) => {
+              await writeCachedList("recent", "Movie" + movieLibMetaSuffix(movieLibId), items.map(x=>x?.Id).filter(Boolean));
               return items;
             }),
             {
-              cachedItems: function() loadCachedRowItems("recent", "Movie" + movieLibMetaSuffix(movieLibId), TTL_RECENT_MS, {
+              cachedItems: () => loadCachedRowItems("recent", "Movie" + movieLibMetaSuffix(movieLibId), TTL_RECENT_MS, {
                 limit: runtimeCfg.effectiveRecentMoviesCount + 1
               })
             }
           ),
-          onSeeAll: function() gotoHash(getMoviesLibraryHash(movieLibId))
+          onSeeAll: () => gotoHash(getMoviesLibraryHash(movieLibId))
         }));
       }
     }
   }
 
   if (runtimeCfg.enableRecentSeries) {
-    var split = (getConfig().recentRowsSplitTvLibs !== false);
-    var tvIds = resolveTvLibSelection("recentSeries");
+    const split = (getConfig()?.recentRowsSplitTvLibs !== false);
+    const tvIds = resolveTvLibSelection("recentSeries");
 
     if (!split) {
-      pushPlanfunction(recentPlans, () buildManagedSectionfunction({
-        titleText: config.languageLabels.recentSeries || "Séries adicionadas recentemente",
+      pushPlan(recentPlans, () => buildManagedSection({
+        titleText: config.languageLabels.recentSeries || "Son eklenen diziler",
         badgeType: "new",
-        heroLabel: config.languageLabels.recentSeriesHero || "Série adicionada recentemente",
+        heroLabel: config.languageLabels.recentSeriesHero || "Son eklenen dizi",
         cardCount: runtimeCfg.effectiveRecentSeriesCount,
         showProgress: false,
         hideHero: runtimeCfg.showRecentSeriesHeroCards === false,
         fetcher: Object.assign(
-          () fetchRecent(userId, "Series", runtimeCfg.effectiveRecentSeriesCount + 1).thenfunction((items) {
-            writeCachedList("recent", "Series", items.map(function(x)x.Id).filter(Boolean));
+          () => fetchRecent(userId, "Series", runtimeCfg.effectiveRecentSeriesCount + 1).then(async (items) => {
+            await writeCachedList("recent", "Series", items.map(x=>x?.Id).filter(Boolean));
             return items;
           }),
           {
-            cachedItems: function() loadCachedRowItems("recent", "Series", TTL_RECENT_MS, {
+            cachedItems: () => loadCachedRowItems("recent", "Series", TTL_RECENT_MS, {
               limit: runtimeCfg.effectiveRecentSeriesCount + 1
             })
           }
         ),
-        onSeeAll: function() openLatestPage("Series")
+        onSeeAll: () => openLatestPage("Series")
       }));
     } else {
-      for (var tvLibId of tvIds) {
-        var libName = (STATE.tvLibs || []).find(function(x) x.Id === tvLibId).Name || "";
-        pushPlanfunction(recentPlans, () buildManagedSection({
-          titleText: (config.languageLabels.recentSeries || "Séries adicionadas recentemente") + (libName ? " • " + (libName) : ""),
+      for (const tvLibId of tvIds) {
+        const libName = (STATE.tvLibs || []).find(x => x.Id === tvLibId)?.Name || "";
+        pushPlan(recentPlans, () => buildManagedSection({
+          titleText: (config.languageLabels.recentSeries || "Son eklenen diziler") + (libName ? ` • ${libName}` : ""),
           badgeType: "new",
-          heroLabel: (config.languageLabels.recentSeriesHero || "Série adicionada recentemente") + (libName ? " • " + (libName) : ""),
+          heroLabel: (config.languageLabels.recentSeriesHero || "Son eklenen dizi") + (libName ? ` • ${libName}` : ""),
           cardCount: runtimeCfg.effectiveRecentSeriesCount,
           showProgress: false,
           hideHero: runtimeCfg.showRecentSeriesHeroCards === false,
-          fetcher: Object.assignfunction(() fetchRecent(userId, "Series", runtimeCfg.effectiveRecentSeriesCount + 1, tvLibId).thenfunction((items) {
-              writeCachedList("recent", "Series" + tvLibMetaSuffix(tvLibId), items.map(function(x)x.Id).filter(Boolean));
+          fetcher: Object.assign(
+            () => fetchRecent(userId, "Series", runtimeCfg.effectiveRecentSeriesCount + 1, tvLibId).then(async (items) => {
+              await writeCachedList("recent", "Series" + tvLibMetaSuffix(tvLibId), items.map(x=>x?.Id).filter(Boolean));
               return items;
             }),
             {
-              cachedItems: function() loadCachedRowItems("recent", "Series" + tvLibMetaSuffix(tvLibId), TTL_RECENT_MS, {
+              cachedItems: () => loadCachedRowItems("recent", "Series" + tvLibMetaSuffix(tvLibId), TTL_RECENT_MS, {
                 limit: runtimeCfg.effectiveRecentSeriesCount + 1
               })
             }
           ),
-          onSeeAll: function() gotoHash("#/tv?topParentId=" + (encodeURIComponent(tvLibId)) + "&collectionType=tvshows&tab=1")
+          onSeeAll: () => gotoHash(`#/tv?topParentId=${encodeURIComponent(tvLibId)}&collectionType=tvshows&tab=1`)
         }));
       }
     }
   }
 
   if (runtimeCfg.enableRecentEpisodes) {
-    var split = (getConfig().recentRowsSplitTvLibs !== false);
-    var tvIds = resolveTvLibSelection("recentEpisodes");
+    const split = (getConfig()?.recentRowsSplitTvLibs !== false);
+    const tvIds = resolveTvLibSelection("recentEpisodes");
 
     if (!split) {
-      pushPlanfunction(recentPlans, () buildManagedSectionfunction({
-        titleText: config.languageLabels.recentEpisodes || "Episódios Recentes",
+      pushPlan(recentPlans, () => buildManagedSection({
+        titleText: config.languageLabels.recentEpisodes || "Son eklenen bölümler",
         badgeType: "new",
-        heroLabel: config.languageLabels.recentEpisodesHero || "Novo Episódio",
+        heroLabel: config.languageLabels.recentEpisodesHero || "Son eklenen bölüm",
         cardCount: runtimeCfg.effectiveRecentEpisodesCount,
         showProgress: false,
         hideHero: runtimeCfg.showRecentEpisodesHeroCards === false,
         fetcher: Object.assign(
-          () fetchRecentEpisodes(userId, runtimeCfg.effectiveRecentEpisodesCount + 1).thenfunction((items) {
-            writeCachedList("recent", "Episode", items.map(function(x)x.Id).filter(Boolean));
+          () => fetchRecentEpisodes(userId, runtimeCfg.effectiveRecentEpisodesCount + 1).then(async (items) => {
+            await writeCachedList("recent", "Episode", items.map(x=>x?.Id).filter(Boolean));
             return items;
           }),
           {
-            cachedItems: function() loadCachedRowItems("recent", "Episode", TTL_RECENT_MS, {
+            cachedItems: () => loadCachedRowItems("recent", "Episode", TTL_RECENT_MS, {
               limit: runtimeCfg.effectiveRecentEpisodesCount + 1,
               afterLoad: attachSeriesPosterSourceToEpsAndSeasons
             })
           }
         ),
-        onSeeAll: function() openLatestPage("Episode")
+        onSeeAll: () => openLatestPage("Episode")
       }));
     } else {
-      for (var tvLibId of tvIds) {
-        var libName = (STATE.tvLibs || []).find(function(x) x.Id === tvLibId).Name || "";
-        pushPlanfunction(recentPlans, () buildManagedSection({
-          titleText: (config.languageLabels.recentEpisodes || "Episódios Recentes") + (libName ? " • " + (libName) : ""),
+      for (const tvLibId of tvIds) {
+        const libName = (STATE.tvLibs || []).find(x => x.Id === tvLibId)?.Name || "";
+        pushPlan(recentPlans, () => buildManagedSection({
+          titleText: (config.languageLabels.recentEpisodes || "Son eklenen bölümler") + (libName ? ` • ${libName}` : ""),
           badgeType: "new",
-          heroLabel: (config.languageLabels.recentEpisodesHero || "Novo Episódio") + (libName ? " • " + (libName) : ""),
+          heroLabel: (config.languageLabels.recentEpisodesHero || "Son eklenen bölüm") + (libName ? ` • ${libName}` : ""),
           cardCount: runtimeCfg.effectiveRecentEpisodesCount,
           showProgress: false,
           hideHero: runtimeCfg.showRecentEpisodesHeroCards === false,
-          fetcher: Object.assignfunction(() fetchRecentEpisodes(userId, runtimeCfg.effectiveRecentEpisodesCount + 1, tvLibId).thenfunction((items) {
-              writeCachedList("recent", "Episode" + tvLibMetaSuffix(tvLibId), items.map(function(x)x.Id).filter(Boolean));
+          fetcher: Object.assign(
+            () => fetchRecentEpisodes(userId, runtimeCfg.effectiveRecentEpisodesCount + 1, tvLibId).then(async (items) => {
+              await writeCachedList("recent", "Episode" + tvLibMetaSuffix(tvLibId), items.map(x=>x?.Id).filter(Boolean));
               return items;
             }),
             {
-              cachedItems: function() loadCachedRowItems("recent", "Episode" + tvLibMetaSuffix(tvLibId), TTL_RECENT_MS, {
+              cachedItems: () => loadCachedRowItems("recent", "Episode" + tvLibMetaSuffix(tvLibId), TTL_RECENT_MS, {
                 limit: runtimeCfg.effectiveRecentEpisodesCount + 1,
                 afterLoad: attachSeriesPosterSourceToEpsAndSeasons
               })
             }
           ),
-          onSeeAll: function() gotoHash("#/tv?topParentId=" + (encodeURIComponent(tvLibId)) + "&collectionType=tvshows&tab=1")
+          onSeeAll: () => gotoHash(`#/tv?topParentId=${encodeURIComponent(tvLibId)}&collectionType=tvshows&tab=1`)
         }));
       }
     }
   }
 
   if (runtimeCfg.enableRecentMusic) {
-    pushPlanfunction(recentPlans, () buildManagedSectionfunction({
-      titleText: config.languageLabels.recentMusic || "Álbuns Recentes",
+    pushPlan(recentPlans, () => buildManagedSection({
+      titleText: config.languageLabels.recentMusic || "Son eklenen Albüm",
       badgeType: "new",
-      heroLabel: config.languageLabels.recentMusicHero || "Novo Álbum",
+      heroLabel: config.languageLabels.recentMusicHero || "Son eklenen albüm",
       cardCount: runtimeCfg.effectiveRecentMusicCount,
       showProgress: false,
       hideHero: runtimeCfg.showRecentMusicHeroCards === false,
       fetcher: Object.assign(
-        () fetchRecent(userId, "MusicAlbum", runtimeCfg.effectiveRecentMusicCount + 1).thenfunction((items) {
-          writeCachedList("recent", "MusicAlbum", items.map(function(x)x.Id).filter(Boolean));
+        () => fetchRecent(userId, "MusicAlbum", runtimeCfg.effectiveRecentMusicCount + 1).then(async (items) => {
+          await writeCachedList("recent", "MusicAlbum", items.map(x=>x?.Id).filter(Boolean));
           return items;
         }),
         {
-          cachedItems: function() loadCachedRowItems("recent", "MusicAlbum", TTL_RECENT_MS, {
+          cachedItems: () => loadCachedRowItems("recent", "MusicAlbum", TTL_RECENT_MS, {
             limit: runtimeCfg.effectiveRecentMusicCount + 1
           })
         }
       ),
-      onSeeAll: function() openLatestPage("MusicAlbum"),
+      onSeeAll: () => openLatestPage("MusicAlbum"),
       randomHero: false
     }));
   }
 
   if (runtimeCfg.enableContinueMovies) {
-    pushPlanfunction(continuePlans, () buildManagedSection({
-      titleText: config.languageLabels.continueMovies || "Continuar Assistindo (Filmes)",
+    pushPlan(continuePlans, () => buildManagedSection({
+      titleText: config.languageLabels.continueMovies || "Film izlemeye devam et",
       badgeType: "continue",
-      heroLabel: config.languageLabels.continueMoviesHero || "Continuar: Filmes",
+      heroLabel: config.languageLabels.continueMoviesHero || "İzlemeye devam (Film)",
       cardCount: runtimeCfg.effectiveContinueMoviesCount,
       showProgress: true,
       hideHero: runtimeCfg.showContinueMoviesHeroCards === false,
-      fetcher: Object.assignfunction(() fetchContinue(userId, "Movie", runtimeCfg.effectiveContinueMoviesCount + 1).thenfunction((items) {
-          writeCachedList("resume", "Movie", items.map(function(x)x.Id).filter(Boolean));
+      fetcher: Object.assign(
+        () => fetchContinue(userId, "Movie", runtimeCfg.effectiveContinueMoviesCount + 1).then(async (items) => {
+          await writeCachedList("resume", "Movie", items.map(x=>x?.Id).filter(Boolean));
           return items;
         }),
         {
-          cachedItems: function() loadCachedRowItems("resume", "Movie", TTL_CONTINUE_MS, {
+          cachedItems: () => loadCachedRowItems("resume", "Movie", TTL_CONTINUE_MS, {
             limit: runtimeCfg.effectiveContinueMoviesCount + 1
           })
         }
       ),
-      onSeeAll: function() openResumePage("Movie"),
+      onSeeAll: () => openResumePage("Movie"),
       randomHero: true
     }));
   }
 
   if (runtimeCfg.enableContinueSeries) {
-    var split = (getConfig().recentRowsSplitTvLibs !== false);
-    var tvIds = resolveTvLibSelection("continueSeries");
+    const split = (getConfig()?.recentRowsSplitTvLibs !== false);
+    const tvIds = resolveTvLibSelection("continueSeries");
 
     if (!split) {
-      pushPlanfunction(continuePlans, () buildManagedSection({
-        titleText: config.languageLabels.continueSeries || "Continuar Assistindo (Séries)",
+      pushPlan(continuePlans, () => buildManagedSection({
+        titleText: config.languageLabels.continueSeries || "Dizi izlemeye devam et",
         badgeType: "continue",
-        heroLabel: config.languageLabels.continueSeriesHero || "Continuar: Séries",
+        heroLabel: config.languageLabels.continueSeriesHero || "İzlemeye devam (Dizi)",
         cardCount: runtimeCfg.effectiveContinueSeriesCount,
         showProgress: true,
         hideHero: runtimeCfg.showContinueSeriesHeroCards === false,
-        fetcher: Object.assignfunction(() fetchContinueEpisodes(userId, runtimeCfg.effectiveContinueSeriesCount + 1).thenfunction((items) {
-            writeCachedList("resume", "Episode", items.map(function(x)x.Id).filter(Boolean));
+        fetcher: Object.assign(
+          () => fetchContinueEpisodes(userId, runtimeCfg.effectiveContinueSeriesCount + 1).then(async (items) => {
+            await writeCachedList("resume", "Episode", items.map(x=>x?.Id).filter(Boolean));
             return items;
           }),
           {
-            cachedItems: function() loadCachedRowItems("resume", "Episode", TTL_CONTINUE_MS, {
+            cachedItems: () => loadCachedRowItems("resume", "Episode", TTL_CONTINUE_MS, {
               limit: runtimeCfg.effectiveContinueSeriesCount + 1,
               afterLoad: attachSeriesPosterSourceToEpsAndSeasons
             })
           }
         ),
-        onSeeAll: function() openResumePage("Episode"),
+        onSeeAll: () => openResumePage("Episode"),
         randomHero: true
       }));
     } else {
-      for (var tvLibId of tvIds) {
-        var libName = (STATE.tvLibs || []).find(function(x) x.Id === tvLibId).Name || "";
-        pushPlanfunction(continuePlans, () buildManagedSection({
-          titleText: (config.languageLabels.continueSeries || "Continuar Assistindo (Séries)") + (libName ? " • " + (libName) : ""),
+      for (const tvLibId of tvIds) {
+        const libName = (STATE.tvLibs || []).find(x => x.Id === tvLibId)?.Name || "";
+        pushPlan(continuePlans, () => buildManagedSection({
+          titleText: (config.languageLabels.continueSeries || "Dizi izlemeye devam et") + (libName ? ` • ${libName}` : ""),
           badgeType: "continue",
-          heroLabel: (config.languageLabels.continueSeriesHero || "Continuar: Séries") + (libName ? " • " + (libName) : ""),
+          heroLabel: (config.languageLabels.continueSeriesHero || "İzlemeye devam (Dizi)") + (libName ? ` • ${libName}` : ""),
           cardCount: runtimeCfg.effectiveContinueSeriesCount,
           showProgress: true,
           hideHero: runtimeCfg.showContinueSeriesHeroCards === false,
-          fetcher: Object.assignfunction(() fetchContinueEpisodes(userId, runtimeCfg.effectiveContinueSeriesCount + 1, tvLibId).thenfunction((items) {
-              writeCachedList("resume", "Episode" + tvLibMetaSuffix(tvLibId), items.map(function(x)x.Id).filter(Boolean));
+          fetcher: Object.assign(
+            () => fetchContinueEpisodes(userId, runtimeCfg.effectiveContinueSeriesCount + 1, tvLibId).then(async (items) => {
+              await writeCachedList("resume", "Episode" + tvLibMetaSuffix(tvLibId), items.map(x=>x?.Id).filter(Boolean));
               return items;
             }),
             {
-              cachedItems: function() loadCachedRowItems("resume", "Episode" + tvLibMetaSuffix(tvLibId), TTL_CONTINUE_MS, {
+              cachedItems: () => loadCachedRowItems("resume", "Episode" + tvLibMetaSuffix(tvLibId), TTL_CONTINUE_MS, {
                 limit: runtimeCfg.effectiveContinueSeriesCount + 1,
                 afterLoad: attachSeriesPosterSourceToEpsAndSeasons
               })
             }
           ),
-          onSeeAll: function() gotoHash("#/tv?topParentId=" + (encodeURIComponent(tvLibId)) + "&collectionType=tvshows&tab=1"),
+          onSeeAll: () => gotoHash(`#/tv?topParentId=${encodeURIComponent(tvLibId)}&collectionType=tvshows&tab=1`),
           randomHero: true
         }));
       }
@@ -4033,138 +4155,139 @@ function initAndRender({ sectionKey = "recentRows", mountState = null } = {}) {
   }
 
   if (runtimeCfg.enableNextUp) {
-    pushPlanfunction(nextUpPlans, () buildManagedSectionfunction({
-      titleText: config.languageLabels.nextUpEpisodes || "Próximos Episódios",
+    pushPlan(nextUpPlans, () => buildManagedSection({
+      titleText: config.languageLabels.nextUpEpisodes || "Sıradaki Bölümler",
       badgeType: "episode",
-      heroLabel: config.languageLabels.nextUpEpisodesHero || "Próximo Episódio",
+      heroLabel: config.languageLabels.nextUpEpisodesHero || "Sıradaki bölüm",
       cardCount: runtimeCfg.effectiveNextUpCount,
       showProgress: true,
       hideHero: runtimeCfg.showNextUpHeroCards === false,
       fetcher: Object.assign(
-        () fetchNextUpEpisodes(userId, runtimeCfg.effectiveNextUpCount + 1).thenfunction((items) {
-          writeCachedListfunction("nextup", "Episode", items.map((x) x.Id).filter(Boolean));
+        () => fetchNextUpEpisodes(userId, runtimeCfg.effectiveNextUpCount + 1).then(async (items) => {
+          await writeCachedList("nextup", "Episode", items.map((x) => x?.Id).filter(Boolean));
           return items;
         }),
         {
-          cachedItems: function() loadCachedRowItems("nextup", "Episode", TTL_CONTINUE_MS, {
+          cachedItems: () => loadCachedRowItems("nextup", "Episode", TTL_CONTINUE_MS, {
             limit: runtimeCfg.effectiveNextUpCount + 1,
             afterLoad: attachSeriesPosterSourceToEpsAndSeasons
           })
         }
       ),
-      onSeeAll: function() gotoHash(STATE.defaultTvHash || DEFAULT_TV_PAGE),
+      onSeeAll: () => gotoHash(STATE.defaultTvHash || DEFAULT_TV_PAGE),
       randomHero: true
     }));
   }
 
   if (runtimeCfg.enableOtherLibRows) {
-    var otherIds = resolveOtherLibSelection();
-    var otherDefs = otherIds.mapfunction((libId) {
-      var lib = (STATE.otherLibs || []).find(function(x) x.Id === libId) || null;
+    const otherIds = resolveOtherLibSelection();
+    const otherDefs = otherIds.map((libId) => {
+      const lib = (STATE.otherLibs || []).find(x => x.Id === libId) || null;
       return {
         libId,
-        libName: lib.Name || config.languageLabels.studioHubLibraryFallbackName || "Library"
+        libName: lib?.Name || config.languageLabels.studioHubLibraryFallbackName || "Library"
       };
     });
 
-    for (var { libId, libName } of otherDefs) {
-      pushPlanfunction(recentPlans, () buildManagedSectionfunction({
-        titleText: (config.languageLabels.otherLibRecent || "Novidades") + " • " + (libName),
+    for (const { libId, libName } of otherDefs) {
+      pushPlan(recentPlans, () => buildManagedSection({
+        titleText: `${config.languageLabels.otherLibRecent || "Son eklenenler"} • ${libName}`,
         badgeType: "new",
-        heroLabel: (config.languageLabels.otherLibRecentHero || "Novo") + " • " + (libName),
+        heroLabel: `${config.languageLabels.otherLibRecentHero || "Son eklenen"} • ${libName}`,
         cardCount: runtimeCfg.effectiveOtherRecentCount,
         showProgress: false,
         hideHero: runtimeCfg.showOtherLibrariesHeroCards === false,
         fetcher: Object.assign(
-          () fetchRecentGeneric(userId, runtimeCfg.effectiveOtherRecentCount + 1, libId).thenfunction((items) {
-            writeCachedList("other_recent", "lib:" + (libId), items.map(function(x)x.Id).filter(Boolean));
+          () => fetchRecentGeneric(userId, runtimeCfg.effectiveOtherRecentCount + 1, libId).then(async (items) => {
+            await writeCachedList("other_recent", `lib:${libId}`, items.map(x=>x?.Id).filter(Boolean));
             return items;
           }),
           {
-            cachedItems: function() loadCachedRowItems("other_recent", "lib:" + (libId), TTL_RECENT_MS, {
+            cachedItems: () => loadCachedRowItems("other_recent", `lib:${libId}`, TTL_RECENT_MS, {
               limit: runtimeCfg.effectiveOtherRecentCount + 1,
               afterLoad: attachSeriesPosterSourceToEpsAndSeasons
             })
           }
         ),
-        onSeeAll: function() gotoHash("#/list.html?parentId=" + (encodeURIComponent(libId)))
+        onSeeAll: () => gotoHash(`#/list.html?parentId=${encodeURIComponent(libId)}`)
       }));
     }
 
-    for (var { libId, libName } of otherDefs) {
-      pushPlanfunction(continuePlans, () buildManagedSectionfunction({
-        titleText: (config.languageLabels.otherLibContinue || "Continuar Assistindo") + " • " + (libName),
+    for (const { libId, libName } of otherDefs) {
+      pushPlan(continuePlans, () => buildManagedSection({
+        titleText: `${config.languageLabels.otherLibContinue || "İzlemeye devam et"} • ${libName}`,
         badgeType: "continue",
-        heroLabel: (config.languageLabels.otherLibContinueHero || "Continuar") + " • " + (libName),
+        heroLabel: `${config.languageLabels.otherLibContinueHero || "Devam"} • ${libName}`,
         cardCount: runtimeCfg.effectiveOtherContinueCount,
         showProgress: true,
         hideHero: runtimeCfg.showOtherLibrariesHeroCards === false,
         fetcher: Object.assign(
-          () fetchContinueGeneric(userId, runtimeCfg.effectiveOtherContinueCount + 1, libId).thenfunction((items) {
-            writeCachedList("other_resume", "lib:" + (libId), items.map(function(x)x.Id).filter(Boolean));
+          () => fetchContinueGeneric(userId, runtimeCfg.effectiveOtherContinueCount + 1, libId).then(async (items) => {
+            await writeCachedList("other_resume", `lib:${libId}`, items.map(x=>x?.Id).filter(Boolean));
             return items;
           }),
           {
-            cachedItems: function() loadCachedRowItems("other_resume", "lib:" + (libId), TTL_CONTINUE_MS, {
+            cachedItems: () => loadCachedRowItems("other_resume", `lib:${libId}`, TTL_CONTINUE_MS, {
               limit: runtimeCfg.effectiveOtherContinueCount + 1,
               afterLoad: attachSeriesPosterSourceToEpsAndSeasons
             })
           }
         ),
-        onSeeAll: function() gotoHash("#/list.html?parentId=" + (encodeURIComponent(libId)) + "&tab=resume"),
+        onSeeAll: () => gotoHash(`#/list.html?parentId=${encodeURIComponent(libId)}&tab=resume`),
         randomHero: true
       }));
     }
 
-    for (var { libId, libName } of otherDefs) {
-      pushPlanfunction(episodePlans, () buildManagedSectionfunction({
-        titleText: (config.languageLabels.recentEpisodes || "Episódios Recentes") + " • " + (libName),
+    for (const { libId, libName } of otherDefs) {
+      pushPlan(episodePlans, () => buildManagedSection({
+        titleText: `${config.languageLabels.recentEpisodes || "Son eklenen bölümler"} • ${libName}`,
         badgeType: "episode",
-        heroLabel: (config.languageLabels.recentEpisodesHero || "Bölum") + " • " + (libName),
+        heroLabel: `${config.languageLabels.recentEpisodesHero || "Bölüm"} • ${libName}`,
         cardCount: runtimeCfg.effectiveOtherEpisodesCount,
         showProgress: false,
         hideHero: runtimeCfg.showOtherLibrariesHeroCards === false,
         fetcher: Object.assign(
-          () fetchRecentEpisodes(userId, runtimeCfg.effectiveOtherEpisodesCount + 1, libId).thenfunction((items) {
-            writeCachedList("other_recent", "ep:" + (libId), items.map(function(x)x.Id).filter(Boolean));
+          () => fetchRecentEpisodes(userId, runtimeCfg.effectiveOtherEpisodesCount + 1, libId).then(async (items) => {
+            await writeCachedList("other_recent", `ep:${libId}`, items.map(x=>x?.Id).filter(Boolean));
             return items;
           }),
           {
-            cachedItems: function() loadCachedRowItems("other_recent", "ep:" + (libId), TTL_RECENT_MS, {
+            cachedItems: () => loadCachedRowItems("other_recent", `ep:${libId}`, TTL_RECENT_MS, {
               limit: runtimeCfg.effectiveOtherEpisodesCount + 1,
               afterLoad: attachSeriesPosterSourceToEpsAndSeasons
             })
           }
         ),
-        onSeeAll: function() gotoHash("#/list.html?parentId=" + (encodeURIComponent(libId)) + "&includeItemTypes=Episode")
+        onSeeAll: () => gotoHash(`#/list.html?parentId=${encodeURIComponent(libId)}&includeItemTypes=Episode`)
       }));
     }
   }
 
   if (runtimeCfg.enableRecentTracks) {
-    pushPlanfunction(continuePlans, () buildManagedSection({
-      titleText: (config.languageLabels.recentlyPlayedTracks || config.languageLabels.recRecentTracks) || "Músicas Recentes",
+    pushPlan(continuePlans, () => buildManagedSection({
+      titleText: (config.languageLabels.recentlyPlayedTracks || config.languageLabels.recRecentTracks) || "Son dinlenen parçalar",
       badgeType: "continue",
-      heroLabel: (config.languageLabels.recentlyPlayedTracksHero || config.languageLabels.recentTracksHero) || "Música Recente",
+      heroLabel: (config.languageLabels.recentlyPlayedTracksHero || config.languageLabels.recentTracksHero) || "Son dinlenen parça",
       cardCount: runtimeCfg.effectiveRecentTracksCount,
       showProgress: false,
       hideHero: runtimeCfg.showRecentTracksHeroCards === false,
-      fetcher: Object.assignfunction(() fetchRecentlyPlayedTracks(userId, runtimeCfg.effectiveRecentTracksCount + 1).thenfunction((items) {
-          writeCachedList("played", "Audio", items.map(function(x)x.Id).filter(Boolean));
+      fetcher: Object.assign(
+        () => fetchRecentlyPlayedTracks(userId, runtimeCfg.effectiveRecentTracksCount + 1).then(async (items) => {
+          await writeCachedList("played", "Audio", items.map(x=>x?.Id).filter(Boolean));
           return items;
         }),
         {
-          cachedItems: function() loadCachedRowItems("played", "Audio", TTL_CONTINUE_MS, {
+          cachedItems: () => loadCachedRowItems("played", "Audio", TTL_CONTINUE_MS, {
             limit: runtimeCfg.effectiveRecentTracksCount + 1
           })
         }
       ),
-      onSeeAll: function() openLatestPage("Audio"),
+      onSeeAll: () => openLatestPage("Audio"),
       randomHero: false
     }));
   }
 
-    var runners = (
+    const runners = (
       sectionKey === "top10SeriesRows" ? [...top10SeriesPlans] :
       sectionKey === "top10MovieRows" ? [...top10MoviePlans] :
       sectionKey === "tmdbTopMoviesRows" ? [...tmdbTopMoviePlans] :
@@ -4178,16 +4301,16 @@ function initAndRender({ sectionKey = "recentRows", mountState = null } = {}) {
         sectionKey,
         runnerCount: runners.length,
       });
-      for (var i = 0; i < runners.length; i++) {
-        var run = runners[i];
+      for (let i = 0; i < runners.length; i++) {
+        const run = runners[i];
         if (!isRecentRowsMountStateValid(mountState)) break;
         try {
-          run();
+          await run();
         } catch (e) {
           console.warn("recentRows: runner error:", e);
         }
         if (i < runners.length - 1 && isRecentRowsMountStateValid(mountState)) {
-          yieldRecentRowsSectionStep();
+          await yieldRecentRowsSectionStep();
         }
       }
     }
@@ -4200,13 +4323,13 @@ export function cleanupRecentRows() {
   try {
     recentRowsLog("cleanup:start", {
       started: !!STATE.started,
-      wrapConnected: !!STATE.wrapEl.isConnected,
+      wrapConnected: !!STATE.wrapEl?.isConnected,
     });
     recentRowsTrace("cleanup:start", {
       started: !!STATE.started,
-      wrapConnected: !!STATE.wrapEl.isConnected,
+      wrapConnected: !!STATE.wrapEl?.isConnected,
       sectionShellCounts: Object.fromEntries(
-        Object.keys(RECENT_ROW_SECTION_META).mapfunction((sectionKey) [
+        Object.keys(RECENT_ROW_SECTION_META).map((sectionKey) => [
           sectionKey,
           getManagedRecentRowsSections(sectionKey, document).length,
         ])
@@ -4215,7 +4338,7 @@ export function cleanupRecentRows() {
     });
     clearRecentRowsRetry();
     __recentMountPromise = null;
-    Object.keys(RECENT_ROW_SECTION_META).forEach(function((sectionKey) {
+    Object.keys(RECENT_ROW_SECTION_META).forEach((sectionKey) => {
       setManagedRecentRowsDone(sectionKey, false);
       cleanupManagedRecentRowsSections(sectionKey, document);
       cleanupLegacyRecentRowsWrap(sectionKey);
@@ -4244,7 +4367,7 @@ export function cleanupRecentRows() {
 }
 
 export function releaseRecentRowsDbConnection() {
-  try { STATE.db.close.(); } catch {}
+  try { STATE.db?.close?.(); } catch {}
   STATE.db = null;
   STATE.scope = null;
 }
@@ -4253,8 +4376,8 @@ export function releaseRecentRowsDbConnection() {
   if (window.__jmsRecentRowsDbReleaseBound) return;
   window.__jmsRecentRowsDbReleaseBound = true;
 
-  window.addEventListenerfunction('jms:indexeddb:release', (event) {
-    var dbName = event.detail.dbName;
+  window.addEventListener('jms:indexeddb:release', (event) => {
+    const dbName = event?.detail?.dbName;
     if (!dbName || dbName === 'monwui_recent_db' || dbName === '*') {
       releaseRecentRowsDbConnection();
     }
@@ -4262,9 +4385,9 @@ export function releaseRecentRowsDbConnection() {
 })();
 
 function getHomeSectionsContainer(indexPage) {
-  var page = indexPage ||
+  const page = indexPage ||
     getMountedRecentRowsPage() ||
-    getActiveHomePageEl.() ||
+    getActiveHomePageEl?.() ||
     document.querySelector("#indexPage:not(.hide)") ||
     document.querySelector("#homePage:not(.hide)") ||
     document.body;

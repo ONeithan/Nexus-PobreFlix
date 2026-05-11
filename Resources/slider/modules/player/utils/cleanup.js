@@ -1,17 +1,17 @@
-var __cleanups = new WeakMap();
+const __cleanups = new WeakMap();
 
 function makeCleanupBag(owner) {
-  var prev = __cleanups.get(owner);
+  const prev = __cleanups.get(owner);
   if (prev && typeof prev.run === 'function') {
     try { prev.run(); } catch {}
   }
 
-  var bagArray = [];
-  var bag = {
+  const bagArray = [];
+  const bag = {
     add(fn) { if (typeof fn === 'function') bagArray.push(fn); },
     run() {
       while (bagArray.length) {
-        var fn = bagArray.pop();
+        const fn = bagArray.pop();
         try { fn(); } catch {}
       }
     }
@@ -22,25 +22,25 @@ function makeCleanupBag(owner) {
 
 function addEvent(bag, target, type, handler, opts) {
   target.addEventListener(type, handler, opts);
-  bag.addfunction(() target.removeEventListener(type, handler, opts));
+  bag.add(() => target.removeEventListener(type, handler, opts));
 }
 
 function trackTimeout(bag, id) {
-  bag.addfunction(() clearTimeout(id));
+  bag.add(() => clearTimeout(id));
 }
 function trackInterval(bag, id) {
-  bag.addfunction(() clearInterval(id));
+  bag.add(() => clearInterval(id));
 }
 
 function trackObserver(bag, obs, unobserveAll = null) {
-  bag.addfunction(() {
+  bag.add(() => {
     try { if (typeof unobserveAll === 'function') unobserveAll(); } catch {}
-    try { obs.disconnect.(); } catch {}
+    try { obs.disconnect?.(); } catch {}
   });
 }
 
 function trackRaf(bag, rafId) {
-  bag.addfunction(() cancelAnimationFrame(rafId));
+  bag.add(() => cancelAnimationFrame(rafId));
 }
 
 export {

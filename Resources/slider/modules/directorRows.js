@@ -5,7 +5,7 @@ import { getConfig, getHomeSectionsRuntimeConfig } from "./config.js";
 import { getLanguageLabels } from "../language/index.js";
 import { attachMiniPosterHover } from "./studioHubsUtils.js";
 import { openDirectorExplorer } from "./genreExplorer.js";
-import { REOPEN_COOLDOWN_MS, getOpenHoverDelay } from "./hoverTrailerModal.js";
+import { REOPEN_COOLDOWN_MS, OPEN_HOVER_DELAY_MS } from "./hoverTrailerModal.js";
 import { createTrailerIframe, formatOfficialRatingLabel } from "./utils.js";
 import { openDetailsModal } from "./detailsModalLoader.js";
 import {
@@ -45,37 +45,37 @@ import {
   setMeta
 } from "./dirRowsDb.js";
 
-var config = getConfig();
-var labels = getLanguageLabels.() || {};
-var IS_MOBILE = (navigator.maxTouchPoints > 0) || (window.innerWidth <= 820);
-var UNIFIED_ROW_ITEM_LIMIT = 20;
+const config = getConfig();
+const labels = getLanguageLabels?.() || {};
+const IS_MOBILE = (navigator.maxTouchPoints > 0) || (window.innerWidth <= 820);
+const UNIFIED_ROW_ITEM_LIMIT = 20;
 
-var PLACEHOLDER_URL = resolveSliderAssetHref(
+const PLACEHOLDER_URL = resolveSliderAssetHref(
   config.placeholderImage || "/slider/src/images/placeholder.png"
 );
-var MIN_RATING = 0;
-var SHOW_DIRECTOR_ROWS_HERO_CARDS = (config.showDirectorRowsHeroCards !== false);
-var HOVER_MODE = (config.directorRowsHoverPreviewMode === 'studioMini' || config.directorRowsHoverPreviewMode === 'modal')
+const MIN_RATING = 0;
+const SHOW_DIRECTOR_ROWS_HERO_CARDS = (config.showDirectorRowsHeroCards !== false);
+const HOVER_MODE = (config.directorRowsHoverPreviewMode === 'studioMini' || config.directorRowsHoverPreviewMode === 'modal')
   ? config.directorRowsHoverPreviewMode
   : 'inherit';
-var DIRECTOR_ROW_BATCH_SIZE = 1;
-var DIRECTOR_ROW_FILL_YIELD_MS = IS_MOBILE ? 48 : 24;
-var DIRECTOR_MOBILE_CARD_DELAY_MS = 90;
-var HOME_DEBUG_STORAGE_KEY = "jms:debug:home-sections";
-var HOME_TRACE_STORAGE_KEY = "jms:trace:home-sections";
-var DIRECTOR_ROWS_RELEASE_ROOT_MARGIN = IS_MOBILE
+const DIRECTOR_ROW_BATCH_SIZE = 1;
+const DIRECTOR_ROW_FILL_YIELD_MS = IS_MOBILE ? 48 : 24;
+const DIRECTOR_MOBILE_CARD_DELAY_MS = 90;
+const HOME_DEBUG_STORAGE_KEY = "jms:debug:home-sections";
+const HOME_TRACE_STORAGE_KEY = "jms:trace:home-sections";
+const DIRECTOR_ROWS_RELEASE_ROOT_MARGIN = IS_MOBILE
   ? "0px 0px 60% 0px"
   : "0px 0px 22% 0px";
-var DIRECTOR_ROWS_ARROW_OBSERVER_ROOT_MARGIN = IS_MOBILE
+const DIRECTOR_ROWS_ARROW_OBSERVER_ROOT_MARGIN = IS_MOBILE
   ? "0px 0px 66% 0px"
   : "0px 0px 26% 0px";
-var DIRECTOR_ROWS_ARROW_OBSERVER_THRESHOLD = IS_MOBILE ? 0.01 : 0.2;
+const DIRECTOR_ROWS_ARROW_OBSERVER_THRESHOLD = IS_MOBILE ? 0.01 : 0.2;
 
 function isDirectorRowsDebugEnabled() {
   try {
     if (window.__JMS_DEBUG_HOME_SECTIONS === true) return true;
     if (window.__JMS_DEBUG_HOME_SECTIONS === false) return false;
-    var raw = localStorage.getItem(HOME_DEBUG_STORAGE_KEY);
+    const raw = localStorage.getItem(HOME_DEBUG_STORAGE_KEY);
     return raw === "1" || raw === "true" || raw === "on";
   } catch {
     return window.__JMS_DEBUG_HOME_SECTIONS === true;
@@ -83,15 +83,15 @@ function isDirectorRowsDebugEnabled() {
 }
 
 function buildDirectorRowsDebugPayload(payload) {
-  var extra = payload && typeof payload === "object" && !Array.isArray(payload)
+  const extra = payload && typeof payload === "object" && !Array.isArray(payload)
     ? payload
     : { value: payload };
   return {
     at: new Date().toISOString(),
     hash: String(window.location.hash || ""),
     page: (
-      document.querySelector("#indexPage:not(.hide)").id ||
-      document.querySelector("#homePage:not(.hide)").id ||
+      document.querySelector("#indexPage:not(.hide)")?.id ||
+      document.querySelector("#homePage:not(.hide)")?.id ||
       null
     ),
     ...extra,
@@ -112,7 +112,7 @@ function isDirectorRowsTraceEnabled() {
   try {
     if (window.__JMS_TRACE_HOME_SECTIONS === true) return true;
     if (window.__JMS_TRACE_HOME_SECTIONS === false) return false;
-    var raw = localStorage.getItem(HOME_TRACE_STORAGE_KEY);
+    const raw = localStorage.getItem(HOME_TRACE_STORAGE_KEY);
     return raw === "1" || raw === "true" || raw === "on";
   } catch {
     return false;
@@ -126,15 +126,15 @@ function dirRowsTrace(event, payload = {}) {
 
 function buildDirTraceStack(limit = 6) {
   try {
-    return new Error().stack.split("\n").slice(0, Math.max(2, limit | 0)).join("\n") || "";
+    return new Error().stack?.split("\n").slice(0, Math.max(2, limit | 0)).join("\n") || "";
   } catch {
     return "";
   }
 }
 
 function setDirectorRowsDone(done) {
-  var next = !!done;
-  var prev = false;
+  const next = !!done;
+  let prev = false;
   try { prev = window.__jmsDirectorRowsDone === true; } catch {}
   try { window.__jmsDirectorRowsDone = next; } catch {}
   if (next && !prev) {
@@ -148,22 +148,22 @@ function setDirectorRowsDone(done) {
 }
 
 function clampConfiguredCount(value, fallback, max = UNIFIED_ROW_ITEM_LIMIT) {
-  var n = Number(value);
+  const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
   return Math.max(1, Math.min(max, n | 0));
 }
 
 function getDirectorRowsCount(source = null) {
-  var cfg = source || getConfig.() || config || {};
+  const cfg = source || getConfig?.() || config || {};
   return clampConfiguredCount(cfg.directorRowsCount, 5, 50);
 }
 
 function getDirectorRowCardCount(source = null) {
-  var cfg = source || getConfig.() || config || {};
+  const cfg = source || getConfig?.() || config || {};
   return clampConfiguredCount(cfg.directorRowCardCount, 10);
 }
 
-var STATE = {
+const STATE = {
   directors: [],
   nextIndex: 0,
   batchSize: DIRECTOR_ROW_BATCH_SIZE,
@@ -185,53 +185,53 @@ var STATE = {
   hadMountedSections: false,
 };
 
-var __dirScrollIdleTimer = null;
-var __dirScrollIdleAttached = false;
-var __dirArrowObserver = null;
-var __dirSyncInterval = null;
-var __dirBackfillInterval = null;
-var __dirBackfillIdleHandle = null;
-var __dirAutoPumpHandle = null;
-var __dirDeferredWarmTimer = null;
-var __dirInitSeq = 0;
-var __dirWarmPromise = null;
-var __dirWarmScope = "";
-var __dirWarmCache = { scope: "", directors: [], fromCache: false, warmedAt: 0, minContents: 0 };
-var __dirPrimePromise = null;
-var __dirPrimeScope = "";
-var __dirKickBackfillPromise = null;
-var __dirKickBackfillScope = "";
-var __dirEligibilityRefreshRunning = false;
-var __dirEligibilityRefreshScope = "";
-var __directorMountPromise = null;
-var __directorDeferredStartPromise = null;
-var __directorRowsRetryTo = null;
-var __directorDeferredSeq = 0;
-var __directorRowsSelfHealObserver = null;
-var __directorRowsSelfHealTimer = null;
-var __directorRowsSelfHealPending = false;
+let __dirScrollIdleTimer = null;
+let __dirScrollIdleAttached = false;
+let __dirArrowObserver = null;
+let __dirSyncInterval = null;
+let __dirBackfillInterval = null;
+let __dirBackfillIdleHandle = null;
+let __dirAutoPumpHandle = null;
+let __dirDeferredWarmTimer = null;
+let __dirInitSeq = 0;
+let __dirWarmPromise = null;
+let __dirWarmScope = "";
+let __dirWarmCache = { scope: "", directors: [], fromCache: false, warmedAt: 0, minContents: 0 };
+let __dirPrimePromise = null;
+let __dirPrimeScope = "";
+let __dirKickBackfillPromise = null;
+let __dirKickBackfillScope = "";
+let __dirEligibilityRefreshRunning = false;
+let __dirEligibilityRefreshScope = "";
+let __directorMountPromise = null;
+let __directorDeferredStartPromise = null;
+let __directorRowsRetryTo = null;
+let __directorDeferredSeq = 0;
+let __directorRowsSelfHealObserver = null;
+let __directorRowsSelfHealTimer = null;
+let __directorRowsSelfHealPending = false;
 
 function makeManagedDirectorSectionId(index = 0) {
-  return "director-rows--" + (Math.max(0, index | 0));
+  return `director-rows--${Math.max(0, index | 0)}`;
 }
 
 function getManagedDirectorSections(root = getHomeSectionsContainer() || document) {
-  return Array.from(root.querySelectorAll.('[id^="director-rows--"]') || [])
-    .filterfunction((el) el.isConnected)
-    .sortfunction((left, right) {
-      var li = Number(String(left.id || "").split("--")[1]) || 0;
-      var ri = Number(String(right.id || "").split("--")[1]) || 0;
+  return Array.from(root?.querySelectorAll?.('[id^="director-rows--"]') || [])
+    .filter((el) => el?.isConnected)
+    .sort((left, right) => {
+      const li = Number(String(left.id || "").split("--")[1]) || 0;
+      const ri = Number(String(right.id || "").split("--")[1]) || 0;
       return li - ri;
     });
 }
 
 function cleanupManagedDirectorSections(root = getHomeSectionsContainer() || document) {
-  for (var section of getManagedDirectorSections(root)) {
+  for (const section of getManagedDirectorSections(root)) {
     try {
-      section.querySelectorAll(".personal-recs-card, .dir-row-hero").forEach(function((el) {
+      section.querySelectorAll(".personal-recs-card, .dir-row-hero").forEach((el) => {
         try { el.dispatchEvent(new Event("jms:cleanup")); } catch {}
       });
-      section.querySelectorAll(".personal-recs-row").forEach(function((row) {
+      section.querySelectorAll(".personal-recs-row").forEach((row) => {
         try { row.dispatchEvent(new Event("jms:cleanup")); } catch {}
       });
     } catch {}
@@ -240,10 +240,10 @@ function cleanupManagedDirectorSections(root = getHomeSectionsContainer() || doc
 }
 
 function placeDirectorSection(section) {
-  var parent = STATE.hostEl || getHomeSectionsContainer() || document.body;
-  var siblings = getManagedDirectorSections(parent);
-  var last = siblings[siblings.length - 1] || null;
-  if (last.parentElement === parent) {
+  const parent = STATE.hostEl || getHomeSectionsContainer() || document.body;
+  const siblings = getManagedDirectorSections(parent);
+  const last = siblings[siblings.length - 1] || null;
+  if (last?.parentElement === parent) {
     last.insertAdjacentElement("afterend", section);
   } else {
     appendToParent(parent, section);
@@ -259,32 +259,32 @@ function cleanupDirectorSection(section) {
 }
 
 function getMountedDirectorRowsPage() {
-  var visiblePage =
-    getActiveHomePageEl.() ||
+  const visiblePage =
+    getActiveHomePageEl?.() ||
     document.querySelector("#indexPage:not(.hide)") ||
     document.querySelector("#homePage:not(.hide)") ||
     null;
-  if (visiblePage.isConnected) {
-    var visibleHasManagedRows = !!visiblePage.querySelector.(
+  if (visiblePage?.isConnected) {
+    const visibleHasManagedRows = !!visiblePage.querySelector?.(
       '#director-rows, [id^="director-rows--"]'
     );
     if (visibleHasManagedRows) return visiblePage;
   }
 
-  var wrap = document.getElementById("director-rows");
-  var wrapPage = wrap.closest.("#indexPage, #homePage");
-  if (wrapPage.isConnected) return wrapPage;
+  const wrap = document.getElementById("director-rows");
+  const wrapPage = wrap?.closest?.("#indexPage, #homePage");
+  if (wrapPage?.isConnected) return wrapPage;
 
-  var section = document.querySelector('[id^="director-rows--"]');
-  var sectionPage = section.closest.("#indexPage, #homePage");
-  if (sectionPage.isConnected) return sectionPage;
+  const section = document.querySelector('[id^="director-rows--"]');
+  const sectionPage = section?.closest?.("#indexPage, #homePage");
+  if (sectionPage?.isConnected) return sectionPage;
 
-  return visiblePage.isConnected ? visiblePage : null;
+  return visiblePage?.isConnected ? visiblePage : null;
 }
 
 function isDirectorRowsSelfHealDisabled() {
   try {
-    var cfg = getConfig.() || config || {};
+    const cfg = getConfig?.() || config || {};
     return cfg.enableSlider === false;
   } catch {
     return false;
@@ -305,7 +305,7 @@ function scheduleDirectorRowsSelfHeal(reason = "mutation", delayMs = 180) {
   }
   __directorRowsSelfHealPending = true;
   if (__directorRowsSelfHealTimer) return;
-  __directorRowsSelfHealTimer = setTimeoutfunction(() {
+  __directorRowsSelfHealTimer = setTimeout(() => {
     __directorRowsSelfHealTimer = null;
     if (!__directorRowsSelfHealPending) return;
     if (__directorMountPromise) {
@@ -315,9 +315,9 @@ function scheduleDirectorRowsSelfHeal(reason = "mutation", delayMs = 180) {
     __directorRowsSelfHealPending = false;
     if (!STATE.hadMountedSections) return;
     if (!isHomeRoute()) return;
-    var cfg = getConfig();
-    if (cfg.enableSlider === false) return;
-    var homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
+    const cfg = getConfig();
+    if (cfg?.enableSlider === false) return;
+    const homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
     if (!homeSectionsConfig.enableDirectorRows) return;
     if (getManagedDirectorSections().length > 0) return;
 
@@ -331,10 +331,10 @@ function scheduleDirectorRowsSelfHeal(reason = "mutation", delayMs = 180) {
 function bindDirectorRowsSelfHealObserver() {
   if (isDirectorRowsSelfHealDisabled()) return;
   if (__directorRowsSelfHealObserver || typeof MutationObserver !== "function") return;
-  var target = document.body || document.documentElement || null;
+  const target = document.body || document.documentElement || null;
   if (!target) return;
 
-  __directorRowsSelfHealObserver = new MutationObserverfunction(() {
+  __directorRowsSelfHealObserver = new MutationObserver(() => {
     scheduleDirectorRowsSelfHeal("observer");
   });
 
@@ -349,27 +349,27 @@ function bindDirectorRowsSelfHealObserver() {
 }
 
 function resolveDirectorRowsMountState(homeParent = null, targetPage = null) {
-  var page =
-    (targetPage.isConnected ? targetPage : null) ||
+  const page =
+    (targetPage?.isConnected ? targetPage : null) ||
     getMountedDirectorRowsPage() ||
-    getActiveHomePageEl.() ||
+    getActiveHomePageEl?.() ||
     document.querySelector("#indexPage:not(.hide)") ||
     document.querySelector("#homePage:not(.hide)") ||
     null;
-  var container =
-    (homeParent.isConnected ? homeParent : null) ||
-    page.querySelector.(".homeSectionsContainer") ||
+  const container =
+    (homeParent?.isConnected ? homeParent : null) ||
+    page?.querySelector?.(".homeSectionsContainer") ||
     getHomeSectionsContainer(page) ||
     null;
   return { page, container };
 }
 
 function isDirectorRowsMountStateValid(state) {
-  return !!state.page.isConnected && !!state.container.isConnected && isHomeRoute();
+  return !!state?.page?.isConnected && !!state?.container?.isConnected && isHomeRoute();
 }
 
 function getDirectorRowsAnchor(root = null) {
-  var sections = getManagedDirectorSections(root || STATE.hostEl || getHomeSectionsContainer() || document);
+  const sections = getManagedDirectorSections(root || STATE.hostEl || getHomeSectionsContainer() || document);
   return sections.length ? sections[sections.length - 1] : null;
 }
 
@@ -378,15 +378,15 @@ function isDirectorRowsWorkerActive() {
 }
 
 function getDirectorMinContents() {
-  var liveConfig = getConfig.() || config || {};
-  var raw = Number(liveConfig.directorRowsMinItemsPerDirector);
+  const liveConfig = getConfig?.() || config || {};
+  const raw = Number(liveConfig.directorRowsMinItemsPerDirector);
   return Number.isFinite(raw) ? Math.max(1, raw | 0) : 10;
 }
 
 function getDirectorWarmCache(scope) {
   if (!scope || __dirWarmCache.scope !== scope) return null;
   if (__dirWarmCache.minContents !== getDirectorMinContents()) return null;
-  var directors = Array.isArray(__dirWarmCache.directors) ? __dirWarmCache.directors : [];
+  const directors = Array.isArray(__dirWarmCache.directors) ? __dirWarmCache.directors : [];
   if (!directors.length) return null;
   return {
     directors: directors.slice(),
@@ -402,16 +402,16 @@ function setDirectorWarmCache(scope, result) {
   if (!scope) return;
   __dirWarmCache = {
     scope,
-    directors: Array.isArray(result.directors) ? result.directors.filter(Boolean).slice() : [],
-    fromCache: !!result.fromCache,
+    directors: Array.isArray(result?.directors) ? result.directors.filter(Boolean).slice() : [],
+    fromCache: !!result?.fromCache,
     warmedAt: Date.now(),
     minContents: getDirectorMinContents(),
   };
 }
 
-function ensureDirectorRowsSession({ userId, serverId }) {
+async function ensureDirectorRowsSession({ userId, serverId }) {
   if (!userId) return { db: null, scope: null };
-  var scope = makeScope({ serverId, userId });
+  const scope = makeScope({ serverId, userId });
 
   STATE.userId = userId;
   STATE.serverId = serverId;
@@ -420,20 +420,20 @@ function ensureDirectorRowsSession({ userId, serverId }) {
     return { db: STATE._db, scope };
   }
 
-  var db = openDirRowsDB();
+  const db = await openDirRowsDB();
   STATE._db = db;
   STATE._scope = scope;
   return { db, scope };
 }
 
 function setDirectorArrowLoading(isLoading) {
-  var arrow = STATE._loadMoreArrow;
+  const arrow = STATE._loadMoreArrow;
   if (!arrow) return;
 
   if (isLoading) {
     arrow.classList.add('is-loading');
     arrow.disabled = true;
-    arrow.innerHTML = "<span class=\"gh-spinner\" aria-hidden=\"true\"></span>";
+    arrow.innerHTML = `<span class="gh-spinner" aria-hidden="true"></span>`;
     arrow.setAttribute('aria-busy', 'true');
   } else {
     arrow.classList.remove('is-loading');
@@ -444,12 +444,12 @@ function setDirectorArrowLoading(isLoading) {
 }
 
 function placeDirectorLoadMoreArrow() {
-  var parent = STATE.hostEl || getHomeSectionsContainer() || document.body;
-  var arrow = STATE._loadMoreArrow;
+  const parent = STATE.hostEl || getHomeSectionsContainer() || document.body;
+  const arrow = STATE._loadMoreArrow;
   if (!parent || !arrow) return;
-  var siblings = getManagedDirectorSections(parent);
-  var last = siblings[siblings.length - 1] || null;
-  if (last.parentElement === parent) {
+  const siblings = getManagedDirectorSections(parent);
+  const last = siblings[siblings.length - 1] || null;
+  if (last?.parentElement === parent) {
     last.insertAdjacentElement("afterend", arrow);
   } else {
     appendToParent(parent, arrow);
@@ -472,19 +472,19 @@ function attachDirectorScrollIdleLoader() {
 
   if (!STATE.hostEl) return;
   if (!STATE._loadMoreArrow) {
-    var arrow = document.createElement('button');
+    const arrow = document.createElement('button');
     arrow.className = 'dir-load-more-arrow';
     arrow.type = 'button';
     arrow.innerHTML = faIconHtml("chevronDown");
     arrow.setAttribute(
       'aria-label',
       (labels.loadMoreDirectors ||
-        config.languageLabels.loadMoreDirectors ||
-        'Mostrar mais diretores')
+        config.languageLabels?.loadMoreDirectors ||
+        'Daha fazla yönetmen göster')
     );
     STATE._loadMoreArrow = arrow;
 
-    arrow.addEventListenerfunction('click', (e) {
+    arrow.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       if (
@@ -503,8 +503,8 @@ function attachDirectorScrollIdleLoader() {
     try { __dirArrowObserver.disconnect(); } catch {}
   }
 
-  __dirArrowObserver = new IntersectionObserverfunction((entries) {
-  for (var ent of entries) {
+  __dirArrowObserver = new IntersectionObserver((entries) => {
+  for (const ent of entries) {
     if (!ent.isIntersecting) continue;
     if (STATE.loading) continue;
     if (STATE.nextIndex >= STATE.directors.length || STATE.renderedCount >= STATE.maxRenderCount) {
@@ -556,8 +556,8 @@ function scheduleDirectorAutoPump(timeout = 120) {
 }
 
 function yieldToMain(timeout = DIRECTOR_ROW_FILL_YIELD_MS) {
-  return new Promisefunction((resolve) {
-    __idlefunction(() resolve(), Math.max(16, timeout | 0));
+  return new Promise((resolve) => {
+    __idle(() => resolve(), Math.max(16, timeout | 0));
   });
 }
 
@@ -579,19 +579,19 @@ function scheduleLazyDirectorWork(target, init, {
   eager = false,
   observeVisibility = true,
 } = {}) {
-  if (!target || typeof init !== 'function') return function() {};
+  if (!target || typeof init !== 'function') return () => {};
 
-  var started = false;
-  var idleHandle = null;
-  var io = null;
+  let started = false;
+  let idleHandle = null;
+  let io = null;
 
-  var clearIdleHandle = function() {
+  const clearIdleHandle = () => {
     if (!idleHandle) return;
     try { __cancelIdle(idleHandle); } catch {}
     idleHandle = null;
   };
 
-  var cleanup = function() {
+  const cleanup = () => {
     clearIdleHandle();
     unregisterSectionObserver(io);
     io = null;
@@ -600,8 +600,8 @@ function scheduleLazyDirectorWork(target, init, {
     try { target.removeEventListener('focusin', onIntent); } catch {}
   };
 
-  var start = function() {
-    if (started || !target.isConnected) return;
+  const start = () => {
+    if (started || !target?.isConnected) return;
     started = true;
     cleanup();
     try { init(); } catch (e) {
@@ -609,15 +609,15 @@ function scheduleLazyDirectorWork(target, init, {
     }
   };
 
-  var scheduleIdleStart = function() {
+  const scheduleIdleStart = () => {
     if (started || idleHandle) return;
-    idleHandle = __idlefunction(() {
+    idleHandle = __idle(() => {
       idleHandle = null;
       start();
     }, Math.max(80, timeout | 0));
   };
 
-  var onIntent = function() start();
+  const onIntent = () => start();
 
   try { target.addEventListener('pointerenter', onIntent, { passive: true }); } catch {}
   try { target.addEventListener('pointerdown', onIntent, { passive: true }); } catch {}
@@ -629,8 +629,8 @@ function scheduleLazyDirectorWork(target, init, {
   }
 
   if (observeVisibility && typeof IntersectionObserver === 'function') {
-    io = registerSectionObserverfunction(new IntersectionObserver((entries) {
-      for (var entry of entries) {
+    io = registerSectionObserver(new IntersectionObserver((entries) => {
+      for (const entry of entries) {
         if (!entry.isIntersecting) continue;
         scheduleIdleStart();
         break;
@@ -651,10 +651,10 @@ function scheduleLazyDirectorWork(target, init, {
 
 (function ensurePerfCssOnce(){
   if (document.getElementById('dir-rows-perf-css')) return;
-  var st = document.createElement('style');
+  const st = document.createElement('style');
 })();
 
-var COMMON_FIELDS = [
+const COMMON_FIELDS = [
   "Type",
   "PrimaryImageAspectRatio",
   "ImageTags",
@@ -676,27 +676,27 @@ var COMMON_FIELDS = [
 ].join(",");
 
 function getDirectorRowCardTypeBadge(itemType) {
-  var ll = config.languageLabels || {};
+  const ll = config.languageLabels || {};
   if (itemType === "Series") {
-    return { label: ll.dizi || labels.dizi || "Série", icon: "tv" };
+    return { label: ll.dizi || labels.dizi || "Dizi", icon: "tv" };
   }
   if (itemType === "BoxSet") {
     return {
-      label: ll.collectionTitle || ll.boxset || labels.collectionTitle || labels.boxset || "Coleção",
+      label: ll.collectionTitle || ll.boxset || labels.collectionTitle || labels.boxset || "Collection",
       icon: "layerGroup"
     };
   }
-  return { label: ll.film || labels.film || "Filme", icon: "film" };
+  return { label: ll.film || labels.film || "Film", icon: "film" };
 }
 
 function pickBestItemByRating(items) {
   if (!items || !items.length) return null;
-  var best = null;
-  var bestScore = -Infinity;
-  for (var it of items) {
+  let best = null;
+  let bestScore = -Infinity;
+  for (const it of items) {
     if (!it) continue;
-    var score = Number(it.CommunityRating);
-    var s = Number.isFinite(score) ? score : 0;
+    const score = Number(it.CommunityRating);
+    const s = Number.isFinite(score) ? score : 0;
     if (!best || s > bestScore) {
       bestScore = s;
       best = it;
@@ -706,80 +706,80 @@ function pickBestItemByRating(items) {
 }
 
 function shouldPreferTaglessImages(item) {
-  return item.__preferTaglessImages === true;
+  return item?.__preferTaglessImages === true;
 }
 
 function sanitizeResolvedId(value) {
   if (value == null) return null;
-  var out = String(value).trim();
+  const out = String(value).trim();
   if (!out || out === "undefined" || out === "null") return null;
   return out;
 }
 
 function resolveItemId(item) {
   return (
-    sanitizeResolvedId(item.Id) ||
-    sanitizeResolvedId(item.itemId) ||
-    sanitizeResolvedId(item.id) ||
-    sanitizeResolvedId(item.__posterSource.Id) ||
-    sanitizeResolvedId(item.__posterSource.itemId) ||
-    sanitizeResolvedId(item.__posterSource.id) ||
-    sanitizeResolvedId(item.AlbumId) ||
-    sanitizeResolvedId(item.ParentBackdropItemId) ||
-    sanitizeResolvedId(item.ParentId) ||
-    sanitizeResolvedId(item.SeriesId) ||
+    sanitizeResolvedId(item?.Id) ||
+    sanitizeResolvedId(item?.itemId) ||
+    sanitizeResolvedId(item?.id) ||
+    sanitizeResolvedId(item?.__posterSource?.Id) ||
+    sanitizeResolvedId(item?.__posterSource?.itemId) ||
+    sanitizeResolvedId(item?.__posterSource?.id) ||
+    sanitizeResolvedId(item?.AlbumId) ||
+    sanitizeResolvedId(item?.ParentBackdropItemId) ||
+    sanitizeResolvedId(item?.ParentId) ||
+    sanitizeResolvedId(item?.SeriesId) ||
     null
   );
 }
 
 function resolveItemName(item) {
   return String(
-    item.Name ||
-    item.SeriesName ||
-    item.__posterSource.Name ||
-    item.__posterSource.SeriesName ||
+    item?.Name ||
+    item?.SeriesName ||
+    item?.__posterSource?.Name ||
+    item?.__posterSource?.SeriesName ||
     ""
   ).trim();
 }
 
 function primeItemIdentity(item) {
   if (!item || typeof item !== "object") return { item, itemId: null, itemName: "" };
-  var itemId = resolveItemId(item);
-  var itemName = resolveItemName(item);
-  if (itemId && !sanitizeResolvedId(item.Id)) {
+  const itemId = resolveItemId(item);
+  const itemName = resolveItemName(item);
+  if (itemId && !sanitizeResolvedId(item?.Id)) {
     try { item.Id = itemId; } catch {}
   }
-  if (itemName && !item.Name) {
+  if (itemName && !item?.Name) {
     try { item.Name = itemName; } catch {}
   }
   return { item, itemId, itemName };
 }
 
 function getPrimaryImageCandidate(item) {
-  var itemId = item.Id || item.AlbumId || null;
-  var tag =
-    item.ImageTags.Primary ||
-    item.PrimaryImageTag ||
-    item.AlbumPrimaryImageTag ||
+  const itemId = item?.Id || item?.AlbumId || null;
+  const tag =
+    item?.ImageTags?.Primary ||
+    item?.PrimaryImageTag ||
+    item?.AlbumPrimaryImageTag ||
     null;
   if (!itemId || !tag) return null;
   return { itemId, imageType: "Primary", tag };
 }
 
 function getThumbImageCandidate(item) {
-  var itemId = item.Id || null;
-  var tag = item.ImageTags.Thumb || item.ThumbImageTag || null;
+  const itemId = item?.Id || null;
+  const tag = item?.ImageTags?.Thumb || item?.ThumbImageTag || null;
   if (!itemId || !tag) return null;
   return { itemId, imageType: "Thumb", tag, aspectRatio: 16 / 9 };
 }
 
 function getBackdropImageCandidate(item) {
-  var itemId = item.ParentBackdropItemId || item.Id || null;
-  var tag =
-    (Array.isArray(item.ParentBackdropImageTags) && item.ParentBackdropImageTags[0]) ||
-    (Array.isArray(item.BackdropImageTags) && item.BackdropImageTags[0]) ||
-    item.BackdropImageTag ||
-    item.ImageTags.Backdrop ||
+  const itemId = item?.ParentBackdropItemId || item?.Id || null;
+  const tag =
+    (Array.isArray(item?.ParentBackdropImageTags) && item.ParentBackdropImageTags[0]) ||
+    (Array.isArray(item?.BackdropImageTags) && item.BackdropImageTags[0]) ||
+    item?.BackdropImageTag ||
+    item?.ImageTags?.Backdrop ||
     null;
   if (!itemId || !tag) return null;
   return { itemId, imageType: "Backdrop", tag, aspectRatio: 16 / 9 };
@@ -795,25 +795,25 @@ function getPosterLikeImageCandidate(item) {
 }
 
 function buildCandidateImageUrl(item, candidate, height = 540, quality = 72, { omitTag = false } = {}) {
-  if (!candidate.itemId || !candidate.imageType) return null;
-  var skipTag = omitTag || shouldPreferTaglessImages(item);
-  var qs = [];
+  if (!candidate?.itemId || !candidate?.imageType) return null;
+  const skipTag = omitTag || shouldPreferTaglessImages(item);
+  const qs = [];
 
-  if (!skipTag && candidate.tag) qs.push("tag=" + (encodeURIComponent(candidate.tag)));
+  if (!skipTag && candidate.tag) qs.push(`tag=${encodeURIComponent(candidate.tag)}`);
   if (candidate.imageType === "Primary") {
-    qs.push("maxHeight=" + (height));
+    qs.push(`maxHeight=${height}`);
   } else {
-    var aspectRatio = Number(candidate.aspectRatio) || (16 / 9);
-    qs.push("maxWidth=" + (Math.max(96, Math.round(height * aspectRatio))));
+    const aspectRatio = Number(candidate.aspectRatio) || (16 / 9);
+    qs.push(`maxWidth=${Math.max(96, Math.round(height * aspectRatio))}`);
   }
-  qs.push("quality=" + (quality));
-  qs.push("EnableImageEnhancers=false");
+  qs.push(`quality=${quality}`);
+  qs.push(`EnableImageEnhancers=false`);
 
-  return withServer("/Items/" + (candidate.itemId) + "/Images/" + (candidate.imageType) + "?" + (qs.join("&")));
+  return withServer(`/Items/${candidate.itemId}/Images/${candidate.imageType}?${qs.join("&")}`);
 }
 
 function buildPosterUrl(item, height = 540, quality = 72, { omitTag = false } = {}) {
-  var candidate = getPosterLikeImageCandidate(item);
+  const candidate = getPosterLikeImageCandidate(item);
   return buildCandidateImageUrl(item, candidate, height, quality, { omitTag });
 }
 function buildPosterImageUrl(item) {
@@ -823,34 +823,34 @@ function buildPosterImageUrl(item) {
 function buildLogoUrl(item, width = 220, quality = 80) {
   if (!item) return null;
 
-  var tag =
+  const tag =
     (item.ImageTags && (item.ImageTags.Logo || item.ImageTags.logo || item.ImageTags.LogoImageTag)) ||
     item.LogoImageTag ||
     null;
 
   if (!tag) return null;
 
-  var omitTag = shouldPreferTaglessImages(item);
-  var qs = [];
-  if (!omitTag) qs.push("tag=" + (encodeURIComponent(tag)));
-  qs.push("maxWidth=" + (width));
-  qs.push("quality=" + (quality));
-  qs.push("EnableImageEnhancers=false");
-  return withServer("/Items/" + (item.Id) + "/Images/Logo?" + (qs.join("&")));
+  const omitTag = shouldPreferTaglessImages(item);
+  const qs = [];
+  if (!omitTag) qs.push(`tag=${encodeURIComponent(tag)}`);
+  qs.push(`maxWidth=${width}`);
+  qs.push(`quality=${quality}`);
+  qs.push(`EnableImageEnhancers=false`);
+  return withServer(`/Items/${item.Id}/Images/Logo?${qs.join("&")}`);
 }
 
 function buildBackdropUrl(item, width = 1920, quality = 80) {
   if (!item) return null;
-  var candidate = getBackdropImageCandidate(item);
+  const candidate = getBackdropImageCandidate(item);
   if (!candidate) return null;
 
-  var omitTag = shouldPreferTaglessImages(item);
-  var qs = [];
-  if (!omitTag && candidate.tag) qs.push("tag=" + (encodeURIComponent(candidate.tag)));
-  qs.push("maxWidth=" + (width));
-  qs.push("quality=" + (quality));
-  qs.push("EnableImageEnhancers=false");
-  return withServer("/Items/" + (candidate.itemId) + "/Images/Backdrop?" + (qs.join("&")));
+  const omitTag = shouldPreferTaglessImages(item);
+  const qs = [];
+  if (!omitTag && candidate.tag) qs.push(`tag=${encodeURIComponent(candidate.tag)}`);
+  qs.push(`maxWidth=${width}`);
+  qs.push(`quality=${quality}`);
+  qs.push(`EnableImageEnhancers=false`);
+  return withServer(`/Items/${candidate.itemId}/Images/Backdrop?${qs.join("&")}`);
 }
 
 function buildBackdropImageUrl(item) {
@@ -859,57 +859,57 @@ function buildBackdropImageUrl(item) {
 
 function formatRuntime(ticks) {
   if (!ticks) return null;
-  var minutes = Math.floor(ticks / 600000000);
-  if (minutes < 60) return (minutes) + "m";
-  var hours = Math.floor(minutes / 60);
-  var remainingMinutes = minutes % 60;
-  return remainingMinutes > 0 ? (hours) + "h " + (remainingMinutes) + "m" : (hours) + "h";
+  const minutes = Math.floor(ticks / 600000000);
+  if (minutes < 60) return `${minutes}d`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes > 0 ? `${hours}s ${remainingMinutes}d` : `${hours}s`;
 }
 
 function getRuntimeWithIcons(runtime) {
   if (!runtime) return '';
-  return runtime.replace(/(\d+)h/g, "$1" + (config.languageLabels.sa || 'h'))
-               .replace(/(\d+)m/g, "$1" + (config.languageLabels.dk || 'm'));
+  return runtime.replace(/(\d+)s/g, `$1${config.languageLabels?.sa || 'sa'}`)
+               .replace(/(\d+)d/g, `$1${config.languageLabels?.dk || 'dk'}`);
 }
 
 function getDetailsUrl(itemId, serverId) {
-  return "#/details?id=" + (itemId) + "&serverId=" + (encodeURIComponent(serverId));
+  return `#/details?id=${itemId}&serverId=${encodeURIComponent(serverId)}`;
 }
 
 function clamp01(x){ return Math.max(0, Math.min(1, x)); }
 
 function getPlaybackRuntimeTicks(item) {
   return (
-    (item.Type === "Series" ? Number(item.CumulativeRunTimeTicks) : Number(item.RunTimeTicks)) ||
-    Number(item.RunTimeTicks) ||
-    Number(item.CumulativeRunTimeTicks) ||
+    (item?.Type === "Series" ? Number(item?.CumulativeRunTimeTicks) : Number(item?.RunTimeTicks)) ||
+    Number(item?.RunTimeTicks) ||
+    Number(item?.CumulativeRunTimeTicks) ||
     0
   );
 }
 
 function isPlaybackCompleted(item, runtimeOverride = 0) {
-  var ud = item.UserData || item.UserDataDto || null;
+  const ud = item?.UserData || item?.UserDataDto || null;
   if (!ud) return false;
   if (ud.Played === true) return true;
 
-  var playedPercentage = Number(ud.PlayedPercentage);
+  const playedPercentage = Number(ud.PlayedPercentage);
   if (Number.isFinite(playedPercentage) && playedPercentage >= 100) return true;
 
-  var positionTicks = Number(ud.PlaybackPositionTicks || 0);
-  var runtimeTicks = Number(runtimeOverride || getPlaybackRuntimeTicks(item) || 0);
+  const positionTicks = Number(ud.PlaybackPositionTicks || 0);
+  const runtimeTicks = Number(runtimeOverride || getPlaybackRuntimeTicks(item) || 0);
   return positionTicks > 0 && runtimeTicks > 0 && positionTicks >= runtimeTicks;
 }
 
 function getPlaybackPercent(item) {
-  var ud = item.UserData || item.UserDataDto || null;
+  const ud = item?.UserData || item?.UserDataDto || null;
   if (!ud) return 0;
-  var durTicks = getPlaybackRuntimeTicks(item);
+  const durTicks = getPlaybackRuntimeTicks(item);
   if (isPlaybackCompleted(item, durTicks)) return 0;
 
-  var p = Number(ud.PlayedPercentage);
+  const p = Number(ud.PlayedPercentage);
   if (Number.isFinite(p) && p > 0) return clamp01(p / 100);
 
-  var pos = Number(ud.PlaybackPositionTicks);
+  const pos = Number(ud.PlaybackPositionTicks);
   if (!Number.isFinite(pos) || pos <= 0) return 0;
 
   if (!Number.isFinite(durTicks) || durTicks <= 0) return 0;
@@ -919,11 +919,11 @@ function getPlaybackPercent(item) {
 function queueEnterAnimation(el) {
   if (!el) return el;
   el.classList.add('is-entering');
-  var clear = function() {
+  const clear = () => {
     try { el.classList.remove('is-entering'); } catch {}
   };
   try {
-    requestAnimationFramefunction(() {
+    requestAnimationFrame(() => {
       requestAnimationFrame(clear);
     });
   } catch {
@@ -935,7 +935,7 @@ function queueEnterAnimation(el) {
 function clearDirectorHeroHost(heroHost) {
   if (!heroHost) return;
   try {
-    heroHost.querySelectorAll('.dir-row-hero').forEach(function((el) {
+    heroHost.querySelectorAll('.dir-row-hero').forEach((el) => {
       try { el.dispatchEvent(new Event('jms:cleanup')); } catch {}
     });
   } catch {}
@@ -944,16 +944,16 @@ function clearDirectorHeroHost(heroHost) {
 }
 
 function mountDirectorHero(heroHost, heroItem, serverId, directorName, { aboveFold = false } = {}) {
-  var heroItemId = resolveItemId(heroItem);
+  const heroItemId = resolveItemId(heroItem);
   if (!heroHost || !heroItemId) return { hero: null, changed: false };
 
-  var existing = heroHost.querySelector('.dir-row-hero');
-  var same = existing && existing.dataset.itemId === String(heroItemId);
+  const existing = heroHost.querySelector('.dir-row-hero');
+  const same = existing && existing.dataset.itemId === String(heroItemId);
 
   if (same) {
-    var label = existing.querySelector('.dir-row-hero-label');
+    const label = existing.querySelector('.dir-row-hero-label');
     if (label) {
-      label.textContent = ((config.languageLabels.yonetmen || "diretor")) + " " + (directorName || "").trim();
+      label.textContent = `${(config.languageLabels?.yonetmen || "yönetmen")} ${directorName || ""}`.trim();
     }
     try { heroHost.style.visibility = 'visible'; } catch {}
     return { hero: existing, changed: false };
@@ -963,61 +963,93 @@ function mountDirectorHero(heroHost, heroItem, serverId, directorName, { aboveFo
     clearDirectorHeroHost(heroHost);
   }
 
-  var hero = createDirectorHeroCard(heroItem, serverId, directorName, { aboveFold });
+  const hero = createDirectorHeroCard(heroItem, serverId, directorName, { aboveFold });
   hero.classList.add('is-entering');
   heroHost.appendChild(hero);
   try { heroHost.style.visibility = 'visible'; } catch {}
-  requestAnimationFramefunction(() {
+  requestAnimationFrame(() => {
     try { hero.classList.remove('is-entering'); } catch {}
   });
   return { hero, changed: true };
 }
 
 function createRecommendationCard(item, serverId, aboveFold = false) {
-  var { itemId, itemName } = primeItemIdentity(item);
-  var card = document.createElement("div");
+  const { itemId, itemName } = primeItemIdentity(item);
+  const card = document.createElement("div");
   card.className = "card personal-recs-card";
   queueEnterAnimation(card);
   if (itemId) card.dataset.itemId = itemId;
 
-  var posterUrlStatic = buildPosterImageUrl(item);
-  var year = item.ProductionYear || "";
-  var ageChip = formatOfficialRatingLabel(item.OfficialRating || "");
-  var runtimeTicks = item.Type === "Series" ? item.CumulativeRunTimeTicks : item.RunTimeTicks;
-  var runtime = formatRuntime(runtimeTicks);
-  var genres = Array.isArray(item.Genres) ? item.Genres.slice(0, 2).join(", ") : "";
-  var { label: typeLabel, icon: typeIcon } = getDirectorRowCardTypeBadge(item.Type);
-  var community = Number.isFinite(item.CommunityRating)
-    ? "<div class=\"community-rating\" title=\"Community Rating\">⭐ " + (item.CommunityRating.toFixed(1)) + "</div>"
+  const posterUrlStatic = buildPosterImageUrl(item);
+  const year = item.ProductionYear || "";
+  const ageChip = formatOfficialRatingLabel(item.OfficialRating || "");
+  const runtimeTicks = item.Type === "Series" ? item.CumulativeRunTimeTicks : item.RunTimeTicks;
+  const runtime = formatRuntime(runtimeTicks);
+  const genres = Array.isArray(item.Genres) ? item.Genres.slice(0, 2).join(", ") : "";
+  const { label: typeLabel, icon: typeIcon } = getDirectorRowCardTypeBadge(item.Type);
+  const community = Number.isFinite(item.CommunityRating)
+    ? `<div class="community-rating" title="Community Rating">⭐ ${item.CommunityRating.toFixed(1)}</div>`
     : "";
-  var progress = getPlaybackPercent(item);
-  var logoUrl = buildLogoUrl(item);
-  var titleRender = resolveManagedCardTitleRender({
+  const progress = getPlaybackPercent(item);
+  const logoUrl = buildLogoUrl(item);
+  const titleRender = resolveManagedCardTitleRender({
     titleText: itemName,
     logoUrl,
-    logoAltText: (itemName) + " logo",
+    logoAltText: `${itemName} logo`,
     aboveFold,
     maxTitleLength: 42,
   });
-  var progressHtml = (progress > 0.02 && progress < 0.999)
-    ? "<div class=\"rr-progress-wrap\" aria-label=\"" + (escapeHtml(config.languageLabels.progress || "Progresso")) + "\">\n         <div class=\"rr-progress-bar\" style=\"width:" + (Math.round(progress * 100)) + "%\"></div>\n       </div>"
+  const progressHtml = (progress > 0.02 && progress < 0.999)
+    ? `<div class="rr-progress-wrap" aria-label="${escapeHtml(config.languageLabels?.progress || "İlerleme")}">
+         <div class="rr-progress-bar" style="width:${Math.round(progress * 100)}%"></div>
+       </div>`
     : "";
 
-  card.innerHTML = "\n    <div class=\"cardBox\">\n      <a class=\"cardLink\" href=\"" + (itemId ? getDetailsUrl(itemId, serverId) : '#') + "\">\n        <div class=\"cardImageContainer\">\n          <img class=\"cardImage\"\n            alt=\"" + (escapeHtml(itemName)) + "\"\n            loading=\"" + (aboveFold ? 'eager' : 'lazy') + "\"\n            decoding=\"async\"\n            " + (aboveFold ? 'fetchpriority="high"' : '') + ">\n          <div class=\"prc-top-badges\">\n            " + (community) + "\n            <div class=\"prc-type-badge\">\n              " + (faIconHtml(typeIcon, "prc-type-icon")) + "\n              " + (typeLabel) + "\n            </div>\n          </div>\n          <div class=\"prc-gradient\"></div>\n          <div class=\"prc-overlay\">\n            " + (titleRender.html) + "\n            <div class=\"prc-meta\">\n              ${ageChip ? "<span class="prc-age">${ageChip}</span><span class="prc-dot">•</span>" : \"\"}\n              ${year ? "<span class="prc-year">${year}</span><span class="prc-dot">•</span>" : \"\"}\n              ${runtime ? "<span class="prc-runtime">${getRuntimeWithIcons(runtime)}</span>" : \"\"}\n            </div>\n            ${genres ? "<div class="prc-genres">${genres}</div>" : \"\"}\n          </div>\n          " + (progressHtml) + "\n        </div>\n      </a>\n    </div>\n  ";
+  card.innerHTML = `
+    <div class="cardBox">
+      <a class="cardLink" href="${itemId ? getDetailsUrl(itemId, serverId) : '#'}">
+        <div class="cardImageContainer">
+          <img class="cardImage"
+            alt="${escapeHtml(itemName)}"
+            loading="${aboveFold ? 'eager' : 'lazy'}"
+            decoding="async"
+            ${aboveFold ? 'fetchpriority="high"' : ''}>
+          <div class="prc-top-badges">
+            ${community}
+            <div class="prc-type-badge">
+              ${faIconHtml(typeIcon, "prc-type-icon")}
+              ${typeLabel}
+            </div>
+          </div>
+          <div class="prc-gradient"></div>
+          <div class="prc-overlay">
+            ${titleRender.html}
+            <div class="prc-meta">
+              ${ageChip ? `<span class="prc-age">${ageChip}</span><span class="prc-dot">•</span>` : ""}
+              ${year ? `<span class="prc-year">${year}</span><span class="prc-dot">•</span>` : ""}
+              ${runtime ? `<span class="prc-runtime">${getRuntimeWithIcons(runtime)}</span>` : ""}
+            </div>
+            ${genres ? `<div class="prc-genres">${genres}</div>` : ""}
+          </div>
+          ${progressHtml}
+        </div>
+      </a>
+    </div>
+  `;
 
-  var logoImg = card.querySelector('.prc-card-logo img');
+  const logoImg = card.querySelector('.prc-card-logo img');
   if (logoImg) {
-    logoImg.addEventListenerfunction('error', () {
+    logoImg.addEventListener('error', () => {
       try {
-        logoImg.closest('.prc-card-logo').remove();
+        logoImg.closest('.prc-card-logo')?.remove();
       } catch {}
     }, { once: true });
   }
 
-  var img = card.querySelector('.cardImage');
+  const img = card.querySelector('.cardImage');
   try {
-    var sizesMobile = '(max-width: 640px) 42vw, (max-width: 820px) 37vw, 252px';
-    var sizesDesk   = '(max-width: 1200px) 21vw, 252px';
+    const sizesMobile = '(max-width: 640px) 42vw, (max-width: 820px) 37vw, 252px';
+    const sizesDesk   = '(max-width: 1200px) 21vw, 252px';
     img.setAttribute('sizes', IS_MOBILE ? sizesMobile : sizesDesk);
   } catch {}
 
@@ -1025,11 +1057,11 @@ function createRecommendationCard(item, serverId, aboveFold = false) {
     setManagedImageSource(img, posterUrlStatic, { fallback: PLACEHOLDER_URL });
   } else {
     try { img.style.display = 'none'; } catch {}
-    var noImg = document.createElement('div');
+    const noImg = document.createElement('div');
     noImg.className = 'prc-noimg-label';
     noImg.textContent =
       (config.languageLabels && (config.languageLabels.noImage || config.languageLabels.loadingText))
-      || (labels.noImage || 'Sem imagem');
+      || (labels.noImage || 'Görsel yok');
     noImg.style.minHeight = '100%';
     noImg.style.height = '100%';
     noImg.style.display = 'flex';
@@ -1038,23 +1070,23 @@ function createRecommendationCard(item, serverId, aboveFold = false) {
     noImg.style.textAlign = 'center';
     noImg.style.padding = '12px';
     noImg.style.fontWeight = '600';
-    card.querySelector('.cardImageContainer').prepend(noImg);
+    card.querySelector('.cardImageContainer')?.prepend(noImg);
   }
 
-  var cardLink = card.querySelector(".cardLink");
+  const cardLink = card.querySelector(".cardLink");
   if (cardLink) {
-    cardLink.addEventListenerfunction("click", (e) {
+    cardLink.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
       if (!itemId) return;
-      var hostEl = card.querySelector(".cardImageContainer");
-      var backdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
+      const hostEl = card.querySelector(".cardImageContainer");
+      const backdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
       try {
-        openDetailsModal({
+        await openDetailsModal({
           itemId,
           serverId,
           preferBackdropIndex: backdropIndex,
-          originEl: hostEl.querySelector.("img.cardImage") || hostEl || card,
+          originEl: hostEl?.querySelector?.("img.cardImage") || hostEl || card,
           originEvent: e,
         });
       } catch (err) {
@@ -1063,11 +1095,11 @@ function createRecommendationCard(item, serverId, aboveFold = false) {
     }, { passive: false });
   }
 
-  var mode = (HOVER_MODE === 'inherit')
-    ? (getConfig().globalPreviewMode === 'studioMini' ? 'studioMini' : 'modal')
+  const mode = (HOVER_MODE === 'inherit')
+    ? (getConfig()?.globalPreviewMode === 'studioMini' ? 'studioMini' : 'modal')
     : HOVER_MODE;
 
-  var cleanupLazyPreview = scheduleLazyDirectorWorkfunction(card, () {
+  const cleanupLazyPreview = scheduleLazyDirectorWork(card, () => {
     if (!card.isConnected) return;
     attachPreviewByMode(card, { ...item, Id: itemId, Name: itemName }, mode);
   }, {
@@ -1076,7 +1108,7 @@ function createRecommendationCard(item, serverId, aboveFold = false) {
     observeVisibility: false,
   });
 
-  card.addEventListenerfunction('jms:cleanup', () {
+  card.addEventListener('jms:cleanup', () => {
     try { cleanupLazyPreview(); } catch {}
     cleanupManagedImage(img);
     detachPreviewHandlers(card);
@@ -1086,53 +1118,84 @@ function createRecommendationCard(item, serverId, aboveFold = false) {
 }
 
 function isHomeRoute() {
-  var h = String(window.location.hash || '').toLowerCase();
+  const h = String(window.location.hash || '').toLowerCase();
   return h.startsWith('#/home') || h.startsWith('#/index') || h === '' || h === '#';
 }
 
 function createDirectorHeroCard(item, serverId, directorName, { aboveFold = false } = {}) {
-  var { itemId, itemName } = primeItemIdentity(item);
-  var hero = document.createElement('div');
+  const { itemId, itemName } = primeItemIdentity(item);
+  const hero = document.createElement('div');
   hero.className = 'dir-row-hero';
   if (itemId) hero.dataset.itemId = itemId;
 
-  var bgSrc = buildBackdropImageUrl(item);
-  var logo = buildLogoUrl(item);
-  var year = item.ProductionYear || '';
-  var plot = clampText(item.Overview, 1200);
-  var ageChip = formatOfficialRatingLabel(item.OfficialRating || '');
-  var genres = Array.isArray(item.Genres) ? item.Genres.slice(0, 3).join(", ") : "";
+  const bgSrc = buildBackdropImageUrl(item);
+  const logo = buildLogoUrl(item);
+  const year = item.ProductionYear || '';
+  const plot = clampText(item.Overview, 1200);
+  const ageChip = formatOfficialRatingLabel(item.OfficialRating || '');
+  const genres = Array.isArray(item.Genres) ? item.Genres.slice(0, 3).join(", ") : "";
 
-  var heroMetaItems = [];
+  const heroMetaItems = [];
   if (ageChip) heroMetaItems.push({ text: ageChip, variant: "age" });
   if (year) heroMetaItems.push({ text: year, variant: "year" });
   if (genres) heroMetaItems.push({ text: genres, variant: "genres" });
-  var metaHtml = heroMetaItems.length
+  const metaHtml = heroMetaItems.length
     ? heroMetaItems
-        .mapfunction(({ text, variant })
-          "<span class=\"dir-row-hero-meta dir-row-hero-meta--" + (variant) + "\">" + (escapeHtml(text)) + "</span>"
+        .map(({ text, variant }) =>
+          `<span class="dir-row-hero-meta dir-row-hero-meta--${variant}">${escapeHtml(text)}</span>`
         )
         .join("")
     : "";
-  var heroProgress = getPlaybackPercent(item);
-  var heroProgressPct = Math.round(heroProgress * 100);
-  var heroProgressHtml = (heroProgress > 0.02 && heroProgress < 0.999)
-    ? "\n      <div class=\"dir-hero-progress-wrap\" aria-label=\"" + (escapeHtml(config.languageLabels.progress || "Progresso")) + "\">\n        <div class=\"dir-hero-progress-bar\" style=\"width:" + (heroProgressPct) + "%\"></div>\n      </div>\n      <div class=\"dir-hero-progress-pct\">" + (heroProgressPct) + "%</div>\n    "
+  const heroProgress = getPlaybackPercent(item);
+  const heroProgressPct = Math.round(heroProgress * 100);
+  const heroProgressHtml = (heroProgress > 0.02 && heroProgress < 0.999)
+    ? `
+      <div class="dir-hero-progress-wrap" aria-label="${escapeHtml(config.languageLabels?.progress || "İlerleme")}">
+        <div class="dir-hero-progress-bar" style="width:${heroProgressPct}%"></div>
+      </div>
+      <div class="dir-hero-progress-pct">${heroProgressPct}%</div>
+    `
     : "";
 
-  hero.innerHTML = "\n    <div class=\"dir-row-hero-bg-wrap\">\n      <img class=\"dir-row-hero-bg\"\n           alt=\"" + (escapeHtml(itemName)) + "\"\n           decoding=\"async\"\n           loading=\"" + (aboveFold ? 'eager' : 'lazy') + "\"\n           " + (aboveFold ? 'fetchpriority="high"' : '') + ">\n    </div>\n\n    <div class=\"dir-row-hero-inner\">\n      <div class=\"dir-row-hero-meta-container\">\n        <div class=\"dir-row-hero-label\">\n          " + ((config.languageLabels.yonetmen || "diretor")) + " " + (escapeHtml(directorName || "")) + "\n        </div>\n\n        ${logo ? "
+  hero.innerHTML = `
+    <div class="dir-row-hero-bg-wrap">
+      <img class="dir-row-hero-bg"
+           alt="${escapeHtml(itemName)}"
+           decoding="async"
+           loading="${aboveFold ? 'eager' : 'lazy'}"
+           ${aboveFold ? 'fetchpriority="high"' : ''}>
+    </div>
+
+    <div class="dir-row-hero-inner">
+      <div class="dir-row-hero-meta-container">
+        <div class="dir-row-hero-label">
+          ${(config.languageLabels?.yonetmen || "yönetmen")} ${escapeHtml(directorName || "")}
+        </div>
+
+        ${logo ? `
           <div class="dir-row-hero-logo">
             <img src="${logo}" alt="${escapeHtml(itemName)} logo">
           </div>
-        " : ""}\n\n        <div class=\"dir-row-hero-title\">" + (escapeHtml(itemName)) + "</div>\n\n        ${metaHtml ? "<div class="dir-row-hero-submeta">${metaHtml}</div>" : \"\"}\n\n        ${plot ? "<div class="dir-row-hero-plot">${escapeHtml(plot)}</div>" : \"\"}\n\n      </div>\n    </div>\n    " + (heroProgressHtml) + "\n  ";
+        ` : ``}
 
-  var openDetails = function(e) {
-    try { e.preventDefault.(); e.stopPropagation.(); } catch {}
-    var backdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
-    var originEl = hero.querySelector(".dir-row-hero-bg") || hero;
+        <div class="dir-row-hero-title">${escapeHtml(itemName)}</div>
+
+        ${metaHtml ? `<div class="dir-row-hero-submeta">${metaHtml}</div>` : ""}
+
+        ${plot ? `<div class="dir-row-hero-plot">${escapeHtml(plot)}</div>` : ""}
+
+      </div>
+    </div>
+    ${heroProgressHtml}
+  `;
+
+  const openDetails = async (e) => {
+    try { e?.preventDefault?.(); e?.stopPropagation?.(); } catch {}
+    const backdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
+    const originEl = hero.querySelector(".dir-row-hero-bg") || hero;
     try {
       if (!itemId) return;
-      openDetailsModal({
+      await openDetailsModal({
         itemId,
         serverId,
         preferBackdropIndex: backdropIndex,
@@ -1145,14 +1208,14 @@ function createDirectorHeroCard(item, serverId, directorName, { aboveFold = fals
 
   hero.addEventListener('click', openDetails);
   hero.tabIndex = 0;
-  hero.addEventListenerfunction("keydown", (e) {
+  hero.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") openDetails(e);
   });
 
   hero.classList.add('active');
 
   try {
-    var bgImg = hero.querySelector('.dir-row-hero-bg');
+    const bgImg = hero.querySelector('.dir-row-hero-bg');
     if (bgImg) {
       setManagedImageSource(bgImg, bgSrc, { fallback: PLACEHOLDER_URL });
     }
@@ -1160,9 +1223,9 @@ function createDirectorHeroCard(item, serverId, directorName, { aboveFold = fals
     dirRowsWarn("dir-row-hero-bg hydrate failed:", e);
   }
 
-  hero.addEventListenerfunction('jms:cleanup', () {
+  hero.addEventListener('jms:cleanup', () => {
     try {
-      var bgImg = hero.querySelector('.dir-row-hero-bg');
+      const bgImg = hero.querySelector('.dir-row-hero-bg');
       if (bgImg) cleanupManagedImage(bgImg);
     } catch {}
     detachPreviewHandlers(hero);
@@ -1172,32 +1235,32 @@ function createDirectorHeroCard(item, serverId, directorName, { aboveFold = fals
   return hero;
 }
 
-var __hoverIntent = new WeakMap();
-var __enterTimers = new WeakMap();
-var __enterSeq     = new WeakMap();
-var __cooldownUntil= new WeakMap();
-var __openTokenMap = new WeakMap();
-var __boundPreview = new WeakMap();
+const __hoverIntent = new WeakMap();
+const __enterTimers = new WeakMap();
+const __enterSeq     = new WeakMap();
+const __cooldownUntil= new WeakMap();
+const __openTokenMap = new WeakMap();
+const __boundPreview = new WeakMap();
 
-var __lastMoveTS = 0;
-var __pmLast = 0;
-window.addEventListenerfunction('pointermove', () {
-  var now = Date.now();
+let __lastMoveTS = 0;
+let __pmLast = 0;
+window.addEventListener('pointermove', () => {
+  const now = Date.now();
   if (now - __pmLast > 100) { __pmLast = now; __lastMoveTS = now; }
 }, {passive:true});
 
-var __touchStickyOpen = false;
-var __touchLastOpenTS = 0;
-var TOUCH_STICKY_GRACE_MS = 1200;
+let __touchStickyOpen = false;
+let __touchLastOpenTS = 0;
+const TOUCH_STICKY_GRACE_MS = 1200;
 
 function hardWipeHoverModalDom() {
-  var modal = document.querySelector('.video-preview-modal');
+  const modal = document.querySelector('.video-preview-modal');
   if (!modal) return;
   try { modal.dataset.itemId = ""; } catch {}
-  modal.querySelectorAll('img').forEach(function(img) {
+  modal.querySelectorAll('img').forEach(img => {
     try { img.removeAttribute('src'); img.removeAttribute('srcset'); } catch {}
   });
-  modal.querySelectorAll('[data-field="title"],[data-field="subtitle"],[data-field="meta"],[data-field="genres"]').forEach(function(el) {
+  modal.querySelectorAll('[data-field="title"],[data-field="subtitle"],[data-field="meta"],[data-field="genres"]').forEach(el => {
     el.textContent = '';
   });
 }
@@ -1205,15 +1268,15 @@ function hardWipeHoverModalDom() {
 (function ensureGlobalTouchOutsideCloser(){
   if (window.__jmsTouchCloserBound_dir) return;
   window.__jmsTouchCloserBound_dir = true;
-  document.addEventListenerfunction('pointerdown', (e) {
+  document.addEventListener('pointerdown', (e) => {
     if (!__touchStickyOpen) return;
-    var inModal = e.target.closest.('.video-preview-modal');
+    const inModal = e.target?.closest?.('.video-preview-modal');
     if (!inModal) {
       try { safeCloseHoverModal(); } catch {}
       __touchStickyOpen = false;
     }
   }, { passive: true });
-  document.addEventListenerfunction('keydown', (e) {
+  document.addEventListener('keydown', (e) => {
     if (!__touchStickyOpen) return;
     if (e.key === 'Escape') {
       try { safeCloseHoverModal(); } catch {}
@@ -1224,14 +1287,14 @@ function hardWipeHoverModalDom() {
 
 function isHoveringCardOrModal(cardEl) {
   try {
-    var overCard  = cardEl.isConnected && cardEl.matches(':hover');
-    var overModal = !!document.querySelector('.video-preview-modal:hover');
+    const overCard  = cardEl?.isConnected && cardEl.matches(':hover');
+    const overModal = !!document.querySelector('.video-preview-modal:hover');
     return !!(overCard || overModal);
   } catch { return false; }
 }
 
 function schedulePostOpenGuard(cardEl, token, delay=300) {
-  setTimeoutfunction(() {
+  setTimeout(() => {
     if (__openTokenMap.get(cardEl) !== token) return;
     if (!isHoveringCardOrModal(cardEl)) {
       try { safeCloseHoverModal(); } catch {}
@@ -1240,8 +1303,8 @@ function schedulePostOpenGuard(cardEl, token, delay=300) {
 }
 
 function scheduleClosePollingGuard(cardEl, tries=4, interval=120) {
-  var count = 0;
-  var iid = setIntervalfunction(() {
+  let count = 0;
+  const iid = setInterval(() => {
     count++;
     if (isHoveringCardOrModal(cardEl)) { clearInterval(iid); return; }
     if (Date.now() - __lastMoveTS > 120 || count >= tries) {
@@ -1252,7 +1315,7 @@ function scheduleClosePollingGuard(cardEl, tries=4, interval=120) {
 }
 
 function clearEnterTimer(cardEl) {
-  var t = __enterTimers.get(cardEl);
+  const t = __enterTimers.get(cardEl);
   if (t) { clearTimeout(t); __enterTimers.delete(cardEl); }
 }
 
@@ -1278,22 +1341,22 @@ function safeCloseHoverModal() {
 }
 
 function attachHoverTrailer(cardEl, itemLike) {
-  var itemId = resolveItemId(itemLike) || sanitizeResolvedId(cardEl.dataset.itemId);
+  const itemId = resolveItemId(itemLike) || sanitizeResolvedId(cardEl?.dataset?.itemId);
   if (!cardEl || !itemId) return;
   if (!__enterSeq.has(cardEl)) __enterSeq.set(cardEl, 0);
 
-  var onEnter = function(e) {
-    var isTouch = e.pointerType === 'touch';
-    var until = __cooldownUntil.get(cardEl) || 0;
+  const onEnter = (e) => {
+    const isTouch = e?.pointerType === 'touch';
+    const until = __cooldownUntil.get(cardEl) || 0;
     if (Date.now() < until) return;
 
     __hoverIntent.set(cardEl, true);
     clearEnterTimer(cardEl);
 
-    var seq = (__enterSeq.get(cardEl) || 0) + 1;
+    const seq = (__enterSeq.get(cardEl) || 0) + 1;
     __enterSeq.set(cardEl, seq);
 
-    var timer = setTimeoutfunction(() {
+    const timer = setTimeout(() => {
       if ((__enterSeq.get(cardEl) || 0) !== seq) return;
       if (!__hoverIntent.get(cardEl)) return;
       if (!isTouch) {
@@ -1301,7 +1364,7 @@ function attachHoverTrailer(cardEl, itemLike) {
       }
       try { window.dispatchEvent(new Event('closeAllMiniPopovers')); } catch {}
 
-      var token = (Date.now() ^ Math.random()*1e9) | 0;
+      const token = (Date.now() ^ Math.random()*1e9) | 0;
       __openTokenMap.set(cardEl, token);
 
       try { hardWipeHoverModalDom(); } catch {}
@@ -1312,13 +1375,13 @@ function attachHoverTrailer(cardEl, itemLike) {
         __touchLastOpenTS = Date.now();
       }
       if (!isTouch) schedulePostOpenGuard(cardEl, token, 300);
-    }, getOpenHoverDelay());
+    }, OPEN_HOVER_DELAY_MS);
 
     __enterTimers.set(cardEl, timer);
   };
 
-  var onLeave = function(e) {
-    var isTouch = e.pointerType === 'touch';
+  const onLeave = (e) => {
+    const isTouch = e?.pointerType === 'touch';
     __hoverIntent.set(cardEl, false);
     clearEnterTimer(cardEl);
     __enterSeq.set(cardEl, (__enterSeq.get(cardEl) || 0) + 1);
@@ -1327,8 +1390,8 @@ function attachHoverTrailer(cardEl, itemLike) {
       __touchStickyOpen = false;
     }
 
-    var rt = e.relatedTarget || null;
-    var goingToModal = !!(rt && (rt.closest ? rt.closest('.video-preview-modal') : null));
+    const rt = e?.relatedTarget || null;
+    const goingToModal = !!(rt && (rt.closest ? rt.closest('.video-preview-modal') : null));
     if (goingToModal) return;
 
     try { safeCloseHoverModal(); } catch {}
@@ -1338,14 +1401,14 @@ function attachHoverTrailer(cardEl, itemLike) {
   };
 
   cardEl.addEventListener('pointerenter', onEnter, { passive: true });
-  var onDown = function(e) { if (e.pointerType === 'touch') onEnter(e); };
+  const onDown = (e) => { if (e?.pointerType === 'touch') onEnter(e); };
   cardEl.addEventListener('pointerdown', onDown, { passive: true });
   cardEl.addEventListener('pointerleave', onLeave,  { passive: true });
   __boundPreview.set(cardEl, { mode: 'modal', onEnter, onLeave, onDown });
 }
 
 function detachPreviewHandlers(cardEl) {
-  var rec = __boundPreview.get(cardEl);
+  const rec = __boundPreview.get(cardEl);
   if (!rec) return;
   try { cardEl.removeEventListener('pointerenter', rec.onEnter); } catch {}
   try { cardEl.removeEventListener('pointerleave', rec.onLeave); } catch {}
@@ -1358,21 +1421,21 @@ function detachPreviewHandlers(cardEl) {
 
 function attachPreviewByMode(cardEl, itemLike, mode) {
   detachPreviewHandlers(cardEl);
-  var itemId = resolveItemId(itemLike) || sanitizeResolvedId(cardEl.dataset.itemId);
+  const itemId = resolveItemId(itemLike) || sanitizeResolvedId(cardEl?.dataset?.itemId);
   if (!itemId) return;
-  var normalizedItem = { ...(itemLike || {}), Id: itemId, Name: resolveItemName(itemLike) };
+  const normalizedItem = { ...(itemLike || {}), Id: itemId, Name: resolveItemName(itemLike) };
   if (mode === 'studioMini') {
     attachMiniPosterHover(cardEl, normalizedItem);
-    __boundPreview.setfunction(cardEl, { mode: 'studioMini', onEnter: (){}, onLeave: function(){} });
+    __boundPreview.set(cardEl, { mode: 'studioMini', onEnter: ()=>{}, onLeave: ()=>{} });
   } else {
     attachHoverTrailer(cardEl, normalizedItem);
   }
 }
 
 function filterAndTrimByRating(items, minRating, maxCount) {
-  var seen = new Set();
-  var out = [];
-  for (var it of items || []) {
+  const seen = new Set();
+  const out = [];
+  for (const it of items || []) {
     if (!it || !it.Id) continue;
     if (seen.has(it.Id)) continue;
     seen.add(it.Id);
@@ -1382,38 +1445,38 @@ function filterAndTrimByRating(items, minRating, maxCount) {
   return out;
 }
 
-function getDirectorContentCount(userId, directorId) {
-  var url =
-    "/Users/" + (userId) + "/Items?IncludeItemTypes=Movie,Series&Recursive=true&" +
-    "PersonIds=" + (encodeURIComponent(directorId)) + "&" +
-    "Limit=1&SortBy=DateCreated&SortOrder=Descending";
+async function getDirectorContentCount(userId, directorId) {
+  const url =
+    `/Users/${userId}/Items?IncludeItemTypes=Movie,Series&Recursive=true&` +
+    `PersonIds=${encodeURIComponent(directorId)}&` +
+    `Limit=1&SortBy=DateCreated&SortOrder=Descending`;
   try {
-    var data = makeApiRequest(url);
-    return Number(data.TotalRecordCount) || 0;
+    const data = await makeApiRequest(url);
+    return Number(data?.TotalRecordCount) || 0;
   } catch (e) {
     dirRowsWarn('directorRows: count check failed for', directorId, e);
     return null;
   }
 }
 
-function pMapLimited(list, limit, mapper) {
-  var ret = new Array(list.length);
-  var i = 0;
-  var workers = new Array(Math.min(limit, list.length)).fill(0).mapfunction(() {
+async function pMapLimited(list, limit, mapper) {
+  const ret = new Array(list.length);
+  let i = 0;
+  const workers = new Array(Math.min(limit, list.length)).fill(0).map(async () => {
     while (i < list.length) {
-      var cur = i++;
-      ret[cur] = mapper(list[cur], cur);
+      const cur = i++;
+      ret[cur] = await mapper(list[cur], cur);
     }
   });
-  Promise.all(workers);
+  await Promise.all(workers);
   return ret;
 }
 
 function runDirectorBackgroundTask(task, label = "directorRows: background task failed:", timeout = 800) {
-  var runner = function() {
+  const runner = () => {
     Promise.resolve()
       .then(task)
-      .catchfunction((e) {
+      .catch((e) => {
         dirRowsWarn(label, e);
       });
   };
@@ -1429,15 +1492,16 @@ function ensureDirectorSyncLoop({ forceImmediate = false } = {}) {
   if (__dirSyncInterval) return;
 
   if (forceImmediate) {
-    runDirectorBackgroundTaskfunction(() checkAndSyncNewItems({ force: true }),
+    runDirectorBackgroundTask(
+      () => checkAndSyncNewItems({ force: true }),
       "directorRows: startup sync failed:",
       2400
     );
   }
 
-  __dirSyncInterval = setIntervalfunction(() {
+  __dirSyncInterval = setInterval(() => {
     if (!isDirectorRowsWorkerActive()) return;
-    checkAndSyncNewItems().catchfunction(() {});
+    checkAndSyncNewItems().catch(() => {});
   }, Number.isFinite(config.directorRowsNewCheckIntervalMs)
       ? Math.max(30_000, config.directorRowsNewCheckIntervalMs | 0)
       : 15 * 60 * 1000);
@@ -1454,12 +1518,12 @@ function cleanupDirectorRowsMount(host) {
   if (!host) return;
 
   try {
-    var targets = new Set();
-    if (host.matches.(".personal-recs-card, .dir-row-hero")) {
+    const targets = new Set();
+    if (host.matches?.(".personal-recs-card, .dir-row-hero")) {
       targets.add(host);
     }
-    host.querySelectorAll.(".personal-recs-card, .dir-row-hero").forEach(function((node) targets.add(node));
-    targets.forEach(function((node) {
+    host.querySelectorAll?.(".personal-recs-card, .dir-row-hero").forEach((node) => targets.add(node));
+    targets.forEach((node) => {
       try { node.dispatchEvent(new CustomEvent("jms:cleanup")); } catch {}
     });
   } catch {}
@@ -1470,12 +1534,12 @@ function cleanupDirectorRowsMount(host) {
 function refreshCachedDirectorEligibility(userId, cachedRows, { db, scope, limit = 0 } = {}) {
   if (!userId || !db || !scope || !Array.isArray(cachedRows) || !cachedRows.length) return;
   if (__dirEligibilityRefreshRunning && __dirEligibilityRefreshScope === scope) return;
-  var minContents = getDirectorMinContents();
+  const minContents = getDirectorMinContents();
 
-  var head = cachedRows
-    .filterfunction((d) d.directorId)
+  const head = cachedRows
+    .filter((d) => d?.directorId)
     .slice(0, Math.max(1, limit | 0))
-    .mapfunction((d) ({
+    .map((d) => ({
       Id: d.directorId,
       Name: d.name,
       Count: d.countHint || 0,
@@ -1486,10 +1550,10 @@ function refreshCachedDirectorEligibility(userId, cachedRows, { db, scope, limit
   __dirEligibilityRefreshRunning = true;
   __dirEligibilityRefreshScope = scope;
 
-  runDirectorBackgroundTaskfunction(() {
+  runDirectorBackgroundTask(async () => {
     try {
-      var checks = pMapLimitedfunction(head, 3, (d) {
-        var total = getDirectorContentCount(userId, d.Id);
+      const checks = await pMapLimited(head, 3, async (d) => {
+        const total = await getDirectorContentCount(userId, d.Id);
         return {
           d,
           total,
@@ -1497,9 +1561,9 @@ function refreshCachedDirectorEligibility(userId, cachedRows, { db, scope, limit
         };
       });
 
-      for (var x of checks) {
+      for (const x of checks) {
         if (!Number.isFinite(x.total)) continue;
-        upsertDirector(db, scope, {
+        await upsertDirector(db, scope, {
           Id: x.d.Id,
           Name: x.d.Name,
           Count: x.d.Count || 0,
@@ -1518,32 +1582,32 @@ function refreshCachedDirectorEligibility(userId, cachedRows, { db, scope, limit
 
 function persistItemsToDbLater(items) {
   if (!STATE._db || !STATE._scope || !Array.isArray(items) || !items.length) return;
-  var db = STATE._db;
-  var scope = STATE._scope;
-  var uniqItems = uniqById(items);
+  const db = STATE._db;
+  const scope = STATE._scope;
+  const uniqItems = uniqById(items);
   if (!uniqItems.length) return;
 
-  runDirectorBackgroundTaskfunction(() {
-    for (var it of uniqItems) {
-      upsertItem(db, scope, it);
+  runDirectorBackgroundTask(async () => {
+    for (const it of uniqItems) {
+      await upsertItem(db, scope, it);
     }
   }, "directorRows: cached item hydration persist failed:", 600);
 }
 
 function persistDirectorItemsToDbLater(dir, items) {
-  if (!STATE._db || !STATE._scope || !dir.Id || !Array.isArray(items) || !items.length) return;
-  var db = STATE._db;
-  var scope = STATE._scope;
-  var uniqItems = uniqById(items);
+  if (!STATE._db || !STATE._scope || !dir?.Id || !Array.isArray(items) || !items.length) return;
+  const db = STATE._db;
+  const scope = STATE._scope;
+  const uniqItems = uniqById(items);
   if (!uniqItems.length) return;
 
-  runDirectorBackgroundTaskfunction(() {
-    for (var it of uniqItems) {
-      upsertItem(db, scope, it);
-      linkDirectorItem(db, scope, dir.Id, it.Id);
+  runDirectorBackgroundTask(async () => {
+    for (const it of uniqItems) {
+      await upsertItem(db, scope, it);
+      await linkDirectorItem(db, scope, dir.Id, it.Id);
     }
 
-    upsertDirector(db, scope, {
+    await upsertDirector(db, scope, {
       Id: dir.Id,
       Name: dir.Name,
       Count: dir.Count || 0,
@@ -1554,34 +1618,34 @@ function persistDirectorItemsToDbLater(dir, items) {
 
 function pruneDeletedDirectorItemsLater(itemIds) {
   if (!STATE._db || !STATE._scope) return;
-  var clean = Array.isArray(itemIds) ? Array.from(new Set(itemIds.map(function(x) String(x || "").trim()).filter(Boolean))) : [];
+  const clean = Array.isArray(itemIds) ? Array.from(new Set(itemIds.map(x => String(x || "").trim()).filter(Boolean))) : [];
   if (!clean.length) return;
 
-  runDirectorBackgroundTaskfunction(() {
-    deleteItemsAndRelationsByIds(STATE._db, STATE._scope, clean);
+  runDirectorBackgroundTask(async () => {
+    await deleteItemsAndRelationsByIds(STATE._db, STATE._scope, clean);
   }, "directorRows: prune deleted items failed:", 700);
 }
 
-function pickRandomDirectorsFromTopGenres(userId, targetCount = getDirectorRowsCount()) {
-  var requestedPrimary = 300;
-  var requestedFallback = 600;
-  var fields = COMMON_FIELDS;
-  var minContents = getDirectorMinContents();
-  var topGenres = (config.directorRowsUseTopGenres !== false)
-    ? (getCachedUserTopGenres(2).catchfunction(()[]))
+async function pickRandomDirectorsFromTopGenres(userId, targetCount = getDirectorRowsCount()) {
+  const requestedPrimary = 300;
+  const requestedFallback = 600;
+  const fields = COMMON_FIELDS;
+  const minContents = getDirectorMinContents();
+  const topGenres = (config.directorRowsUseTopGenres !== false)
+    ? (await getCachedUserTopGenres(2).catch(()=>[]))
     : [];
-  var peopleMap = new Map();
+  const peopleMap = new Map();
 
-  function scanItems(url, takeUntil) {
+  async function scanItems(url, takeUntil) {
     try {
-      var data = makeApiRequest(url);
-      var items = Array.isArray(data.Items) ? data.Items : [];
-      for (var it of items) {
-        var ppl = Array.isArray(it.People) ? it.People : [];
-        for (var p of ppl) {
-          if (!p.Id || !p.Name) continue;
-          if (String(p.Type || '').toLowerCase() !== 'director') continue;
-          var entry = peopleMap.get(p.Id) || { Id: p.Id, Name: p.Name, Count: 0 };
+      const data = await makeApiRequest(url);
+      const items = Array.isArray(data?.Items) ? data.Items : [];
+      for (const it of items) {
+        const ppl = Array.isArray(it?.People) ? it.People : [];
+        for (const p of ppl) {
+          if (!p?.Id || !p?.Name) continue;
+          if (String(p?.Type || '').toLowerCase() !== 'director') continue;
+          const entry = peopleMap.get(p.Id) || { Id: p.Id, Name: p.Name, Count: 0 };
           entry.Count++;
           peopleMap.set(p.Id, entry);
           if (peopleMap.size >= takeUntil) break;
@@ -1593,31 +1657,31 @@ function pickRandomDirectorsFromTopGenres(userId, targetCount = getDirectorRowsC
     }
   }
 
-  if (topGenres.length) {
-    var g = encodeURIComponent(topGenres.join("|"));
-    var url = "/Users/" + (userId) + "/Items?IncludeItemTypes=Movie,Series&Recursive=true&Fields=" + (fields) + "&EnableUserData=true&SortBy=Random,CommunityRating,DateCreated&SortOrder=Descending&Limit=" + (requestedPrimary) + "&Genres=" + (g);
-    scanItems(url, targetCount * 8);
+  if (topGenres?.length) {
+    const g = encodeURIComponent(topGenres.join("|"));
+    const url = `/Users/${userId}/Items?IncludeItemTypes=Movie,Series&Recursive=true&Fields=${fields}&EnableUserData=true&SortBy=Random,CommunityRating,DateCreated&SortOrder=Descending&Limit=${requestedPrimary}&Genres=${g}`;
+    await scanItems(url, targetCount * 8);
   }
   if (peopleMap.size < targetCount * 2) {
-    var url = "/Users/" + (userId) + "/Items?IncludeItemTypes=Movie,Series&Recursive=true&Fields=" + (fields) + "&EnableUserData=true&SortBy=Random,CommunityRating,DateCreated&SortOrder=Descending&Limit=" + (requestedFallback);
-    scanItems(url, targetCount * 12);
+    const url = `/Users/${userId}/Items?IncludeItemTypes=Movie,Series&Recursive=true&Fields=${fields}&EnableUserData=true&SortBy=Random,CommunityRating,DateCreated&SortOrder=Descending&Limit=${requestedFallback}`;
+    await scanItems(url, targetCount * 12);
   }
 
-  var directors = [...peopleMap.values()];
+  let directors = [...peopleMap.values()];
   if (!directors.length) return [];
-  directors.sortfunction((a,b)b.Count-a.Count);
-  var head = directors.slice(0, Math.min(60, directors.length));
-  var checks = pMapLimitedfunction(head, 3, (d) {
-    var total = getDirectorContentCount(userId, d.Id);
+  directors.sort((a,b)=>b.Count-a.Count);
+  const head = directors.slice(0, Math.min(60, directors.length));
+  const checks = await pMapLimited(head, 3, async (d) => {
+    const total = await getDirectorContentCount(userId, d.Id);
     return {
       d,
       total,
       ok: Number.isFinite(total) && total >= minContents,
     };
   });
-  var eligible = checks
-    .filter(function(x) x.ok)
-    .map(function(x) ({ ...x.d, countActual: x.total, qualifiedMinItems: minContents }));
+  const eligible = checks
+    .filter(x => x.ok)
+    .map(x => ({ ...x.d, countActual: x.total, qualifiedMinItems: minContents }));
 
   if (!eligible.length) return [];
 
@@ -1626,52 +1690,52 @@ function pickRandomDirectorsFromTopGenres(userId, targetCount = getDirectorRowsC
 }
 
 function shuffle(arr){
-  for(var i=arr.length-1;i>0;i--){
-    var j=(Math.random()*(i+1))|0;
+  for(let i=arr.length-1;i>0;i--){
+    const j=(Math.random()*(i+1))|0;
     [arr[i],arr[j]]=[arr[j],arr[i]];
   }
   return arr;
 }
 
-function fetchItemsByDirector(userId, directorId, limit = getDirectorRowCardCount() * 2) {
-  var rowCount = getDirectorRowsCount();
-  var rowCardCount = getDirectorRowCardCount();
-  var fields = COMMON_FIELDS;
+async function fetchItemsByDirector(userId, directorId, limit = getDirectorRowCardCount() * 2) {
+  const rowCount = getDirectorRowsCount();
+  const rowCardCount = getDirectorRowCardCount();
+  const fields = COMMON_FIELDS;
 
-  var url =
-    "/Users/" + (userId) + "/Items?" +
-    "IncludeItemTypes=Movie,Series&Recursive=true&Fields=" + (fields) + "&EnableUserData=true&" +
-    "PersonIds=" + (encodeURIComponent(directorId)) + "&" +
-    "SortBy=Random,CommunityRating,DateCreated&SortOrder=Descending&" +
-    "Limit=" + (Math.max(rowCount, limit));
+  const url =
+    `/Users/${userId}/Items?` +
+    `IncludeItemTypes=Movie,Series&Recursive=true&Fields=${fields}&EnableUserData=true&` +
+    `PersonIds=${encodeURIComponent(directorId)}&` +
+    `SortBy=Random,CommunityRating,DateCreated&SortOrder=Descending&` +
+    `Limit=${Math.max(rowCount, limit)}`;
 
   try {
-    var data = makeApiRequest(url);
-    var items = Array.isArray(data.Items) ? data.Items : [];
-    var NEED = rowCardCount + 1;
+    const data = await makeApiRequest(url);
+    const items = Array.isArray(data?.Items) ? data.Items : [];
+    const NEED = rowCardCount + 1;
     return filterAndTrimByRating(items, MIN_RATING, NEED);
   } catch (e) {
-    dirRowsWarn("directorRows: não foi possível carregar conteúdo do diretor:", e);
+    dirRowsWarn("directorRows: yönetmen içerik çekilemedi:", e);
     return [];
   }
 }
 
-function loadDirectorsFromDbOrApi(userId) {
-  var rowCount = getDirectorRowsCount();
-  var wantFloor = Math.max(1, STATE.maxRenderCount || rowCount);
-  var WANT = Math.max(rowCount * 3, wantFloor);
-  var db = STATE._db;
-  var scope = STATE._scope;
-  var minContents = getDirectorMinContents();
+async function loadDirectorsFromDbOrApi(userId) {
+  const rowCount = getDirectorRowsCount();
+  const wantFloor = Math.max(1, STATE.maxRenderCount || rowCount);
+  const WANT = Math.max(rowCount * 3, wantFloor);
+  const db = STATE._db;
+  const scope = STATE._scope;
+  const minContents = getDirectorMinContents();
 
   if (db && scope) {
     try {
-      var cached = listDirectors(db, scope, { limit: Math.max(WANT * 4, rowCount * 20) });
+      const cached = await listDirectors(db, scope, { limit: Math.max(WANT * 4, rowCount * 20) });
 
-      if (cached.length) {
-        var cachedPool = cached
-          .filter(function(d) d.directorId)
-          .map(function(d) ({
+      if (cached?.length) {
+        const cachedPool = cached
+          .filter(d => d?.directorId)
+          .map(d => ({
             Id: d.directorId,
             Name: d.name,
             Count: d.countHint || 0,
@@ -1679,15 +1743,15 @@ function loadDirectorsFromDbOrApi(userId) {
             qualifiedMinItems: Number.isFinite(Number(d.qualifiedMinItems)) ? Number(d.qualifiedMinItems) : null,
           }));
 
-        var knownEligible = cachedPool.filterfunction((d)
+        const knownEligible = cachedPool.filter((d) =>
           Number.isFinite(d.countActual) && d.countActual >= minContents
         );
-        var unknownPool = cachedPool.filterfunction((d) !Number.isFinite(d.countActual));
-        var validated = [];
-        var seen = new Set();
+        const unknownPool = cachedPool.filter((d) => !Number.isFinite(d.countActual));
+        const validated = [];
+        const seen = new Set();
 
         shuffle(knownEligible);
-        for (var d of knownEligible) {
+        for (const d of knownEligible) {
           if (seen.has(d.Id)) continue;
           seen.add(d.Id);
           validated.push(d);
@@ -1696,9 +1760,9 @@ function loadDirectorsFromDbOrApi(userId) {
 
         if (validated.length < WANT && unknownPool.length) {
           shuffle(unknownPool);
-          var toCheck = unknownPool.slice(0, Math.min(unknownPool.length, Math.max(WANT * 3, rowCount * 8)));
-          var checks = pMapLimitedfunction(toCheck, 3, (d) {
-            var total = getDirectorContentCount(userId, d.Id);
+          const toCheck = unknownPool.slice(0, Math.min(unknownPool.length, Math.max(WANT * 3, rowCount * 8)));
+          const checks = await pMapLimited(toCheck, 3, async (d) => {
+            const total = await getDirectorContentCount(userId, d.Id);
             return {
               d,
               total,
@@ -1706,9 +1770,9 @@ function loadDirectorsFromDbOrApi(userId) {
             };
           });
 
-          for (var x of checks) {
+          for (const x of checks) {
             if (Number.isFinite(x.total)) {
-              upsertDirector(db, scope, {
+              await upsertDirector(db, scope, {
                 Id: x.d.Id,
                 Name: x.d.Name,
                 Count: x.d.Count || 0,
@@ -1738,14 +1802,14 @@ function loadDirectorsFromDbOrApi(userId) {
     }
   }
 
-  var seen = new Set();
-  var directors = [];
+  const seen = new Set();
+  const directors = [];
 
-  for (var attempt = 0; attempt < 6 && directors.length < WANT; attempt++) {
-    var need = WANT - directors.length;
-    var batch = pickRandomDirectorsFromTopGenres(userId, need);
-    for (var d of batch) {
-      if (!d.Id) continue;
+  for (let attempt = 0; attempt < 6 && directors.length < WANT; attempt++) {
+    const need = WANT - directors.length;
+    const batch = await pickRandomDirectorsFromTopGenres(userId, need);
+    for (const d of batch) {
+      if (!d?.Id) continue;
       if (seen.has(d.Id)) continue;
       seen.add(d.Id);
       directors.push(d);
@@ -1755,8 +1819,8 @@ function loadDirectorsFromDbOrApi(userId) {
 
   if (db && scope) {
     try {
-      for (var d of directors) {
-        upsertDirector(db, scope, {
+      for (const d of directors) {
+        await upsertDirector(db, scope, {
           Id: d.Id,
           Name: d.Name,
           Count: d.Count || 0,
@@ -1771,29 +1835,29 @@ function loadDirectorsFromDbOrApi(userId) {
   return { directors: directors.slice(0, WANT), fromCache: false };
 }
 
-export function warmDirectorRowsDb({ force = false } = {}) {
-  var cfg = getConfig.() || config || {};
-  var homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
+export async function warmDirectorRowsDb({ force = false } = {}) {
+  const cfg = getConfig?.() || config || {};
+  const homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
   if (!homeSectionsConfig.enableDirectorRows) {
     return { directors: [], fromCache: false, skipped: true };
   }
 
-  var { userId, serverId } = getSessionInfo.() || {};
+  const { userId, serverId } = getSessionInfo?.() || {};
   if (!userId) {
     return { directors: [], fromCache: false, skipped: true };
   }
 
-  var scope = makeScope({ serverId, userId });
+  const scope = makeScope({ serverId, userId });
   if (!force && __dirWarmPromise && __dirWarmScope === scope) {
     return __dirWarmPromise;
   }
 
   __dirWarmScope = scope;
-  __dirWarmPromise = function(() {
+  __dirWarmPromise = (async () => {
     STATE._bgStarted = true;
 
     try {
-      ensureDirectorRowsSession({ userId, serverId });
+      await ensureDirectorRowsSession({ userId, serverId });
     } catch (e) {
       dirRowsWarn("directorRows: background DB init failed:", e);
       STATE._db = null;
@@ -1801,14 +1865,14 @@ export function warmDirectorRowsDb({ force = false } = {}) {
       return { directors: [], fromCache: false, skipped: true };
     }
 
-    var result = force ? null : getDirectorWarmCache(STATE._scope);
+    let result = force ? null : getDirectorWarmCache(STATE._scope);
     if (!result) {
-      result = loadDirectorsFromDbOrApi(userId);
+      result = await loadDirectorsFromDbOrApi(userId);
       setDirectorWarmCache(STATE._scope, result);
     }
 
     return result;
-  })().finallyfunction(() {
+  })().finally(() => {
     if (__dirWarmScope === scope) {
       __dirWarmPromise = null;
     }
@@ -1817,32 +1881,32 @@ export function warmDirectorRowsDb({ force = false } = {}) {
   return __dirWarmPromise;
 }
 
-function ensureDirectorItemsCachedForWarmup(dir, minItems = getDirectorPrimeMinItems()) {
-  var db = STATE._db;
-  var scope = STATE._scope;
-  var userId = STATE.userId;
-  if (!db || !scope || !userId || !dir.Id) return;
+async function ensureDirectorItemsCachedForWarmup(dir, minItems = getDirectorPrimeMinItems()) {
+  const db = STATE._db;
+  const scope = STATE._scope;
+  const userId = STATE.userId;
+  if (!db || !scope || !userId || !dir?.Id) return;
 
   try {
-    var existing = getItemsForDirector(db, scope, dir.Id, minItems);
-    if ((existing.length || 0) >= minItems) return;
+    const existing = await getItemsForDirector(db, scope, dir.Id, minItems);
+    if ((existing?.length || 0) >= minItems) return;
   } catch {}
 
-  var apiItems = fetchItemsByDirector(
+  const apiItems = await fetchItemsByDirector(
     userId,
     dir.Id,
     Math.max(minItems * 3, getDirectorRowCardCount() * 2)
   );
 
-  var items = uniqById(apiItems || []);
+  const items = uniqById(apiItems || []);
   if (!items.length) return;
 
-  for (var it of items) {
-    upsertItem(db, scope, it);
-    linkDirectorItem(db, scope, dir.Id, it.Id);
+  for (const it of items) {
+    await upsertItem(db, scope, it);
+    await linkDirectorItem(db, scope, dir.Id, it.Id);
   }
 
-  upsertDirector(db, scope, {
+  await upsertDirector(db, scope, {
     Id: dir.Id,
     Name: dir.Name,
     Count: dir.Count || 0,
@@ -1851,27 +1915,27 @@ function ensureDirectorItemsCachedForWarmup(dir, minItems = getDirectorPrimeMinI
 }
 
 function startDirectorItemsPrime(directors, { force = false } = {}) {
-  var db = STATE._db;
-  var scope = STATE._scope;
-  var userId = STATE.userId;
-  var list = Array.isArray(directors) ? directors.filter(function(d) d.Id) : [];
+  const db = STATE._db;
+  const scope = STATE._scope;
+  const userId = STATE.userId;
+  const list = Array.isArray(directors) ? directors.filter(d => d?.Id) : [];
   if (!db || !scope || !userId || !list.length) return null;
 
   if (!force && __dirPrimePromise && __dirPrimeScope === scope) {
     return __dirPrimePromise;
   }
 
-  var primeList = list.slice(0, Math.max(getDirectorRowsCount(), 1));
+  const primeList = list.slice(0, Math.max(getDirectorRowsCount(), 1));
   __dirPrimeScope = scope;
-  __dirPrimePromise = function(() {
+  __dirPrimePromise = (async () => {
     try {
-      pMapLimitedfunction(primeList, 2, (dir) {
-        ensureDirectorItemsCachedForWarmup(dir);
+      await pMapLimited(primeList, 2, async (dir) => {
+        await ensureDirectorItemsCachedForWarmup(dir);
       });
     } catch (e) {
       dirRowsWarn("directorRows: startup prime failed:", e);
     }
-  })().finallyfunction(() {
+  })().finally(() => {
     if (__dirPrimeScope === scope) {
       __dirPrimePromise = null;
     }
@@ -1881,25 +1945,25 @@ function startDirectorItemsPrime(directors, { force = false } = {}) {
 }
 
 function kickDirectorBackfillNow({ force = false } = {}) {
-  var scope = STATE._scope;
+  const scope = STATE._scope;
   if (!scope || !STATE._db || !STATE.userId) return null;
 
   if (!force && __dirKickBackfillPromise && __dirKickBackfillScope === scope) {
     return __dirKickBackfillPromise;
   }
 
-  var cfg = getConfig.() || config || {};
-  var pagesPerRun = Number.isFinite(cfg.directorRowsBackfillPagesPerRun)
+  const cfg = getConfig?.() || config || {};
+  const pagesPerRun = Number.isFinite(cfg.directorRowsBackfillPagesPerRun)
     ? Math.max(1, Math.min(6, cfg.directorRowsBackfillPagesPerRun | 0))
     : 1;
-  var perPage = Number.isFinite(cfg.directorRowsBackfillLimit)
+  const perPage = Number.isFinite(cfg.directorRowsBackfillLimit)
     ? Math.max(50, Math.min(400, cfg.directorRowsBackfillLimit | 0))
     : 200;
 
   __dirKickBackfillScope = scope;
-  __dirKickBackfillPromise = runDirectorBackfillOnce({ pagesPerRun, limit: perPage }).catchfunction((e) {
+  __dirKickBackfillPromise = runDirectorBackfillOnce({ pagesPerRun, limit: perPage }).catch((e) => {
     dirRowsWarn("directorRows: immediate backfill failed:", e);
-  }).finallyfunction(() {
+  }).finally(() => {
     if (__dirKickBackfillScope === scope) {
       __dirKickBackfillPromise = null;
     }
@@ -1909,53 +1973,53 @@ function kickDirectorBackfillNow({ force = false } = {}) {
 }
 
 function getDateCreatedTicks(it) {
-  var t = Number(it.DateCreatedTicks || it.dateCreatedTicks || 0);
+  const t = Number(it?.DateCreatedTicks ?? it?.dateCreatedTicks ?? 0);
   if (t) return t;
 
-  var iso = it.DateCreated || it.dateCreated;
+  const iso = it?.DateCreated || it?.dateCreated;
   if (!iso) return 0;
 
-  var ms = Date.parse(iso);
+  const ms = Date.parse(iso);
   return Number.isFinite(ms) ? (ms * 10000) : 0;
 }
 
-function fetchItemsByIdsDetailed(userId, ids, fields = COMMON_FIELDS) {
-  var clean = (ids || []).filter(Boolean);
+async function fetchItemsByIdsDetailed(userId, ids, fields = COMMON_FIELDS) {
+  const clean = (ids || []).filter(Boolean);
   if (!clean.length) {
     return { items: [], foundIds: [], missingIds: [], failedIds: [] };
   }
 
-  var out = [];
-  var found = new Set();
-  var failed = new Set();
-  var chunkSize = 80;
+  const out = [];
+  const found = new Set();
+  const failed = new Set();
+  const chunkSize = 80;
 
-  for (var i = 0; i < clean.length; i += chunkSize) {
-    var chunk = clean.slice(i, i + chunkSize);
-    var url =
-      "/Users/" + (userId) + "/Items?" +
-      "Ids=" + (encodeURIComponent(chunk.join(","))) +
-      "&Fields=" + (encodeURIComponent(fields)) +
-      "&EnableUserData=true";
+  for (let i = 0; i < clean.length; i += chunkSize) {
+    const chunk = clean.slice(i, i + chunkSize);
+    const url =
+      `/Users/${userId}/Items?` +
+      `Ids=${encodeURIComponent(chunk.join(","))}` +
+      `&Fields=${encodeURIComponent(fields)}` +
+      `&EnableUserData=true`;
 
     try {
-      var data = makeApiRequest(url);
-      var items = Array.isArray(data.Items) ? data.Items : [];
+      const data = await makeApiRequest(url);
+      const items = Array.isArray(data?.Items) ? data.Items : [];
       out.push(...items);
-      for (var it of items) {
-        if (it.Id) found.add(String(it.Id));
+      for (const it of items) {
+        if (it?.Id) found.add(String(it.Id));
       }
     } catch (e) {
       dirRowsWarn("directorRows: fetchItemsByIds failed:", e);
-      for (var id of chunk) {
+      for (const id of chunk) {
         failed.add(String(id));
       }
     }
   }
-  var failedIds = Array.from(failed);
-  var missingIds = clean
-    .mapfunction((id) String(id || "").trim())
-    .filterfunction((id) id && !found.has(id) && !failed.has(id));
+  const failedIds = Array.from(failed);
+  const missingIds = clean
+    .map((id) => String(id || "").trim())
+    .filter((id) => id && !found.has(id) && !failed.has(id));
 
   return {
     items: uniqById(out),
@@ -1965,91 +2029,91 @@ function fetchItemsByIdsDetailed(userId, ids, fields = COMMON_FIELDS) {
   };
 }
 
-function fetchItemsByIds(userId, ids, fields = COMMON_FIELDS) {
-  var res = fetchItemsByIdsDetailed(userId, ids, fields);
+async function fetchItemsByIds(userId, ids, fields = COMMON_FIELDS) {
+  const res = await fetchItemsByIdsDetailed(userId, ids, fields);
   return res.items;
 }
 
 function extractDirectorPeople(it) {
-  var ppl = Array.isArray(it.People) ? it.People : [];
-  var out = [];
-  for (var p of ppl) {
-    if (!p.Id || !p.Name) continue;
-    if (String(p.Type || "").toLowerCase() !== "director") continue;
+  const ppl = Array.isArray(it?.People) ? it.People : [];
+  const out = [];
+  for (const p of ppl) {
+    if (!p?.Id || !p?.Name) continue;
+    if (String(p?.Type || "").toLowerCase() !== "director") continue;
     out.push({ Id: p.Id, Name: p.Name });
   }
   return out;
 }
 
-function startDirectorIncrementalSync() {
-  var db = STATE._db;
-  var scope = STATE._scope;
+async function startDirectorIncrementalSync() {
+  const db = STATE._db;
+  const scope = STATE._scope;
   if (!db || !scope || !STATE.userId) return;
 
   try {
-    var metaKey = "dirRows:lastSync:" + (scope);
-    var last = (getMeta(db, metaKey)) || 0;
-    var fieldsMini = "People,DateCreated,DateCreatedTicks";
-    var url =
-      "/Users/" + (STATE.userId) + "/Items?IncludeItemTypes=Movie,Series&Recursive=true" +
-      "&Fields=" + (fieldsMini) +
-      "&SortBy=DateCreated&SortOrder=Descending&Limit=200";
+    const metaKey = `dirRows:lastSync:${scope}`;
+    const last = (await getMeta(db, metaKey)) || 0;
+    const fieldsMini = "People,DateCreated,DateCreatedTicks";
+    const url =
+      `/Users/${STATE.userId}/Items?IncludeItemTypes=Movie,Series&Recursive=true` +
+      `&Fields=${fieldsMini}` +
+      `&SortBy=DateCreated&SortOrder=Descending&Limit=200`;
 
-    var data = makeApiRequest(url);
-    var items = Array.isArray(data.Items) ? data.Items : [];
+    const data = await makeApiRequest(url);
+    const items = Array.isArray(data?.Items) ? data.Items : [];
 
-    var newestSeen = last;
-    var newIds = [];
-    var relPairs = [];
+    let newestSeen = last;
+    const newIds = [];
+    const relPairs = [];
 
-    for (var it of items) {
-      var dct = getDateCreatedTicks(it);
+    for (const it of items) {
+      const dct = getDateCreatedTicks(it);
       if (dct && dct > newestSeen) newestSeen = dct;
       if (last && dct && dct <= last) continue;
 
-      if (it.Id) newIds.push(it.Id);
-      var dirs = extractDirectorPeople(it);
-      for (var d of dirs) {
+      if (it?.Id) newIds.push(it.Id);
+      const dirs = extractDirectorPeople(it);
+      for (const d of dirs) {
         relPairs.push({ directorId: d.Id, directorName: d.Name, itemId: it.Id });
       }
      }
 
     if (!newIds.length) {
       if (newestSeen && newestSeen !== last) {
-        setMeta(db, metaKey, newestSeen);
+        await setMeta(db, metaKey, newestSeen);
       }
       return;
     }
 
-    var fullItems = fetchItemsByIds(STATE.userId, newIds, COMMON_FIELDS);
-    for (var it of fullItems) {
-      upsertItem(db, scope, it);
+    const fullItems = await fetchItemsByIds(STATE.userId, newIds, COMMON_FIELDS);
+    for (const it of fullItems) {
+      await upsertItem(db, scope, it);
     }
 
-    for (var r of relPairs) {
+    for (const r of relPairs) {
       if (!r.directorId || !r.itemId) continue;
-      upsertDirector(db, scope, { Id: r.directorId, Name: r.directorName, Count: 0, eligible: true });
-      linkDirectorItem(db, scope, r.directorId, r.itemId);
+      await upsertDirector(db, scope, { Id: r.directorId, Name: r.directorName, Count: 0, eligible: true });
+      await linkDirectorItem(db, scope, r.directorId, r.itemId);
     }
 
     if (newestSeen && newestSeen !== last) {
-      setMeta(db, metaKey, newestSeen);
+      await setMeta(db, metaKey, newestSeen);
     }
   } catch (e) {
     dirRowsWarn("directorRows: incremental sync failed:", e);
   }
 }
 
-function fetchLibraryHeadTick(userId) {
-  var fields = "DateCreated,DateCreatedTicks";
-  var url =
-    "/Users/" + (userId) + "/Items?IncludeItemTypes=Movie,Series&Recursive=true" +
-    "&Fields=" + (fields) +
-    "&SortBy=DateCreated&SortOrder=Descending&Limit=1";
+async function fetchLibraryHeadTick(userId) {
+  const fields = "DateCreated,DateCreatedTicks";
+  const url =
+    `/Users/${userId}/Items?IncludeItemTypes=Movie,Series&Recursive=true` +
+    `&Fields=${fields}` +
+    `&SortBy=DateCreated&SortOrder=Descending&Limit=1`;
 
   try {
-    var data = makeApiRequest(url);
-    var it = (Array.isArray(data.Items) && data.Items[0]) ? data.Items[0] : null;
+    const data = await makeApiRequest(url);
+    const it = (Array.isArray(data?.Items) && data.Items[0]) ? data.Items[0] : null;
     return it ? getDateCreatedTicks(it) : 0;
   } catch (e) {
     dirRowsWarn("directorRows: head tick check failed:", e);
@@ -2057,29 +2121,29 @@ function fetchLibraryHeadTick(userId) {
   }
 }
 
-function checkAndSyncNewItems({ force = false } = {}) {
-  var db = STATE._db;
-  var scope = STATE._scope;
+async function checkAndSyncNewItems({ force = false } = {}) {
+  const db = STATE._db;
+  const scope = STATE._scope;
   if (!db || !scope || !STATE.userId) return;
   if (!isDirectorRowsWorkerActive()) return;
   if (document.hidden && !force) return;
   if (STATE._backfillRunning) return;
 
-  var headKey = "dirRows:lastHeadTick:" + (scope);
-  var prev = Number(getMeta(db, headKey)) || 0;
-  var now = fetchLibraryHeadTick(STATE.userId);
+  const headKey = `dirRows:lastHeadTick:${scope}`;
+  const prev = Number(await getMeta(db, headKey)) || 0;
+  const now = await fetchLibraryHeadTick(STATE.userId);
   if (!now) return;
   if (!force && prev && now <= prev) return;
-  try { setMeta(db, headKey, now); } catch {}
-  startDirectorIncrementalSync();
+  try { await setMeta(db, headKey, now); } catch {}
+  await startDirectorIncrementalSync();
 }
 
 function __idle(cb, timeout = 1200) {
   if (typeof requestIdleCallback === "function") {
-    var h = requestIdleCallbackfunction(() cb(), { timeout });
+    const h = requestIdleCallback(() => cb(), { timeout });
     return { type: "ric", h };
   }
-  var h = setTimeoutfunction(() cb(), Math.max(0, timeout | 0));
+  const h = setTimeout(() => cb(), Math.max(0, timeout | 0));
   return { type: "to", h };
 }
 
@@ -2091,63 +2155,63 @@ function __cancelIdle(handle) {
   } catch {}
 }
 
-function runDirectorBackfillOnce({ pagesPerRun = 1, limit = 200 } = {}) {
-  var db = STATE._db;
-  var scope = STATE._scope;
-  var userId = STATE.userId;
+async function runDirectorBackfillOnce({ pagesPerRun = 1, limit = 200 } = {}) {
+  const db = STATE._db;
+  const scope = STATE._scope;
+  const userId = STATE.userId;
   if (!db || !scope || !userId) return;
   if (STATE._backfillRunning) return;
 
   STATE._backfillRunning = true;
   try {
-    var cursorKey = "dirRows:backfillCursor:" + (scope);
-    var doneKey   = "dirRows:backfillDoneAt:" + (scope);
-    var startIndex  = Number(getMeta(db, cursorKey)) || 0;
+    const cursorKey = `dirRows:backfillCursor:${scope}`;
+    const doneKey   = `dirRows:backfillDoneAt:${scope}`;
+    let startIndex  = Number(await getMeta(db, cursorKey)) || 0;
 
-    var fields = COMMON_FIELDS;
-    var perPage = Math.max(50, Math.min(400, limit | 0));
-    var pages   = Math.max(1, Math.min(6, pagesPerRun | 0));
+    const fields = COMMON_FIELDS;
+    const perPage = Math.max(50, Math.min(400, limit | 0));
+    const pages   = Math.max(1, Math.min(6, pagesPerRun | 0));
 
-    for (var p = 0; p < pages; p++) {
+    for (let p = 0; p < pages; p++) {
       if (!isDirectorRowsWorkerActive() || !STATE._db || !STATE._scope) break;
 
-      var url =
-        "/Users/" + (userId) + "/Items?IncludeItemTypes=Movie,Series&Recursive=true" +
-        "&Fields=" + (fields) +
-        "&EnableUserData=true" +
-        "&SortBy=DateCreated&SortOrder=Descending" +
-        "&StartIndex=" + (startIndex) +
-        "&Limit=" + (perPage);
+      const url =
+        `/Users/${userId}/Items?IncludeItemTypes=Movie,Series&Recursive=true` +
+        `&Fields=${fields}` +
+        `&EnableUserData=true` +
+        `&SortBy=DateCreated&SortOrder=Descending` +
+        `&StartIndex=${startIndex}` +
+        `&Limit=${perPage}`;
 
-      var data = makeApiRequest(url);
-      var items = Array.isArray(data.Items) ? data.Items : [];
+      const data = await makeApiRequest(url);
+      const items = Array.isArray(data?.Items) ? data.Items : [];
       if (!items.length) {
         startIndex = 0;
-        setMeta(db, cursorKey, startIndex);
-        setMeta(db, doneKey, Date.now());
+        await setMeta(db, cursorKey, startIndex);
+        await setMeta(db, doneKey, Date.now());
         break;
       }
 
-      for (var it of items) {
-        if (!it.Id) continue;
-        upsertItem(db, scope, it);
+      for (const it of items) {
+        if (!it?.Id) continue;
+        await upsertItem(db, scope, it);
 
-        var ppl = Array.isArray(it.People) ? it.People : [];
-        for (var person of ppl) {
-          if (!person.Id || !person.Name) continue;
-          if (String(person.Type || "").toLowerCase() !== "director") continue;
-          upsertDirector(db, scope, { Id: person.Id, Name: person.Name, eligible: true });
-          linkDirectorItem(db, scope, person.Id, it.Id);
+        const ppl = Array.isArray(it?.People) ? it.People : [];
+        for (const person of ppl) {
+          if (!person?.Id || !person?.Name) continue;
+          if (String(person?.Type || "").toLowerCase() !== "director") continue;
+          await upsertDirector(db, scope, { Id: person.Id, Name: person.Name, eligible: true });
+          await linkDirectorItem(db, scope, person.Id, it.Id);
         }
       }
 
       startIndex += items.length;
-      setMeta(db, cursorKey, startIndex);
+      await setMeta(db, cursorKey, startIndex);
 
       if (items.length < perPage) {
         startIndex = 0;
-        setMeta(db, cursorKey, startIndex);
-        setMeta(db, doneKey, Date.now());
+        await setMeta(db, cursorKey, startIndex);
+        await setMeta(db, doneKey, Date.now());
         break;
       }
     }
@@ -2159,34 +2223,34 @@ function runDirectorBackfillOnce({ pagesPerRun = 1, limit = 200 } = {}) {
 }
 
 function startDirectorBackfillLoop() {
-  var cfg = getConfig.() || config || {};
-  var enabled = (cfg.directorRowsBackfillEnabled !== false);
+  const cfg = getConfig?.() || config || {};
+  const enabled = (cfg.directorRowsBackfillEnabled !== false);
   if (!enabled) return;
 
   if (__dirBackfillInterval) return;
 
-  var intervalMs = Number.isFinite(cfg.directorRowsBackfillIntervalMs)
+  const intervalMs = Number.isFinite(cfg.directorRowsBackfillIntervalMs)
     ? Math.max(15_000, cfg.directorRowsBackfillIntervalMs | 0)
     : 45_000;
 
-  var pagesPerRun = Number.isFinite(cfg.directorRowsBackfillPagesPerRun)
+  const pagesPerRun = Number.isFinite(cfg.directorRowsBackfillPagesPerRun)
     ? Math.max(1, Math.min(6, cfg.directorRowsBackfillPagesPerRun | 0))
     : 1;
 
-  var perPage = Number.isFinite(cfg.directorRowsBackfillLimit)
+  const perPage = Number.isFinite(cfg.directorRowsBackfillLimit)
     ? Math.max(50, Math.min(400, cfg.directorRowsBackfillLimit | 0))
     : 200;
-  var initialDelayMs = Number.isFinite(cfg.directorRowsBackfillInitialDelayMs)
+  const initialDelayMs = Number.isFinite(cfg.directorRowsBackfillInitialDelayMs)
     ? Math.max(30_000, cfg.directorRowsBackfillInitialDelayMs | 0)
     : Math.max(120_000, intervalMs);
 
-  var schedule = function() {
+  const schedule = async () => {
     if (!isDirectorRowsWorkerActive()) return;
     if (!STATE._db || !STATE._scope || !STATE.userId) return;
     if (document.hidden) return;
     try {
-      var doneKey = "dirRows:backfillDoneAt:" + (STATE._scope);
-      var doneAt = getMeta(STATE._db, doneKey);
+      const doneKey = `dirRows:backfillDoneAt:${STATE._scope}`;
+      const doneAt = await getMeta(STATE._db, doneKey);
       if (doneAt) {
         try { clearInterval(__dirBackfillInterval); } catch {}
         __dirBackfillInterval = null;
@@ -2195,15 +2259,15 @@ function startDirectorBackfillLoop() {
     } catch {}
     if (__dirBackfillIdleHandle) return;
 
-    __dirBackfillIdleHandle = __idlefunction(() {
+    __dirBackfillIdleHandle = __idle(async () => {
       __dirBackfillIdleHandle = null;
-      runDirectorBackfillOnce({ pagesPerRun, limit: perPage });
+      await runDirectorBackfillOnce({ pagesPerRun, limit: perPage });
     }, 1500);
   };
 
-  __dirBackfillIdleHandle = __idlefunction(() {
+  __dirBackfillIdleHandle = __idle(async () => {
     __dirBackfillIdleHandle = null;
-    schedule();
+    await schedule();
   }, initialDelayMs);
   __dirBackfillInterval = setInterval(schedule, intervalMs);
 }
@@ -2219,7 +2283,7 @@ function insertAfter(parent, node, ref) {
   if (ref && ref.parentElement === parent) {
     if (node === ref) return;
     if (node.parentElement === parent && node.previousElementSibling === ref) return;
-    var next = ref.nextElementSibling;
+    const next = ref.nextElementSibling;
     if (next) {
       if (next === node) return;
       parent.insertBefore(node, next);
@@ -2232,7 +2296,7 @@ function insertAfter(parent, node, ref) {
 }
 
 function hasRenderableDirectorRowsContent(root = STATE.hostEl || getHomeSectionsContainer() || document) {
-  return getManagedDirectorSections(root).somefunction((section) !!section.querySelector(
+  return getManagedDirectorSections(root).some((section) => !!section.querySelector(
     ".personal-recs-card, .no-recommendations, .dir-row-hero"
   ));
 }
@@ -2249,9 +2313,9 @@ function scheduleDirectorRowsRetry(ms = 1000, options = {}, reason = "retry") {
   dirRowsWarn("retry:scheduled", {
     delayMs: Math.max(120, ms | 0),
     reason,
-    force: options.force === true,
+    force: options?.force === true,
   });
-  __directorRowsRetryTo = setTimeoutfunction(() {
+  __directorRowsRetryTo = setTimeout(() => {
     __directorRowsRetryTo = null;
     void mountDirectorRowsLazy(options);
   }, Math.max(120, ms | 0));
@@ -2275,15 +2339,15 @@ function scheduleDirectorInitWhenReady(mountState, { force = false } = {}) {
     return __directorDeferredStartPromise;
   }
 
-  var seq = __directorDeferredSeq;
-  var initialMountState = mountState || resolveDirectorRowsMountState();
+  const seq = __directorDeferredSeq;
+  const initialMountState = mountState || resolveDirectorRowsMountState();
   try { window.__directorFirstRowReady = false; } catch {}
   setDirectorRowsDone(false);
-  var run = enqueueManagedSectionRenderfunction("directorRows", () {
+  const run = enqueueManagedSectionRender("directorRows", async () => {
     try {
-      var currentMountState = resolveDirectorRowsMountState(
-        initialMountState.container,
-        initialMountState.page
+      const currentMountState = resolveDirectorRowsMountState(
+        initialMountState?.container,
+        initialMountState?.page
       );
       dirRowsLog("deferred:start", {
         force,
@@ -2306,8 +2370,8 @@ function scheduleDirectorInitWhenReady(mountState, { force = false } = {}) {
         dirRowsLog("deferred:skip:already-rendered", { seq });
         return true;
       }
-      var mountKey = currentMountState.page || currentMountState.container;
-      if (STATE.started && STATE.wrapEl === mountKey && mountKey.isConnected) {
+      const mountKey = currentMountState.page || currentMountState.container;
+      if (STATE.started && STATE.wrapEl === mountKey && mountKey?.isConnected) {
         dirRowsLog("deferred:skip:state-started", { seq });
         return true;
       }
@@ -2316,7 +2380,7 @@ function scheduleDirectorInitWhenReady(mountState, { force = false } = {}) {
         seq,
         sectionCount: getManagedDirectorSections().length,
       });
-      initAndRenderFirstBatch(currentMountState);
+      await initAndRenderFirstBatch(currentMountState);
       if (!hasRenderableDirectorRowsContent()) {
         dirRowsWarn("render:done-but-empty", {
           force,
@@ -2338,7 +2402,7 @@ function scheduleDirectorInitWhenReady(mountState, { force = false } = {}) {
       dirRowsWarn("render:error", {
         force,
         seq,
-        error: e.message || String(e),
+        error: e?.message || String(e),
       });
       scheduleDirectorRowsRetry(1400, { force: true }, "render-error");
       try { cleanupDirectorRows(); } catch {}
@@ -2347,18 +2411,18 @@ function scheduleDirectorInitWhenReady(mountState, { force = false } = {}) {
   }, {
     timeoutMs: 25000,
     force,
-    getAnchor: function() getDirectorRowsAnchor(initialMountState.container),
-    isStillValid: function() (
+    getAnchor: () => getDirectorRowsAnchor(initialMountState?.container),
+    isStillValid: () => (
       seq === __directorDeferredSeq &&
       isDirectorRowsMountStateValid(resolveDirectorRowsMountState(
-        initialMountState.container,
-        initialMountState.page
+        initialMountState?.container,
+        initialMountState?.page
       ))
     ),
   });
 
   __directorDeferredStartPromise = run;
-  run.finallyfunction(() {
+  run.finally(() => {
     if (__directorDeferredStartPromise === run) {
       __directorDeferredStartPromise = null;
     }
@@ -2366,24 +2430,24 @@ function scheduleDirectorInitWhenReady(mountState, { force = false } = {}) {
   return run;
 }
 
-export function mountDirectorRowsLazy(options = {}) {
+export async function mountDirectorRowsLazy(options = {}) {
   bindDirectorRowsSelfHealObserver();
-  var force = options.force === true;
+  const force = options?.force === true;
   if (__directorMountPromise) {
     if (!force) {
       dirRowsLog("mount:skip:existing-promise", { force });
       return __directorMountPromise;
     }
     dirRowsWarn("mount:force:await-existing-promise", { force });
-    try { __directorMountPromise; } catch {}
+    try { await __directorMountPromise; } catch {}
   }
-  var cfg = getConfig();
-  var homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
+  const cfg = getConfig();
+  const homeSectionsConfig = getHomeSectionsRuntimeConfig(cfg);
   if (!homeSectionsConfig.enableDirectorRows) {
     dirRowsLog("mount:skip:disabled", { force });
     clearDirectorRowsRetry();
     try { cleanupDirectorRows(); } catch {}
-    var existing = document.getElementById('director-rows');
+    const existing = document.getElementById('director-rows');
     if (existing) { try { existing.remove(); } catch {} }
     return;
   }
@@ -2402,30 +2466,30 @@ export function mountDirectorRowsLazy(options = {}) {
     stack: force ? buildDirTraceStack() : "",
   });
 
-  var run = function(() {
+  const run = (async () => {
     if (force) {
       dirRowsWarn("mount:force:cleanup-before-render", { force });
       cleanupDirectorRows();
     }
 
-    var host = waitForVisibleHomeSections({
+    const host = await waitForVisibleHomeSections({
       timeout: 12000
     });
-    if (!host.container || !isHomeRoute()) {
+    if (!host?.container || !isHomeRoute()) {
       dirRowsWarn("mount:retry:no-visible-home-sections", {
         force,
-        hostPageId: host.page.id || null,
-        hasContainer: !!host.container,
+        hostPageId: host?.page?.id || null,
+        hasContainer: !!host?.container,
       });
       scheduleDirectorRowsRetry(1000, options, "no-visible-home-sections");
       return false;
     }
-    var targetPage = getMountedDirectorRowsPage() || host.page || null;
-    var homeParent = targetPage.querySelector.(".homeSectionsContainer");
+    const targetPage = getMountedDirectorRowsPage() || host.page || null;
+    const homeParent = targetPage?.querySelector?.(".homeSectionsContainer");
     if (!homeParent) {
       dirRowsWarn("mount:retry:no-homeSectionsContainer", {
         force,
-        hostPageId: targetPage.id || host.page.id || null,
+        hostPageId: targetPage?.id || host?.page?.id || null,
       });
       scheduleDirectorRowsRetry(900, options, "no-homeSectionsContainer");
       return false;
@@ -2434,9 +2498,9 @@ export function mountDirectorRowsLazy(options = {}) {
     STATE.hostEl = homeParent;
     dirRowsTrace("mount:host-ready", {
       force,
-      hostPageId: host.page.id || null,
-      targetPageId: targetPage.id || null,
-      childCount: homeParent.children.length || 0,
+      hostPageId: host?.page?.id || null,
+      targetPageId: targetPage?.id || null,
+      childCount: homeParent?.children?.length || 0,
     });
     if (!force && hasRenderableDirectorRowsContent()) {
       dirRowsLog("mount:skip:already-rendered", {
@@ -2447,7 +2511,7 @@ export function mountDirectorRowsLazy(options = {}) {
       return true;
     }
 
-    return scheduleDirectorInitWhenReady(
+    return await scheduleDirectorInitWhenReady(
       resolveDirectorRowsMountState(homeParent, targetPage),
       { force }
     );
@@ -2455,7 +2519,7 @@ export function mountDirectorRowsLazy(options = {}) {
 
   __directorMountPromise = run;
   try {
-    return run;
+    return await run;
   } finally {
     if (__directorMountPromise === run) {
       __directorMountPromise = null;
@@ -2468,26 +2532,26 @@ export function mountDirectorRowsLazy(options = {}) {
 
 function ensureIntoHomeSections(el, indexPage, { placeAfterId } = {}) {
   if (!el) return;
-  var apply = function() {
-    var page = indexPage ||
+  const apply = () => {
+    const page = indexPage ||
     document.querySelector("#indexPage:not(.hide)") ||
     document.querySelector("#homePage:not(.hide)");
     if (!page) return;
-    var container =
+    const container =
       page.querySelector(".homeSectionsContainer") ||
       document.querySelector(".homeSectionsContainer");
     if (!container) return false;
 
     appendToParent(container, el);
-    try { container.__jmsManagedBelowNativeSchedule.(); } catch {}
+    try { container.__jmsManagedBelowNativeSchedule?.(); } catch {}
     return true;
   };
 
   if (apply()) return;
 
-  var tries = 0;
-  var maxTries = 100;
-  var mo = new MutationObserverfunction(() {
+  let tries = 0;
+  const maxTries = 100;
+  const mo = new MutationObserver(() => {
     tries++;
     if (apply() || tries >= maxTries) { try { mo.disconnect(); } catch {} }
   });
@@ -2497,8 +2561,8 @@ function ensureIntoHomeSections(el, indexPage, { placeAfterId } = {}) {
 }
 
 function getHomeSectionsContainer(indexPage) {
-  var page = indexPage ||
-    getActiveHomePageEl.() ||
+  const page = indexPage ||
+    getActiveHomePageEl?.() ||
     getMountedDirectorRowsPage() ||
     document.querySelector("#indexPage:not(.hide)") ||
     document.querySelector("#homePage:not(.hide)");
@@ -2508,11 +2572,11 @@ function getHomeSectionsContainer(indexPage) {
   page;
 }
 
-function initAndRenderFirstBatch(mountState) {
+async function initAndRenderFirstBatch(mountState) {
   if (!isDirectorRowsMountStateValid(mountState)) return;
-  var mountKey = mountState.page || mountState.container;
+  const mountKey = mountState.page || mountState.container;
   if (STATE.started) {
-    var stale =
+    const stale =
       !STATE.wrapEl ||
       !STATE.wrapEl.isConnected ||
       (mountKey && STATE.wrapEl !== mountKey);
@@ -2520,8 +2584,8 @@ function initAndRenderFirstBatch(mountState) {
     try { cleanupDirectorRows(); } catch {}
   }
 
-  var initSeq = ++__dirInitSeq;
-  var { userId, serverId } = getSessionInfo();
+  const initSeq = ++__dirInitSeq;
+  const { userId, serverId } = getSessionInfo();
   if (!userId) return;
 
   STATE.started = true;
@@ -2531,38 +2595,38 @@ function initAndRenderFirstBatch(mountState) {
   STATE.userId = userId;
   STATE.serverId = serverId;
 
-  var warmResult = null;
+  let warmResult = null;
   try {
-    warmResult = warmDirectorRowsDb();
+    warmResult = await warmDirectorRowsDb();
   } catch (e) {
     dirRowsWarn("directorRows: warmup failed during init:", e);
   }
 
   if (!STATE._db || !STATE._scope) {
     try {
-      ensureDirectorRowsSession({ userId, serverId });
+      await ensureDirectorRowsSession({ userId, serverId });
     } catch (e) {
       dirRowsWarn("directorRows: IndexedDB init failed:", e);
       STATE._db = null;
       STATE._scope = null;
     }
   }
-  if (initSeq !== __dirInitSeq || !STATE.started || STATE.wrapEl !== mountKey || !mountKey.isConnected) return;
+  if (initSeq !== __dirInitSeq || !STATE.started || STATE.wrapEl !== mountKey || !mountKey?.isConnected) return;
 
-  var directorSource = warmResult || getDirectorWarmCache(STATE._scope);
+  let directorSource = warmResult || getDirectorWarmCache(STATE._scope);
   if (!directorSource) {
-    directorSource = loadDirectorsFromDbOrApi(userId);
+    directorSource = await loadDirectorsFromDbOrApi(userId);
     setDirectorWarmCache(STATE._scope, directorSource);
   }
 
-  var { directors, fromCache } = directorSource;
-  if (initSeq !== __dirInitSeq || !STATE.started || STATE.wrapEl !== mountKey || !mountKey.isConnected) return;
-  var rowCount = getDirectorRowsCount();
+  const { directors, fromCache } = directorSource;
+  if (initSeq !== __dirInitSeq || !STATE.started || STATE.wrapEl !== mountKey || !mountKey?.isConnected) return;
+  const rowCount = getDirectorRowsCount();
   STATE.directors = directors || [];
   STATE.maxRenderCount = rowCount;
 
   if (STATE.directors.length < rowCount) {
-    dirRowsWarn("DirectorRows: apenas " + (STATE.directors.length) + "/" + (rowCount) + " diretores encontrados (a biblioteca pode estar limitada).");
+    dirRowsWarn(`DirectorRows: sadece ${STATE.directors.length}/${rowCount} yönetmen bulunabildi (kütüphane kısıtlı olabilir).`);
   }
 
   STATE.nextIndex = 0;
@@ -2570,27 +2634,27 @@ function initAndRenderFirstBatch(mountState) {
   setDirectorRowsDone(false);
   try { window.__directorFirstRowReady = false; } catch {}
 
-  dirRowsLog("DirectorRows: " + (STATE.directors.length) + " yönetmen (" + (fromCache ? "DB cache" : "API") + ") , ilk row hemen render ediliyor...");
+  dirRowsLog(`DirectorRows: ${STATE.directors.length} yönetmen (${fromCache ? "DB cache" : "API"}) , ilk row hemen render ediliyor...`);
 
-  var originalBatchSize = Math.max(1, Number(STATE.batchSize) || DIRECTOR_ROW_BATCH_SIZE);
+  const originalBatchSize = Math.max(1, Number(STATE.batchSize) || DIRECTOR_ROW_BATCH_SIZE);
   try {
     STATE.batchSize = DIRECTOR_ROW_BATCH_SIZE;
     while (
       initSeq === __dirInitSeq &&
       STATE.started &&
       STATE.wrapEl === mountKey &&
-      mountKey.isConnected &&
+      mountKey?.isConnected &&
       STATE.renderedCount < STATE.maxRenderCount &&
       STATE.nextIndex < STATE.directors.length
     ) {
       try {
-        waitForManagedHomeRowRelease({
+        await waitForManagedHomeRowRelease({
           anchor: getDirectorRowsAnchor(STATE.hostEl),
           timeoutMs: 25000,
           rootMargin: DIRECTOR_ROWS_RELEASE_ROOT_MARGIN,
         });
       } catch {}
-      renderNextDirectorBatch();
+      await renderNextDirectorBatch();
       try {
         registerManagedHomeRowAnchor(getDirectorRowsAnchor(STATE.hostEl));
       } catch {}
@@ -2598,12 +2662,12 @@ function initAndRenderFirstBatch(mountState) {
         initSeq !== __dirInitSeq ||
         !STATE.started ||
         STATE.wrapEl !== mountKey ||
-        !mountKey.isConnected
+        !mountKey?.isConnected
       ) {
         return;
       }
       if (STATE.renderedCount < STATE.maxRenderCount && STATE.nextIndex < STATE.directors.length) {
-        yieldToMain(IS_MOBILE ? 104 : 42);
+        await yieldToMain(IS_MOBILE ? 104 : 42);
       }
     }
   } finally {
@@ -2611,11 +2675,11 @@ function initAndRenderFirstBatch(mountState) {
     detachDirectorScrollIdleLoader();
   }
 
-  if (initSeq !== __dirInitSeq || !STATE.started || STATE.wrapEl !== mountKey || !mountKey.isConnected) return;
+  if (initSeq !== __dirInitSeq || !STATE.started || STATE.wrapEl !== mountKey || !mountKey?.isConnected) return;
   scheduleDirectorDeferredWarmTasks();
 }
 
-function renderNextDirectorBatch() {
+async function renderNextDirectorBatch() {
   if (STATE.loading || STATE.renderedCount >= STATE.maxRenderCount) {
     if (STATE.renderedCount >= STATE.maxRenderCount) {
       setDirectorRowsDone(true);
@@ -2634,26 +2698,26 @@ function renderNextDirectorBatch() {
 
   STATE.loading = true;
   setDirectorArrowLoading(true);
-  var remainingCapacity = Math.max(0, STATE.maxRenderCount - STATE.renderedCount);
-  var end = Math.min(
+  const remainingCapacity = Math.max(0, STATE.maxRenderCount - STATE.renderedCount);
+  const end = Math.min(
     STATE.nextIndex + Math.min(STATE.batchSize, remainingCapacity),
     STATE.directors.length
   );
-  var slice = STATE.directors.slice(STATE.nextIndex, end);
+  const slice = STATE.directors.slice(STATE.nextIndex, end);
 
-  dirRowsLog("Render batch: " + (STATE.nextIndex) + "-" + (end) + " (" + (slice.length) + " yönetmen)");
+  dirRowsLog(`Render batch: ${STATE.nextIndex}-${end} (${slice.length} yönetmen)`);
 
-  var prevCount = STATE.renderedCount;
+  const prevCount = STATE.renderedCount;
 
   if (slice.length) {
-    for (var i = 0; i < slice.length; i++) {
-      var shell = renderDirectorSection(slice[i], {
+    for (let i = 0; i < slice.length; i++) {
+      const shell = renderDirectorSection(slice[i], {
         deferContent: true,
         sectionIndex: STATE.renderedCount
       });
-      var mounted = false;
+      let mounted = false;
       try {
-        mounted = fillRowWhenReady(shell.row, shell.dir, shell.heroHost);
+        mounted = await fillRowWhenReady(shell.row, shell.dir, shell.heroHost);
       } catch (e) {
         dirRowsWarn('directorRows: section fill failed:', e);
       }
@@ -2664,7 +2728,7 @@ function renderNextDirectorBatch() {
       }
 
       if (i < slice.length - 1) {
-        yieldToMain();
+        await yieldToMain();
       }
     }
   }
@@ -2690,37 +2754,50 @@ function renderNextDirectorBatch() {
     detachDirectorScrollIdleLoader();
   }
 
-  dirRowsLog("Render tamamlandı. Toplam: " + (STATE.renderedCount) + "/" + (STATE.directors.length) + " yönetmen");
+  dirRowsLog(`Render tamamlandı. Toplam: ${STATE.renderedCount}/${STATE.directors.length} yönetmen`);
 }
 
 function getDirectorUrl(directorId, directorName, serverId) {
-  return "#/details?id=" + (directorId) + "&serverId=" + (encodeURIComponent(serverId));
+  return `#/details?id=${directorId}&serverId=${encodeURIComponent(serverId)}`;
 }
 
 function buildDirectorTitle(name) {
-  var lbl = (getConfig().languageLabels || {}).showDirector || "Director {name}";
-  var safeName = escapeHtml(name || "");
+  const lbl = (getConfig()?.languageLabels || {}).showDirector || "Director {name}";
+  const safeName = escapeHtml(name || "");
   if (lbl.includes("{name}")) {
     return lbl.replace("{name}", safeName);
   }
-  return (escapeHtml(lbl)) + " " + (safeName);
+  return `${escapeHtml(lbl)} ${safeName}`;
 }
 
 function renderDirectorSection(dir, { deferContent = false, sectionIndex = 0 } = {}) {
-  var section = document.createElement('section');
+  const section = document.createElement('section');
   section.id = makeManagedDirectorSectionId(sectionIndex);
   section.className = 'homeSection dir-row-section';
 
-  var title = document.createElement('div');
+  const title = document.createElement('div');
   title.className = 'sectionTitleContainer sectionTitleContainer-cards';
-  var dirTitleText = buildDirectorTitle(dir.Name);
-  title.innerHTML = "\n    <h2 class=\"sectionTitle sectionTitle-cards dir-row-title\">\n      <span class=\"dir-row-title-text\" role=\"button\" tabindex=\"0\"\n        aria-label=\"" + ((labels.seeAll || config.languageLabels.seeAll || 'Ver tudo')) + ": " + (dirTitleText) + "\">\n        " + (dirTitleText) + "\n      </span>\n      <div class=\"dir-row-see-all\"\n           aria-label=\"" + ((labels.seeAll || config.languageLabels.seeAll || 'Ver tudo')) + "\"\n           title=\"" + ((labels.seeAll || config.languageLabels.seeAll || 'Ver tudo')) + "\">\n        " + (faIconHtml("chevronRight")) + "\n      </div>\n      <span class=\"dir-row-see-all-tip\">" + ((labels.seeAll || config.languageLabels.seeAll || 'Ver tudo')) + "</span>\n    </h2>\n  ";
+  const dirTitleText = buildDirectorTitle(dir.Name);
+  title.innerHTML = `
+    <h2 class="sectionTitle sectionTitle-cards dir-row-title">
+      <span class="dir-row-title-text" role="button" tabindex="0"
+        aria-label="${(labels.seeAll || config.languageLabels?.seeAll || 'Tümünü gör')}: ${dirTitleText}">
+        ${dirTitleText}
+      </span>
+      <div class="dir-row-see-all"
+           aria-label="${(labels.seeAll || config.languageLabels?.seeAll || 'Tümünü gör')}"
+           title="${(labels.seeAll || config.languageLabels?.seeAll || 'Tümünü gör')}">
+        ${faIconHtml("chevronRight")}
+      </div>
+      <span class="dir-row-see-all-tip">${(labels.seeAll || config.languageLabels?.seeAll || 'Tümünü gör')}</span>
+    </h2>
+  `;
 
-  var titleBtn = title.querySelector('.dir-row-title-text');
-  var seeAllBtn = title.querySelector('.dir-row-see-all');
+  const titleBtn = title.querySelector('.dir-row-title-text');
+  const seeAllBtn = title.querySelector('.dir-row-see-all');
 
   if (titleBtn) {
-    var open = function(e) {
+    const open = (e) => {
       e.preventDefault();
       e.stopPropagation();
       try {
@@ -2730,13 +2807,13 @@ function renderDirectorSection(dir, { deferContent = false, sectionIndex = 0 } =
       }
     };
     titleBtn.addEventListener('click', open, { passive: false });
-    titleBtn.addEventListenerfunction('keydown', (e) {
+    titleBtn.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') open(e);
     });
   }
 
   if (seeAllBtn) {
-    seeAllBtn.addEventListenerfunction('click', (e) {
+    seeAllBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       try {
@@ -2747,29 +2824,29 @@ function renderDirectorSection(dir, { deferContent = false, sectionIndex = 0 } =
     }, { passive: false });
   }
 
-  var scrollWrap = document.createElement('div');
+  const scrollWrap = document.createElement('div');
   scrollWrap.className = 'personal-recs-scroll-wrap';
 
-  var heroHost = document.createElement('div');
+  const heroHost = document.createElement('div');
   heroHost.className = 'dir-row-hero-host';
   heroHost.style.display = SHOW_DIRECTOR_ROWS_HERO_CARDS ? '' : 'none';
   heroHost.style.visibility = 'hidden';
 
-  var btnL = document.createElement('button');
+  const btnL = document.createElement('button');
   btnL.className = 'hub-scroll-btn hub-scroll-left';
-  btnL.setAttribute('aria-label', (config.languageLabels.scrollLeft) || "Rolar para esquerda");
+  btnL.setAttribute('aria-label', (config.languageLabels?.scrollLeft) || "Sola kaydır");
   btnL.setAttribute('aria-disabled', 'true');
-  btnL.innerHTML = "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z\"/></svg>";
+  btnL.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>`;
 
-  var row = document.createElement('div');
+  const row = document.createElement('div');
   row.className = 'itemsContainer personal-recs-row';
   row.setAttribute('role', 'list');
 
-  var btnR = document.createElement('button');
+  const btnR = document.createElement('button');
   btnR.className = 'hub-scroll-btn hub-scroll-right';
-  btnR.setAttribute('aria-label', (config.languageLabels.scrollRight) || "Rolar para direita");
+  btnR.setAttribute('aria-label', (config.languageLabels?.scrollRight) || "Sağa kaydır");
   btnR.setAttribute('aria-disabled', 'true');
-  btnR.innerHTML = "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z\"/></svg>";
+  btnR.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>`;
 
   scrollWrap.appendChild(btnL);
   scrollWrap.appendChild(row);
@@ -2784,17 +2861,17 @@ function renderDirectorSection(dir, { deferContent = false, sectionIndex = 0 } =
   if (deferContent) {
     return { section, row, heroHost, dir };
   }
-  fillRowWhenReady(row, dir, heroHost).catchfunction((e) {
+  fillRowWhenReady(row, dir, heroHost).catch((e) => {
     dirRowsWarn('directorRows: deferred section fill failed:', e);
   });
   return { section, row, heroHost, dir };
 }
 
 function uniqById(list) {
-  var seen = new Set();
-  var out = [];
-  for (var it of list || []) {
-    if (!it.Id) continue;
+  const seen = new Set();
+  const out = [];
+  for (const it of list || []) {
+    if (!it?.Id) continue;
     if (seen.has(it.Id)) continue;
     seen.add(it.Id);
     out.push(it);
@@ -2808,16 +2885,16 @@ function scheduleDirectorCardPump(row, items, serverId, {
   chunkSize = getDirectorRowCardCount(),
   delay = DIRECTOR_MOBILE_CARD_DELAY_MS,
 } = {}) {
-  var currentIndex = Math.max(0, startIndex | 0);
+  let currentIndex = Math.max(0, startIndex | 0);
 
-  var pump = function() {
-    if (!row.isConnected) return;
+  const pump = () => {
+    if (!row?.isConnected) return;
     if (currentIndex >= items.length || row.childElementCount >= limit) return;
 
-    var frag = document.createDocumentFragment();
-    var appended = 0;
+    const frag = document.createDocumentFragment();
+    let appended = 0;
 
-    for (var i = 0; i < chunkSize && currentIndex < items.length; i++) {
+    for (let i = 0; i < chunkSize && currentIndex < items.length; i++) {
       if (row.childElementCount + appended >= limit) break;
       frag.appendChild(createRecommendationCard(items[currentIndex], serverId, false));
       currentIndex++;
@@ -2837,20 +2914,20 @@ function scheduleDirectorCardPump(row, items, serverId, {
   window.setTimeout(pump, Math.max(16, delay | 0));
 }
 
-function fillRowWhenReady(row, dir, heroHost){
-  var section = row.closest.(".dir-row-section") || null;
+async function fillRowWhenReady(row, dir, heroHost){
+  const section = row?.closest?.(".dir-row-section") || null;
   try {
-    var rowCardCount = getDirectorRowCardCount();
-    var NEED = rowCardCount + 1;
+    const rowCardCount = getDirectorRowCardCount();
+    const NEED = rowCardCount + 1;
     if (!row.childElementCount) {
       setupScroller(row);
     }
 
-    var items = [];
+    let items = [];
 
     if (STATE._db && STATE._scope) {
       try {
-        items = getItemsForDirector(
+        items = await getItemsForDirector(
           STATE._db,
           STATE._scope,
           dir.Id,
@@ -2861,28 +2938,28 @@ function fillRowWhenReady(row, dir, heroHost){
       }
     }
 
-    if ((items.length || 0) > 0 && STATE.userId) {
+    if ((items?.length || 0) > 0 && STATE.userId) {
       try {
-        var hydrateIds = (items || []).map(function(it) it.Id).filter(Boolean).slice(0, NEED);
-        var cachedById = new Map((items || []).filter(function(it) it.Id).map(function(it) [it.Id, it]));
-        var resolved = fetchItemsByIdsDetailed(STATE.userId, hydrateIds, COMMON_FIELDS);
+        const hydrateIds = (items || []).map(it => it?.Id).filter(Boolean).slice(0, NEED);
+        const cachedById = new Map((items || []).filter(it => it?.Id).map(it => [it.Id, it]));
+        const resolved = await fetchItemsByIdsDetailed(STATE.userId, hydrateIds, COMMON_FIELDS);
 
-        if (resolved.items.length) {
+        if (resolved.items?.length) {
           persistItemsToDbLater(resolved.items);
         }
-        if (resolved.missingIds.length) {
+        if (resolved.missingIds?.length) {
           pruneDeletedDirectorItemsLater(resolved.missingIds);
         }
 
-        if (resolved.items.length || resolved.missingIds.length) {
-          var liveById = new Map((resolved.items || []).filter(function(it) it.Id).map(function(it) [it.Id, it]));
-          var failedSet = new Set((resolved.failedIds || []).filter(Boolean));
-          var reconciled = [];
-          var seen = new Set();
+        if (resolved.items?.length || resolved.missingIds?.length) {
+          const liveById = new Map((resolved.items || []).filter(it => it?.Id).map(it => [it.Id, it]));
+          const failedSet = new Set((resolved.failedIds || []).filter(Boolean));
+          const reconciled = [];
+          const seen = new Set();
 
-          for (var id of hydrateIds) {
-            var it = liveById.get(id) || (failedSet.has(id) ? cachedById.get(id) : null);
-            if (!it.Id || seen.has(it.Id)) continue;
+          for (const id of hydrateIds) {
+            const it = liveById.get(id) || (failedSet.has(id) ? cachedById.get(id) : null);
+            if (!it?.Id || seen.has(it.Id)) continue;
             seen.add(it.Id);
             reconciled.push(it);
           }
@@ -2894,8 +2971,8 @@ function fillRowWhenReady(row, dir, heroHost){
       }
     }
 
-    if ((items.length || 0) < NEED) {
-      var apiItems = fetchItemsByDirector(
+    if ((items?.length || 0) < NEED) {
+      const apiItems = await fetchItemsByDirector(
         STATE.userId,
         dir.Id,
         Math.max(NEED * 3, rowCardCount * 2)
@@ -2903,12 +2980,12 @@ function fillRowWhenReady(row, dir, heroHost){
 
       items = uniqById([...(items || []), ...(apiItems || [])]);
 
-      if (items.length && STATE._db && STATE._scope) {
+      if (items?.length && STATE._db && STATE._scope) {
         persistDirectorItemsToDbLater(dir, items);
       }
     }
 
-    if (!items.length) {
+    if (!items?.length) {
       if (heroHost) {
         heroHost.style.display = SHOW_DIRECTOR_ROWS_HERO_CARDS ? '' : 'none';
         clearDirectorHeroHost(heroHost);
@@ -2917,20 +2994,20 @@ function fillRowWhenReady(row, dir, heroHost){
       return false;
     }
 
-    var pool = items.slice();
-    var best = pickBestItemByRating(pool) || pool[0] || null;
-    var remaining = best ? pool.filter(function(x) x.Id !== best.Id) : pool;
+    const pool = items.slice();
+    const best = pickBestItemByRating(pool) || pool[0] || null;
+    const remaining = best ? pool.filter(x => x?.Id !== best.Id) : pool;
 
     if (heroHost) {
-      var showHero = SHOW_DIRECTOR_ROWS_HERO_CARDS;
+      const showHero = SHOW_DIRECTOR_ROWS_HERO_CARDS;
       heroHost.style.display = showHero ? '' : 'none';
       if (!showHero || !best) {
         clearDirectorHeroHost(heroHost);
       } else {
-        var { hero: heroEl, changed } = mountDirectorHero(heroHost, best, STATE.serverId, dir.Name);
+        const { hero: heroEl, changed } = mountDirectorHero(heroHost, best, STATE.serverId, dir.Name);
         try {
-          var backdropImg = heroEl.querySelector.('.dir-row-hero-bg');
-          var RemoteTrailers =
+          const backdropImg = heroEl?.querySelector?.('.dir-row-hero-bg');
+          const RemoteTrailers =
             best.RemoteTrailers ||
             best.RemoteTrailerItems ||
             best.RemoteTrailerUrls ||
@@ -2944,7 +3021,7 @@ function fillRowWhenReady(row, dir, heroHost){
               itemId: best.Id,
               serverId: STATE.serverId,
               detailsUrl: getDetailsUrl(best.Id, STATE.serverId),
-              detailsText: (config.languageLabels.details || labels.details || "Detalhes"),
+              detailsText: (config.languageLabels?.details || labels.details || "Ayrıntılar"),
               showDetailsOverlay: false,
             });
           }
@@ -2955,13 +3032,13 @@ function fillRowWhenReady(row, dir, heroHost){
     cleanupDirectorRowsMount(row);
     row.innerHTML = "";
 
-    if (!remaining.length) {
+    if (!remaining?.length) {
       cleanupDirectorSection(section);
       return false;
     }
 
-    new Promisefunction((resolve) {
-      var scrollerReady = false;
+    await new Promise((resolve) => {
+      let scrollerReady = false;
       progressivelyRenderCardRow({
         row,
         items: remaining,
@@ -2972,19 +3049,19 @@ function fillRowWhenReady(row, dir, heroHost){
         ),
         chunkSize: IS_MOBILE ? 2 : 3,
         delayMs: IS_MOBILE ? DIRECTOR_MOBILE_CARD_DELAY_MS : 34,
-        appendCard: function(item, index) createRecommendationCard(
+        appendCard: (item, index) => createRecommendationCard(
           item,
           STATE.serverId,
           index < (IS_MOBILE ? 2 : 4)
         ),
-        onAppend: function() {
+        onAppend: () => {
           if (!scrollerReady) {
             setupScroller(row);
             scrollerReady = true;
           }
           try { row.dispatchEvent(new Event('scroll')); } catch {}
         },
-        onComplete: function() {
+        onComplete: () => {
           if (!scrollerReady && row.isConnected) {
             setupScroller(row);
           }
@@ -2997,7 +3074,7 @@ function fillRowWhenReady(row, dir, heroHost){
     return true;
 
   } catch (error) {
-    console.error('Erro ao carregar conteúdo do diretor:', error);
+    console.error('Yönetmen içerik yükleme hatası:', error);
     cleanupDirectorSection(section);
     return false;
   }
@@ -3007,11 +3084,11 @@ export function cleanupDirectorRows() {
   try {
     dirRowsLog("cleanup:start", {
       started: !!STATE.started,
-      wrapConnected: !!STATE.wrapEl.isConnected,
+      wrapConnected: !!STATE.wrapEl?.isConnected,
     });
     dirRowsTrace("cleanup:start", {
       started: !!STATE.started,
-      wrapConnected: !!STATE.wrapEl.isConnected,
+      wrapConnected: !!STATE.wrapEl?.isConnected,
       sectionCount: getManagedDirectorSections(document).length,
       lastCleanupReason: window.__jmsLastManagedCleanupReason || null,
     });
@@ -3027,8 +3104,8 @@ export function cleanupDirectorRows() {
       __dirDeferredWarmTimer = null;
     }
     detachDirectorScrollIdleLoader();
-    STATE.batchObserver.disconnect();
-    STATE.sectionIOs.forEach(function(io) io.disconnect());
+    STATE.batchObserver?.disconnect();
+    STATE.sectionIOs.forEach(io => io.disconnect());
     STATE.sectionIOs.clear();
 
     if (__dirSyncInterval) {
@@ -3049,15 +3126,15 @@ export function cleanupDirectorRows() {
       __dirAutoPumpHandle = null;
     }
 
-    var wrapEl = STATE.wrapEl;
+    const wrapEl = STATE.wrapEl;
     cleanupManagedDirectorSections(document);
-    var legacyWrap = document.getElementById("director-rows");
+    const legacyWrap = document.getElementById("director-rows");
     if (legacyWrap && legacyWrap !== wrapEl) {
       try { legacyWrap.replaceChildren(); } catch {}
       try { legacyWrap.remove(); } catch {}
     }
     if (wrapEl) {
-      try { wrapEl.__pinMO.disconnect.(); } catch {}
+      try { wrapEl.__pinMO?.disconnect?.(); } catch {}
       try {
         if (wrapEl.__pinHashChange) {
           window.removeEventListener('hashchange', wrapEl.__pinHashChange);
@@ -3076,7 +3153,7 @@ export function cleanupDirectorRows() {
         try { wrapEl.remove(); } catch {}
       }
     }
-    Object.keys(STATE).forEach(function(key) {
+    Object.keys(STATE).forEach(key => {
       if (key !== 'maxRenderCount') {
         STATE[key] = Array.isArray(STATE[key]) ? [] :
                     typeof STATE[key] === 'number' ? 0 :
@@ -3103,7 +3180,7 @@ export function cleanupDirectorRows() {
 }
 
 export function releaseDirectorRowsDbConnection() {
-  try { STATE._db.close.(); } catch {}
+  try { STATE._db?.close?.(); } catch {}
   STATE._db = null;
   STATE._scope = null;
 }
@@ -3112,8 +3189,8 @@ export function releaseDirectorRowsDbConnection() {
   if (window.__jmsDirectorRowsDbReleaseBound) return;
   window.__jmsDirectorRowsDbReleaseBound = true;
 
-  window.addEventListenerfunction('jms:indexeddb:release', (event) {
-    var dbName = event.detail.dbName;
+  window.addEventListener('jms:indexeddb:release', (event) => {
+    const dbName = event?.detail?.dbName;
     if (!dbName || dbName === 'jms_dirrows_db' || dbName === '*') {
       releaseDirectorRowsDbConnection();
     }
@@ -3121,7 +3198,7 @@ export function releaseDirectorRowsDbConnection() {
 })();
 
 function clampText(s, max = 220) {
-  var t = String(s || "").replace(/\s+/g, " ").trim();
+  const t = String(s || "").replace(/\s+/g, " ").trim();
   if (!t) return "";
   return t.length > max ? (t.slice(0, max - 1) + "…") : t;
 }

@@ -1,40 +1,40 @@
-var DB_NAME = "jms_collection_cache";
-var DB_VER = 1;
+const DB_NAME = "jms_collection_cache";
+const DB_VER = 1;
 
-var STORE_MOVIE_BOXSET = "movieBoxset";
-var STORE_BOXSET_ITEMS = "boxsetItems";
-var STORE_META = "meta";
+const STORE_MOVIE_BOXSET = "movieBoxset";
+const STORE_BOXSET_ITEMS = "boxsetItems";
+const STORE_META = "meta";
 
-export function prepareCollectionCacheDbForDeletion() {
+export async function prepareCollectionCacheDbForDeletion() {
   try {
     window.dispatchEvent(new CustomEvent("jms:indexeddb:release", {
       detail: { dbName: DB_NAME }
     }));
   } catch {}
 
-  var db = Promise.resolve(_dbP).catchfunction(() null);
-  try { db.close.(); } catch {}
+  const db = await Promise.resolve(_dbP).catch(() => null);
+  try { db?.close?.(); } catch {}
   _dbP = null;
 }
 
 function promisifyReq(req) {
-  return new Promisefunction((resolve, reject) {
-    req.onsuccess = function() resolve(req.result);
-    req.onerror = function() reject(req.error);
+  return new Promise((resolve, reject) => {
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
   });
 }
 
 function openDb() {
-  var req = indexedDB.open(DB_NAME, DB_VER);
-  req.onupgradeneeded = function() {
-    var db = req.result;
+  const req = indexedDB.open(DB_NAME, DB_VER);
+  req.onupgradeneeded = () => {
+    const db = req.result;
 
     if (!db.objectStoreNames.contains(STORE_MOVIE_BOXSET)) {
-      var s = db.createObjectStore(STORE_MOVIE_BOXSET, { keyPath: "movieId" });
+      const s = db.createObjectStore(STORE_MOVIE_BOXSET, { keyPath: "movieId" });
       s.createIndex("updatedAt", "updatedAt", { unique: false });
     }
     if (!db.objectStoreNames.contains(STORE_BOXSET_ITEMS)) {
-      var s = db.createObjectStore(STORE_BOXSET_ITEMS, { keyPath: "boxsetId" });
+      const s = db.createObjectStore(STORE_BOXSET_ITEMS, { keyPath: "boxsetId" });
       s.createIndex("updatedAt", "updatedAt", { unique: false });
     }
     if (!db.objectStoreNames.contains(STORE_META)) {
@@ -44,26 +44,26 @@ function openDb() {
   return promisifyReq(req);
 }
 
-function tx(db, storeName, mode, fn) {
-  var t = db.transaction(storeName, mode);
-  var s = t.objectStore(storeName);
-  var out = fn(s);
-  new Promisefunction((res, rej) {
-    t.oncomplete = function() res();
-    t.onerror = function() rej(t.error);
-    t.onabort = function() rej(t.error);
+async function tx(db, storeName, mode, fn) {
+  const t = db.transaction(storeName, mode);
+  const s = t.objectStore(storeName);
+  const out = await fn(s);
+  await new Promise((res, rej) => {
+    t.oncomplete = () => res();
+    t.onerror = () => rej(t.error);
+    t.onabort = () => rej(t.error);
   });
   return out;
 }
 
-function txRaw(db, storeName, mode, fn) {
-  var t = db.transaction(storeName, mode);
-  var s = t.objectStore(storeName);
-  var out = fn(s, t);
-  new Promisefunction((res, rej) {
-    t.oncomplete = function() res();
-    t.onerror = function() rej(t.error);
-    t.onabort = function() rej(t.error);
+async function txRaw(db, storeName, mode, fn) {
+  const t = db.transaction(storeName, mode);
+  const s = t.objectStore(storeName);
+  const out = await fn(s, t);
+  await new Promise((res, rej) => {
+    t.oncomplete = () => res();
+    t.onerror = () => rej(t.error);
+    t.onabort = () => rej(t.error);
   });
   return out;
 }
@@ -76,7 +76,7 @@ function idle(cb, { timeout = 1200 } = {}) {
   if (typeof requestIdleCallback === "function") {
     return requestIdleCallback(cb, { timeout });
   }
-  return setTimeoutfunction(() cbfunction({ timeRemaining: () 0, didTimeout: true }), 250);
+  return setTimeout(() => cb({ timeRemaining: () => 0, didTimeout: true }), 250);
 }
 
 function cancelIdle(handle) {
@@ -84,45 +84,45 @@ function cancelIdle(handle) {
   else clearTimeout(handle);
 }
 
-var _dbP = null;
+let _dbP = null;
 function getDb() {
   if (!_dbP) _dbP = openDb();
   return _dbP;
 }
 
-export var CollectionCacheDB = {
+export const CollectionCacheDB = {
   idle,
   cancelIdle,
 
-  getMovieBoxset(movieId) {
-    var db = getDb();
-    return txfunction(db, STORE_MOVIE_BOXSET, "readonly", (s)
+  async getMovieBoxset(movieId) {
+    const db = await getDb();
+    return tx(db, STORE_MOVIE_BOXSET, "readonly", (s) =>
       promisifyReq(s.get(String(movieId)))
     );
   },
 
-  setMovieBoxset(movieId, boxsetId, boxsetName) {
-    var db = getDb();
-    var row = {
+  async setMovieBoxset(movieId, boxsetId, boxsetName) {
+    const db = await getDb();
+    const row = {
       movieId: String(movieId),
       boxsetId: boxsetId ? String(boxsetId) : "",
       boxsetName: boxsetName ? String(boxsetName) : "",
       updatedAt: now(),
     };
-    return txfunction(db, STORE_MOVIE_BOXSET, "readwrite", (s) promisifyReq(s.put(row)));
+    return tx(db, STORE_MOVIE_BOXSET, "readwrite", (s) => promisifyReq(s.put(row)));
   },
 
-  setMovieBoxsetMany(movieIds, boxsetId, boxsetName) {
-    var db = getDb();
-    var updatedAt = now();
-    var bid = boxsetId ? String(boxsetId) : "";
-    var bnm = boxsetName ? String(boxsetName) : "";
+  async setMovieBoxsetMany(movieIds, boxsetId, boxsetName) {
+    const db = await getDb();
+    const updatedAt = now();
+    const bid = boxsetId ? String(boxsetId) : "";
+    const bnm = boxsetName ? String(boxsetName) : "";
 
-    var ids = (movieIds || []).map(String).filter(Boolean);
+    const ids = (movieIds || []).map(String).filter(Boolean);
     if (!ids.length) return;
 
-    return txRawfunction(db, STORE_MOVIE_BOXSET, "readwrite", (s) {
-      for (var mid of ids) {
+    return txRaw(db, STORE_MOVIE_BOXSET, "readwrite", (s) => {
+      for (const mid of ids) {
         s.put({
           movieId: mid,
           boxsetId: bid,
@@ -133,53 +133,54 @@ export var CollectionCacheDB = {
     });
   },
 
-  getMovieBoxsetMany(movieIds) {
-    var db = getDb();
-    var ids = (movieIds || []).map(String).filter(Boolean);
+  async getMovieBoxsetMany(movieIds) {
+    const db = await getDb();
+    const ids = (movieIds || []).map(String).filter(Boolean);
     if (!ids.length) return new Map();
 
-    return txRawfunction(db, STORE_MOVIE_BOXSET, "readonly", (s) {
-      var ps = ids.mapfunction((mid)
-          new Promisefunction((res) {
+    return txRaw(db, STORE_MOVIE_BOXSET, "readonly", async (s) => {
+      const ps = ids.map(
+        (mid) =>
+          new Promise((res) => {
             try {
-              var req = s.get(mid);
-              req.onsuccess = function() res([mid, req.result || null]);
-              req.onerror = function() res([mid, null]);
+              const req = s.get(mid);
+              req.onsuccess = () => res([mid, req.result || null]);
+              req.onerror = () => res([mid, null]);
             } catch {
               res([mid, null]);
             }
           })
       );
-      var entries = Promise.all(ps);
+      const entries = await Promise.all(ps);
       return new Map(entries);
     });
   },
 
-  getBoxsetItems(boxsetId) {
-    var db = getDb();
-    return txfunction(db, STORE_BOXSET_ITEMS, "readonly", (s)
+  async getBoxsetItems(boxsetId) {
+    const db = await getDb();
+    return tx(db, STORE_BOXSET_ITEMS, "readonly", (s) =>
       promisifyReq(s.get(String(boxsetId)))
     );
   },
 
-  setBoxsetItems(boxsetId, items) {
-    var db = getDb();
-    var row = {
+  async setBoxsetItems(boxsetId, items) {
+    const db = await getDb();
+    const row = {
       boxsetId: String(boxsetId),
       items: Array.isArray(items) ? items : [],
       updatedAt: now(),
     };
-    return txfunction(db, STORE_BOXSET_ITEMS, "readwrite", (s) promisifyReq(s.put(row)));
+    return tx(db, STORE_BOXSET_ITEMS, "readwrite", (s) => promisifyReq(s.put(row)));
   },
 
-  getMeta(key) {
-    var db = getDb();
-    return txfunction(db, STORE_META, "readonly", (s) promisifyReq(s.get(String(key))));
+  async getMeta(key) {
+    const db = await getDb();
+    return tx(db, STORE_META, "readonly", (s) => promisifyReq(s.get(String(key))));
   },
 
-  setMeta(key, value) {
-    var db = getDb();
-    return txfunction(db, STORE_META, "readwrite", (s)
+  async setMeta(key, value) {
+    const db = await getDb();
+    return tx(db, STORE_META, "readwrite", (s) =>
       promisifyReq(s.put({ key: String(key), value, updatedAt: now() }))
     );
   },

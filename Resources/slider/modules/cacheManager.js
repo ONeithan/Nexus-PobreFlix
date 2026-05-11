@@ -1,14 +1,14 @@
-var QUALITY_CACHE_SCHEMA_VERSION = 2;
-var QUALITY_CACHE_STORAGE_KEY = "videoQualityCache_v" + (QUALITY_CACHE_SCHEMA_VERSION);
-var LEGACY_QUALITY_CACHE_STORAGE_KEYS = ['videoQualityCache'];
+const QUALITY_CACHE_SCHEMA_VERSION = 2;
+const QUALITY_CACHE_STORAGE_KEY = `videoQualityCache_v${QUALITY_CACHE_SCHEMA_VERSION}`;
+const LEGACY_QUALITY_CACHE_STORAGE_KEYS = ['videoQualityCache'];
 
-var inMemoryOnly = false;
-var pendingSaveId = null;
-var useRIC = typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function';
+let inMemoryOnly = false;
+let pendingSaveId = null;
+let useRIC = typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function';
 
 function storageAvailable() {
   try {
-    var x = '__vq_test__';
+    const x = '__vq_test__';
     localStorage.setItem(x, '1');
     localStorage.removeItem(x);
     return true;
@@ -19,7 +19,7 @@ function storageAvailable() {
 
 function clearLegacyQualityCacheKeys() {
   if (!storageAvailable()) return;
-  for (var key of LEGACY_QUALITY_CACHE_STORAGE_KEYS) {
+  for (const key of LEGACY_QUALITY_CACHE_STORAGE_KEYS) {
     if (!key || key === QUALITY_CACHE_STORAGE_KEY) continue;
     try { localStorage.removeItem(key); } catch {}
   }
@@ -44,7 +44,7 @@ function denormalizeEntry(entry) {
 function scheduleSave(saveFn) {
   if (inMemoryOnly) return;
   if (pendingSaveId != null) return;
-  var run = function() {
+  const run = () => {
     pendingSaveId = null;
     try { saveFn(); } catch {}
   };
@@ -77,20 +77,20 @@ function tryLocalStorageSet(key, value, evictBatch, getOldestKeys) {
     return true;
   } catch (err) {
     if (err && (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
-      var attempts = 0;
+      let attempts = 0;
       while (attempts < 10) {
         attempts++;
-        var toDelete = getOldestKeys(evictBatch);
+        const toDelete = getOldestKeys(evictBatch);
         if (!toDelete.length) break;
-        for (var k of toDelete) {
+        for (const k of toDelete) {
           videoQualityCache.data.delete(k);
         }
         try {
-          var obj = {};
-          for (var [k, v] of videoQualityCache.data.entries()) {
+          const obj = {};
+          for (const [k, v] of videoQualityCache.data.entries()) {
             obj[k] = denormalizeEntry(v);
           }
-          var s = JSON.stringify(obj);
+          const s = JSON.stringify(obj);
           localStorage.setItem(key, s);
           return true;
         } catch (e2) {
@@ -106,7 +106,7 @@ function tryLocalStorageSet(key, value, evictBatch, getOldestKeys) {
   }
 }
 
-var videoQualityCache = {
+const videoQualityCache = {
   data: new Map(),
   maxSize: 300,
   softCeil: 260,
@@ -118,21 +118,21 @@ var videoQualityCache = {
       return;
     }
     clearLegacyQualityCacheKeys();
-    var str = localStorage.getItem(QUALITY_CACHE_STORAGE_KEY);
+    const str = localStorage.getItem(QUALITY_CACHE_STORAGE_KEY);
     if (!str) return;
     try {
-      var obj = JSON.parse(str);
-      for (var [k, raw] of Object.entries(obj)) {
-        var v = normalizeEntry(raw);
+      const obj = JSON.parse(str);
+      for (const [k, raw] of Object.entries(obj)) {
+        const v = normalizeEntry(raw);
         if (!v) continue;
         if (v.type && (v.type === 'Movie' || v.type === 'Episode')) {
           this.data.set(k, v);
         }
       }
       if (this.data.size > this.maxSize) {
-        var excess = this.data.size - this.maxSize;
-        for (var i = 0; i < excess; i++) {
-          var oldestKey = this.data.keys().next().value;
+        const excess = this.data.size - this.maxSize;
+        for (let i = 0; i < excess; i++) {
+          const oldestKey = this.data.keys().next().value;
           this.data.delete(oldestKey);
         }
         this.save(true);
@@ -146,26 +146,27 @@ var videoQualityCache = {
   save(force = false) {
     if (inMemoryOnly) return;
 
-    var doSave = function() {
+    const doSave = () => {
       try {
         while (this.data.size > this.maxSize) {
-          var oldestKey = this.data.keys().next().value;
+          const oldestKey = this.data.keys().next().value;
           this.data.delete(oldestKey);
         }
 
-        var obj = {};
-        for (var [k, v] of this.data.entries()) {
+        const obj = {};
+        for (const [k, v] of this.data.entries()) {
           obj[k] = denormalizeEntry(v);
         }
-        var s = JSON.stringify(obj);
-        var ok = tryLocalStorageSetfunction(QUALITY_CACHE_STORAGE_KEY,
+        const s = JSON.stringify(obj);
+        const ok = tryLocalStorageSet(
+          QUALITY_CACHE_STORAGE_KEY,
           s,
           40,
-          (n) {
-            var keys = [];
-            var it = this.data.keys();
-            for (var i = 0; i < n; i++) {
-              var { value, done } = it.next();
+          (n) => {
+            const keys = [];
+            const it = this.data.keys();
+            for (let i = 0; i < n; i++) {
+              const { value, done } = it.next();
               if (done) break;
               keys.push(value);
             }
@@ -193,12 +194,12 @@ var videoQualityCache = {
   },
 
   set(itemId, entry) {
-    if (!entry.type || (entry.type !== 'Movie' && entry.type !== 'Episode')) return;
+    if (!entry?.type || (entry.type !== 'Movie' && entry.type !== 'Episode')) return;
     if (this.data.has(itemId)) this.data.delete(itemId);
     this.data.set(itemId, entry);
     if (this.data.size > this.softCeil) {
       while (this.data.size > this.softCeil) {
-        var oldestKey = this.data.keys().next().value;
+        const oldestKey = this.data.keys().next().value;
         this.data.delete(oldestKey);
       }
     }
@@ -218,10 +219,10 @@ var videoQualityCache = {
 
 videoQualityCache.load();
 
-var CACHE_EXPIRY = 7 * 24 * 60 * 60 * 1000;
+const CACHE_EXPIRY = 7 * 24 * 60 * 60 * 1000;
 
-export function getCachedQuality(itemId) {
-  var cached = videoQualityCache.get(itemId);
+export async function getCachedQuality(itemId) {
+  const cached = videoQualityCache.get(itemId);
   if (!cached) return null;
   if (typeof cached !== 'object') return null;
   if ((now() - cached.timestamp) >= CACHE_EXPIRY) return null;
@@ -230,13 +231,13 @@ export function getCachedQuality(itemId) {
 }
 
 export function getQualitySnapshot() {
-  var out = new Map();
-  var deadline = Date.now() - CACHE_EXPIRY;
-  for (var [k, v] of videoQualityCache.data.entries()) {
+  const out = new Map();
+  const deadline = Date.now() - CACHE_EXPIRY;
+  for (const [k, v] of videoQualityCache.data.entries()) {
     if (!v || typeof v !== 'object') continue;
-    var ts = v.ts || v.timestamp;
-    var t  = v.t  || v.type;
-    var q  = v.q  || v.quality;
+    const ts = v.ts ?? v.timestamp;
+    const t  = v.t  ?? v.type;
+    const q  = v.q  ?? v.quality;
     if (!ts || ts < deadline) continue;
     if (!q) continue;
     if (t !== 'Movie' && t !== 'Episode') continue;
@@ -263,7 +264,7 @@ export function clearQualityCache() {
 }
 
 try {
-  window.addEventListenerfunction('pagehide', () {
+  window.addEventListener('pagehide', () => {
     try { cancelScheduledSave(); } catch {}
     try { videoQualityCache.save(true); } catch {}
   }, { once: true });

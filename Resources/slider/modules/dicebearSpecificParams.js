@@ -4,13 +4,13 @@ import { getLanguageLabels, getDefaultLanguage } from '../language/index.js';
 import { clearAvatarCache, cleanAvatars, updateHeaderUserAvatar } from "./userAvatar.js";
 import { applyRawConfig, applySettings } from './settings/applySettings.js';
 
-    var config = getConfig();
-    var currentLang = config.defaultLanguage || getDefaultLanguage();
-    var labels = getLanguageLabels(currentLang) || {};
+    const config = getConfig();
+    const currentLang = config.defaultLanguage || getDefaultLanguage();
+    const labels = getLanguageLabels(currentLang) || {};
 
 export function addStyleSpecificParams(params, style) {
-  var randomBoolean = function() Math.random() > 0.5;
-  var randomOption = function(options) options[Math.floor(Math.random() * options.length)];
+  const randomBoolean = () => Math.random() > 0.5;
+  const randomOption = (options) => options[Math.floor(Math.random() * options.length)];
 
   switch(style) {
     case 'adventurer':
@@ -651,7 +651,7 @@ export function addStyleSpecificParams(params, style) {
 }
 
 export function createDicebearParamsSection(style) {
-  var paramsSection = document.createElement('div');
+  const paramsSection = document.createElement('div');
   paramsSection.className = 'dicebear-params-section';
   paramsSection.id = 'dicebearParamsSection';
 
@@ -1542,28 +1542,28 @@ export function createDicebearParamsSection(style) {
 }
 
 function createDicebearParamSelect(name, label, options, selectedValue) {
-  var container = document.createElement('div');
+  const container = document.createElement('div');
   container.className = 'param-control';
 
-  var selectId = "dicebearParams_" + (name);
+  const selectId = `dicebearParams_${name}`;
 
-  var labelEl = document.createElement('label');
+  const labelEl = document.createElement('label');
   labelEl.textContent = label;
   labelEl.htmlFor = selectId;
 
-  var select = document.createElement('select');
-  select.name = "dicebearParams." + (name);
+  const select = document.createElement('select');
+  select.name = `dicebearParams.${name}`;
   select.id = selectId;
 
-  options.forEach(function(opt) {
-    var option = document.createElement('option');
+  options.forEach(opt => {
+    const option = document.createElement('option');
     option.value = opt;
     option.textContent = opt;
     option.selected = opt === selectedValue;
     select.appendChild(option);
   });
 
-  select.addEventListenerfunction('change', () {
+  select.addEventListener('change', () => {
     clearAvatarCache();
     applySettings(false);
   });

@@ -32,13 +32,13 @@ import {
   uploadStudioHubVideo
 } from "../studioHubsShared.js";
 
-var DEFAULT_ORDER = [
+const DEFAULT_ORDER = [
   "Marvel Studios","Pixar","Walt Disney Pictures","Disney+","DC",
   "Warner Bros. Pictures","Lucasfilm Ltd.","Columbia Pictures",
   "Paramount Pictures","Netflix","DreamWorks Animation"
 ];
 
-var ALIASES = {
+const ALIASES = {
   "Marvel Studios": ["marvel studios","marvel","marvel entertainment","marvel studios llc"],
   "Pixar": ["pixar","pixar animation studios","disney pixar"],
   "Walt Disney Pictures": ["walt disney","walt disney pictures"],
@@ -51,7 +51,7 @@ var ALIASES = {
   "Netflix": ["netflix"],
   "DreamWorks Animation": ["dreamworks","dreamworks animation","dreamworks pictures"]
 };
-var CORE_TOKENS = {
+const CORE_TOKENS = {
   "Marvel Studios": ["marvel"],
   "Pixar": ["pixar"],
   "Walt Disney Pictures": ["walt","disney"],
@@ -65,56 +65,56 @@ var CORE_TOKENS = {
   "DreamWorks Animation": ["dreamworks", "animation"]
 };
 
-var JUNK_WORDS = [
+const JUNK_WORDS = [
   "ltd","ltd.","llc","inc","inc.","company","co.","corp","corp.","the",
   "pictures","studios","animation","film","films","pictures.","studios."
 ];
-var TMDB_API_BASE = "https://api.themoviedb.org/3";
-var TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/original";
-var TMDB_FILTERED_LOGO_BASE = "https://media.themoviedb.org/t/p/h100_filter(negate,000,666)";
+const TMDB_API_BASE = "https://api.themoviedb.org/3";
+const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/original";
+const TMDB_FILTERED_LOGO_BASE = "https://media.themoviedb.org/t/p/h100_filter(negate,000,666)";
 
-var nbase = function(s)
+const nbase = s =>
   (s || "")
     .toLowerCase()
     .replace(/[().,™©®\-:_+]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 
-var strip = function(s) {
-  var out = " " + nbase(s) + " ";
-  for (var w of JUNK_WORDS) out = out.replace(new RegExp("\\\\s" + (w) + "\\\\s", "g"), " ");
+const strip = s => {
+  let out = " " + nbase(s) + " ";
+  for (const w of JUNK_WORDS) out = out.replace(new RegExp(`\\s${w}\\s`, "g"), " ");
   return out.trim();
 };
 
-var toks = function(s) strip(s).split(" ").filter(Boolean);
+const toks = s => strip(s).split(" ").filter(Boolean);
 
-var CANONICALS = new Map(DEFAULT_ORDER.map(function(n) [n.toLowerCase(), n]));
+const CANONICALS = new Map(DEFAULT_ORDER.map(n => [n.toLowerCase(), n]));
 
-var ALIAS_TO_CANON = function(() {
-  var m = new Map();
-  for (var [canon, aliases] of Object.entries(ALIASES)) {
+const ALIAS_TO_CANON = (() => {
+  const m = new Map();
+  for (const [canon, aliases] of Object.entries(ALIASES)) {
     m.set(canon.toLowerCase(), canon);
-    for (var a of aliases) m.set(String(a).toLowerCase(), canon);
+    for (const a of aliases) m.set(String(a).toLowerCase(), canon);
   }
   return m;
 })();
 
 function toCanonicalStudioName(name) {
   if (!name) return null;
-  var key = String(name).toLowerCase();
+  const key = String(name).toLowerCase();
   return ALIAS_TO_CANON.get(key) || CANONICALS.get(key) || null;
 }
 
 function mergeOrder(defaults, custom) {
-  var out = [];
-  var seen = new Set();
-  for (var n of (custom || [])) {
-    var canon = toCanonicalStudioName(n) || n;
-    var k = String(canon).toLowerCase();
+  const out = [];
+  const seen = new Set();
+  for (const n of (custom || [])) {
+    const canon = toCanonicalStudioName(n) || n;
+    const k = String(canon).toLowerCase();
     if (!seen.has(k)) { out.push(canon); seen.add(k); }
   }
-  for (var n of defaults) {
-    var k = n.toLowerCase();
+  for (const n of defaults) {
+    const k = n.toLowerCase();
     if (!seen.has(k)) { out.push(n); seen.add(k); }
   }
   return out;
@@ -125,12 +125,12 @@ function nameKey(value) {
 }
 
 function dedupeNames(items) {
-  var out = [];
-  var seen = new Set();
-  for (var item of items || []) {
-    var clean = String(item || "").trim();
+  const out = [];
+  const seen = new Set();
+  for (const item of items || []) {
+    const clean = String(item || "").trim();
     if (!clean) continue;
-    var key = nameKey(clean);
+    const key = nameKey(clean);
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(clean);
@@ -138,23 +138,23 @@ function dedupeNames(items) {
   return out;
 }
 
-var DEFAULT_NAME_KEYS = new Set(DEFAULT_ORDER.map(nameKey));
+const DEFAULT_NAME_KEYS = new Set(DEFAULT_ORDER.map(nameKey));
 
 function isDefaultStudioHub(name) {
   return DEFAULT_NAME_KEYS.has(nameKey(name));
 }
 
 function scoreStudioHubMatch(desired, candidate) {
-  var desiredTokens = new Set(toks(desired));
-  var candidateTokens = new Set(toks(candidate));
+  const desiredTokens = new Set(toks(desired));
+  const candidateTokens = new Set(toks(candidate));
   if (!desiredTokens.size || !candidateTokens.size) return 0;
 
-  var intersection = 0;
-  for (var token of desiredTokens) {
+  let intersection = 0;
+  for (const token of desiredTokens) {
     if (candidateTokens.has(token)) intersection++;
   }
 
-  var hasCoreToken = (CORE_TOKENS[desired] || []).some(function(token) candidateTokens.has(nbase(token)));
+  const hasCoreToken = (CORE_TOKENS[desired] || []).some(token => candidateTokens.has(nbase(token)));
   if (!hasCoreToken) return 0;
 
   return 1 + (intersection / Math.min(desiredTokens.size, candidateTokens.size));
@@ -164,19 +164,19 @@ function matchesStudioHubName(desired, candidate) {
   return scoreStudioHubMatch(desired, candidate) >= 1.3;
 }
 
-function searchStudioHubByAliases(desired, signal) {
-  var lookupTerms = [desired, ...(ALIASES[desired] || [])];
-  var bestMatch = null;
-  var bestScore = 0;
+async function searchStudioHubByAliases(desired, signal) {
+  const lookupTerms = [desired, ...(ALIASES[desired] || [])];
+  let bestMatch = null;
+  let bestScore = 0;
 
-  for (var term of lookupTerms) {
-    var data = null;
+  for (const term of lookupTerms) {
+    let data = null;
     try {
-      data = makeApiRequest("/Studios?SearchTerm=" + (encodeURIComponent(term)) + "&Limit=20", { signal });
+      data = await makeApiRequest(`/Studios?SearchTerm=${encodeURIComponent(term)}&Limit=20`, { signal });
     } catch {}
-    var items = Array.isArray(data.Items) ? data.Items : (Array.isArray(data) ? data : []);
-    for (var studio of items) {
-      var score = scoreStudioHubMatch(desired, studio.Name || "");
+    const items = Array.isArray(data?.Items) ? data.Items : (Array.isArray(data) ? data : []);
+    for (const studio of items) {
+      const score = scoreStudioHubMatch(desired, studio?.Name || "");
       if (score > bestScore) {
         bestMatch = studio;
         bestScore = score;
@@ -187,35 +187,35 @@ function searchStudioHubByAliases(desired, signal) {
   return bestScore >= 1.3 ? bestMatch : null;
 }
 
-function getStudioHubCurrentUserId(signal) {
+async function getStudioHubCurrentUserId(signal) {
   try {
-    var me = makeApiRequest("/Users/Me", { signal });
-    return String(me.Id || "").trim();
+    const me = await makeApiRequest("/Users/Me", { signal });
+    return String(me?.Id || "").trim();
   } catch {
     return "";
   }
 }
 
-function defaultStudioHubHasItems(studioId, studioName, userId, runtimeConfig, signal) {
-  var cleanStudioId = String(studioId || "").trim();
-  var cleanStudioName = String(studioName || "").trim();
-  var cleanUserId = String(userId || "").trim();
+async function defaultStudioHubHasItems(studioId, studioName, userId, runtimeConfig, signal) {
+  const cleanStudioId = String(studioId || "").trim();
+  const cleanStudioName = String(studioName || "").trim();
+  const cleanUserId = String(userId || "").trim();
   if (!cleanStudioId || !cleanUserId) return false;
 
-  var minRating = Number.isFinite(runtimeConfig.studioHubsMinRating)
+  const minRating = Number.isFinite(runtimeConfig?.studioHubsMinRating)
     ? Number(runtimeConfig.studioHubsMinRating)
     : null;
-  var ratingPart = Number.isFinite(minRating) ? "&MinCommunityRating=" + (minRating) : "";
-  var common = "StartIndex=0&Limit=1&Fields=PrimaryImageAspectRatio,ImageTags,BackdropImageTags,CommunityRating,CriticRating&Recursive=true&SortOrder=Descending" + (ratingPart);
-  var urls = [
-    "/Users/" + (encodeURIComponent(cleanUserId)) + "/Items?" + (common) + "&IncludeItemTypes=Movie,Series&StudioIds=" + (encodeURIComponent(cleanStudioId)),
-    "/Users/" + (encodeURIComponent(cleanUserId)) + "/Items?" + (common) + "&IncludeItemTypes=Movie,Series&Studios=" + (encodeURIComponent(cleanStudioName))
+  const ratingPart = Number.isFinite(minRating) ? `&MinCommunityRating=${minRating}` : "";
+  const common = `StartIndex=0&Limit=1&Fields=PrimaryImageAspectRatio,ImageTags,BackdropImageTags,CommunityRating,CriticRating&Recursive=true&SortOrder=Descending${ratingPart}`;
+  const urls = [
+    `/Users/${encodeURIComponent(cleanUserId)}/Items?${common}&IncludeItemTypes=Movie,Series&StudioIds=${encodeURIComponent(cleanStudioId)}`,
+    `/Users/${encodeURIComponent(cleanUserId)}/Items?${common}&IncludeItemTypes=Movie,Series&Studios=${encodeURIComponent(cleanStudioName)}`
   ];
 
-  for (var url of urls) {
+  for (const url of urls) {
     try {
-      var data = makeApiRequest(url, { signal });
-      var items = Array.isArray(data.Items) ? data.Items : (Array.isArray(data) ? data : []);
+      const data = await makeApiRequest(url, { signal });
+      const items = Array.isArray(data?.Items) ? data.Items : (Array.isArray(data) ? data : []);
       if (items.length) return true;
     } catch {}
   }
@@ -223,30 +223,30 @@ function defaultStudioHubHasItems(studioId, studioName, userId, runtimeConfig, s
   return false;
 }
 
-function findEmptyDefaultStudioHubNames(runtimeConfig, signal) {
-  var userId = getStudioHubCurrentUserId(signal);
+async function findEmptyDefaultStudioHubNames(runtimeConfig, signal) {
+  const userId = await getStudioHubCurrentUserId(signal);
   if (!userId) return [];
 
-  var data = null;
+  let data = null;
   try {
-    data = makeApiRequest("/Studios?Limit=300&Recursive=true&SortBy=SortName&SortOrder=Ascending", { signal });
+    data = await makeApiRequest("/Studios?Limit=300&Recursive=true&SortBy=SortName&SortOrder=Ascending", { signal });
   } catch {
     return [];
   }
 
-  var studios = Array.isArray(data.Items) ? data.Items : (Array.isArray(data) ? data : []);
-  var emptyNames = [];
+  const studios = Array.isArray(data?.Items) ? data.Items : (Array.isArray(data) ? data : []);
+  const emptyNames = [];
 
-  for (var desired of DEFAULT_ORDER) {
-    var studio =
-      studios.find(function(item) matchesStudioHubName(desired, item.Name || "")) ||
-      searchStudioHubByAliases(desired, signal);
-    if (!studio.Id) {
+  for (const desired of DEFAULT_ORDER) {
+    const studio =
+      studios.find(item => matchesStudioHubName(desired, item?.Name || "")) ||
+      await searchStudioHubByAliases(desired, signal);
+    if (!studio?.Id) {
       emptyNames.push(desired);
       continue;
     }
 
-    var hasItems = defaultStudioHubHasItems(
+    const hasItems = await defaultStudioHubHasItems(
       studio.Id,
       studio.Name || desired,
       userId,
@@ -260,7 +260,7 @@ function findEmptyDefaultStudioHubNames(runtimeConfig, signal) {
 }
 
 function createHiddenInput(id, value) {
-  var inp = document.createElement("input");
+  const inp = document.createElement("input");
   inp.type = "hidden";
   inp.id = id;
   inp.name = id;
@@ -283,12 +283,12 @@ function getDnDItemLabel(item) {
 }
 
 function dedupeDnDItems(items) {
-  var out = [];
-  var seen = new Set();
-  for (var item of items || []) {
-    var name = getDnDItemName(item);
+  const out = [];
+  const seen = new Set();
+  for (const item of items || []) {
+    const name = getDnDItemName(item);
     if (!name) continue;
-    var key = nameKey(name);
+    const key = nameKey(name);
     if (seen.has(key)) continue;
     seen.add(key);
     out.push({
@@ -305,64 +305,64 @@ function getManagedHomeSectionOrderLabel(name, config, labels) {
   }
   if (name === "studioHubs") {
     return (
-      labels.studioHubs ||
-      config.languageLabels.studioHubs ||
-      "Coleções de Estúdios"
+      labels?.studioHubs ||
+      config?.languageLabels?.studioHubs ||
+      "Stüdyo Koleksiyonları"
     );
   }
   if (name === "personalRecommendations") {
     return (
-      labels.personalRecommendations ||
-      config.languageLabels.personalRecommendations ||
-      "Sugestões Para Você"
+      labels?.personalRecommendations ||
+      config?.languageLabels?.personalRecommendations ||
+      "Sana Özel Öneriler"
     );
   }
   if (name === "top10SeriesRows") {
-    return labels.top10Series || "Top 10 Séries";
+    return labels?.top10Series || "Top 10 Diziler";
   }
   if (name === "top10MovieRows") {
-    return labels.top10Movies || "Top 10 Filmes";
+    return labels?.top10Movies || "Top 10 Filmler";
   }
   if (name === "tmdbTopMoviesRows") {
-    return labels.tmdbTopMovies || "Melhores Filmes TMDb";
+    return labels?.tmdbTopMovies || "TMDb En Iyi Filmler";
   }
   if (name === "recentRows") {
-    return labels.managedRecentRowsLabel || "Adicionados Recentemente";
+    return labels?.managedRecentRowsLabel || "Son Eklenenler";
   }
   if (name === "continueRows") {
-    return labels.managedContinueRowsLabel || "Continuar Assistindo";
+    return labels?.managedContinueRowsLabel || "İzlemeye Devam Et";
   }
   if (name === "nextUpRows") {
-    return labels.managedNextUpRowsLabel || labels.nextUpEpisodes || "Próximos Episódios";
+    return labels?.managedNextUpRowsLabel || labels?.nextUpEpisodes || "Sıradaki Bölümler";
   }
   if (name === "becauseYouWatched") {
     return (
-      labels.becauseYouWatched ||
-      config.languageLabels.becauseYouWatched ||
-      "Sugestões por você ter assistido"
+      labels?.becauseYouWatched ||
+      config?.languageLabels?.becauseYouWatched ||
+      "İzlediğin İçin Öneriler"
     );
   }
   if (name === "genreHubs") {
-    return labels.managedGenreHubsLabel || "Sugestões de Gênero";
+    return labels?.managedGenreHubsLabel || "Tür Önerileri";
   }
   if (name === "directorRows") {
-    return labels.managedDirectorRowsLabel || "Coleções de Diretores";
+    return labels?.managedDirectorRowsLabel || "Yönetmen Koleksiyonları";
   }
   return name;
 }
 
 function getManagedHomeSectionOrderItems(config, labels, nativeItems = []) {
-  var nativeLabels = new Map(
-    (Array.isArray(nativeItems) ? nativeItems : []).mapfunction((item) [
-      String(item.name || "").trim(),
-      String(item.label || "").trim()
+  const nativeLabels = new Map(
+    (Array.isArray(nativeItems) ? nativeItems : []).map((item) => [
+      String(item?.name || "").trim(),
+      String(item?.label || "").trim()
     ])
   );
 
   return normalizeManagedHomeSectionOrder(
-    config.managedHomeSectionOrder,
+    config?.managedHomeSectionOrder,
     { nativeEntries: nativeItems }
-  ).mapfunction((name) ({
+  ).map((name) => ({
     name,
     label: nativeLabels.get(name) || getManagedHomeSectionOrderLabel(name, config, labels)
   }));
@@ -370,48 +370,81 @@ function getManagedHomeSectionOrderItems(config, labels, nativeItems = []) {
 
 function ensureStudioHubsSpinnerStyles() {
   if (document.getElementById("jms-studio-hubs-spinner-style")) return;
-  var style = document.createElement("style");
+  const style = document.createElement("style");
   style.id = "jms-studio-hubs-spinner-style";
-  style.textContent = "\n    @keyframes jmsStudioHubsSpin {\n      to { transform: rotate(360deg); }\n    }\n    .dnd-item.dnd-item-studio {\n      align-items: flex-start;\n      flex-wrap: wrap;\n    }\n    .dnd-main {\n      align-items: flex-start;\n      display: flex;\n      flex: 1 1 240px;\n      gap: 8px;\n      max-width: 100%;\n      min-width: min(240px, 100%);\n    }\n    .dnd-actions {\n      display: flex;\n      flex-wrap: wrap;\n      gap: 6px;\n      justify-content: flex-end;\n      margin-left: auto;\n    }\n    .dnd-handle {\n      touch-action: none;\n    }\n    .dnd-name {\n      line-height: 1.35;\n      min-width: 0;\n      overflow-wrap: anywhere;\n      text-decoration-color: var(--accent, #ff6b6b);\n      word-break: normal;\n    }\n  ";
+  style.textContent = `
+    @keyframes jmsStudioHubsSpin {
+      to { transform: rotate(360deg); }
+    }
+    .dnd-item.dnd-item-studio {
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .dnd-main {
+      align-items: flex-start;
+      display: flex;
+      flex: 1 1 240px;
+      gap: 8px;
+      max-width: 100%;
+      min-width: min(240px, 100%);
+    }
+    .dnd-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+      margin-left: auto;
+    }
+    .dnd-handle {
+      touch-action: none;
+    }
+    .dnd-name {
+      line-height: 1.35;
+      min-width: 0;
+      overflow-wrap: anywhere;
+      text-decoration-color: var(--accent, #ff6b6b);
+      word-break: normal;
+    }
+  `;
   document.head.appendChild(style);
 }
 
 function setButtonBusy(button, textEl, spinnerEl, busy, options = {}) {
   if (!button) return;
-  var idleText = options.idleText;
-  var busyText = options.busyText;
+  const idleText = options.idleText;
+  const busyText = options.busyText;
   button.disabled = !!busy;
   if (textEl) {
-    var nextText = busy ? busyText : idleText;
+    const nextText = busy ? busyText : idleText;
     if (nextText != null) textEl.textContent = nextText;
   }
   if (spinnerEl) spinnerEl.style.display = busy ? "inline-block" : "none";
 }
 
 function buildTmdbStudioQueries(studioName) {
-  var cleanName = String(studioName || "").trim();
+  const cleanName = String(studioName || "").trim();
   if (!cleanName) return [];
 
-  var canonical = toCanonicalStudioName(cleanName);
-  var aliases = canonical ? (ALIASES[canonical] || []) : [];
+  const canonical = toCanonicalStudioName(cleanName);
+  const aliases = canonical ? (ALIASES[canonical] || []) : [];
   return dedupeNames([cleanName, canonical, ...aliases]);
 }
 
 function scoreTmdbCompanyCandidate(candidate, studioName) {
-  var targetName = String(studioName || "").trim();
-  var candidateName = String(candidate.name || candidate.Name || "").trim();
+  const targetName = String(studioName || "").trim();
+  const candidateName = String(candidate?.name || candidate?.Name || "").trim();
   if (!targetName || !candidateName) return Number.NEGATIVE_INFINITY;
 
-  var targetCanonical = toCanonicalStudioName(targetName) || targetName;
-  var candidateCanonical = toCanonicalStudioName(candidateName) || candidateName;
-  var targetNorm = nbase(targetName);
-  var candidateNorm = nbase(candidateName);
-  var targetStripped = strip(targetName);
-  var candidateStripped = strip(candidateName);
-  var targetTokens = new Set(toks(targetName));
-  var candidateTokens = new Set(toks(candidateName));
+  const targetCanonical = toCanonicalStudioName(targetName) || targetName;
+  const candidateCanonical = toCanonicalStudioName(candidateName) || candidateName;
+  const targetNorm = nbase(targetName);
+  const candidateNorm = nbase(candidateName);
+  const targetStripped = strip(targetName);
+  const candidateStripped = strip(candidateName);
+  const targetTokens = new Set(toks(targetName));
+  const candidateTokens = new Set(toks(candidateName));
 
-  var score = 0;
+  let score = 0;
   if (nameKey(targetCanonical) === nameKey(candidateCanonical)) score += 8;
   if (candidateStripped && targetStripped && candidateStripped === targetStripped) score += 7;
   if (candidateNorm && targetNorm && candidateNorm === targetNorm) score += 5;
@@ -424,51 +457,51 @@ function scoreTmdbCompanyCandidate(candidate, studioName) {
     score += 3;
   }
 
-  var overlap = 0;
-  targetTokens.forEach(function(token) {
+  let overlap = 0;
+  targetTokens.forEach(token => {
     if (candidateTokens.has(token)) overlap += 1;
   });
   score += overlap * 0.6;
-  if (candidate.logo_path) score += 1.25;
-  score += Math.min(Math.max(Number(candidate.popularity || 0), 0), 40) / 100;
+  if (candidate?.logo_path) score += 1.25;
+  score += Math.min(Math.max(Number(candidate?.popularity || 0), 0), 40) / 100;
   return score;
 }
 
 function guessTmdbLogoExtension(path, mimeType) {
-  var extMatch = String(path || "").match(/\.([a-z0-9]+)(?:$|\?)/i);
-  var ext = String(extMatch.[1] || "").toLowerCase();
+  const extMatch = String(path || "").match(/\.([a-z0-9]+)(?:$|\?)/i);
+  const ext = String(extMatch?.[1] || "").toLowerCase();
   if (["png", "svg", "webp", "jpg", "jpeg"].includes(ext)) {
     return ext === "jpeg" ? "jpg" : ext;
   }
 
-  var type = String(mimeType || "").toLowerCase();
+  const type = String(mimeType || "").toLowerCase();
   if (type.includes("svg")) return "svg";
   if (type.includes("webp")) return "webp";
   if (type.includes("jpeg")) return "jpg";
   return "png";
 }
 
-function fetchTmdbCompanyResults(studioName) {
-  var apiKey = getGlobalTmdbApiKey().catchfunction(() "");
+async function fetchTmdbCompanyResults(studioName) {
+  const apiKey = await getGlobalTmdbApiKey().catch(() => "");
   if (!apiKey) return [];
 
-  var queries = buildTmdbStudioQueries(studioName);
-  var allResults = [];
-  var seenIds = new Set();
+  const queries = buildTmdbStudioQueries(studioName);
+  const allResults = [];
+  const seenIds = new Set();
 
-  for (var query of queries) {
-    var url = new URL((TMDB_API_BASE) + "/search/company");
+  for (const query of queries) {
+    const url = new URL(`${TMDB_API_BASE}/search/company`);
     url.searchParams.set("api_key", apiKey);
     url.searchParams.set("query", query);
     url.searchParams.set("page", "1");
 
-    var res = fetch(url.toString(), { method: "GET", cache: "no-store" });
+    const res = await fetch(url.toString(), { method: "GET", cache: "no-store" });
     if (!res.ok) continue;
 
-    var data = res.json().catchfunction(() ({}));
-    var results = Array.isArray(data.results) ? data.results : [];
-    results.forEach(function(result) {
-      var id = String(result.id || "").trim();
+    const data = await res.json().catch(() => ({}));
+    const results = Array.isArray(data?.results) ? data.results : [];
+    results.forEach(result => {
+      const id = String(result?.id || "").trim();
       if (id && seenIds.has(id)) return;
       if (id) seenIds.add(id);
       allResults.push(result);
@@ -478,37 +511,37 @@ function fetchTmdbCompanyResults(studioName) {
   return allResults;
 }
 
-function resolveTmdbLogoFileForStudio(studioName) {
-  var results = fetchTmdbCompanyResults(studioName);
+async function resolveTmdbLogoFileForStudio(studioName) {
+  const results = await fetchTmdbCompanyResults(studioName);
   if (!results.length) return null;
 
-  var best = results
-    .map(function(result) ({ result, score: scoreTmdbCompanyCandidate(result, studioName) }))
-    .sortfunction((a, b) b.score - a.score)[0];
+  const best = results
+    .map(result => ({ result, score: scoreTmdbCompanyCandidate(result, studioName) }))
+    .sort((a, b) => b.score - a.score)[0];
 
-  var candidate = best.result || null;
-  var minAcceptableScore = 4;
-  var logoPath = String(candidate.logo_path || "").trim();
+  const candidate = best?.result || null;
+  const minAcceptableScore = 4;
+  const logoPath = String(candidate?.logo_path || "").trim();
   if (!candidate || best.score < minAcceptableScore || !logoPath) return null;
 
-  var logoUrls = logoPath.startsWith("http")
+  const logoUrls = logoPath.startsWith("http")
     ? [logoPath]
-    : [(TMDB_FILTERED_LOGO_BASE) + (logoPath), (TMDB_IMAGE_BASE) + (logoPath)];
+    : [`${TMDB_FILTERED_LOGO_BASE}${logoPath}`, `${TMDB_IMAGE_BASE}${logoPath}`];
 
-  var blob = null;
-  for (var logoUrl of logoUrls) {
-    var res = fetch(logoUrl, { method: "GET", cache: "no-store" }).catchfunction(() null);
-    if (!res.ok) continue;
-    var nextBlob = res.blob().catchfunction(() null);
-    if (nextBlob.size) {
+  let blob = null;
+  for (const logoUrl of logoUrls) {
+    const res = await fetch(logoUrl, { method: "GET", cache: "no-store" }).catch(() => null);
+    if (!res?.ok) continue;
+    const nextBlob = await res.blob().catch(() => null);
+    if (nextBlob?.size) {
       blob = nextBlob;
       break;
     }
   }
-  if (!blob.size) return null;
+  if (!blob?.size) return null;
 
-  var ext = guessTmdbLogoExtension(logoPath, blob.type);
-  var fileName = "tmdb-studio-" + (String(candidate.id || "logo").trim() || "logo") + "." + (ext);
+  const ext = guessTmdbLogoExtension(logoPath, blob.type);
+  const fileName = `tmdb-studio-${String(candidate?.id || "logo").trim() || "logo"}.${ext}`;
 
   try {
     return new File([blob], fileName, { type: blob.type || undefined });
@@ -518,23 +551,23 @@ function resolveTmdbLogoFileForStudio(studioName) {
 }
 
 function refreshStudioHubHiddenInputs(list, orderInput, hiddenInput) {
-  var names = [...list.querySelectorAll(".dnd-item")].map(function(li) li.dataset.name).filter(Boolean);
-  var hiddenNames = [...list.querySelectorAll('.dnd-item[data-hidden="1"]')].map(function(li) li.dataset.name).filter(Boolean);
+  const names = [...list.querySelectorAll(".dnd-item")].map(li => li.dataset.name).filter(Boolean);
+  const hiddenNames = [...list.querySelectorAll('.dnd-item[data-hidden="1"]')].map(li => li.dataset.name).filter(Boolean);
   orderInput.value = JSON.stringify(dedupeNames(names));
   hiddenInput.value = JSON.stringify(dedupeNames(hiddenNames));
 }
 
 function applyDnDItemState(li, labels, state = {}) {
   if (!li) return;
-  var sharedVideos = Array.isArray(state.sharedVideos) ? state.sharedVideos : [];
-  var manualEntries = Array.isArray(state.manualEntries) ? state.manualEntries : [];
-  var visibilityDisabled = state.visibilityDisabled === true;
+  const sharedVideos = Array.isArray(state.sharedVideos) ? state.sharedVideos : [];
+  const manualEntries = Array.isArray(state.manualEntries) ? state.manualEntries : [];
+  const visibilityDisabled = state.visibilityDisabled === true;
 
-  var hidden = li.dataset.hidden === "1";
+  const hidden = li.dataset.hidden === "1";
   li.style.opacity = hidden ? "0.58" : "1";
   li.style.filter = hidden ? "saturate(0.65)" : "";
 
-  var txt = li.querySelector(".dnd-name");
+  const txt = li.querySelector(".dnd-name");
   if (txt) {
     if (hidden) {
       txt.style.textDecoration = "line-through";
@@ -544,84 +577,84 @@ function applyDnDItemState(li, labels, state = {}) {
     }
   }
 
-  var toggleBtn = li.querySelector(".dnd-btn-visibility");
+  const toggleBtn = li.querySelector(".dnd-btn-visibility");
   if (toggleBtn) {
-    var showText = labels.showCollection || "Mostrar";
-    var hideText = labels.hideCollection || "Ocultar";
+    const showText = labels?.showCollection || "Göster";
+    const hideText = labels?.hideCollection || "Gizle";
     toggleBtn.textContent = hidden ? showText : hideText;
     toggleBtn.disabled = visibilityDisabled;
     toggleBtn.title = visibilityDisabled
-      ? (labels.showCollectionLockedHint || "Esta configuração só pode ser alterada pelo admin no modo global")
-      : (hidden ? (labels.showCollectionHint || "Mostrar coleção") : (labels.hideCollectionHint || "Ocultar coleção"));
+      ? (labels?.showCollectionLockedHint || "Bu ayar global modda sadece admin tarafından değiştirilebilir")
+      : (hidden ? (labels?.showCollectionHint || "Koleksiyonu göster") : (labels?.hideCollectionHint || "Koleksiyonu gizle"));
     toggleBtn.style.opacity = visibilityDisabled ? "0.55" : "";
     toggleBtn.style.cursor = visibilityDisabled ? "not-allowed" : "";
   }
 
-  var manualBadge = li.querySelector(".dnd-manual-badge");
+  const manualBadge = li.querySelector(".dnd-manual-badge");
   if (manualBadge) {
     manualBadge.style.display = li.dataset.manual === "1" ? "" : "none";
   }
 
-  var removeBtn = li.querySelector(".dnd-btn-remove");
+  const removeBtn = li.querySelector(".dnd-btn-remove");
   if (removeBtn) {
     removeBtn.style.display = li.dataset.manual === "1" ? "" : "none";
   }
 
-  var videoBadge = li.querySelector(".dnd-video-badge");
-  var hasSharedVideo = !!findStudioHubVideoEntry(sharedVideos, li.dataset.name);
-  var manualEntry = findStudioHubManualEntry(manualEntries, li.dataset.studioId || li.dataset.name);
-  var hasCustomLogo = !!buildStudioHubLogoUrl(manualEntry);
+  const videoBadge = li.querySelector(".dnd-video-badge");
+  const hasSharedVideo = !!findStudioHubVideoEntry(sharedVideos, li.dataset.name);
+  const manualEntry = findStudioHubManualEntry(manualEntries, li.dataset.studioId || li.dataset.name);
+  const hasCustomLogo = !!buildStudioHubLogoUrl(manualEntry);
   if (videoBadge) {
-    videoBadge.textContent = hasSharedVideo ? (labels.hoverVideoAvailable || "Video") : "";
+    videoBadge.textContent = hasSharedVideo ? (labels?.hoverVideoAvailable || "Video") : "";
     videoBadge.style.color = "var(--accent, #10b981)";
     videoBadge.style.display = hasSharedVideo ? "" : "none";
   }
 
-  var deleteVideoBtn = li.querySelector(".dnd-btn-delete-video");
+  const deleteVideoBtn = li.querySelector(".dnd-btn-delete-video");
   if (deleteVideoBtn) {
     deleteVideoBtn.disabled = !hasSharedVideo;
     deleteVideoBtn.style.display = hasSharedVideo ? "" : "none";
-    deleteVideoBtn.title = labels.deleteHoverVideo || "Excluir vídeo carregado";
+    deleteVideoBtn.title = labels?.deleteHoverVideo || "Yüklü videoyu sil";
   }
 
-  var logoBadge = li.querySelector(".dnd-logo-badge");
+  const logoBadge = li.querySelector(".dnd-logo-badge");
   if (logoBadge) {
-    logoBadge.textContent = hasCustomLogo ? (labels.logoAvailable || "Logo") : "";
+    logoBadge.textContent = hasCustomLogo ? (labels?.logoAvailable || "Logo") : "";
     logoBadge.style.color = "var(--accent, #10b981)";
     logoBadge.style.display = hasCustomLogo ? "" : "none";
   }
 
-  var deleteLogoBtn = li.querySelector(".dnd-btn-delete-logo");
+  const deleteLogoBtn = li.querySelector(".dnd-btn-delete-logo");
   if (deleteLogoBtn) {
     deleteLogoBtn.disabled = !hasCustomLogo;
     deleteLogoBtn.style.display = (li.dataset.manual === "1" && hasCustomLogo) ? "" : "none";
-    deleteLogoBtn.title = labels.deleteLogo || "Excluir logo carregado";
+    deleteLogoBtn.title = labels?.deleteLogo || "Yüklü logoyu sil";
   }
 
-  var uploadLogoBtn = li.querySelector(".dnd-btn-upload-logo");
+  const uploadLogoBtn = li.querySelector(".dnd-btn-upload-logo");
   if (uploadLogoBtn) {
     uploadLogoBtn.style.display = li.dataset.manual === "1" ? "" : "none";
   }
 }
 
 function createDraggableList(id, items, labels, options = {}) {
-  var enableStudioControls = options.enableStudioControls === true;
-  var hiddenNames = new Set((options.hiddenNames || []).map(nameKey));
-  var sharedVideos = Array.isArray(options.sharedVideos) ? options.sharedVideos : [];
-  var manualEntries = Array.isArray(options.manualEntries) ? options.manualEntries : [];
-  var isAdmin = options.isAdmin === true;
-  var visibilityDisabled = options.visibilityDisabled === true;
-  var dndItems = dedupeDnDItems(items);
+  const enableStudioControls = options.enableStudioControls === true;
+  const hiddenNames = new Set((options.hiddenNames || []).map(nameKey));
+  const sharedVideos = Array.isArray(options.sharedVideos) ? options.sharedVideos : [];
+  const manualEntries = Array.isArray(options.manualEntries) ? options.manualEntries : [];
+  const isAdmin = options.isAdmin === true;
+  const visibilityDisabled = options.visibilityDisabled === true;
+  const dndItems = dedupeDnDItems(items);
 
-  var wrap = document.createElement("div");
+  const wrap = document.createElement("div");
   wrap.className = "setting-input setting-dnd";
 
-  var lab = document.createElement("div");
-  lab.textContent = options.labelText || labels.studioHubsOrderLabel || "Ordenação (arrastar e soltar)";
+  const lab = document.createElement("div");
+  lab.textContent = options.labelText || labels?.studioHubsOrderLabel || "Sıralama (sürükle-bırak)";
   lab.style.display = "block";
   lab.style.marginBottom = "6px";
 
-  var list = document.createElement("ul");
+  const list = document.createElement("ul");
   list.id = id;
   list.className = "dnd-list";
   list.style.listStyle = "none";
@@ -632,13 +665,13 @@ function createDraggableList(id, items, labels, options = {}) {
   list.style.maxHeight = "320px";
   list.style.overflow = "auto";
 
-  dndItems.forEach(function((item) {
-    var name = getDnDItemName(item);
+  dndItems.forEach((item) => {
+    const name = getDnDItemName(item);
     list.appendChild(createDnDItem(item, labels, {
       enableStudioControls,
       hidden: hiddenNames.has(nameKey(name)),
       isManual: !!findStudioHubManualEntry(manualEntries, name),
-      studioId: String(findStudioHubManualEntry(manualEntries, name).studioId || findStudioHubManualEntry(manualEntries, name).StudioId || "").trim(),
+      studioId: String(findStudioHubManualEntry(manualEntries, name)?.studioId || findStudioHubManualEntry(manualEntries, name)?.StudioId || "").trim(),
       isAdmin,
       visibilityDisabled,
       manualEntries,
@@ -646,30 +679,30 @@ function createDraggableList(id, items, labels, options = {}) {
     }));
   });
 
-  var dragEl = null;
-  var touchDrag = null;
-  var restoreUserSelect = "";
+  let dragEl = null;
+  let touchDrag = null;
+  let restoreUserSelect = "";
 
-  var setDragActive = function(li, active) {
+  const setDragActive = (li, active) => {
     if (!li) return;
     li.style.opacity = active ? "0.6" : "";
   };
 
-  var moveDraggedItem = function(clientY) {
+  const moveDraggedItem = (clientY) => {
     if (!dragEl) return;
 
-    var listRect = list.getBoundingClientRect();
-    var scrollEdge = 44;
+    const listRect = list.getBoundingClientRect();
+    const scrollEdge = 44;
     if (clientY < listRect.top + scrollEdge) {
       list.scrollTop -= Math.max(8, Math.ceil((listRect.top + scrollEdge - clientY) / 3));
     } else if (clientY > listRect.bottom - scrollEdge) {
       list.scrollTop += Math.max(8, Math.ceil((clientY - (listRect.bottom - scrollEdge)) / 3));
     }
 
-    var siblings = [...list.querySelectorAll(".dnd-item")].filter(function(item) item !== dragEl);
-    var nextSibling = null;
-    for (var item of siblings) {
-      var rect = item.getBoundingClientRect();
+    const siblings = [...list.querySelectorAll(".dnd-item")].filter(item => item !== dragEl);
+    let nextSibling = null;
+    for (const item of siblings) {
+      const rect = item.getBoundingClientRect();
       if (clientY < rect.top + rect.height / 2) {
         nextSibling = item;
         break;
@@ -678,46 +711,46 @@ function createDraggableList(id, items, labels, options = {}) {
     list.insertBefore(dragEl, nextSibling);
   };
 
-  var finishTouchDrag = function(notify = false) {
+  const finishTouchDrag = (notify = false) => {
     if (!touchDrag) return;
     setDragActive(touchDrag.li, false);
     document.body.style.userSelect = restoreUserSelect;
     restoreUserSelect = "";
     dragEl = null;
-    var moved = touchDrag.moved;
+    const moved = touchDrag.moved;
     touchDrag = null;
     if (notify && moved) {
       list.dispatchEvent(new CustomEvent("dnd:reorder"));
     }
   };
 
-  list.addEventListenerfunction("dragstart", (e) {
-    var li = e.target.closest(".dnd-item");
+  list.addEventListener("dragstart", (e) => {
+    const li = e.target.closest(".dnd-item");
     if (!li) return;
     dragEl = li;
     setDragActive(li, true);
-    e.dataTransfer.setData.("text/plain", li.dataset.name || "");
+    e.dataTransfer?.setData?.("text/plain", li.dataset.name || "");
     e.dataTransfer.effectAllowed = "move";
   });
 
-  list.addEventListenerfunction("dragend", (e) {
-    var li = e.target.closest(".dnd-item");
+  list.addEventListener("dragend", (e) => {
+    const li = e.target.closest(".dnd-item");
     if (!li) return;
     setDragActive(li, false);
     dragEl = null;
   });
 
-  list.addEventListenerfunction("dragover", (e) {
+  list.addEventListener("dragover", (e) => {
     e.preventDefault();
     if (!dragEl) return;
     moveDraggedItem(e.clientY);
   });
 
-  list.addEventListenerfunction("touchstart", (e) {
-    var handle = e.target.closest(".dnd-handle");
+  list.addEventListener("touchstart", (e) => {
+    const handle = e.target.closest(".dnd-handle");
     if (!handle) return;
-    var li = handle.closest(".dnd-item");
-    var touch = e.touches.[0];
+    const li = handle.closest(".dnd-item");
+    const touch = e.touches?.[0];
     if (!li || !touch) return;
 
     e.preventDefault();
@@ -733,18 +766,18 @@ function createDraggableList(id, items, labels, options = {}) {
     setDragActive(li, true);
   }, { passive: false });
 
-  var onTouchMove = function(e) {
+  const onTouchMove = (e) => {
     if (!touchDrag) return;
-    var touch = [...(e.touches || [])].find(function(item) item.identifier === touchDrag.touchId);
+    const touch = [...(e.touches || [])].find(item => item.identifier === touchDrag.touchId);
     if (!touch) return;
     e.preventDefault();
     touchDrag.moved = true;
     moveDraggedItem(touch.clientY);
   };
 
-  var onTouchEnd = function(e) {
+  const onTouchEnd = (e) => {
     if (!touchDrag) return;
-    var ended = [...(e.changedTouches || [])].some(function(item) item.identifier === touchDrag.touchId);
+    const ended = [...(e.changedTouches || [])].some(item => item.identifier === touchDrag.touchId);
     if (!ended) return;
     e.preventDefault();
     finishTouchDrag(true);
@@ -754,7 +787,7 @@ function createDraggableList(id, items, labels, options = {}) {
   window.addEventListener("touchend", onTouchEnd, { passive: false });
   window.addEventListener("touchcancel", onTouchEnd, { passive: false });
 
-  var __cleanup = function() {
+  const __cleanup = () => {
     finishTouchDrag(false);
     window.removeEventListener("touchmove", onTouchMove);
     window.removeEventListener("touchend", onTouchEnd);
@@ -762,11 +795,11 @@ function createDraggableList(id, items, labels, options = {}) {
   };
   wrap.addEventListener('jms:cleanup', __cleanup, { once:true });
 
-  list.addEventListenerfunction("click", (e) {
-    var btnUp = e.target.closest.(".dnd-btn-up");
-    var btnDown = e.target.closest.(".dnd-btn-down");
+  list.addEventListener("click", (e) => {
+    const btnUp = e.target.closest?.(".dnd-btn-up");
+    const btnDown = e.target.closest?.(".dnd-btn-down");
     if (!btnUp && !btnDown) return;
-    var li = e.target.closest(".dnd-item");
+    const li = e.target.closest(".dnd-item");
     if (!li) return;
     if (btnUp && li.previousElementSibling) {
       li.parentElement.insertBefore(li, li.previousElementSibling);
@@ -775,17 +808,17 @@ function createDraggableList(id, items, labels, options = {}) {
     }
   });
 
-  var wrapAll = document.createElement("div");
+  const wrapAll = document.createElement("div");
   wrapAll.appendChild(lab);
   wrapAll.appendChild(list);
   return { wrap: wrapAll, list };
 }
 
 function createDnDItem(name, labels, options = {}) {
-  var itemName = getDnDItemName(name);
-  var itemLabel = getDnDItemLabel(name) || itemName;
+  const itemName = getDnDItemName(name);
+  const itemLabel = getDnDItemLabel(name) || itemName;
   if (!options.enableStudioControls) {
-    var li = document.createElement("li");
+    const li = document.createElement("li");
     li.className = "dnd-item";
     li.draggable = true;
     li.dataset.name = itemName;
@@ -796,35 +829,35 @@ function createDnDItem(name, labels, options = {}) {
     li.style.borderBottom = "1px solid #0002";
     li.style.background = "var(--theme-background, rgba(255,255,255,0.02))";
 
-    var handle = document.createElement("span");
+    const handle = document.createElement("span");
     handle.className = "dnd-handle";
     handle.textContent = "↕";
-    handle.title = labels.dragToReorder || "Arrastar e soltar";
+    handle.title = labels?.dragToReorder || "Sürükle-bırak";
     handle.style.cursor = "grab";
     handle.style.userSelect = "none";
     handle.style.fontWeight = "700";
 
-    var txt = document.createElement("span");
+    const txt = document.createElement("span");
     txt.textContent = itemLabel;
     txt.style.flex = "1";
     txt.style.textDecorationColor = "var(--accent-color, #ff6b6b)";
 
-    var btns = document.createElement("div");
+    const btns = document.createElement("div");
     btns.style.display = "flex";
     btns.style.gap = "6px";
 
-    var up = document.createElement("button");
+    const up = document.createElement("button");
     up.type = "button";
     up.className = "dnd-btn-up";
     up.textContent = "↑";
-    up.title = labels.moveUp || "Mover para cima";
+    up.title = labels?.moveUp || "Yukarı taşı";
     up.style.minWidth = "28px";
 
-    var down = document.createElement("button");
+    const down = document.createElement("button");
     down.type = "button";
     down.className = "dnd-btn-down";
     down.textContent = "↓";
-    down.title = labels.moveDown || "Mover para baixo";
+    down.title = labels?.moveDown || "Aşağı taşı";
     down.style.minWidth = "28px";
 
     btns.appendChild(up);
@@ -836,7 +869,7 @@ function createDnDItem(name, labels, options = {}) {
     return li;
   }
 
-  var li = document.createElement("li");
+  const li = document.createElement("li");
   li.className = "dnd-item dnd-item-studio";
   li.draggable = true;
   li.dataset.name = itemName;
@@ -852,18 +885,18 @@ function createDnDItem(name, labels, options = {}) {
   li.style.borderBottom = "1px solid #0002";
   li.style.background = "var(--theme-background, rgba(255,255,255,0.02))";
 
-  var handle = document.createElement("span");
+  const handle = document.createElement("span");
   handle.className = "dnd-handle";
   handle.textContent = "↕";
-  handle.title = labels.dragToReorder || "Arrastar e soltar";
+  handle.title = labels?.dragToReorder || "Sürükle-bırak";
   handle.style.cursor = "grab";
   handle.style.userSelect = "none";
   handle.style.fontWeight = "700";
 
-  var main = document.createElement("div");
+  const main = document.createElement("div");
   main.className = "dnd-main";
 
-  var content = document.createElement("div");
+  const content = document.createElement("div");
   content.style.display = "flex";
   content.style.flex = "1 1 auto";
   content.style.minWidth = "0";
@@ -871,34 +904,34 @@ function createDnDItem(name, labels, options = {}) {
   content.style.flexDirection = "column";
   content.style.gap = "4px";
 
-  var txt = document.createElement("span");
+  const txt = document.createElement("span");
   txt.className = "dnd-name";
   txt.textContent = itemLabel;
   txt.style.flex = "1 1 auto";
   txt.style.fontWeight = "600";
   txt.style.textDecorationColor = "var(--accent-color, #ff6b6b)";
 
-  var meta = document.createElement("div");
+  const meta = document.createElement("div");
   meta.style.display = "flex";
   meta.style.gap = "6px";
   meta.style.flexWrap = "wrap";
   meta.style.minWidth = "0";
   meta.style.fontSize = "12px";
 
-  var manualBadge = document.createElement("span");
+  const manualBadge = document.createElement("span");
   manualBadge.className = "dnd-manual-badge";
-  manualBadge.textContent = labels.manualCollectionBadge || "Manual";
+  manualBadge.textContent = labels?.manualCollectionBadge || "Manuel";
   manualBadge.style.padding = "2px 6px";
   manualBadge.style.borderRadius = "999px";
   manualBadge.style.background = "rgba(16,185,129,0.18)";
 
-  var videoBadge = document.createElement("span");
+  const videoBadge = document.createElement("span");
   videoBadge.className = "dnd-video-badge";
   videoBadge.style.padding = "2px 6px";
   videoBadge.style.borderRadius = "999px";
   videoBadge.style.background = "rgba(255,255,255,0.08)";
 
-  var logoBadge = document.createElement("span");
+  const logoBadge = document.createElement("span");
   logoBadge.className = "dnd-logo-badge";
   logoBadge.style.padding = "2px 6px";
   logoBadge.style.borderRadius = "999px";
@@ -910,59 +943,59 @@ function createDnDItem(name, labels, options = {}) {
   content.appendChild(txt);
   content.appendChild(meta);
 
-  var btns = document.createElement("div");
+  const btns = document.createElement("div");
   btns.className = "dnd-actions";
 
-  var toggleVisibility = document.createElement("button");
+  const toggleVisibility = document.createElement("button");
   toggleVisibility.type = "button";
   toggleVisibility.className = "dnd-btn-visibility";
   toggleVisibility.style.minWidth = "56px";
 
-  var uploadVideo = document.createElement("button");
+  const uploadVideo = document.createElement("button");
   uploadVideo.type = "button";
   uploadVideo.className = "dnd-btn-upload-video";
-  uploadVideo.textContent = labels.uploadHoverVideo || "Video";
-  uploadVideo.title = labels.uploadHoverVideoHint || "Carregar vídeo de hover";
+  uploadVideo.textContent = labels?.uploadHoverVideo || "Video";
+  uploadVideo.title = labels?.uploadHoverVideoHint || "Hover videosu yükle";
   uploadVideo.style.minWidth = "56px";
 
-  var uploadLogo = document.createElement("button");
+  const uploadLogo = document.createElement("button");
   uploadLogo.type = "button";
   uploadLogo.className = "dnd-btn-upload-logo";
-  uploadLogo.textContent = labels.uploadLogoShort || "Logo";
-  uploadLogo.title = labels.uploadLogoHint || "Carregar logo";
+  uploadLogo.textContent = labels?.uploadLogoShort || "Logo";
+  uploadLogo.title = labels?.uploadLogoHint || "Logo yükle";
   uploadLogo.style.minWidth = "56px";
 
-  var deleteLogo = document.createElement("button");
+  const deleteLogo = document.createElement("button");
   deleteLogo.type = "button";
   deleteLogo.className = "dnd-btn-delete-logo";
-  deleteLogo.textContent = labels.deleteLogoShort || "Excluir Logo";
+  deleteLogo.textContent = labels?.deleteLogoShort || "Logo Sil";
   deleteLogo.style.minWidth = "72px";
 
-  var deleteVideo = document.createElement("button");
+  const deleteVideo = document.createElement("button");
   deleteVideo.type = "button";
   deleteVideo.className = "dnd-btn-delete-video";
-  deleteVideo.textContent = labels.deleteHoverVideoShort || "Excluir";
+  deleteVideo.textContent = labels?.deleteHoverVideoShort || "Sil";
   deleteVideo.style.minWidth = "44px";
 
-  var up = document.createElement("button");
+  const up = document.createElement("button");
   up.type = "button";
   up.className = "dnd-btn-up";
   up.textContent = "↑";
-  up.title = labels.moveUp || "Mover para cima";
+  up.title = labels?.moveUp || "Yukarı taşı";
   up.style.minWidth = "28px";
 
-  var down = document.createElement("button");
+  const down = document.createElement("button");
   down.type = "button";
   down.className = "dnd-btn-down";
   down.textContent = "↓";
-  down.title = labels.moveDown || "Mover para baixo";
+  down.title = labels?.moveDown || "Aşağı taşı";
   down.style.minWidth = "28px";
 
-  var remove = document.createElement("button");
+  const remove = document.createElement("button");
   remove.type = "button";
   remove.className = "dnd-btn-remove";
-  remove.textContent = labels.removeCollection || "Remover";
-  remove.title = labels.removeCollectionHint || "Remover coleção manual";
+  remove.textContent = labels?.removeCollection || "Kaldır";
+  remove.title = labels?.removeCollectionHint || "Manuel koleksiyonu kaldır";
   remove.style.minWidth = "60px";
 
   btns.appendChild(toggleVisibility);
@@ -990,89 +1023,89 @@ function createDnDItem(name, labels, options = {}) {
 
 export function createStudioHubsPanel(config, labels) {
   ensureStudioHubsSpinnerStyles();
-  var panel = document.createElement('div');
+  const panel = document.createElement('div');
   panel.id = 'studio-panel';
   panel.className = 'setting-item';
 
-  var section = createSection(
-    labels.studioHubsSettings ||
+  const section = createSection(
+    labels?.studioHubsSettings ||
     config.languageLabels.studioHubsSettings ||
-    'Configurações de Coleções de Estúdios'
+    'Stüdyo Koleksiyonları Ayarları'
   );
 
-  var enableCheckbox = createCheckbox(
+  const enableCheckbox = createCheckbox(
     'enableStudioHubs',
-    labels.enableStudioHubs || config.languageLabels.enableStudioHubs || 'Ativar Coleções de Estúdios',
+    labels?.enableStudioHubs || config.languageLabels.enableStudioHubs || 'Stüdyo Koleksiyonlarını Etkinleştir',
     config.enableStudioHubs
   );
 
   section.appendChild(enableCheckbox);
 
-  var colorizeCheckbox = createCheckbox(
+  const colorizeCheckbox = createCheckbox(
     'studioHubsColorize',
-    labels.studioHubsColorize || config.languageLabels.studioHubsColorize || 'Coleções Coloridas',
+    labels?.studioHubsColorize || config.languageLabels.studioHubsColorize || 'Renkli Koleksiyonlar',
     config.studioHubsColorize
   );
 
   section.appendChild(colorizeCheckbox);
 
-  var enableHoverVideo = createCheckbox(
+  const enableHoverVideo = createCheckbox(
     'studioHubsHoverVideo',
-    labels.studioHubsHoverVideo || 'Reproduzir vídeo no hover',
+    labels?.studioHubsHoverVideo || 'Hoverda video oynat',
     config.studioHubsHoverVideo
   );
   section.appendChild(enableHoverVideo);
 
-  var countWrap = createNumberInput(
+  const countWrap = createNumberInput(
     'studioHubsCardCount',
-    labels.studioHubsCardCount || 'Número de cards a exibir (Tela principal)',
+    labels?.studioHubsCardCount || 'Gösterilecek kart sayısı (Ana ekran)',
     Number.isFinite(config.studioHubsCardCount) ? config.studioHubsCardCount : 10,
     1,
     100
   );
   section.appendChild(countWrap);
 
-  var baseOrder = mergeOrder(
+  const baseOrder = mergeOrder(
     DEFAULT_ORDER,
     Array.isArray(config.studioHubsOrder) && config.studioHubsOrder.length
       ? config.studioHubsOrder
       : []
   );
-  var isForceGlobal = config.forceGlobalUserSettings === true;
-  var isAdmin = config.currentUserIsAdmin === true;
-  var visibilityDisabled = isForceGlobal && !isAdmin;
-  var useGlobalVisibility = isForceGlobal;
-  var useGlobalOrder = isForceGlobal;
+  const isForceGlobal = config.forceGlobalUserSettings === true;
+  const isAdmin = config.currentUserIsAdmin === true;
+  const visibilityDisabled = isForceGlobal && !isAdmin;
+  const useGlobalVisibility = isForceGlobal;
+  const useGlobalOrder = isForceGlobal;
 
-  var autoAddFromWatchlistCopyCheckbox = createCheckbox(
+  const autoAddFromWatchlistCopyCheckbox = createCheckbox(
     'studioHubsAutoAddFromWatchlistCopy',
-    labels.studioHubsAutoAddFromWatchlistCopy || 'Adicionar coleção automaticamente ao copiar ID de estúdio da Watchlist',
+    labels?.studioHubsAutoAddFromWatchlistCopy || 'Watchlist stüdyo ID kopyasında koleksiyonu otomatik ekle',
     config.studioHubsAutoAddFromWatchlistCopy === true
   );
   autoAddFromWatchlistCopyCheckbox.style.display = isAdmin ? '' : 'none';
   section.appendChild(autoAddFromWatchlistCopyCheckbox);
 
-  var autoAddFromWatchlistCopyHint = document.createElement("div");
+  const autoAddFromWatchlistCopyHint = document.createElement("div");
   autoAddFromWatchlistCopyHint.className = "description-text2";
   autoAddFromWatchlistCopyHint.style.margin = "4px 0 10px";
   autoAddFromWatchlistCopyHint.style.display = isAdmin ? "" : "none";
   autoAddFromWatchlistCopyHint.textContent =
-    labels.studioHubsAutoAddFromWatchlistCopyHint ||
-    "Quando ativado, se o administrador clicar em um estúdio na pré-visualização da watchlist e copiar o ID, a coleção do estúdio correspondente será criada ou atualizada automaticamente.";
+    labels?.studioHubsAutoAddFromWatchlistCopyHint ||
+    "Açıkken admin kullanıcı, watchlist önizlemesinde stüdyoya tıklayıp ID kopyaladığında ilgili stüdyo koleksiyonu otomatik oluşturulur veya güncellenir.";
   section.appendChild(autoAddFromWatchlistCopyHint);
 
-  var manualEntries = [];
-  var manualEntriesLoaded = false;
-  var sharedVideos = [];
-  var currentOrderNames = dedupeNames(baseOrder);
-  var currentHiddenNames = useGlobalVisibility
+  let manualEntries = [];
+  let manualEntriesLoaded = false;
+  let sharedVideos = [];
+  let currentOrderNames = dedupeNames(baseOrder);
+  let currentHiddenNames = useGlobalVisibility
     ? dedupeNames(Array.isArray(config.studioHubsHidden) ? config.studioHubsHidden : [])
     : [];
-  var getVisibilityProfile = function() ((isForceGlobal && isAdmin) ? getAdminTargetProfile() : getDeviceProfileAuto());
+  const getVisibilityProfile = () => ((isForceGlobal && isAdmin) ? getAdminTargetProfile() : getDeviceProfileAuto());
 
-  var orderHiddenInput = createHiddenInput('studioHubsOrder', JSON.stringify(dedupeNames(baseOrder)));
-  var hiddenHiddenInput = createHiddenInput('studioHubsHidden', JSON.stringify(currentHiddenNames));
-  var { wrap: dndWrap, list } = createDraggableList('studioHubsOrderList', baseOrder, labels, {
+  const orderHiddenInput = createHiddenInput('studioHubsOrder', JSON.stringify(dedupeNames(baseOrder)));
+  const hiddenHiddenInput = createHiddenInput('studioHubsHidden', JSON.stringify(currentHiddenNames));
+  const { wrap: dndWrap, list } = createDraggableList('studioHubsOrderList', baseOrder, labels, {
     enableStudioControls: true,
     hiddenNames: currentHiddenNames,
     isAdmin,
@@ -1081,40 +1114,40 @@ export function createStudioHubsPanel(config, labels) {
     sharedVideos
   });
 
-  var normalizeOrderNamesForState = function(names) (
+  const normalizeOrderNamesForState = (names) => (
     manualEntriesLoaded
       ? sanitizeStudioHubOrderNames(names, manualEntries)
       : dedupeNames(names)
   );
 
-  var normalizeHiddenNamesForState = function(names) (
+  const normalizeHiddenNamesForState = (names) => (
     manualEntriesLoaded
       ? sanitizeStudioHubHiddenNames(names, manualEntries)
       : dedupeNames(names)
   );
 
-  var getAllowedNames = function() (
+  const getAllowedNames = () => (
     manualEntriesLoaded
       ? getStudioHubAllowedNames(manualEntries)
       : dedupeNames([
-          ...[...list.querySelectorAll(".dnd-item")].map(function(li) li.dataset.name).filter(Boolean),
+          ...[...list.querySelectorAll(".dnd-item")].map(li => li.dataset.name).filter(Boolean),
           ...DEFAULT_ORDER
         ])
   );
 
-  var pruneInvalidListItems = function() {
+  const pruneInvalidListItems = () => {
     if (!manualEntriesLoaded) return;
-    var allowedKeys = new Set(getAllowedNames().map(nameKey));
-    [...list.querySelectorAll(".dnd-item")].forEach(function(li) {
+    const allowedKeys = new Set(getAllowedNames().map(nameKey));
+    [...list.querySelectorAll(".dnd-item")].forEach(li => {
       if (!allowedKeys.has(nameKey(li.dataset.name))) {
         li.remove();
       }
     });
   };
 
-  var syncHiddenNamesFromInput = function() {
+  const syncHiddenNamesFromInput = () => {
     try {
-      var parsed = JSON.parse(hiddenHiddenInput.value || "[]");
+      const parsed = JSON.parse(hiddenHiddenInput.value || "[]");
       currentHiddenNames = normalizeHiddenNamesForState(Array.isArray(parsed) ? parsed : []);
     } catch {
       currentHiddenNames = [];
@@ -1122,9 +1155,9 @@ export function createStudioHubsPanel(config, labels) {
     return currentHiddenNames;
   };
 
-  var syncOrderNamesFromInput = function() {
+  const syncOrderNamesFromInput = () => {
     try {
-      var parsed = JSON.parse(orderHiddenInput.value || "[]");
+      const parsed = JSON.parse(orderHiddenInput.value || "[]");
       currentOrderNames = normalizeOrderNamesForState(Array.isArray(parsed) ? parsed : []);
     } catch {
       currentOrderNames = dedupeNames(baseOrder);
@@ -1132,69 +1165,69 @@ export function createStudioHubsPanel(config, labels) {
     return currentOrderNames;
   };
 
-  var applyOrderNamesToList = function(orderNames) {
+  const applyOrderNamesToList = (orderNames) => {
     currentOrderNames = normalizeOrderNamesForState(orderNames);
     pruneInvalidListItems();
-    var desiredOrder = mergeOrder(
+    const desiredOrder = mergeOrder(
       getAllowedNames(),
       currentOrderNames
     );
-    var itemsByKey = new Map(
-      [...list.querySelectorAll(".dnd-item")].map(function(li) [nameKey(li.dataset.name), li])
+    const itemsByKey = new Map(
+      [...list.querySelectorAll(".dnd-item")].map(li => [nameKey(li.dataset.name), li])
     );
 
-    desiredOrder.forEach(function(name) {
-      var key = nameKey(name);
-      var li = itemsByKey.get(key);
+    desiredOrder.forEach(name => {
+      const key = nameKey(name);
+      const li = itemsByKey.get(key);
       if (!li) return;
       list.appendChild(li);
       itemsByKey.delete(key);
     });
 
-    itemsByKey.forEach(function(li) li.remove());
+    itemsByKey.forEach(li => li.remove());
     refreshListState();
   };
 
-  var applyHiddenNamesToList = function(hiddenNames) {
+  const applyHiddenNamesToList = (hiddenNames) => {
     currentHiddenNames = normalizeHiddenNamesForState(hiddenNames);
     pruneInvalidListItems();
-    var hiddenSet = new Set(currentHiddenNames.map(nameKey));
-    [...list.querySelectorAll(".dnd-item")].forEach(function(li) {
+    const hiddenSet = new Set(currentHiddenNames.map(nameKey));
+    [...list.querySelectorAll(".dnd-item")].forEach(li => {
       li.dataset.hidden = hiddenSet.has(nameKey(li.dataset.name)) ? "1" : "0";
     });
     refreshListState();
   };
 
-  var findListItemsByManualEntry = function(entry) {
-    var name = String(entry.name || entry.Name || "").trim();
-    var studioId = String(entry.studioId || entry.StudioId || "").trim();
-    return [...list.querySelectorAll(".dnd-item")].filter(function(li) {
-      var sameStudioId = studioId && nameKey(li.dataset.studioId) === nameKey(studioId);
-      var sameName = name && nameKey(li.dataset.name) === nameKey(name);
+  const findListItemsByManualEntry = (entry) => {
+    const name = String(entry?.name || entry?.Name || "").trim();
+    const studioId = String(entry?.studioId || entry?.StudioId || "").trim();
+    return [...list.querySelectorAll(".dnd-item")].filter(li => {
+      const sameStudioId = studioId && nameKey(li.dataset.studioId) === nameKey(studioId);
+      const sameName = name && nameKey(li.dataset.name) === nameKey(name);
       return sameStudioId || sameName;
     });
   };
 
-  var upsertManualEntryInList = function(entry) {
-    var name = String(entry.name || entry.Name || "").trim();
-    var studioId = String(entry.studioId || entry.StudioId || "").trim();
+  const upsertManualEntryInList = (entry) => {
+    const name = String(entry?.name || entry?.Name || "").trim();
+    const studioId = String(entry?.studioId || entry?.StudioId || "").trim();
     if (!name || !studioId) return null;
 
-    var matches = findListItemsByManualEntry(entry);
-    var existing = matches[0] || null;
+    const matches = findListItemsByManualEntry(entry);
+    const existing = matches[0] || null;
     if (existing) {
       existing.dataset.name = name;
       existing.dataset.studioId = studioId;
       existing.dataset.manual = "1";
-      var nameEl = existing.querySelector(".dnd-name");
+      const nameEl = existing.querySelector(".dnd-name");
       if (nameEl) nameEl.textContent = name;
-      matches.slice(1).forEach(function(li) li.remove());
+      matches.slice(1).forEach(li => li.remove());
       return existing;
     }
 
-    var li = createDnDItem(name, labels, {
+    const li = createDnDItem(name, labels, {
       enableStudioControls: true,
-      hidden: currentHiddenNames.some(function(item) nameKey(item) === nameKey(name)),
+      hidden: currentHiddenNames.some(item => nameKey(item) === nameKey(name)),
       isManual: true,
       studioId,
       isAdmin,
@@ -1206,24 +1239,24 @@ export function createStudioHubsPanel(config, labels) {
     return li;
   };
 
-  var refreshListState = function() {
+  const refreshListState = () => {
     pruneInvalidListItems();
     refreshStudioHubHiddenInputs(list, orderHiddenInput, hiddenHiddenInput);
     syncOrderNamesFromInput();
     syncHiddenNamesFromInput();
-    [...list.querySelectorAll(".dnd-item")].forEach(function(li) applyDnDItemState(li, labels, {
+    [...list.querySelectorAll(".dnd-item")].forEach(li => applyDnDItemState(li, labels, {
       visibilityDisabled: li.dataset.visibilityDisabled === "1",
       sharedVideos,
       manualEntries
     }));
   };
 
-  var statusText = document.createElement("div");
+  const statusText = document.createElement("div");
   statusText.className = "description-text2";
   statusText.style.margin = "8px 0 12px";
   statusText.style.minHeight = "18px";
 
-  var setStatus = function(text = "", tone = "") {
+  const setStatus = (text = "", tone = "") => {
     statusText.textContent = text;
     statusText.style.color =
       tone === "error" ? "#ff7b7b" :
@@ -1231,21 +1264,21 @@ export function createStudioHubsPanel(config, labels) {
       "";
   };
 
-  var handleExternalManualEntryAdded = function(event) {
-    var entry = event.detail.entry || null;
-    var entries = Array.isArray(event.detail.entries) ? event.detail.entries : null;
-    var studioId = String(entry.studioId || entry.StudioId || "").trim();
-    var name = String(entry.name || entry.Name || "").trim();
+  const handleExternalManualEntryAdded = (event) => {
+    const entry = event?.detail?.entry || null;
+    const entries = Array.isArray(event?.detail?.entries) ? event.detail.entries : null;
+    const studioId = String(entry?.studioId || entry?.StudioId || "").trim();
+    const name = String(entry?.name || entry?.Name || "").trim();
     if (!entries && !studioId && !name) return;
 
     if (entries) {
       manualEntries = entries;
     } else if (entry) {
-      var existing = findStudioHubManualEntry(manualEntries, studioId || name);
+      const existing = findStudioHubManualEntry(manualEntries, studioId || name);
       manualEntries = existing
-        ? manualEntries.mapfunction((item) {
-            var sameStudioId = studioId && nameKey(item.studioId || item.StudioId) === nameKey(studioId);
-            var sameName = name && nameKey(item.name || item.Name) === nameKey(name);
+        ? manualEntries.map((item) => {
+            const sameStudioId = studioId && nameKey(item?.studioId || item?.StudioId) === nameKey(studioId);
+            const sameName = name && nameKey(item?.name || item?.Name) === nameKey(name);
             return (sameStudioId || sameName) ? entry : item;
           })
         : [...manualEntries, entry];
@@ -1254,14 +1287,14 @@ export function createStudioHubsPanel(config, labels) {
     if (entry) {
       upsertManualEntryInList(entry);
     } else if (entries) {
-      entries.forEach(function(nextEntry) upsertManualEntryInList(nextEntry));
+      entries.forEach(nextEntry => upsertManualEntryInList(nextEntry));
     }
 
     refreshListState();
 
-    if (event.detail.source === "watchlist-auto-add" && name) {
+    if (event?.detail?.source === "watchlist-auto-add" && name) {
       setStatus(
-        labels.studioHubAutoAddedFromWatchlist || "{name} foi adicionado à lista de coleções.", {
+        formatLabel("studioHubAutoAddedFromWatchlist", "{name} koleksiyon listesine eklendi.", {
           name
         }),
         "success"
@@ -1271,56 +1304,56 @@ export function createStudioHubsPanel(config, labels) {
 
   window.addEventListener(JMS_STUDIO_HUB_MANUAL_ENTRY_ADDED_EVENT, handleExternalManualEntryAdded);
 
-  var formatLabel = function(key, fallback, vars = {}) {
-    var text = String(labels.[key] || fallback);
-    for (var [name, value] of Object.entries(vars)) {
-      text = text.split("{" + (name) + "}").join(String(value || ""));
+  const formatLabel = (key, fallback, vars = {}) => {
+    let text = String(labels?.[key] || fallback);
+    for (const [name, value] of Object.entries(vars)) {
+      text = text.split(`{${name}}`).join(String(value ?? ""));
     }
     return text;
   };
 
-  var manualAddWrap = document.createElement("div");
+  const manualAddWrap = document.createElement("div");
   manualAddWrap.className = "input-container";
   manualAddWrap.style.display = isAdmin ? "" : "none";
 
-  var manualAddLabel = document.createElement("div");
-  manualAddLabel.textContent = labels.addManualCollection || "Adicionar nova coleção";
+  const manualAddLabel = document.createElement("div");
+  manualAddLabel.textContent = labels?.addManualCollection || "Yeni koleksiyon ekle";
   manualAddWrap.appendChild(manualAddLabel);
 
-  var manualAddHint = document.createElement("div");
+  const manualAddHint = document.createElement("div");
   manualAddHint.className = "description-text2";
   manualAddHint.style.marginBottom = "8px";
-  manualAddHint.textContent = labels.manualCollectionStudioIdHint || "Insira o Studio ID. O título é resolvido automaticamente; carregar logo e vídeo é opcional.";
+  manualAddHint.textContent = labels?.manualCollectionStudioIdHint || "Studio ID girin. Başlık otomatik çözülür; logo ve video yükleme opsiyoneldir.";
   manualAddWrap.appendChild(manualAddHint);
 
-  var studioIdLabel = document.createElement("label");
-  studioIdLabel.textContent = labels.studioIdPlaceholder || "Studio ID";
+  const studioIdLabel = document.createElement("label");
+  studioIdLabel.textContent = labels?.studioIdPlaceholder || "Studio ID";
   studioIdLabel.htmlFor = "studioHubsManualStudioId";
   studioIdLabel.style.display = "block";
   studioIdLabel.style.marginBottom = "6px";
   manualAddWrap.appendChild(studioIdLabel);
 
-  var manualAddRow = document.createElement("div");
+  const manualAddRow = document.createElement("div");
   manualAddRow.style.display = "flex";
   manualAddRow.style.gap = "8px";
   manualAddRow.style.flexWrap = "wrap";
 
-  var studioIdInput = document.createElement("input");
+  const studioIdInput = document.createElement("input");
   studioIdInput.type = "text";
   studioIdInput.id = "studioHubsManualStudioId";
   studioIdInput.name = "studioHubsManualStudioId";
-  studioIdInput.placeholder = labels.studioIdPlaceholder || "Studio ID";
+  studioIdInput.placeholder = labels?.studioIdPlaceholder || "Studio ID";
   studioIdInput.style.flex = "1";
   studioIdInput.style.minWidth = "240px";
 
-  var manualAddBtn = document.createElement("button");
+  const manualAddBtn = document.createElement("button");
   manualAddBtn.type = "button";
   manualAddBtn.style.display = "inline-flex";
   manualAddBtn.style.alignItems = "center";
   manualAddBtn.style.justifyContent = "center";
   manualAddBtn.style.gap = "8px";
 
-  var manualAddSpinner = document.createElement("span");
+  const manualAddSpinner = document.createElement("span");
   manualAddSpinner.setAttribute("aria-hidden", "true");
   manualAddSpinner.style.display = "none";
   manualAddSpinner.style.width = "14px";
@@ -1330,65 +1363,65 @@ export function createStudioHubsPanel(config, labels) {
   manualAddSpinner.style.borderRadius = "50%";
   manualAddSpinner.style.animation = "jmsStudioHubsSpin 0.7s linear infinite";
 
-  var manualAddBtnText = document.createElement("span");
-  manualAddBtnText.textContent = labels.addCollectionButton || "Adicionar";
+  const manualAddBtnText = document.createElement("span");
+  manualAddBtnText.textContent = labels?.addCollectionButton || "Ekle";
   manualAddBtn.append(manualAddSpinner, manualAddBtnText);
 
   manualAddRow.appendChild(studioIdInput);
   manualAddRow.appendChild(manualAddBtn);
   manualAddWrap.appendChild(manualAddRow);
 
-  var manualAssetRow = document.createElement("div");
+  const manualAssetRow = document.createElement("div");
   manualAssetRow.style.display = "flex";
   manualAssetRow.style.gap = "8px";
   manualAssetRow.style.flexWrap = "wrap";
   manualAssetRow.style.marginTop = "8px";
 
-  var manualLogoWrap = document.createElement("div");
+  const manualLogoWrap = document.createElement("div");
   manualLogoWrap.style.display = "flex";
   manualLogoWrap.style.flexDirection = "column";
   manualLogoWrap.style.gap = "6px";
 
-  var manualLogoLabel = document.createElement("label");
-  manualLogoLabel.textContent = labels.optionalLogoTitle || "Logo opcional";
+  const manualLogoLabel = document.createElement("label");
+  manualLogoLabel.textContent = labels?.optionalLogoTitle || "Opsiyonel logo";
   manualLogoLabel.htmlFor = "studioHubsManualLogoInput";
 
-  var manualLogoInput = document.createElement("input");
+  const manualLogoInput = document.createElement("input");
   manualLogoInput.type = "file";
   manualLogoInput.id = "studioHubsManualLogoInput";
   manualLogoInput.name = "studioHubsManualLogoInput";
   manualLogoInput.accept = "image/png,image/webp,image/svg+xml,image/jpeg,.png,.webp,.svg,.jpg,.jpeg";
-  manualLogoInput.title = labels.optionalLogoTitle || "Logo opcional";
+  manualLogoInput.title = labels?.optionalLogoTitle || "Opsiyonel logo";
 
-  var manualVideoWrap = document.createElement("div");
+  const manualVideoWrap = document.createElement("div");
   manualVideoWrap.style.display = "flex";
   manualVideoWrap.style.flexDirection = "column";
   manualVideoWrap.style.gap = "6px";
 
-  var manualVideoLabel = document.createElement("label");
-  manualVideoLabel.textContent = labels.optionalVideoTitle || "Vídeo de hover opcional";
+  const manualVideoLabel = document.createElement("label");
+  manualVideoLabel.textContent = labels?.optionalVideoTitle || "Opsiyonel hover video";
   manualVideoLabel.htmlFor = "studioHubsManualVideoInput";
 
-  var manualVideoInput = document.createElement("input");
+  const manualVideoInput = document.createElement("input");
   manualVideoInput.type = "file";
   manualVideoInput.id = "studioHubsManualVideoInput";
   manualVideoInput.name = "studioHubsManualVideoInput";
   manualVideoInput.accept = "video/mp4,video/webm,video/quicktime,.mp4,.webm,.m4v,.mov";
-  manualVideoInput.title = labels.optionalVideoTitle || "Vídeo de hover opcional";
+  manualVideoInput.title = labels?.optionalVideoTitle || "Opsiyonel hover video";
 
   manualLogoWrap.append(manualLogoLabel, manualLogoInput);
   manualVideoWrap.append(manualVideoLabel, manualVideoInput);
   manualAssetRow.append(manualLogoWrap, manualVideoWrap);
   manualAddWrap.appendChild(manualAssetRow);
 
-  var sharedVideoHint = document.createElement("div");
+  const sharedVideoHint = document.createElement("div");
   sharedVideoHint.className = "description-text2";
   sharedVideoHint.style.marginBottom = "8px";
   sharedVideoHint.textContent = isAdmin
-    ? (labels.hoverVideoAdminHint || "Os vídeos de hover são salvos instantaneamente no servidor e usados por todos os usuários.")
-    : (labels.hoverVideoAdminOnlyHint || "O carregamento e exclusão de vídeos de hover é permitido apenas para administradores.");
+    ? (labels?.hoverVideoAdminHint || "Hover videoları anında sunucuya kaydedilir ve tüm kullanıcılar kullanır.")
+    : (labels?.hoverVideoAdminOnlyHint || "Hover video yükleme ve silme sadece admin kullanıcılar içindir.");
 
-  var videoFileInput = document.createElement("input");
+  const videoFileInput = document.createElement("input");
   videoFileInput.type = "file";
   videoFileInput.id = "studioHubsSharedVideoFileInput";
   videoFileInput.name = "studioHubsSharedVideoFileInput";
@@ -1396,7 +1429,7 @@ export function createStudioHubsPanel(config, labels) {
   videoFileInput.style.display = "none";
   videoFileInput.setAttribute("aria-hidden", "true");
 
-  var logoFileInput = document.createElement("input");
+  const logoFileInput = document.createElement("input");
   logoFileInput.type = "file";
   logoFileInput.id = "studioHubsSharedLogoFileInput";
   logoFileInput.name = "studioHubsSharedLogoFileInput";
@@ -1404,86 +1437,86 @@ export function createStudioHubsPanel(config, labels) {
   logoFileInput.style.display = "none";
   logoFileInput.setAttribute("aria-hidden", "true");
 
-  var pendingVideoTarget = "";
-  var pendingLogoTargetStudioId = "";
-  var manualAddBusy = false;
+  let pendingVideoTarget = "";
+  let pendingLogoTargetStudioId = "";
+  let manualAddBusy = false;
 
-  panel.addEventListenerfunction("jms:cleanup", () {
+  panel.addEventListener("jms:cleanup", () => {
     window.removeEventListener(JMS_STUDIO_HUB_MANUAL_ENTRY_ADDED_EVENT, handleExternalManualEntryAdded);
   }, { once: true });
 
-  var setManualAddBusy = function(busy) {
+  const setManualAddBusy = (busy) => {
     manualAddBusy = !!busy;
     setButtonBusy(manualAddBtn, manualAddBtnText, manualAddSpinner, manualAddBusy, {
-      idleText: labels.addCollectionButton || "Adicionar",
-      busyText: labels.addCollectionBusy || "Adicionando..."
+      idleText: labels?.addCollectionButton || "Ekle",
+      busyText: labels?.addCollectionBusy || "Ekleniyor..."
     });
     studioIdInput.disabled = manualAddBusy;
     manualLogoInput.disabled = manualAddBusy;
     manualVideoInput.disabled = manualAddBusy;
   };
 
-  var addManualCollection = function() {
+  const addManualCollection = async () => {
     if (manualAddBusy) return;
-    var studioId = String(studioIdInput.value || "").trim();
+    const studioId = String(studioIdInput.value || "").trim();
     if (!studioId) {
-      setStatus(labels.manualCollectionEmpty || "Insira primeiro o Studio ID.", "error");
+      setStatus(labels?.manualCollectionEmpty || "Önce Studio ID girin.", "error");
       return;
     }
 
     setManualAddBusy(true);
     try {
-      setStatus(labels.studioResolving || "Resolvendo estúdio...");
-      var item = fetchItemDetails(studioId).catchfunction(() null);
-      var resolvedName = String(item.Name || "").trim();
+      setStatus(labels?.studioResolving || "Stüdyo çözümleniyor...");
+      const item = await fetchItemDetails(studioId).catch(() => null);
+      const resolvedName = String(item?.Name || "").trim();
       if (!resolvedName) {
-        setStatus(labels.studioResolveFailed || "Não foi possível resolver o título para este Studio ID.", "error");
+        setStatus(labels?.studioResolveFailed || "Bu Studio ID için başlık çözümlenemedi.", "error");
         return;
       }
-      var canonicalName = toCanonicalStudioName(resolvedName) || resolvedName;
+      const canonicalName = toCanonicalStudioName(resolvedName) || resolvedName;
 
       if (isDefaultStudioHub(canonicalName)) {
-        setStatus(labels.manualCollectionDuplicate || "Esta coleção já foi adicionada.", "error");
+        setStatus(labels?.manualCollectionDuplicate || "Bu koleksiyon zaten ekli.", "error");
         return;
       }
 
-      var existing = findStudioHubManualEntry(manualEntries, studioId) || findStudioHubManualEntry(manualEntries, canonicalName);
+      const existing = findStudioHubManualEntry(manualEntries, studioId) || findStudioHubManualEntry(manualEntries, canonicalName);
       if (existing) {
-        setStatus(labels.manualCollectionDuplicate || "Esta coleção já foi adicionada.", "error");
+        setStatus(labels?.manualCollectionDuplicate || "Bu koleksiyon zaten ekli.", "error");
         return;
       }
 
-      var existingListName = [...list.querySelectorAll(".dnd-item")].some(function(li) nameKey(li.dataset.name) === nameKey(canonicalName));
+      const existingListName = [...list.querySelectorAll(".dnd-item")].some(li => nameKey(li.dataset.name) === nameKey(canonicalName));
       if (existingListName) {
-        setStatus(labels.manualCollectionDuplicate || "Esta coleção já existe na lista.", "error");
+        setStatus(labels?.manualCollectionDuplicate || "Bu koleksiyon zaten listede var.", "error");
         return;
       }
 
-      var created = createStudioHubManualEntry({ studioId, name: canonicalName });
-      manualEntries = Array.isArray(created.entries) ? created.entries : manualEntries;
-      upsertManualEntryInList(created.entry || { studioId, name: canonicalName });
+      const created = await createStudioHubManualEntry({ studioId, name: canonicalName });
+      manualEntries = Array.isArray(created?.entries) ? created.entries : manualEntries;
+      upsertManualEntryInList(created?.entry || { studioId, name: canonicalName });
 
-      var logoFile = manualLogoInput.files.[0];
-      var autoLogoUploaded = false;
+      const logoFile = manualLogoInput.files?.[0];
+      let autoLogoUploaded = false;
       if (logoFile) {
-        var logoRes = uploadStudioHubLogo(studioId, logoFile);
-        manualEntries = Array.isArray(logoRes.entries) ? logoRes.entries : manualEntries;
+        const logoRes = await uploadStudioHubLogo(studioId, logoFile);
+        manualEntries = Array.isArray(logoRes?.entries) ? logoRes.entries : manualEntries;
       } else {
-        setStatus(formatLabel("studioHubTmdbLogoSearching", "Procurando logo no TMDB para {name}...", {
+        setStatus(formatLabel("studioHubTmdbLogoSearching", "{name} için TMDB logosu aranıyor...", {
           name: canonicalName
         }));
-        var tmdbLogoFile = resolveTmdbLogoFileForStudio(canonicalName).catchfunction(() null);
+        const tmdbLogoFile = await resolveTmdbLogoFileForStudio(canonicalName).catch(() => null);
         if (tmdbLogoFile) {
-          var logoRes = uploadStudioHubLogo(studioId, tmdbLogoFile);
-          manualEntries = Array.isArray(logoRes.entries) ? logoRes.entries : manualEntries;
+          const logoRes = await uploadStudioHubLogo(studioId, tmdbLogoFile);
+          manualEntries = Array.isArray(logoRes?.entries) ? logoRes.entries : manualEntries;
           autoLogoUploaded = true;
         }
       }
 
-      var videoFile = manualVideoInput.files.[0];
+      const videoFile = manualVideoInput.files?.[0];
       if (videoFile) {
-        var videoRes = uploadStudioHubVideo(canonicalName, videoFile);
-        sharedVideos = Array.isArray(videoRes.entries) ? videoRes.entries : sharedVideos;
+        const videoRes = await uploadStudioHubVideo(canonicalName, videoFile);
+        sharedVideos = Array.isArray(videoRes?.entries) ? videoRes.entries : sharedVideos;
       }
 
       studioIdInput.value = "";
@@ -1492,75 +1525,75 @@ export function createStudioHubsPanel(config, labels) {
       refreshListState();
       setStatus(
         autoLogoUploaded
-          ? formatLabel("studioHubManualCollectionAddedWithTmdbLogo", "{name} adicionado. Logo do TMDB salvo automaticamente.", {
+          ? formatLabel("studioHubManualCollectionAddedWithTmdbLogo", "{name} eklendi. TMDB logosu otomatik kaydedildi.", {
             name: canonicalName
           })
-          : formatLabel("studioHubManualCollectionAdded", "{name} adicionado.", {
+          : formatLabel("studioHubManualCollectionAdded", "{name} eklendi.", {
             name: canonicalName
           }),
         "success"
       );
     } catch (error) {
-      setStatus(error.message || (labels.studioHubManualCollectionAddFailed || "Não foi possível adicionar a coleção."), "error");
+      setStatus(error?.message || (labels?.studioHubManualCollectionAddFailed || "Koleksiyon eklenemedi."), "error");
     } finally {
       setManualAddBusy(false);
     }
   };
 
   manualAddBtn.addEventListener("click", addManualCollection);
-  studioIdInput.addEventListenerfunction("keydown", (e) {
+  studioIdInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       addManualCollection();
     }
   });
 
-  videoFileInput.addEventListenerfunction("change", () {
-    var file = videoFileInput.files.[0];
-    var targetName = pendingVideoTarget;
+  videoFileInput.addEventListener("change", async () => {
+    const file = videoFileInput.files?.[0];
+    const targetName = pendingVideoTarget;
     pendingVideoTarget = "";
     videoFileInput.value = "";
 
     if (!file || !targetName) return;
 
-    setStatus(formatLabel("studioHubHoverVideoUploading", "Carregando vídeo para {name}...", {
+    setStatus(formatLabel("studioHubHoverVideoUploading", "{name} için video yükleniyor...", {
       name: targetName
     }));
     try {
-      var result = uploadStudioHubVideo(targetName, file);
-      sharedVideos = Array.isArray(result.entries) ? result.entries : sharedVideos;
+      const result = await uploadStudioHubVideo(targetName, file);
+      sharedVideos = Array.isArray(result?.entries) ? result.entries : sharedVideos;
       refreshListState();
-      setStatus(formatLabel("studioHubHoverVideoSaved", "Vídeo de hover salvo para {name}.", {
+      setStatus(formatLabel("studioHubHoverVideoSaved", "{name} için hover videosu kaydedildi.", {
         name: targetName
       }), "success");
     } catch (error) {
-      setStatus(error.message || (labels.studioHubHoverVideoUploadFailed || "Não foi possível carregar o vídeo de hover."), "error");
+      setStatus(error?.message || (labels?.studioHubHoverVideoUploadFailed || "Hover videosu yüklenemedi."), "error");
     }
   });
 
-  logoFileInput.addEventListenerfunction("change", () {
-    var file = logoFileInput.files.[0];
-    var studioId = pendingLogoTargetStudioId;
+  logoFileInput.addEventListener("change", async () => {
+    const file = logoFileInput.files?.[0];
+    const studioId = pendingLogoTargetStudioId;
     pendingLogoTargetStudioId = "";
     logoFileInput.value = "";
 
     if (!file || !studioId) return;
 
-    var target = findStudioHubManualEntry(manualEntries, studioId);
-    var targetName = String(target.name || target.Name || studioId);
+    const target = findStudioHubManualEntry(manualEntries, studioId);
+    const targetName = String(target?.name || target?.Name || studioId);
 
-    setStatus(formatLabel("studioHubLogoUploading", "Carregando logo para {name}...", {
+    setStatus(formatLabel("studioHubLogoUploading", "{name} için logo yükleniyor...", {
       name: targetName
     }));
     try {
-      var result = uploadStudioHubLogo(studioId, file);
-      manualEntries = Array.isArray(result.entries) ? result.entries : manualEntries;
+      const result = await uploadStudioHubLogo(studioId, file);
+      manualEntries = Array.isArray(result?.entries) ? result.entries : manualEntries;
       refreshListState();
-      setStatus(formatLabel("studioHubLogoSaved", "Logo salvo para {name}.", {
+      setStatus(formatLabel("studioHubLogoSaved", "{name} için logo kaydedildi.", {
         name: targetName
       }), "success");
     } catch (error) {
-      setStatus(error.message || (labels.studioHubLogoUploadFailed || "Não foi possível carregar o logo."), "error");
+      setStatus(error?.message || (labels?.studioHubLogoUploadFailed || "Logo yüklenemedi."), "error");
     }
   });
 
@@ -1573,20 +1606,20 @@ export function createStudioHubsPanel(config, labels) {
   section.appendChild(orderHiddenInput);
   section.appendChild(hiddenHiddenInput);
 
-  function(() {
+  (async () => {
     try {
-      var ctrl = new AbortController();
-      panel.addEventListenerfunction('jms:cleanup', () ctrl.abort(), { once: true });
-      var url = "/Studios?Limit=300&Recursive=true&SortBy=SortName&SortOrder=Ascending";
-      var data = makeApiRequest(url, { signal: ctrl.signal });
-      var items = Array.isArray(data.Items) ? data.Items : (Array.isArray(data) ? data : []);
-      var existing = new Set(
-        [...list.querySelectorAll(".dnd-item")].map(function(li) li.dataset.name.toLowerCase())
+      const ctrl = new AbortController();
+      panel.addEventListener('jms:cleanup', () => ctrl.abort(), { once: true });
+      const url = `/Studios?Limit=300&Recursive=true&SortBy=SortName&SortOrder=Ascending`;
+      const data = await makeApiRequest(url, { signal: ctrl.signal });
+      const items = Array.isArray(data?.Items) ? data.Items : (Array.isArray(data) ? data : []);
+      const existing = new Set(
+        [...list.querySelectorAll(".dnd-item")].map(li => li.dataset.name.toLowerCase())
       );
 
-      var toAdd = [];
-      for (var s of items) {
-        var canon = toCanonicalStudioName(s.Name);
+      const toAdd = [];
+      for (const s of items) {
+        const canon = toCanonicalStudioName(s?.Name);
         if (!canon) continue;
         if (!existing.has(canon.toLowerCase())) {
           existing.add(canon.toLowerCase());
@@ -1595,13 +1628,14 @@ export function createStudioHubsPanel(config, labels) {
       }
 
       if (toAdd.length) {
-        var appendSorted = toAdd.sortfunction((a, b) DEFAULT_ORDER.indexOf(a) - DEFAULT_ORDER.indexOf(b)
+        const appendSorted = toAdd.sort(
+          (a, b) => DEFAULT_ORDER.indexOf(a) - DEFAULT_ORDER.indexOf(b)
         );
 
-        for (var name of appendSorted) {
+        for (const name of appendSorted) {
           list.appendChild(createDnDItem(name, labels, {
             enableStudioControls: true,
-            hidden: currentHiddenNames.some(function(item) nameKey(item) === nameKey(name)),
+            hidden: currentHiddenNames.some(item => nameKey(item) === nameKey(name)),
             isManual: false,
             isAdmin,
             visibilityDisabled,
@@ -1618,11 +1652,11 @@ export function createStudioHubsPanel(config, labels) {
     }
   })();
 
-  list.addEventListenerfunction("click", (e) {
-    var li = e.target.closest(".dnd-item");
+  list.addEventListener("click", async (e) => {
+    const li = e.target.closest(".dnd-item");
     if (!li) return;
 
-    var toggleBtn = e.target.closest(".dnd-btn-visibility");
+    const toggleBtn = e.target.closest(".dnd-btn-visibility");
     if (toggleBtn) {
       if (toggleBtn.disabled || li.dataset.visibilityDisabled === "1") return;
       li.dataset.hidden = li.dataset.hidden === "1" ? "0" : "1";
@@ -1630,76 +1664,76 @@ export function createStudioHubsPanel(config, labels) {
       return;
     }
 
-    var removeBtn = e.target.closest(".dnd-btn-remove");
+    const removeBtn = e.target.closest(".dnd-btn-remove");
     if (removeBtn) {
-      var studioId = li.dataset.studioId || "";
+      const studioId = li.dataset.studioId || "";
       if (!studioId) return;
-      var targetName = li.dataset.name || formatLabel("studioHubCollectionFallbackName", "Koleksiyon");
+      const targetName = li.dataset.name || formatLabel("studioHubCollectionFallbackName", "Koleksiyon");
       setStatus(formatLabel("studioHubCollectionRemoving", "{name} kaldırılıyor...", {
         name: targetName
       }));
       try {
-        var result = deleteStudioHubManualEntry(studioId);
-        manualEntries = Array.isArray(result.manualEntries) ? result.manualEntries : manualEntries;
-        sharedVideos = Array.isArray(result.videoEntries) ? result.videoEntries : sharedVideos;
+        const result = await deleteStudioHubManualEntry(studioId);
+        manualEntries = Array.isArray(result?.manualEntries) ? result.manualEntries : manualEntries;
+        sharedVideos = Array.isArray(result?.videoEntries) ? result.videoEntries : sharedVideos;
         li.remove();
         refreshListState();
-        setStatus(labels.manualCollectionRemoved || "Koleksiyon listeden kaldırıldı.", "success");
+        setStatus(labels?.manualCollectionRemoved || "Koleksiyon listeden kaldırıldı.", "success");
       } catch (error) {
-        setStatus(error.message || (labels.studioHubManualCollectionRemoveFailed || "Koleksiyon kaldırılamadı."), "error");
+        setStatus(error?.message || (labels?.studioHubManualCollectionRemoveFailed || "Koleksiyon kaldırılamadı."), "error");
       }
       return;
     }
 
-    var uploadLogoBtn = e.target.closest(".dnd-btn-upload-logo");
+    const uploadLogoBtn = e.target.closest(".dnd-btn-upload-logo");
     if (uploadLogoBtn) {
       pendingLogoTargetStudioId = li.dataset.studioId || "";
       logoFileInput.click();
       return;
     }
 
-    var deleteLogoBtn = e.target.closest(".dnd-btn-delete-logo");
+    const deleteLogoBtn = e.target.closest(".dnd-btn-delete-logo");
     if (deleteLogoBtn && !deleteLogoBtn.disabled) {
-      var studioId = li.dataset.studioId || "";
-      var targetName = li.dataset.name || "";
+      const studioId = li.dataset.studioId || "";
+      const targetName = li.dataset.name || "";
       setStatus(formatLabel("studioHubLogoDeleting", "{name} için logo siliniyor...", {
         name: targetName
       }));
       try {
-        var result = deleteStudioHubLogo(studioId);
-        manualEntries = Array.isArray(result.entries) ? result.entries : manualEntries;
+        const result = await deleteStudioHubLogo(studioId);
+        manualEntries = Array.isArray(result?.entries) ? result.entries : manualEntries;
         refreshListState();
         setStatus(formatLabel("studioHubLogoDeleted", "{name} için logo silindi.", {
           name: targetName
         }), "success");
       } catch (error) {
-        setStatus(error.message || (labels.studioHubLogoDeleteFailed || "Logo silinemedi."), "error");
+        setStatus(error?.message || (labels?.studioHubLogoDeleteFailed || "Logo silinemedi."), "error");
       }
       return;
     }
 
-    var uploadBtn = e.target.closest(".dnd-btn-upload-video");
+    const uploadBtn = e.target.closest(".dnd-btn-upload-video");
     if (uploadBtn) {
       pendingVideoTarget = li.dataset.name || "";
       videoFileInput.click();
       return;
     }
 
-    var deleteVideoBtn = e.target.closest(".dnd-btn-delete-video");
+    const deleteVideoBtn = e.target.closest(".dnd-btn-delete-video");
     if (deleteVideoBtn && !deleteVideoBtn.disabled) {
-      var targetName = li.dataset.name || "";
+      const targetName = li.dataset.name || "";
       setStatus(formatLabel("studioHubHoverVideoDeleting", "{name} için hover videosu siliniyor...", {
         name: targetName
       }));
       try {
-        var result = deleteStudioHubVideo(targetName);
-        sharedVideos = Array.isArray(result.entries) ? result.entries : [];
+        const result = await deleteStudioHubVideo(targetName);
+        sharedVideos = Array.isArray(result?.entries) ? result.entries : [];
         refreshListState();
         setStatus(formatLabel("studioHubHoverVideoDeleted", "{name} için hover videosu silindi.", {
           name: targetName
         }), "success");
       } catch (error) {
-        setStatus(error.message || (labels.studioHubHoverVideoDeleteFailed || "Hover videosu silinemedi."), "error");
+        setStatus(error?.message || (labels?.studioHubHoverVideoDeleteFailed || "Hover videosu silinemedi."), "error");
       }
     }
   });
@@ -1707,39 +1741,39 @@ export function createStudioHubsPanel(config, labels) {
   list.addEventListener("dragend", refreshListState);
   list.addEventListener("drop", refreshListState);
   list.addEventListener("dnd:reorder", refreshListState);
-  list.addEventListenerfunction("click", (e) {
+  list.addEventListener("click", (e) => {
     if (e.target.closest(".dnd-btn-up") || e.target.closest(".dnd-btn-down")) refreshListState();
   });
   refreshListState();
 
-  var visibilityLoadPromise = useGlobalVisibility
-    ? Promise.resolve().thenfunction(() {
+  const visibilityLoadPromise = useGlobalVisibility
+    ? Promise.resolve().then(() => {
         if (useGlobalOrder) applyOrderNamesToList(currentOrderNames);
         applyHiddenNamesToList(currentHiddenNames);
       })
-    : function(() {
+    : (async () => {
         try {
-          var visibility = fetchStudioHubVisibility({
+          const visibility = await fetchStudioHubVisibility({
             force: true,
             profile: getVisibilityProfile()
           });
           applyOrderNamesToList(
-            Array.isArray(visibility.orderNames) && visibility.orderNames.length
+            Array.isArray(visibility?.orderNames) && visibility.orderNames.length
               ? visibility.orderNames
               : currentOrderNames
           );
-          applyHiddenNamesToList(visibility.hiddenNames || []);
+          applyHiddenNamesToList(visibility?.hiddenNames || []);
         } catch (e) {
           console.warn("studioHubsPage: visibility alınamadı:", e);
         }
       })();
 
-  var sharedDataLoadPromise = function(() {
+  const sharedDataLoadPromise = (async () => {
     try {
-      manualEntries = fetchStudioHubManualEntries();
+      manualEntries = await fetchStudioHubManualEntries();
       manualEntriesLoaded = true;
-      manualEntries.forEach(function(entry) upsertManualEntryInList(entry));
-      sharedVideos = fetchStudioHubVideoEntries();
+      manualEntries.forEach(entry => upsertManualEntryInList(entry));
+      sharedVideos = await fetchStudioHubVideoEntries();
       applyOrderNamesToList(currentOrderNames);
       refreshListState();
     } catch (e) {
@@ -1747,19 +1781,19 @@ export function createStudioHubsPanel(config, labels) {
     }
   })();
 
-  function(() {
-    var ctrl = new AbortController();
-    panel.addEventListenerfunction("jms:cleanup", () ctrl.abort(), { once: true });
+  (async () => {
+    const ctrl = new AbortController();
+    panel.addEventListener("jms:cleanup", () => ctrl.abort(), { once: true });
     try {
-      Promise.allSettled([visibilityLoadPromise, sharedDataLoadPromise]);
+      await Promise.allSettled([visibilityLoadPromise, sharedDataLoadPromise]);
       if (ctrl.signal.aborted) return;
 
-      var emptyDefaultNames = findEmptyDefaultStudioHubNames(config, ctrl.signal);
+      const emptyDefaultNames = await findEmptyDefaultStudioHubNames(config, ctrl.signal);
       if (ctrl.signal.aborted || !emptyDefaultNames.length) return;
 
-      var hiddenSet = new Set(currentHiddenNames.map(nameKey));
-      var nextHiddenNames = dedupeNames([...currentHiddenNames, ...emptyDefaultNames]);
-      var changed = emptyDefaultNames.some(function(name) !hiddenSet.has(nameKey(name)));
+      const hiddenSet = new Set(currentHiddenNames.map(nameKey));
+      const nextHiddenNames = dedupeNames([...currentHiddenNames, ...emptyDefaultNames]);
+      const changed = emptyDefaultNames.some(name => !hiddenSet.has(nameKey(name)));
       if (!changed) return;
 
       applyHiddenNamesToList(nextHiddenNames);
@@ -1770,48 +1804,48 @@ export function createStudioHubsPanel(config, labels) {
     }
   })();
 
-  var subheading = document.createElement('h3');
-  subheading.textContent = labels.personalRecommendations || 'Para Você';
+  const subheading = document.createElement('h3');
+  subheading.textContent = labels?.personalRecommendations || 'Kişisel Öneriler';
   section.appendChild(subheading);
 
-  var cardTitleModeWrap = document.createElement("div");
+  const cardTitleModeWrap = document.createElement("div");
   cardTitleModeWrap.className = "input-container";
 
-  var cardTitleModeLabel = document.createElement("label");
+  const cardTitleModeLabel = document.createElement("label");
   cardTitleModeLabel.htmlFor = "managedCardTitleDisplayMode";
   cardTitleModeLabel.textContent =
-    labels.managedCardTitleDisplayMode ||
-    "Exibição de Logo/Título nos cards";
+    labels?.managedCardTitleDisplayMode ||
+    "Normal kart başlık/logo görünümü";
   cardTitleModeWrap.appendChild(cardTitleModeLabel);
 
-  var cardTitleModeSelect = document.createElement("select");
+  const cardTitleModeSelect = document.createElement("select");
   cardTitleModeSelect.id = "managedCardTitleDisplayMode";
   cardTitleModeSelect.name = "managedCardTitleDisplayMode";
 
-  var cardTitleModeValue = normalizeManagedCardTitleDisplayMode(
+  const cardTitleModeValue = normalizeManagedCardTitleDisplayMode(
     config.managedCardTitleDisplayMode
   );
-  var cardTitleModeOptions = [
+  const cardTitleModeOptions = [
     {
       value: "logo",
-      label: labels.managedCardTitleDisplayModeLogoOnly || "Apenas logo",
+      label: labels?.managedCardTitleDisplayModeLogoOnly || "Sadece logo",
     },
     {
       value: "title",
-      label: labels.managedCardTitleDisplayModeTitleOnly || "Apenas título",
+      label: labels?.managedCardTitleDisplayModeTitleOnly || "Sadece başlık",
     },
     {
       value: "logoTitle",
-      label: labels.managedCardTitleDisplayModeLogoAndTitle || "Logo e título",
+      label: labels?.managedCardTitleDisplayModeLogoAndTitle || "Logo - başlık",
     },
     {
       value: "none",
-      label: labels.managedCardTitleDisplayModeNone || "Ocultar ambos",
+      label: labels?.managedCardTitleDisplayModeNone || "Hiçbiri",
     },
   ];
 
-  for (var optionDef of cardTitleModeOptions) {
-    var option = document.createElement("option");
+  for (const optionDef of cardTitleModeOptions) {
+    const option = document.createElement("option");
     option.value = optionDef.value;
     option.textContent = optionDef.label;
     option.selected = optionDef.value === cardTitleModeValue;
@@ -1821,16 +1855,16 @@ export function createStudioHubsPanel(config, labels) {
   cardTitleModeWrap.appendChild(cardTitleModeSelect);
   section.appendChild(cardTitleModeWrap);
 
-  var enableForYouCheckbox = createCheckbox(
+  const enableForYouCheckbox = createCheckbox(
     'enablePersonalRecommendations',
-    labels.enableForYou || 'Habilitar Recomendações \'Para Você\'',
+    labels?.enableForYou || config.languageLabels.enableForYou || 'Sana Özel Koleksiyonları Etkinleştir',
     config.enablePersonalRecommendations
   );
   section.appendChild(enableForYouCheckbox);
 
-  var ratingWrap = createNumberInput(
+  const ratingWrap = createNumberInput(
    'studioHubsMinRating',
-   labels.studioHubsMinRating || 'Nota Mínima',
+   labels?.studioHubsMinRating || 'Minimum Derecelendirme',
    Number.isFinite(config.studioHubsMinRating) ? config.studioHubsMinRating : 6.5,
    1,
    10,
@@ -1838,260 +1872,260 @@ export function createStudioHubsPanel(config, labels) {
   );
   section.appendChild(ratingWrap);
 
-  var volumeWrap = createSelect(
+  const volumeWrap = createSelect(
     'studioHubsVolume',
-    labels.studioHubsVolume || 'Volume dos Trailers (Coleções)',
+    labels?.studioHubsVolume || 'Volume dos Trailers (Coleções)',
     [
-      { value: 'muted', text: labels.studioHubsMuted || 'Mudo' },
-      { value: '10', text: (labels.studioHubsVolumeValue || '{value}%').replace('{value}', '10') },
-      { value: '20', text: (labels.studioHubsVolumeValue || '{value}%').replace('{value}', '20') },
-      { value: '30', text: (labels.studioHubsVolumeValue || '{value}%').replace('{value}', '30') },
-      { value: '50', text: (labels.studioHubsVolumeValue || '{value}%').replace('{value}', '50') }
+      { value: 'muted', text: labels?.studioHubsMuted || 'Mudo' },
+      { value: '10', text: (labels?.studioHubsVolumeValue || '{value}%').replace('{value}', '10') },
+      { value: '20', text: (labels?.studioHubsVolumeValue || '{value}%').replace('{value}', '20') },
+      { value: '30', text: (labels?.studioHubsVolumeValue || '{value}%').replace('{value}', '30') },
+      { value: '50', text: (labels?.studioHubsVolumeValue || '{value}%').replace('{value}', '50') }
     ],
     config.studioHubsVolume || '20'
   );
   section.appendChild(volumeWrap);
 
-  var personalcountWrap = createNumberInput(
+  const personalcountWrap = createNumberInput(
     'personalRecsCardCount',
-    labels.studioHubsCardCount || 'Número de cards a exibir (Tela principal)',
+    labels?.studioHubsCardCount || 'Gösterilecek kart sayısı (Ana ekran)',
     Number.isFinite(config.personalRecsCardCount) ? config.personalRecsCardCount : 9,
     1,
     20
   );
   section.appendChild(personalcountWrap);
 
-  var raHeading = document.createElement('h3');
+  const raHeading = document.createElement('h3');
   raHeading.textContent =
-    labels.recentAndContinueHeading ||
-    'Novidades e Continuar';
+    labels?.recentAndContinueHeading ||
+    'Son Eklenenler & İzlemeye Devam Et';
   section.appendChild(raHeading);
 
-  var enableRecentRows = createCheckbox(
+  const enableRecentRows = createCheckbox(
     'enableRecentRows',
-    labels.enableRecentRows || 'Habilitar Seção',
+    labels?.enableRecentRows || 'Son eklenenler (master) satırlarını göster',
     config.enableRecentRows !== false
   );
   section.appendChild(enableRecentRows);
 
-  var recentSubWrap = document.createElement("div");
+  const recentSubWrap = document.createElement("div");
   recentSubWrap.style.paddingLeft = "8px";
   recentSubWrap.style.borderLeft = "2px solid #0002";
   recentSubWrap.style.marginBottom = "10px";
   section.appendChild(recentSubWrap);
 
-  var showRecentRowsHeroCards = createCheckbox(
+  const showRecentRowsHeroCards = createCheckbox(
     'showRecentRowsHeroCards',
-    labels.showRecentRowsHeroCards || 'Mostrar Hero Card (Master)',
+    labels?.showRecentRowsHeroCards || 'Hero kartını göster (Son Eklenenler)',
     config.showRecentRowsHeroCards !== false
   );
   recentSubWrap.appendChild(showRecentRowsHeroCards);
 
-  var enableTop10SeriesRow = createCheckbox(
+  const enableTop10SeriesRow = createCheckbox(
     'enableTop10SeriesRow',
-    labels.enableTop10SeriesRow || 'Habilitar Top 10 Séries',
+    labels?.enableTop10SeriesRow || 'Top 10 dizi satırı',
     config.enableTop10SeriesRow !== false
   );
   recentSubWrap.appendChild(enableTop10SeriesRow);
 
-  var enableTop10MoviesRow = createCheckbox(
+  const enableTop10MoviesRow = createCheckbox(
     'enableTop10MoviesRow',
-    labels.enableTop10MoviesRow || 'Habilitar Top 10 Filmes',
+    labels?.enableTop10MoviesRow || 'Top 10 film satırı',
     config.enableTop10MoviesRow !== false
   );
   recentSubWrap.appendChild(enableTop10MoviesRow);
 
-  var enableTmdbTopMoviesRow = createCheckbox(
+  const enableTmdbTopMoviesRow = createCheckbox(
     'enableTmdbTopMoviesRow',
-    labels.enableTmdbTopMoviesRow || 'Habilitar Top 10 TMDb',
+    labels?.enableTmdbTopMoviesRow || 'TMDb en iyi filmler satırı',
     config.enableTmdbTopMoviesRow !== false
   );
   recentSubWrap.appendChild(enableTmdbTopMoviesRow);
 
-  var enableRecentMoviesRow = createCheckbox(
+  const enableRecentMoviesRow = createCheckbox(
     'enableRecentMoviesRow',
-    labels.enableRecentMoviesRow || 'Habilitar Filmes Recentes',
+    labels?.enableRecentMoviesRow || 'Son eklenen filmler satırı',
     config.enableRecentMoviesRow !== false
   );
   recentSubWrap.appendChild(enableRecentMoviesRow);
 
-  var showRecentMoviesHeroCards = createCheckbox(
+  const showRecentMoviesHeroCards = createCheckbox(
     'showRecentMoviesHeroCards',
-    labels.showRecentMoviesHeroCards || 'Mostrar Hero Card (Filmes)',
+    labels?.showRecentMoviesHeroCards || 'Hero kartını göster (Son Eklenen Filmler)',
     config.showRecentMoviesHeroCards !== false
   );
   recentSubWrap.appendChild(showRecentMoviesHeroCards);
 
-  var splitMovieLibRows = createCheckbox(
+  const splitMovieLibRows = createCheckbox(
     'recentRowsSplitMovieLibs',
-    labels.recentRowsSplitMovieLibs || 'Film Kütüphanelerini Ayrı Bölümlerde Göster',
+    labels?.recentRowsSplitMovieLibs || 'Film Kütüphanelerini Ayrı Bölümlerde Göster',
     config.recentRowsSplitMovieLibs === true
   );
   recentSubWrap.appendChild(splitMovieLibRows);
 
-  var recentMoviesCountWrap = createNumberInput(
+  const recentMoviesCountWrap = createNumberInput(
     'recentMoviesCardCount',
-    labels.recentMoviesCardCount || 'Limite de Filmes Recentes',
+    labels?.recentMoviesCardCount || 'Son eklenen filmler kart sayısı',
     Number.isFinite(config.recentMoviesCardCount) ? config.recentMoviesCardCount : 10,
     1,
     20
   );
   recentSubWrap.appendChild(recentMoviesCountWrap);
 
-  var enableRecentSeriesRow = createCheckbox(
+  const enableRecentSeriesRow = createCheckbox(
     'enableRecentSeriesRow',
-    labels.enableRecentSeriesRow || 'Habilitar Séries Recentes',
+    labels?.enableRecentSeriesRow || 'Son eklenen diziler satırı',
     config.enableRecentSeriesRow !== false
   );
   recentSubWrap.appendChild(enableRecentSeriesRow);
 
-  var showRecentSeriesHeroCards = createCheckbox(
+  const showRecentSeriesHeroCards = createCheckbox(
     'showRecentSeriesHeroCards',
-    labels.showRecentSeriesHeroCards || 'Mostrar Hero Card (Séries)',
+    labels?.showRecentSeriesHeroCards || 'Hero kartını göster (Son Eklenen Diziler)',
     config.showRecentSeriesHeroCards !== false
   );
   recentSubWrap.appendChild(showRecentSeriesHeroCards);
 
-  var splitTvLibRows = createCheckbox(
+  const splitTvLibRows = createCheckbox(
     'recentRowsSplitTvLibs',
-    labels.recentRowsSplitTvLibs || 'Dizi Kütüphanelerini Ayrı Bölümle',
+    labels?.recentRowsSplitTvLibs || 'Dizi Kütüphanelerini Ayrı Bölümle',
     config.recentRowsSplitTvLibs !== false
   );
   recentSubWrap.appendChild(splitTvLibRows);
 
-  var recentSeriesCountWrap = createNumberInput(
+  const recentSeriesCountWrap = createNumberInput(
     'recentSeriesCardCount',
-    labels.recentSeriesCardCount || 'Limite de Séries Recentes',
+    labels?.recentSeriesCardCount || 'Son eklenen diziler kart sayısı',
     Number.isFinite(config.recentSeriesCardCount) ? config.recentSeriesCardCount : 10,
     1,
     20
   );
   recentSubWrap.appendChild(recentSeriesCountWrap);
 
-  var enableRecentMusicRow = createCheckbox(
+  const enableRecentMusicRow = createCheckbox(
     'enableRecentMusicRow',
-    labels.enableRecentMusicRow || 'Habilitar Álbuns Recentes',
+    labels?.enableRecentMusicRow || 'Son eklenen Albüm Bölümü',
     config.enableRecentMusicRow !== false
   );
   recentSubWrap.appendChild(enableRecentMusicRow);
 
-  var showRecentMusicHeroCards = createCheckbox(
+  const showRecentMusicHeroCards = createCheckbox(
     'showRecentMusicHeroCards',
-    labels.showRecentMusicHeroCards || 'Mostrar Hero Card (Álbuns)',
+    labels?.showRecentMusicHeroCards || 'Hero kartını göster (Son Eklenen Albümler)',
     config.showRecentMusicHeroCards !== false
   );
   recentSubWrap.appendChild(showRecentMusicHeroCards);
 
-  var enableRecentMusicTracksRow = createCheckbox(
+  const enableRecentMusicTracksRow = createCheckbox(
     'enableRecentMusicTracksRow',
-    labels.enableRecentMusicTracksRow || 'Son Dinlenen Parçalar',
+    labels?.enableRecentMusicTracksRow || 'Son Dinlenen Parçalar',
     config.enableRecentMusicTracksRow !== false
   );
   recentSubWrap.appendChild(enableRecentMusicTracksRow);
 
-  var showRecentTracksHeroCards = createCheckbox(
+  const showRecentTracksHeroCards = createCheckbox(
     'showRecentTracksHeroCards',
-    labels.showRecentTracksHeroCards || 'Mostrar Hero Card (Músicas)',
+    labels?.showRecentTracksHeroCards || 'Hero kartını göster (Son Dinlenen Şarkılar)',
     config.showRecentTracksHeroCards !== false
   );
   recentSubWrap.appendChild(showRecentTracksHeroCards);
 
-  var recentMusicCountWrap = createNumberInput(
+  const recentMusicCountWrap = createNumberInput(
     'recentMusicCardCount',
-    labels.recentMusicCardCount || 'Limite de Música Recente',
+    labels?.recentMusicCardCount || 'Son eklenen müzikler kart sayısı',
     Number.isFinite(config.recentMusicCardCount) ? config.recentMusicCardCount : 10,
     1,
     20
   );
   recentSubWrap.appendChild(recentMusicCountWrap);
 
-  var enableRecentEpisodesRow = createCheckbox(
+  const enableRecentEpisodesRow = createCheckbox(
     'enableRecentEpisodesRow',
-    labels.enableRecentEpisodesRow || 'Habilitar Episódios Recentes',
+    labels?.enableRecentEpisodesRow || 'Son eklenen bölümler',
     config.enableRecentEpisodesRow !== false
   );
   recentSubWrap.appendChild(enableRecentEpisodesRow);
 
-  var showRecentEpisodesHeroCards = createCheckbox(
+  const showRecentEpisodesHeroCards = createCheckbox(
     'showRecentEpisodesHeroCards',
-    labels.showRecentEpisodesHeroCards || 'Mostrar Hero Card (Episódios)',
+    labels?.showRecentEpisodesHeroCards || 'Hero kartını göster (Son Eklenen Bölümler)',
     config.showRecentEpisodesHeroCards !== false
   );
   recentSubWrap.appendChild(showRecentEpisodesHeroCards);
 
-  var recentEpisodesCountWrap = createNumberInput(
+  const recentEpisodesCountWrap = createNumberInput(
     'recentEpisodesCardCount',
-    labels.recentEpisodesCardCount || 'Limite de Episódios Recentes',
+    labels?.recentEpisodesCardCount || 'Son eklenen bölümler kart sayısı',
     Number.isFinite(config.recentEpisodesCardCount) ? config.recentEpisodesCardCount : 10,
     1,
     20
   );
   recentSubWrap.appendChild(recentEpisodesCountWrap);
 
-  var enableNextUpRow = createCheckbox(
+  const enableNextUpRow = createCheckbox(
     'enableNextUpRow',
-    labels.enableNextUpRow || 'Habilitar Próximos Episódios',
+    labels?.enableNextUpRow || 'Sıradaki bölümler kartlarını etkinleştir',
     config.enableNextUpRow !== false
   );
   recentSubWrap.appendChild(enableNextUpRow);
 
-  var showNextUpHeroCards = createCheckbox(
+  const showNextUpHeroCards = createCheckbox(
     'showNextUpHeroCards',
-    labels.showNextUpHeroCards || 'Mostrar Hero Card (Próximos)',
+    labels?.showNextUpHeroCards || 'Hero kartını göster (Sıradaki Bölümler)',
     config.showNextUpHeroCards !== false
   );
   recentSubWrap.appendChild(showNextUpHeroCards);
 
-  var nextUpCountWrap = createNumberInput(
+  const nextUpCountWrap = createNumberInput(
     'nextUpCardCount',
-    labels.nextUpCardCount || 'Limite de Próximos',
+    labels?.nextUpCardCount || 'Sıradaki bölümler kart sayısı',
     Number.isFinite(config.nextUpCardCount) ? config.nextUpCardCount : 10,
     1,
     20
   );
   recentSubWrap.appendChild(nextUpCountWrap);
 
-  var getCb = function(wrap) wrap.querySelector.('input[type="checkbox"]');
-  var bindDependentCheckboxVisibility = function(controllerWrap, dependentWrap) {
-    var controllerCb = getCb(controllerWrap);
-    var dependentCb = getCb(dependentWrap);
+  const getCb = wrap => wrap?.querySelector?.('input[type="checkbox"]');
+  const bindDependentCheckboxVisibility = (controllerWrap, dependentWrap) => {
+    const controllerCb = getCb(controllerWrap);
+    const dependentCb = getCb(dependentWrap);
 
-    var sync = function() {
-      var visible = !!controllerCb.checked;
+    const sync = () => {
+      const visible = !!controllerCb?.checked;
       if (dependentWrap) dependentWrap.style.display = visible ? '' : 'none';
       if (!visible && dependentCb) dependentCb.checked = false;
     };
 
     sync();
-    controllerWrap.addEventListener.('change', sync, { passive: true });
+    controllerWrap?.addEventListener?.('change', sync, { passive: true });
     return sync;
   };
 
-  var masterCb = getCb(enableRecentRows);
-  var top10SeriesCb = getCb(enableTop10SeriesRow);
-  var top10MoviesCb = getCb(enableTop10MoviesRow);
-  var tmdbTopMoviesCb = getCb(enableTmdbTopMoviesRow);
-  var recMovCb = getCb(enableRecentMoviesRow);
-  var recMovHeroCb = getCb(showRecentMoviesHeroCards);
-  var recSerCb = getCb(enableRecentSeriesRow);
-  var recSerHeroCb = getCb(showRecentSeriesHeroCards);
-  var recMusicCb = getCb(enableRecentMusicRow);
-  var recMusicHeroCb = getCb(showRecentMusicHeroCards);
-  var recTracksCb = getCb(enableRecentMusicTracksRow);
-  var recTracksHeroCb = getCb(showRecentTracksHeroCards);
-  var recEpCb  = getCb(enableRecentEpisodesRow);
-  var recEpHeroCb = getCb(showRecentEpisodesHeroCards);
-  var nextUpCb = getCb(enableNextUpRow);
-  var nextUpHeroCb = getCb(showNextUpHeroCards);
-  var syncRecentMoviesHeroVisibility = bindDependentCheckboxVisibility(enableRecentMoviesRow, showRecentMoviesHeroCards);
-  var syncRecentSeriesHeroVisibility = bindDependentCheckboxVisibility(enableRecentSeriesRow, showRecentSeriesHeroCards);
-  var syncRecentMusicHeroVisibility = bindDependentCheckboxVisibility(enableRecentMusicRow, showRecentMusicHeroCards);
-  var syncRecentTracksHeroVisibility = bindDependentCheckboxVisibility(enableRecentMusicTracksRow, showRecentTracksHeroCards);
-  var syncRecentEpisodesHeroVisibility = bindDependentCheckboxVisibility(enableRecentEpisodesRow, showRecentEpisodesHeroCards);
-  var syncNextUpHeroVisibility = bindDependentCheckboxVisibility(enableNextUpRow, showNextUpHeroCards);
+  const masterCb = getCb(enableRecentRows);
+  const top10SeriesCb = getCb(enableTop10SeriesRow);
+  const top10MoviesCb = getCb(enableTop10MoviesRow);
+  const tmdbTopMoviesCb = getCb(enableTmdbTopMoviesRow);
+  const recMovCb = getCb(enableRecentMoviesRow);
+  const recMovHeroCb = getCb(showRecentMoviesHeroCards);
+  const recSerCb = getCb(enableRecentSeriesRow);
+  const recSerHeroCb = getCb(showRecentSeriesHeroCards);
+  const recMusicCb = getCb(enableRecentMusicRow);
+  const recMusicHeroCb = getCb(showRecentMusicHeroCards);
+  const recTracksCb = getCb(enableRecentMusicTracksRow);
+  const recTracksHeroCb = getCb(showRecentTracksHeroCards);
+  const recEpCb  = getCb(enableRecentEpisodesRow);
+  const recEpHeroCb = getCb(showRecentEpisodesHeroCards);
+  const nextUpCb = getCb(enableNextUpRow);
+  const nextUpHeroCb = getCb(showNextUpHeroCards);
+  const syncRecentMoviesHeroVisibility = bindDependentCheckboxVisibility(enableRecentMoviesRow, showRecentMoviesHeroCards);
+  const syncRecentSeriesHeroVisibility = bindDependentCheckboxVisibility(enableRecentSeriesRow, showRecentSeriesHeroCards);
+  const syncRecentMusicHeroVisibility = bindDependentCheckboxVisibility(enableRecentMusicRow, showRecentMusicHeroCards);
+  const syncRecentTracksHeroVisibility = bindDependentCheckboxVisibility(enableRecentMusicTracksRow, showRecentTracksHeroCards);
+  const syncRecentEpisodesHeroVisibility = bindDependentCheckboxVisibility(enableRecentEpisodesRow, showRecentEpisodesHeroCards);
+  const syncNextUpHeroVisibility = bindDependentCheckboxVisibility(enableNextUpRow, showNextUpHeroCards);
 
   function syncRecentSubState() {
-    var on = !!masterCb.checked;
+    const on = !!masterCb?.checked;
     recentSubWrap.style.display = on ? '' : 'none';
     if (!on) {
       if (top10SeriesCb) top10SeriesCb.checked = false;
@@ -2120,58 +2154,58 @@ export function createStudioHubsPanel(config, labels) {
   syncRecentSubState();
   enableRecentRows.addEventListener('change', syncRecentSubState, { passive: true });
 
-  var enableContinueMovies = createCheckbox(
+  const enableContinueMovies = createCheckbox(
     'enableContinueMovies',
-    labels.enableContinueMovies || 'Habilitar Continuar Assistindo (Filmes)',
+    labels?.enableContinueMovies || 'İzlemeye devam et (Filmler) satırını göster',
     !!config.enableContinueMovies
   );
   section.appendChild(enableContinueMovies);
 
-  var showContinueMoviesHeroCards = createCheckbox(
+  const showContinueMoviesHeroCards = createCheckbox(
     'showContinueMoviesHeroCards',
-    labels.showContinueMoviesHeroCards || 'Mostrar Hero Card (Continuar - Filmes)',
+    labels?.showContinueMoviesHeroCards || 'Hero kartını göster (İzlemeye Devam Et - Filmler)',
     config.showContinueMoviesHeroCards !== false
   );
   section.appendChild(showContinueMoviesHeroCards);
 
-  var continueMoviesCountWrap = createNumberInput(
+  const continueMoviesCountWrap = createNumberInput(
     'continueMoviesCardCount',
-    labels.continueMoviesCardCount || 'Limite de Continuar (Filmes)',
+    labels?.continueMoviesCardCount || 'İzlemeye devam et (Filmler) kart sayısı',
     Number.isFinite(config.continueMoviesCardCount) ? config.continueMoviesCardCount : 10,
     1,
     20
   );
   section.appendChild(continueMoviesCountWrap);
 
-  var enableContinueSeries = createCheckbox(
+  const enableContinueSeries = createCheckbox(
     'enableContinueSeries',
-    labels.enableContinueSeries || 'Habilitar Continuar Assistindo (Séries)',
+    labels?.enableContinueSeries || 'İzlemeye devam et (Diziler) satırını göster',
     !!config.enableContinueSeries
   );
   section.appendChild(enableContinueSeries);
 
-  var showContinueSeriesHeroCards = createCheckbox(
+  const showContinueSeriesHeroCards = createCheckbox(
     'showContinueSeriesHeroCards',
-    labels.showContinueSeriesHeroCards || 'Mostrar Hero Card (Continuar - Séries)',
+    labels?.showContinueSeriesHeroCards || 'Hero kartını göster (İzlemeye Devam Et - Diziler)',
     config.showContinueSeriesHeroCards !== false
   );
   section.appendChild(showContinueSeriesHeroCards);
 
-  var continueSeriesCountWrap = createNumberInput(
+  const continueSeriesCountWrap = createNumberInput(
     'continueSeriesCardCount',
-    labels.continueSeriesCardCount || 'Limite de Continuar (Séries)',
+    labels?.continueSeriesCardCount || 'İzlemeye devam et (Diziler) kart sayısı',
     Number.isFinite(config.continueSeriesCardCount) ? config.continueSeriesCardCount : 10,
     1,
     20
   );
   section.appendChild(continueSeriesCountWrap);
 
-  var continueMoviesCb = getCb(enableContinueMovies);
-  var continueMoviesHeroCb = getCb(showContinueMoviesHeroCards);
-  var continueSeriesCb = getCb(enableContinueSeries);
-  var continueSeriesHeroCb = getCb(showContinueSeriesHeroCards);
-  var syncContinueMoviesHeroVisibility = bindDependentCheckboxVisibility(enableContinueMovies, showContinueMoviesHeroCards);
-  var syncContinueSeriesHeroVisibility = bindDependentCheckboxVisibility(enableContinueSeries, showContinueSeriesHeroCards);
+  const continueMoviesCb = getCb(enableContinueMovies);
+  const continueMoviesHeroCb = getCb(showContinueMoviesHeroCards);
+  const continueSeriesCb = getCb(enableContinueSeries);
+  const continueSeriesHeroCb = getCb(showContinueSeriesHeroCards);
+  const syncContinueMoviesHeroVisibility = bindDependentCheckboxVisibility(enableContinueMovies, showContinueMoviesHeroCards);
+  const syncContinueSeriesHeroVisibility = bindDependentCheckboxVisibility(enableContinueSeries, showContinueSeriesHeroCards);
 
   function syncContinueHeroState() {
     if (continueMoviesCb && continueMoviesHeroCb && !continueMoviesCb.checked) {
@@ -2188,61 +2222,61 @@ export function createStudioHubsPanel(config, labels) {
   enableContinueMovies.addEventListener('change', syncContinueHeroState, { passive: true });
   enableContinueSeries.addEventListener('change', syncContinueHeroState, { passive: true });
 
-  var movieLibBox = document.createElement("div");
+  const movieLibBox = document.createElement("div");
   movieLibBox.className = "setting-item movies";
   movieLibBox.style.paddingLeft = "8px";
   movieLibBox.style.borderLeft = "2px solid #0002";
   movieLibBox.style.marginBottom = "10px";
   section.appendChild(movieLibBox);
 
-  var splitMovieCb = splitMovieLibRows.querySelector.('input[type="checkbox"]');
+  const splitMovieCb = splitMovieLibRows?.querySelector?.('input[type="checkbox"]');
   function syncMovieLibBoxVisibility() {
-    var splitOn = !!splitMovieCb.checked;
+    const splitOn = !!splitMovieCb?.checked;
     movieLibBox.style.display = splitOn ? "" : "none";
   }
   syncMovieLibBoxVisibility();
   splitMovieLibRows.addEventListener("change", syncMovieLibBoxVisibility, { passive: true });
 
-  var movieLibTitle = document.createElement("div");
+  const movieLibTitle = document.createElement("div");
   movieLibTitle.style.fontWeight = "700";
   movieLibTitle.style.margin = "6px 0";
-  movieLibTitle.textContent = labels.movieLibSelectHeading || "Selecionar Bibliotecas de Filmes";
+  movieLibTitle.textContent = labels?.movieLibSelectHeading || "Gösterilecek Film Kütüphaneleri";
   movieLibBox.appendChild(movieLibTitle);
 
-  var tvLibBox = document.createElement("div");
+  const tvLibBox = document.createElement("div");
   tvLibBox.className = "setting-item tvshows";
   tvLibBox.style.paddingLeft = "8px";
   tvLibBox.style.borderLeft = "2px solid #0002";
   tvLibBox.style.marginBottom = "10px";
   section.appendChild(tvLibBox);
 
-  var splitCb = splitTvLibRows.querySelector.('input[type="checkbox"]');
+  const splitCb = splitTvLibRows?.querySelector?.('input[type="checkbox"]');
   function syncTvLibBoxVisibility() {
-    var splitOn = !!splitCb.checked;
+    const splitOn = !!splitCb?.checked;
     tvLibBox.style.display = splitOn ? "" : "none";
   }
   syncTvLibBoxVisibility();
   splitTvLibRows.addEventListener("change", syncTvLibBoxVisibility, { passive: true });
 
-  var tvLibTitle = document.createElement("div");
+  const tvLibTitle = document.createElement("div");
   tvLibTitle.style.fontWeight = "700";
   tvLibTitle.style.margin = "6px 0";
-  tvLibTitle.textContent = labels.tvLibSelectHeading || "Selecionar Bibliotecas de Séries";
+  tvLibTitle.textContent = labels?.tvLibSelectHeading || "Gösterilecek Dizi Kütüphaneleri";
   tvLibBox.appendChild(tvLibTitle);
 
   function readJsonArr(k) {
     try {
-      var raw = localStorage.getItem(k);
+      const raw = localStorage.getItem(k);
       if (!raw || raw === "[object Object]") return [];
-      var arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr.map(function(x)String(x||"").trim()).filter(Boolean) : [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr.map(x=>String(x||"").trim()).filter(Boolean) : [];
     } catch { return []; }
   }
   function writeJsonArr(k, arr) {
     try { localStorage.setItem(k, JSON.stringify((arr||[]).filter(Boolean))); } catch {}
   }
   function mkHidden(k, initialArr) {
-    var inp = document.createElement("input");
+    const inp = document.createElement("input");
     inp.type = "hidden";
     inp.id = k;
     inp.name = k;
@@ -2250,49 +2284,49 @@ export function createStudioHubsPanel(config, labels) {
     return inp;
   }
 
-  var hiddenRecentMovies   = mkHidden("recentMoviesLibIds",    readJsonArr("recentMoviesLibIds"));
-  var hiddenRecentSeries   = mkHidden("recentSeriesTvLibIds",   readJsonArr("recentSeriesTvLibIds"));
-  var hiddenRecentEpisodes = mkHidden("recentEpisodesTvLibIds", readJsonArr("recentEpisodesTvLibIds"));
-  var hiddenContinueSeries = mkHidden("continueSeriesTvLibIds", readJsonArr("continueSeriesTvLibIds"));
+  const hiddenRecentMovies   = mkHidden("recentMoviesLibIds",    readJsonArr("recentMoviesLibIds"));
+  const hiddenRecentSeries   = mkHidden("recentSeriesTvLibIds",   readJsonArr("recentSeriesTvLibIds"));
+  const hiddenRecentEpisodes = mkHidden("recentEpisodesTvLibIds", readJsonArr("recentEpisodesTvLibIds"));
+  const hiddenContinueSeries = mkHidden("continueSeriesTvLibIds", readJsonArr("continueSeriesTvLibIds"));
   movieLibBox.appendChild(hiddenRecentMovies);
   tvLibBox.appendChild(hiddenRecentSeries);
   tvLibBox.appendChild(hiddenRecentEpisodes);
   tvLibBox.appendChild(hiddenContinueSeries);
 
-  var movieLibHint = document.createElement("div");
+  const movieLibHint = document.createElement("div");
   movieLibHint.style.opacity = "0.85";
   movieLibHint.style.fontSize = "0.95em";
   movieLibHint.style.marginBottom = "6px";
-  movieLibHint.textContent = labels.movieLibSelectHint || "Se vazio: todas as bibliotecas de Filmes serão incluídas.";
+  movieLibHint.textContent = labels?.movieLibSelectHint || "Boş bırakırsan: tüm Film kütüphaneleri aktif sayılır.";
   movieLibBox.appendChild(movieLibHint);
 
-  var movieLibGrid = document.createElement("div");
+  const movieLibGrid = document.createElement("div");
   movieLibGrid.style.display = "grid";
   movieLibGrid.style.gridTemplateColumns = "1fr";
   movieLibGrid.style.gap = "8px";
   movieLibBox.appendChild(movieLibGrid);
 
-  var tvLibHint = document.createElement("div");
+  const tvLibHint = document.createElement("div");
   tvLibHint.style.opacity = "0.85";
   tvLibHint.style.fontSize = "0.95em";
   tvLibHint.style.marginBottom = "6px";
-  tvLibHint.textContent = labels.tvLibSelectHint || "Se vazio: todas as bibliotecas de Séries serão incluídas.";
+  tvLibHint.textContent = labels?.tvLibSelectHint || "Boş bırakırsan: tüm Dizi kütüphaneleri aktif sayılır.";
   tvLibBox.appendChild(tvLibHint);
 
-  var tvLibGrid = document.createElement("div");
+  const tvLibGrid = document.createElement("div");
   tvLibGrid.style.display = "grid";
   tvLibGrid.style.gridTemplateColumns = "1fr";
   tvLibGrid.style.gap = "8px";
   tvLibBox.appendChild(tvLibGrid);
 
-  var OTHER_CT_EXCLUDE = new Set(["movies","tvshows","music"]);
+  const OTHER_CT_EXCLUDE = new Set(["movies","tvshows","music"]);
 
   function readJsonArrGeneric(k) {
     try {
-      var raw = localStorage.getItem(k);
+      const raw = localStorage.getItem(k);
       if (!raw || raw === "[object Object]") return [];
-      var arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr.map(function(x)String(x||"").trim()).filter(Boolean) : [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr.map(x=>String(x||"").trim()).filter(Boolean) : [];
     } catch { return []; }
   }
 
@@ -2300,7 +2334,7 @@ export function createStudioHubsPanel(config, labels) {
     try { localStorage.setItem(k, JSON.stringify((arr||[]).filter(Boolean))); } catch {}
   }
 
-  var allViewsPromise = null;
+  let allViewsPromise = null;
 
   function getAllViews() {
     if (!allViewsPromise) {
@@ -2309,96 +2343,96 @@ export function createStudioHubsPanel(config, labels) {
     return allViewsPromise;
   }
 
-  function fetchTvLibs() {
+  async function fetchTvLibs() {
     try {
-      var all = getAllViews();
-      return all.filter(function(x) x.CollectionType === "tvshows" && x.Id).map(function(x) ({
+      const all = await getAllViews();
+      return all.filter(x => x?.CollectionType === "tvshows" && x?.Id).map(x => ({
         Id: x.Id,
-        Name: x.Name || (labels.studioHubTvLibraryFallbackName || "TV")
+        Name: x.Name || (labels?.studioHubTvLibraryFallbackName || "TV")
       }));
     } catch {
       return [];
     }
   }
 
-  function fetchMovieLibs() {
+  async function fetchMovieLibs() {
     try {
-      var all = getAllViews();
-      return all.filter(function(x) x.CollectionType === "movies" && x.Id).map(function(x) ({
+      const all = await getAllViews();
+      return all.filter(x => x?.CollectionType === "movies" && x?.Id).map(x => ({
         Id: x.Id,
-        Name: x.Name || (labels.studioHubMovieLibraryFallbackName || "Movies")
+        Name: x.Name || (labels?.studioHubMovieLibraryFallbackName || "Movies")
       }));
     } catch {
       return [];
     }
   }
 
-  function fetchAllViews() {
+  async function fetchAllViews() {
     try {
-      var me = makeApiRequest("/Users/Me");
-      var uid = me.Id;
+      const me = await makeApiRequest(`/Users/Me`);
+      const uid = me?.Id;
       if (!uid) return [];
-      var v = makeApiRequest("/Users/" + (uid) + "/Views");
-      var items = Array.isArray(v.Items) ? v.Items : [];
+      const v = await makeApiRequest(`/Users/${uid}/Views`);
+      const items = Array.isArray(v?.Items) ? v.Items : [];
       return items
-        .filter(function(x) x.Id)
-        .map(function(x) ({
+        .filter(x => x?.Id)
+        .map(x => ({
           Id: x.Id,
-          Name: x.Name || (labels.studioHubLibraryFallbackName || "Library"),
+          Name: x.Name || (labels?.studioHubLibraryFallbackName || "Library"),
           CollectionType: (x.CollectionType || "").toString()
         }));
     } catch { return []; }
   }
 
-  function(() {
-    var libs = fetchMovieLibs();
+  (async () => {
+    const libs = await fetchMovieLibs();
     if (!libs.length) {
-      var warn = document.createElement("div");
+      const warn = document.createElement("div");
       warn.style.opacity = "0.85";
-      warn.textContent = labels.movieLibSelectNoLibs || "Nenhuma biblioteca de filmes encontrada.";
+      warn.textContent = labels?.movieLibSelectNoLibs || "Film kütüphanesi bulunamadı.";
       movieLibGrid.appendChild(warn);
       return;
     }
 
-    var box = document.createElement("div");
+    const box = document.createElement("div");
     box.style.border = "1px solid #0002";
     box.style.borderRadius = "8px";
     box.style.padding = "8px";
 
-    var h = document.createElement("div");
+    const h = document.createElement("div");
     h.style.fontWeight = "700";
     h.style.marginBottom = "6px";
-    h.textContent = labels.movieLibRowRecentMovies || "Escolha as bibliotecas para a seção de filmes recentes";
+    h.textContent = labels?.movieLibRowRecentMovies || "Görüntülemek istediğiniz son eklenen filmler için kütüphane seçin";
     box.appendChild(h);
 
-    var selected = new Set(readJsonArr("recentMoviesLibIds"));
-    var list = document.createElement("div");
+    const selected = new Set(readJsonArr("recentMoviesLibIds"));
+    const list = document.createElement("div");
     list.style.display = "grid";
     list.style.gridTemplateColumns = "1fr";
     list.style.gap = "6px";
 
-    var sync = function() {
-      var arr = Array.from(selected);
+    const sync = () => {
+      const arr = Array.from(selected);
       hiddenRecentMovies.value = JSON.stringify(arr);
       writeJsonArr("recentMoviesLibIds", arr);
     };
 
-    for (var lib of libs) {
-      var line = document.createElement("label");
+    for (const lib of libs) {
+      const line = document.createElement("label");
       line.style.display = "flex";
       line.style.alignItems = "center";
       line.style.gap = "8px";
 
-      var cb = document.createElement("input");
+      const cb = document.createElement("input");
       cb.type = "checkbox";
       cb.checked = selected.has(lib.Id);
-      cb.addEventListenerfunction("change", () {
+      cb.addEventListener("change", () => {
         if (cb.checked) selected.add(lib.Id);
         else selected.delete(lib.Id);
         sync();
       }, { passive: true });
 
-      var t = document.createElement("span");
+      const t = document.createElement("span");
       t.textContent = lib.Name;
 
       line.appendChild(cb);
@@ -2406,27 +2440,27 @@ export function createStudioHubsPanel(config, labels) {
       list.appendChild(line);
     }
 
-    var actions = document.createElement("div");
+    const actions = document.createElement("div");
     actions.style.display = "flex";
     actions.style.gap = "8px";
     actions.style.marginTop = "8px";
 
-    var btnAll = document.createElement("button");
+    const btnAll = document.createElement("button");
     btnAll.type = "button";
-    btnAll.textContent = labels.selectAll || "Selecionar Tudo";
-    btnAll.addEventListenerfunction("click", () {
+    btnAll.textContent = labels?.selectAll || "Hepsini seç";
+    btnAll.addEventListener("click", () => {
       selected.clear();
-      libs.forEach(function(l) selected.add(l.Id));
-      [...list.querySelectorAll("input[type=checkbox]")].forEach(function(i) i.checked = true);
+      libs.forEach(l => selected.add(l.Id));
+      [...list.querySelectorAll("input[type=checkbox]")].forEach(i => i.checked = true);
       sync();
     });
 
-    var btnNone = document.createElement("button");
+    const btnNone = document.createElement("button");
     btnNone.type = "button";
-    btnNone.textContent = labels.selectNone || "Remover Tudo";
-    btnNone.addEventListenerfunction("click", () {
+    btnNone.textContent = labels?.selectNone || "Hepsini kaldır";
+    btnNone.addEventListener("click", () => {
       selected.clear();
-      [...list.querySelectorAll("input[type=checkbox]")].forEach(function(i) i.checked = false);
+      [...list.querySelectorAll("input[type=checkbox]")].forEach(i => i.checked = false);
       sync();
     });
 
@@ -2440,56 +2474,56 @@ export function createStudioHubsPanel(config, labels) {
     sync();
   })();
 
-  function(() {
-    var libs = fetchTvLibs();
+  (async () => {
+    const libs = await fetchTvLibs();
     if (!libs.length) {
-      var warn = document.createElement("div");
+      const warn = document.createElement("div");
       warn.style.opacity = "0.85";
-      warn.textContent = labels.tvLibSelectNoLibs || "Nenhuma biblioteca de séries encontrada.";
+      warn.textContent = labels?.tvLibSelectNoLibs || "Dizi kütüphanesi bulunamadı.";
       tvLibGrid.appendChild(warn);
       return;
     }
 
-    var makeRow = function(title, key, hiddenInp) {
-      var box = document.createElement("div");
+    const makeRow = (title, key, hiddenInp) => {
+      const box = document.createElement("div");
       box.style.border = "1px solid #0002";
       box.style.borderRadius = "8px";
       box.style.padding = "8px";
 
-      var h = document.createElement("div");
+      const h = document.createElement("div");
       h.style.fontWeight = "700";
       h.style.marginBottom = "6px";
       h.textContent = title;
       box.appendChild(h);
 
-      var selected = new Set(readJsonArr(key));
-      var list = document.createElement("div");
+      const selected = new Set(readJsonArr(key));
+      const list = document.createElement("div");
       list.style.display = "grid";
       list.style.gridTemplateColumns = "1fr";
       list.style.gap = "6px";
 
-      var sync = function() {
-        var arr = Array.from(selected);
+      const sync = () => {
+        const arr = Array.from(selected);
         hiddenInp.value = JSON.stringify(arr);
         writeJsonArr(key, arr);
       };
 
-      for (var lib of libs) {
-        var line = document.createElement("label");
+      for (const lib of libs) {
+        const line = document.createElement("label");
         line.style.display = "flex";
         line.style.alignItems = "center";
         line.style.gap = "8px";
 
-        var cb = document.createElement("input");
+        const cb = document.createElement("input");
         cb.type = "checkbox";
         cb.checked = selected.has(lib.Id);
-        cb.addEventListenerfunction("change", () {
+        cb.addEventListener("change", () => {
           if (cb.checked) selected.add(lib.Id);
           else selected.delete(lib.Id);
           sync();
         }, { passive: true });
 
-        var t = document.createElement("span");
+        const t = document.createElement("span");
         t.textContent = lib.Name;
 
         line.appendChild(cb);
@@ -2497,27 +2531,27 @@ export function createStudioHubsPanel(config, labels) {
         list.appendChild(line);
       }
 
-      var actions = document.createElement("div");
+      const actions = document.createElement("div");
       actions.style.display = "flex";
       actions.style.gap = "8px";
       actions.style.marginTop = "8px";
 
-      var btnAll = document.createElement("button");
+      const btnAll = document.createElement("button");
       btnAll.type = "button";
-      btnAll.textContent = labels.selectAll || "Selecionar Tudo";
-      btnAll.addEventListenerfunction("click", () {
+      btnAll.textContent = labels?.selectAll || "Hepsini seç";
+      btnAll.addEventListener("click", () => {
         selected.clear();
-        libs.forEach(function(l) selected.add(l.Id));
-        [...list.querySelectorAll("input[type=checkbox]")].forEach(function(i) i.checked = true);
+        libs.forEach(l => selected.add(l.Id));
+        [...list.querySelectorAll("input[type=checkbox]")].forEach(i => i.checked = true);
         sync();
       });
 
-      var btnNone = document.createElement("button");
+      const btnNone = document.createElement("button");
       btnNone.type = "button";
-      btnNone.textContent = labels.selectNone || "Remover Tudo";
-      btnNone.addEventListenerfunction("click", () {
+      btnNone.textContent = labels?.selectNone || "Hepsini kaldır";
+      btnNone.addEventListener("click", () => {
         selected.clear();
-        [...list.querySelectorAll("input[type=checkbox]")].forEach(function(i) i.checked = false);
+        [...list.querySelectorAll("input[type=checkbox]")].forEach(i => i.checked = false);
         sync();
       });
 
@@ -2532,77 +2566,77 @@ export function createStudioHubsPanel(config, labels) {
     };
 
     tvLibGrid.appendChild(makeRow(
-      labels.tvLibRowRecentSeries || "Escolha as bibliotecas para a seção de séries recentes",
+      labels?.tvLibRowRecentSeries || "Görüntülemek istediğiniz son eklenen diziler için kütüphane seçin",
       "recentSeriesTvLibIds",
       hiddenRecentSeries
     ));
     tvLibGrid.appendChild(makeRow(
-      labels.tvLibRowRecentEpisodes || "Escolha as bibliotecas para a seção de episódios recentes",
+      labels?.tvLibRowRecentEpisodes || "Görüntülemek istediğiniz son eklenen bölüm kartları için kütüphane seçin",
       "recentEpisodesTvLibIds",
       hiddenRecentEpisodes
     ));
     tvLibGrid.appendChild(makeRow(
-      labels.tvLibRowContinueSeries || "Escolha as bibliotecas para a seção de continuar assistindo",
+      labels?.tvLibRowContinueSeries || "Görüntülemek istediğiniz İzlemeye devam kartları için kütüphane seçin",
       "continueSeriesTvLibIds",
       hiddenContinueSeries
     ));
   })();
 
-  var otherLibsHeading = document.createElement("div");
+  const otherLibsHeading = document.createElement("div");
   otherLibsHeading.style.fontWeight = "800";
   otherLibsHeading.style.margin = "14px 0 6px";
-  otherLibsHeading.textContent = labels.otherLibrariesHeading || "Diğer Kütüphaneler";
+  otherLibsHeading.textContent = labels?.otherLibrariesHeading || "Diğer Kütüphaneler";
   section.appendChild(otherLibsHeading);
 
-  var enableOtherLibRows = createCheckbox(
+  const enableOtherLibRows = createCheckbox(
     "enableOtherLibRows",
-    labels.enableOtherLibRows || "Diğer kütüphane bölümleirni göster (Son Eklenen / Devam / Bölüm)",
+    labels?.enableOtherLibRows || "Diğer kütüphane bölümleirni göster (Son Eklenen / Devam / Bölüm)",
     !!config.enableOtherLibRows
   );
   section.appendChild(enableOtherLibRows);
 
-  var showOtherLibrariesHeroCards = createCheckbox(
+  const showOtherLibrariesHeroCards = createCheckbox(
     "showOtherLibrariesHeroCards",
-    labels.showOtherLibrariesHeroCards || "Mostrar Hero Card (Outros)",
+    labels?.showOtherLibrariesHeroCards || "Hero kartını göster (Diğer Kütüphaneler)",
     config.showOtherLibrariesHeroCards !== false
   );
   section.appendChild(showOtherLibrariesHeroCards);
 
-  var otherLibBox = document.createElement("div");
+  const otherLibBox = document.createElement("div");
   otherLibBox.style.paddingLeft = "8px";
   otherLibBox.style.borderLeft = "2px solid #0002";
   otherLibBox.style.marginBottom = "10px";
   section.appendChild(otherLibBox);
 
-  var otherRecentCountWrap = createNumberInput(
+  const otherRecentCountWrap = createNumberInput(
     "otherLibrariesRecentCardCount",
-    labels.otherLibrariesRecentCardCount || "Novidades • Limite de cards",
+    labels?.otherLibrariesRecentCardCount || "Diğer kütüphaneler • Son eklenen kart sayısı",
     Number.isFinite(config.otherLibrariesRecentCardCount) ? config.otherLibrariesRecentCardCount : 10,
     1,
     20
   );
   otherLibBox.appendChild(otherRecentCountWrap);
 
-  var otherContinueCountWrap = createNumberInput(
+  const otherContinueCountWrap = createNumberInput(
     "otherLibrariesContinueCardCount",
-    labels.otherLibrariesContinueCardCount || "Continuar Assistindo • Limite de cards",
+    labels?.otherLibrariesContinueCardCount || "Diğer kütüphaneler • İzlemeye devam kart sayısı",
     Number.isFinite(config.otherLibrariesContinueCardCount) ? config.otherLibrariesContinueCardCount : 10,
     1,
     20
   );
   otherLibBox.appendChild(otherContinueCountWrap);
 
-  var otherEpisodesCountWrap = createNumberInput(
+  const otherEpisodesCountWrap = createNumberInput(
     "otherLibrariesEpisodesCardCount",
-    labels.otherLibrariesEpisodesCardCount || "Episódios Recentes • Limite de cards",
+    labels?.otherLibrariesEpisodesCardCount || "Diğer kütüphaneler • Son eklenen bölüm kart sayısı",
     Number.isFinite(config.otherLibrariesEpisodesCardCount) ? config.otherLibrariesEpisodesCardCount : 10,
     1,
     20
   );
   otherLibBox.appendChild(otherEpisodesCountWrap);
 
-  var hiddenOtherLibIds = function(() {
-    var inp = document.createElement("input");
+  const hiddenOtherLibIds = (() => {
+    const inp = document.createElement("input");
     inp.type = "hidden";
     inp.id = "otherLibrariesIds";
     inp.name = "otherLibrariesIds";
@@ -2611,208 +2645,208 @@ export function createStudioHubsPanel(config, labels) {
   })();
   otherLibBox.appendChild(hiddenOtherLibIds);
 
-  var otherHint = document.createElement("div");
+  const otherHint = document.createElement("div");
   otherHint.style.opacity = "0.85";
   otherHint.style.fontSize = "0.95em";
   otherHint.style.margin = "6px 0";
-  otherHint.textContent = labels.otherLibrariesHint || "Se vazio: todas as outras bibliotecas serão incluídas.";
+  otherHint.textContent = labels?.otherLibrariesHint || "Boş bırakırsan: tüm diğer kütüphaneler aktif sayılır.";
   otherLibBox.appendChild(otherHint);
 
-  var otherGrid = document.createElement("div");
+  const otherGrid = document.createElement("div");
   otherGrid.style.display = "grid";
   otherGrid.style.gridTemplateColumns = "1fr";
   otherGrid.style.gap = "6px";
   otherLibBox.appendChild(otherGrid);
 
-  var otherActions = document.createElement("div");
+  const otherActions = document.createElement("div");
   otherActions.style.display = "flex";
   otherActions.style.gap = "8px";
   otherActions.style.marginTop = "8px";
   otherLibBox.appendChild(otherActions);
 
-  var btnOtherAll = document.createElement("button");
+  const btnOtherAll = document.createElement("button");
   btnOtherAll.type = "button";
-  btnOtherAll.textContent = labels.selectAll || "Hepsini seç";
+  btnOtherAll.textContent = labels?.selectAll || "Hepsini seç";
   otherActions.appendChild(btnOtherAll);
 
-  var btnOtherNone = document.createElement("button");
+  const btnOtherNone = document.createElement("button");
   btnOtherNone.type = "button";
-  btnOtherNone.textContent = labels.selectNone || "Hepsini kaldır";
+  btnOtherNone.textContent = labels?.selectNone || "Hepsini kaldır";
   otherActions.appendChild(btnOtherNone);
 
-  var otherMasterCb = enableOtherLibRows.querySelector.('input[type="checkbox"]');
-  var otherHeroCb = showOtherLibrariesHeroCards.querySelector.('input[type="checkbox"]');
-  var syncOtherHeroVisibility = bindDependentCheckboxVisibility(enableOtherLibRows, showOtherLibrariesHeroCards);
+  const otherMasterCb = enableOtherLibRows?.querySelector?.('input[type="checkbox"]');
+  const otherHeroCb = showOtherLibrariesHeroCards?.querySelector?.('input[type="checkbox"]');
+  const syncOtherHeroVisibility = bindDependentCheckboxVisibility(enableOtherLibRows, showOtherLibrariesHeroCards);
   function syncOtherBoxVisibility() {
-    var on = !!otherMasterCb.checked;
+    const on = !!otherMasterCb?.checked;
     otherLibBox.style.display = on ? "" : "none";
     if (!on) {
       if (otherHeroCb) otherHeroCb.checked = false;
       hiddenOtherLibIds.value = "[]";
       writeJsonArrGeneric("otherLibrariesIds", []);
-      [...otherGrid.querySelectorAll('input[type="checkbox"]')].forEach(function(i) (i.checked = false));
+      [...otherGrid.querySelectorAll('input[type="checkbox"]')].forEach(i => (i.checked = false));
     }
     syncOtherHeroVisibility();
   }
   syncOtherBoxVisibility();
   enableOtherLibRows.addEventListener("change", syncOtherBoxVisibility, { passive: true });
 
-  function(() {
-    var all = getAllViews();
-    var others = all.filter(function(v) {
-      var ct = (v.CollectionType || "").toLowerCase();
+  (async () => {
+    const all = await getAllViews();
+    const others = all.filter(v => {
+      const ct = (v.CollectionType || "").toLowerCase();
       return !OTHER_CT_EXCLUDE.has(ct);
     });
 
     if (!others.length) {
-      var warn = document.createElement("div");
+      const warn = document.createElement("div");
       warn.style.opacity = "0.85";
-      warn.textContent = labels.otherLibrariesNone || "Nenhuma biblioteca adicional encontrada.";
+      warn.textContent = labels?.otherLibrariesNone || "Diğer kütüphane bulunamadı.";
       otherGrid.appendChild(warn);
       return;
     }
 
-    var selected = new Set(readJsonArrGeneric("otherLibrariesIds"));
-    var sync = function() {
-      var arr = Array.from(selected);
+    const selected = new Set(readJsonArrGeneric("otherLibrariesIds"));
+    const sync = () => {
+      const arr = Array.from(selected);
       hiddenOtherLibIds.value = JSON.stringify(arr);
       writeJsonArrGeneric("otherLibrariesIds", arr);
     };
 
-    for (var lib of others) {
-      var line = document.createElement("label");
+    for (const lib of others) {
+      const line = document.createElement("label");
       line.style.display = "flex";
       line.style.alignItems = "center";
       line.style.gap = "8px";
 
-      var cb = document.createElement("input");
+      const cb = document.createElement("input");
       cb.type = "checkbox";
       cb.checked = selected.has(lib.Id);
-      cb.addEventListenerfunction("change", () {
+      cb.addEventListener("change", () => {
         if (cb.checked) selected.add(lib.Id);
         else selected.delete(lib.Id);
         sync();
       }, { passive: true });
 
-      var t = document.createElement("span");
-      var ct = (lib.CollectionType || "").toLowerCase();
-      var ctLabel = ct ? " (" + (ct) + ")" : "";
-      t.textContent = (lib.Name) + (ctLabel);
+      const t = document.createElement("span");
+      const ct = (lib.CollectionType || "").toLowerCase();
+      const ctLabel = ct ? ` (${ct})` : "";
+      t.textContent = `${lib.Name}${ctLabel}`;
 
       line.appendChild(cb);
       line.appendChild(t);
       otherGrid.appendChild(line);
     }
 
-    btnOtherAll.addEventListenerfunction("click", () {
+    btnOtherAll.addEventListener("click", () => {
       selected.clear();
-      others.forEach(function(l) selected.add(l.Id));
-      [...otherGrid.querySelectorAll('input[type="checkbox"]')].forEach(function(i) (i.checked = true));
+      others.forEach(l => selected.add(l.Id));
+      [...otherGrid.querySelectorAll('input[type="checkbox"]')].forEach(i => (i.checked = true));
       sync();
     });
 
-    btnOtherNone.addEventListenerfunction("click", () {
+    btnOtherNone.addEventListener("click", () => {
       selected.clear();
-      [...otherGrid.querySelectorAll('input[type="checkbox"]')].forEach(function(i) (i.checked = false));
+      [...otherGrid.querySelectorAll('input[type="checkbox"]')].forEach(i => (i.checked = false));
       sync();
     });
 
     sync();
   })();
 
-  var becauseYouWatchedSection = createSection(
-    labels.becauseYouWatchedSettings ||
-    config.languageLabels.becauseYouWatchedSettings ||
-    'Recomendações por Histórico'
+  const becauseYouWatchedSection = createSection(
+    labels?.becauseYouWatchedSettings ||
+    config.languageLabels?.becauseYouWatchedSettings ||
+    'İzlediğin İçin Öneriler'
   );
 
-  var enableBecauseYouWatched = createCheckbox(
+  const enableBecauseYouWatched = createCheckbox(
     'enableBecauseYouWatched',
-    labels.enableBecauseYouWatched || 'Ativar Sugestões Baseadas no que Assistiu',
+    labels?.enableBecauseYouWatched || 'Öneri Bazlı Koleksiyonları Etkinleştir',
     config.enableBecauseYouWatched !== false
   );
   becauseYouWatchedSection.appendChild(enableBecauseYouWatched);
 
-  var showPersonalRecsHeroCards = createCheckbox(
+  const showPersonalRecsHeroCards = createCheckbox(
     'showPersonalRecsHeroCards',
-    labels.showPersonalRecsHeroCards || 'Mostrar Hero Card (Sugeridos)',
+    labels?.showPersonalRecsHeroCards || 'Hero kartını göster (İzlediğin İçin Öneriler)',
     config.showPersonalRecsHeroCards !== false
   );
   becauseYouWatchedSection.appendChild(showPersonalRecsHeroCards);
   bindDependentCheckboxVisibility(enableBecauseYouWatched, showPersonalRecsHeroCards);
 
-  var bywRowCountWrap = createNumberInput(
+  const bywRowCountWrap = createNumberInput(
     'becauseYouWatchedRowCount',
-    labels.becauseYouWatchedRowCount || 'Número de fileiras de sugestão',
+    labels?.becauseYouWatchedRowCount || 'Ekranda gösterilecek Öneri sırası sayısı',
     Number.isFinite(config.becauseYouWatchedRowCount) ? config.becauseYouWatchedRowCount : 1,
     1,
     50
   );
   becauseYouWatchedSection.appendChild(bywRowCountWrap);
 
-  var bywCardCountWrap = createNumberInput(
+  const bywCardCountWrap = createNumberInput(
     'becauseYouWatchedCardCount',
-    labels.becauseYouWatchedCardCount || 'Cards por fileira',
+    labels?.becauseYouWatchedCardCount || 'Her öneri sırası için kart sayısı',
     Number.isFinite(config.becauseYouWatchedCardCount) ? config.becauseYouWatchedCardCount : 10,
     1,
     20
   );
   becauseYouWatchedSection.appendChild(bywCardCountWrap);
 
-  var genreSection = createSection(
-    labels.genreHubsSettings ||
-    config.languageLabels.genreHubsSettings ||
-    'Coleções por Gênero'
+  const genreSection = createSection(
+    labels?.genreHubsSettings ||
+    config.languageLabels?.genreHubsSettings ||
+    'Tür Bazlı Koleksiyonlar'
   );
 
-  var enableGenreHubs = createCheckbox(
+  const enableGenreHubs = createCheckbox(
     'enableGenreHubs',
-    labels.enableGenreHubs || 'Ativar Coleções por Gênero',
+    labels?.enableGenreHubs || 'Tür Bazlı Koleksiyonları Etkinleştir',
     !!config.enableGenreHubs
   );
   genreSection.appendChild(enableGenreHubs);
 
-  var showGenreHubsHeroCards = createCheckbox(
+  const showGenreHubsHeroCards = createCheckbox(
     'showGenreHubsHeroCards',
-    labels.showGenreHubsHeroCards || 'Mostrar Hero Card (Gêneros)',
+    labels?.showGenreHubsHeroCards || 'Hero kartını göster (Tür Bazlı Koleksiyonlar)',
     config.showGenreHubsHeroCards !== false
   );
   genreSection.appendChild(showGenreHubsHeroCards);
 
-  var rowsCountWrap = createNumberInput(
+  const rowsCountWrap = createNumberInput(
     'studioHubsGenreRowsCount',
-    labels.studioHubsGenreRowsCount || 'Número de fileiras de gêneros',
+    labels?.studioHubsGenreRowsCount || 'Ekranda gösterilecek Tür sırası sayısı',
     Number.isFinite(config.studioHubsGenreRowsCount) ? config.studioHubsGenreRowsCount : 4,
     1,
     50
   );
   genreSection.appendChild(rowsCountWrap);
 
-  var perRowCountWrap = createNumberInput(
+  const perRowCountWrap = createNumberInput(
     'studioHubsGenreCardCount',
-    labels.studioHubsGenreCardCount || 'Cards por fileira',
+    labels?.studioHubsGenreCardCount || 'Her Tür sırası için kart sayısı',
     Number.isFinite(config.studioHubsGenreCardCount) ? config.studioHubsGenreCardCount : 10,
     1,
     20
   );
   genreSection.appendChild(perRowCountWrap);
 
-  var genreHidden = createHiddenInput('genreHubsOrder', JSON.stringify(Array.isArray(config.genreHubsOrder) ? config.genreHubsOrder : []));
+  const genreHidden = createHiddenInput('genreHubsOrder', JSON.stringify(Array.isArray(config.genreHubsOrder) ? config.genreHubsOrder : []));
   genreSection.appendChild(genreHidden);
 
-  var { wrap: genreDndWrap, list: genreList } = createDraggableList('genreHubsOrderList', Array.isArray(config.genreHubsOrder) && config.genreHubsOrder.length ? config.genreHubsOrder : [], labels);
+  const { wrap: genreDndWrap, list: genreList } = createDraggableList('genreHubsOrderList', Array.isArray(config.genreHubsOrder) && config.genreHubsOrder.length ? config.genreHubsOrder : [], labels);
   genreSection.appendChild(genreDndWrap);
 
-  function(() {
+  (async () => {
     try {
-      var ctrl = new AbortController(); panel.addEventListenerfunction('jms:cleanup', ()ctrl.abort(), {once:true});
-      var genres = fetchGenresForSettings(ctrl);
-      var existing = new Set(
-        [...genreList.querySelectorAll(".dnd-item")].map(function(li) li.dataset.name.toLowerCase())
+      const ctrl = new AbortController(); panel.addEventListener('jms:cleanup', ()=>ctrl.abort(), {once:true});
+      const genres = await fetchGenresForSettings(ctrl);
+      const existing = new Set(
+        [...genreList.querySelectorAll(".dnd-item")].map(li => li.dataset.name.toLowerCase())
       );
-      var appended = 0;
-      for (var g of genres) {
-        var k = String(g).toLowerCase();
+      let appended = 0;
+      for (const g of genres) {
+        const k = String(g).toLowerCase();
         if (!existing.has(k)) {
           existing.add(k);
           genreList.appendChild(createDnDItem(g, labels));
@@ -2820,21 +2854,21 @@ export function createStudioHubsPanel(config, labels) {
         }
       }
       if (appended > 0) {
-        var names = [...genreList.querySelectorAll(".dnd-item")].map(function(li) li.dataset.name);
+        const names = [...genreList.querySelectorAll(".dnd-item")].map(li => li.dataset.name);
         genreHidden.value = JSON.stringify(names);
       }
     } catch (e) {
-      console.warn("Falha ao carregar lista de gêneros:", e);
+      console.warn("Tür listesi ayarlara eklenemedi:", e);
     }
   })();
 
-  var refreshGenreHidden = function() {
-    var names = [...genreList.querySelectorAll(".dnd-item")].map(function(li) li.dataset.name);
+  const refreshGenreHidden = () => {
+    const names = [...genreList.querySelectorAll(".dnd-item")].map(li => li.dataset.name);
     genreHidden.value = JSON.stringify(names);
   };
-  var genreMasterCb = enableGenreHubs.querySelector.('input[type="checkbox"]');
-  var genreHeroCb = showGenreHubsHeroCards.querySelector.('input[type="checkbox"]');
-  var syncGenreHeroVisibility = bindDependentCheckboxVisibility(enableGenreHubs, showGenreHubsHeroCards);
+  const genreMasterCb = enableGenreHubs?.querySelector?.('input[type="checkbox"]');
+  const genreHeroCb = showGenreHubsHeroCards?.querySelector?.('input[type="checkbox"]');
+  const syncGenreHeroVisibility = bindDependentCheckboxVisibility(enableGenreHubs, showGenreHubsHeroCards);
   function syncGenreHeroState() {
     if (genreMasterCb && genreHeroCb && !genreMasterCb.checked) {
       genreHeroCb.checked = false;
@@ -2846,75 +2880,75 @@ export function createStudioHubsPanel(config, labels) {
   genreList.addEventListener("dragend", refreshGenreHidden);
   genreList.addEventListener("drop", refreshGenreHidden);
   genreList.addEventListener("dnd:reorder", refreshGenreHidden);
-  genreList.addEventListenerfunction("click", (e) {
+  genreList.addEventListener("click", (e) => {
     if (e.target.closest(".dnd-btn-up") || e.target.closest(".dnd-btn-down")) refreshGenreHidden();
   });
 
-  var dirSection = createSection(labels.directorRowsSettings || 'Coleções por Diretor');
+  const dirSection = createSection(labels?.directorRowsSettings || 'Yönetmen Koleksiyon Ayarları');
 
-  var enableDirectorRows = createCheckbox(
+  const enableDirectorRows = createCheckbox(
     'enableDirectorRows',
-    labels.enableDirectorRows || 'Ativar Coleções por Diretor',
+    labels?.enableDirectorRows || 'Yönetmen Koleksiyonlarını Etkinleştir',
     !!config.enableDirectorRows
   );
   dirSection.appendChild(enableDirectorRows);
 
-  var showDirectorRowsHeroCards = createCheckbox(
+  const showDirectorRowsHeroCards = createCheckbox(
     'showDirectorRowsHeroCards',
-    labels.showDirectorRowsHeroCards || 'Mostrar Hero Card (Diretores)',
+    labels?.showDirectorRowsHeroCards || 'Hero kartını göster (Yönetmen Koleksiyonları)',
     config.showDirectorRowsHeroCards !== false
   );
   dirSection.appendChild(showDirectorRowsHeroCards);
   bindDependentCheckboxVisibility(enableDirectorRows, showDirectorRowsHeroCards);
 
-  var directorRowsUseTopGenres = createCheckbox(
+  const directorRowsUseTopGenres = createCheckbox(
     'directorRowsUseTopGenres',
-    labels.directorRowsUseTopGenres || 'Selecionar diretores dos seus gêneros favoritos',
+    labels?.directorRowsUseTopGenres || 'En çok izlediğiniz filmlerin yönetmenlerini seç',
     config.directorRowsUseTopGenres !== false
   );
   dirSection.appendChild(directorRowsUseTopGenres);
 
-  var dirCount = createNumberInput(
+  const dirCount = createNumberInput(
     'directorRowsCount',
-    labels.directorRowsCount || 'Número de diretores',
+    labels?.directorRowsCount || 'Yönetmen sayısı',
     Number.isFinite(config.directorRowsCount) ? config.directorRowsCount : 5,
     1, 50
   );
   dirSection.appendChild(dirCount);
 
-  var dirPerRow = createNumberInput(
+  const dirPerRow = createNumberInput(
     'directorRowCardCount',
-    labels.directorRowCardCount || 'Cards por fileira',
+    labels?.directorRowCardCount || 'Her satırda kart sayısı',
     Number.isFinite(config.directorRowCardCount) ? config.directorRowCardCount : 10,
     1, 20
   );
   dirSection.appendChild(dirPerRow);
 
-  var directorRowsMinItemsPerDirector = createNumberInput(
+  const directorRowsMinItemsPerDirector = createNumberInput(
     'directorRowsMinItemsPerDirector',
-    labels.directorRowsMinItemsPerDirector || 'Mínimo de itens por diretor',
+    labels?.directorRowsMinItemsPerDirector || 'Minimum Yönetmen İçerik Sayısı',
     Number.isFinite(config.directorRowsMinItemsPerDirector) ? config.directorRowsMinItemsPerDirector : 10,
     1, 20
   );
   dirSection.appendChild(directorRowsMinItemsPerDirector);
 
-  var managedOrderSection = createSection(
-    labels.managedHomeSectionOrderSettings ||
-    config.languageLabels.managedHomeSectionOrderSettings ||
-    'Ordem das Seções da Home'
+  const managedOrderSection = createSection(
+    labels?.managedHomeSectionOrderSettings ||
+    config.languageLabels?.managedHomeSectionOrderSettings ||
+    'Ana Sayfa Satır Sıralaması'
   );
 
-  var managedOrderHint = document.createElement("div");
+  const managedOrderHint = document.createElement("div");
   managedOrderHint.className = "description-text2";
   managedOrderHint.style.margin = "4px 0 10px";
   managedOrderHint.textContent =
-    labels.managedHomeSectionOrderHint ||
-    "Esta ordem define tanto a posição visual quanto a prioridade de carregamento das fileiras.";
+    labels?.managedHomeSectionOrderHint ||
+    "Bu sıra hem satırların fallback yerleşimini hem de birbirini bekleme zincirini belirler.";
   managedOrderSection.appendChild(managedOrderHint);
 
-  var currentNativeHomeSectionItems = getCurrentNativeHomeSectionOrderItems();
+  const currentNativeHomeSectionItems = getCurrentNativeHomeSectionOrderItems();
 
-  var managedHomeSectionOrderHidden = createHiddenInput(
+  const managedHomeSectionOrderHidden = createHiddenInput(
     'managedHomeSectionOrder',
     JSON.stringify(
       normalizeManagedHomeSectionOrder(
@@ -2925,21 +2959,21 @@ export function createStudioHubsPanel(config, labels) {
   );
   managedOrderSection.appendChild(managedHomeSectionOrderHidden);
 
-  var { wrap: managedOrderWrap, list: managedOrderList } = createDraggableList(
+  const { wrap: managedOrderWrap, list: managedOrderList } = createDraggableList(
     'managedHomeSectionOrderList',
     getManagedHomeSectionOrderItems(config, labels, currentNativeHomeSectionItems),
     labels,
     {
       labelText:
-        labels.managedHomeSectionOrderLabel ||
-        'Ordem das fileiras na tela principal'
+        labels?.managedHomeSectionOrderLabel ||
+        'Ana sayfada görünecek satır sırası'
     }
   );
   managedOrderSection.appendChild(managedOrderWrap);
 
-  var refreshManagedHomeSectionOrder = function() {
-    var names = [...managedOrderList.querySelectorAll(".dnd-item")]
-      .mapfunction((li) String(li.dataset.name || "").trim())
+  const refreshManagedHomeSectionOrder = () => {
+    const names = [...managedOrderList.querySelectorAll(".dnd-item")]
+      .map((li) => String(li.dataset.name || "").trim())
       .filter(Boolean);
     managedHomeSectionOrderHidden.value = JSON.stringify(
       normalizeManagedHomeSectionOrder(
@@ -2952,7 +2986,7 @@ export function createStudioHubsPanel(config, labels) {
   managedOrderList.addEventListener("dragend", refreshManagedHomeSectionOrder);
   managedOrderList.addEventListener("drop", refreshManagedHomeSectionOrder);
   managedOrderList.addEventListener("dnd:reorder", refreshManagedHomeSectionOrder);
-  managedOrderList.addEventListenerfunction("click", (e) {
+  managedOrderList.addEventListener("click", (e) => {
     if (e.target.closest(".dnd-btn-up") || e.target.closest(".dnd-btn-down")) {
       refreshManagedHomeSectionOrder();
     }
@@ -2967,28 +3001,28 @@ export function createStudioHubsPanel(config, labels) {
   return panel;
 }
 
-function fetchGenresForSettings(ctrl) {
+async function fetchGenresForSettings(ctrl) {
   try {
-    var url = "/Genres?Recursive=true&SortBy=SortName&SortOrder=Ascending&IncludeItemTypes=Movie,Series";
-    var data = makeApiRequest(url, { signal: ctrl.signal });
-    var items = Array.isArray(data.Items) ? data.Items : (Array.isArray(data) ? data : []);
-    var names = [];
-    for (var it of items) {
-      var name = (it.Name || "").trim();
+    const url = `/Genres?Recursive=true&SortBy=SortName&SortOrder=Ascending&IncludeItemTypes=Movie,Series`;
+    const data = await makeApiRequest(url, { signal: ctrl?.signal });
+    const items = Array.isArray(data?.Items) ? data.Items : (Array.isArray(data) ? data : []);
+    const names = [];
+    for (const it of items) {
+      const name = (it?.Name || "").trim();
       if (name) names.push(name);
     }
     return uniqueCaseInsensitive(names);
   } catch (e) {
-    console.warn("fetchGenresForSettings erro:", e);
+    console.warn("fetchGenresForSettings hatası:", e);
     return [];
   }
 }
 
 function uniqueCaseInsensitive(list) {
-  var seen = new Set();
-  var out = [];
-  for (var g of list) {
-    var k = String(g).toLowerCase();
+  const seen = new Set();
+  const out = [];
+  for (const g of list) {
+    const k = String(g).toLowerCase();
     if (!seen.has(k)) { seen.add(k); out.push(g); }
   }
   return out;

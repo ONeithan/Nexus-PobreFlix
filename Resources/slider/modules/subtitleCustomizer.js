@@ -2,50 +2,51 @@ import { getConfig } from "./config.js";
 import { getLanguageLabels } from "../language/index.js";
 import { faIconHtml } from "./faIcons.js";
 
-var STORAGE_KEY = "jms:subtitleCustomizer:v1";
-var JF_APPEARANCE_KEY = "localplayersubtitleappearance3";
-var JF_SUBTITLE_BURN_IN_KEY = "subtitleburnin";
-var JF_SUBTITLE_RENDER_PGS_KEY = "subtitlerenderpgs";
-var JF_ALWAYS_BURN_IN_WHEN_TRANSCODING_KEY = "alwaysBurnInSubtitleWhenTranscoding";
-var STYLE_ID = "jms-subtitle-cue-style";
-var BTN_CLASS = "btnJmsSubtitleCustomizer";
-var DIALOG_ATTR = "data-jms-subtitle-dialog";
-var DIALOG_ID = "jms-subtitle-dialog";
-var FORCED_BURN_IN_VALUES = new Set(["all", "allcomplexformats", "onlyimageformats"]);
+const STORAGE_KEY = "jms:subtitleCustomizer:v1";
+const JF_APPEARANCE_KEY = "localplayersubtitleappearance3";
+const JF_SUBTITLE_BURN_IN_KEY = "subtitleburnin";
+const JF_SUBTITLE_RENDER_PGS_KEY = "subtitlerenderpgs";
+const JF_ALWAYS_BURN_IN_WHEN_TRANSCODING_KEY = "alwaysBurnInSubtitleWhenTranscoding";
+const STYLE_ID = "jms-subtitle-cue-style";
+const BTN_CLASS = "btnJmsSubtitleCustomizer";
+const DIALOG_ATTR = "data-jms-subtitle-dialog";
+const DIALOG_ID = "jms-subtitle-dialog";
+const FORCED_BURN_IN_VALUES = new Set(["all", "allcomplexformats", "onlyimageformats"]);
 
-var playbackManagersCache = {
+let playbackManagersCache = {
   at: 0,
   list: []
 };
-var patchedSubtitleAppearancePlayers = new Set();
-var patchedSubtitleAppearanceMeta = new WeakMap();
-var cachedSubtitleOffsets = new WeakMap();
-var originalCueTimings = new WeakMap();
-var trackCueTimingSyncState = new WeakMap();
-var trackCuePositionSyncState = new WeakMap();
-var mirroredSubtitleTrackModes = new Map();
+const patchedSubtitleAppearancePlayers = new Set();
+const patchedSubtitleAppearanceMeta = new WeakMap();
+const cachedSubtitleOffsets = new WeakMap();
+const originalCueTimings = new WeakMap();
+const trackCueTimingSyncState = new WeakMap();
+const trackCuePositionSyncState = new WeakMap();
+const mirroredSubtitleTrackModes = new Map();
 
-var nativeSubtitleUiOffsetCache = {
+let nativeSubtitleUiOffsetCache = {
   slider: null,
   value: null
 };
 
-var config = getConfig();
-var labels =
+const config = getConfig();
+const labels =
   (typeof getLanguageLabels === "function"
-    ? getLanguageLabels(config.defaultLanguage || config.language)
+    ? getLanguageLabels(config?.defaultLanguage || config?.language)
     : null) ||
-  (config.languageLabels.[config.language] || null) ||
-  config.languageLabels ||
+  (config?.languageLabels?.[config?.language] ?? null) ||
+  (config?.languageLabels?.tur ?? null) ||
+  config?.languageLabels ||
   {};
 
 function L(key, fallback) {
-  var value = labels.[key];
+  const value = labels?.[key];
   if (typeof value === "string" && value.trim()) return value;
   return fallback;
 }
 
-var DEFAULT_SETTINGS = Object.freeze({
+const DEFAULT_SETTINGS = Object.freeze({
   sizePercent: 110,
   color: "#ffffff",
   colorOpacity: 100,
@@ -63,10 +64,10 @@ var DEFAULT_SETTINGS = Object.freeze({
   position: "bottom"
 });
 
-var DEFAULT_FONT_STACK = "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif";
+const DEFAULT_FONT_STACK = "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif";
 
-var BASE_FONT_OPTIONS = Object.freeze([
-  { value: "default", label: L("subtitleCustomizerFontDefault", "Padrão"), jellyfinFont: "" },
+const BASE_FONT_OPTIONS = Object.freeze([
+  { value: "default", label: L("subtitleCustomizerFontDefault", "Varsayılan"), jellyfinFont: "" },
   { value: "Courier New,monospace", label: "Typewriter", jellyfinFont: "typewriter" },
   { value: "Georgia,Times New Roman,Arial,Helvetica,serif", label: "Print", jellyfinFont: "print" },
   { value: "Consolas,Lucida Console,Menlo,Monaco,monospace", label: "Console", jellyfinFont: "console" },
@@ -93,7 +94,7 @@ var BASE_FONT_OPTIONS = Object.freeze([
   { value: "Comic Sans MS,cursive,sans-serif", label: "Comic Sans", jellyfinFont: "" }
 ]);
 
-var EXTRA_FONT_OPTIONS = Object.freeze([
+const EXTRA_FONT_OPTIONS = Object.freeze([
   { value: "system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif", label: "System UI", jellyfinFont: "" },
   { value: "SF Pro Display,SF Pro Text,-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif", label: "SF Pro", jellyfinFont: "" },
   { value: "Avenir Next,Avenir,Segoe UI,Arial,sans-serif", label: "Avenir Next", jellyfinFont: "" },
@@ -162,16 +163,16 @@ var EXTRA_FONT_OPTIONS = Object.freeze([
   { value: "Papyrus,Marker Felt,Comic Sans MS,fantasy", label: "Papyrus", jellyfinFont: "" }
 ]);
 
-var SUBTITLE_BACKGROUND_PADDING = "0.04em 0.24em";
-var PREVIEW_BACKGROUND_PADDING = "0.05em 0.3em";
-var MIN_BACKGROUND_RADIUS_PX = 0;
-var MAX_BACKGROUND_RADIUS_PX = 32;
-var SUBTITLE_MUTATION_SELECTOR = [
+const SUBTITLE_BACKGROUND_PADDING = "0.04em 0.24em";
+const PREVIEW_BACKGROUND_PADDING = "0.05em 0.3em";
+const MIN_BACKGROUND_RADIUS_PX = 0;
+const MAX_BACKGROUND_RADIUS_PX = 32;
+const SUBTITLE_MUTATION_SELECTOR = [
   ".videoPlayerContainer",
   ".videoOsdBottom.videoOsdBottom-maincontrols",
   ".videoOsdBottom.videoOsdBottom-maincontrols .buttons",
   ".btnSubtitles",
-  "." + (BTN_CLASS),
+  `.${BTN_CLASS}`,
   ".videoSubtitles",
   ".videoSubtitlesInner",
   ".videoSecondarySubtitlesInner",
@@ -180,38 +181,38 @@ var SUBTITLE_MUTATION_SELECTOR = [
   "video.htmlvideoplayer",
   "video"
 ].join(",");
-var SUBTITLE_HEAVY_MUTATION_SELECTOR = [
+const SUBTITLE_HEAVY_MUTATION_SELECTOR = [
   ".videoPlayerContainer",
   ".libassjs-canvas-parent",
   "canvas.libassjs-canvas",
   "video.htmlvideoplayer",
   "video"
 ].join(",");
-var FONT_SIGNATURE_SAMPLES = Object.freeze([
+const FONT_SIGNATURE_SAMPLES = Object.freeze([
   "Sphinx of black quartz, judge my vow 0123456789",
   "Il1 O0 mwMW @#%& [] {} ()",
   "The quick brown fox jumps over the lazy dog"
 ]);
 
-var fontOptionsCache = null;
-var fontAliasesCache = null;
-var fontMeasureContextCache = null;
+let fontOptionsCache = null;
+let fontAliasesCache = null;
+let fontMeasureContextCache = null;
 
 function getFontOptions() {
   if (fontOptionsCache) return fontOptionsCache;
 
-  var out = [];
-  var seen = new Set();
-  var aliases = new Map();
-  var signatureOwners = new Map();
-  var measureContext = getFontMeasureContext();
-  var add = function(option) {
+  const out = [];
+  const seen = new Set();
+  const aliases = new Map();
+  const signatureOwners = new Map();
+  const measureContext = getFontMeasureContext();
+  const add = (option) => {
     if (!option || typeof option !== "object") return;
-    var value = String(option.value || "").trim();
+    const value = String(option.value || "").trim();
     if (!value || seen.has(value)) return;
     if (value !== DEFAULT_SETTINGS.fontFamily && measureContext) {
-      var signature = getFontRenderSignature(value, measureContext);
-      var existingValue = signatureOwners.get(signature);
+      const signature = getFontRenderSignature(value, measureContext);
+      const existingValue = signatureOwners.get(signature);
       if (existingValue) {
         aliases.set(value, existingValue);
         return;
@@ -235,7 +236,7 @@ function getFontMeasureContext() {
   if (typeof document === "undefined") return null;
 
   try {
-    var canvas = document.createElement("canvas");
+    const canvas = document.createElement("canvas");
     fontMeasureContextCache = canvas.getContext("2d");
   } catch {
     fontMeasureContextCache = null;
@@ -247,14 +248,14 @@ function getFontMeasureContext() {
 function getFontRenderSignature(fontStack, context) {
   if (!context) return String(fontStack || "").trim();
 
-  var safeFontStack = formatFontStack(fontStack);
+  const safeFontStack = formatFontStack(fontStack);
   if (!safeFontStack) return "";
 
-  var parts = [];
-  FONT_SIGNATURE_SAMPLES.forEach(function((sample) {
+  const parts = [];
+  FONT_SIGNATURE_SAMPLES.forEach((sample) => {
     try {
-      context.font = "72px " + (safeFontStack);
-      var metrics = context.measureText(sample);
+      context.font = `72px ${safeFontStack}`;
+      const metrics = context.measureText(sample);
       parts.push((Math.round(metrics.width * 100) / 100).toFixed(2));
       if (Number.isFinite(metrics.actualBoundingBoxAscent)) {
         parts.push((Math.round(metrics.actualBoundingBoxAscent * 100) / 100).toFixed(2));
@@ -271,49 +272,49 @@ function getFontRenderSignature(fontStack, context) {
 }
 
 function normalizeFontFamilySelection(value, fallback = DEFAULT_SETTINGS.fontFamily) {
-  var fontOptions = getFontOptions();
-  var aliases = fontAliasesCache || new Map();
-  var selected = String(value || "").trim();
-  var canonical = aliases.get(selected) || selected;
-  var fallbackValue = String(fallback || DEFAULT_SETTINGS.fontFamily).trim();
-  var canonicalFallback = aliases.get(fallbackValue) || fallbackValue || DEFAULT_SETTINGS.fontFamily;
-  return fontOptions.somefunction((opt) opt.value === canonical)
+  const fontOptions = getFontOptions();
+  const aliases = fontAliasesCache || new Map();
+  const selected = String(value || "").trim();
+  const canonical = aliases.get(selected) || selected;
+  const fallbackValue = String(fallback || DEFAULT_SETTINGS.fontFamily).trim();
+  const canonicalFallback = aliases.get(fallbackValue) || fallbackValue || DEFAULT_SETTINGS.fontFamily;
+  return fontOptions.some((opt) => opt.value === canonical)
     ? canonical
-    : function(fontOptions.some((opt) opt.value === canonicalFallback)
+    : (fontOptions.some((opt) => opt.value === canonicalFallback)
         ? canonicalFallback
         : DEFAULT_SETTINGS.fontFamily);
 }
 
 function formatFontFamilyToken(token) {
-  var family = String(token || "").trim();
+  const family = String(token || "").trim();
   if (!family) return "";
   if (/^["'].*["']$/.test(family)) return family;
   if (/^(serif|sans-serif|monospace|cursive|fantasy|system-ui|ui-serif|ui-sans-serif|ui-monospace|ui-rounded|math|emoji|fangsong)$/i.test(family)) {
     return family;
   }
-  return "\"" + (family.replace(/\\/g, "\\\\").replace(/"/g, '\\"')) + "\"";
+  return `"${family.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
 function formatFontStack(fontStack) {
   return String(fontStack || "")
     .split(",")
-    .mapfunction((part) formatFontFamilyToken(part))
+    .map((part) => formatFontFamilyToken(part))
     .filter(Boolean)
     .join(",");
 }
 
-var SHADOW_OPTIONS = Object.freeze([
-  { value: "", label: L("subtitleCustomizerShadowDefault", "Padrão") },
-  { value: "none", label: L("subtitleCustomizerShadowNone", "Nenhum") },
+const SHADOW_OPTIONS = Object.freeze([
+  { value: "", label: L("subtitleCustomizerShadowDefault", "Varsayılan") },
+  { value: "none", label: L("subtitleCustomizerShadowNone", "Yok") },
   { value: "uniform", label: L("subtitleCustomizerShadowUniform", "Uniform") },
-  { value: "raised", label: L("subtitleCustomizerShadowRaised", "Alto relevo") },
-  { value: "depressed", label: L("subtitleCustomizerShadowDepressed", "Baixo relevo") }
+  { value: "raised", label: L("subtitleCustomizerShadowRaised", "Kabartmalı") },
+  { value: "depressed", label: L("subtitleCustomizerShadowDepressed", "Çökük") }
 ]);
 
-var POSITION_VALUES = Object.freeze(["bottom", "center", "top"]);
+const POSITION_VALUES = Object.freeze(["bottom", "center", "top"]);
 
 function clampNumber(value, min, max, fallback) {
-  var num = Number(value);
+  const num = Number(value);
   if (!Number.isFinite(num)) return fallback;
   if (num < min) return min;
   if (num > max) return max;
@@ -321,10 +322,10 @@ function clampNumber(value, min, max, fallback) {
 }
 
 function normalizeHexColor(raw, fallback) {
-  var val = String(raw || "").trim().toLowerCase();
+  const val = String(raw || "").trim().toLowerCase();
   if (/^#[0-9a-f]{6}$/.test(val)) return val;
   if (/^#[0-9a-f]{3}$/.test(val)) {
-    return "#" + (val[1]) + (val[1]) + (val[2]) + (val[2]) + (val[3]) + (val[3]);
+    return `#${val[1]}${val[1]}${val[2]}${val[2]}${val[3]}${val[3]}`;
   }
   return fallback;
 }
@@ -368,13 +369,13 @@ function normalizeBackgroundRadius(raw) {
 }
 
 function getBackgroundRadiusCssValue(settings) {
-  return (normalizeBackgroundRadius(settings.backgroundRadiusPx)) + "px";
+  return `${normalizeBackgroundRadius(settings?.backgroundRadiusPx)}px`;
 }
 
 function formatDelayValue(delaySec) {
-  var normalized =
+  const normalized =
     Math.round(clampNumber(delaySec, -30, 30, DEFAULT_SETTINGS.delaySec) * 10) / 10;
-  return (normalized.toFixed(1)) + "s";
+  return `${normalized.toFixed(1)}s`;
 }
 
 function normalizeDelaySeconds(delaySec) {
@@ -382,8 +383,8 @@ function normalizeDelaySeconds(delaySec) {
 }
 
 function normalizeDropShadow(raw) {
-  var val = String(raw || "").trim().toLowerCase();
-  return SHADOW_OPTIONS.somefunction((item) item.value === val) ? val : DEFAULT_SETTINGS.dropShadow;
+  const val = String(raw || "").trim().toLowerCase();
+  return SHADOW_OPTIONS.some((item) => item.value === val) ? val : DEFAULT_SETTINGS.dropShadow;
 }
 
 function normalizeShadowSize(raw) {
@@ -391,16 +392,16 @@ function normalizeShadowSize(raw) {
 }
 
 function normalizeShadowDirection(raw) {
-  var n = Number(raw);
+  const n = Number(raw);
   if (!Number.isFinite(n)) return DEFAULT_SETTINGS.shadowDirection;
-  var normalized = ((Math.round(n) % 360) + 360) % 360;
+  const normalized = ((Math.round(n) % 360) + 360) % 360;
   return normalized;
 }
 
 function parseCssColorValue(raw, fallbackHex, fallbackOpacity = 100) {
-  var safeFallbackHex = normalizeHexColor(fallbackHex, DEFAULT_SETTINGS.color);
-  var safeFallbackOpacity = normalizeOpacity(fallbackOpacity, 100);
-  var val = String(raw || "").trim().toLowerCase();
+  const safeFallbackHex = normalizeHexColor(fallbackHex, DEFAULT_SETTINGS.color);
+  const safeFallbackOpacity = normalizeOpacity(fallbackOpacity, 100);
+  const val = String(raw || "").trim().toLowerCase();
 
   if (!val) {
     return {
@@ -413,19 +414,19 @@ function parseCssColorValue(raw, fallbackHex, fallbackOpacity = 100) {
 
   if (/^#[0-9a-f]{8}$/.test(val)) {
     return {
-      hex: "#" + (val.slice(1, 7)),
+      hex: `#${val.slice(1, 7)}`,
       opacity: normalizeOpacity((parseInt(val.slice(7, 9), 16) / 255) * 100, 100)
     };
   }
 
   if (/^#[0-9a-f]{4}$/.test(val)) {
     return {
-      hex: "#" + (val[1]) + (val[1]) + (val[2]) + (val[2]) + (val[3]) + (val[3]),
-      opacity: normalizeOpacity((parseInt((val[4]) + (val[4]), 16) / 255) * 100, 100)
+      hex: `#${val[1]}${val[1]}${val[2]}${val[2]}${val[3]}${val[3]}`,
+      opacity: normalizeOpacity((parseInt(`${val[4]}${val[4]}`, 16) / 255) * 100, 100)
     };
   }
 
-  var normalizedHex = normalizeHexColor(val, "");
+  const normalizedHex = normalizeHexColor(val, "");
   if (normalizedHex) {
     return {
       hex: normalizedHex,
@@ -433,7 +434,7 @@ function parseCssColorValue(raw, fallbackHex, fallbackOpacity = 100) {
     };
   }
 
-  var match = val.match(/^rgba?\(([^)]+)\)$/);
+  const match = val.match(/^rgba?\(([^)]+)\)$/);
   if (!match) {
     return {
       hex: safeFallbackHex,
@@ -441,15 +442,15 @@ function parseCssColorValue(raw, fallbackHex, fallbackOpacity = 100) {
     };
   }
 
-  var body = match[1].trim();
-  var parts = [];
-  var alphaPart = "";
+  const body = match[1].trim();
+  let parts = [];
+  let alphaPart = "";
   if (body.includes(",")) {
-    var pieces = body.split(",").mapfunction((v) v.trim()).filter(Boolean);
+    const pieces = body.split(",").map((v) => v.trim()).filter(Boolean);
     parts = pieces.slice(0, 3);
     alphaPart = pieces[3] || "";
   } else {
-    var [rgbPart, alphaRaw = ""] = body.split("/").mapfunction((v) v.trim());
+    const [rgbPart, alphaRaw = ""] = body.split("/").map((v) => v.trim());
     parts = String(rgbPart || "").split(/\s+/).filter(Boolean).slice(0, 3);
     alphaPart = alphaRaw;
   }
@@ -461,24 +462,24 @@ function parseCssColorValue(raw, fallbackHex, fallbackOpacity = 100) {
     };
   }
 
-  var rgb = [];
-  for (var i = 0; i < 3; i++) {
-    var n = Number(parts[i].replace("%", ""));
+  const rgb = [];
+  for (let i = 0; i < 3; i++) {
+    const n = Number(parts[i].replace("%", ""));
     if (!Number.isFinite(n)) {
       return {
         hex: safeFallbackHex,
         opacity: safeFallbackOpacity
       };
     }
-    var normalized = parts[i].includes("%")
+    const normalized = parts[i].includes("%")
       ? Math.round((n / 100) * 255)
       : Math.round(n);
     rgb.push(Math.max(0, Math.min(255, normalized)));
   }
 
-  var opacity = 100;
+  let opacity = 100;
   if (alphaPart) {
-    var alphaValue = alphaPart.includes("%")
+    const alphaValue = alphaPart.includes("%")
       ? Number(alphaPart.replace("%", "")) / 100
       : Number(alphaPart);
     if (Number.isFinite(alphaValue)) {
@@ -487,13 +488,13 @@ function parseCssColorValue(raw, fallbackHex, fallbackOpacity = 100) {
   }
 
   return {
-    hex: "#" + (rgb.mapfunction((v) v.toString(16).padStart(2, "0")).join("")),
+    hex: `#${rgb.map((v) => v.toString(16).padStart(2, "0")).join("")}`,
     opacity
   };
 }
 
 function parseBackgroundFromJellyfin(raw) {
-  var parsed = parseCssColorValue(
+  const parsed = parseCssColorValue(
     raw,
     DEFAULT_SETTINGS.backgroundColor,
     DEFAULT_SETTINGS.backgroundOpacity
@@ -521,51 +522,51 @@ function escapeAttr(value) {
 }
 
 function getFontOptionByValue(value) {
-  var selected = normalizeFontFamilySelection(value);
-  var fontOptions = getFontOptions();
-  return fontOptions.findfunction((opt) opt.value === selected) || fontOptions[0];
+  const selected = normalizeFontFamilySelection(value);
+  const fontOptions = getFontOptions();
+  return fontOptions.find((opt) => opt.value === selected) || fontOptions[0];
 }
 
 function getCurrentUserIdCandidates() {
-  var ids = [];
-  var add = function(value) {
-    var val = String(value || "").trim();
+  const ids = [];
+  const add = (value) => {
+    const val = String(value || "").trim();
     if (!val || ids.includes(val)) return;
     ids.push(val);
   };
 
   try {
-    add(window.ApiClient.getCurrentUserId.());
+    add(window.ApiClient?.getCurrentUserId?.());
   } catch {}
 
   try {
-    add(window.MediaBrowser.ApiClient.getCurrentUserId.());
+    add(window.MediaBrowser?.ApiClient?.getCurrentUserId?.());
   } catch {}
 
   try {
-    add(window.MediaBrowser.ApiClient._currentUser.Id);
+    add(window.MediaBrowser?.ApiClient?._currentUser?.Id);
   } catch {}
 
   return ids;
 }
 
 function getPreferredAppearanceKeys() {
-  var keys = [];
-  var seen = new Set();
-  var add = function(value) {
-    var key = String(value || "").trim();
+  const keys = [];
+  const seen = new Set();
+  const add = (value) => {
+    const key = String(value || "").trim();
     if (!key || seen.has(key)) return;
     seen.add(key);
     keys.push(key);
   };
 
-  var userIds = getCurrentUserIdCandidates();
-  userIds.forEach(function((userId) add((userId) + "-" + (JF_APPEARANCE_KEY)));
+  const userIds = getCurrentUserIdCandidates();
+  userIds.forEach((userId) => add(`${userId}-${JF_APPEARANCE_KEY}`));
 
   try {
-    for (var i = 0; i < localStorage.length; i++) {
-      var key = localStorage.key(i);
-      if (typeof key === "string" && key.endsWith("-" + (JF_APPEARANCE_KEY))) {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (typeof key === "string" && key.endsWith(`-${JF_APPEARANCE_KEY}`)) {
         add(key);
       }
     }
@@ -576,13 +577,13 @@ function getPreferredAppearanceKeys() {
 }
 
 function getDefaultSettingsFromJellyfin() {
-  var { data: jf } = loadJellyfinAppearance();
-  var text = parseCssColorValue(jf.textColor, DEFAULT_SETTINGS.color, DEFAULT_SETTINGS.colorOpacity);
-  var bg = parseBackgroundFromJellyfin(jf.textBackground);
+  const { data: jf } = loadJellyfinAppearance();
+  const text = parseCssColorValue(jf.textColor, DEFAULT_SETTINGS.color, DEFAULT_SETTINGS.colorOpacity);
+  const bg = parseBackgroundFromJellyfin(jf.textBackground);
   return {
     sizePercent: jellyfinTextSizeToPercent(jf.textSize),
-    color: normalizeColor(text.hex || DEFAULT_SETTINGS.color),
-    colorOpacity: normalizeColorOpacity(text.opacity || DEFAULT_SETTINGS.colorOpacity),
+    color: normalizeColor(text?.hex || DEFAULT_SETTINGS.color),
+    colorOpacity: normalizeColorOpacity(text?.opacity ?? DEFAULT_SETTINGS.colorOpacity),
     fontFamily: jellyfinFontToFamily(jf.font),
     dropShadow: normalizeDropShadow(jf.dropShadow),
     shadowColor: DEFAULT_SETTINGS.shadowColor,
@@ -598,26 +599,26 @@ function getDefaultSettingsFromJellyfin() {
 }
 
 function loadSettings() {
-  var fallback = getDefaultSettingsFromJellyfin();
+  const fallback = getDefaultSettingsFromJellyfin();
 
   try {
-    var parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    var selectedFont = normalizeFontFamilySelection(parsed.fontFamily, fallback.fontFamily);
-    var dropShadow = normalizeDropShadow(parsed.dropShadow || fallback.dropShadow);
-    var colorOpacity = normalizeColorOpacity(parsed.colorOpacity || fallback.colorOpacity);
-    var shadowColor = normalizeShadowColor(parsed.shadowColor || fallback.shadowColor);
-    var shadowOpacity = normalizeShadowOpacity(parsed.shadowOpacity || fallback.shadowOpacity);
-    var shadowSize = normalizeShadowSize(parsed.shadowSize || fallback.shadowSize);
-    var shadowDirection = normalizeShadowDirection(parsed.shadowDirection || fallback.shadowDirection);
-    var backgroundEnabled = normalizeBackgroundEnabled(
-      parsed.backgroundEnabled || fallback.backgroundEnabled
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    const selectedFont = normalizeFontFamilySelection(parsed.fontFamily, fallback.fontFamily);
+    const dropShadow = normalizeDropShadow(parsed.dropShadow || fallback.dropShadow);
+    const colorOpacity = normalizeColorOpacity(parsed.colorOpacity ?? fallback.colorOpacity);
+    const shadowColor = normalizeShadowColor(parsed.shadowColor || fallback.shadowColor);
+    const shadowOpacity = normalizeShadowOpacity(parsed.shadowOpacity ?? fallback.shadowOpacity);
+    const shadowSize = normalizeShadowSize(parsed.shadowSize ?? fallback.shadowSize);
+    const shadowDirection = normalizeShadowDirection(parsed.shadowDirection ?? fallback.shadowDirection);
+    const backgroundEnabled = normalizeBackgroundEnabled(
+      parsed.backgroundEnabled ?? fallback.backgroundEnabled
     );
-    var backgroundColor = normalizeBackgroundColor(parsed.backgroundColor || fallback.backgroundColor);
-    var backgroundOpacity = normalizeBackgroundOpacity(
-      parsed.backgroundOpacity || fallback.backgroundOpacity
+    const backgroundColor = normalizeBackgroundColor(parsed.backgroundColor || fallback.backgroundColor);
+    const backgroundOpacity = normalizeBackgroundOpacity(
+      parsed.backgroundOpacity ?? fallback.backgroundOpacity
     );
-    var backgroundRadiusPx = normalizeBackgroundRadius(
-      parsed.backgroundRadiusPx || fallback.backgroundRadiusPx
+    const backgroundRadiusPx = normalizeBackgroundRadius(
+      parsed.backgroundRadiusPx ?? fallback.backgroundRadiusPx
     );
 
     return {
@@ -647,19 +648,19 @@ function loadSettings() {
 
 function getPersistentSettingsPayload(settings) {
   return {
-    sizePercent: Math.round(clampNumber(settings.sizePercent, 60, 220, DEFAULT_SETTINGS.sizePercent)),
-    color: normalizeColor(settings.color || DEFAULT_SETTINGS.color),
-    colorOpacity: normalizeColorOpacity(settings.colorOpacity),
-    fontFamily: normalizeFontFamilySelection(settings.fontFamily, DEFAULT_SETTINGS.fontFamily),
-    dropShadow: normalizeDropShadow(settings.dropShadow),
-    shadowColor: normalizeShadowColor(settings.shadowColor),
-    shadowOpacity: normalizeShadowOpacity(settings.shadowOpacity),
-    shadowSize: normalizeShadowSize(settings.shadowSize),
-    shadowDirection: normalizeShadowDirection(settings.shadowDirection),
-    backgroundEnabled: normalizeBackgroundEnabled(settings.backgroundEnabled),
-    backgroundColor: normalizeBackgroundColor(settings.backgroundColor),
-    backgroundOpacity: normalizeBackgroundOpacity(settings.backgroundOpacity),
-    backgroundRadiusPx: normalizeBackgroundRadius(settings.backgroundRadiusPx)
+    sizePercent: Math.round(clampNumber(settings?.sizePercent, 60, 220, DEFAULT_SETTINGS.sizePercent)),
+    color: normalizeColor(settings?.color || DEFAULT_SETTINGS.color),
+    colorOpacity: normalizeColorOpacity(settings?.colorOpacity),
+    fontFamily: normalizeFontFamilySelection(settings?.fontFamily, DEFAULT_SETTINGS.fontFamily),
+    dropShadow: normalizeDropShadow(settings?.dropShadow),
+    shadowColor: normalizeShadowColor(settings?.shadowColor),
+    shadowOpacity: normalizeShadowOpacity(settings?.shadowOpacity),
+    shadowSize: normalizeShadowSize(settings?.shadowSize),
+    shadowDirection: normalizeShadowDirection(settings?.shadowDirection),
+    backgroundEnabled: normalizeBackgroundEnabled(settings?.backgroundEnabled),
+    backgroundColor: normalizeBackgroundColor(settings?.backgroundColor),
+    backgroundOpacity: normalizeBackgroundOpacity(settings?.backgroundOpacity),
+    backgroundRadiusPx: normalizeBackgroundRadius(settings?.backgroundRadiusPx)
   };
 }
 
@@ -671,7 +672,7 @@ function saveSettings(settings) {
 
 function setLocalStorageIfChanged(key, value) {
   try {
-    var next = String(value);
+    const next = String(value);
     if (localStorage.getItem(key) !== next) {
       localStorage.setItem(key, next);
       return true;
@@ -681,12 +682,12 @@ function setLocalStorageIfChanged(key, value) {
 }
 
 function ensureClientSubtitleRenderingPreferences() {
-  var changed = false;
+  let changed = false;
 
   changed = setLocalStorageIfChanged(JF_SUBTITLE_RENDER_PGS_KEY, "true") || changed;
 
   try {
-    var burnIn = String(localStorage.getItem(JF_SUBTITLE_BURN_IN_KEY) || "")
+    const burnIn = String(localStorage.getItem(JF_SUBTITLE_BURN_IN_KEY) || "")
       .trim()
       .toLowerCase();
     if (FORCED_BURN_IN_VALUES.has(burnIn)) {
@@ -695,7 +696,7 @@ function ensureClientSubtitleRenderingPreferences() {
   } catch {}
 
   try {
-    var alwaysBurn = String(localStorage.getItem(JF_ALWAYS_BURN_IN_WHEN_TRANSCODING_KEY) || "")
+    const alwaysBurn = String(localStorage.getItem(JF_ALWAYS_BURN_IN_WHEN_TRANSCODING_KEY) || "")
       .trim()
       .toLowerCase();
     if (alwaysBurn === "true" || alwaysBurn === "1") {
@@ -707,13 +708,13 @@ function ensureClientSubtitleRenderingPreferences() {
 }
 
 function loadJellyfinAppearance() {
-  var keys = getPreferredAppearanceKeys();
-  for (var i = 0; i < keys.length; i++) {
-    var key = keys[i];
+  const keys = getPreferredAppearanceKeys();
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
     try {
-      var raw = localStorage.getItem(key);
+      const raw = localStorage.getItem(key);
       if (!raw) continue;
-      var parsed = JSON.parse(raw);
+      const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === "object") {
         return { data: parsed, key };
       }
@@ -740,7 +741,7 @@ function jellyfinTextSizeToPercent(textSize) {
 }
 
 function percentToJellyfinTextSize(sizePercent) {
-  var n = clampNumber(sizePercent, 60, 220, DEFAULT_SETTINGS.sizePercent);
+  const n = clampNumber(sizePercent, 60, 220, DEFAULT_SETTINGS.sizePercent);
   if (n <= 82) return "smaller";
   if (n <= 102) return "small";
   if (n <= 130) return "";
@@ -750,7 +751,7 @@ function percentToJellyfinTextSize(sizePercent) {
 }
 
 function jellyfinVerticalToPosition(verticalPosition) {
-  var n = parseInt(verticalPosition, 10);
+  const n = parseInt(verticalPosition, 10);
   if (!Number.isFinite(n)) return DEFAULT_SETTINGS.position;
   if (n <= -2) return "bottom";
   if (n >= 2) return "top";
@@ -764,9 +765,9 @@ function positionToJellyfinVertical(position) {
 }
 
 function jellyfinFontToFamily(fontToken) {
-  var token = String(fontToken || "").toLowerCase();
+  const token = String(fontToken || "").toLowerCase();
   if (!token) return DEFAULT_SETTINGS.fontFamily;
-  var hit = getFontOptions().findfunction((opt) opt.jellyfinFont === token);
+  const hit = getFontOptions().find((opt) => opt.jellyfinFont === token);
   return hit ? hit.value : DEFAULT_SETTINGS.fontFamily;
 }
 
@@ -778,7 +779,7 @@ function resolveFontStack(settings) {
 }
 
 function hexToRgb(hex) {
-  var normalized = normalizeHexColor(hex, DEFAULT_SETTINGS.shadowColor);
+  const normalized = normalizeHexColor(hex, DEFAULT_SETTINGS.shadowColor);
   return {
     r: parseInt(normalized.slice(1, 3), 16),
     g: parseInt(normalized.slice(3, 5), 16),
@@ -787,15 +788,15 @@ function hexToRgb(hex) {
 }
 
 function mixHex(colorA, colorB, ratio) {
-  var a = hexToRgb(colorA);
-  var b = hexToRgb(colorB);
-  var r = Math.max(0, Math.min(1, Number(ratio)));
-  var c = {
+  const a = hexToRgb(colorA);
+  const b = hexToRgb(colorB);
+  const r = Math.max(0, Math.min(1, Number(ratio)));
+  const c = {
     r: Math.round(a.r * (1 - r) + b.r * r),
     g: Math.round(a.g * (1 - r) + b.g * r),
     b: Math.round(a.b * (1 - r) + b.b * r)
   };
-  return "#" + (c.r.toString(16).padStart(2, "0")) + (c.g.toString(16).padStart(2, "0")) + (c.b.toString(16).padStart(2, "0"));
+  return `#${c.r.toString(16).padStart(2, "0")}${c.g.toString(16).padStart(2, "0")}${c.b.toString(16).padStart(2, "0")}`;
 }
 
 function opacityPercentToAlpha(raw, fallback = 100) {
@@ -803,41 +804,41 @@ function opacityPercentToAlpha(raw, fallback = 100) {
 }
 
 function getCssColorValue(raw, opacity, fallbackHex) {
-  var normalizedFallback = normalizeHexColor(fallbackHex, DEFAULT_SETTINGS.color);
-  var normalizedHex = normalizeHexColor(raw, normalizedFallback);
-  var alpha = opacityPercentToAlpha(opacity, 100);
+  const normalizedFallback = normalizeHexColor(fallbackHex, DEFAULT_SETTINGS.color);
+  const normalizedHex = normalizeHexColor(raw, normalizedFallback);
+  const alpha = opacityPercentToAlpha(opacity, 100);
   if (alpha >= 1) return normalizedHex;
-  var { r, g, b } = hexToRgb(normalizedHex);
-  return "rgba(" + (r) + ", " + (g) + ", " + (b) + ", " + (alpha) + ")";
+  const { r, g, b } = hexToRgb(normalizedHex);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 function getTextColorValue(settings) {
-  return getCssColorValue(settings.color, settings.colorOpacity, DEFAULT_SETTINGS.color);
+  return getCssColorValue(settings?.color, settings?.colorOpacity, DEFAULT_SETTINGS.color);
 }
 
 function getBackgroundColorValue(settings) {
-  return settings.backgroundEnabled
+  return settings?.backgroundEnabled
     ? getCssColorValue(
-      settings.backgroundColor,
-      settings.backgroundOpacity,
+      settings?.backgroundColor,
+      settings?.backgroundOpacity,
       DEFAULT_SETTINGS.backgroundColor
     )
     : "transparent";
 }
 
 function formatPx(value) {
-  var n = Number(value);
+  const n = Number(value);
   if (!Number.isFinite(n)) return "0px";
-  var rounded = Math.round(n * 100) / 100;
-  return (rounded) + "px";
+  const rounded = Math.round(n * 100) / 100;
+  return `${rounded}px`;
 }
 
 function getShadowVector(sizePx, directionDeg) {
-  var size = normalizeShadowSize(sizePx);
-  var dir = normalizeShadowDirection(directionDeg);
-  var rad = (dir * Math.PI) / 180;
-  var distance = size * 0.42;
-  var blur = size;
+  const size = normalizeShadowSize(sizePx);
+  const dir = normalizeShadowDirection(directionDeg);
+  const rad = (dir * Math.PI) / 180;
+  const distance = size * 0.42;
+  const blur = size;
   return {
     size,
     x: Math.cos(rad) * distance,
@@ -847,20 +848,20 @@ function getShadowVector(sizePx, directionDeg) {
 }
 
 function getTextShadowValue(dropShadow, shadowColor, shadowSize, shadowDirection, shadowOpacity) {
-  var base = normalizeShadowColor(shadowColor);
-  var light = mixHex(base, "#ffffff", 0.58);
-  var dark = mixHex(base, "#000000", 0.42);
-  var vector = getShadowVector(shadowSize, shadowDirection);
-  var shadowAlpha = opacityPercentToAlpha(shadowOpacity, DEFAULT_SETTINGS.shadowOpacity);
-  var baseColor = getCssColorValue(base, shadowOpacity, DEFAULT_SETTINGS.shadowColor);
-  var lightColor = getCssColorValue(light, shadowOpacity, light);
-  var darkColor = getCssColorValue(dark, shadowOpacity, dark);
-  var mainX = formatPx(vector.x);
-  var mainY = formatPx(vector.y);
-  var invX = formatPx(-vector.x);
-  var invY = formatPx(-vector.y);
-  var mainBlur = formatPx(vector.blur);
-  var subtleBlur = formatPx(Math.max(0, vector.blur * 0.16));
+  const base = normalizeShadowColor(shadowColor);
+  const light = mixHex(base, "#ffffff", 0.58);
+  const dark = mixHex(base, "#000000", 0.42);
+  const vector = getShadowVector(shadowSize, shadowDirection);
+  const shadowAlpha = opacityPercentToAlpha(shadowOpacity, DEFAULT_SETTINGS.shadowOpacity);
+  const baseColor = getCssColorValue(base, shadowOpacity, DEFAULT_SETTINGS.shadowColor);
+  const lightColor = getCssColorValue(light, shadowOpacity, light);
+  const darkColor = getCssColorValue(dark, shadowOpacity, dark);
+  const mainX = formatPx(vector.x);
+  const mainY = formatPx(vector.y);
+  const invX = formatPx(-vector.x);
+  const invY = formatPx(-vector.y);
+  const mainBlur = formatPx(vector.blur);
+  const subtleBlur = formatPx(Math.max(0, vector.blur * 0.16));
 
   if (vector.size <= 0 || shadowAlpha <= 0) {
     return "none";
@@ -868,34 +869,34 @@ function getTextShadowValue(dropShadow, shadowColor, shadowSize, shadowDirection
 
   switch (normalizeDropShadow(dropShadow)) {
     case "raised":
-      return (invX) + " " + (invY) + " " + (subtleBlur) + " " + (lightColor) + ", " + (mainX) + " " + (mainY) + " " + (subtleBlur) + " " + (darkColor);
+      return `${invX} ${invY} ${subtleBlur} ${lightColor}, ${mainX} ${mainY} ${subtleBlur} ${darkColor}`;
     case "depressed":
-      return (mainX) + " " + (mainY) + " " + (subtleBlur) + " " + (lightColor) + ", " + (invX) + " " + (invY) + " " + (subtleBlur) + " " + (darkColor);
+      return `${mainX} ${mainY} ${subtleBlur} ${lightColor}, ${invX} ${invY} ${subtleBlur} ${darkColor}`;
     case "uniform": {
-      var r = Math.max(0.8, vector.size * 0.34);
-      var ring = [
+      const r = Math.max(0.8, vector.size * 0.34);
+      const ring = [
         [1, 0], [-1, 0], [0, 1], [0, -1],
         [0.72, 0.72], [-0.72, 0.72], [0.72, -0.72], [-0.72, -0.72]
-      ].mapfunction(([dx, dy]) (formatPx(dx * r)) + " " + (formatPx(dy * r)) + " " + (formatPx(Math.max(0, vector.blur * 0.12))) + " " + (baseColor));
-      ring.push((mainX) + " " + (mainY) + " " + (formatPx(Math.max(0, vector.blur * 0.55))) + " " + (baseColor));
+      ].map(([dx, dy]) => `${formatPx(dx * r)} ${formatPx(dy * r)} ${formatPx(Math.max(0, vector.blur * 0.12))} ${baseColor}`);
+      ring.push(`${mainX} ${mainY} ${formatPx(Math.max(0, vector.blur * 0.55))} ${baseColor}`);
       return ring.join(", ");
     }
     case "none":
       return "none";
     default:
-      return (mainX) + " " + (mainY) + " " + (mainBlur) + " " + (baseColor);
+      return `${mainX} ${mainY} ${mainBlur} ${baseColor}`;
   }
 }
 
 function saveJellyfinAppearance(settings, options = null) {
-  var appearanceEntry = loadJellyfinAppearance();
-  var current = appearanceEntry.data || {};
-  var selectedFont = getFontOptionByValue(settings.fontFamily);
-  var currentStyling = String(current.subtitleStyling || "").toLowerCase();
-  var suppressComplexTextSize = options.suppressComplexTextSize === true;
-  var textColor = getTextColorValue(settings);
-  var textBackground = getBackgroundColorValue(settings);
-  var next = {
+  const appearanceEntry = loadJellyfinAppearance();
+  const current = appearanceEntry.data || {};
+  const selectedFont = getFontOptionByValue(settings.fontFamily);
+  const currentStyling = String(current.subtitleStyling || "").toLowerCase();
+  const suppressComplexTextSize = options?.suppressComplexTextSize === true;
+  const textColor = getTextColorValue(settings);
+  const textBackground = getBackgroundColorValue(settings);
+  const next = {
     ...current,
     subtitleStyling: currentStyling === "native" ? "Custom" : (current.subtitleStyling || "Custom"),
     textSize: suppressComplexTextSize ? "" : percentToJellyfinTextSize(settings.sizePercent),
@@ -906,16 +907,16 @@ function saveJellyfinAppearance(settings, options = null) {
     textColor
   };
 
-  var keys = getPreferredAppearanceKeys();
-  var primaryKey = appearanceEntry.key || keys[0] || JF_APPEARANCE_KEY;
+  const keys = getPreferredAppearanceKeys();
+  const primaryKey = appearanceEntry.key || keys[0] || JF_APPEARANCE_KEY;
   if (!keys.includes(primaryKey)) {
     keys.unshift(primaryKey);
   }
 
-  var nextSerialized = JSON.stringify(next);
-  keys.forEach(function((key) {
+  const nextSerialized = JSON.stringify(next);
+  keys.forEach((key) => {
     try {
-      var currentSerialized = localStorage.getItem(key) || "";
+      const currentSerialized = localStorage.getItem(key) || "";
       if (nextSerialized !== currentSerialized) {
         localStorage.setItem(key, nextSerialized);
       }
@@ -924,7 +925,7 @@ function saveJellyfinAppearance(settings, options = null) {
 }
 
 function ensureCueStyleElement() {
-  var style = document.getElementById(STYLE_ID);
+  let style = document.getElementById(STYLE_ID);
   if (!style) {
     style = document.createElement("style");
     style.id = STYLE_ID;
@@ -934,47 +935,47 @@ function ensureCueStyleElement() {
 }
 
 function applyCueCss(settings) {
-  var fontStack = resolveFontStack(settings);
-  var textShadow = getTextShadowValue(
+  const fontStack = resolveFontStack(settings);
+  const textShadow = getTextShadowValue(
     settings.dropShadow,
     settings.shadowColor,
     settings.shadowSize,
     settings.shadowDirection,
     settings.shadowOpacity
   );
-  var textColor = getTextColorValue(settings);
-  var textBackground = getBackgroundColorValue(settings);
-  var backgroundRadius = getBackgroundRadiusCssValue(settings);
-  var backgroundPadding = settings.backgroundEnabled ? SUBTITLE_BACKGROUND_PADDING : "0";
-  var subtitleDisplay = settings.backgroundEnabled ? "block" : "inline";
-  var subtitleWidth = settings.backgroundEnabled ? "fit-content" : "auto";
-  var subtitleMaxWidth = settings.backgroundEnabled ? "calc(100% - 1.8em)" : "100%";
-  var style = ensureCueStyleElement();
-  var lines = [];
+  const textColor = getTextColorValue(settings);
+  const textBackground = getBackgroundColorValue(settings);
+  const backgroundRadius = getBackgroundRadiusCssValue(settings);
+  const backgroundPadding = settings.backgroundEnabled ? SUBTITLE_BACKGROUND_PADDING : "0";
+  const subtitleDisplay = settings.backgroundEnabled ? "block" : "inline";
+  const subtitleWidth = settings.backgroundEnabled ? "fit-content" : "auto";
+  const subtitleMaxWidth = settings.backgroundEnabled ? "calc(100% - 1.8em)" : "100%";
+  const style = ensureCueStyleElement();
+  const lines = [];
 
   lines.push("html body .videoPlayerContainer video.htmlvideoplayer::cue, html body .videoPlayerContainer .htmlvideoplayer::cue, html body video::cue {");
-  lines.push("  color: " + (textColor) + " !important;");
-  lines.push("  font-size: " + (settings.sizePercent) + "% !important;");
-  lines.push("  font-family: " + (fontStack) + " !important;");
-  lines.push("  text-shadow: " + (textShadow) + " !important;");
-  lines.push("  background-color: " + (textBackground) + " !important;");
+  lines.push(`  color: ${textColor} !important;`);
+  lines.push(`  font-size: ${settings.sizePercent}% !important;`);
+  lines.push(`  font-family: ${fontStack} !important;`);
+  lines.push(`  text-shadow: ${textShadow} !important;`);
+  lines.push(`  background-color: ${textBackground} !important;`);
   lines.push("}");
 
   lines.push(".videoSubtitlesInner, .videoSecondarySubtitlesInner {");
-  lines.push("  color: " + (textColor) + " !important;");
-  lines.push("  font-size: " + (settings.sizePercent) + "% !important;");
-  lines.push("  font-family: " + (fontStack) + " !important;");
-  lines.push("  text-shadow: " + (textShadow) + " !important;");
-  lines.push("  background-color: " + (textBackground) + " !important;");
-  lines.push("  padding: " + (backgroundPadding) + " !important;");
-  lines.push("  border-radius: " + (backgroundRadius) + " !important;");
-  lines.push("  display: " + (subtitleDisplay) + " !important;");
-  lines.push("  width: " + (subtitleWidth) + " !important;");
-  lines.push("  max-width: " + (subtitleMaxWidth) + " !important;");
+  lines.push(`  color: ${textColor} !important;`);
+  lines.push(`  font-size: ${settings.sizePercent}% !important;`);
+  lines.push(`  font-family: ${fontStack} !important;`);
+  lines.push(`  text-shadow: ${textShadow} !important;`);
+  lines.push(`  background-color: ${textBackground} !important;`);
+  lines.push(`  padding: ${backgroundPadding} !important;`);
+  lines.push(`  border-radius: ${backgroundRadius} !important;`);
+  lines.push(`  display: ${subtitleDisplay} !important;`);
+  lines.push(`  width: ${subtitleWidth} !important;`);
+  lines.push(`  max-width: ${subtitleMaxWidth} !important;`);
   lines.push("  margin-left: auto !important;");
   lines.push("  margin-right: auto !important;");
-  lines.push("  box-decoration-break: " + (settings.backgroundEnabled ? "clone" : "slice") + " !important;");
-  lines.push("  -webkit-box-decoration-break: " + (settings.backgroundEnabled ? "clone" : "slice") + " !important;");
+  lines.push(`  box-decoration-break: ${settings.backgroundEnabled ? "clone" : "slice"} !important;`);
+  lines.push(`  -webkit-box-decoration-break: ${settings.backgroundEnabled ? "clone" : "slice"} !important;`);
   lines.push("  background-clip: padding-box !important;");
   lines.push("  line-height: 1.3 !important;");
   lines.push("  text-align: center;");
@@ -996,27 +997,27 @@ function applyCueCss(settings) {
 }
 
 function patchExistingCueStyles(settings) {
-  var fontStack = resolveFontStack(settings);
-  var textShadow = getTextShadowValue(
+  const fontStack = resolveFontStack(settings);
+  const textShadow = getTextShadowValue(
     settings.dropShadow,
     settings.shadowColor,
     settings.shadowSize,
     settings.shadowDirection,
     settings.shadowOpacity
   );
-  var textColor = getTextColorValue(settings);
-  var textBackground = getBackgroundColorValue(settings);
-  var css = [
+  const textColor = getTextColorValue(settings);
+  const textBackground = getBackgroundColorValue(settings);
+  const css = [
     ".htmlvideoplayer::cue, video::cue {",
-    "  color: " + (textColor) + " !important;",
-    "  font-size: " + (settings.sizePercent) + "% !important;",
-    "  font-family: " + (fontStack) + " !important;",
-    "  text-shadow: " + (textShadow) + " !important;",
-    "  background-color: " + (textBackground) + " !important;",
+    `  color: ${textColor} !important;`,
+    `  font-size: ${settings.sizePercent}% !important;`,
+    `  font-family: ${fontStack} !important;`,
+    `  text-shadow: ${textShadow} !important;`,
+    `  background-color: ${textBackground} !important;`,
     "}"
   ].join("\n");
 
-  document.querySelectorAll("style[id$='-cuestyle']").forEach(function((styleNode) {
+  document.querySelectorAll("style[id$='-cuestyle']").forEach((styleNode) => {
     if (!(styleNode instanceof HTMLStyleElement)) return;
     styleNode.textContent = css;
   });
@@ -1024,7 +1025,7 @@ function patchExistingCueStyles(settings) {
 
 function getLiveSubtitleCustomizerSettings(fallback = null) {
   try {
-    var live = window.__jmsSubtitleCustomizerState.settings;
+    const live = window.__jmsSubtitleCustomizerState?.settings;
     if (live && typeof live === "object") {
       return {
         ...DEFAULT_SETTINGS,
@@ -1045,13 +1046,13 @@ function getLiveSubtitleCustomizerSettings(fallback = null) {
 
 function setElementStyle(node, prop, value, priority = "") {
   if (!(node instanceof HTMLElement)) return;
-  var normalizedPriority = priority === "important" ? "important" : "";
+  const normalizedPriority = priority === "important" ? "important" : "";
   if (value === null || value === undefined || value === "") {
     if (!node.style.getPropertyValue(prop)) return;
     node.style.removeProperty(prop);
     return;
   }
-  var nextValue = String(value);
+  const nextValue = String(value);
   if (
     node.style.getPropertyValue(prop) === nextValue &&
     node.style.getPropertyPriority(prop) === normalizedPriority
@@ -1078,7 +1079,7 @@ function nodeMatchesSubtitleMutationSelector(node, selector, includeDescendants 
 }
 
 function nodeListContainsSubtitleMutationTarget(nodeList, selector) {
-  for (var i = 0; i < nodeList.length; i++) {
+  for (let i = 0; i < nodeList.length; i++) {
     if (nodeMatchesSubtitleMutationSelector(nodeList[i], selector)) {
       return true;
     }
@@ -1087,13 +1088,13 @@ function nodeListContainsSubtitleMutationTarget(nodeList, selector) {
 }
 
 function mutationTouchesOnlyTextNodes(mutation) {
-  var touchedNodes = [...mutation.addedNodes, ...mutation.removedNodes];
-  return touchedNodes.length > 0 && touchedNodes.everyfunction((node) node.nodeType === Node.TEXT_NODE);
+  const touchedNodes = [...mutation.addedNodes, ...mutation.removedNodes];
+  return touchedNodes.length > 0 && touchedNodes.every((node) => node?.nodeType === Node.TEXT_NODE);
 }
 
 function isRelevantSubtitleMutation(mutations) {
-  for (var i = 0; i < mutations.length; i++) {
-    var mutation = mutations[i];
+  for (let i = 0; i < mutations.length; i++) {
+    const mutation = mutations[i];
     if (mutation.type === "attributes") {
       if (nodeMatchesSubtitleMutationSelector(mutation.target, SUBTITLE_MUTATION_SELECTOR, false)) {
         return true;
@@ -1124,8 +1125,8 @@ function isRelevantSubtitleMutation(mutations) {
 }
 
 function mutationNeedsHeavyRefresh(mutations) {
-  for (var i = 0; i < mutations.length; i++) {
-    var mutation = mutations[i];
+  for (let i = 0; i < mutations.length; i++) {
+    const mutation = mutations[i];
     if (mutation.type !== "childList") continue;
     if (
       nodeListContainsSubtitleMutationTarget(mutation.addedNodes, SUBTITLE_HEAVY_MUTATION_SELECTOR) ||
@@ -1139,8 +1140,8 @@ function mutationNeedsHeavyRefresh(mutations) {
 }
 
 function getSubtitleMirrorElements(video = null) {
-  var playerContainer =
-    video.closest.(".videoPlayerContainer") ||
+  const playerContainer =
+    video?.closest?.(".videoPlayerContainer") ||
     document.querySelector(".videoPlayerContainer");
   if (!(playerContainer instanceof HTMLElement)) {
     return {
@@ -1150,8 +1151,8 @@ function getSubtitleMirrorElements(video = null) {
     };
   }
 
-  var container = playerContainer.querySelector(".videoSubtitles[data-jms-subtitle-mirror='1']");
-  var text = container.querySelector.(".videoSubtitlesInner");
+  let container = playerContainer.querySelector(".videoSubtitles[data-jms-subtitle-mirror='1']");
+  let text = container?.querySelector?.(".videoSubtitlesInner");
 
   if (!(container instanceof HTMLElement) || !(text instanceof HTMLElement)) {
     container = null;
@@ -1168,7 +1169,7 @@ function getSubtitleMirrorElements(video = null) {
 function removeForeignSubtitleMirrors(playerContainer = null) {
   document
     .querySelectorAll(".videoSubtitles[data-jms-subtitle-mirror='1']")
-    .forEach(function((node) {
+    .forEach((node) => {
       if (!(node instanceof HTMLElement)) return;
       if (playerContainer instanceof HTMLElement && node.parentElement === playerContainer) return;
       node.remove();
@@ -1176,18 +1177,18 @@ function removeForeignSubtitleMirrors(playerContainer = null) {
 }
 
 function ensureSubtitleMirror(video) {
-  var refs = getSubtitleMirrorElements(video);
+  const refs = getSubtitleMirrorElements(video);
   if (refs.playerContainer instanceof HTMLElement) {
     removeForeignSubtitleMirrors(refs.playerContainer);
   }
   if (refs.container && refs.text) return refs;
   if (!(refs.playerContainer instanceof HTMLElement)) return refs;
 
-  var container = document.createElement("div");
+  const container = document.createElement("div");
   container.className = "videoSubtitles";
   container.dataset.jmsSubtitleMirror = "1";
 
-  var text = document.createElement("div");
+  const text = document.createElement("div");
   text.className = "videoSubtitlesInner";
   text.dataset.jmsSubtitleMirror = "1";
   text.classList.add("hide");
@@ -1203,8 +1204,8 @@ function ensureSubtitleMirror(video) {
 }
 
 function clearSubtitleMirror(video = null, settings = null) {
-  var cleared = false;
-  var refs = getSubtitleMirrorElements(video);
+  let cleared = false;
+  const refs = getSubtitleMirrorElements(video);
   if (refs.text instanceof HTMLElement) {
     refs.text.textContent = "";
     refs.text.classList.add("hide");
@@ -1218,7 +1219,7 @@ function clearSubtitleMirror(video = null, settings = null) {
 
   document
     .querySelectorAll(".videoSubtitles[data-jms-subtitle-mirror='1'] .videoSubtitlesInner")
-    .forEach(function((node) {
+    .forEach((node) => {
       if (!(node instanceof HTMLElement)) return;
       node.textContent = "";
       node.classList.add("hide");
@@ -1229,12 +1230,12 @@ function clearSubtitleMirror(video = null, settings = null) {
 }
 
 function restoreMirroredSubtitleTracks(video = null) {
-  var tracks = video.textTracks;
+  const tracks = video?.textTracks;
   if (tracks) {
-    for (var i = 0; i < tracks.length; i++) {
-      var track = tracks[i];
+    for (let i = 0; i < tracks.length; i++) {
+      const track = tracks[i];
       if (!track || !mirroredSubtitleTrackModes.has(track)) continue;
-      var prevMode = mirroredSubtitleTrackModes.get(track);
+      const prevMode = mirroredSubtitleTrackModes.get(track);
       mirroredSubtitleTrackModes.delete(track);
       try {
         if (track.mode === "hidden" && prevMode === "showing") {
@@ -1244,9 +1245,9 @@ function restoreMirroredSubtitleTracks(video = null) {
     }
   }
 
-  for (var [track, prevMode] of mirroredSubtitleTrackModes.entries()) {
+  for (const [track, prevMode] of mirroredSubtitleTrackModes.entries()) {
     try {
-      if (track.mode === "hidden" && prevMode === "showing") {
+      if (track?.mode === "hidden" && prevMode === "showing") {
         track.mode = prevMode;
       }
     } catch {}
@@ -1262,13 +1263,13 @@ function isTrackMirrorEligible(track) {
 function getTrackCueText(cue) {
   if (!cue) return "";
 
-  var rawText = typeof cue.text === "string" ? cue.text : "";
+  const rawText = typeof cue.text === "string" ? cue.text : "";
   if (rawText.trim()) return rawText;
 
   try {
-    var fragment = cue.getCueAsHTML.();
+    const fragment = cue.getCueAsHTML?.();
     if (!fragment) return "";
-    var holder = document.createElement("div");
+    const holder = document.createElement("div");
     holder.appendChild(fragment.cloneNode(true));
     return holder.textContent || "";
   } catch {}
@@ -1277,16 +1278,16 @@ function getTrackCueText(cue) {
 }
 
 function syncSubtitleMirror(video, settings, options = null) {
-  var disabled = options.disabled === true;
-  var hasComplexRenderer = options.hasComplexRenderer === true;
-  var tracks = getSubtitleTracks(video, false);
-  var mirrorTrack = null;
+  const disabled = options?.disabled === true;
+  const hasComplexRenderer = options?.hasComplexRenderer === true;
+  const tracks = getSubtitleTracks(video, false);
+  let mirrorTrack = null;
 
   if (!disabled && !hasComplexRenderer) {
     mirrorTrack =
-      tracks.findfunction((track) isTrackMirrorEligible(track) && track.mode === "showing") ||
-      tracks.findfunction((track) mirroredSubtitleTrackModes.has(track) && track.mode === "hidden") ||
-      tracks.findfunction((track) isTrackMirrorEligible(track) && track.mode === "hidden");
+      tracks.find((track) => isTrackMirrorEligible(track) && track.mode === "showing") ||
+      tracks.find((track) => mirroredSubtitleTrackModes.has(track) && track.mode === "hidden") ||
+      tracks.find((track) => isTrackMirrorEligible(track) && track.mode === "hidden");
   }
 
   if (!mirrorTrack) {
@@ -1305,21 +1306,21 @@ function syncSubtitleMirror(video, settings, options = null) {
     }
   } catch {}
 
-  var refs = ensureSubtitleMirror(video);
+  const refs = ensureSubtitleMirror(video);
   if (!(refs.container instanceof HTMLElement) || !(refs.text instanceof HTMLElement)) {
     return false;
   }
 
   applySubtitleContainerStyles(refs.container, settings);
 
-  var activeCues = mirrorTrack.activeCues;
-  var lines = [];
-  var seen = new Set();
+  const activeCues = mirrorTrack.activeCues;
+  const lines = [];
+  const seen = new Set();
 
-  for (var i = 0; activeCues && i < activeCues.length; i++) {
-    var cue = activeCues[i];
-    var text = getTrackCueText(cue);
-    var normalized = text.replace(/\r\n?/g, "\n").trim();
+  for (let i = 0; activeCues && i < activeCues.length; i++) {
+    const cue = activeCues[i];
+    const text = getTrackCueText(cue);
+    const normalized = text.replace(/\r\n?/g, "\n").trim();
     if (!normalized || seen.has(normalized)) continue;
     seen.add(normalized);
     lines.push(normalized);
@@ -1364,25 +1365,25 @@ function applySubtitleContainerStyles(container, settings) {
 function applySubtitleTextStyles(subtitleText, settings) {
   if (!(subtitleText instanceof HTMLElement)) return;
 
-  var fontStack = resolveFontStack(settings);
-  var textShadow = getTextShadowValue(
+  const fontStack = resolveFontStack(settings);
+  const textShadow = getTextShadowValue(
     settings.dropShadow,
     settings.shadowColor,
     settings.shadowSize,
     settings.shadowDirection,
     settings.shadowOpacity
   );
-  var textColor = getTextColorValue(settings);
-  var textBackground = getBackgroundColorValue(settings);
-  var backgroundRadius = getBackgroundRadiusCssValue(settings);
-  var hasBackground = !!settings.backgroundEnabled;
-  var isHidden =
+  const textColor = getTextColorValue(settings);
+  const textBackground = getBackgroundColorValue(settings);
+  const backgroundRadius = getBackgroundRadiusCssValue(settings);
+  const hasBackground = !!settings.backgroundEnabled;
+  const isHidden =
     subtitleText.hidden ||
     subtitleText.classList.contains("hide") ||
     !String(subtitleText.textContent || "").trim();
 
   setElementStyle(subtitleText, "color", textColor);
-  setElementStyle(subtitleText, "font-size", (settings.sizePercent) + "%");
+  setElementStyle(subtitleText, "font-size", `${settings.sizePercent}%`);
   setElementStyle(subtitleText, "font-family", fontStack);
   setElementStyle(subtitleText, "text-shadow", textShadow);
   setElementStyle(subtitleText, "line-height", "1.3");
@@ -1419,19 +1420,19 @@ function applySubtitleTextStyles(subtitleText, settings) {
 }
 
 function applySubtitleAppearancePair(windowEl, textEl, settings) {
-  var resolved = getLiveSubtitleCustomizerSettings(settings);
+  const resolved = getLiveSubtitleCustomizerSettings(settings);
   applySubtitleContainerStyles(windowEl, resolved);
   applySubtitleTextStyles(textEl, resolved);
 }
 
 function applyOverlayStyles(settings) {
-  var containers = document.querySelectorAll(".videoSubtitles");
-  containers.forEach(function((container) {
+  const containers = document.querySelectorAll(".videoSubtitles");
+  containers.forEach((container) => {
     applySubtitleContainerStyles(container, settings);
   });
 
-  var subtitles = document.querySelectorAll(".videoSubtitlesInner, .videoSecondarySubtitlesInner");
-  subtitles.forEach(function((subtitleText) {
+  const subtitles = document.querySelectorAll(".videoSubtitlesInner, .videoSecondarySubtitlesInner");
+  subtitles.forEach((subtitleText) => {
     applySubtitleTextStyles(subtitleText, settings);
   });
 }
@@ -1441,11 +1442,11 @@ function patchPlayerSubtitleAppearance(player, settings = null) {
   if (patchedSubtitleAppearancePlayers.has(player)) return true;
   if (typeof player.setSubtitleAppearance !== "function") return false;
 
-  var original = player.setSubtitleAppearance;
+  const original = player.setSubtitleAppearance;
   if (typeof original !== "function") return false;
 
-  var wrapped = function patchedSetSubtitleAppearance(windowEl, textEl, ...args) {
-    var result;
+  const wrapped = function patchedSetSubtitleAppearance(windowEl, textEl, ...args) {
+    let result;
     try {
       result = original.call(this, windowEl, textEl, ...args);
     } finally {
@@ -1467,8 +1468,8 @@ function patchPlayerSubtitleAppearance(player, settings = null) {
 }
 
 function unpatchAllPlayerSubtitleAppearance() {
-  patchedSubtitleAppearancePlayers.forEach(function((player) {
-    var meta = patchedSubtitleAppearanceMeta.get(player);
+  patchedSubtitleAppearancePlayers.forEach((player) => {
+    const meta = patchedSubtitleAppearanceMeta.get(player);
     if (!meta) return;
     try {
       if (player.setSubtitleAppearance === meta.wrapped) {
@@ -1481,8 +1482,8 @@ function unpatchAllPlayerSubtitleAppearance() {
 }
 
 function getComplexSubtitleScale(sizePercent) {
-  var normalized = clampNumber(sizePercent, 60, 220, DEFAULT_SETTINGS.sizePercent);
-  var scale = normalized / DEFAULT_SETTINGS.sizePercent;
+  const normalized = clampNumber(sizePercent, 60, 220, DEFAULT_SETTINGS.sizePercent);
+  const scale = normalized / DEFAULT_SETTINGS.sizePercent;
   return Math.max(0.55, Math.min(2.2, Math.round(scale * 1000) / 1000));
 }
 
@@ -1499,13 +1500,13 @@ function getComplexSubtitleTransformOrigin(position) {
 }
 
 function normalizeTransformString(value) {
-  var normalized = String(value || "").trim().replace(/\s+/g, " ");
+  const normalized = String(value || "").trim().replace(/\s+/g, " ");
   if (!normalized || normalized === "none") return "";
   return normalized;
 }
 
 function isLegacyComplexSubtitleTransform(value) {
-  var normalized = normalizeTransformString(value);
+  const normalized = normalizeTransformString(value);
   if (!normalized) return false;
   return /^(?:translateY\([^)]+\)\s*)?(?:scale\([^)]+\))?$/.test(normalized);
 }
@@ -1524,16 +1525,16 @@ function supportsIndependentTransformProperties() {
 }
 
 function applyComplexSubtitleTransformFallback(node, extraTransform) {
-  var currentTransform = normalizeTransformString(node.style.getPropertyValue("transform"));
-  var lastComposite = normalizeTransformString(node.dataset.jmsSubtitleComplexComposite);
-  var lastBase = normalizeTransformString(node.dataset.jmsSubtitleComplexBase);
+  const currentTransform = normalizeTransformString(node.style.getPropertyValue("transform"));
+  const lastComposite = normalizeTransformString(node.dataset.jmsSubtitleComplexComposite);
+  const lastBase = normalizeTransformString(node.dataset.jmsSubtitleComplexBase);
 
-  var baseTransform = lastBase;
+  let baseTransform = lastBase;
   if (currentTransform && currentTransform !== lastComposite && !isLegacyComplexSubtitleTransform(currentTransform)) {
     baseTransform = currentTransform;
   }
 
-  var nextTransform = [baseTransform, normalizeTransformString(extraTransform)]
+  const nextTransform = [baseTransform, normalizeTransformString(extraTransform)]
     .filter(Boolean)
     .join(" ");
 
@@ -1550,15 +1551,16 @@ function applyComplexSubtitleTransformFallback(node, extraTransform) {
 }
 
 function collectComplexSubtitleNodes() {
-  var assParents = Array.from(
+  const assParents = Array.from(
     document.querySelectorAll(".videoPlayerContainer .libassjs-canvas-parent")
   );
-  var assFallbackCanvases = Array.from(
+  const assFallbackCanvases = Array.from(
     document.querySelectorAll(".videoPlayerContainer canvas.libassjs-canvas")
-  ).filterfunction((canvas) !canvas.closest(".libassjs-canvas-parent"));
-  var imageSubtitleCanvases = Array.from(
+  ).filter((canvas) => !canvas.closest(".libassjs-canvas-parent"));
+  const imageSubtitleCanvases = Array.from(
     document.querySelectorAll(".videoPlayerContainer canvas")
-  ).filterfunction((canvas) !canvas.classList.contains("libassjs-canvas") && isLikelyImageSubtitleCanvas(canvas)
+  ).filter(
+    (canvas) => !canvas.classList.contains("libassjs-canvas") && isLikelyImageSubtitleCanvas(canvas)
   );
 
   return {
@@ -1581,14 +1583,14 @@ function isPlaybackManagerLike(value) {
 }
 
 function collectPlaybackManagers() {
-  var now = Date.now();
+  const now = Date.now();
   if (now - playbackManagersCache.at < 2500) {
     return playbackManagersCache.list;
   }
 
-  var out = [];
-  var seen = new Set();
-  var add = function(candidate) {
+  const out = [];
+  const seen = new Set();
+  const add = (candidate) => {
     if (!isPlaybackManagerLike(candidate) || seen.has(candidate)) return;
     seen.add(candidate);
     out.push(candidate);
@@ -1596,23 +1598,23 @@ function collectPlaybackManagers() {
 
   [
     window.playbackManager,
-    window.MediaBrowser.playbackManager,
-    window.MediaBrowser.PlaybackManager,
-    window.Emby.playbackManager,
-    window.Emby.PlaybackManager,
-    window.appRouter.playbackManager,
-    window.dashboardPage.playbackManager,
+    window.MediaBrowser?.playbackManager,
+    window.MediaBrowser?.PlaybackManager,
+    window.Emby?.playbackManager,
+    window.Emby?.PlaybackManager,
+    window.appRouter?.playbackManager,
+    window.dashboardPage?.playbackManager,
     window.__playbackManager,
     window.__jellyfinPlaybackManager,
     window.__jmsPlaybackManager
   ].forEach(add);
 
   try {
-    var windowKeys = Object.getOwnPropertyNames(window);
-    for (var i = 0; i < windowKeys.length; i++) {
-      var key = windowKeys[i];
+    const windowKeys = Object.getOwnPropertyNames(window);
+    for (let i = 0; i < windowKeys.length; i++) {
+      const key = windowKeys[i];
       if (!/playback/i.test(key)) continue;
-      var value;
+      let value;
       try {
         value = window[key];
       } catch {
@@ -1630,23 +1632,23 @@ function collectPlaybackManagers() {
 }
 
 function collectPlayerCandidates(playbackManagers) {
-  var out = [];
-  var seen = new Set();
-  var add = function(candidate) {
+  const out = [];
+  const seen = new Set();
+  const add = (candidate) => {
     if (!candidate || typeof candidate !== "object" || seen.has(candidate)) return;
     seen.add(candidate);
     out.push(candidate);
   };
 
-  add(window.MediaPlayer.getActivePlayer.());
-  add(window.MediaBrowser.MediaPlayer.getActivePlayer.());
+  add(window.MediaPlayer?.getActivePlayer?.());
+  add(window.MediaBrowser?.MediaPlayer?.getActivePlayer?.());
   add(window.player);
   add(window.currentPlayer);
   add(window.__jmsPlayer);
 
-  (playbackManagers || []).forEach(function((manager) {
+  (playbackManagers || []).forEach((manager) => {
     try {
-      add(manager.getActivePlayer.());
+      add(manager.getActivePlayer?.());
     } catch {}
     try {
       add(manager._currentPlayer);
@@ -1654,11 +1656,11 @@ function collectPlayerCandidates(playbackManagers) {
   });
 
   try {
-    var windowKeys = Object.getOwnPropertyNames(window);
-    for (var i = 0; i < windowKeys.length; i++) {
-      var key = windowKeys[i];
+    const windowKeys = Object.getOwnPropertyNames(window);
+    for (let i = 0; i < windowKeys.length; i++) {
+      const key = windowKeys[i];
       if (!/player/i.test(key)) continue;
-      var value;
+      let value;
       try {
         value = window[key];
       } catch {
@@ -1682,10 +1684,10 @@ function isLikelyImageSubtitleCanvas(canvas) {
   if (!(canvas instanceof HTMLCanvasElement)) return false;
   if (canvas.classList.contains("libassjs-canvas")) return false;
 
-  var parent = canvas.parentElement;
+  const parent = canvas.parentElement;
   if (!parent || !parent.querySelector("video.htmlvideoplayer, video")) return false;
 
-  var style;
+  let style;
   try {
     style = getComputedStyle(canvas);
   } catch {
@@ -1696,12 +1698,12 @@ function isLikelyImageSubtitleCanvas(canvas) {
   if (!/absolute|fixed/.test(style.position || "")) return false;
   if ((style.pointerEvents || "").toLowerCase() !== "none") return false;
 
-  var rect = canvas.getBoundingClientRect.();
+  const rect = canvas.getBoundingClientRect?.();
   if (!rect || rect.width < 2 || rect.height < 2) return false;
 
-  var classHints = (canvas.className || "") + " " + (parent.className || "").toLowerCase();
-  var nameLooksLikeSubtitle = /pgs|sub|subtitle|caption|overlay|dvd|vob/.test(classHints);
-  var styleLooksLikeSubtitle =
+  const classHints = `${canvas.className || ""} ${parent.className || ""}`.toLowerCase();
+  const nameLooksLikeSubtitle = /pgs|sub|subtitle|caption|overlay|dvd|vob/.test(classHints);
+  const styleLooksLikeSubtitle =
     (canvas.style.width === "100%" && canvas.style.height === "100%") ||
     !!canvas.style.objectFit ||
     style.objectFit !== "fill" ||
@@ -1711,24 +1713,24 @@ function isLikelyImageSubtitleCanvas(canvas) {
 }
 
 function applyComplexSubtitleStyles(settings) {
-  var scale = getComplexSubtitleScale(settings.sizePercent);
-  var shiftPercent = getComplexSubtitleShiftPercent(settings.position);
-  var shiftValue = shiftPercent ? "0 " + (shiftPercent) + "%" : "";
-  var shiftTransform = shiftPercent ? "translateY(" + (shiftPercent) + "%)" : "";
-  var scaledTransform = (shiftTransform) + (shiftTransform ? " " : "") + "scale(" + (scale) + ")";
-  var transformOrigin = getComplexSubtitleTransformOrigin(settings.position);
-  var useIndependentTransforms = supportsIndependentTransformProperties();
-  var complexNodes = collectComplexSubtitleNodes();
+  const scale = getComplexSubtitleScale(settings?.sizePercent);
+  const shiftPercent = getComplexSubtitleShiftPercent(settings?.position);
+  const shiftValue = shiftPercent ? `0 ${shiftPercent}%` : "";
+  const shiftTransform = shiftPercent ? `translateY(${shiftPercent}%)` : "";
+  const scaledTransform = `${shiftTransform}${shiftTransform ? " " : ""}scale(${scale})`;
+  const transformOrigin = getComplexSubtitleTransformOrigin(settings?.position);
+  const useIndependentTransforms = supportsIndependentTransformProperties();
+  const complexNodes = collectComplexSubtitleNodes();
 
   [
     { nodes: complexNodes.assNodes, allowScale: false },
     { nodes: complexNodes.imageSubtitleCanvases, allowScale: true }
-  ].forEach(function(({ nodes, allowScale }) {
-    nodes.forEach(function((node) {
+  ].forEach(({ nodes, allowScale }) => {
+    nodes.forEach((node) => {
       if (!(node instanceof HTMLElement)) return;
       node.style.setProperty("transform-origin", transformOrigin, "important");
       if (useIndependentTransforms) {
-        var currentTransform = normalizeTransformString(node.style.getPropertyValue("transform"));
+        const currentTransform = normalizeTransformString(node.style.getPropertyValue("transform"));
         if (isLegacyComplexSubtitleTransform(currentTransform)) {
           node.style.removeProperty("transform");
         }
@@ -1758,12 +1760,12 @@ function applyComplexSubtitleStyles(settings) {
 }
 
 function applyNativeSubtitleOffsetViaUi(delaySec) {
-  var normalized = normalizeDelaySeconds(delaySec);
-  var slider = document.querySelector(".subtitleSyncSlider");
+  const normalized = normalizeDelaySeconds(delaySec);
+  const slider = document.querySelector(".subtitleSyncSlider");
   if (!(slider instanceof HTMLInputElement)) return false;
 
-  var next = String(normalized);
-  var applied = false;
+  const next = String(normalized);
+  let applied = false;
 
   try {
     if (typeof slider.updateOffset === "function") {
@@ -1784,30 +1786,30 @@ function applyNativeSubtitleOffsetViaUi(delaySec) {
 }
 
 function syncNativeSubtitleSyncUi(delaySec, opts = null) {
-  var normalized = normalizeDelaySeconds(delaySec);
+  const normalized = normalizeDelaySeconds(delaySec);
 
-  var slider = document.querySelector(".subtitleSyncSlider");
-  var sliderValueRaw = slider instanceof HTMLInputElement ? Number(slider.value) : null;
-  var sliderValueChanged = false;
+  const slider = document.querySelector(".subtitleSyncSlider");
+  const sliderValueRaw = slider instanceof HTMLInputElement ? Number(slider.value) : null;
+  let sliderValueChanged = false;
   if (slider instanceof HTMLInputElement) {
-    var next = String(normalized);
+    const next = String(normalized);
     if (slider.value !== next) {
       slider.value = next;
       sliderValueChanged = true;
     }
   }
 
-  var textField = document.querySelector(".subtitleSyncTextField");
+  const textField = document.querySelector(".subtitleSyncTextField");
   if (textField instanceof HTMLElement) {
-    textField.textContent = (normalized) + "s";
+    textField.textContent = `${normalized}s`;
   }
 
-  if (opts.applyToPlayer) {
-    var sliderAlreadyZero =
+  if (opts?.applyToPlayer) {
+    const sliderAlreadyZero =
       slider instanceof HTMLInputElement &&
       Number.isFinite(sliderValueRaw) &&
       Math.abs(sliderValueRaw) <= 0.051;
-    var cacheMatches =
+    const cacheMatches =
       slider instanceof HTMLInputElement &&
       nativeSubtitleUiOffsetCache.slider === slider &&
       Math.abs(Number(nativeSubtitleUiOffsetCache.value) - normalized) <= 0.051;
@@ -1822,7 +1824,7 @@ function syncNativeSubtitleSyncUi(delaySec, opts = null) {
     if (!sliderValueChanged && cacheMatches) {
       return false;
     }
-    var applied = applyNativeSubtitleOffsetViaUi(normalized);
+    const applied = applyNativeSubtitleOffsetViaUi(normalized);
     if (applied && slider instanceof HTMLInputElement) {
       nativeSubtitleUiOffsetCache = {
         slider,
@@ -1836,7 +1838,7 @@ function syncNativeSubtitleSyncUi(delaySec, opts = null) {
 
 function getCachedSubtitleOffset(target, playerArg = null) {
   if (!target || (typeof target !== "object" && typeof target !== "function")) return null;
-  var entry = cachedSubtitleOffsets.get(target);
+  const entry = cachedSubtitleOffsets.get(target);
   if (!entry) return null;
 
   if (
@@ -1844,16 +1846,16 @@ function getCachedSubtitleOffset(target, playerArg = null) {
     playerArg !== target &&
     (typeof playerArg === "object" || typeof playerArg === "function")
   ) {
-    return entry.byPlayer.get(playerArg) || null;
+    return entry.byPlayer.get(playerArg) ?? null;
   }
 
-  return entry.self || null;
+  return entry.self ?? null;
 }
 
 function setCachedSubtitleOffset(target, sec, playerArg = null) {
   if (!target || (typeof target !== "object" && typeof target !== "function")) return;
 
-  var entry = cachedSubtitleOffsets.get(target);
+  let entry = cachedSubtitleOffsets.get(target);
   if (!entry) {
     entry = {
       self: null,
@@ -1875,35 +1877,35 @@ function setCachedSubtitleOffset(target, sec, playerArg = null) {
 }
 
 function tryRefreshPlayerAppearance(settings) {
-  var subtitleDelayRaw = Number(settings.delaySec);
-  var playbackManagers = collectPlaybackManagers();
-  var players = collectPlayerCandidates(playbackManagers);
-  var didApplySubtitleDelay = false;
-  var managerApplyAttempts = 0;
-  var managerApplySuccess = 0;
-  var playerApplyAttempts = 0;
-  var playerApplySuccess = 0;
-  var nativeUiApplied = false;
+  const subtitleDelayRaw = Number(settings?.delaySec);
+  const playbackManagers = collectPlaybackManagers();
+  const players = collectPlayerCandidates(playbackManagers);
+  let didApplySubtitleDelay = false;
+  let managerApplyAttempts = 0;
+  let managerApplySuccess = 0;
+  let playerApplyAttempts = 0;
+  let playerApplySuccess = 0;
+  let nativeUiApplied = false;
 
-  players.forEach(function((player) {
+  players.forEach((player) => {
     try {
       patchPlayerSubtitleAppearance(player, settings);
     } catch {}
   });
 
-  var readSubtitleOffset = function(target, playerArg = null) {
+  const readSubtitleOffset = (target, playerArg = null) => {
     if (!target || typeof target !== "object") return null;
 
     try {
       if (typeof target.getSubtitleOffset === "function") {
-        var value = Number(target.getSubtitleOffset());
+        const value = Number(target.getSubtitleOffset());
         if (Number.isFinite(value)) return value;
       }
     } catch {}
 
     try {
       if (typeof target.getPlayerSubtitleOffset === "function") {
-        var value = Number(target.getPlayerSubtitleOffset(playerArg || undefined));
+        const value = Number(target.getPlayerSubtitleOffset(playerArg || undefined));
         if (Number.isFinite(value)) return value;
       }
     } catch {}
@@ -1911,12 +1913,12 @@ function tryRefreshPlayerAppearance(settings) {
     return null;
   };
 
-  var applyOffsetToTarget = function(target, sec, playerArg = null) {
+  const applyOffsetToTarget = (target, sec, playerArg = null) => {
     if (!target || typeof target.setSubtitleOffset !== "function") return false;
 
-    var isVerified = function(didInvoke) {
+    const isVerified = (didInvoke) => {
       if (!didInvoke) return false;
-      var appliedOffset = readSubtitleOffset(target, playerArg);
+      const appliedOffset = readSubtitleOffset(target, playerArg);
       if (!Number.isFinite(appliedOffset)) return false;
       if (Math.abs(appliedOffset - sec) > 0.051) {
         return false;
@@ -1926,14 +1928,14 @@ function tryRefreshPlayerAppearance(settings) {
       return true;
     };
 
-    var currentOffset = readSubtitleOffset(target, playerArg);
+    const currentOffset = readSubtitleOffset(target, playerArg);
     if (Number.isFinite(currentOffset) && Math.abs(currentOffset - sec) <= 0.051) {
       didApplySubtitleDelay = true;
       setCachedSubtitleOffset(target, sec, playerArg);
       return true;
     }
 
-    var cachedOffset = getCachedSubtitleOffset(target, playerArg);
+    const cachedOffset = getCachedSubtitleOffset(target, playerArg);
     if (Number.isFinite(cachedOffset) && Math.abs(cachedOffset - sec) <= 0.051) {
       return false;
     }
@@ -1946,7 +1948,7 @@ function tryRefreshPlayerAppearance(settings) {
       return false;
     }
 
-    var invoked = false;
+    let invoked = false;
     try {
       if (playerArg && playerArg !== target) target.setSubtitleOffset(sec, playerArg);
       else target.setSubtitleOffset(sec);
@@ -1971,11 +1973,11 @@ function tryRefreshPlayerAppearance(settings) {
   };
 
   if (Number.isFinite(subtitleDelayRaw)) {
-    var subtitleDelay = normalizeDelaySeconds(subtitleDelayRaw);
+    const subtitleDelay = normalizeDelaySeconds(subtitleDelayRaw);
 
-    var tryManagerApply = function(manager, player = null) {
+    const tryManagerApply = (manager, player = null) => {
       if (!manager || typeof manager !== "object") return false;
-      var targetPlayer = player || manager.getActivePlayer.() || null;
+      const targetPlayer = player || manager.getActivePlayer?.() || null;
 
       if (Math.abs(subtitleDelay) > 0.051) {
         try {
@@ -1988,19 +1990,19 @@ function tryRefreshPlayerAppearance(settings) {
       return applyOffsetToTarget(manager, subtitleDelay, targetPlayer);
     };
 
-    playbackManagers.forEach(function((manager) {
+    playbackManagers.forEach((manager) => {
       if (!manager || typeof manager !== "object") return;
       if (typeof manager.setSubtitleOffset !== "function") return;
 
       managerApplyAttempts += 1;
       if (tryManagerApply(manager, null)) managerApplySuccess += 1;
-      players.forEach(function((player) {
+      players.forEach((player) => {
         managerApplyAttempts += 1;
         if (tryManagerApply(manager, player)) managerApplySuccess += 1;
       });
     });
 
-    players.forEach(function((player) {
+    players.forEach((player) => {
       if (!player || typeof player !== "object") return;
       playerApplyAttempts += 1;
       if (applyOffsetToTarget(player, subtitleDelay)) playerApplySuccess += 1;
@@ -2010,7 +2012,7 @@ function tryRefreshPlayerAppearance(settings) {
     if (nativeUiApplied) didApplySubtitleDelay = true;
   }
 
-  players.forEach(function((player) {
+  players.forEach((player) => {
     if (!player || typeof player !== "object") return;
     try {
       if (typeof player.setCueAppearance === "function") {
@@ -2019,9 +2021,9 @@ function tryRefreshPlayerAppearance(settings) {
     } catch {}
 
     try {
-      var windowEl = document.querySelector(".videoSubtitles");
-      var primaryTextEl = document.querySelector(".videoSubtitlesInner");
-      var secondaryTextEl = document.querySelector(".videoSecondarySubtitlesInner");
+      const windowEl = document.querySelector(".videoSubtitles");
+      const primaryTextEl = document.querySelector(".videoSubtitlesInner");
+      const secondaryTextEl = document.querySelector(".videoSecondarySubtitlesInner");
       if (typeof player.setSubtitleAppearance === "function" && windowEl) {
         if (primaryTextEl) player.setSubtitleAppearance(windowEl, primaryTextEl);
         if (secondaryTextEl) player.setSubtitleAppearance(windowEl, secondaryTextEl);
@@ -2047,15 +2049,15 @@ function getShowingSubtitleTracks(video) {
 
 function getSubtitleTracks(video, showingOnly = false) {
   if (!video || !video.textTracks) return [];
-  var out = [];
-  var tracks = video.textTracks;
-  for (var i = 0; i < tracks.length; i++) {
-    var track = tracks[i];
-    var kind = String(track.kind || "").toLowerCase();
-    var isSubtitleLike = kind === "subtitles" || kind === "captions" || !kind;
+  const out = [];
+  const tracks = video.textTracks;
+  for (let i = 0; i < tracks.length; i++) {
+    const track = tracks[i];
+    const kind = String(track?.kind || "").toLowerCase();
+    const isSubtitleLike = kind === "subtitles" || kind === "captions" || !kind;
     if (!isSubtitleLike) continue;
-    if (showingOnly && track.mode !== "showing") continue;
-    if (!showingOnly && !["showing", "hidden", "disabled"].includes(track.mode)) continue;
+    if (showingOnly && track?.mode !== "showing") continue;
+    if (!showingOnly && !["showing", "hidden", "disabled"].includes(track?.mode)) continue;
     if (track) {
       out.push(track);
     }
@@ -2065,16 +2067,16 @@ function getSubtitleTracks(video, showingOnly = false) {
 
 function isVisible(el) {
   if (!el) return false;
-  var rect = el.getBoundingClientRect.();
+  const rect = el.getBoundingClientRect?.();
   if (!rect || rect.width < 2 || rect.height < 2) return false;
-  var st = getComputedStyle(el);
+  const st = getComputedStyle(el);
   return st.display !== "none" && st.visibility !== "hidden" && st.opacity !== "0";
 }
 
 function scoreVideoCandidate(video) {
   try {
     if (!(video instanceof HTMLVideoElement)) return -1e9;
-    var score = 0;
+    let score = 0;
     if (video.classList.contains("htmlvideoplayer")) score += 1000;
     if (video.closest(".htmlvideoplayer")) score += 900;
     if (!video.paused && !video.ended) score += 140;
@@ -2089,14 +2091,14 @@ function scoreVideoCandidate(video) {
 }
 
 function pickActiveVideo() {
-  var pinned = window.__jmsActiveVideo;
+  const pinned = window.__jmsActiveVideo;
   if (pinned instanceof HTMLVideoElement && pinned.isConnected) {
     return pinned;
   }
-  var best = null;
-  var bestScore = -1e9;
-  document.querySelectorAll("video").forEach(function((video) {
-    var s = scoreVideoCandidate(video);
+  let best = null;
+  let bestScore = -1e9;
+  document.querySelectorAll("video").forEach((video) => {
+    const s = scoreVideoCandidate(video);
     if (s > bestScore) {
       bestScore = s;
       best = video;
@@ -2126,16 +2128,16 @@ function applyPositionToCue(cue, position) {
 }
 
 function shiftTrackCues(track, settings) {
-  var cues = track.cues;
-  var cueCount = cues.length || 0;
+  const cues = track?.cues;
+  const cueCount = cues?.length || 0;
   if (!cueCount) return false;
 
-  var normalizedPosition = POSITION_VALUES.includes(settings.position)
+  const normalizedPosition = POSITION_VALUES.includes(settings?.position)
     ? settings.position
     : DEFAULT_SETTINGS.position;
-  var firstCue = cues[0];
-  var lastCue = cues[cueCount - 1];
-  var prevState = trackCuePositionSyncState.get(track);
+  const firstCue = cues[0];
+  const lastCue = cues[cueCount - 1];
+  const prevState = trackCuePositionSyncState.get(track);
 
   if (
     prevState &&
@@ -2147,8 +2149,8 @@ function shiftTrackCues(track, settings) {
     return false;
   }
 
-  for (var i = 0; i < cueCount; i++) {
-    var cue = cues[i];
+  for (let i = 0; i < cueCount; i++) {
+    const cue = cues[i];
     applyPositionToCue(cue, normalizedPosition);
   }
 
@@ -2163,12 +2165,12 @@ function shiftTrackCues(track, settings) {
 }
 
 function shiftTrackCueTimings(track, delaySec) {
-  var cues = track.cues;
-  var cueCount = cues.length || 0;
-  var normalizedDelay = normalizeDelaySeconds(delaySec);
-  var firstCue = cueCount ? cues[0] : null;
-  var lastCue = cueCount ? cues[cueCount - 1] : null;
-  var prevState = trackCueTimingSyncState.get(track);
+  const cues = track?.cues;
+  const cueCount = cues?.length || 0;
+  const normalizedDelay = normalizeDelaySeconds(delaySec);
+  const firstCue = cueCount ? cues[0] : null;
+  const lastCue = cueCount ? cues[cueCount - 1] : null;
+  const prevState = trackCueTimingSyncState.get(track);
 
   if (
     prevState &&
@@ -2180,28 +2182,28 @@ function shiftTrackCueTimings(track, delaySec) {
     return false;
   }
 
-  var changed = false;
+  let changed = false;
 
-  for (var i = 0; i < cueCount; i++) {
-    var cue = cues[i];
+  for (let i = 0; i < cueCount; i++) {
+    const cue = cues[i];
     if (!cue) continue;
 
-    var timing = originalCueTimings.get(cue);
+    let timing = originalCueTimings.get(cue);
     if (!timing) {
-      var startTime = Number(cue.startTime);
-      var endTime = Number(cue.endTime);
+      const startTime = Number(cue.startTime);
+      const endTime = Number(cue.endTime);
       if (!Number.isFinite(startTime) || !Number.isFinite(endTime)) continue;
       timing = { startTime, endTime };
       originalCueTimings.set(cue, timing);
     }
 
-    var duration = Math.max(0, timing.endTime - timing.startTime);
-    var nextStart = timing.startTime - normalizedDelay;
+    const duration = Math.max(0, timing.endTime - timing.startTime);
+    let nextStart = timing.startTime - normalizedDelay;
     if (nextStart < 0) nextStart = 0;
-    var nextEnd = nextStart + duration;
+    const nextEnd = nextStart + duration;
 
-    var startChanged = Math.abs(Number(cue.startTime) - nextStart) > 0.0005;
-    var endChanged = Math.abs(Number(cue.endTime) - nextEnd) > 0.0005;
+    const startChanged = Math.abs(Number(cue.startTime) - nextStart) > 0.0005;
+    const endChanged = Math.abs(Number(cue.endTime) - nextEnd) > 0.0005;
     if (!startChanged && !endChanged) continue;
 
     try {
@@ -2226,71 +2228,223 @@ function setSubtitleDialogOpenState(isOpen) {
     document.documentElement.classList.toggle("jms-subtitle-dialog-open", !!isOpen);
   } catch {}
   try {
-    document.body.classList.toggle("jms-subtitle-dialog-open", !!isOpen);
+    document.body?.classList.toggle("jms-subtitle-dialog-open", !!isOpen);
   } catch {}
 }
 
 function isPlaybackScreenActive() {
-  var hasControls = !!document.querySelector(".videoOsdBottom.videoOsdBottom-maincontrols .buttons");
-  var hasPlayerContainer = !!document.querySelector(".videoPlayerContainer");
-  var hasPlayerVideo = !!document.querySelector(".videoPlayerContainer video.htmlvideoplayer, .videoPlayerContainer video");
+  const hasControls = !!document.querySelector(".videoOsdBottom.videoOsdBottom-maincontrols .buttons");
+  const hasPlayerContainer = !!document.querySelector(".videoPlayerContainer");
+  const hasPlayerVideo = !!document.querySelector(".videoPlayerContainer video.htmlvideoplayer, .videoPlayerContainer video");
   return hasControls || (hasPlayerContainer && hasPlayerVideo);
 }
 
 function createDialog(settings, onUpdate, onReset, onClosed) {
-  document.querySelectorAll("[" + (DIALOG_ATTR) + "]").forEach(function((node) node.remove());
+  document.querySelectorAll(`[${DIALOG_ATTR}]`).forEach((node) => node.remove());
 
-  var backdrop = document.createElement("div");
+  const backdrop = document.createElement("div");
   backdrop.className = "dialogBackdrop";
   backdrop.setAttribute(DIALOG_ATTR, "1");
 
-  var container = document.createElement("div");
+  const container = document.createElement("div");
   container.className = "dialogContainer";
   container.setAttribute(DIALOG_ATTR, "1");
 
-  var fontOptionsHtml = getFontOptions().mapfunction((opt) {
-    var selected = opt.value === settings.fontFamily ? "selected" : "";
-    return "<option value=\"" + (escapeAttr(opt.value)) + "\" " + (selected) + ">" + (escapeAttr(opt.label)) + "</option>";
+  const fontOptionsHtml = getFontOptions().map((opt) => {
+    const selected = opt.value === settings.fontFamily ? "selected" : "";
+    return `<option value="${escapeAttr(opt.value)}" ${selected}>${escapeAttr(opt.label)}</option>`;
   }).join("");
-  var shadowOptionsHtml = SHADOW_OPTIONS.mapfunction((opt) {
-    var selected = opt.value === settings.dropShadow ? "selected" : "";
-    return "<option value=\"" + (escapeAttr(opt.value)) + "\" " + (selected) + ">" + (escapeAttr(opt.label)) + "</option>";
+  const shadowOptionsHtml = SHADOW_OPTIONS.map((opt) => {
+    const selected = opt.value === settings.dropShadow ? "selected" : "";
+    return `<option value="${escapeAttr(opt.value)}" ${selected}>${escapeAttr(opt.label)}</option>`;
   }).join("");
-  var colorOpacityInitialValue = normalizeColorOpacity(settings.colorOpacity);
-  var shadowColorValue = normalizeShadowColor(settings.shadowColor);
-  var shadowOpacityInitialValue = normalizeShadowOpacity(settings.shadowOpacity);
-  var shadowSizeInitialValue = normalizeShadowSize(settings.shadowSize);
-  var shadowDirectionInitialValue = normalizeShadowDirection(settings.shadowDirection);
-  var backgroundColorValue = normalizeBackgroundColor(settings.backgroundColor);
-  var backgroundOpacityInitialValue = normalizeBackgroundOpacity(settings.backgroundOpacity);
-  var backgroundRadiusValue = normalizeBackgroundRadius(settings.backgroundRadiusPx);
-  var delaySummaryValue = formatDelayValue(settings.delaySec);
-  var backLabel = L("subtitleCustomizerBack", "Voltar");
+  const colorOpacityInitialValue = normalizeColorOpacity(settings.colorOpacity);
+  const shadowColorValue = normalizeShadowColor(settings.shadowColor);
+  const shadowOpacityInitialValue = normalizeShadowOpacity(settings.shadowOpacity);
+  const shadowSizeInitialValue = normalizeShadowSize(settings.shadowSize);
+  const shadowDirectionInitialValue = normalizeShadowDirection(settings.shadowDirection);
+  const backgroundColorValue = normalizeBackgroundColor(settings.backgroundColor);
+  const backgroundOpacityInitialValue = normalizeBackgroundOpacity(settings.backgroundOpacity);
+  const backgroundRadiusValue = normalizeBackgroundRadius(settings.backgroundRadiusPx);
+  const delaySummaryValue = formatDelayValue(settings.delaySec);
+  const backLabel = L("subtitleCustomizerBack", "Geri");
 
-  container.innerHTML = "\n    <div id=\"" + (DIALOG_ID) + "\" class=\"focuscontainer dialog opened jms-subtitle-dialog\" role=\"dialog\" aria-modal=\"true\">\n      <div class=\"formDialog\">\n        <div class=\"formDialogHeader\">\n          <button type=\"button\" is=\"paper-icon-button-light\" class=\"btnCancel autoSize\" title=\"" + (escapeAttr(backLabel)) + "\">\n            " + (faIconHtml("arrowLeft", "jms-subtitle-icon")) + "\n          </button>\n          <h3 class=\"formDialogHeaderTitle\">" + (escapeAttr(L("subtitleCustomizerDialogTitle", "Configurações de Legendas"))) + "</h3>\n        </div>\n        <div class=\"formDialogContent scrollY jms-subtitle-formContent\">\n          <div class=\"dialogContentInner dialog-content-centered jms-subtitle-content\">\n            <div class=\"jms-subtitle-previewWrap\">\n              <div class=\"jms-subtitle-previewTitle\">" + (escapeAttr(L("subtitleCustomizerPreviewTitle", "Prévia em Tempo Real"))) + "</div>\n              <div class=\"jms-subtitle-previewStage\" data-position=\"" + (escapeAttr(settings.position)) + "\">\n                <div class=\"jms-subtitle-previewCaption\">\n                  <div class=\"jms-subtitle-previewText\">" + (escapeAttr(L("subtitleCustomizerPreviewLine1", "Esta é uma linha de prévia."))) + "\\n" + (escapeAttr(L("subtitleCustomizerPreviewLine2", "A segunda linha aparece aqui."))) + "</div>\n                </div>\n              </div>\n            </div>\n\n            <div class=\"inputContainer\">\n              <label for=\"jms-subtitle-size\">" + (escapeAttr(L("subtitleCustomizerSizeLabel", "Tamanho da fonte (%)"))) + "</label>\n              <input id=\"jms-subtitle-size\" type=\"range\" min=\"60\" max=\"220\" step=\"1\" value=\"" + (settings.sizePercent) + "\" />\n              <div class=\"fieldDescription\"><span id=\"jms-subtitle-size-value\">" + (settings.sizePercent) + "%</span></div>\n            </div>\n\n            <div class=\"inputContainer\">\n              <label for=\"jms-subtitle-color\">" + (escapeAttr(L("subtitleCustomizerColorLabel", "Cor da fonte"))) + "</label>\n              <input id=\"jms-subtitle-color\" class=\"jms-subtitle-colorInput\" type=\"color\" value=\"" + (settings.color) + "\" />\n            </div>\n\n            <div class=\"inputContainer\">\n              <label for=\"jms-subtitle-color-opacity\">" + (escapeAttr(L("subtitleCustomizerColorOpacityLabel", "Opacidade da fonte"))) + "</label>\n              <input id=\"jms-subtitle-color-opacity\" type=\"range\" min=\"0\" max=\"100\" step=\"1\" value=\"" + (colorOpacityInitialValue) + "\" />\n              <div class=\"fieldDescription\"><span id=\"jms-subtitle-color-opacity-value\">" + (colorOpacityInitialValue) + "%</span></div>\n            </div>\n\n            <div class=\"selectContainer\">\n              <label class=\"selectLabel\" for=\"jms-subtitle-font\">" + (escapeAttr(L("subtitleCustomizerFontLabel", "Fonte"))) + "</label>\n              <select id=\"jms-subtitle-font\" is=\"emby-select\" class=\"emby-select\">\n                " + (fontOptionsHtml) + "\n              </select>\n            </div>\n\n            <div class=\"selectContainer\">\n              <label class=\"selectLabel\" for=\"jms-subtitle-shadow\">" + (escapeAttr(L("subtitleCustomizerShadowLabel", "Sombra"))) + "</label>\n              <select id=\"jms-subtitle-shadow\" is=\"emby-select\" class=\"emby-select\">\n                " + (shadowOptionsHtml) + "\n              </select>\n            </div>\n\n            <div class=\"inputContainer jms-subtitle-colorRow\">\n              <label for=\"jms-subtitle-shadow-color\">" + (escapeAttr(L("subtitleCustomizerShadowColorLabel", "Cor da sombra"))) + "</label>\n              <input id=\"jms-subtitle-shadow-color\" class=\"jms-subtitle-colorInput\" type=\"color\" value=\"" + (shadowColorValue) + "\" />\n            </div>\n\n            <div class=\"inputContainer\">\n              <label for=\"jms-subtitle-shadow-opacity\">" + (escapeAttr(L("subtitleCustomizerShadowOpacityLabel", "Opacidade da sombra"))) + "</label>\n              <input id=\"jms-subtitle-shadow-opacity\" type=\"range\" min=\"0\" max=\"100\" step=\"1\" value=\"" + (shadowOpacityInitialValue) + "\" />\n              <div class=\"fieldDescription\"><span id=\"jms-subtitle-shadow-opacity-value\">" + (shadowOpacityInitialValue) + "%</span></div>\n            </div>\n\n            <div class=\"inputContainer\">\n              <label for=\"jms-subtitle-shadow-size\">" + (escapeAttr(L("subtitleCustomizerShadowSizeLabel", "Tamanho da sombra"))) + "</label>\n              <input id=\"jms-subtitle-shadow-size\" type=\"range\" min=\"0\" max=\"24\" step=\"1\" value=\"" + (shadowSizeInitialValue) + "\" />\n              <div class=\"fieldDescription\"><span id=\"jms-subtitle-shadow-size-value\">" + (shadowSizeInitialValue) + "px</span></div>\n            </div>\n\n            <div class=\"inputContainer\">\n              <label for=\"jms-subtitle-shadow-direction\">" + (escapeAttr(L("subtitleCustomizerShadowDirectionLabel", "Direção da sombra"))) + "</label>\n              <input id=\"jms-subtitle-shadow-direction\" type=\"range\" min=\"0\" max=\"360\" step=\"1\" value=\"" + (shadowDirectionInitialValue) + "\" />\n              <div class=\"fieldDescription\"><span id=\"jms-subtitle-shadow-direction-value\">" + (shadowDirectionInitialValue) + "°</span></div>\n            </div>\n\n            <div class=\"inputContainer jms-subtitle-bgRow\">\n              <label class=\"jms-subtitle-inlineLabel\" for=\"jms-subtitle-bg-enabled\">\n                <input id=\"jms-subtitle-bg-enabled\" type=\"checkbox\" " + (settings.backgroundEnabled ? "checked" : "") + " />\n                <span>" + (escapeAttr(L("subtitleCustomizerBackgroundLabel", "Cor do fundo"))) + "</span>\n              </label>\n              <input id=\"jms-subtitle-bg-color\" class=\"jms-subtitle-colorInput\" type=\"color\" value=\"" + (backgroundColorValue) + "\" " + (settings.backgroundEnabled ? "" : "disabled") + " />\n            </div>\n\n            <div class=\"inputContainer\">\n              <label for=\"jms-subtitle-bg-opacity\">" + (escapeAttr(L("subtitleCustomizerBackgroundOpacityLabel", "Opacidade do fundo"))) + "</label>\n              <input id=\"jms-subtitle-bg-opacity\" type=\"range\" min=\"0\" max=\"100\" step=\"1\" value=\"" + (backgroundOpacityInitialValue) + "\" " + (settings.backgroundEnabled ? "" : "disabled") + " />\n              <div class=\"fieldDescription\"><span id=\"jms-subtitle-bg-opacity-value\">" + (backgroundOpacityInitialValue) + "%</span></div>\n            </div>\n\n            <div class=\"inputContainer\">\n              <label for=\"jms-subtitle-bg-radius\">" + (escapeAttr(L("subtitleCustomizerBackgroundRadiusLabel", "Arredondamento do fundo"))) + "</label>\n              <input id=\"jms-subtitle-bg-radius\" type=\"range\" min=\"" + (MIN_BACKGROUND_RADIUS_PX) + "\" max=\"" + (MAX_BACKGROUND_RADIUS_PX) + "\" step=\"1\" value=\"" + (backgroundRadiusValue) + "\" " + (settings.backgroundEnabled ? "" : "disabled") + " />\n              <div class=\"fieldDescription\"><span id=\"jms-subtitle-bg-radius-value\">" + (backgroundRadiusValue) + "px</span></div>\n            </div>\n\n            <div class=\"selectContainer\">\n              <label class=\"selectLabel\" for=\"jms-subtitle-position\">" + (escapeAttr(L("subtitleCustomizerPositionLabel", "Posição"))) + "</label>\n              <select id=\"jms-subtitle-position\" is=\"emby-select\" class=\"emby-select\">\n                <option value=\"bottom\" " + (settings.position === "bottom" ? "selected" : "") + ">" + (escapeAttr(L("subtitleCustomizerPositionBottom", "Inferior"))) + "</option>\n                <option value=\"center\" " + (settings.position === "center" ? "selected" : "") + ">" + (escapeAttr(L("subtitleCustomizerPositionCenter", "Central"))) + "</option>\n                <option value=\"top\" " + (settings.position === "top" ? "selected" : "") + ">" + (escapeAttr(L("subtitleCustomizerPositionTop", "Superior"))) + "</option>\n              </select>\n            </div>\n\n            <div class=\"inputContainer jms-subtitle-delayLaunch\" role=\"button\" tabindex=\"0\" aria-haspopup=\"dialog\" aria-controls=\"jms-subtitle-delay-focus-panel\">\n              <div class=\"jms-subtitle-delayLaunchHead\">\n                <label>" + (escapeAttr(L("subtitleCustomizerDelayLabel", "Atraso (segundos)"))) + "</label>\n                <span id=\"jms-subtitle-delay-summary\" class=\"jms-subtitle-delaySummaryValue\">" + (delaySummaryValue) + "</span>\n              </div>\n              <div class=\"jms-subtitle-delayLaunchHint\">" + (escapeAttr(L("subtitleCustomizerDelayFocusCta", "Abrir barra de atraso em tempo real"))) + "</div>\n            </div>\n          </div>\n        </div>\n        <div class=\"formDialogFooter\">\n          <button is=\"emby-button\" type=\"button\" class=\"raised button-cancel formDialogFooterItem jms-subtitle-reset\">\n            <span>" + (escapeAttr(L("subtitleCustomizerResetButton", "Redefinir"))) + "</span>\n          </button>\n          <button is=\"emby-button\" type=\"button\" class=\"raised button-submit formDialogFooterItem jms-subtitle-close\">\n            <span>" + (escapeAttr(L("subtitleCustomizerCloseButton", "Fechar"))) + "</span>\n          </button>\n        </div>\n      </div>\n      <div id=\"jms-subtitle-delay-focus-panel\" class=\"jms-subtitle-delayFocusPanel\" hidden>\n        <div class=\"jms-subtitle-delayFocusCard\">\n          <div class=\"jms-subtitle-delayFocusHeader\">\n            <div>\n              <div class=\"jms-subtitle-delayFocusEyebrow\">" + (escapeAttr(L("subtitleCustomizerDelayLiveTitle", "Ajuste de Atraso em Tempo Real"))) + "</div>\n              <div id=\"jms-subtitle-delay-focus-value\" class=\"jms-subtitle-delayFocusValue\">" + (delaySummaryValue) + "</div>\n            </div>\n            <div class=\"jms-subtitle-delayFocusHeaderActions\">\n              <button is=\"emby-button\" type=\"button\" class=\"raised button-submit jms-subtitle-delayFocusDone\">\n                <span>" + (escapeAttr(L("subtitleCustomizerDelayFocusDone", "Voltar ao Painel"))) + "</span>\n              </button>\n              <button is=\"emby-button\" type=\"button\" class=\"raised button-cancel jms-subtitle-delayFocusClose\">\n                <span>" + (escapeAttr(L("subtitleCustomizerCloseButton", "Fechar"))) + "</span>\n              </button>\n            </div>\n          </div>\n          <input id=\"jms-subtitle-delay-live\" class=\"jms-subtitle-delayRange\" type=\"range\" step=\"0.1\" min=\"-30\" max=\"30\" value=\"" + (settings.delaySec.toFixed(1)) + "\" />\n          <div class=\"jms-subtitle-delayFocusScale\" aria-hidden=\"true\">\n            <span>" + (escapeAttr(L("subtitleCustomizerDelayScaleMin", "-30s"))) + "</span>\n            <span>" + (escapeAttr(L("subtitleCustomizerDelayScaleZero", "0.0s"))) + "</span>\n            <span>" + (escapeAttr(L("subtitleCustomizerDelayScaleMax", "+30s"))) + "</span>\n          </div>\n          <div class=\"jms-subtitle-delayFocusActions\">\n            <button is=\"emby-button\" type=\"button\" class=\"raised button-cancel jms-subtitle-delayFocusReset\">\n              <span>" + (escapeAttr(L("subtitleCustomizerDelayReset", "Zerar Atraso"))) + "</span>\n            </button>\n          </div>\n        </div>\n      </div>\n    </div>\n  ";
+  container.innerHTML = `
+    <div id="${DIALOG_ID}" class="focuscontainer dialog opened jms-subtitle-dialog" role="dialog" aria-modal="true">
+      <div class="formDialog">
+        <div class="formDialogHeader">
+          <button type="button" is="paper-icon-button-light" class="btnCancel autoSize" title="${escapeAttr(backLabel)}">
+            ${faIconHtml("arrowLeft", "jms-subtitle-icon")}
+          </button>
+          <h3 class="formDialogHeaderTitle">${escapeAttr(L("subtitleCustomizerDialogTitle", "Altyazı Ayarları"))}</h3>
+        </div>
+        <div class="formDialogContent scrollY jms-subtitle-formContent">
+          <div class="dialogContentInner dialog-content-centered jms-subtitle-content">
+            <div class="jms-subtitle-previewWrap">
+              <div class="jms-subtitle-previewTitle">${escapeAttr(L("subtitleCustomizerPreviewTitle", "Canlı Önizleme"))}</div>
+              <div class="jms-subtitle-previewStage" data-position="${escapeAttr(settings.position)}">
+                <div class="jms-subtitle-previewCaption">
+                  <div class="jms-subtitle-previewText">${escapeAttr(L("subtitleCustomizerPreviewLine1", "Bu bir canlı önizleme satırıdır."))}
+${escapeAttr(L("subtitleCustomizerPreviewLine2", "İkinci satır burada görünür."))}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="inputContainer">
+              <label for="jms-subtitle-size">${escapeAttr(L("subtitleCustomizerSizeLabel", "Yazı boyutu (%)"))}</label>
+              <input id="jms-subtitle-size" type="range" min="60" max="220" step="1" value="${settings.sizePercent}" />
+              <div class="fieldDescription"><span id="jms-subtitle-size-value">${settings.sizePercent}%</span></div>
+            </div>
+
+            <div class="inputContainer">
+              <label for="jms-subtitle-color">${escapeAttr(L("subtitleCustomizerColorLabel", "Yazı rengi"))}</label>
+              <input id="jms-subtitle-color" class="jms-subtitle-colorInput" type="color" value="${settings.color}" />
+            </div>
+
+            <div class="inputContainer">
+              <label for="jms-subtitle-color-opacity">${escapeAttr(L("subtitleCustomizerColorOpacityLabel", "Yazı opaklığı"))}</label>
+              <input id="jms-subtitle-color-opacity" type="range" min="0" max="100" step="1" value="${colorOpacityInitialValue}" />
+              <div class="fieldDescription"><span id="jms-subtitle-color-opacity-value">${colorOpacityInitialValue}%</span></div>
+            </div>
+
+            <div class="selectContainer">
+              <label class="selectLabel" for="jms-subtitle-font">${escapeAttr(L("subtitleCustomizerFontLabel", "Yazı fontu"))}</label>
+              <select id="jms-subtitle-font" is="emby-select" class="emby-select">
+                ${fontOptionsHtml}
+              </select>
+            </div>
+
+            <div class="selectContainer">
+              <label class="selectLabel" for="jms-subtitle-shadow">${escapeAttr(L("subtitleCustomizerShadowLabel", "Gölgelendirme"))}</label>
+              <select id="jms-subtitle-shadow" is="emby-select" class="emby-select">
+                ${shadowOptionsHtml}
+              </select>
+            </div>
+
+            <div class="inputContainer jms-subtitle-colorRow">
+              <label for="jms-subtitle-shadow-color">${escapeAttr(L("subtitleCustomizerShadowColorLabel", "Gölge rengi"))}</label>
+              <input id="jms-subtitle-shadow-color" class="jms-subtitle-colorInput" type="color" value="${shadowColorValue}" />
+            </div>
+
+            <div class="inputContainer">
+              <label for="jms-subtitle-shadow-opacity">${escapeAttr(L("subtitleCustomizerShadowOpacityLabel", "Gölge opaklığı"))}</label>
+              <input id="jms-subtitle-shadow-opacity" type="range" min="0" max="100" step="1" value="${shadowOpacityInitialValue}" />
+              <div class="fieldDescription"><span id="jms-subtitle-shadow-opacity-value">${shadowOpacityInitialValue}%</span></div>
+            </div>
+
+            <div class="inputContainer">
+              <label for="jms-subtitle-shadow-size">${escapeAttr(L("subtitleCustomizerShadowSizeLabel", "Gölge boyutu"))}</label>
+              <input id="jms-subtitle-shadow-size" type="range" min="0" max="24" step="1" value="${shadowSizeInitialValue}" />
+              <div class="fieldDescription"><span id="jms-subtitle-shadow-size-value">${shadowSizeInitialValue}px</span></div>
+            </div>
+
+            <div class="inputContainer">
+              <label for="jms-subtitle-shadow-direction">${escapeAttr(L("subtitleCustomizerShadowDirectionLabel", "Gölge yönü"))}</label>
+              <input id="jms-subtitle-shadow-direction" type="range" min="0" max="360" step="1" value="${shadowDirectionInitialValue}" />
+              <div class="fieldDescription"><span id="jms-subtitle-shadow-direction-value">${shadowDirectionInitialValue}°</span></div>
+            </div>
+
+            <div class="inputContainer jms-subtitle-bgRow">
+              <label class="jms-subtitle-inlineLabel" for="jms-subtitle-bg-enabled">
+                <input id="jms-subtitle-bg-enabled" type="checkbox" ${settings.backgroundEnabled ? "checked" : ""} />
+                <span>${escapeAttr(L("subtitleCustomizerBackgroundLabel", "Arkaplan rengi"))}</span>
+              </label>
+              <input id="jms-subtitle-bg-color" class="jms-subtitle-colorInput" type="color" value="${backgroundColorValue}" ${settings.backgroundEnabled ? "" : "disabled"} />
+            </div>
+
+            <div class="inputContainer">
+              <label for="jms-subtitle-bg-opacity">${escapeAttr(L("subtitleCustomizerBackgroundOpacityLabel", "Arkaplan opaklığı"))}</label>
+              <input id="jms-subtitle-bg-opacity" type="range" min="0" max="100" step="1" value="${backgroundOpacityInitialValue}" ${settings.backgroundEnabled ? "" : "disabled"} />
+              <div class="fieldDescription"><span id="jms-subtitle-bg-opacity-value">${backgroundOpacityInitialValue}%</span></div>
+            </div>
+
+            <div class="inputContainer">
+              <label for="jms-subtitle-bg-radius">${escapeAttr(L("subtitleCustomizerBackgroundRadiusLabel", "Arkaplan köşe yuvarlama"))}</label>
+              <input id="jms-subtitle-bg-radius" type="range" min="${MIN_BACKGROUND_RADIUS_PX}" max="${MAX_BACKGROUND_RADIUS_PX}" step="1" value="${backgroundRadiusValue}" ${settings.backgroundEnabled ? "" : "disabled"} />
+              <div class="fieldDescription"><span id="jms-subtitle-bg-radius-value">${backgroundRadiusValue}px</span></div>
+            </div>
+
+            <div class="selectContainer">
+              <label class="selectLabel" for="jms-subtitle-position">${escapeAttr(L("subtitleCustomizerPositionLabel", "Konum"))}</label>
+              <select id="jms-subtitle-position" is="emby-select" class="emby-select">
+                <option value="bottom" ${settings.position === "bottom" ? "selected" : ""}>${escapeAttr(L("subtitleCustomizerPositionBottom", "Alt"))}</option>
+                <option value="center" ${settings.position === "center" ? "selected" : ""}>${escapeAttr(L("subtitleCustomizerPositionCenter", "Orta"))}</option>
+                <option value="top" ${settings.position === "top" ? "selected" : ""}>${escapeAttr(L("subtitleCustomizerPositionTop", "Üst"))}</option>
+              </select>
+            </div>
+
+            <div class="inputContainer jms-subtitle-delayLaunch" role="button" tabindex="0" aria-haspopup="dialog" aria-controls="jms-subtitle-delay-focus-panel">
+              <div class="jms-subtitle-delayLaunchHead">
+                <label>${escapeAttr(L("subtitleCustomizerDelayLabel", "Gecikme (saniye)"))}</label>
+                <span id="jms-subtitle-delay-summary" class="jms-subtitle-delaySummaryValue">${delaySummaryValue}</span>
+              </div>
+              <div class="jms-subtitle-delayLaunchHint">${escapeAttr(L("subtitleCustomizerDelayFocusCta", "Canlı delay çubuğunu aç"))}</div>
+            </div>
+          </div>
+        </div>
+        <div class="formDialogFooter">
+          <button is="emby-button" type="button" class="raised button-cancel formDialogFooterItem jms-subtitle-reset">
+            <span>${escapeAttr(L("subtitleCustomizerResetButton", "Sıfırla"))}</span>
+          </button>
+          <button is="emby-button" type="button" class="raised button-submit formDialogFooterItem jms-subtitle-close">
+            <span>${escapeAttr(L("subtitleCustomizerCloseButton", "Kapat"))}</span>
+          </button>
+        </div>
+      </div>
+      <div id="jms-subtitle-delay-focus-panel" class="jms-subtitle-delayFocusPanel" hidden>
+        <div class="jms-subtitle-delayFocusCard">
+          <div class="jms-subtitle-delayFocusHeader">
+            <div>
+              <div class="jms-subtitle-delayFocusEyebrow">${escapeAttr(L("subtitleCustomizerDelayLiveTitle", "Canlı Gecikme Ayarı"))}</div>
+              <div id="jms-subtitle-delay-focus-value" class="jms-subtitle-delayFocusValue">${delaySummaryValue}</div>
+            </div>
+            <div class="jms-subtitle-delayFocusHeaderActions">
+              <button is="emby-button" type="button" class="raised button-submit jms-subtitle-delayFocusDone">
+                <span>${escapeAttr(L("subtitleCustomizerDelayFocusDone", "Panele Dön"))}</span>
+              </button>
+              <button is="emby-button" type="button" class="raised button-cancel jms-subtitle-delayFocusClose">
+                <span>${escapeAttr(L("subtitleCustomizerCloseButton", "Kapat"))}</span>
+              </button>
+            </div>
+          </div>
+          <input id="jms-subtitle-delay-live" class="jms-subtitle-delayRange" type="range" step="0.1" min="-30" max="30" value="${settings.delaySec.toFixed(1)}" />
+          <div class="jms-subtitle-delayFocusScale" aria-hidden="true">
+            <span>${escapeAttr(L("subtitleCustomizerDelayScaleMin", "-30s"))}</span>
+            <span>${escapeAttr(L("subtitleCustomizerDelayScaleZero", "0.0s"))}</span>
+            <span>${escapeAttr(L("subtitleCustomizerDelayScaleMax", "+30s"))}</span>
+          </div>
+          <div class="jms-subtitle-delayFocusActions">
+            <button is="emby-button" type="button" class="raised button-cancel jms-subtitle-delayFocusReset">
+              <span>${escapeAttr(L("subtitleCustomizerDelayReset", "Delay Sıfırla"))}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
 
   document.body.append(backdrop, container);
   setSubtitleDialogOpenState(true);
 
-  var dialogEl = container.querySelector("#" + (DIALOG_ID));
-  var keyTrap = function(ev) {
-    var t = ev.target;
+  const dialogEl = container.querySelector(`#${DIALOG_ID}`);
+  const keyTrap = (ev) => {
+    const t = ev?.target;
     if (!(t instanceof Node)) return;
 
     if (!container.contains(t)) return;
     if (ev.key === "Escape") return;
 
-    try { ev.stopImmediatePropagation.(); } catch {}
-    try { ev.stopPropagation.(); } catch {}
+    try { ev.stopImmediatePropagation?.(); } catch {}
+    try { ev.stopPropagation?.(); } catch {}
   };
 
   document.addEventListener("keydown", keyTrap, true);
   document.addEventListener("keypress", keyTrap, true);
   document.addEventListener("keyup", keyTrap, true);
 
-  var isClosed = false;
+  let isClosed = false;
 
-  var close = function() {
+  let close = () => {
     if (isClosed) return;
     isClosed = true;
     backdrop.remove();
@@ -2302,13 +2456,13 @@ function createDialog(settings, onUpdate, onReset, onClosed) {
     document.removeEventListener("keyup", keyTrap, true);
     setSubtitleDialogOpenState(false);
     try {
-      onClosed.();
+      onClosed?.();
     } catch {}
   };
 
-  var isDelayFocusMode = false;
+  let isDelayFocusMode = false;
 
-  var setDelayFocusMode = function(active) {
+  const setDelayFocusMode = (active) => {
     isDelayFocusMode = !!active;
     container.classList.toggle("jms-delay-focus-mode", isDelayFocusMode);
     if (delayFocusPanel instanceof HTMLElement) {
@@ -2319,17 +2473,17 @@ function createDialog(settings, onUpdate, onReset, onClosed) {
       delayLaunch.setAttribute("aria-expanded", isDelayFocusMode ? "true" : "false");
     }
     if (isDelayFocusMode) {
-      window.requestAnimationFramefunction(() {
+      window.requestAnimationFrame(() => {
         try {
-          delayFocusRange.focus.({ preventScroll: true });
+          delayFocusRange?.focus?.({ preventScroll: true });
         } catch {
-          delayFocusRange.focus.();
+          delayFocusRange?.focus?.();
         }
       });
     }
   };
 
-  var onEsc = function(ev) {
+  const onEsc = (ev) => {
     if (ev.key === "Escape") {
       ev.preventDefault();
       if (isDelayFocusMode) {
@@ -2341,8 +2495,8 @@ function createDialog(settings, onUpdate, onReset, onClosed) {
   };
   document.addEventListener("keydown", onEsc, true);
 
-  var onDocPointerDown = function(ev) {
-    var target = ev.target;
+  const onDocPointerDown = (ev) => {
+    const target = ev?.target;
     if (!(target instanceof Node)) {
       close();
       return;
@@ -2357,66 +2511,66 @@ function createDialog(settings, onUpdate, onReset, onClosed) {
   };
   document.addEventListener("pointerdown", onDocPointerDown, true);
 
-  backdrop.addEventListenerfunction("click", () {
+  backdrop.addEventListener("click", () => {
     close();
   });
-  container.querySelector(".btnCancel").addEventListener("click", close);
-  container.querySelector(".jms-subtitle-close").addEventListener("click", close);
+  container.querySelector(".btnCancel")?.addEventListener("click", close);
+  container.querySelector(".jms-subtitle-close")?.addEventListener("click", close);
 
-  var size = container.querySelector("#jms-subtitle-size");
-  var sizeValue = container.querySelector("#jms-subtitle-size-value");
-  var color = container.querySelector("#jms-subtitle-color");
-  var colorOpacity = container.querySelector("#jms-subtitle-color-opacity");
-  var colorOpacityValue = container.querySelector("#jms-subtitle-color-opacity-value");
-  var font = container.querySelector("#jms-subtitle-font");
-  var shadow = container.querySelector("#jms-subtitle-shadow");
-  var shadowColor = container.querySelector("#jms-subtitle-shadow-color");
-  var shadowOpacity = container.querySelector("#jms-subtitle-shadow-opacity");
-  var shadowOpacityValue = container.querySelector("#jms-subtitle-shadow-opacity-value");
-  var shadowSize = container.querySelector("#jms-subtitle-shadow-size");
-  var shadowSizeValue = container.querySelector("#jms-subtitle-shadow-size-value");
-  var shadowDirection = container.querySelector("#jms-subtitle-shadow-direction");
-  var shadowDirectionValue = container.querySelector("#jms-subtitle-shadow-direction-value");
-  var backgroundEnabled = container.querySelector("#jms-subtitle-bg-enabled");
-  var backgroundColor = container.querySelector("#jms-subtitle-bg-color");
-  var backgroundOpacityInput = container.querySelector("#jms-subtitle-bg-opacity");
-  var backgroundOpacityValueText = container.querySelector("#jms-subtitle-bg-opacity-value");
-  var backgroundRadiusInput = container.querySelector("#jms-subtitle-bg-radius");
-  var backgroundRadiusValueText = container.querySelector("#jms-subtitle-bg-radius-value");
-  var position = container.querySelector("#jms-subtitle-position");
-  var delayLaunch = container.querySelector(".jms-subtitle-delayLaunch");
-  var delaySummary = container.querySelector("#jms-subtitle-delay-summary");
-  var delayFocusPanel = container.querySelector("#jms-subtitle-delay-focus-panel");
-  var delayFocusRange = container.querySelector("#jms-subtitle-delay-live");
-  var delayFocusValue = container.querySelector("#jms-subtitle-delay-focus-value");
-  var delayFocusDone = container.querySelector(".jms-subtitle-delayFocusDone");
-  var delayFocusClose = container.querySelector(".jms-subtitle-delayFocusClose");
-  var delayFocusReset = container.querySelector(".jms-subtitle-delayFocusReset");
-  var resetBtn = container.querySelector(".jms-subtitle-reset");
-  var previewStage = container.querySelector(".jms-subtitle-previewStage");
-  var previewText = container.querySelector(".jms-subtitle-previewText");
+  const size = container.querySelector("#jms-subtitle-size");
+  const sizeValue = container.querySelector("#jms-subtitle-size-value");
+  const color = container.querySelector("#jms-subtitle-color");
+  const colorOpacity = container.querySelector("#jms-subtitle-color-opacity");
+  const colorOpacityValue = container.querySelector("#jms-subtitle-color-opacity-value");
+  const font = container.querySelector("#jms-subtitle-font");
+  const shadow = container.querySelector("#jms-subtitle-shadow");
+  const shadowColor = container.querySelector("#jms-subtitle-shadow-color");
+  const shadowOpacity = container.querySelector("#jms-subtitle-shadow-opacity");
+  const shadowOpacityValue = container.querySelector("#jms-subtitle-shadow-opacity-value");
+  const shadowSize = container.querySelector("#jms-subtitle-shadow-size");
+  const shadowSizeValue = container.querySelector("#jms-subtitle-shadow-size-value");
+  const shadowDirection = container.querySelector("#jms-subtitle-shadow-direction");
+  const shadowDirectionValue = container.querySelector("#jms-subtitle-shadow-direction-value");
+  const backgroundEnabled = container.querySelector("#jms-subtitle-bg-enabled");
+  const backgroundColor = container.querySelector("#jms-subtitle-bg-color");
+  const backgroundOpacityInput = container.querySelector("#jms-subtitle-bg-opacity");
+  const backgroundOpacityValueText = container.querySelector("#jms-subtitle-bg-opacity-value");
+  const backgroundRadiusInput = container.querySelector("#jms-subtitle-bg-radius");
+  const backgroundRadiusValueText = container.querySelector("#jms-subtitle-bg-radius-value");
+  const position = container.querySelector("#jms-subtitle-position");
+  const delayLaunch = container.querySelector(".jms-subtitle-delayLaunch");
+  const delaySummary = container.querySelector("#jms-subtitle-delay-summary");
+  const delayFocusPanel = container.querySelector("#jms-subtitle-delay-focus-panel");
+  const delayFocusRange = container.querySelector("#jms-subtitle-delay-live");
+  const delayFocusValue = container.querySelector("#jms-subtitle-delay-focus-value");
+  const delayFocusDone = container.querySelector(".jms-subtitle-delayFocusDone");
+  const delayFocusClose = container.querySelector(".jms-subtitle-delayFocusClose");
+  const delayFocusReset = container.querySelector(".jms-subtitle-delayFocusReset");
+  const resetBtn = container.querySelector(".jms-subtitle-reset");
+  const previewStage = container.querySelector(".jms-subtitle-previewStage");
+  const previewText = container.querySelector(".jms-subtitle-previewText");
 
-  var renderDelayUi = function() {
-    var valueText = formatDelayValue(settings.delaySec);
+  const renderDelayUi = () => {
+    const valueText = formatDelayValue(settings.delaySec);
     if (delaySummary) delaySummary.textContent = valueText;
     if (delayFocusValue) delayFocusValue.textContent = valueText;
     if (delayFocusRange) delayFocusRange.value = settings.delaySec.toFixed(1);
   };
 
-  var renderPreview = function() {
+  const renderPreview = () => {
     if (!(previewStage instanceof HTMLElement) || !(previewText instanceof HTMLElement)) return;
-    var fontStack = resolveFontStack(settings);
-    var textShadow = getTextShadowValue(
+    const fontStack = resolveFontStack(settings);
+    const textShadow = getTextShadowValue(
       settings.dropShadow,
       settings.shadowColor,
       settings.shadowSize,
       settings.shadowDirection,
       settings.shadowOpacity
     );
-    var textColor = getTextColorValue(settings);
-    var textBackground = getBackgroundColorValue(settings);
-    var backgroundRadius = getBackgroundRadiusCssValue(settings);
-    var pxSize = Math.round(clampNumber(settings.sizePercent, 60, 220, DEFAULT_SETTINGS.sizePercent) * 0.22);
+    const textColor = getTextColorValue(settings);
+    const textBackground = getBackgroundColorValue(settings);
+    const backgroundRadius = getBackgroundRadiusCssValue(settings);
+    const pxSize = Math.round(clampNumber(settings.sizePercent, 60, 220, DEFAULT_SETTINGS.sizePercent) * 0.22);
 
     previewStage.setAttribute("data-position", settings.position);
     previewText.style.color = textColor;
@@ -2428,50 +2582,50 @@ function createDialog(settings, onUpdate, onReset, onClosed) {
     previewText.style.display = settings.backgroundEnabled ? "inline-block" : "";
     previewText.style.boxDecorationBreak = settings.backgroundEnabled ? "clone" : "";
     previewText.style.webkitBoxDecorationBreak = settings.backgroundEnabled ? "clone" : "";
-    previewText.style.fontSize = (Math.max(14, Math.min(46, pxSize))) + "px";
+    previewText.style.fontSize = `${Math.max(14, Math.min(46, pxSize))}px`;
 
     if (backgroundColor) backgroundColor.disabled = !settings.backgroundEnabled;
     if (backgroundOpacityInput) backgroundOpacityInput.disabled = !settings.backgroundEnabled;
     if (backgroundRadiusInput) backgroundRadiusInput.disabled = !settings.backgroundEnabled;
   };
 
-  var emitUpdate = function() {
-    settings.sizePercent = Math.round(clampNumber(size.value, 60, 220, DEFAULT_SETTINGS.sizePercent));
-    settings.color = normalizeColor(color.value);
-    settings.colorOpacity = normalizeColorOpacity(colorOpacity.value || DEFAULT_SETTINGS.colorOpacity);
+  const emitUpdate = () => {
+    settings.sizePercent = Math.round(clampNumber(size?.value, 60, 220, DEFAULT_SETTINGS.sizePercent));
+    settings.color = normalizeColor(color?.value);
+    settings.colorOpacity = normalizeColorOpacity(colorOpacity?.value ?? DEFAULT_SETTINGS.colorOpacity);
 
-    var selectedFont = String(font.value || DEFAULT_SETTINGS.fontFamily);
+    const selectedFont = String(font?.value || DEFAULT_SETTINGS.fontFamily);
     settings.fontFamily = normalizeFontFamilySelection(selectedFont, DEFAULT_SETTINGS.fontFamily);
-    settings.dropShadow = normalizeDropShadow(shadow.value || DEFAULT_SETTINGS.dropShadow);
-    settings.shadowColor = normalizeShadowColor(shadowColor.value || DEFAULT_SETTINGS.shadowColor);
-    settings.shadowOpacity = normalizeShadowOpacity(shadowOpacity.value || DEFAULT_SETTINGS.shadowOpacity);
-    settings.shadowSize = normalizeShadowSize(shadowSize.value || DEFAULT_SETTINGS.shadowSize);
-    settings.shadowDirection = normalizeShadowDirection(shadowDirection.value || DEFAULT_SETTINGS.shadowDirection);
-    settings.backgroundEnabled = !!backgroundEnabled.checked;
-    settings.backgroundColor = normalizeBackgroundColor(backgroundColor.value || DEFAULT_SETTINGS.backgroundColor);
+    settings.dropShadow = normalizeDropShadow(shadow?.value || DEFAULT_SETTINGS.dropShadow);
+    settings.shadowColor = normalizeShadowColor(shadowColor?.value || DEFAULT_SETTINGS.shadowColor);
+    settings.shadowOpacity = normalizeShadowOpacity(shadowOpacity?.value ?? DEFAULT_SETTINGS.shadowOpacity);
+    settings.shadowSize = normalizeShadowSize(shadowSize?.value ?? DEFAULT_SETTINGS.shadowSize);
+    settings.shadowDirection = normalizeShadowDirection(shadowDirection?.value ?? DEFAULT_SETTINGS.shadowDirection);
+    settings.backgroundEnabled = !!backgroundEnabled?.checked;
+    settings.backgroundColor = normalizeBackgroundColor(backgroundColor?.value || DEFAULT_SETTINGS.backgroundColor);
     settings.backgroundOpacity = normalizeBackgroundOpacity(
-      backgroundOpacityInput.value || DEFAULT_SETTINGS.backgroundOpacity
+      backgroundOpacityInput?.value ?? DEFAULT_SETTINGS.backgroundOpacity
     );
     settings.backgroundRadiusPx = normalizeBackgroundRadius(
-      backgroundRadiusInput.value || DEFAULT_SETTINGS.backgroundRadiusPx
+      backgroundRadiusInput?.value ?? DEFAULT_SETTINGS.backgroundRadiusPx
     );
 
-    settings.position = POSITION_VALUES.includes(position.value) ? position.value : DEFAULT_SETTINGS.position;
+    settings.position = POSITION_VALUES.includes(position?.value) ? position.value : DEFAULT_SETTINGS.position;
 
-    if (sizeValue) sizeValue.textContent = (settings.sizePercent) + "%";
-    if (colorOpacityValue) colorOpacityValue.textContent = (settings.colorOpacity) + "%";
-    if (shadowOpacityValue) shadowOpacityValue.textContent = (settings.shadowOpacity) + "%";
-    if (shadowSizeValue) shadowSizeValue.textContent = (settings.shadowSize) + "px";
-    if (shadowDirectionValue) shadowDirectionValue.textContent = (settings.shadowDirection) + "°";
-    if (backgroundOpacityValueText) backgroundOpacityValueText.textContent = (settings.backgroundOpacity) + "%";
-    if (backgroundRadiusValueText) backgroundRadiusValueText.textContent = (settings.backgroundRadiusPx) + "px";
+    if (sizeValue) sizeValue.textContent = `${settings.sizePercent}%`;
+    if (colorOpacityValue) colorOpacityValue.textContent = `${settings.colorOpacity}%`;
+    if (shadowOpacityValue) shadowOpacityValue.textContent = `${settings.shadowOpacity}%`;
+    if (shadowSizeValue) shadowSizeValue.textContent = `${settings.shadowSize}px`;
+    if (shadowDirectionValue) shadowDirectionValue.textContent = `${settings.shadowDirection}°`;
+    if (backgroundOpacityValueText) backgroundOpacityValueText.textContent = `${settings.backgroundOpacity}%`;
+    if (backgroundRadiusValueText) backgroundRadiusValueText.textContent = `${settings.backgroundRadiusPx}px`;
     renderPreview();
     renderDelayUi();
     onUpdate();
   };
 
-  var emitDelayUpdate = function() {
-    var parsed = Number(delayFocusRange.value);
+  const emitDelayUpdate = () => {
+    const parsed = Number(delayFocusRange?.value);
     if (!Number.isFinite(parsed)) return;
     settings.delaySec =
       Math.round(clampNumber(parsed, -30, 30, DEFAULT_SETTINGS.delaySec) * 10) / 10;
@@ -2479,7 +2633,7 @@ function createDialog(settings, onUpdate, onReset, onClosed) {
     onUpdate();
   };
 
-  var openDelayFocusMode = function(ev) {
+  const openDelayFocusMode = (ev) => {
     if (!(delayFocusPanel instanceof HTMLElement)) return;
     if (ev) {
       ev.preventDefault();
@@ -2487,78 +2641,78 @@ function createDialog(settings, onUpdate, onReset, onClosed) {
     setDelayFocusMode(true);
   };
 
-  size.addEventListener("input", emitUpdate);
-  color.addEventListener("input", emitUpdate);
-  colorOpacity.addEventListener("input", emitUpdate);
-  colorOpacity.addEventListener("change", emitUpdate);
-  font.addEventListener("change", emitUpdate);
-  shadow.addEventListener("change", emitUpdate);
-  shadowColor.addEventListener("input", emitUpdate);
-  shadowColor.addEventListener("change", emitUpdate);
-  shadowOpacity.addEventListener("input", emitUpdate);
-  shadowOpacity.addEventListener("change", emitUpdate);
-  shadowSize.addEventListener("input", emitUpdate);
-  shadowSize.addEventListener("change", emitUpdate);
-  shadowDirection.addEventListener("input", emitUpdate);
-  shadowDirection.addEventListener("change", emitUpdate);
-  backgroundEnabled.addEventListener("change", emitUpdate);
-  backgroundColor.addEventListener("input", emitUpdate);
-  backgroundColor.addEventListener("change", emitUpdate);
-  backgroundOpacityInput.addEventListener("input", emitUpdate);
-  backgroundOpacityInput.addEventListener("change", emitUpdate);
-  backgroundRadiusInput.addEventListener("input", emitUpdate);
-  backgroundRadiusInput.addEventListener("change", emitUpdate);
-  position.addEventListener("change", emitUpdate);
-  delayLaunch.addEventListener("click", openDelayFocusMode);
-  delayLaunch.addEventListenerfunction("keydown", (ev) {
+  size?.addEventListener("input", emitUpdate);
+  color?.addEventListener("input", emitUpdate);
+  colorOpacity?.addEventListener("input", emitUpdate);
+  colorOpacity?.addEventListener("change", emitUpdate);
+  font?.addEventListener("change", emitUpdate);
+  shadow?.addEventListener("change", emitUpdate);
+  shadowColor?.addEventListener("input", emitUpdate);
+  shadowColor?.addEventListener("change", emitUpdate);
+  shadowOpacity?.addEventListener("input", emitUpdate);
+  shadowOpacity?.addEventListener("change", emitUpdate);
+  shadowSize?.addEventListener("input", emitUpdate);
+  shadowSize?.addEventListener("change", emitUpdate);
+  shadowDirection?.addEventListener("input", emitUpdate);
+  shadowDirection?.addEventListener("change", emitUpdate);
+  backgroundEnabled?.addEventListener("change", emitUpdate);
+  backgroundColor?.addEventListener("input", emitUpdate);
+  backgroundColor?.addEventListener("change", emitUpdate);
+  backgroundOpacityInput?.addEventListener("input", emitUpdate);
+  backgroundOpacityInput?.addEventListener("change", emitUpdate);
+  backgroundRadiusInput?.addEventListener("input", emitUpdate);
+  backgroundRadiusInput?.addEventListener("change", emitUpdate);
+  position?.addEventListener("change", emitUpdate);
+  delayLaunch?.addEventListener("click", openDelayFocusMode);
+  delayLaunch?.addEventListener("keydown", (ev) => {
     if (ev.key !== "Enter" && ev.key !== " ") return;
     openDelayFocusMode(ev);
   });
-  delayFocusRange.addEventListener("input", emitDelayUpdate);
-  delayFocusRange.addEventListener("change", emitDelayUpdate);
-  delayFocusDone.addEventListenerfunction("click", () {
+  delayFocusRange?.addEventListener("input", emitDelayUpdate);
+  delayFocusRange?.addEventListener("change", emitDelayUpdate);
+  delayFocusDone?.addEventListener("click", () => {
     setDelayFocusMode(false);
-    delayLaunch.focus.();
+    delayLaunch?.focus?.();
   });
-  delayFocusClose.addEventListenerfunction("click", () {
+  delayFocusClose?.addEventListener("click", () => {
     close();
   });
-  delayFocusReset.addEventListenerfunction("click", () {
+  delayFocusReset?.addEventListener("click", () => {
     settings.delaySec = DEFAULT_SETTINGS.delaySec;
     renderDelayUi();
     onUpdate();
   });
 
-  resetBtn.addEventListenerfunction("click", () {
+  resetBtn?.addEventListener("click", () => {
     onReset();
     if (size) size.value = settings.sizePercent;
-    if (sizeValue) sizeValue.textContent = (settings.sizePercent) + "%";
+    if (sizeValue) sizeValue.textContent = `${settings.sizePercent}%`;
     if (color) color.value = settings.color;
     if (colorOpacity) colorOpacity.value = String(settings.colorOpacity);
-    if (colorOpacityValue) colorOpacityValue.textContent = (settings.colorOpacity) + "%";
+    if (colorOpacityValue) colorOpacityValue.textContent = `${settings.colorOpacity}%`;
     if (font) font.value = settings.fontFamily;
     if (shadow) shadow.value = settings.dropShadow;
     if (shadowColor) shadowColor.value = settings.shadowColor;
     if (shadowOpacity) shadowOpacity.value = String(settings.shadowOpacity);
-    if (shadowOpacityValue) shadowOpacityValue.textContent = (settings.shadowOpacity) + "%";
+    if (shadowOpacityValue) shadowOpacityValue.textContent = `${settings.shadowOpacity}%`;
     if (shadowSize) shadowSize.value = String(settings.shadowSize);
-    if (shadowSizeValue) shadowSizeValue.textContent = (settings.shadowSize) + "px";
+    if (shadowSizeValue) shadowSizeValue.textContent = `${settings.shadowSize}px`;
     if (shadowDirection) shadowDirection.value = String(settings.shadowDirection);
-    if (shadowDirectionValue) shadowDirectionValue.textContent = (settings.shadowDirection) + "°";
+    if (shadowDirectionValue) shadowDirectionValue.textContent = `${settings.shadowDirection}°`;
     if (backgroundEnabled) backgroundEnabled.checked = settings.backgroundEnabled;
     if (backgroundColor) backgroundColor.value = settings.backgroundColor;
     if (backgroundOpacityInput) backgroundOpacityInput.value = String(settings.backgroundOpacity);
-    if (backgroundOpacityValueText) backgroundOpacityValueText.textContent = (settings.backgroundOpacity) + "%";
+    if (backgroundOpacityValueText) backgroundOpacityValueText.textContent = `${settings.backgroundOpacity}%`;
     if (backgroundRadiusInput) backgroundRadiusInput.value = String(settings.backgroundRadiusPx);
-    if (backgroundRadiusValueText) backgroundRadiusValueText.textContent = (settings.backgroundRadiusPx) + "px";
+    if (backgroundRadiusValueText) backgroundRadiusValueText.textContent = `${settings.backgroundRadiusPx}px`;
     if (position) position.value = settings.position;
     renderDelayUi();
     setDelayFocusMode(false);
     renderPreview();
   });
 
-  var originalClose = close;
-  close = function() {
+  const originalClose = close;
+  close = () => {
     setDelayFocusMode(false);
     originalClose();
   };
@@ -2571,33 +2725,33 @@ function createDialog(settings, onUpdate, onReset, onClosed) {
 
 function refreshTrack(track) {
     try {
-      var prev = track.mode;
+      const prev = track.mode;
       track.mode = "disabled";
       track.mode = prev;
     } catch {}
   }
 
 export function initSubtitleCustomizer() {
-  if (window.__jmsSubtitleCustomizer.active) {
+  if (window.__jmsSubtitleCustomizer?.active) {
     return window.__jmsSubtitleCustomizer.destroy;
   }
 
-  var settings = loadSettings();
-  var observer = null;
-  var closeDialog = null;
-  var lastSaved = "";
-  var lastComplexSubtitleRendererState = null;
-  var lastAppliedDelay = settings.delaySec;
-  var lastAppliedPosition = settings.position;
-  var lastDidApplySubtitleDelay = false;
-  var missingPlaybackTicks = 0;
-  var lightApplyRafId = 0;
-  var cueApplyRafId = 0;
-  var heavyApplyTimeoutId = null;
-  var liveSubtitleIntervalId = null;
-  var hiddenWorkSuspended = document.hidden === true;
+  const settings = loadSettings();
+  let observer = null;
+  let closeDialog = null;
+  let lastSaved = "";
+  let lastComplexSubtitleRendererState = null;
+  let lastAppliedDelay = settings.delaySec;
+  let lastAppliedPosition = settings.position;
+  let lastDidApplySubtitleDelay = false;
+  let missingPlaybackTicks = 0;
+  let lightApplyRafId = 0;
+  let cueApplyRafId = 0;
+  let heavyApplyTimeoutId = null;
+  let liveSubtitleIntervalId = null;
+  let hiddenWorkSuspended = document.hidden === true;
 
-  var maybeAutoCloseDialog = function() {
+  const maybeAutoCloseDialog = () => {
     if (!closeDialog) {
       missingPlaybackTicks = 0;
       return;
@@ -2615,17 +2769,17 @@ export function initSubtitleCustomizer() {
     missingPlaybackTicks = 0;
   };
 
-  var applyNow = function(options = null) {
+  const applyNow = (options = null) => {
     if (document.hidden) {
       suspendHiddenSubtitleWork();
       return;
     }
     hiddenWorkSuspended = false;
 
-    var full = options.full !== false;
-    var refreshStyles = options.refreshStyles !== false;
-    var recomputeComplexRenderer =
-      options.recomputeComplexRenderer !== false || lastComplexSubtitleRendererState === null;
+    const full = options?.full !== false;
+    const refreshStyles = options?.refreshStyles !== false;
+    const recomputeComplexRenderer =
+      options?.recomputeComplexRenderer !== false || lastComplexSubtitleRendererState === null;
 
     try {
       window.__jmsSubtitleCustomizerState = {
@@ -2633,12 +2787,12 @@ export function initSubtitleCustomizer() {
       };
     } catch {}
 
-    var hasAssSubtitleRenderer = recomputeComplexRenderer
+    const hasAssSubtitleRenderer = recomputeComplexRenderer
       ? collectComplexSubtitleNodes().assNodes.length > 0
       : lastComplexSubtitleRendererState === true;
 
     if (full) {
-      var serialized = JSON.stringify(settings);
+      const serialized = JSON.stringify(settings);
       if (serialized !== lastSaved || hasAssSubtitleRenderer !== lastComplexSubtitleRendererState) {
         saveSettings(settings);
         saveJellyfinAppearance(settings, {
@@ -2651,10 +2805,10 @@ export function initSubtitleCustomizer() {
       ensureClientSubtitleRenderingPreferences();
     }
 
-    var playerRefreshState = full
+    const playerRefreshState = full
       ? tryRefreshPlayerAppearance(settings)
       : { didApplySubtitleDelay: lastDidApplySubtitleDelay };
-    lastDidApplySubtitleDelay = !!playerRefreshState.didApplySubtitleDelay;
+    lastDidApplySubtitleDelay = !!playerRefreshState?.didApplySubtitleDelay;
 
     if (refreshStyles) {
       applyCueCss(settings);
@@ -2663,36 +2817,36 @@ export function initSubtitleCustomizer() {
       applyComplexSubtitleStyles(settings);
     }
 
-    var video = pickActiveVideo();
+    const video = pickActiveVideo();
     if (!video) {
       restoreMirroredSubtitleTracks();
       clearSubtitleMirror(null, settings);
       return;
     }
 
-    var subtitleTracks = getSubtitleTracks(video, false);
-    var isMirroringTextSubtitles = syncSubtitleMirror(video, settings, {
+    const subtitleTracks = getSubtitleTracks(video, false);
+    const isMirroringTextSubtitles = syncSubtitleMirror(video, settings, {
       disabled: !settings.backgroundEnabled,
       hasComplexRenderer: hasAssSubtitleRenderer
     });
-    var showingTracks = getShowingSubtitleTracks(video);
+    const showingTracks = getShowingSubtitleTracks(video);
 
-    var delayChanged = settings.delaySec !== lastAppliedDelay;
-    var posChanged = settings.position !== lastAppliedPosition;
-    var delayDeltaSec = settings.delaySec - lastAppliedDelay;
-    var shouldUseCueDelayFallback = !playerRefreshState.didApplySubtitleDelay;
-    var cueTimingChanged = false;
+    const delayChanged = settings.delaySec !== lastAppliedDelay;
+    const posChanged = settings.position !== lastAppliedPosition;
+    const delayDeltaSec = settings.delaySec - lastAppliedDelay;
+    const shouldUseCueDelayFallback = !playerRefreshState?.didApplySubtitleDelay;
+    let cueTimingChanged = false;
 
-    subtitleTracks.forEach(function((track) {
-      var changed = shiftTrackCueTimings(
+    subtitleTracks.forEach((track) => {
+      const changed = shiftTrackCueTimings(
         track,
         shouldUseCueDelayFallback ? settings.delaySec : DEFAULT_SETTINGS.delaySec
       );
       cueTimingChanged = cueTimingChanged || changed;
     });
 
-    showingTracks.forEach(function((track) {
-      var shouldRefreshTrack = cueTimingChanged;
+    showingTracks.forEach((track) => {
+      let shouldRefreshTrack = cueTimingChanged;
       if (shiftTrackCues(track, settings)) {
         shouldRefreshTrack = true;
       }
@@ -2719,13 +2873,13 @@ export function initSubtitleCustomizer() {
     } catch {}
   };
 
-  var scheduleLightApply = function() {
+  const scheduleLightApply = () => {
     if (document.hidden) {
       suspendHiddenSubtitleWork();
       return;
     }
     if (lightApplyRafId) return;
-    lightApplyRafId = window.requestAnimationFramefunction(() {
+    lightApplyRafId = window.requestAnimationFrame(() => {
       lightApplyRafId = 0;
       ensureButtons();
       applyOverlayStyles(settings);
@@ -2734,13 +2888,13 @@ export function initSubtitleCustomizer() {
     });
   };
 
-  var scheduleCueApply = function() {
+  const scheduleCueApply = () => {
     if (document.hidden) {
       suspendHiddenSubtitleWork();
       return;
     }
     if (cueApplyRafId) return;
-    cueApplyRafId = window.requestAnimationFramefunction(() {
+    cueApplyRafId = window.requestAnimationFrame(() => {
       cueApplyRafId = 0;
       applyNow({
         full: false,
@@ -2750,7 +2904,7 @@ export function initSubtitleCustomizer() {
     });
   };
 
-  var scheduleHeavyApply = function(delayMs = 80) {
+  const scheduleHeavyApply = (delayMs = 80) => {
     if (document.hidden) {
       suspendHiddenSubtitleWork();
       return;
@@ -2758,13 +2912,13 @@ export function initSubtitleCustomizer() {
     if (heavyApplyTimeoutId) {
       clearTimeout(heavyApplyTimeoutId);
     }
-    heavyApplyTimeoutId = window.setTimeoutfunction(() {
+    heavyApplyTimeoutId = window.setTimeout(() => {
       heavyApplyTimeoutId = null;
       applyNow();
     }, delayMs);
   };
 
-  var runLiveSubtitleTick = function() {
+  const runLiveSubtitleTick = () => {
     if (document.hidden) {
       suspendHiddenSubtitleWork();
       return;
@@ -2784,13 +2938,13 @@ export function initSubtitleCustomizer() {
     });
   };
 
-  var stopLiveSubtitleTicker = function() {
+  const stopLiveSubtitleTicker = () => {
     if (!liveSubtitleIntervalId) return;
     clearInterval(liveSubtitleIntervalId);
     liveSubtitleIntervalId = null;
   };
 
-  var cancelScheduledApplies = function() {
+  const cancelScheduledApplies = () => {
     if (lightApplyRafId) {
       cancelAnimationFrame(lightApplyRafId);
       lightApplyRafId = 0;
@@ -2805,7 +2959,7 @@ export function initSubtitleCustomizer() {
     }
   };
 
-  var suspendHiddenSubtitleWork = function() {
+  const suspendHiddenSubtitleWork = () => {
     cancelScheduledApplies();
     stopLiveSubtitleTicker();
     if (hiddenWorkSuspended) return;
@@ -2815,8 +2969,8 @@ export function initSubtitleCustomizer() {
     clearSubtitleMirror(null, settings);
   };
 
-  var resumeHiddenSubtitleWork = function() {
-    var wasSuspended = hiddenWorkSuspended;
+  const resumeHiddenSubtitleWork = () => {
+    const wasSuspended = hiddenWorkSuspended;
     hiddenWorkSuspended = false;
     if (document.hidden) return;
     syncLiveSubtitleTicker();
@@ -2825,14 +2979,14 @@ export function initSubtitleCustomizer() {
     }
   };
 
-  var startLiveSubtitleTicker = function() {
+  const startLiveSubtitleTicker = () => {
     if (liveSubtitleIntervalId) return;
     if (document.hidden) return;
     if (!isPlaybackScreenActive()) return;
     liveSubtitleIntervalId = window.setInterval(runLiveSubtitleTick, 250);
   };
 
-  var syncLiveSubtitleTicker = function() {
+  const syncLiveSubtitleTicker = () => {
     if (document.hidden) {
       suspendHiddenSubtitleWork();
       return;
@@ -2851,13 +3005,13 @@ export function initSubtitleCustomizer() {
     startLiveSubtitleTicker();
   };
 
-  var resetSettings = function() {
-    var fallback = getDefaultSettingsFromJellyfin();
+  const resetSettings = () => {
+    const fallback = getDefaultSettingsFromJellyfin();
 
     settings.sizePercent = fallback.sizePercent || DEFAULT_SETTINGS.sizePercent;
     settings.color = fallback.color || DEFAULT_SETTINGS.color;
     settings.colorOpacity = normalizeColorOpacity(
-      fallback.colorOpacity || DEFAULT_SETTINGS.colorOpacity
+      fallback.colorOpacity ?? DEFAULT_SETTINGS.colorOpacity
     );
     settings.fontFamily = normalizeFontFamilySelection(
       fallback.fontFamily,
@@ -2866,23 +3020,23 @@ export function initSubtitleCustomizer() {
     settings.dropShadow = fallback.dropShadow || DEFAULT_SETTINGS.dropShadow;
     settings.shadowColor = fallback.shadowColor || DEFAULT_SETTINGS.shadowColor;
     settings.shadowOpacity = normalizeShadowOpacity(
-      fallback.shadowOpacity || DEFAULT_SETTINGS.shadowOpacity
+      fallback.shadowOpacity ?? DEFAULT_SETTINGS.shadowOpacity
     );
     settings.shadowSize = normalizeShadowSize(
-      fallback.shadowSize || DEFAULT_SETTINGS.shadowSize
+      fallback.shadowSize ?? DEFAULT_SETTINGS.shadowSize
     );
     settings.shadowDirection = normalizeShadowDirection(
-      fallback.shadowDirection || DEFAULT_SETTINGS.shadowDirection
+      fallback.shadowDirection ?? DEFAULT_SETTINGS.shadowDirection
     );
     settings.backgroundEnabled = normalizeBackgroundEnabled(
-      fallback.backgroundEnabled || DEFAULT_SETTINGS.backgroundEnabled
+      fallback.backgroundEnabled ?? DEFAULT_SETTINGS.backgroundEnabled
     );
     settings.backgroundColor = fallback.backgroundColor || DEFAULT_SETTINGS.backgroundColor;
     settings.backgroundOpacity = normalizeBackgroundOpacity(
-      fallback.backgroundOpacity || DEFAULT_SETTINGS.backgroundOpacity
+      fallback.backgroundOpacity ?? DEFAULT_SETTINGS.backgroundOpacity
     );
     settings.backgroundRadiusPx = normalizeBackgroundRadius(
-      fallback.backgroundRadiusPx || DEFAULT_SETTINGS.backgroundRadiusPx
+      fallback.backgroundRadiusPx ?? DEFAULT_SETTINGS.backgroundRadiusPx
     );
     settings.delaySec = DEFAULT_SETTINGS.delaySec;
     settings.position = fallback.position || DEFAULT_SETTINGS.position;
@@ -2890,46 +3044,46 @@ export function initSubtitleCustomizer() {
     applyNow();
   };
 
-  var openDialog = function() {
+  const openDialog = () => {
     if (closeDialog) {
       closeDialog();
       closeDialog = null;
     }
-    closeDialog = createDialogfunction(settings, applyNow, resetSettings, () {
+    closeDialog = createDialog(settings, applyNow, resetSettings, () => {
       closeDialog = null;
       missingPlaybackTicks = 0;
     });
   };
 
-  var ensureButtons = function() {
-    var controlBars = document.querySelectorAll(".videoOsdBottom.videoOsdBottom-maincontrols .buttons");
-    controlBars.forEach(function((bar) {
-      var subtitleBtn = bar.querySelector(".btnSubtitles");
-      var btn = bar.querySelector("." + (BTN_CLASS));
+  const ensureButtons = () => {
+    const controlBars = document.querySelectorAll(".videoOsdBottom.videoOsdBottom-maincontrols .buttons");
+    controlBars.forEach((bar) => {
+      const subtitleBtn = bar.querySelector(".btnSubtitles");
+      let btn = bar.querySelector(`.${BTN_CLASS}`);
       if (!btn) {
         btn = document.createElement("button");
         btn.type = "button";
-        btn.className = subtitleBtn.className || "autoSize paper-icon-button-light";
+        btn.className = subtitleBtn?.className || "autoSize paper-icon-button-light";
         btn.classList.remove("btnSubtitles", "hide");
         btn.classList.add(BTN_CLASS, "autoSize");
-        btn.setAttribute("is", subtitleBtn.getAttribute("is") || "paper-icon-button-light");
-        btn.setAttribute("aria-label", L("subtitleCustomizerOpenButton", "Configurações de legenda"));
-        btn.title = L("subtitleCustomizerOpenButton", "Configurações de legenda");
+        btn.setAttribute("is", subtitleBtn?.getAttribute("is") || "paper-icon-button-light");
+        btn.setAttribute("aria-label", L("subtitleCustomizerOpenButton", "Altyazı ayarları"));
+        btn.title = L("subtitleCustomizerOpenButton", "Altyazı ayarları");
         btn.innerHTML = faIconHtml("sliders", "xlargePaperIconButton jms-subtitle-icon");
         btn.addEventListener("click", openDialog);
 
-        if (subtitleBtn.parentElement === bar) {
+        if (subtitleBtn?.parentElement === bar) {
           subtitleBtn.insertAdjacentElement("afterend", btn);
         } else {
-          var audioBtn = bar.querySelector(".btnAudio");
-          if (audioBtn.parentElement === bar) {
+          const audioBtn = bar.querySelector(".btnAudio");
+          if (audioBtn?.parentElement === bar) {
             audioBtn.insertAdjacentElement("beforebegin", btn);
           } else {
             bar.appendChild(btn);
           }
         }
       }
-      var hidden = !!subtitleBtn.classList.contains("hide");
+      const hidden = !!subtitleBtn?.classList?.contains("hide");
       btn.classList.toggle("hide", hidden);
     });
   };
@@ -2937,7 +3091,7 @@ export function initSubtitleCustomizer() {
   applyNow();
   ensureButtons();
 
-  observer = new MutationObserverfunction((mutations) {
+  observer = new MutationObserver((mutations) => {
     if (document.hidden) {
       suspendHiddenSubtitleWork();
       return;
@@ -2957,7 +3111,7 @@ export function initSubtitleCustomizer() {
     attributeFilter: ["class"]
   });
 
-  var passiveApply = function() {
+  const passiveApply = () => {
     if (document.hidden) {
       suspendHiddenSubtitleWork();
       return;
@@ -2965,7 +3119,7 @@ export function initSubtitleCustomizer() {
     syncLiveSubtitleTicker();
     scheduleHeavyApply(60);
   };
-  var passiveCueApply = function() {
+  const passiveCueApply = () => {
     if (document.hidden) {
       suspendHiddenSubtitleWork();
       return;
@@ -2975,8 +3129,8 @@ export function initSubtitleCustomizer() {
   document.addEventListener("play", passiveApply, true);
   document.addEventListener("loadedmetadata", passiveApply, true);
   document.addEventListener("cuechange", passiveCueApply, true);
-  var routeApply = function() syncLiveSubtitleTicker();
-  var visibilityApply = function() {
+  const routeApply = () => syncLiveSubtitleTicker();
+  const visibilityApply = () => {
     if (document.hidden) {
       suspendHiddenSubtitleWork();
       return;
@@ -2988,9 +3142,9 @@ export function initSubtitleCustomizer() {
   document.addEventListener("visibilitychange", visibilityApply, true);
   syncLiveSubtitleTicker();
 
-  var destroy = function() {
+  const destroy = () => {
     try {
-      observer.disconnect();
+      observer?.disconnect();
     } catch {}
     observer = null;
 
@@ -2998,7 +3152,7 @@ export function initSubtitleCustomizer() {
     stopLiveSubtitleTicker();
 
     try {
-      closeDialog.();
+      closeDialog?.();
     } catch {}
     closeDialog = null;
     setSubtitleDialogOpenState(false);
@@ -3007,7 +3161,7 @@ export function initSubtitleCustomizer() {
     restoreMirroredSubtitleTracks();
     document
       .querySelectorAll(".videoSubtitles[data-jms-subtitle-mirror='1']")
-      .forEach(function((node) node.remove());
+      .forEach((node) => node.remove());
     nativeSubtitleUiOffsetCache = {
       slider: null,
       value: null
@@ -3020,7 +3174,7 @@ export function initSubtitleCustomizer() {
     window.removeEventListener("popstate", routeApply, true);
     document.removeEventListener("visibilitychange", visibilityApply, true);
 
-    document.querySelectorAll("." + (BTN_CLASS)).forEach(function((btn) btn.remove());
+    document.querySelectorAll(`.${BTN_CLASS}`).forEach((btn) => btn.remove());
     window.__jmsSubtitleCustomizer = { active: false, destroy: null };
   };
 

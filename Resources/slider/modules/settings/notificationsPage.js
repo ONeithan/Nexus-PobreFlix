@@ -2,51 +2,51 @@ import { getConfig } from "../config.js";
 import { createCheckbox, createSection } from "./shared.js";
 import { applySettings } from "./applySettings.js";
 
-var config = getConfig();
+const config = getConfig();
 
 export function createNotificationsPanel(config, labels) {
-    var panel = document.createElement('div');
+    const panel = document.createElement('div');
     panel.id = 'notifications-panel';
     panel.className = 'settings-panel';
 
-    var section = createSection(labels.notificationsSettings || 'Configurações de Notificações');
+    const section = createSection(labels.notificationsSettings || 'Bildirim Ayarları');
 
-    var enableCheckbox = createCheckbox(
+    const enableCheckbox = createCheckbox(
     'enableNotifications',
-    labels.enableNotifications || 'Ícone de Notificações',
+    labels.enableNotifications || 'Bildirim Simgesini Etkinleştir',
     config.enableNotifications
 );
     section.appendChild(enableCheckbox);
 
-    var enableToastNewCheckbox = createCheckbox(
+    const enableToastNewCheckbox = createCheckbox(
     'enableToastNew',
-    labels.enableToastNew || 'Toast para novidades',
+    labels.enableToastNew || 'Yeni eklenenler için toast bildirimi etkinleştir.',
     config.enableToastNew
 );
     section.appendChild(enableToastNewCheckbox);
 
 
-    var enableToastSystemCheckbox = createCheckbox(
+    const enableToastSystemCheckbox = createCheckbox(
     'enableToastSystem',
-    labels.enableToastSystem || 'Toast para sistema',
+    labels.enableToastSystem || 'Sistem bildirimleri için toast bildirimi etkinleştir.',
     config.enableToastSystem
 );
     section.appendChild(enableToastSystemCheckbox);
 
-    var enableCounterSystemCheckbox = createCheckbox(
+    const enableCounterSystemCheckbox = createCheckbox(
     'enableCounterSystem',
-    labels.enableCounterSystem || 'Incluir sistema no contador',
+    labels.enableCounterSystem || 'Sistem Bildirimlerini Sayaca Ekle.',
     config.enableCounterSystem
 );
     section.appendChild(enableCounterSystemCheckbox);
 
-    var maxNotificationsDiv = document.createElement('div');
+    const maxNotificationsDiv = document.createElement('div');
     maxNotificationsDiv.className = 'setting-item limit-container';
 
-    var maxNotificationsLabel = document.createElement('label');
-    maxNotificationsLabel.textContent = labels.maxNotifications || 'Limite de notificações:';
+    const maxNotificationsLabel = document.createElement('label');
+    maxNotificationsLabel.textContent = labels.maxNotifications || 'Gösterilecek Bildirim Limiti:';
 
-    var maxNotificationsInput = document.createElement('input');
+    const maxNotificationsInput = document.createElement('input');
     maxNotificationsInput.type = 'number';
     maxNotificationsInput.value = typeof config.maxNotifications !== 'undefined' ? config.maxNotifications : 15;
     maxNotificationsInput.name = 'maxNotifications';
@@ -58,13 +58,13 @@ export function createNotificationsPanel(config, labels) {
     maxNotificationsDiv.append(maxNotificationsLabel, maxNotificationsInput);
     section.appendChild(maxNotificationsDiv);
 
-    var toastDurationDiv = document.createElement('div');
+    const toastDurationDiv = document.createElement('div');
     toastDurationDiv.className = 'setting-item limit-container';
 
-    var toastDurationLabel = document.createElement('label');
-    toastDurationLabel.textContent = labels.toastDuration || 'Duração do Toast (ms):';
+    const toastDurationLabel = document.createElement('label');
+    toastDurationLabel.textContent = labels.toastDuration || 'Toast Süresi (ms):';
 
-    var toastDurationInput = document.createElement('input');
+    const toastDurationInput = document.createElement('input');
     toastDurationInput.type = 'number';
     toastDurationInput.value = typeof config.toastDuration !== 'undefined' ? config.toastDuration : 4000;
     toastDurationInput.name = 'toastDuration';
@@ -76,13 +76,13 @@ export function createNotificationsPanel(config, labels) {
     toastDurationDiv.append(toastDurationLabel, toastDurationInput);
     section.appendChild(toastDurationDiv);
 
-    var toastGroupThresholdDiv = document.createElement('div');
+    const toastGroupThresholdDiv = document.createElement('div');
     toastGroupThresholdDiv.className = 'setting-item limit-container';
 
-    var toastGroupThresholdLabel = document.createElement('label');
-    toastGroupThresholdLabel.textContent = labels.toastGroupThreshold || 'Limite de Notificações:';
+    const toastGroupThresholdLabel = document.createElement('label');
+    toastGroupThresholdLabel.textContent = labels.toastGroupThreshold || 'Toast Grup Limiti:';
 
-    var toastGroupThresholdInput = document.createElement('input');
+    const toastGroupThresholdInput = document.createElement('input');
     toastGroupThresholdInput.type = 'number';
     toastGroupThresholdInput.value = typeof config.toastGroupThreshold !== 'undefined' ? config.toastGroupThreshold : 15;
     toastGroupThresholdInput.name = 'toastGroupThreshold';
@@ -94,20 +94,20 @@ export function createNotificationsPanel(config, labels) {
     toastGroupThresholdDiv.append(toastGroupThresholdLabel, toastGroupThresholdInput);
     section.appendChild(toastGroupThresholdDiv);
 
-    var enableRenderResumeCheckbox = createCheckbox(
+    const enableRenderResumeCheckbox = createCheckbox(
     'enableRenderResume',
-    labels.enableRenderResume || "Exibir 'Continuar Assistindo'",
+    labels.enableRenderResume || 'İzlenmesi Yarım Kalanları Görüntüle',
     config.enableRenderResume
 );
     section.appendChild(enableRenderResumeCheckbox);
 
-    var renderResumeDiv = document.createElement('div');
+    const renderResumeDiv = document.createElement('div');
     renderResumeDiv.className = 'setting-item limit-container';
 
-    var renderResumeLabel = document.createElement('label');
-    renderResumeLabel.textContent = labels.playingLimit || 'Limite de Continuar Assistindo';
+    const renderResumeLabel = document.createElement('label');
+    renderResumeLabel.textContent = labels.playingLimit || 'İzlemeye Devam Et Limiti';
 
-    var renderResumeInput = document.createElement('input');
+    const renderResumeInput = document.createElement('input');
     renderResumeInput.type = 'number';
     renderResumeInput.value = typeof config.renderResume !== 'undefined' ? config.renderResume : 10;
     renderResumeInput.name = 'renderResume';

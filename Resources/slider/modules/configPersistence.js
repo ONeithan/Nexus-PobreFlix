@@ -2,7 +2,7 @@ import { getConfig } from "./config.js";
 
 export function isLocalStorageAvailable() {
   try {
-    var testKey = "test";
+    const testKey = "test";
     localStorage.setItem(testKey, testKey);
     localStorage.removeItem(testKey);
     return true;
@@ -12,15 +12,15 @@ export function isLocalStorageAvailable() {
 }
 
 export function updateConfig(updatedConfig) {
-  var cfg = getConfig();
+  const cfg = getConfig();
 
-  if (cfg && cfg.forceGlobalUserSettings && !cfg.currentUserIsAdmin) {
-    var allowedKeys = new Set([
+  if (cfg?.forceGlobalUserSettings && !cfg?.currentUserIsAdmin) {
+    const allowedKeys = new Set([
       "playerTheme"
     ]);
 
-    var onlyAllowed =
-      Object.keys(updatedConfig || {}).every(function(key) { return allowedKeys.has(key); });
+    const onlyAllowed =
+      Object.keys(updatedConfig || {}).every((key) => allowedKeys.has(key));
 
     if (!onlyAllowed) {
       console.warn("[NexusPobreFlix] Global settings forced - update blocked (non-admin).");
@@ -28,14 +28,11 @@ export function updateConfig(updatedConfig) {
     }
   }
 
-  var existingDicebearParams = localStorage.getItem("dicebearParams");
-  var isPlainObject = function(value) {
-    return value !== null && typeof value === "object" && !Array.isArray(value);
-  };
+  const existingDicebearParams = localStorage.getItem("dicebearParams");
+  const isPlainObject = (value) =>
+    value !== null && typeof value === "object" && !Array.isArray(value);
 
-  Object.entries(updatedConfig || {}).forEach(function(entry) {
-    var key = entry[0];
-    var value = entry[1];
+  Object.entries(updatedConfig || {}).forEach(([key, value]) => {
     if (key === "dicebearParams") return;
 
     try {
@@ -61,17 +58,17 @@ export function updateConfig(updatedConfig) {
     localStorage.setItem("dicebearParams", existingDicebearParams);
   }
 
-  if (updatedConfig && updatedConfig.defaultLanguage !== undefined) {
+  if (updatedConfig?.defaultLanguage !== undefined) {
     localStorage.setItem("defaultLanguage", updatedConfig.defaultLanguage);
   }
 
-  if (updatedConfig && updatedConfig.dateLocale !== undefined) {
+  if (updatedConfig?.dateLocale !== undefined) {
     localStorage.setItem("dateLocale", updatedConfig.dateLocale);
   }
 
   if (!isLocalStorageAvailable()) return;
 
-  var keysToSave = [
+  const keysToSave = [
     "playerTheme",
     "playerStyle",
     "useAlbumArtAsBackground",
@@ -85,8 +82,8 @@ export function updateConfig(updatedConfig) {
     "nextTracksSource"
   ];
 
-  keysToSave.forEach(function(key) {
-    var value = updatedConfig ? updatedConfig[key] : undefined;
+  keysToSave.forEach((key) => {
+    const value = updatedConfig?.[key];
     if (value !== undefined && value !== null) {
       localStorage.setItem(key, String(value));
     }

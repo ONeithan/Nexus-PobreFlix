@@ -5,10 +5,10 @@ function isObjectLike(value) {
 function rebuildLegacyLyricsText(data) {
   if (!isObjectLike(data)) return null;
 
-  var chars = Object.keys(data)
-    .filterfunction((key) /^\d+$/.test(key))
-    .sortfunction((a, b) Number(a) - Number(b))
-    .mapfunction((key) (typeof data[key] === "string" ? data[key] : ""))
+  const chars = Object.keys(data)
+    .filter((key) => /^\d+$/.test(key))
+    .sort((a, b) => Number(a) - Number(b))
+    .map((key) => (typeof data[key] === "string" ? data[key] : ""))
     .join("");
 
   return chars.trim() ? chars : null;
@@ -18,13 +18,13 @@ export function normalizeLyricsPayload(data) {
   if (data == null) return null;
 
   if (typeof data === "string") {
-    var trimmed = data.trim();
+    const trimmed = data.trim();
     if (!trimmed) return null;
 
     if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
       try {
-        var parsed = JSON.parse(trimmed);
-        var normalized = normalizeLyricsPayload(parsed);
+        const parsed = JSON.parse(trimmed);
+        const normalized = normalizeLyricsPayload(parsed);
         if (normalized) return normalized;
       } catch {}
     }
@@ -46,7 +46,7 @@ export function normalizeLyricsPayload(data) {
     return data.lyrics.length ? { Lyrics: data.lyrics } : null;
   }
 
-  var textCandidates = [
+  const textCandidates = [
     data.text,
     data.Text,
     data.lyricsText,
@@ -54,7 +54,7 @@ export function normalizeLyricsPayload(data) {
     typeof data.lyrics === "string" ? data.lyrics : null,
   ];
 
-  for (var candidate of textCandidates) {
+  for (const candidate of textCandidates) {
     if (typeof candidate === "string" && candidate.trim()) {
       return candidate;
     }
@@ -64,7 +64,7 @@ export function normalizeLyricsPayload(data) {
 }
 
 export function hasLyricsPayload(data) {
-  var normalized = normalizeLyricsPayload(data);
+  const normalized = normalizeLyricsPayload(data);
   if (!normalized) return false;
 
   if (typeof normalized === "string") {
@@ -77,12 +77,12 @@ export function hasLyricsPayload(data) {
 export function buildLyricsRecord(trackId, data) {
   if (!trackId) return null;
 
-  var normalized = normalizeLyricsPayload(data);
+  const normalized = normalizeLyricsPayload(data);
   if (!normalized) return null;
 
-  var source = isObjectLike(data) && typeof data.source === "string" ? data.source : undefined;
-  var addedAt = isObjectLike(data) && typeof data.addedAt === "string" ? data.addedAt : undefined;
-  var updatedAt = new Date().toISOString();
+  const source = isObjectLike(data) && typeof data.source === "string" ? data.source : undefined;
+  const addedAt = isObjectLike(data) && typeof data.addedAt === "string" ? data.addedAt : undefined;
+  const updatedAt = new Date().toISOString();
 
   if (typeof normalized === "string") {
     return {

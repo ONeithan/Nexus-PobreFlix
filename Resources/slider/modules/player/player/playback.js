@@ -29,19 +29,19 @@ import {
 } from "../core/radio.js";
 import { getVideoStreamUrl, getAuthHeader, getEmbyHeaders, getSessionInfo } from "../../../../Plugins/NexusPobreFlix/runtime/api.js";
 
-var config = getConfig();
-var SEEK_RETRY_DELAY = 0;
-var DEFAULT_ARTWORK = "./slider/src/images/defaultArt.png";
-var DEFAULT_ARTWORK_CSS = "url('" + (DEFAULT_ARTWORK) + "')";
+const config = getConfig();
+const SEEK_RETRY_DELAY = 0;
+const DEFAULT_ARTWORK = "./slider/src/images/defaultArt.png";
+const DEFAULT_ARTWORK_CSS = `url('${DEFAULT_ARTWORK}')`;
 
-var currentCanPlayHandler = null;
-var currentPlayErrorHandler = null;
-var _metaReqId = 0;
-var _artReqId = 0;
-var _streamReqId = 0;
-var resolvedAudioUrlCache = new Map();
+let currentCanPlayHandler = null;
+let currentPlayErrorHandler = null;
+let _metaReqId = 0;
+let _artReqId = 0;
+let _streamReqId = 0;
+const resolvedAudioUrlCache = new Map();
 
-var updatePlaybackUI = function(isPlaying) {
+const updatePlaybackUI = (isPlaying) => {
   if (musicPlayerState.playPauseBtn) {
     musicPlayerState.playPauseBtn.innerHTML = isPlaying
       ? '<i class="fas fa-pause"></i>'
@@ -53,15 +53,15 @@ var updatePlaybackUI = function(isPlaying) {
   }
 };
 
-var handlePlaybackError = function(error, action = 'play') {
-  console.error("Oynatma sırasında hata oluştu " + (action) + ":", error);
-  var t = musicPlayerState.playlist[musicPlayerState.currentIndex];
+const handlePlaybackError = (error, action = 'play') => {
+  console.error(`Oynatma sırasında hata oluştu ${action}:`, error);
+  const t = musicPlayerState.playlist[musicPlayerState.currentIndex];
   if (t && musicPlayerState.isPlayingReported) {
-    reportPlaybackStopped(t, convertSecondsToTicks(musicPlayerState.audio.currentTime || 0));
+    reportPlaybackStopped(t, convertSecondsToTicks(musicPlayerState.audio?.currentTime || 0));
     musicPlayerState.isPlayingReported = false;
   }
   showNotification(
-  "<i class=\"fas fa-exclamation-circle\"></i> " + (config.languageLabels.playbackError || "Oynatma Hatası"),
+  `<i class="fas fa-exclamation-circle"></i> ${config.languageLabels.playbackError || "Oynatma Hatası"}`,
   3000,
   'error'
 );
@@ -72,26 +72,26 @@ var handlePlaybackError = function(error, action = 'play') {
   setTimeout(playNext, SEEK_RETRY_DELAY);
 };
 
-var disposables = {
+const disposables = {
   timeouts: new Set(),
   images: new Set(),
   aborters: new Set(),
   listeners: new Set(),
   clearAll() {
-    for (var id of this.timeouts) { clearTimeout(id); }
+    for (const id of this.timeouts) { clearTimeout(id); }
     this.timeouts.clear();
 
-    for (var { target, type, fn, opts } of this.listeners) {
+    for (const { target, type, fn, opts } of this.listeners) {
       try { target.removeEventListener(type, fn, opts); } catch {}
     }
     this.listeners.clear();
 
-    for (var img of this.images) {
+    for (const img of this.images) {
       try { img.onload = img.onerror = null; img.src = ""; } catch {}
     }
     this.images.clear();
 
-    for (var a of this.aborters) { try { a.abort(); } catch {} }
+    for (const a of this.aborters) { try { a.abort(); } catch {} }
     this.aborters.clear();
   },
   addTimeout(id){ this.timeouts.add(id); return id; },
@@ -103,40 +103,40 @@ var disposables = {
   }
 };
 
-var _lyricsRunning = false;
-var _marqueeT1 = null;
-var _loadedMetaRetryT = null;
+let _lyricsRunning = false;
+let _marqueeT1 = null;
+let _loadedMetaRetryT = null;
 
 function isRadioPlaylist(playlist = musicPlayerState.playlist) {
-  return Array.isArray(playlist) && playlist.length > 0 && playlist.everyfunction((track) isRadioTrack(track));
+  return Array.isArray(playlist) && playlist.length > 0 && playlist.every((track) => isRadioTrack(track));
 }
 
 function getTrackArtists(track) {
   if (isRadioTrack(track)) {
     return [getRadioTrackArtistLine(track)];
   }
-  if (Array.isArray(track.Artists) && track.Artists.length) {
-    return track.Artists.mapfunction((artist) typeof artist === "string" ? artist : artist.Name).filter(Boolean);
+  if (Array.isArray(track?.Artists) && track.Artists.length) {
+    return track.Artists.map((artist) => typeof artist === "string" ? artist : artist?.Name).filter(Boolean);
   }
-  if (Array.isArray(track.ArtistItems) && track.ArtistItems.length) {
-    return track.ArtistItems.mapfunction((artist) artist.Name).filter(Boolean);
+  if (Array.isArray(track?.ArtistItems) && track.ArtistItems.length) {
+    return track.ArtistItems.map((artist) => artist?.Name).filter(Boolean);
   }
-  if (track.artist) return [track.artist];
-  if (track.Country) return [track.Country];
+  if (track?.artist) return [track.artist];
+  if (track?.Country) return [track.Country];
   return [config.languageLabels.unknownArtist];
 }
 
 function setModernPlayerTitle(title) {
   if (!musicPlayerState.modernTitleEl) return false;
 
-  var nextTitle = String(title || "");
+  const nextTitle = String(title ?? "");
   if (musicPlayerState.modernTitleEl.textContent === nextTitle) return false;
 
   musicPlayerState.modernTitleEl.textContent = nextTitle;
   checkMarqueeNeeded(musicPlayerState.modernTitleEl);
   clearMarqueeTimers();
-  _marqueeT1 = disposables.addTimeoutfunction(setTimeout(() {
-    if (musicPlayerState.modernTitleEl.textContent !== nextTitle) return;
+  _marqueeT1 = disposables.addTimeout(setTimeout(() => {
+    if (musicPlayerState.modernTitleEl?.textContent !== nextTitle) return;
     checkMarqueeNeeded(musicPlayerState.modernTitleEl);
   }, 500));
 
@@ -146,7 +146,7 @@ function setModernPlayerTitle(title) {
 function setModernPlayerArtist(artist) {
   if (!musicPlayerState.modernArtistEl) return false;
 
-  var nextArtist = String(artist || "");
+  const nextArtist = String(artist ?? "");
   if (musicPlayerState.modernArtistEl.textContent === nextArtist) return false;
 
   musicPlayerState.modernArtistEl.textContent = nextArtist;
@@ -155,9 +155,9 @@ function setModernPlayerArtist(artist) {
 
 function refreshLiveRadioTrackInfo(track) {
   if (!track) return;
-  if (musicPlayerState.currentTrack.Id !== track.Id) return;
+  if (musicPlayerState.currentTrack?.Id !== track.Id) return;
 
-  var liveInfo = getRadioTrackDisplayInfo(track);
+  const liveInfo = getRadioTrackDisplayInfo(track);
   setModernPlayerTitle(liveInfo.playerTitle || liveInfo.title);
   setModernPlayerArtist(liveInfo.artist);
 
@@ -168,26 +168,26 @@ function refreshLiveRadioTrackInfo(track) {
 
  function handleCanPlay() {
   musicPlayerState.audio.play()
-    .thenfunction(() {
+    .then(() => {
       updatePlaybackUI(true);
-      var track = musicPlayerState.isUserModified
+      const track = musicPlayerState.isUserModified
         ? musicPlayerState.combinedPlaylist[musicPlayerState.currentIndex]
         : musicPlayerState.playlist[musicPlayerState.currentIndex];
       if (track && !musicPlayerState.isPlayingReported) {
         reportPlaybackStart(track);
         musicPlayerState.isPlayingReported = true;
-        musicPlayerState.lastReportedItemId = track.Id || null;
+        musicPlayerState.lastReportedItemId = track.Id ?? null;
       }
     })
-     .catch(function(err) handlePlaybackError(err, 'canplay'));
+     .catch(err => handlePlaybackError(err, 'canplay'));
  }
 
 
 function handlePlayError() {
   console.error("Şarkı yükleme hatası:", musicPlayerState.audio.src);
-  var t = musicPlayerState.playlist[musicPlayerState.currentIndex];
+  const t = musicPlayerState.playlist[musicPlayerState.currentIndex];
   if (t && musicPlayerState.isPlayingReported) {
-    reportPlaybackStopped(t, convertSecondsToTicks(musicPlayerState.audio.currentTime || 0));
+    reportPlaybackStopped(t, convertSecondsToTicks(musicPlayerState.audio?.currentTime || 0));
     musicPlayerState.isPlayingReported = false;
   }
   if (isRadioTrack(t) && musicPlayerState.playlist.length <= 1) {
@@ -198,12 +198,12 @@ function handlePlayError() {
 }
 
 function cleanupAudioListeners() {
-  var audio = musicPlayerState.audio;
+  const audio = musicPlayerState.audio;
   _streamReqId += 1;
   disposables.clearAll();
   try { stopLyricsSync(); } catch {}
   _lyricsRunning = false;
-  try { musicPlayerState.__audioCtrl.abort.(); } catch {}
+  try { musicPlayerState.__audioCtrl?.abort?.(); } catch {}
   musicPlayerState.__audioCtrl = null;
 
   if (!audio) return;
@@ -219,18 +219,18 @@ function cleanupAudioListeners() {
   try { audio.load(); } catch {}
 }
 
-export function stopPlayback({ resetSource = true } = {}) {
-  var audio = musicPlayerState.audio;
-  var currentTrack =
+export async function stopPlayback({ resetSource = true } = {}) {
+  const audio = musicPlayerState.audio;
+  const currentTrack =
     musicPlayerState.currentTrack ||
-    musicPlayerState.playlist.[musicPlayerState.currentIndex] ||
+    musicPlayerState.playlist?.[musicPlayerState.currentIndex] ||
     null;
 
   if (currentTrack && musicPlayerState.isPlayingReported) {
-    reportPlaybackStopped(
+    await reportPlaybackStopped(
       currentTrack,
-      convertSecondsToTicks(audio.currentTime || 0)
-    ).catchfunction(() {});
+      convertSecondsToTicks(audio?.currentTime || 0)
+    ).catch(() => {});
   }
 
   musicPlayerState.isPlayingReported = false;
@@ -247,8 +247,8 @@ export function stopPlayback({ resetSource = true } = {}) {
 }
 
 export function handleSongEnd() {
-   var { userSettings, playlist, audio } = musicPlayerState;
-   var currentTrack = playlist[musicPlayerState.currentIndex];
+   const { userSettings, playlist, audio } = musicPlayerState;
+   const currentTrack = playlist[musicPlayerState.currentIndex];
   if (currentTrack && musicPlayerState.isPlayingReported) {
      reportPlaybackStopped(
        currentTrack,
@@ -268,26 +268,26 @@ export function handleSongEnd() {
       return;
     }
     showNotification(
-      config.languageLabels.playlistEnded || "Lista de reprodução terminou, atualizando...",
+      config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
       2000,
       'info'
     );
-    return setTimeoutfunction(() refreshPlaylist(), 500);
+    return setTimeout(() => refreshPlaylist(), 500);
   }
 
   switch (userSettings.repeatMode) {
     case 'one':
       musicPlayerState.audio.currentTime = 0;
       musicPlayerState.audio.play()
-        .thenfunction(() updatePlaybackUI(true))
-        .catch(function(err) handlePlaybackError(err, 'repeat'));
+        .then(() => updatePlaybackUI(true))
+        .catch(err => handlePlaybackError(err, 'repeat'));
       break;
 
     case 'all':
       if (userSettings.removeOnPlay) {
         playNext();
       } else {
-        var nextIndex = (musicPlayerState.currentIndex + 1) % playlist.length;
+        const nextIndex = (musicPlayerState.currentIndex + 1) % playlist.length;
         playTrack(nextIndex);
       }
       break;
@@ -298,7 +298,7 @@ export function handleSongEnd() {
 }
 
 export function togglePlayPause() {
-  var { audio } = musicPlayerState;
+  const { audio } = musicPlayerState;
 
   if (!audio) {
     console.warn('Ses okunamadı');
@@ -307,20 +307,20 @@ export function togglePlayPause() {
 
   if (audio.paused) {
     audio.play()
-      .thenfunction(() {
+      .then(() => {
         updatePlaybackUI(true);
-        var currentTrack = musicPlayerState.playlist[musicPlayerState.currentIndex];
+        const currentTrack = musicPlayerState.playlist[musicPlayerState.currentIndex];
         if (currentTrack && !musicPlayerState.isPlayingReported) {
           reportPlaybackStart(currentTrack);
           musicPlayerState.isPlayingReported = true;
-          musicPlayerState.lastReportedItemId = currentTrack.Id || null;
+          musicPlayerState.lastReportedItemId = currentTrack.Id ?? null;
         }
       })
-      .catch(function(error) handlePlaybackError(error));
+      .catch(error => handlePlaybackError(error));
   } else {
     audio.pause();
     updatePlaybackUI(false);
-    var currentTrack = musicPlayerState.playlist[musicPlayerState.currentIndex];
+    const currentTrack = musicPlayerState.playlist[musicPlayerState.currentIndex];
     if (currentTrack && musicPlayerState.isPlayingReported) {
       reportPlaybackStopped(
         currentTrack,
@@ -332,20 +332,20 @@ export function togglePlayPause() {
 }
 
 export function playPrevious() {
-  var { playlist, effectivePlaylist, userSettings, audio } = musicPlayerState;
-  var liveRadio = isRadioPlaylist(playlist);
-  var prevTrack = playlist[musicPlayerState.currentIndex];
+  const { playlist, effectivePlaylist, userSettings, audio } = musicPlayerState;
+  const liveRadio = isRadioPlaylist(playlist);
+  const prevTrack = playlist[musicPlayerState.currentIndex];
   if (prevTrack && musicPlayerState.isPlayingReported) {
-    reportPlaybackStopped(prevTrack, convertSecondsToTicks(audio.currentTime || 0));
+    reportPlaybackStopped(prevTrack, convertSecondsToTicks(audio?.currentTime || 0));
     musicPlayerState.isPlayingReported = false;
   }
-  var currentIndex = musicPlayerState.currentIndex;
+  const currentIndex = musicPlayerState.currentIndex;
 
   if (playlist.length === 0) {
     updatePlaybackUI(false);
     if (musicPlayerState.playlistSource === "radio") return;
     showNotification(
-      config.languageLabels.playlistEnded || "Lista de reprodução terminou, atualizando...",
+      config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
       2000,
       'info'
     );
@@ -355,7 +355,7 @@ export function playPrevious() {
   if (audio.currentTime > 3) {
     audio.currentTime = 0;
     showNotification(
-  "<i class=\"fas fa-music\" style=\"margin-right: 8px;\"></i>" + (config.languageLabels.simdioynat) + ": " + (musicPlayerState.currentTrackName),
+  `<i class="fas fa-music" style="margin-right: 8px;"></i>${config.languageLabels.simdioynat}: ${musicPlayerState.currentTrackName}`,
   2000,
   'kontrol'
 );
@@ -363,15 +363,15 @@ export function playPrevious() {
   }
 
   if (userSettings.removeOnPlay && !liveRadio) {
-    var removed = playlist.splice(currentIndex, 1);
-    var effIdx = effectivePlaylist.findIndex(function(t) t.Id === removed[0].Id);
+    const removed = playlist.splice(currentIndex, 1);
+    const effIdx = effectivePlaylist.findIndex(t => t.Id === removed[0]?.Id);
     if (effIdx > -1) effectivePlaylist.splice(effIdx, 1);
     updatePlaylistModal();
 
     if (playlist.length === 0) {
       updatePlaybackUI(false);
       showNotification(
-        config.languageLabels.playlistEnded || "Lista de reprodução terminou, atualizando...",
+        config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
         2000,
         'info'
       );
@@ -381,18 +381,18 @@ export function playPrevious() {
     musicPlayerState.currentIndex = Math.min(currentIndex, playlist.length - 1);
   }
 
-  var prevIndex = musicPlayerState.currentIndex - 1;
+  let prevIndex = musicPlayerState.currentIndex - 1;
   if (prevIndex < 0) prevIndex = playlist.length - 1;
 
   playTrack(prevIndex);
 }
 
 export function playNext() {
-  var { playlist, effectivePlaylist, userSettings, currentIndex, audio } = musicPlayerState;
-  var liveRadio = isRadioPlaylist(playlist);
-  var prevTrack = playlist[currentIndex];
+  const { playlist, effectivePlaylist, userSettings, currentIndex, audio } = musicPlayerState;
+  const liveRadio = isRadioPlaylist(playlist);
+  const prevTrack = playlist[currentIndex];
   if (prevTrack && musicPlayerState.isPlayingReported) {
-    reportPlaybackStopped(prevTrack, convertSecondsToTicks(audio.currentTime || 0));
+    reportPlaybackStopped(prevTrack, convertSecondsToTicks(audio?.currentTime || 0));
     musicPlayerState.isPlayingReported = false;
   }
 
@@ -400,19 +400,19 @@ export function playNext() {
     updatePlaybackUI(false);
     if (musicPlayerState.playlistSource === "radio") return;
     showNotification(
-      config.languageLabels.playlistEnded || "Lista de reprodução terminou, atualizando...",
+      config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
       2000,
       'info'
     );
     return refreshPlaylist();
   }
 
-  var playableLength = effectivePlaylist.length || playlist.length;
+  const playableLength = effectivePlaylist.length || playlist.length;
   if (playableLength === 0) {
     updatePlaybackUI(false);
     if (musicPlayerState.playlistSource === "radio") return;
     showNotification(
-      config.languageLabels.playlistEnded || "Lista de reprodução terminou, atualizando...",
+      config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
       2000,
       'info'
     );
@@ -420,16 +420,16 @@ export function playNext() {
   }
 
   if (userSettings.removeOnPlay && !liveRadio && currentIndex >= 0 && currentIndex < playlist.length) {
-    var removed = playlist.splice(currentIndex, 1);
-    var removedTrackId = removed[0].Id;
-    var effIdx = effectivePlaylist.findIndex(function(t) t.Id === removedTrackId);
+    const removed = playlist.splice(currentIndex, 1);
+    const removedTrackId = removed[0]?.Id;
+    const effIdx = effectivePlaylist.findIndex(t => t.Id === removedTrackId);
     if (effIdx > -1) effectivePlaylist.splice(effIdx, 1);
     updatePlaylistModal();
 
     if (playlist.length === 0) {
       updatePlaybackUI(false);
       showNotification(
-        config.languageLabels.playlistEnded || "Lista de reprodução terminou, atualizando...",
+        config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
         2000,
         'info'
       );
@@ -437,17 +437,17 @@ export function playNext() {
     }
 
     if (userSettings.shuffle) {
-      var nextIndex = Math.floor(Math.random() * playlist.length);
+      const nextIndex = Math.floor(Math.random() * playlist.length);
       return playTrack(nextIndex);
     } else {
-      var newIndex = currentIndex >= playlist.length ? 0 : currentIndex;
+      const newIndex = currentIndex >= playlist.length ? 0 : currentIndex;
       return playTrack(newIndex);
     }
   }
 
-  var nextIndex;
+  let nextIndex;
   if (userSettings.shuffle) {
-    var rnd;
+    let rnd;
     do {
       rnd = Math.floor(Math.random() * playableLength);
     } while (rnd === currentIndex && playableLength > 1);
@@ -463,7 +463,7 @@ export function playNext() {
         }
         updatePlaybackUI(false);
         showNotification(
-          config.languageLabels.playlistEnded || "Lista de reprodução terminou, atualizando...",
+          config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
           2000,
           'info'
         );
@@ -475,23 +475,23 @@ export function playNext() {
   playTrack(nextIndex);
 }
 
-export function updateModernTrackInfo(track) {
+export async function updateModernTrackInfo(track) {
   if (!track) {
     resetTrackInfo();
     return;
   }
 
-  var radioDisplay = isRadioTrack(track)
+  const radioDisplay = isRadioTrack(track)
     ? getRadioTrackDisplayInfo(track)
     : null;
-  var title = radioDisplay.playerTitle || radioDisplay.title || track.Name || config.languageLabels.unknownTrack;
-  var artistLine = radioDisplay.artist || getTrackArtists(track).join(", ");
+  const title = radioDisplay?.playerTitle || radioDisplay?.title || track.Name || config.languageLabels.unknownTrack;
+  const artistLine = radioDisplay?.artist || getTrackArtists(track).join(", ");
 
   setModernPlayerTitle(title);
   setModernPlayerArtist(artistLine);
   updateMediaMetadata(track);
 
-  Promise.all([ loadAlbumArt(track), updateTrackMeta(track) ]);
+  await Promise.all([ loadAlbumArt(track), updateTrackMeta(track) ]);
   updatePlayerBackground();
 
   if (musicPlayerState.favoriteBtn) {
@@ -505,14 +505,14 @@ function resetTrackInfo() {
   setAlbumArt(DEFAULT_ARTWORK);
 }
 
-function updateTrackMeta(track) {
-  var reqId = ++_metaReqId;
+async function updateTrackMeta(track) {
+  const reqId = ++_metaReqId;
 
   if (!musicPlayerState.metaWrapper) createMetaWrapper();
   if (musicPlayerState.modernPlayer) {
     musicPlayerState.modernPlayer
       .querySelectorAll(".player-meta-container")
-      .forEach(function(el) { if (el !== musicPlayerState.metaContainer) el.remove(); });
+      .forEach(el => { if (el !== musicPlayerState.metaContainer) el.remove(); });
   }
   if (!musicPlayerState.metaContainer) {
     musicPlayerState.metaContainer = document.createElement("div");
@@ -529,13 +529,13 @@ function updateTrackMeta(track) {
 
   musicPlayerState.metaContainer.innerHTML = '';
 
-  var appendMetaItem = function(item) {
-    if (!item.text) return;
-    var span = document.createElement('span');
-    span.className = (item.key) + "-meta";
-    var label = config.languageLabels[item.key] || item.label || item.key;
-    span.title = (label) + ": " + (item.text);
-    span.innerHTML = "<i class=\"" + (item.icon) + "\" style=\"margin-right:4px\"></i>" + (item.text);
+  const appendMetaItem = (item) => {
+    if (!item?.text) return;
+    const span = document.createElement('span');
+    span.className = `${item.key}-meta`;
+    const label = config.languageLabels[item.key] || item.label || item.key;
+    span.title = `${label}: ${item.text}`;
+    span.innerHTML = `<i class="${item.icon}" style="margin-right:4px"></i>${item.text}`;
 
     if (item.compact) {
       Object.assign(span.style, {
@@ -555,11 +555,11 @@ function updateTrackMeta(track) {
   };
 
   if (isRadioTrack(track)) {
-    var radioMeta = [
+    const radioMeta = [
       { key: 'radioLiveLabel', label: config.languageLabels.radioLiveLabel || "LIVE", icon: 'fas fa-broadcast-tower', text: config.languageLabels.radioLiveLabel || "LIVE", compact: true },
       { key: 'country', label: config.languageLabels.country || "Ülke", icon: 'fas fa-globe', text: track.Country || track.Language },
       { key: 'codec', label: config.languageLabels.codec || "Codec", icon: 'fas fa-wave-square', text: track.Codec || "" },
-      { key: 'bitrate', label: config.languageLabels.bitrate || "Bitrate", icon: 'fas fa-tachometer-alt', text: track.Bitrate > 0 ? (track.Bitrate) + " kbps" : "", compact: true },
+      { key: 'bitrate', label: config.languageLabels.bitrate || "Bitrate", icon: 'fas fa-tachometer-alt', text: track.Bitrate > 0 ? `${track.Bitrate} kbps` : "", compact: true },
       { key: 'tag', label: config.languageLabels.tags || "Etiket", icon: 'fas fa-tags', text: track.TagsText || "" }
     ];
 
@@ -567,16 +567,16 @@ function updateTrackMeta(track) {
     return;
   }
 
-  var tags = readID3Tags(track.Id);
+  const tags = await readID3Tags(track.Id);
   if (reqId !== _metaReqId) return;
-  var metaItems = [
-    { key: 'tracknumber', show: track.IndexNumber != null, icon: 'fas fa-list-ol', text: track.IndexNumber },
-    { key: 'year', show: track.ProductionYear != null, icon: 'fas fa-calendar-alt', text: track.ProductionYear },
-    { key: 'album', show: !!track.Album, icon: 'fas fa-compact-disc', text: track.Album },
-    { key: 'genre', show: !!tags.genre, icon: 'fas fa-music', text: tags.genre }
+  const metaItems = [
+    { key: 'tracknumber', show: track?.IndexNumber != null, icon: 'fas fa-list-ol', text: track.IndexNumber },
+    { key: 'year', show: track?.ProductionYear != null, icon: 'fas fa-calendar-alt', text: track.ProductionYear },
+    { key: 'album', show: !!track?.Album, icon: 'fas fa-compact-disc', text: track.Album },
+    { key: 'genre', show: !!tags?.genre, icon: 'fas fa-music', text: tags.genre }
   ];
 
-  for (var item of metaItems) {
+  for (const item of metaItems) {
     if (!item.show || item.text == null) continue;
     appendMetaItem({
       ...item,
@@ -609,7 +609,7 @@ function setAlbumArt(imageUrl) {
     return;
   }
 
-  musicPlayerState.albumArtEl.style.backgroundImage = "url('" + (imageUrl) + "')";
+  musicPlayerState.albumArtEl.style.backgroundImage = `url('${imageUrl}')`;
   musicPlayerState.currentArtwork = [{
     src: imageUrl,
     sizes: '300x300',
@@ -618,7 +618,7 @@ function setAlbumArt(imageUrl) {
 }
 
 function createMetaWrapper() {
-  var metaWrapper = document.createElement("div");
+  const metaWrapper = document.createElement("div");
   metaWrapper.className = "player-meta-wrapper";
 
   if (musicPlayerState.modernPlayer) {
@@ -633,20 +633,20 @@ function createMetaWrapper() {
 function addMetaItem(className, icon, text) {
   if (!musicPlayerState.metaContainer || !text) return;
 
-  var span = document.createElement("span");
-  span.className = (className) + "-meta";
+  const span = document.createElement("span");
+  span.className = `${className}-meta`;
 
-  var label = config.languageLabels[className] || className;
-  span.title = (label) + ": " + (text);
+  const label = config.languageLabels[className] || className;
+  span.title = `${label}: ${text}`;
 
-  span.innerHTML = "<i class=\"" + (icon) + "\"></i> " + (text);
+  span.innerHTML = `<i class="${icon}"></i> ${text}`;
   musicPlayerState.metaContainer.appendChild(span);
 }
 
-function loadAlbumArt(track) {
-  var artReqId = ++_artReqId;
+async function loadAlbumArt(track) {
+  const artReqId = ++_artReqId;
   try {
-    var artwork = getArtworkFromSources(track);
+    const artwork = await getArtworkFromSources(track);
     if (artReqId !== _artReqId) return;
     setAlbumArt(artwork);
 
@@ -660,23 +660,23 @@ function loadAlbumArt(track) {
   }
 }
 
-function getArtworkFromSources(track) {
+async function getArtworkFromSources(track) {
   try {
     if (isRadioTrack(track)) {
-      return resolveRadioStationArtUrl(track) || DEFAULT_ARTWORK;
+      return await resolveRadioStationArtUrl(track) || DEFAULT_ARTWORK;
     }
 
-    var fromCache = getFromOfflineCache(track.Id, 'artwork');
+    const fromCache = await getFromOfflineCache(track.Id, 'artwork');
     if (fromCache) return fromCache;
 
-    var embedded = getEmbeddedImage(track.Id);
+    const embedded = await getEmbeddedImage(track.Id);
     if (embedded) return embedded;
 
-    var imageTag = track.AlbumPrimaryImageTag || track.PrimaryImageTag;
+    const imageTag = track.AlbumPrimaryImageTag || track.PrimaryImageTag;
     if (imageTag) {
-      var imageId = track.AlbumId || track.Id;
-      var url = apiUrl("/Items/" + (imageId) + "/Images/Primary?fillHeight=300&fillWidth=300&quality=90&tag=" + (imageTag));
-      var valid = checkImageExists(url);
+      const imageId = track.AlbumId || track.Id;
+      const url = apiUrl(`/Items/${imageId}/Images/Primary?fillHeight=300&fillWidth=300&quality=90&tag=${imageTag}`);
+      const valid = await checkImageExists(url);
       return valid ? url : DEFAULT_ARTWORK;
     }
 
@@ -688,10 +688,10 @@ function getArtworkFromSources(track) {
 }
 
 function checkImageExists(url) {
-  return new Promisefunction((resolve) {
-    var img = disposables.addImage(new Image());
-    img.onload = function() { resolve(true); img.onload = img.onerror = null; img.src = ""; disposables.images.delete(img); };
-    img.onerror = function() { resolve(false); img.onload = img.onerror = null; img.src = ""; disposables.images.delete(img); };
+  return new Promise((resolve) => {
+    const img = disposables.addImage(new Image());
+    img.onload = () => { resolve(true); img.onload = img.onerror = null; img.src = ""; disposables.images.delete(img); };
+    img.onerror = () => { resolve(false); img.onload = img.onerror = null; img.src = ""; disposables.images.delete(img); };
     img.src = url;
   });
 }
@@ -700,17 +700,17 @@ function clearMarqueeTimers() {
   if (_marqueeT1) { clearTimeout(_marqueeT1); _marqueeT1 = null; }
 }
 
-function getEmbeddedImage(trackId) {
-  var tags = readID3Tags(trackId);
-  return tags.pictureUri || null;
+async function getEmbeddedImage(trackId) {
+  const tags = await readID3Tags(trackId);
+  return tags?.pictureUri || null;
 }
 
 function getTrackId(track) {
-  return track.Id || track.id || null;
+  return track?.Id || track?.id || null;
 }
 
 function isDirectJellyfinAudioUrl(url) {
-  var value = String(url || "");
+  const value = String(url || "");
   return /\/Audio\/[^/]+\/stream(?:\.\w+)?(?:\?|$)/i.test(value);
 }
 
@@ -718,16 +718,16 @@ function syncResolvedTrackSource(trackId, url) {
   if (!trackId || !url) return;
   resolvedAudioUrlCache.set(trackId, url);
 
-  var lists = [
+  const lists = [
     musicPlayerState.playlist,
     musicPlayerState.originalPlaylist,
     musicPlayerState.effectivePlaylist,
     musicPlayerState.combinedPlaylist,
   ];
 
-  lists.forEach(function((list) {
+  lists.forEach((list) => {
     if (!Array.isArray(list)) return;
-    list.forEach(function((item) {
+    list.forEach((item) => {
       if (getTrackId(item) === trackId) {
         item.mediaSource = url;
       }
@@ -740,44 +740,44 @@ function syncResolvedTrackSource(trackId, url) {
 }
 
 function buildDirectAudioUrl(track) {
-  var trackId = getTrackId(track);
+  const trackId = getTrackId(track);
   if (!trackId) {
     console.error("Parça Id Bulunamadı:", track);
     return null;
   }
 
-  var authToken = getAuthToken();
+  const authToken = getAuthToken();
   if (!authToken) {
     showNotification(
-    "<i class=\"fas fa-exclamation-circle\"></i> " + (config.languageLabels.authRequired || "Kimlik doğrulama hatası"),
+    `<i class="fas fa-exclamation-circle"></i> ${config.languageLabels.authRequired || "Kimlik doğrulama hatası"}`,
     3000,
     'error'
   );
     return null;
   }
 
-  return apiUrl("/Audio/" + (encodeURIComponent(trackId)) + "/stream.mp3?Static=true&api_key=" + (authToken));
+  return apiUrl(`/Audio/${encodeURIComponent(trackId)}/stream.mp3?Static=true&api_key=${authToken}`);
 }
 
-function resolveTrackAudioUrl(track) {
+async function resolveTrackAudioUrl(track) {
   if (!track) return null;
-  if (track.filePath) return track.filePath;
+  if (track?.filePath) return track.filePath;
 
-  var trackId = getTrackId(track);
+  const trackId = getTrackId(track);
   if (!trackId) return null;
 
-  var cached = resolvedAudioUrlCache.get(trackId);
+  const cached = resolvedAudioUrlCache.get(trackId);
   if (cached) return cached;
 
-  var existingSource = String(track.mediaSource || "").trim();
-  var shouldResolveViaPlaybackInfo =
+  const existingSource = String(track?.mediaSource || "").trim();
+  const shouldResolveViaPlaybackInfo =
     !existingSource ||
     isDirectJellyfinAudioUrl(existingSource) ||
     musicPlayerState.playlistSource === "jellyfin";
 
   if (shouldResolveViaPlaybackInfo) {
     try {
-      var resolvedUrl = getVideoStreamUrl(trackId, 360, 0);
+      const resolvedUrl = await getVideoStreamUrl(trackId, 360, 0);
       if (resolvedUrl) {
         syncResolvedTrackSource(trackId, resolvedUrl);
         return resolvedUrl;
@@ -791,13 +791,13 @@ function resolveTrackAudioUrl(track) {
 
 export function playTrack(index) {
   if (index === musicPlayerState.currentIndex &&
-      musicPlayerState.playlist[index].Id ===
-      musicPlayerState.playlist[musicPlayerState.currentIndex].Id) {
+      musicPlayerState.playlist[index]?.Id ===
+      musicPlayerState.playlist[musicPlayerState.currentIndex]?.Id) {
   }
   cleanupAudioListeners();
-  var prevIndex = musicPlayerState.currentIndex;
-  var hadTime = Number.isFinite(musicPlayerState.audio.currentTime) && musicPlayerState.audio.currentTime > 0.25;
-  var prevTrack = (prevIndex != null && prevIndex > -1) ? musicPlayerState.playlist[prevIndex] : null;
+  const prevIndex = musicPlayerState.currentIndex;
+  const hadTime = Number.isFinite(musicPlayerState?.audio?.currentTime) && musicPlayerState.audio.currentTime > 0.25;
+  const prevTrack = (prevIndex != null && prevIndex > -1) ? musicPlayerState.playlist[prevIndex] : null;
 
   if (index < 0 || index >= musicPlayerState.playlist.length) return;
 
@@ -806,12 +806,12 @@ export function playTrack(index) {
     musicPlayerState.mediaSessionInitialized = true;
   }
 
-  var track = musicPlayerState.isUserModified
+  const track = musicPlayerState.isUserModified
     ? musicPlayerState.combinedPlaylist[index]
     : musicPlayerState.playlist[index];
 
   if (prevTrack && musicPlayerState.isPlayingReported) {
-    var switchingToDifferent = prevTrack.Id !== track.Id;
+    const switchingToDifferent = prevTrack.Id !== track?.Id;
     if (switchingToDifferent || hadTime) {
       reportPlaybackStopped(
         prevTrack,
@@ -834,7 +834,7 @@ export function playTrack(index) {
     : null;
 
   showNotification(
-    (isRadioTrack(track) ? '<i class="fas fa-broadcast-tower" style="margin-right: 8px;"></i>' : '<i class="fas fa-music" style="margin-right: 8px;"></i>') + (config.languageLabels.simdioynat) + ": " + (musicPlayerState.currentTrackName),
+    `${isRadioTrack(track) ? '<i class="fas fa-broadcast-tower" style="margin-right: 8px;"></i>' : '<i class="fas fa-music" style="margin-right: 8px;"></i>'}${config.languageLabels.simdioynat}: ${musicPlayerState.currentTrackName}`,
     2000,
     'kontrol'
   );
@@ -853,7 +853,7 @@ export function playTrack(index) {
     }
   }
 
-  var audio = musicPlayerState.audio;
+  const audio = musicPlayerState.audio;
   disposables.addListener(audio, 'canplay', handleCanPlay, { once: true });
   disposables.addListener(audio, 'error', handlePlayError, { once: true });
   disposables.addListener(audio, 'loadedmetadata', handleLoadedMetadata, { once: true });
@@ -864,9 +864,9 @@ export function playTrack(index) {
       audio.removeAttribute("crossorigin");
       audio.crossOrigin = null;
     } catch {}
-    function(() {
+    (async () => {
       try {
-        var { url, station } = resolveRadioStream(track);
+        const { url, station } = await resolveRadioStream(track);
         Object.assign(track, {
           StreamUrl: station.url || track.StreamUrl,
           ResolvedUrl: url,
@@ -886,9 +886,9 @@ export function playTrack(index) {
         });
         applyRadioNowPlaying(track, station);
         refreshLiveRadioTrackInfo(track);
-        attachRadioStreamfunction(audio, url, {
+        await attachRadioStream(audio, url, {
           disableMetadataReader: station.metadataReaderDisabled === true,
-          onMetadata: (metadata) {
+          onMetadata: (metadata) => {
             if (!applyRadioNowPlaying(track, metadata)) return;
             refreshLiveRadioTrackInfo(track);
           }
@@ -901,9 +901,9 @@ export function playTrack(index) {
     try {
       audio.crossOrigin = "anonymous";
     } catch {}
-    var streamReqId = ++_streamReqId;
-    function(() {
-      var audioUrl = resolveTrackAudioUrl(track);
+    const streamReqId = ++_streamReqId;
+    (async () => {
+      const audioUrl = await resolveTrackAudioUrl(track);
       if (streamReqId !== _streamReqId) return;
       if (!audioUrl) {
         handlePlaybackError(new Error("Audio source unavailable"), "resolve-url");
@@ -918,25 +918,25 @@ export function playTrack(index) {
 }
 
 function getAudioUrl(track) {
-  if (track.filePath) return track.filePath;
-  if (track.mediaSource) return track.mediaSource;
-  var trackId = getTrackId(track);
+  if (track?.filePath) return track.filePath;
+  if (track?.mediaSource) return track.mediaSource;
+  const trackId = getTrackId(track);
   if (trackId) {
-    var cached = resolvedAudioUrlCache.get(trackId);
+    const cached = resolvedAudioUrlCache.get(trackId);
     if (cached) return cached;
   }
   return buildDirectAudioUrl(track);
 }
 
 function getEffectiveDuration() {
-  var audio = musicPlayerState.audio;
+  const audio = musicPlayerState.audio;
   if (audio && isFinite(audio.duration)) return audio.duration;
   if (isFinite(musicPlayerState.currentTrackDuration)) return musicPlayerState.currentTrackDuration;
   return 0;
 }
 
 function handleLoadedMetadata() {
-  var effectiveDuration = getEffectiveDuration();
+  const effectiveDuration = getEffectiveDuration();
   musicPlayerState.currentTrackDuration = effectiveDuration;
 
   updateDuration();
@@ -944,34 +944,34 @@ function handleLoadedMetadata() {
 
   if (!isFinite(effectiveDuration)) {
     if (_loadedMetaRetryT) { clearTimeout(_loadedMetaRetryT); _loadedMetaRetryT = null; }
-    _loadedMetaRetryT = disposables.addTimeoutfunction(setTimeout(() {
+    _loadedMetaRetryT = disposables.addTimeout(setTimeout(() => {
       updateDuration();
       updateProgress();
     }, 1000));
   }
 }
 
-function reportPlaybackStart(track) {
-  if (!track.Id || isRadioTrack(track)) return;
+async function reportPlaybackStart(track) {
+  if (!track?.Id || isRadioTrack(track)) return;
 
   try {
-    var authToken = getAuthToken();
+    const authToken = getAuthToken();
     if (!authToken) return;
-    var session = getSessionInfo.() || {};
-    var authHeader = getAuthHeader.() || "MediaBrowser Token=\"" + (authToken) + "\"";
-    var headers = getEmbyHeaders.({
+    const session = getSessionInfo?.() || {};
+    const authHeader = getAuthHeader?.() || `MediaBrowser Token="${authToken}"`;
+    const headers = getEmbyHeaders?.({
       "Content-Type": "application/json",
       "Authorization": authHeader
     }) || {
       "Authorization": authHeader,
       "Content-Type": "application/json"
     };
-    if (session.userId) {
+    if (session?.userId) {
       headers["X-Emby-UserId"] = session.userId;
       headers["X-MediaBrowser-UserId"] = session.userId;
     }
 
-    var response = fetch(apiUrl("/Sessions/Playing"), {
+    const response = await fetch(apiUrl(`/Sessions/Playing`), {
       method: "POST",
       headers,
       body: JSON.stringify({
@@ -992,27 +992,27 @@ function reportPlaybackStart(track) {
   }
 }
 
-function reportPlaybackStopped(track, positionTicks) {
-  if (!track.Id || isRadioTrack(track)) return;
+async function reportPlaybackStopped(track, positionTicks) {
+  if (!track?.Id || isRadioTrack(track)) return;
 
   try {
-    var authToken = getAuthToken();
+    const authToken = getAuthToken();
     if (!authToken) return;
-    var session = getSessionInfo.() || {};
-    var authHeader = getAuthHeader.() || "MediaBrowser Token=\"" + (authToken) + "\"";
-    var headers = getEmbyHeaders.({
+    const session = getSessionInfo?.() || {};
+    const authHeader = getAuthHeader?.() || `MediaBrowser Token="${authToken}"`;
+    const headers = getEmbyHeaders?.({
       "Content-Type": "application/json",
       "Authorization": authHeader
     }) || {
       "Authorization": authHeader,
       "Content-Type": "application/json"
     };
-    if (session.userId) {
+    if (session?.userId) {
       headers["X-Emby-UserId"] = session.userId;
       headers["X-MediaBrowser-UserId"] = session.userId;
     }
 
-    var response = fetch(apiUrl("/Sessions/Playing/Stopped"), {
+    const response = await fetch(apiUrl(`/Sessions/Playing/Stopped`), {
       method: "POST",
       headers,
       body: JSON.stringify({

@@ -8,12 +8,12 @@ import { faIconHtml } from "./faIcons.js";
 import { openDetailsModal } from "./detailsModalLoader.js";
 import { applyHeaderIconButtonMode, findHeaderMountTarget } from "./headerCompat.js";
 
-var config = getConfig();
-var __castModulePromise = null;
+const config = getConfig();
+let __castModulePromise = null;
 
-function getCastModule() {
+async function getCastModule() {
   if (!__castModulePromise) {
-    __castModulePromise = import("./castModule.js").catchfunction((error) {
+    __castModulePromise = import("./castModule.js").catch((error) => {
       __castModulePromise = null;
       throw error;
     });
@@ -31,40 +31,40 @@ function getLiveConfig() {
 }
 
 function getLiveLabels() {
-  return getLiveConfig().languageLabels || config.languageLabels || {};
+  return getLiveConfig()?.languageLabels || config?.languageLabels || {};
 }
 
 function jfUrl(pathOrUrl) {
   return pathOrUrl ? withServer(pathOrUrl) : "";
 }
 
-var POLL_INTERVAL_MS = 60_000;
-var POLL_RESUME_DELAY_MS = 1_500;
-var AUTH_RETRY_INTERVAL_MS = 5_000;
-var CAPABILITY_RECHECK_MS = 2 * 60 * 1000;
-var TOAST_DURATION_MS = config.toastDuration;
-var MAX_NOTIFS = config.maxNotifications;
-var TOAST_DEDUP_MS = 5 * 60 * 1000;
-var TOAST_GAP_MS = 250;
-var MAX_STORE = 200;
-var UPDATE_BANNER_KEY      = function() storageKey("updateBanner");
-var UPDATE_TOAST_SHOWN_KEY = function() storageKey("updateToastShown");
-var UPDATE_TOAST_INFO_KEY = function() storageKey("updateToastInfo");
-var UPDATE_LIST_ID = function(latest) "update:" + (latest);
-var HOVER_OPEN_DELAY  = 150;
-var HOVER_CLOSE_DELAY = 200;
-var CSS_READY_TIMEOUT_MS = 2000;
-var MAX_RECENT_TOAST_KEYS = 500;
-var CREATED_TS_CACHE_MAX = 2000;
-var TOAST_QUEUE_MAX = 60;
-var NOTIF_THEME_LINK_ID = "jfNotifCss";
-var NOTIF_THEME_HREF_FRAGMENT = "slider/src/notifications";
-var NOTIF_HEADER_LEGACY_CLASS = "headerSyncButton syncButton headerButton headerButtonRight paper-icon-button-light";
-var __uiReady = false;
-var __forcePEObs = null;
-var __notifCssObs = null;
-var createdTsCache = new Map();
-var pollCtl = {
+const POLL_INTERVAL_MS = 60_000;
+const POLL_RESUME_DELAY_MS = 1_500;
+const AUTH_RETRY_INTERVAL_MS = 5_000;
+const CAPABILITY_RECHECK_MS = 2 * 60 * 1000;
+const TOAST_DURATION_MS = config.toastDuration;
+const MAX_NOTIFS = config.maxNotifications;
+const TOAST_DEDUP_MS = 5 * 60 * 1000;
+const TOAST_GAP_MS = 250;
+const MAX_STORE = 200;
+const UPDATE_BANNER_KEY      = () => storageKey("updateBanner");
+const UPDATE_TOAST_SHOWN_KEY = () => storageKey("updateToastShown");
+const UPDATE_TOAST_INFO_KEY = () => storageKey("updateToastInfo");
+const UPDATE_LIST_ID = (latest) => `update:${latest}`;
+const HOVER_OPEN_DELAY  = 150;
+const HOVER_CLOSE_DELAY = 200;
+const CSS_READY_TIMEOUT_MS = 2000;
+const MAX_RECENT_TOAST_KEYS = 500;
+const CREATED_TS_CACHE_MAX = 2000;
+const TOAST_QUEUE_MAX = 60;
+const NOTIF_THEME_LINK_ID = "jfNotifCss";
+const NOTIF_THEME_HREF_FRAGMENT = "slider/src/notifications";
+const NOTIF_HEADER_LEGACY_CLASS = "headerSyncButton syncButton headerButton headerButtonRight paper-icon-button-light";
+let __uiReady = false;
+let __forcePEObs = null;
+let __notifCssObs = null;
+const createdTsCache = new Map();
+const pollCtl = {
   latestTimer: null,
   actTimer: null,
   latestRunning: false,
@@ -72,11 +72,11 @@ var pollCtl = {
   paused: false
 };
 
-var notifRenderGen = 0;
-var __hoverOpenTimer  = null;
-var __hoverCloseTimer = null;
-var recentToastMap = new Map();
-var notifState = {
+let notifRenderGen = 0;
+let __hoverOpenTimer  = null;
+let __hoverCloseTimer = null;
+let recentToastMap = new Map();
+let notifState = {
   list: [],
   lastSeenCreatedAt: 0,
   toastQueue: [],
@@ -88,8 +88,8 @@ var notifState = {
   isModalOpen: false,
   _systemAllowed: false,
 };
-var __castTabMount = null;
-var __castTabSyncPromise = null;
+let __castTabMount = null;
+let __castTabSyncPromise = null;
 
 function isHoverCapable() {
   try {
@@ -97,20 +97,20 @@ function isHoverCapable() {
   } catch { return false; }
 }
 
- var sleep = function(ms) new Promise(function(r) setTimeout(r, ms));
+ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
  function isAuthReady() {
    try {
-     var s = getSessionInfo();
-     return !!(s.accessToken && s.userId);
+     const s = getSessionInfo();
+     return !!(s?.accessToken && s?.userId);
    } catch { return false; }
  }
 
-function waitForAuthReady(timeoutMs = 15000) {
-   var start = Date.now();
+async function waitForAuthReady(timeoutMs = 15000) {
+   const start = Date.now();
    while (Date.now() - start < timeoutMs) {
      if (isAuthReady()) return true;
-     sleep(250);
+     await sleep(250);
    }
    return false;
  }
@@ -122,37 +122,37 @@ function clearHoverTimers() {
 
 function insideNotifArea(node) {
   if (!node || !(node instanceof Node)) return false;
-  var panel = document.querySelector('#jfNotifModal .jf-notif-panel');
-  var btn   = document.getElementById('jfNotifBtn');
-  return !!(node.closest.('#jfNotifBtn') || node.closest.('#jfNotifModal .jf-notif-panel'));
+  const panel = document.querySelector('#jfNotifModal .jf-notif-panel');
+  const btn   = document.getElementById('jfNotifBtn');
+  return !!(node.closest?.('#jfNotifBtn') || node.closest?.('#jfNotifModal .jf-notif-panel'));
 }
 
 function setupNotifHover() {
   if (!isHoverCapable()) return;
-  var btn   = document.getElementById('jfNotifBtn');
-  var modal = document.getElementById('jfNotifModal');
-  var panel = modal.querySelector('.jf-notif-panel');
+  const btn   = document.getElementById('jfNotifBtn');
+  const modal = document.getElementById('jfNotifModal');
+  const panel = modal?.querySelector('.jf-notif-panel');
   if (!btn || !modal || !panel) return;
   if (btn.__notifHoverBound) return;
   btn.__notifHoverBound = true;
 
-  var openLater = function() {
+  const openLater = () => {
     clearHoverTimers();
-    __hoverOpenTimer = setTimeoutfunction(() { openModal(); }, HOVER_OPEN_DELAY);
+    __hoverOpenTimer = setTimeout(() => { openModal(); }, HOVER_OPEN_DELAY);
   };
-  var closeLater = function() {
+  const closeLater = () => {
     clearHoverTimers();
-    __hoverCloseTimer = setTimeoutfunction(() { closeModal(); }, HOVER_CLOSE_DELAY);
+    __hoverCloseTimer = setTimeout(() => { closeModal(); }, HOVER_CLOSE_DELAY);
   };
-  var cancelClose = function() {
+  const cancelClose = () => {
     if (__hoverCloseTimer) { clearTimeout(__hoverCloseTimer); __hoverCloseTimer = null; }
   };
 
-  btn.addEventListenerfunction('mouseenter', () {
+  btn.addEventListener('mouseenter', () => {
     openLater();
   });
-  var leaveHandler = function(ev) {
-    var to = ev.relatedTarget;
+  const leaveHandler = (ev) => {
+    const to = ev.relatedTarget;
     if (insideNotifArea(to)) {
       cancelClose();
     } else {
@@ -169,19 +169,22 @@ function findHeaderContainer() {
   return findHeaderMountTarget({ variant: "actions" });
 }
 
-var __notifBtn = null;
-var __headerObs = null;
+let __notifBtn = null;
+let __headerObs = null;
 
 function ensureNotifButtonIn(el, mode = "legacy") {
   if (!el) return false;
   if (!__notifBtn) {
-    var btn = document.createElement("button");
+    const btn = document.createElement("button");
     btn.id = "jfNotifBtn";
     btn.type = "button";
     btn.setAttribute("aria-label", config.languageLabels.recentNotifications);
     btn.title = config.languageLabels.recentNotifications;
     btn.setAttribute("aria-haspopup", "dialog");
-    btn.innerHTML = "\n      " + (faIconHtml("bell", "jf-notif-icon notif")) + "\n      <span class=\"jf-notif-badge\" hidden></span>\n    ";
+    btn.innerHTML = `
+      ${faIconHtml("bell", "jf-notif-icon notif")}
+      <span class="jf-notif-badge" hidden></span>
+    `;
     btn.addEventListener("click", openModal);
     __notifBtn = btn;
   }
@@ -195,14 +198,14 @@ function ensureNotifButtonIn(el, mode = "legacy") {
 
 function startHeaderIconSentinel() {
   if (__headerObs) return;
-  var mount = function() {
-    var target = document.querySelector(".skinHeader") || document.body;
+  const mount = () => {
+    const target = document.querySelector(".skinHeader") || document.body;
     if (!target) return;
-    var host = findHeaderContainer();
+    const host = findHeaderContainer();
     ensureNotifButtonIn(host.element, host.mode);
     if (__headerObs) __headerObs.disconnect();
-    __headerObs = new MutationObserverfunction(() {
-      var nextHost = findHeaderContainer();
+    __headerObs = new MutationObserver(() => {
+      const nextHost = findHeaderContainer();
       if (!nextHost.element) return;
       if (!__notifBtn || !nextHost.element.contains(__notifBtn)) {
         ensureNotifButtonIn(nextHost.element, nextHost.mode);
@@ -219,9 +222,9 @@ function startHeaderIconSentinel() {
   } else {
     mount();
   }
-  document.addEventListenerfunction("visibilitychange", () {
+  document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
-      var host = findHeaderContainer();
+      const host = findHeaderContainer();
       ensureNotifButtonIn(host.element, host.mode);
       updateBadge();
     }
@@ -229,81 +232,81 @@ function startHeaderIconSentinel() {
 }
 
 function hasPrimaryImage(it) {
-  var hasItemPrimary   = !!it.ImageTags.Primary || !!it.HasPrimaryImage;
-  var hasSeriesPrimary = !!it.Series.ImageTags.Primary;
-  if (it.Type === "Episode") return hasItemPrimary || hasSeriesPrimary;
+  const hasItemPrimary   = !!it?.ImageTags?.Primary || !!it?.HasPrimaryImage;
+  const hasSeriesPrimary = !!it?.Series?.ImageTags?.Primary;
+  if (it?.Type === "Episode") return hasItemPrimary || hasSeriesPrimary;
   return hasItemPrimary;
 }
 
 function safePosterImageSrc(it, maxWidth = 80, quality = 80) {
-  var isEp   = it.Type === "Episode";
-  var idBase = isEp ? (it.SeriesId || it.Series.Id) : (it.Id || it.ItemId || it.id);
-  var itemPrimaryTag   = it.ImageTags.Primary;
-  var seriesPrimaryTag = it.Series.ImageTags.Primary;
-  var primaryTag       = itemPrimaryTag || seriesPrimaryTag;
+  const isEp   = it?.Type === "Episode";
+  const idBase = isEp ? (it.SeriesId || it.Series?.Id) : (it?.Id || it?.ItemId || it?.id);
+  const itemPrimaryTag   = it?.ImageTags?.Primary;
+  const seriesPrimaryTag = it?.Series?.ImageTags?.Primary;
+  const primaryTag       = itemPrimaryTag || seriesPrimaryTag;
 
   if (idBase && primaryTag) {
-    return "/Items/" + (idBase) + "/Images/Primary?maxWidth=" + (maxWidth) + "&quality=" + (quality) + "&tag=" + (encodeURIComponent(primaryTag));
+    return `/Items/${idBase}/Images/Primary?maxWidth=${maxWidth}&quality=${quality}&tag=${encodeURIComponent(primaryTag)}`;
   }
 
-  var backdropId  = it.ParentBackdropItemId || idBase;
-  var backdropTag = (Array.isArray(it.ParentBackdropImageTags) && it.ParentBackdropImageTags[0])
-                   || (Array.isArray(it.BackdropImageTags) && it.BackdropImageTags[0])
-                   || (Array.isArray(it.Series.BackdropImageTags) && it.Series.BackdropImageTags[0]);
+  const backdropId  = it?.ParentBackdropItemId || idBase;
+  const backdropTag = (Array.isArray(it?.ParentBackdropImageTags) && it.ParentBackdropImageTags[0])
+                   || (Array.isArray(it?.BackdropImageTags) && it.BackdropImageTags[0])
+                   || (Array.isArray(it?.Series?.BackdropImageTags) && it.Series.BackdropImageTags[0]);
 
   if (backdropId && backdropTag) {
-    return "/Items/" + (backdropId) + "/Images/Backdrop/0?maxWidth=" + (maxWidth) + "&quality=" + (quality) + "&tag=" + (encodeURIComponent(backdropTag));
+    return `/Items/${backdropId}/Images/Backdrop/0?maxWidth=${maxWidth}&quality=${quality}&tag=${encodeURIComponent(backdropTag)}`;
   }
 
-  var thumbTag = it.ImageTags.Thumb || it.Series.ImageTags.Thumb;
+  const thumbTag = it?.ImageTags?.Thumb || it?.Series?.ImageTags?.Thumb;
   if (idBase && thumbTag) {
-    return "/Items/" + (idBase) + "/Images/Thumb?maxWidth=" + (maxWidth) + "&quality=" + (quality) + "&tag=" + (encodeURIComponent(thumbTag));
+    return `/Items/${idBase}/Images/Thumb?maxWidth=${maxWidth}&quality=${quality}&tag=${encodeURIComponent(thumbTag)}`;
   }
 
   return "";
 }
 
 function upsertUpdateNotification({ latest, url }) {
-  var id = UPDATE_LIST_ID(latest);
-  notifState.list = notifState.list.filter(function(n) n.id !== id);
+  const id = UPDATE_LIST_ID(latest);
+  notifState.list = notifState.list.filter(n => n.id !== id);
   notifState.list.unshift({
     id,
     itemId: null,
-    title: (config.languageLabels.updateAvailable || "Nova versão disponível") + ": " + (latest),
+    title: `${config.languageLabels?.updateAvailable || "Nova versão disponível"}: ${latest}`,
     timestamp: Date.now(),
     status: "update",
     url,
     read: false
   });
-  notifState.list = notifState.list.filter(function(n) n.status !== "update" || n.id === id);
+  notifState.list = notifState.list.filter(n => n.status !== "update" || n.id === id);
   saveState();
   updateBadge();
   if (document.querySelector("#jfNotifModal.open")) renderNotifications();
 }
 
 function posterImageSrc(it, maxWidth = 80, quality = 80) {
-  var id =
-    (it.Type === "Episode" && (it.SeriesId || it.Series.Id))
+  const id =
+    (it?.Type === "Episode" && (it?.SeriesId || it?.Series?.Id))
       ? (it.SeriesId || it.Series.Id)
-      : (it.Id || it.ItemId || it.id);
+      : (it?.Id || it?.ItemId || it?.id);
 
-  return id ? "/Items/" + (id) + "/Images/Primary?maxWidth=" + (maxWidth) + "&quality=" + (quality) : "";
+  return id ? `/Items/${id}/Images/Primary?maxWidth=${maxWidth}&quality=${quality}` : "";
 }
 
 function moreItemsLabel(n) {
-  var tail = (config.languageLabels.moreItems || "mais itens");
-  return (n) + " " + (tail);
+  const tail = (config.languageLabels.moreItems || "mais itens");
+  return `${n} ${tail}`;
 }
 
 function toastShouldEnqueue(key) {
-  var now = Date.now();
-  for (var [k, t] of recentToastMap) {
+  const now = Date.now();
+  for (const [k, t] of recentToastMap) {
     if (now - t > TOAST_DEDUP_MS) recentToastMap.delete(k);
   }
   if (recentToastMap.has(key)) return false;
   recentToastMap.set(key, now);
   if (recentToastMap.size > MAX_RECENT_TOAST_KEYS) {
-    var first = recentToastMap.keys().next().value;
+    const first = recentToastMap.keys().next().value;
     recentToastMap.delete(first);
   }
   return true;
@@ -312,15 +315,15 @@ function toastShouldEnqueue(key) {
 function isNotifThemeStylesheet(node) {
   if (!node || node.nodeType !== 1) return false;
   if (String(node.tagName || "").toLowerCase() !== "link") return false;
-  var rel = String(node.getAttribute.("rel") || "");
+  const rel = String(node.getAttribute?.("rel") || "");
   if (rel.toLowerCase() !== "stylesheet") return false;
-  var href = String(node.getAttribute.("href") || node.href || "");
+  const href = String(node.getAttribute?.("href") || node.href || "");
   return href.includes(NOTIF_THEME_HREF_FRAGMENT);
 }
 
 function pruneForeignNotifStylesheets(activeLink = null) {
-  document.querySelectorAll('link[rel="stylesheet"][href]').forEach(function((link) {
-    var href = String(link.getAttribute("href") || link.href || "");
+  document.querySelectorAll('link[rel="stylesheet"][href]').forEach((link) => {
+    const href = String(link.getAttribute("href") || link.href || "");
     if (!href.includes(NOTIF_THEME_HREF_FRAGMENT)) return;
     if (activeLink && link === activeLink) return;
     link.remove();
@@ -329,19 +332,19 @@ function pruneForeignNotifStylesheets(activeLink = null) {
 
 function queueNotifStylesheetPrune(activeLink = null) {
   pruneForeignNotifStylesheets(activeLink);
-  requestAnimationFramefunction(() pruneForeignNotifStylesheets(activeLink));
-  setTimeoutfunction(() pruneForeignNotifStylesheets(activeLink), 0);
-  setTimeoutfunction(() pruneForeignNotifStylesheets(activeLink), 60);
-  setTimeoutfunction(() pruneForeignNotifStylesheets(activeLink), 250);
+  requestAnimationFrame(() => pruneForeignNotifStylesheets(activeLink));
+  setTimeout(() => pruneForeignNotifStylesheets(activeLink), 0);
+  setTimeout(() => pruneForeignNotifStylesheets(activeLink), 60);
+  setTimeout(() => pruneForeignNotifStylesheets(activeLink), 250);
 }
 
 function ensureNotifStylesheetSentinel() {
   if (__notifCssObs || typeof MutationObserver !== "function") return;
-  var root = document.head || document.documentElement;
+  const root = document.head || document.documentElement;
   if (!root) return;
-  __notifCssObs = new MutationObserverfunction((mutations) {
-    var shouldPrune = false;
-    for (var mutation of mutations) {
+  __notifCssObs = new MutationObserver((mutations) => {
+    let shouldPrune = false;
+    for (const mutation of mutations) {
       if (mutation.type === "attributes") {
         if (isNotifThemeStylesheet(mutation.target)) {
           shouldPrune = true;
@@ -349,12 +352,12 @@ function ensureNotifStylesheetSentinel() {
         }
         continue;
       }
-      for (var node of mutation.addedNodes) {
+      for (const node of mutation.addedNodes) {
         if (isNotifThemeStylesheet(node)) {
           shouldPrune = true;
           break;
         }
-        if (node.nodeType === 1 && node.querySelector.('link[rel="stylesheet"][href*="slider/src/notifications"]')) {
+        if (node?.nodeType === 1 && node.querySelector?.('link[rel="stylesheet"][href*="slider/src/notifications"]')) {
           shouldPrune = true;
           break;
         }
@@ -362,7 +365,7 @@ function ensureNotifStylesheetSentinel() {
       if (shouldPrune) break;
     }
     if (!shouldPrune) return;
-    var activeLink = document.getElementById(NOTIF_THEME_LINK_ID);
+    const activeLink = document.getElementById(NOTIF_THEME_LINK_ID);
     queueNotifStylesheetPrune(activeLink);
   });
   __notifCssObs.observe(root, {
@@ -374,7 +377,7 @@ function ensureNotifStylesheetSentinel() {
 }
 
 function ensureNotifStylesheet() {
-  var link = document.getElementById(NOTIF_THEME_LINK_ID);
+  let link = document.getElementById(NOTIF_THEME_LINK_ID);
   pruneForeignNotifStylesheets(link);
   if (!link) {
     link = document.createElement('link');
@@ -388,37 +391,37 @@ function ensureNotifStylesheet() {
 }
 
 function getThemePreferenceKey() {
-  var userId = getSafeUserId();
-  return "jf:notifTheme:" + (userId || "nouser");
+  const userId = getSafeUserId();
+  return `jf:notifTheme:${userId || "nouser"}`;
 }
 
 function loadThemePreference() {
   ensureNotifStylesheet();
-  var theme = localStorage.getItem(getThemePreferenceKey()) || '1';
+  const theme = localStorage.getItem(getThemePreferenceKey()) || '1';
   setTheme(theme);
 }
 
 function applyNotifCssThemeNumber(themeNumber) {
-  var normalized =
+  const normalized =
     themeNumber === "2" || themeNumber === "3" || themeNumber === "4"
       ? themeNumber
       : "1";
 
   document.documentElement.setAttribute("data-jf-notif-css-theme", normalized);
-  document.body.setAttribute.("data-jf-notif-css-theme", normalized);
-  document.getElementById("jfNotifModal").setAttribute("data-jf-notif-css-theme", normalized);
+  document.body?.setAttribute?.("data-jf-notif-css-theme", normalized);
+  document.getElementById("jfNotifModal")?.setAttribute("data-jf-notif-css-theme", normalized);
 }
 
 function setTheme(themeNumber) {
   applyNotifCssThemeNumber(themeNumber);
-  var link = ensureNotifStylesheet();
-  var href =
+  const link = ensureNotifStylesheet();
+  const href =
     themeNumber === '1' ? resolveSliderAssetHref("/slider/src/notifications.css")  :
     themeNumber === '2' ? resolveSliderAssetHref("/slider/src/notifications2.css") :
     themeNumber === '3' ? resolveSliderAssetHref("/slider/src/notifications3.css") :
                           resolveSliderAssetHref("/slider/src/notifications4.css");
-  var settled = false;
-  var finish = function() {
+  let settled = false;
+  const finish = () => {
     if (settled) return;
     settled = true;
     link.disabled = false;
@@ -427,8 +430,8 @@ function setTheme(themeNumber) {
   };
   link.addEventListener('load', finish);
   link.addEventListener('error', finish);
-  requestAnimationFramefunction(() { if (!settled) link.disabled = false; });
-  setTimeoutfunction(() { if (!settled) link.disabled = false; }, 50);
+  requestAnimationFrame(() => { if (!settled) link.disabled = false; });
+  setTimeout(() => { if (!settled) link.disabled = false; }, 50);
   link.disabled = true;
   if (link.href !== href) {
     link.href = href;
@@ -440,49 +443,49 @@ function setTheme(themeNumber) {
 }
 
 function toggleTheme() {
-  var current = localStorage.getItem(getThemePreferenceKey()) || '1';
-  var next = current === '1' ? '2'
+  const current = localStorage.getItem(getThemePreferenceKey()) || '1';
+  const next = current === '1' ? '2'
               : current === '2' ? '3'
               : current === '3' ? '4'
               : '1';
   setTheme(next);
 }
 
-function fetchLatestAll() {
+async function fetchLatestAll() {
   if (!isAuthReady()) return [];
-  var { userId } = getSessionInfo();
+  const { userId } = getSessionInfo();
 
-  var latestVideo = [];
+  let latestVideo = [];
   try {
-    latestVideo = makeApiRequest(
-      "/Users/" + (userId) + "/Items?SortBy=DateCreated&SortOrder=Descending" +
-      "&IncludeItemTypes=Movie,Episode&Recursive=true&Limit=50" +
-      "&Fields=DateCreated,DateAdded,PremiereDate,DateLastMediaAdded,SeriesName,ParentIndexNumber,IndexNumber,SeriesId"
+    latestVideo = await makeApiRequest(
+      `/Users/${userId}/Items?SortBy=DateCreated&SortOrder=Descending` +
+      `&IncludeItemTypes=Movie,Episode&Recursive=true&Limit=50` +
+      `&Fields=DateCreated,DateAdded,PremiereDate,DateLastMediaAdded,SeriesName,ParentIndexNumber,IndexNumber,SeriesId`
     );
-    latestVideo = Array.isArray(latestVideo.Items) ? latestVideo.Items : (Array.isArray(latestVideo) ? latestVideo : []);
+    latestVideo = Array.isArray(latestVideo?.Items) ? latestVideo.Items : (Array.isArray(latestVideo) ? latestVideo : []);
   } catch (e) {
     return [];
   }
 
-  var seriesIds = Array.from(new Set(
-    latestVideo.filter(function(x) x.Type === 'Episode' && x.SeriesId).map(function(x) x.SeriesId)
+  const seriesIds = Array.from(new Set(
+    latestVideo.filter(x => x?.Type === 'Episode' && x?.SeriesId).map(x => x.SeriesId)
   ));
-  var seriesMap = new Map();
+  let seriesMap = new Map();
   if (seriesIds.length && isAuthReady()) {
     try {
-      var { found } = fetchItemsBulk(seriesIds);
+      const { found } = await fetchItemsBulk(seriesIds);
       seriesMap = found || new Map();
     } catch {}
   }
-  var processedVideo = latestVideo.map(function(item) {
+  const processedVideo = latestVideo.map(item => {
     if (item.Type === 'Episode' && item.SeriesId) {
-      var seriesInfo = seriesMap.get(item.SeriesId);
+      const seriesInfo = seriesMap.get(item.SeriesId);
       if (seriesInfo) {
         return {
           ...item,
-          _seriesDateAdded: seriesInfo.DateAdded || null,
+          _seriesDateAdded: seriesInfo?.DateAdded || null,
           ImageTags: seriesInfo.ImageTags,
-          BackdropImageTags: seriesInfo.BackdropImageTags,
+          BackdropImageTags: seriesInfo?.BackdropImageTags,
           ParentBackdropItemId: seriesInfo.Id,
           ParentBackdropImageTags: seriesInfo.BackdropImageTags
         };
@@ -491,49 +494,49 @@ function fetchLatestAll() {
     return item;
   });
 
-  var latestAudioResp;
+  let latestAudioResp;
   try {
-    latestAudioResp = makeApiRequest(
-      "/Users/" + (userId) + "/Items?SortBy=DateCreated&SortOrder=Descending&IncludeItemTypes=Audio&Recursive=true&Limit=50"
+    latestAudioResp = await makeApiRequest(
+      `/Users/${userId}/Items?SortBy=DateCreated&SortOrder=Descending&IncludeItemTypes=Audio&Recursive=true&Limit=50`
     );
   } catch (e) {
-    console.error("[notif] Erro na requisição de últimos áudios:", e);
+    console.error("[notif] Latest(Audio) isteği hata:", e);
     latestAudioResp = {};
   }
 
-  var audioItems = Array.isArray(latestAudioResp.Items) ? latestAudioResp.Items : [];
-  var combined = [...processedVideo, ...audioItems];
+  const audioItems = Array.isArray(latestAudioResp?.Items) ? latestAudioResp.Items : [];
+  const combined = [...processedVideo, ...audioItems];
 
-  var uniqMap = new Map();
-  combined.forEach(function(it) { if (it.Id) uniqMap.set(it.Id, it); });
+  const uniqMap = new Map();
+  combined.forEach(it => { if (it?.Id) uniqMap.set(it.Id, it); });
 
-  var out = Array.from(uniqMap.values());
+  const out = Array.from(uniqMap.values());
   return out;
 }
 
-function backfillFromLastSeen() {
+async function backfillFromLastSeen() {
   if (!isAuthReady()) return;
   if (!notifState.seenIds) notifState.seenIds = new Set();
 
-  var items = fetchLatestAll();
+  const items = await fetchLatestAll();
   if (!items.length) return;
 
-   var newestTsRaw = items.reducefunction((acc, it) Math.max(acc, getCreatedTs(it)), 0);
- var newestTs = clampToNow(newestTsRaw);
+   const newestTsRaw = items.reduce((acc, it) => Math.max(acc, getCreatedTs(it)), 0);
+ const newestTs = clampToNow(newestTsRaw);
 
   if (!notifState.lastSeenCreatedAt) {
-    items.forEach(function(it) notifState.seenIds.add(it.Id));
+    items.forEach(it => notifState.seenIds.add(it.Id));
     notifState.lastSeenCreatedAt = newestTs || Date.now();
     saveState();
     updateBadge();
     return;
   }
-  var fresh = items
-   .filter(function(it)
+  const fresh = items
+   .filter(it =>
     !notifState.seenIds.has(it.Id) ||
      getCreatedTs(it) > notifState.lastSeenCreatedAt
    )
-    .sortfunction((a, b) getCreatedTs(a) - getCreatedTs(b));
+    .sort((a, b) => getCreatedTs(a) - getCreatedTs(b));
 
   if (fresh.length) {
   enqueueToastBurst(fresh, { type: "content" });
@@ -555,8 +558,8 @@ function backfillFromLastSeen() {
 }
 
 function storageKey(base) {
-  var userId = getSafeUserId();
-  return "jf:" + (base) + ":" + (userId || "nouser");
+  const userId = getSafeUserId();
+  return `jf:${base}:${userId || "nouser"}`;
 }
 
 function getSafeUserId() {
@@ -565,9 +568,9 @@ function getSafeUserId() {
 
 function loadState() {
   try {
-    var raw = localStorage.getItem(storageKey("notifications"));
+    const raw = localStorage.getItem(storageKey("notifications"));
     if (raw) {
-  notifState.list = JSON.parse(raw).map(function(x) ({
+  notifState.list = JSON.parse(raw).map(x => ({
     ...x,
     status: x.status || "added",
     read: typeof x.read === "boolean" ? x.read : false
@@ -575,18 +578,18 @@ function loadState() {
 }
   } catch {}
 
-  var tsRaw = localStorage.getItem(storageKey("lastSeenCreatedAt"));
+  const tsRaw = localStorage.getItem(storageKey("lastSeenCreatedAt"));
   notifState.lastSeenCreatedAt = tsRaw ? Number(tsRaw) : 0;
 
   try {
-    var seenRaw = localStorage.getItem(storageKey("seenIds"));
+    const seenRaw = localStorage.getItem(storageKey("seenIds"));
     notifState.seenIds = seenRaw ? new Set(JSON.parse(seenRaw)) : new Set();
   } catch { notifState.seenIds = new Set(); }
 
-  var actTsRaw = localStorage.getItem(storageKey("activityLastSeen"));
+  const actTsRaw = localStorage.getItem(storageKey("activityLastSeen"));
   notifState.activityLastSeen = actTsRaw ? Number(actTsRaw) : 0;
   try {
-    var actSeenRaw = localStorage.getItem(storageKey("activitySeenIds"));
+    const actSeenRaw = localStorage.getItem(storageKey("activitySeenIds"));
     notifState.activitySeenIds = actSeenRaw ? new Set(JSON.parse(actSeenRaw)) : new Set();
   } catch { notifState.activitySeenIds = new Set(); }
 }
@@ -605,16 +608,16 @@ function saveState() {
 }
 
 function getCreatedTs(item) {
-  var id = item.Id || item.ItemId || item.id;
+  const id = item?.Id || item?.ItemId || item?.id;
   if (id && createdTsCache.has(id)) return createdTsCache.get(id);
-  var seriesTs = Date.parse(item._seriesDateAdded || "") || 0;
-  var val = (
+  const seriesTs = Date.parse(item?._seriesDateAdded || "") || 0;
+  const val = (
     seriesTs ||
-    Date.parse(item.DateCreated || "") ||
-    Date.parse(item.DateAdded || "") ||
-    Date.parse(item.AddedAt || "") ||
-    Date.parse(item.PremiereDate || "") ||
-    Date.parse(item.DateLastMediaAdded || "") ||
+    Date.parse(item?.DateCreated || "") ||
+    Date.parse(item?.DateAdded || "") ||
+    Date.parse(item?.AddedAt || "") ||
+    Date.parse(item?.PremiereDate || "") ||
+    Date.parse(item?.DateLastMediaAdded || "") ||
     0
   );
   if (id) {
@@ -627,17 +630,17 @@ function getCreatedTs(item) {
 }
 
 function ensureUI() {
-  var liveConfig = getLiveConfig();
+  const liveConfig = getLiveConfig();
   if (liveConfig.enableNotifications === false) return;
   injectCriticalNotifCSS();
   ensureCastTabStyles();
-  var header = findHeaderContainer();
+  const header = findHeaderContainer();
   if (header.element) ensureNotifButtonIn(header.element, header.mode);
   startHeaderIconSentinel();
 
   if (!document.querySelector("#jfNotifModal")) {
-    var showSystem = !!notifState._systemAllowed;
-    var modal = document.createElement("div");
+    const showSystem = !!notifState._systemAllowed;
+    const modal = document.createElement("div");
     modal.id = "jfNotifModal";
     modal.className = "jf-notif-modal";
      modal.hidden = true;
@@ -645,20 +648,54 @@ function ensureUI() {
     modal.style.position = "fixed";
     modal.style.inset = "0";
     modal.style.pointerEvents = "none";
-    modal.innerHTML = "\n      <div class=\"jf-notif-backdrop\" data-close></div>\n      <div class=\"jf-notif-panel\">\n        <div class=\"jf-notif-head\">\n          <div class=\"jf-notif-title\">" + (liveConfig.languageLabels.recentNotifications) + "</div>\n          <div class=\"jf-notif-actions\">\n            <button id=\"jfNotifModeToggle\" class=\"jf-notif-theme-toggle\" title=\"" + ((liveConfig.languageLabels.switchToDark)||'Alternar para tema escuro') + "\">\n              " + (faIconHtml("moon", "jf-notif-icon")) + "\n            </button>\n            <button id=\"jfNotifMarkAllRead\" class=\"jf-notif-markallread\" title=\"" + (liveConfig.languageLabels.markAllRead || 'Marcar todas como lidas') + "\">\n              <i class=\"fa-solid fa-eye\"></i>\n            </button>\n            <button id=\"jfNotifThemeToggle\" class=\"jf-notif-theme-toggle\" title=\"" + (liveConfig.languageLabels.themeToggleTooltip) + "\">\n              <i class=\"fa-solid fa-paintbrush\"></i>\n            </button>\n            <button id=\"jfNotifClearAll\" class=\"jf-notif-clearall\">" + (liveConfig.languageLabels.clearAll) + "</button>\n            <button class=\"jf-notif-close\" data-close>×</button>\n          </div>\n        </div>\n        <div class=\"jf-notif-tabs\">\n          <button class=\"jf-notif-tab active\" data-tab=\"new\">" + (liveConfig.languageLabels.newAddedTab || "Novos Adicionados") + "</button>\n          ${notifState._systemAllowed ? "<button class="jf-notif-tab" data-tab="system">${liveConfig.languageLabels.systemNotifications || "Notificações do Sistema"}</button>" : \"\"}\n        </div>\n        <div class=\"jf-notif-content\">\n          <div class=\"jf-notif-tab-content\" data-tab=\"new\">\n            <div class=\"jf-notif-section\">\n              <div class=\"jf-notif-subtitle\">" + (liveConfig.languageLabels.latestNotifications) + "</div>\n              <ul class=\"jf-notif-list\" id=\"jfNotifList\"></ul>\n            </div>\n            ${liveConfig.enableRenderResume ? "
+    modal.innerHTML = `
+      <div class="jf-notif-backdrop" data-close></div>
+      <div class="jf-notif-panel">
+        <div class="jf-notif-head">
+          <div class="jf-notif-title">${liveConfig.languageLabels.recentNotifications}</div>
+          <div class="jf-notif-actions">
+            <button id="jfNotifModeToggle" class="jf-notif-theme-toggle" title="${(liveConfig.languageLabels?.switchToDark)||'Mudar para tema escuro'}">
+              ${faIconHtml("moon", "jf-notif-icon")}
+            </button>
+            <button id="jfNotifMarkAllRead" class="jf-notif-markallread" title="${liveConfig.languageLabels.markAllRead || 'Marcar todas como lidas'}">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+            <button id="jfNotifThemeToggle" class="jf-notif-theme-toggle" title="${liveConfig.languageLabels.themeToggleTooltip}">
+              <i class="fa-solid fa-paintbrush"></i>
+            </button>
+            <button id="jfNotifClearAll" class="jf-notif-clearall">${liveConfig.languageLabels.clearAll}</button>
+            <button class="jf-notif-close" data-close>×</button>
+          </div>
+        </div>
+        <div class="jf-notif-tabs">
+          <button class="jf-notif-tab active" data-tab="new">${liveConfig.languageLabels.newAddedTab || "Novos Adicionados"}</button>
+          ${notifState._systemAllowed ? `<button class="jf-notif-tab" data-tab="system">${liveConfig.languageLabels.systemNotifications || "Notificações do Sistema"}</button>` : ""}
+        </div>
+        <div class="jf-notif-content">
+          <div class="jf-notif-tab-content" data-tab="new">
+            <div class="jf-notif-section">
+              <div class="jf-notif-subtitle">${liveConfig.languageLabels.latestNotifications}</div>
+              <ul class="jf-notif-list" id="jfNotifList"></ul>
+            </div>
+            ${liveConfig.enableRenderResume ? `
               <div class="jf-notif-section watching">
                 <div class="jf-notif-subtitle">${liveConfig.languageLabels.unfinishedWatching}</div>
                 <div class="jf-resume-list" id="jfResumeList"></div>
               </div>
-            " : ''}\n          </div>\n          ${notifState._systemAllowed ? "
+            ` : ''}
+          </div>
+          ${notifState._systemAllowed ? `
           <div class="jf-notif-tab-content" data-tab="system" style="display:none;">
             <ul class="jf-activity-list" id="jfActivityList"></ul>
-          </div>" : ""}\n        </div>\n      </div>\n    ";
+          </div>` : ``}
+        </div>
+      </div>
+    `;
     document.body.appendChild(modal);
-    modal.addEventListenerfunction("click", (e) {
+    modal.addEventListener("click", (e) => {
       if (e.target.matches("[data-close]")) closeModal();
     });
-      modal.addEventListenerfunction("transitionend", (ev) {
+      modal.addEventListener("transitionend", (ev) => {
       if (ev.target === modal && !modal.classList.contains("open")) {
         modal.hidden = true;
         modal.setAttribute("aria-hidden", "true");
@@ -667,19 +704,19 @@ function ensureUI() {
   }
 
   if (!document.querySelector("#jfToastContainer")) {
-    var c = document.createElement("div");
+    const c = document.createElement("div");
     c.id = "jfToastContainer";
     c.className = "jf-toast-container";
     document.body.appendChild(c);
   }
 
-  document.getElementById("jfNotifModeToggle").addEventListenerfunction("click", (e) {
+  document.getElementById("jfNotifModeToggle")?.addEventListener("click", (e) => {
     e.stopPropagation();
     toggleThemeMode();
   });
-  document.getElementById("jfNotifThemeToggle").addEventListener("click", toggleTheme);
-  document.getElementById("jfNotifClearAll").addEventListenerfunction("click", (e) { e.stopPropagation(); clearAllNotifications(); closeModal(); });
-  document.getElementById("jfNotifMarkAllRead").addEventListenerfunction("click", (e) { e.stopPropagation(); markAllNotificationsRead(); });
+  document.getElementById("jfNotifThemeToggle")?.addEventListener("click", toggleTheme);
+  document.getElementById("jfNotifClearAll")?.addEventListener("click", (e) => { e.stopPropagation(); clearAllNotifications(); closeModal(); });
+  document.getElementById("jfNotifMarkAllRead")?.addEventListener("click", (e) => { e.stopPropagation(); markAllNotificationsRead(); });
 
   ensureNotifStylesheet();
   loadThemePreference();
@@ -687,10 +724,10 @@ function ensureUI() {
   updateBadge();
   renderUpdateBanner();
   setTimeout(setupNotifHover, 0);
-  waitForNotifCss().thenfunction(() {
-    var crt = document.getElementById("jfNotifCriticalHide");
+  waitForNotifCss().then(() => {
+    const crt = document.getElementById("jfNotifCriticalHide");
     if (crt) crt.remove();
-  }).catchfunction((){});
+  }).catch(()=>{});
 
   document.querySelectorAll(".jf-notif-tab").forEach(bindNotifTabButton);
   __uiReady = true;
@@ -700,17 +737,17 @@ ensureSystemTabPresence();
 
 function cleanupCastTabMount() {
   try {
-    __castTabMount.destroy.();
+    __castTabMount?.destroy?.();
   } catch {}
   __castTabMount = null;
 }
 
 function activateNotifTab(tabName = "new") {
-  document.querySelectorAll(".jf-notif-tab").forEach(function((button) {
+  document.querySelectorAll(".jf-notif-tab").forEach((button) => {
     button.classList.toggle("active", button.getAttribute("data-tab") === tabName);
   });
 
-  document.querySelectorAll(".jf-notif-tab-content").forEach(function((content) {
+  document.querySelectorAll(".jf-notif-tab-content").forEach((content) => {
     content.style.display = (content.getAttribute("data-tab") === tabName) ? "" : "none";
   });
 
@@ -724,47 +761,47 @@ function activateNotifTab(tabName = "new") {
 function bindNotifTabButton(tabBtn) {
   if (!tabBtn || tabBtn.__jmsNotifTabBound) return;
   tabBtn.__jmsNotifTabBound = true;
-  tabBtn.addEventListenerfunction("click", () {
+  tabBtn.addEventListener("click", () => {
     activateNotifTab(tabBtn.getAttribute("data-tab") || "new");
   });
 }
 
-function mountCastTabPanel() {
-  var host = document.getElementById("jfCastPanelHost");
+async function mountCastTabPanel() {
+  const host = document.getElementById("jfCastPanelHost");
   if (!host) return;
 
   cleanupCastTabMount();
-  host.innerHTML = "<div class=\"jf-loading\">" + (escapeHtml(getLiveLabels().loadingText || "Carregando...")) + "</div>";
-  var { mountCastViewerPanel } = getCastModule();
-  __castTabMount = mountCastViewerPanel(host, { refreshMs: 4000, variant: "notification" }).catchfunction((error) {
-    host.innerHTML = "<div class=\"jf-error\">" + (escapeHtml(String(error.message || getLiveLabels().listError || "Não foi possível carregar a lista."))) + "</div>";
+  host.innerHTML = `<div class="jf-loading">${escapeHtml(getLiveLabels()?.loadingText || "Carregando...")}</div>`;
+  const { mountCastViewerPanel } = await getCastModule();
+  __castTabMount = await mountCastViewerPanel(host, { refreshMs: 4000, variant: "notification" }).catch((error) => {
+    host.innerHTML = `<div class="jf-error">${escapeHtml(String(error?.message || getLiveLabels()?.listError || "Não foi possível carregar a lista."))}</div>`;
     return null;
   });
 }
 
-function ensureCastTabPresence() {
+async function ensureCastTabPresence() {
   if (__castTabSyncPromise) return __castTabSyncPromise;
 
-  __castTabSyncPromise = function(() {
-    var liveConfig = getLiveConfig();
-    var tabs = document.querySelector(".jf-notif-tabs");
-    var contentHost = document.querySelector(".jf-notif-content");
+  __castTabSyncPromise = (async () => {
+    const liveConfig = getLiveConfig();
+    const tabs = document.querySelector(".jf-notif-tabs");
+    const contentHost = document.querySelector(".jf-notif-content");
     if (!tabs || !contentHost) return;
 
-    var access = null;
+    let access = null;
     try {
-      var { getCastAccess } = getCastModule();
-      access = getCastAccess();
+      const { getCastAccess } = await getCastModule();
+      access = await getCastAccess();
     } catch {}
 
-    var allowed = access.canViewShared === true;
-    var existingTab = tabs.querySelector('[data-tab="cast"]');
-    var existingPane = contentHost.querySelector('.jf-notif-tab-content[data-tab="cast"]');
-    var wasCastActive = !!document.querySelector('.jf-notif-tab.active[data-tab="cast"]');
+    const allowed = access?.canViewShared === true;
+    const existingTab = tabs.querySelector('[data-tab="cast"]');
+    const existingPane = contentHost.querySelector('.jf-notif-tab-content[data-tab="cast"]');
+    const wasCastActive = !!document.querySelector('.jf-notif-tab.active[data-tab="cast"]');
 
     if (!allowed) {
-      existingTab.remove();
-      existingPane.remove();
+      existingTab?.remove();
+      existingPane?.remove();
       cleanupCastTabMount();
       if (wasCastActive) {
         activateNotifTab("new");
@@ -773,27 +810,27 @@ function ensureCastTabPresence() {
     }
 
     if (!existingTab) {
-      var btn = document.createElement("button");
+      const btn = document.createElement("button");
       btn.className = "jf-notif-tab";
       btn.setAttribute("data-tab", "cast");
-      btn.textContent = liveConfig.languageLabels.castTab || "Fluxo de Transmissão";
+      btn.textContent = liveConfig.languageLabels.castTab || "İzleme Akışı";
       tabs.appendChild(btn);
       bindNotifTabButton(btn);
     }
 
     if (!existingPane) {
-      var pane = document.createElement("div");
+      const pane = document.createElement("div");
       pane.className = "jf-notif-tab-content";
       pane.setAttribute("data-tab", "cast");
       pane.style.display = "none";
-      pane.innerHTML = "<div class=\"jf-cast-panel-host\" id=\"jfCastPanelHost\"></div>";
+      pane.innerHTML = `<div class="jf-cast-panel-host" id="jfCastPanelHost"></div>`;
       contentHost.appendChild(pane);
     }
 
     if (document.querySelector('.jf-notif-tab.active[data-tab="cast"]')) {
       void mountCastTabPanel();
     }
-  })().finallyfunction(() {
+  })().finally(() => {
     __castTabSyncPromise = null;
   });
 
@@ -801,84 +838,170 @@ function ensureCastTabPresence() {
 }
 
 function ensureSystemTabPresence() {
-  var liveConfig = getLiveConfig();
-  var tabs = document.querySelector(".jf-notif-tabs");
-  var contentHost = document.querySelector(".jf-notif-content");
+  const liveConfig = getLiveConfig();
+  const tabs = document.querySelector(".jf-notif-tabs");
+  const contentHost = document.querySelector(".jf-notif-content");
   if (!tabs || !contentHost) return;
-  var hasTab = !!tabs.querySelector('[data-tab="system"]');
-  var allowed = !!notifState._systemAllowed;
+  const hasTab = !!tabs.querySelector('[data-tab="system"]');
+  const allowed = !!notifState._systemAllowed;
   if (allowed && !hasTab) {
-    var btn = document.createElement("button");
+    const btn = document.createElement("button");
     btn.className = "jf-notif-tab";
     btn.setAttribute("data-tab", "system");
-    btn.textContent = liveConfig.languageLabels.systemNotifications || "Notificações do Sistema";
+    btn.textContent = liveConfig.languageLabels.systemNotifications || "Sistem Bildirimleri";
     tabs.appendChild(btn);
-    var pane = document.createElement("div");
+    const pane = document.createElement("div");
     pane.className = "jf-notif-tab-content";
     pane.setAttribute("data-tab", "system");
     pane.style.display = "none";
-    pane.innerHTML = "<ul class=\"jf-activity-list\" id=\"jfActivityList\"></ul>";
+    pane.innerHTML = `<ul class="jf-activity-list" id="jfActivityList"></ul>`;
     contentHost.appendChild(pane);
     bindNotifTabButton(btn);
   }
 }
 
 function syncResumeSectionVisibility() {
-  var liveConfig = getLiveConfig();
-  var newTab = document.querySelector('#jfNotifModal .jf-notif-tab-content[data-tab="new"]');
+  const liveConfig = getLiveConfig();
+  const newTab = document.querySelector('#jfNotifModal .jf-notif-tab-content[data-tab="new"]');
   if (!newTab) return;
 
-  var section = newTab.querySelector('.jf-notif-section.watching');
+  let section = newTab.querySelector('.jf-notif-section.watching');
   if (liveConfig.enableRenderResume === false) {
-    section.remove();
+    section?.remove();
     return;
   }
 
   if (!section) {
     section = document.createElement("div");
     section.className = "jf-notif-section watching";
-    section.innerHTML = "\n      <div class=\"jf-notif-subtitle\"></div>\n      <div class=\"jf-resume-list\" id=\"jfResumeList\"></div>\n    ";
+    section.innerHTML = `
+      <div class="jf-notif-subtitle"></div>
+      <div class="jf-resume-list" id="jfResumeList"></div>
+    `;
     newTab.appendChild(section);
   }
 
-  var titleEl = section.querySelector(".jf-notif-subtitle");
+  const titleEl = section.querySelector(".jf-notif-subtitle");
   if (titleEl) {
-    titleEl.textContent = liveConfig.languageLabels.unfinishedWatching || "Continuar Assistindo";
+    titleEl.textContent = liveConfig.languageLabels.unfinishedWatching || "İzlemeye Devam Et";
   }
 }
 
 function injectCriticalNotifCSS() {
   if (document.getElementById("jfNotifCriticalHide")) return;
-  var style = document.createElement("style");
+  const style = document.createElement("style");
   style.id = "jfNotifCriticalHide";
-  style.textContent = "\n    #jfNotifModal { display: none !important; }\n    #jfNotifModal.open { display: block !important; }\n    #jfNotifBtn.jms-mui-header-icon-button {\n      align-items: center;\n      background: transparent;\n      border: 0;\n      border-radius: 999px;\n      display: inline-flex !important;\n      height: 40px;\n      justify-content: center;\n      position: relative;\n      text-shadow: none !important;\n      width: 40px;\n    }\n    #jfNotifBtn.jms-mui-header-icon-button:hover {\n      background: rgba(255,255,255,0.08);\n    }\n  ";
+  style.textContent = `
+    #jfNotifModal { display: none !important; }
+    #jfNotifModal.open { display: block !important; }
+    #jfNotifBtn.jms-mui-header-icon-button {
+      align-items: center;
+      background: transparent;
+      border: 0;
+      border-radius: 999px;
+      display: inline-flex !important;
+      height: 40px;
+      justify-content: center;
+      position: relative;
+      text-shadow: none !important;
+      width: 40px;
+    }
+    #jfNotifBtn.jms-mui-header-icon-button:hover {
+      background: rgba(255,255,255,0.08);
+    }
+  `;
   document.head.appendChild(style);
 }
 
 function ensureCastTabStyles() {
   if (document.getElementById("jfCastTabInlineStyle")) return;
-  var style = document.createElement("style");
+  const style = document.createElement("style");
   style.id = "jfCastTabInlineStyle";
-  style.textContent = "\n    #jfNotifModal .jf-notif-tab-content[data-tab=\"cast\"] {\n      padding-top: 6px;\n    }\n    #jfNotifModal .jf-cast-panel-host {\n      width: 100%;\n      min-width: 0;\n    }\n    #jfNotifModal[data-jf-notif-css-theme=\"1\"] {\n      --jms-cast-embed-panel-bg: var(--jf-notif-card-bg);\n      --jms-cast-embed-panel-bg-2: var(--jf-notif-bg);\n      --jms-cast-embed-soft: var(--jf-notif-hover);\n      --jms-cast-embed-text: var(--jf-notif-text);\n      --jms-cast-embed-muted: var(--jf-notif-subtext);\n      --jms-cast-embed-border: var(--jf-notif-border);\n      --jms-cast-embed-accent: var(--jf-notif-accent);\n      --jms-cast-embed-accent-2: var(--jf-notif-warning);\n      --jms-cast-embed-shadow: var(--jf-notif-shadow);\n      --jms-cast-embed-chip-bg: var(--jf-notif-hover);\n      --jms-cast-embed-hero-hover: var(--jf-notif-hover);\n      --jms-cast-embed-progress-bg: var(--jf-notif-hover);\n    }\n    #jfNotifModal[data-jf-notif-css-theme=\"2\"] {\n      --jms-cast-embed-panel-bg: var(--ntf-panel);\n      --jms-cast-embed-panel-bg-2: var(--ntf-surface);\n      --jms-cast-embed-soft: var(--ntf-surface-hover);\n      --jms-cast-embed-text: var(--ntf-text);\n      --jms-cast-embed-muted: var(--ntf-text-muted);\n      --jms-cast-embed-border: var(--ntf-divider);\n      --jms-cast-embed-accent: var(--ntf-accent);\n      --jms-cast-embed-accent-2: var(--ntf-warning);\n      --jms-cast-embed-shadow: var(--ntf-shadow);\n      --jms-cast-embed-chip-bg: var(--ntf-surface);\n      --jms-cast-embed-hero-hover: var(--ntf-surface-hover);\n      --jms-cast-embed-progress-bg: var(--ntf-surface);\n    }\n    #jfNotifModal[data-jf-notif-css-theme=\"3\"] {\n      --jms-cast-embed-panel-bg: var(--panel-bg);\n      --jms-cast-embed-panel-bg-2: var(--head-bg);\n      --jms-cast-embed-soft: var(--row-hover);\n      --jms-cast-embed-text: var(--nft-text-primary);\n      --jms-cast-embed-muted: var(--nft-text-secondary);\n      --jms-cast-embed-border: var(--border-color);\n      --jms-cast-embed-accent: var(--notif-accent);\n      --jms-cast-embed-accent-2: var(--notif-amber);\n      --jms-cast-embed-shadow: var(--notif-shadow-md);\n      --jms-cast-embed-chip-bg: var(--head-bg);\n      --jms-cast-embed-hero-hover: var(--row-hover);\n      --jms-cast-embed-progress-bg: var(--head-bg);\n    }\n    #jfNotifModal[data-jf-notif-css-theme=\"4\"] {\n      --jms-cast-embed-panel-bg: var(--jf-notif-surface);\n      --jms-cast-embed-panel-bg-2: var(--jf-notif-surface-2);\n      --jms-cast-embed-soft: var(--jf-notif-surface-2);\n      --jms-cast-embed-text: var(--jf-notif-text);\n      --jms-cast-embed-muted: var(--jf-notif-text-dim);\n      --jms-cast-embed-border: var(--jf-notif-border);\n      --jms-cast-embed-accent: var(--jf-notif-accent);\n      --jms-cast-embed-accent-2: var(--jf-notif-accent-2);\n      --jms-cast-embed-shadow: var(--jf-shadow-1);\n      --jms-cast-embed-chip-bg: var(--jf-notif-surface-2);\n      --jms-cast-embed-hero-hover: var(--jf-notif-surface-2);\n      --jms-cast-embed-progress-bg: var(--jf-notif-surface-2);\n    }\n  ";
+  style.textContent = `
+    #jfNotifModal .jf-notif-tab-content[data-tab="cast"] {
+      padding-top: 6px;
+    }
+    #jfNotifModal .jf-cast-panel-host {
+      width: 100%;
+      min-width: 0;
+    }
+    #jfNotifModal[data-jf-notif-css-theme="1"] {
+      --jms-cast-embed-panel-bg: var(--jf-notif-card-bg);
+      --jms-cast-embed-panel-bg-2: var(--jf-notif-bg);
+      --jms-cast-embed-soft: var(--jf-notif-hover);
+      --jms-cast-embed-text: var(--jf-notif-text);
+      --jms-cast-embed-muted: var(--jf-notif-subtext);
+      --jms-cast-embed-border: var(--jf-notif-border);
+      --jms-cast-embed-accent: var(--jf-notif-accent);
+      --jms-cast-embed-accent-2: var(--jf-notif-warning);
+      --jms-cast-embed-shadow: var(--jf-notif-shadow);
+      --jms-cast-embed-chip-bg: var(--jf-notif-hover);
+      --jms-cast-embed-hero-hover: var(--jf-notif-hover);
+      --jms-cast-embed-progress-bg: var(--jf-notif-hover);
+    }
+    #jfNotifModal[data-jf-notif-css-theme="2"] {
+      --jms-cast-embed-panel-bg: var(--ntf-panel);
+      --jms-cast-embed-panel-bg-2: var(--ntf-surface);
+      --jms-cast-embed-soft: var(--ntf-surface-hover);
+      --jms-cast-embed-text: var(--ntf-text);
+      --jms-cast-embed-muted: var(--ntf-text-muted);
+      --jms-cast-embed-border: var(--ntf-divider);
+      --jms-cast-embed-accent: var(--ntf-accent);
+      --jms-cast-embed-accent-2: var(--ntf-warning);
+      --jms-cast-embed-shadow: var(--ntf-shadow);
+      --jms-cast-embed-chip-bg: var(--ntf-surface);
+      --jms-cast-embed-hero-hover: var(--ntf-surface-hover);
+      --jms-cast-embed-progress-bg: var(--ntf-surface);
+    }
+    #jfNotifModal[data-jf-notif-css-theme="3"] {
+      --jms-cast-embed-panel-bg: var(--panel-bg);
+      --jms-cast-embed-panel-bg-2: var(--head-bg);
+      --jms-cast-embed-soft: var(--row-hover);
+      --jms-cast-embed-text: var(--nft-text-primary);
+      --jms-cast-embed-muted: var(--nft-text-secondary);
+      --jms-cast-embed-border: var(--border-color);
+      --jms-cast-embed-accent: var(--notif-accent);
+      --jms-cast-embed-accent-2: var(--notif-amber);
+      --jms-cast-embed-shadow: var(--notif-shadow-md);
+      --jms-cast-embed-chip-bg: var(--head-bg);
+      --jms-cast-embed-hero-hover: var(--row-hover);
+      --jms-cast-embed-progress-bg: var(--head-bg);
+    }
+    #jfNotifModal[data-jf-notif-css-theme="4"] {
+      --jms-cast-embed-panel-bg: var(--jf-notif-surface);
+      --jms-cast-embed-panel-bg-2: var(--jf-notif-surface-2);
+      --jms-cast-embed-soft: var(--jf-notif-surface-2);
+      --jms-cast-embed-text: var(--jf-notif-text);
+      --jms-cast-embed-muted: var(--jf-notif-text-dim);
+      --jms-cast-embed-border: var(--jf-notif-border);
+      --jms-cast-embed-accent: var(--jf-notif-accent);
+      --jms-cast-embed-accent-2: var(--jf-notif-accent-2);
+      --jms-cast-embed-shadow: var(--jf-shadow-1);
+      --jms-cast-embed-chip-bg: var(--jf-notif-surface-2);
+      --jms-cast-embed-hero-hover: var(--jf-notif-surface-2);
+      --jms-cast-embed-progress-bg: var(--jf-notif-surface-2);
+    }
+  `;
   document.head.appendChild(style);
 }
 
 function waitForNotifCss() {
-  return new Promisefunction((resolve, reject) {
-    var link = ensureNotifStylesheet();
+  return new Promise((resolve, reject) => {
+    const link = ensureNotifStylesheet();
     if (!link) return resolve();
     if (link.sheet) return resolve();
-    var t = setTimeoutfunction(() reject(new Error("css-timeout")), CSS_READY_TIMEOUT_MS);
-    link.addEventListenerfunction("load", () { clearTimeout(t); resolve(); }, { once: true });
-    link.addEventListenerfunction("error", () { clearTimeout(t); reject(new Error("css-error")); }, { once: true });
+    const t = setTimeout(() => reject(new Error("css-timeout")), CSS_READY_TIMEOUT_MS);
+    link.addEventListener("load", () => { clearTimeout(t); resolve(); }, { once: true });
+    link.addEventListener("error", () => { clearTimeout(t); reject(new Error("css-error")); }, { once: true });
   });
 }
 
-document.addEventListenerfunction("click",
-  (ev) {
-    var btn = ev.target && (ev.target.id === "jfNotifModeToggle"
+document.addEventListener(
+  "click",
+  (ev) => {
+    const btn = ev.target && (ev.target.id === "jfNotifModeToggle"
                  ? ev.target
-                 : ev.target.closest.("#jfNotifModeToggle"));
+                 : ev.target.closest?.("#jfNotifModeToggle"));
     if (!btn) return;
     ev.preventDefault();
     ev.stopPropagation();
@@ -888,13 +1011,13 @@ document.addEventListenerfunction("click",
 );
 
 export function forcejfNotifBtnPointerEvents() {
-   var rafId = 0;
-   var apply = function() {
-     document.querySelectorAll('html .skinHeader').forEach(function(el) {
+   let rafId = 0;
+   const apply = () => {
+     document.querySelectorAll('html .skinHeader').forEach(el => {
        el.style.setProperty('pointer-events', 'all', 'important');
      });
 
-     var jfNotifBtnToggle = document.querySelector('#jfNotifBtn');
+     const jfNotifBtnToggle = document.querySelector('#jfNotifBtn');
      if (jfNotifBtnToggle) {
       jfNotifBtnToggle.style.setProperty('display', 'inline-flex', 'important');
       jfNotifBtnToggle.style.setProperty('pointer-events', 'all', 'important');
@@ -903,9 +1026,9 @@ export function forcejfNotifBtnPointerEvents() {
      }
    };
 
-  var queueApply = function() {
+  const queueApply = () => {
     if (rafId) return;
-    rafId = requestAnimationFramefunction(() {
+    rafId = requestAnimationFrame(() => {
       rafId = 0;
       apply();
     });
@@ -918,26 +1041,26 @@ export function forcejfNotifBtnPointerEvents() {
   }
 
   if (!__forcePEObs) {
-    var root = document.body || document.documentElement;
+    const root = document.body || document.documentElement;
     __forcePEObs = new MutationObserver(queueApply);
     __forcePEObs.observe(root, {
       subtree: true,
       childList: true
     });
-    window.addEventListenerfunction('pagehide', () { try { __forcePEObs.disconnect(); } catch {} __forcePEObs = null; }, { once: true });
+    window.addEventListener('pagehide', () => { try { __forcePEObs.disconnect(); } catch {} __forcePEObs = null; }, { once: true });
   }
 }
 
 function openModal() {
-  var liveConfig = getLiveConfig();
+  const liveConfig = getLiveConfig();
   clearHoverTimers();
-  var m = document.querySelector("#jfNotifModal");
+  const m = document.querySelector("#jfNotifModal");
   if (!m) return;
   syncResumeSectionVisibility();
   m.hidden = false;
   m.removeAttribute("aria-hidden");
   m.style.pointerEvents = "";
-  requestAnimationFramefunction(() m.classList.add("open"));
+  requestAnimationFrame(() => m.classList.add("open"));
   notifState.isModalOpen = true;
   renderNotifications();
   void ensureCastTabPresence();
@@ -949,7 +1072,7 @@ function openModal() {
 
  function closeModal() {
    clearHoverTimers();
-  var m = document.querySelector("#jfNotifModal");
+  const m = document.querySelector("#jfNotifModal");
   if (m) {
     m.classList.remove("open");
   }
@@ -957,8 +1080,8 @@ function openModal() {
   cleanupCastTabMount();
 
   if (notifState._systemAllowed && config.enableCounterSystem && Array.isArray(notifState.activities)) {
-    var newest = notifState.activities.reducefunction((acc, a) {
-      var ts = Date.parse(a.Date || "") || 0;
+    const newest = notifState.activities.reduce((acc, a) => {
+      const ts = Date.parse(a?.Date || "") || 0;
       return Math.max(acc, ts);
     }, 0);
     if (newest && newest > (notifState.activityLastSeen || 0)) {
@@ -971,7 +1094,7 @@ function openModal() {
 
 function isSystemCounterEnabled() {
   try {
-    var v = localStorage.getItem('enableCounterSystem');
+    const v = localStorage.getItem('enableCounterSystem');
     return v !== 'false';
   } catch {
     return !!config.enableCounterSystem;
@@ -979,25 +1102,25 @@ function isSystemCounterEnabled() {
 }
 
 function updateBadge() {
-  var badges = document.querySelectorAll(".jf-notif-badge");
-  var btns = document.querySelectorAll("#jfNotifBtn");
+  const badges = document.querySelectorAll(".jf-notif-badge");
+  const btns = document.querySelectorAll("#jfNotifBtn");
   if (!badges.length && !btns.length) return;
 
-  var contentUnread = notifState.list.reducefunction((acc, n) acc + (n.read ? 0 : 1), 0);
-  var lastSeenAct = Number(notifState.activityLastSeen || 0);
-  var sysEnabled = isSystemCounterEnabled();
-  var systemUnread = (notifState._systemAllowed && sysEnabled && Array.isArray(notifState.activities))
-    ? notifState.activities.reducefunction((acc, a) {
-        var ts = Date.parse(a.Date || "") || 0;
+  const contentUnread = notifState.list.reduce((acc, n) => acc + (n.read ? 0 : 1), 0);
+  const lastSeenAct = Number(notifState.activityLastSeen || 0);
+  const sysEnabled = isSystemCounterEnabled();
+  const systemUnread = (notifState._systemAllowed && sysEnabled && Array.isArray(notifState.activities))
+    ? notifState.activities.reduce((acc, a) => {
+        const ts = Date.parse(a?.Date || "") || 0;
         return acc + (ts > lastSeenAct ? 1 : 0);
       }, 0)
     : 0;
 
-  var total = contentUnread + systemUnread;
-  var label = total > 99 ? "99+" : String(total);
-  var show = total > 0;
+  const total = contentUnread + systemUnread;
+  const label = total > 99 ? "99+" : String(total);
+  const show = total > 0;
 
-  btns.forEach(function(btn) {
+  btns.forEach(btn => {
     btn.setAttribute("data-count", label);
     if (show) {
       btn.setAttribute("data-has-notifs", "true");
@@ -1006,7 +1129,7 @@ function updateBadge() {
     }
   });
 
-    badges.forEach(function(badge) {
+    badges.forEach(badge => {
     badge.textContent = show ? label : "";
     badge.setAttribute("data-count", show ? label : "");
     badge.setAttribute("aria-hidden", show ? "false" : "true");
@@ -1015,61 +1138,85 @@ function updateBadge() {
   });
 }
 
-function renderNotifications() {
-  var ul = document.querySelector("#jfNotifList");
+async function renderNotifications() {
+  const ul = document.querySelector("#jfNotifList");
   if (!ul) return;
   void ensureCastTabPresence();
-  var gen = ++notifRenderGen;
-  var map = new Map();
-  for (var n of notifState.list) {
-    var key = (n.itemId || "none") + ":" + (n.status || "added");
-    var prev = map.get(key);
+  const gen = ++notifRenderGen;
+  const map = new Map();
+  for (const n of notifState.list) {
+    const key = `${n.itemId || "none"}:${n.status || "added"}`;
+    const prev = map.get(key);
     if (!prev || (n.timestamp || 0) > (prev.timestamp || 0)) map.set(key, n);
   }
-  var compact = Array.from(map.values());
-  var items = compact.sortfunction((a,b) (b.timestamp||0)-(a.timestamp||0)).slice(0, MAX_NOTIFS);
+  const compact = Array.from(map.values());
+  let items = compact.sort((a,b)=> (b.timestamp||0)-(a.timestamp||0)).slice(0, MAX_NOTIFS);
 
-var updates = items.filter(function(n) n.status === "update");
-var normals = items.filter(function(n) n.status !== "update");
+const updates = items.filter(n => n.status === "update");
+const normals = items.filter(n => n.status !== "update");
 items = [...updates, ...normals];
 
   if (items.length === 0) {
-    ul.innerHTML = "\n      <li class=\"jf-notif-empty\">\n        <i class=\"fa-solid fa-box-open\" aria-hidden=\"true\"></i>\n        <span>" + (config.languageLabels.noNewContent || "Sem novos conteúdos.") + "</span>\n      </li>";
+    ul.innerHTML = `
+      <li class="jf-notif-empty">
+        <i class="fa-solid fa-box-open" aria-hidden="true"></i>
+        <span>${config.languageLabels.noNewContent || "Yeni içerik yok."}</span>
+      </li>`;
     return;
   }
 
-  var idList = items.map(function(n) n.itemId).filter(Boolean);
-  var { found } = idList.length ? fetchItemsBulk(idList) : { found: new Map() };
+  const idList = items.map(n => n.itemId).filter(Boolean);
+  const { found } = idList.length ? await fetchItemsBulk(idList) : { found: new Map() };
 
 function getDetailFor(n) {
-  var d = n.itemId ? (found.get(n.itemId) || null) : null;
+  const d = n.itemId ? (found.get(n.itemId) || null) : null;
   return { ok: !!d, data: d };
 }
 
   function pickVideoStream(ms) {
-  return Array.isArray(ms) ? ms.find(function(s) s.Type === "Video") : null;
+  return Array.isArray(ms) ? ms.find(s => s.Type === "Video") : null;
 }
 
   if (gen !== notifRenderGen) return;
 
   ul.innerHTML = "";
-  var frag = document.createDocumentFragment();
+  const frag = document.createDocumentFragment();
 
-  items.forEach(function((n, i) {
-  var li = document.createElement("li");
-  var isUpdate = (n.status === "update");
+  items.forEach((n, i) => {
+  const li = document.createElement("li");
+  const isUpdate = (n.status === "update");
   if (isUpdate) {
   li.className = "jf-notif-item jf-notif-update";
-  li.innerHTML = "\n    <div class=\"meta\">\n      <div class=\"title\">\n        <span class=\"jf-badge jf-badge-update\" title=\"" + (config.languageLabels.updateAvailable || 'Nova atualização disponível') + "\">\n          <i class=\"fa-solid fa-arrows-rotate\"></i>\n        </span>\n        ${escapeHtml(n.title || "${config.languageLabels.updateAvailable || "Nova atualização disponível"}")}\n        ${!n.read ? "<span class="jf-pill-unread">${escapeHtml(config.languageLabels.unread || "Novo")}</span>" : \"\"}\n      </div>\n      <div class=\"time\">" + (formatTime(n.timestamp)) + "</div>\n    </div>\n    <div class=\"actions\">\n      <a class=\"lnk\" target=\"_blank\" rel=\"noopener\" href=\"" + (escapeHtml(n.url || "https://github.com/G-grbz/Jellyfin-MonWUI-Plugin/releases")) + "\">\n        " + (escapeHtml(config.languageLabels.viewOnGithub || "Ver no GitHub / Baixar")) + "\n      </a>\n      ${!n.read ? "
-        <button class="mark-read" title="${config.languageLabels.markRead || 'Marcar como lida'}">
+  li.innerHTML = `
+    <div class="meta">
+      <div class="title">
+        <span class="jf-badge jf-badge-update" title="${config.languageLabels?.updateAvailable || 'Yeni sürüm mevcut'}">
+          <i class="fa-solid fa-arrows-rotate"></i>
+        </span>
+        ${escapeHtml(n.title || `${config.languageLabels?.updateAvailable || "Yeni sürüm mevcut"}`)}
+        ${!n.read ? `<span class="jf-pill-unread">${escapeHtml(config.languageLabels?.unread || "Yeni")}</span>` : ""}
+      </div>
+      <div class="time">${formatTime(n.timestamp)}</div>
+    </div>
+    <div class="actions">
+      <a class="lnk" target="_blank" rel="noopener" href="${escapeHtml(n.url || "https://github.com/G-grbz/Jellyfin-MonWUI-Plugin/releases")}">
+        ${escapeHtml(config.languageLabels?.viewOnGithub || "GitHub’da Gör / İndir")}
+      </a>
+      ${!n.read ? `
+        <button class="mark-read" title="${config.languageLabels?.markRead || 'Okundu say'}">
           <i class="fa-solid fa-envelope-open"></i>
-        </button>" : \"\"}\n      <button class=\"del\" title=\"" + (escapeHtml(config.languageLabels.removeTooltip || 'Remover')) + "\">\n        <i class=\"fa-solid fa-circle-xmark\"></i>\n      </button>\n    </div>\n  ";
+        </button>` : ""}
+      <button class="del" title="${escapeHtml(config.languageLabels?.removeTooltip || 'Kaldır')}">
+        <i class="fa-solid fa-circle-xmark"></i>
+      </button>
+    </div>
+  `;
 
-  li.querySelector(".mark-read").addEventListenerfunction("click", (ev) {
+  li.querySelector(".mark-read")?.addEventListener("click", (ev) => {
     ev.stopPropagation();
     markNotificationRead(n.id);
   });
-  li.querySelector(".del").addEventListenerfunction("click", (ev) {
+  li.querySelector(".del")?.addEventListener("click", (ev) => {
     ev.stopPropagation();
     removeNotification(n.id);
   });
@@ -1080,62 +1227,79 @@ function getDetailFor(n) {
 
     li.className = "jf-notif-item";
 
-  var d = getDetailFor(n);
-  var status = n.status === "removed" ? "removed" : "added";
-  var statusLabel = status === "removed"
-    ? (config.languageLabels.removedLabel || "Removido")
-    : (config.languageLabels.addedLabel || "Adicionado");
+  const d = getDetailFor(n);
+  const status = n.status === "removed" ? "removed" : "added";
+  const statusLabel = status === "removed"
+    ? (config.languageLabels.removedLabel || "Kaldırıldı")
+    : (config.languageLabels.addedLabel || "Eklendi");
 
-  var title = n.title || config.languageLabels.newContentDefault;
+  let title = n.title || config.languageLabels.newContentDefault;
 
-  if (d.ok && d.data.Type === "Episode") {
-    var seriesName  = d.data.SeriesName || "";
-    var seasonNum   = d.data.ParentIndexNumber || 0;
-    var episodeNum  = d.data.IndexNumber || 0;
-    var episodeName = d.data.Name || "";
+  if (d.ok && d.data?.Type === "Episode") {
+    const seriesName  = d.data.SeriesName || "";
+    const seasonNum   = d.data.ParentIndexNumber || 0;
+    const episodeNum  = d.data.IndexNumber || 0;
+    const episodeName = d.data.Name || "";
     title = formatEpisodeHeading({
       seriesName,
       seasonNum,
       episodeNum,
       episodeTitle: episodeName,
-      locale: (config.defaultLanguage || "pt-br"),
+      locale: (config.defaultLanguage || "tur"),
       labels: config.languageLabels || {}
     });
-  } else if (d.ok && d.data.Type === "Episode" && d.data.SeriesName) {
-    title = (d.data.SeriesName) + " - " + (title);
+  } else if (d.ok && d.data?.Type === "Episode" && d.data?.SeriesName) {
+    title = `${d.data.SeriesName} - ${title}`;
   }
 
-  var imgSrc = safePosterImageSrc(d.ok ? d.data : null, 80, 80);
-  var vStream = d.ok ? (Array.isArray(d.data.MediaStreams) ? d.data.MediaStreams.find(function(s) s.Type === "Video") : null) : null;
-  var qualityHtml = vStream ? getVideoQualityText(vStream) : "";
+  const imgSrc = safePosterImageSrc(d.ok ? d.data : null, 80, 80);
+  const vStream = d.ok ? (Array.isArray(d.data?.MediaStreams) ? d.data.MediaStreams.find(s => s.Type === "Video") : null) : null;
+  const qualityHtml = vStream ? getVideoQualityText(vStream) : "";
 
-  var isUnread = !n.read;
+  const isUnread = !n.read;
   if (isUnread) li.classList.add("unread");
 
-  li.innerHTML = "\n  ${imgSrc ? "<img class="thumb" src="${escapeHtml(jfUrl(imgSrc))}" alt="" onerror="this.style.display='none'">" : \"\"}\n    <div class=\"meta\">\n      <div class=\"title\">\n        <span class=\"jf-badge " + (status === "removed" ? "jf-badge-removed" : "jf-badge-added") + "\">" + (escapeHtml(statusLabel)) + "</span>\n        " + (escapeHtml(title)) + "\n        ${isUnread ? "<span class="jf-pill-unread">${escapeHtml(config.languageLabels.unread || "Novo")}</span>" : \"\"}\n      </div>\n      <div class=\"time\">" + (formatTime(n.timestamp)) + "</div>\n      ${qualityHtml ? "<div class="quality">${qualityHtml}</div>" : \"\"}\n    </div>\n    <div class=\"actions\">\n      ${isUnread ? "
-        <button class="mark-read" title="${config.languageLabels.markRead || 'Marcar como lida'}">
+  li.innerHTML = `
+  ${imgSrc ? `<img class="thumb" src="${escapeHtml(jfUrl(imgSrc))}" alt="" onerror="this.style.display='none'">` : ""}
+    <div class="meta">
+      <div class="title">
+        <span class="jf-badge ${status === "removed" ? "jf-badge-removed" : "jf-badge-added"}">${escapeHtml(statusLabel)}</span>
+        ${escapeHtml(title)}
+        ${isUnread ? `<span class="jf-pill-unread">${escapeHtml(config.languageLabels?.unread || "Yeni")}</span>` : ""}
+      </div>
+      <div class="time">${formatTime(n.timestamp)}</div>
+      ${qualityHtml ? `<div class="quality">${qualityHtml}</div>` : ""}
+    </div>
+    <div class="actions">
+      ${isUnread ? `
+        <button class="mark-read" title="${config.languageLabels?.markRead || 'Okundu say'}">
           <i class="fa-solid fa-envelope-open"></i>
-        </button>" : \"\"}\n      <button class=\"del\" title=\"" + (escapeHtml(config.languageLabels.removeTooltip || 'Remover')) + "\">\n        <i class=\"fa-solid fa-circle-xmark\"></i>\n      </button>\n    </div>\n  ";
+        </button>` : ""}
+      <button class="del" title="${escapeHtml(config.languageLabels?.removeTooltip || 'Kaldır')}">
+        <i class="fa-solid fa-circle-xmark"></i>
+      </button>
+    </div>
+  `;
 
-  li.querySelector(".mark-read").addEventListenerfunction("click", (ev) {
+  li.querySelector(".mark-read")?.addEventListener("click", (ev) => {
     ev.stopPropagation();
     markNotificationRead(n.id);
   });
 
   if (status !== "removed" && n.itemId) {
-    li.addEventListenerfunction("click", () {
+    li.addEventListener("click", async () => {
       markNotificationRead(n.id, { silent: true });
       try {
-        var openPromise = openDetailsModal({ itemId: n.itemId, originEl: li });
+        const openPromise = openDetailsModal({ itemId: n.itemId, originEl: li });
         closeModal();
-        openPromise;
+        await openPromise;
       } catch (err) {
         console.error("notification details modal open error:", err);
       }
     });
   }
 
-  li.querySelector(".del").addEventListenerfunction("click", (ev) {
+  li.querySelector(".del").addEventListener("click", (ev) => {
     ev.stopPropagation();
     removeNotification(n.id);
   });
@@ -1148,7 +1312,7 @@ function getDetailFor(n) {
 }
 
 function scrollToLastItem() {
-    var list = document.querySelector('.jf-notif-list');
+    const list = document.querySelector('.jf-notif-list');
     if (list && list.lastElementChild) {
         list.lastElementChild.scrollIntoView({
             behavior: 'smooth',
@@ -1158,105 +1322,114 @@ function scrollToLastItem() {
 }
 
 function formatTimeLeft(sec) {
-  var labels = getLiveLabels();
-  var h = Math.floor(sec / 3600);
-  var m = Math.floor((sec % 3600) / 60);
-  var s = Math.floor(sec % 60);
-  var parts = [];
-  if (h > 0) parts.push((h) + (labels.h || "h"));
-  if (m > 0) parts.push((m) + (labels.min || "m"));
-  if (s > 0) parts.push((s) + (labels.s || "s"));
+  const labels = getLiveLabels();
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = Math.floor(sec % 60);
+  const parts = [];
+  if (h > 0) parts.push(`${h}${labels.sa || "sa"}`);
+  if (m > 0) parts.push(`${m}${labels.dk || "dk"}`);
+  if (s > 0) parts.push(`${s}${labels.sn || "sn"}`);
   return parts.join(" ");
 }
 
-function renderResume() {
-  var liveConfig = getLiveConfig();
-  var labels = liveConfig.languageLabels || {};
+async function renderResume() {
+  const liveConfig = getLiveConfig();
+  const labels = liveConfig.languageLabels || {};
   if (liveConfig.enableRenderResume === false) return;
 
-  var container = document.querySelector("#jfResumeList");
+  const container = document.querySelector("#jfResumeList");
   if (!container) return;
-  container.innerHTML = "<div class=\"jf-loading\">" + (labels.loadingText || "Carregando...") + "</div>";
+  container.innerHTML = `<div class="jf-loading">${labels.loadingText || "Yukleniyor..."}</div>`;
   try {
-    var authReady = waitForAuthReady(5000);
+    const authReady = await waitForAuthReady(5000);
     if (!authReady) {
-      setTimeoutfunction(() { renderResume().catchfunction(() {}); }, AUTH_RETRY_INTERVAL_MS);
+      setTimeout(() => { renderResume().catch(() => {}); }, AUTH_RETRY_INTERVAL_MS);
       return;
     }
 
-    var { userId } = getSessionInfo();
+    const { userId } = getSessionInfo();
     if (!userId) {
-      setTimeoutfunction(() { renderResume().catchfunction(() {}); }, AUTH_RETRY_INTERVAL_MS);
+      setTimeout(() => { renderResume().catch(() => {}); }, AUTH_RETRY_INTERVAL_MS);
       return;
     }
 
-    var data = makeApiRequest(
-      "/Users/" + (encodeURIComponent(userId)) + "/Items?Filters=IsResumable&MediaTypes=Video&Recursive=true&EnableUserData=true&Fields=" + (encodeURIComponent("UserData,RunTimeTicks,ImageTags,PrimaryImageAspectRatio,BackdropImageTags,ParentBackdropItemId,ParentBackdropImageTags,SeriesId,SeriesName")) + "&SortBy=DatePlayed,DateCreated&SortOrder=Descending&Limit=" + (Math.max(10, Number(liveConfig.renderResume || 10) * 3))
+    const data = await makeApiRequest(
+      `/Users/${encodeURIComponent(userId)}/Items?Filters=IsResumable&MediaTypes=Video&Recursive=true&EnableUserData=true&Fields=${encodeURIComponent("UserData,RunTimeTicks,ImageTags,PrimaryImageAspectRatio,BackdropImageTags,ParentBackdropItemId,ParentBackdropImageTags,SeriesId,SeriesName")}&SortBy=DatePlayed,DateCreated&SortOrder=Descending&Limit=${Math.max(10, Number(liveConfig.renderResume || 10) * 3)}`
     );
-    var items = (Array.isArray(data.Items) ? data.Items : [])
-      .filterfunction((it) Number(it.UserData.PlaybackPositionTicks || 0) > 0)
+    const items = (Array.isArray(data?.Items) ? data.Items : [])
+      .filter((it) => Number(it?.UserData?.PlaybackPositionTicks || 0) > 0)
       .slice(0, liveConfig.renderResume || 10);
     if (!items.length) {
-      container.innerHTML = "<div class=\"jf-empty\">" + (labels.noUnfinishedContent || "Nenhum conteúdo pendente.") + "</div>";
+      container.innerHTML = `<div class="jf-empty">${labels.noUnfinishedContent || "Yarim kalan icerik yok."}</div>`;
       return;
     }
 
-    var details = Promise.all(
-      items.map(function(it) fetchItemDetails(it.Id).catchfunction(() null))
+    const details = await Promise.all(
+      items.map(it => fetchItemDetails(it.Id).catch(() => null))
     );
 
     container.innerHTML = "";
-    items.forEach(function((it, idx) {
-      var card = document.createElement("div");
+    items.forEach((it, idx) => {
+      const card = document.createElement("div");
       card.className = "jf-resume-card";
 
-      var pct = Math.round(((it.UserData.PlaybackPositionTicks || 0) / (it.RunTimeTicks || 1)) * 100);
-      var totalSec = (it.RunTimeTicks || 0) / 10_000_000;
-      var playedSec = (it.UserData.PlaybackPositionTicks || 0) / 10_000_000;
-      var remainingSec = Math.max(totalSec - playedSec, 0);
-      var d = details[idx];
-      var vStream = d && Array.isArray(d.MediaStreams) ? d.MediaStreams.find(function(s) s.Type === "Video") : null;
-      var qualityHtml = vStream ? getVideoQualityText(vStream) : "";
+      const pct = Math.round(((it?.UserData?.PlaybackPositionTicks || 0) / (it?.RunTimeTicks || 1)) * 100);
+      const totalSec = (it.RunTimeTicks || 0) / 10_000_000;
+      const playedSec = (it?.UserData?.PlaybackPositionTicks || 0) / 10_000_000;
+      const remainingSec = Math.max(totalSec - playedSec, 0);
+      const d = details[idx];
+      const vStream = d && Array.isArray(d.MediaStreams) ? d.MediaStreams.find(s => s.Type === "Video") : null;
+      const qualityHtml = vStream ? getVideoQualityText(vStream) : "";
 
-      card.innerHTML = "\n        ${hasPrimaryImage(it) ? "<img class="poster" src="${escapeHtml(jfUrl(safePosterImageSrc(it, 160, 80)))}" alt="">" : \"\"}\n        <div class=\"resume-meta\">\n          <div class=\"name\">" + (escapeHtml(it.Name || labels.newContentDefault || "Novo Conteúdo")) + "</div>\n          ${qualityHtml ? "<div class="quality">${qualityHtml}</div>" : \"\"}\n          <div class=\"progress\"><div class=\"bar\" style=\"width:" + (Math.min(pct,100)) + "%\"></div></div>\n          <div class=\"time-left\">" + (formatTimeLeft(remainingSec)) + " " + (labels.remaining || "restante") + "</div>\n          <button class=\"resume-btn\">" + (labels.continue || "Continuar") + "</button>\n        </div>\n      ";
-      card.querySelector(".resume-btn").addEventListenerfunction("click", () {
+      card.innerHTML = `
+        ${hasPrimaryImage(it) ? `<img class="poster" src="${escapeHtml(jfUrl(safePosterImageSrc(it, 160, 80)))}" alt="">` : ""}
+        <div class="resume-meta">
+          <div class="name">${escapeHtml(it.Name || labels.newContentDefault || "Yeni Icerik")}</div>
+          ${qualityHtml ? `<div class="quality">${qualityHtml}</div>` : ""}
+          <div class="progress"><div class="bar" style="width:${Math.min(pct,100)}%"></div></div>
+          <div class="time-left">${formatTimeLeft(remainingSec)} ${labels.kaldi || "kaldi"}</div>
+          <button class="resume-btn">${labels.devamet || "Devam Et"}</button>
+        </div>
+      `;
+      card.querySelector(".resume-btn").addEventListener("click", () => {
         playNow(it.Id);
         closeModal();
       });
       container.appendChild(card);
     });
   } catch (e) {
-    console.error("Não foi possível obter a lista de resumo:", e);
-    container.innerHTML = "<div class=\"jf-error\">" + (labels.listError || "Falha ao carregar lista.") + "</div>";
+    console.error("Resume listesi alınamadı:", e);
+    container.innerHTML = `<div class="jf-error">${labels.listError || "Liste yuklenemedi."}</div>`;
   }
 }
 
-function pollLatest({ seedIfFirstRun = false } = {}) {
+async function pollLatest({ seedIfFirstRun = false } = {}) {
   if (!isAuthReady()) return;
   if (!notifState.seenIds) notifState.seenIds = new Set();
   try {
-    var items = fetchLatestAll();
+    const items = await fetchLatestAll();
     if (!items.length) return;
 
-    var newestTs = clampToNowfunction(items.reduce((acc, it) Math.max(acc, getCreatedTs(it)), 0));
+    const newestTs = clampToNow(items.reduce((acc, it) => Math.max(acc, getCreatedTs(it)), 0));
 
     if (seedIfFirstRun && (!notifState.lastSeenCreatedAt || notifState.seenIds.size === 0)) {
-      items.forEach(function(it) notifState.seenIds.add(it.Id));
+      items.forEach(it => notifState.seenIds.add(it.Id));
       notifState.lastSeenCreatedAt = newestTs || Date.now();
       saveState();
       updateBadge();
       return;
     }
 
-    var fresh = items
-     .filter(function(it)
+    const fresh = items
+     .filter(it =>
        !notifState.seenIds.has(it.Id) ||
        getCreatedTs(it) > (notifState.lastSeenCreatedAt || 0)
      )
-      .sortfunction((a, b) getCreatedTs(a) - getCreatedTs(b));
+      .sort((a, b) => getCreatedTs(a) - getCreatedTs(b));
 
-    var nowTs = Date.now();
-    for (var it of fresh) {
+    const nowTs = Date.now();
+    for (const it of fresh) {
       pushNotification({
         itemId: it.Id,
         title: it.Name || config.languageLabels.newContentDefault,
@@ -1266,11 +1439,11 @@ function pollLatest({ seedIfFirstRun = false } = {}) {
       notifState.seenIds.add(it.Id);
     }
 
-    var TOAST_GROUP_THRESHOLD = config.toastGroupThreshold || 5;
+    const TOAST_GROUP_THRESHOLD = config.toastGroupThreshold || 5;
     if (fresh.length >= TOAST_GROUP_THRESHOLD) {
       enqueueToastGroup(fresh);
     } else {
-      for (var it of fresh) queueToast(it);
+      for (const it of fresh) queueToast(it);
     }
 
     if (newestTs) {
@@ -1293,14 +1466,14 @@ function pollLatest({ seedIfFirstRun = false } = {}) {
 }
 
 function pushNotification(n) {
-  var ts = n.timestamp || Date.now();
-  var key = (n.itemId || "none") + ":" + (n.status || "added");
+  const ts = n.timestamp || Date.now();
+  const key = `${n.itemId || "none"}:${n.status || "added"}`;
 
-  notifState.list = notifState.list.filter(function(item)
+  notifState.list = notifState.list.filter(item =>
     !(item.itemId === n.itemId && item.status === n.status)
   );
 
-  var id = (n.itemId || n.id || Math.random().toString(36).slice(2)) + ":" + (ts);
+  const id = `${n.itemId || n.id || Math.random().toString(36).slice(2)}:${ts}`;
   notifState.list.unshift({
     id,
     itemId: n.itemId,
@@ -1318,8 +1491,8 @@ function pushNotification(n) {
 }
 
 function removeNotification(id) {
-  var before = notifState.list.length;
-  notifState.list = notifState.list.filter(function(n) n.id !== id);
+  const before = notifState.list.length;
+  notifState.list = notifState.list.filter(n => n.id !== id);
   if (notifState.list.length !== before) {
     saveState();
     renderNotifications();
@@ -1341,20 +1514,20 @@ function queueToast(it, { type = "content", status = "added" } = {}) {
   if (type === "content" && !config.enableToastNew) return;
   if (type === "activity" && !config.enableToastSystem) return;
 
-  var key = (type) + ":" + (status) + ":" + (it.Id || it.ItemId || it.id || it.Name);
+  const key = `${type}:${status}:${it.Id || it.ItemId || it.id || it.Name}`;
   if (!toastShouldEnqueue(key)) return;
 
-  var useId = it.Id || it.ItemId;
-  var safeStatus = status === "removed" ? "removed" : "added";
-  var push = function(resolved) {
-   var merged = resolved ? { ...it, ...resolved } : { ...it };
-   if (!merged.Name && resolved.Name) merged.Name = resolved.Name;
+  const useId = it.Id || it.ItemId;
+  const safeStatus = status === "removed" ? "removed" : "added";
+  const push = (resolved) => {
+   const merged = resolved ? { ...it, ...resolved } : { ...it };
+   if (!merged.Name && resolved?.Name) merged.Name = resolved.Name;
    notifState.toastQueue.push({ type, it: merged, status: safeStatus });
     runToastQueue();
   };
 
   if (useId) {
-    fetchItemDetails(useId).then(push).catchfunction(() {
+    fetchItemDetails(useId).then(push).catch(() => {
       notifState.toastQueue.push({ type, it, status: safeStatus });
       runToastQueue();
     });
@@ -1368,10 +1541,10 @@ function enqueueToastBurst(items, { type = "content" } = {}) {
   if (type === "content" && !config.enableToastNew) return;
   if (type === "activity" && !config.enableToastSystem) return;
 
-  var seen = new Set();
-  var uniq = [];
-  for (var it of items) {
-    var k = (type) + ":" + (it.Id);
+  const seen = new Set();
+  const uniq = [];
+  for (const it of items) {
+    const k = `${type}:${it.Id}`;
     if (seen.has(k)) continue;
     seen.add(k);
     if (!toastShouldEnqueue(k)) continue;
@@ -1394,17 +1567,17 @@ function enqueueToastGroup(items, { type = "content" } = {}) {
   if (type === "content" && !config.enableToastNew) return;
   if (!Array.isArray(items) || items.length === 0) return;
 
-  var seen = new Set();
-  var uniq = [];
-  for (var it of items) {
-    var id = it.Id || it.ItemId || it.id || it.Name;
+  const seen = new Set();
+  const uniq = [];
+  for (const it of items) {
+    const id = it?.Id || it?.ItemId || it?.id || it?.Name;
     if (!id || seen.has(id)) continue;
     seen.add(id);
     uniq.push(it);
   }
   if (!uniq.length) return;
 
-  var head = uniq.slice(0, 4);
+  const head = uniq.slice(0, 4);
   notifState.toastQueue.push({
     type: "content-group",
     items: head,
@@ -1425,11 +1598,11 @@ function runToastQueue() {
   if (notifState.toastQueue.length > TOAST_QUEUE_MAX) {
     notifState.toastQueue = notifState.toastQueue.slice(-TOAST_QUEUE_MAX);
   }
-  var next = notifState.toastQueue.shift();
+  const next = notifState.toastQueue.shift();
   if (!next) return;
 
-  var { type, it, status = "added", items, total } = next;
-  var c = document.querySelector("#jfToastContainer");
+  const { type, it, status = "added", items, total } = next;
+  const c = document.querySelector("#jfToastContainer");
   if (!c) {
     notifState.toastQueue.unshift(next);
     setTimeout(runToastQueue, 500);
@@ -1438,72 +1611,102 @@ function runToastQueue() {
 
   notifState.toastShowing = true;
 
-  var toast = document.createElement("div");
+  const toast = document.createElement("div");
   toast.className = "jf-toast" + (type === "activity" ? " jf-toast-activity" : "");
 
   if (type === "content-group") {
-    var arr = Array.isArray(items) ? items : [];
-    var first = arr[0] || {};
-    var firstPoster = hasPrimaryImage(first) ? safePosterImageSrc(first, 80, 80) : "";
-    var next3 = arr.slice(1, 4);
-    var restCount = Math.max((total || arr.length) - arr.length, 0);
+    const arr = Array.isArray(items) ? items : [];
+    const first = arr[0] || {};
+    const firstPoster = hasPrimaryImage(first) ? safePosterImageSrc(first, 80, 80) : "";
+    const next3 = arr.slice(1, 4);
+    const restCount = Math.max((total || arr.length) - arr.length, 0);
 
-    var statusLabel = (config.languageLabels.addedLabel || "Adicionado");
-    var firstName = escapeHtml(first.Name || config.languageLabels.newContentDefault);
-    var namesList = next3.map(function(x) "<li>" + (escapeHtml(x.Name || "")) + "</li>").join("");
-    var moreHtml = restCount > 0 ? "<div class=\"more\">" + (escapeHtml(moreItemsLabel(restCount))) + "</div>" : "";
+    const statusLabel = (config.languageLabels.addedLabel || "Eklendi");
+    const firstName = escapeHtml(first?.Name || config.languageLabels.newContentDefault);
+    const namesList = next3.map(x => `<li>${escapeHtml(x?.Name || "")}</li>`).join("");
+    const moreHtml = restCount > 0 ? `<div class="more">${escapeHtml(moreItemsLabel(restCount))}</div>` : "";
 
-    toast.innerHTML = "\n     ${firstPoster ? "<img class="thumb" src="${escapeHtml(jfUrl(firstPoster))}" alt="" onerror="this.style.display='none'">" : \"\"}\n      <div class=\"text\">\n        <b>\n          <span class=\"jf-badge jf-badge-added\">" + (escapeHtml(statusLabel)) + "</span>\n          " + (escapeHtml(config.languageLabels.newContentAdded)) + "\n        </b><br>\n        " + (firstName) + "\n        ${namesList ? "<ul class="names">${namesList}</ul>" : \"\"}\n        " + (moreHtml) + "\n      </div>\n    ";
-    toast.addEventListenerfunction("click", () {
+    toast.innerHTML = `
+     ${firstPoster ? `<img class="thumb" src="${escapeHtml(jfUrl(firstPoster))}" alt="" onerror="this.style.display='none'">` : ""}
+      <div class="text">
+        <b>
+          <span class="jf-badge jf-badge-added">${escapeHtml(statusLabel)}</span>
+          ${escapeHtml(config.languageLabels.newContentAdded)}
+        </b><br>
+        ${firstName}
+        ${namesList ? `<ul class="names">${namesList}</ul>` : ""}
+        ${moreHtml}
+      </div>
+    `;
+    toast.addEventListener("click", () => {
       if (typeof openModal === "function") openModal();
     });
 
   } else if (type === "update") {
-    var title = it.Name || (config.languageLabels.updateAvailable || "Nova versão disponível");
-    var desc  = it.Overview ? " – " + (escapeHtml(it.Overview)) : "";
-    toast.innerHTML = "\n      <div class=\"text\">\n        <b>" + (escapeHtml(title)) + "</b><br>\n        " + (desc) + "\n      </div>\n    ";
-    if (it.Url) {
+    const title = it?.Name || (config.languageLabels.updateAvailable || "Yeni sürüm mevcut");
+    const desc  = it?.Overview ? ` – ${escapeHtml(it.Overview)}` : "";
+    toast.innerHTML = `
+      <div class="text">
+        <b>${escapeHtml(title)}</b><br>
+        ${desc}
+      </div>
+    `;
+    if (it?.Url) {
       toast.style.cursor = "pointer";
-      toast.addEventListenerfunction("click", () window.open(it.Url, "_blank", "noopener"));
+      toast.addEventListener("click", () => window.open(it.Url, "_blank", "noopener"));
     }
 
     } else if (type === "content") {
-    var displayName = it.Name || "";
+    let displayName = it.Name || "";
     if (it.Type === "Episode") {
       displayName = formatEpisodeHeading({
         seriesName: it.SeriesName || "",
         seasonNum: it.ParentIndexNumber || 0,
         episodeNum: it.IndexNumber || 0,
         episodeTitle: it.Name || "",
-        locale: (config.defaultLanguage || "pt-br"),
+        locale: (config.defaultLanguage || "tur"),
         labels: config.languageLabels || {}
       });
     }
-    var statusLabel = status === "removed"
-      ? (config.languageLabels.removedLabel || "Removido")
-      : (config.languageLabels.addedLabel || "Adicionado");
-   toast.innerHTML = "\n    ${status !== \"removed\" ? "<img class="thumb" src="${escapeHtml(jfUrl(safePosterImageSrc(it, 80, 80)))}" alt="" onerror="this.style.display='none'">" : \"\"}\n     <div class=\"text\">\n       <b>\n         <span class=\"jf-badge " + (status === "removed" ? "jf-badge-removed" : "jf-badge-added") + "\">" + (escapeHtml(statusLabel)) + "</span>\n         " + (status === "removed" ? (config.languageLabels.contentChanged || "Conteúdo alterado") : config.languageLabels.newContentAdded) + "\n       </b><br>\n       " + (escapeHtml(displayName)) + "\n     </div>\n   ";
+    const statusLabel = status === "removed"
+      ? (config.languageLabels.removedLabel || "Kaldırıldı")
+      : (config.languageLabels.addedLabel || "Eklendi");
+   toast.innerHTML = `
+    ${status !== "removed" ? `<img class="thumb" src="${escapeHtml(jfUrl(safePosterImageSrc(it, 80, 80)))}" alt="" onerror="this.style.display='none'">` : ""}
+     <div class="text">
+       <b>
+         <span class="jf-badge ${status === "removed" ? "jf-badge-removed" : "jf-badge-added"}">${escapeHtml(statusLabel)}</span>
+         ${status === "removed" ? (config.languageLabels.contentChanged || "İçerik değişti") : config.languageLabels.newContentAdded}
+       </b><br>
+       ${escapeHtml(displayName)}
+     </div>
+   `;
   if (status !== "removed") {
-    toast.addEventListenerfunction("click", () it.Id && playNow(it.Id));
+    toast.addEventListener("click", () => it.Id && playNow(it.Id));
   }
 } else {
-  var title = it.Name || it.Type || (config.languageLabels.systemNotifications || "Notificação do Sistema");
-  var desc = it.Overview ? " – " + (escapeHtml(it.Overview)) : "";
-  toast.innerHTML = "\n    <div class=\"text\">\n      <b>" + (config.languageLabels.systemNotificationAdded || "Notificação do sistema") + "</b><br>\n      " + (escapeHtml(title)) + (desc) + "\n    </div>\n  ";
-  if (it.Url) {
+  const title = it?.Name || it?.Type || (config.languageLabels.systemNotifications || "Sistem Bildirimi");
+  const desc = it?.Overview ? ` – ${escapeHtml(it.Overview)}` : "";
+  toast.innerHTML = `
+    <div class="text">
+      <b>${config.languageLabels.systemNotificationAdded || "Sistem bildirimi"}</b><br>
+      ${escapeHtml(title)}${desc}
+    </div>
+  `;
+  if (it?.Url) {
     toast.style.cursor = "pointer";
-    toast.addEventListenerfunction("click", () window.open(it.Url, "_blank", "noopener"));
+    toast.addEventListener("click", () => window.open(it.Url, "_blank", "noopener"));
   }
 }
 
   c.appendChild(toast);
-  requestAnimationFramefunction(() toast.classList.add("show"));
+  requestAnimationFrame(() => toast.classList.add("show"));
 
-  setTimeoutfunction(() {
+  setTimeout(() => {
     toast.classList.remove("show");
-    setTimeoutfunction(() {
+    setTimeout(() => {
       c.removeChild(toast);
-      setTimeoutfunction(() {
+      setTimeout(() => {
         notifState.toastShowing = false;
         runToastQueue();
       }, TOAST_GAP_MS);
@@ -1513,13 +1716,13 @@ function runToastQueue() {
 
 function formatTime(ts) {
   try {
-    var d = new Date(ts);
+    const d = new Date(ts);
     return d.toLocaleString();
   } catch { return ""; }
 }
 
 function markActivityRead(a, { silent = false } = {}) {
-  var ts = Date.parse(a.Date || "") || 0;
+  const ts = Date.parse(a?.Date || "") || 0;
   if (ts > (notifState.activityLastSeen || 0)) {
     notifState.activityLastSeen = ts;
     saveState();
@@ -1529,42 +1732,42 @@ function markActivityRead(a, { silent = false } = {}) {
 }
 
 function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, function(m) ({
+  return String(s).replace(/[&<>"']/g, m => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   }[m]));
 }
 
-export function initNotifications() {
-  waitForAuthReady(15000);
+export async function initNotifications() {
+  await waitForAuthReady(15000);
   migrateNouserToUser();
-  notifState._systemAllowed = canReadActivityLog();
+  notifState._systemAllowed = await canReadActivityLog();
 
   loadState();
   ensureUI();
   ensureSystemTabPresence();
 
-  setTimeoutfunction(() {
-    var host = findHeaderContainer();
+  setTimeout(() => {
+    const host = findHeaderContainer();
     ensureNotifButtonIn(host.element, host.mode);
   }, 250);
-  setTimeoutfunction(() {
-    var host = findHeaderContainer();
+  setTimeout(() => {
+    const host = findHeaderContainer();
     ensureNotifButtonIn(host.element, host.mode);
   }, 750);
 
-  backfillFromLastSeen();
-  pollLatest({ seedIfFirstRun: true });
+  await backfillFromLastSeen();
+  await pollLatest({ seedIfFirstRun: true });
   if (notifState._systemAllowed) {
-    pollActivities({ seedIfFirstRun: true });
+    await pollActivities({ seedIfFirstRun: true });
     schedulePollActivities(POLL_INTERVAL_MS);
   }
 
   schedulePollLatest(POLL_INTERVAL_MS);
 
-  setIntervalfunction(() {
+  setInterval(async () => {
     if (document.hidden) return;
-    var before = !!notifState._systemAllowed;
-    var nowAllowed = canReadActivityLog();
+    const before = !!notifState._systemAllowed;
+    const nowAllowed = await canReadActivityLog();
     notifState._systemAllowed = !!nowAllowed;
     if (!before && nowAllowed) {
       ensureSystemTabPresence();
@@ -1573,20 +1776,20 @@ export function initNotifications() {
     }
   }, CAPABILITY_RECHECK_MS);
 
-  window.forceCheckNotifications = function() {
+  window.forceCheckNotifications = () => {
      pollLatest();
      if (notifState._systemAllowed) pollActivities();
    };
 
-   window.addEventListenerfunction("focus", () {
+   window.addEventListener("focus", () => {
      if (document.querySelector("#jfNotifModal.open")) {
        renderResume();
        if (notifState._systemAllowed) pollActivities();
      }
    });
 
-  var onVis = function() {
-    var hidden = document.hidden;
+  const onVis = () => {
+    const hidden = document.hidden;
     pollCtl.paused = hidden;
     if (hidden) {
       clearTimeout(pollCtl.latestTimer); pollCtl.latestTimer = null;
@@ -1602,10 +1805,10 @@ export function initNotifications() {
 function schedulePollLatest(delay = POLL_INTERVAL_MS) {
   if (pollCtl.paused) return;
   clearTimeout(pollCtl.latestTimer);
-  pollCtl.latestTimer = setTimeoutfunction(() {
+  pollCtl.latestTimer = setTimeout(async () => {
     if (pollCtl.latestRunning) return schedulePollLatest(1000);
     pollCtl.latestRunning = true;
-    try { pollLatest(); }
+    try { await pollLatest(); }
     catch (e) {  }
     finally {
       pollCtl.latestRunning = false;
@@ -1617,10 +1820,10 @@ function schedulePollLatest(delay = POLL_INTERVAL_MS) {
 function schedulePollActivities(delay = POLL_INTERVAL_MS) {
   if (pollCtl.paused) return;
   clearTimeout(pollCtl.actTimer);
-  pollCtl.actTimer = setTimeoutfunction(() {
+  pollCtl.actTimer = setTimeout(async () => {
     if (pollCtl.actRunning) return schedulePollActivities(1000);
     pollCtl.actRunning = true;
-    try { pollActivities(); }
+    try { await pollActivities(); }
     catch (e) {}
     finally {
       pollCtl.actRunning = false;
@@ -1629,27 +1832,27 @@ function schedulePollActivities(delay = POLL_INTERVAL_MS) {
   }, Math.max(500, delay));
 }
 
-function waitForSessionReady(timeoutMs = 7000) {
-  var start = Date.now();
+async function waitForSessionReady(timeoutMs = 7000) {
+  const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
-      var s = getSessionInfo();
+      const s = getSessionInfo();
       if (s && s.userId) return true;
     } catch {}
-    new Promise(function(r) setTimeout(r, 200));
+    await new Promise(r => setTimeout(r, 200));
   }
   return false;
 }
 
 function migrateNouserToUser() {
-  var uid = getSafeUserId();
+  const uid = getSafeUserId();
   if (!uid) return;
 
-  var parts = ["notifications", "lastSeenCreatedAt", "seenIds"];
-  for (var p of parts) {
-    var src = "jf:" + (p) + ":nouser";
-    var dst = "jf:" + (p) + ":" + (uid);
-    var v = localStorage.getItem(src);
+  const parts = ["notifications", "lastSeenCreatedAt", "seenIds"];
+  for (const p of parts) {
+    const src = `jf:${p}:nouser`;
+    const dst = `jf:${p}:${uid}`;
+    const v = localStorage.getItem(src);
     if (v && !localStorage.getItem(dst)) {
       localStorage.setItem(dst, v);
     }
@@ -1657,46 +1860,46 @@ function migrateNouserToUser() {
 }
 
 function clampToNow(ts) {
-  var now = Date.now();
+  const now = Date.now();
   return Math.min(Number(ts) || 0, now);
 }
 
-var ADMIN_CAP_TTL_MS = 10 * 60 * 1000;
-var ADMIN_NEG_TTL_MS = 2 * 60 * 1000;
+const ADMIN_CAP_TTL_MS = 10 * 60 * 1000;
+const ADMIN_NEG_TTL_MS = 2 * 60 * 1000;
 
-function canReadActivityLog() {
+async function canReadActivityLog() {
   if (!isAuthReady()) return false;
 
-  var now = Date.now();
+  const now = Date.now();
   if (!notifState._adminCapCache) {
     notifState._adminCapCache = { value: null, ts: 0, neg: false };
   }
 
-  var cached = notifState._adminCapCache;
+  const cached = notifState._adminCapCache;
   if (cached.value !== null) {
-    var ttl = cached.neg ? ADMIN_NEG_TTL_MS : ADMIN_CAP_TTL_MS;
+    const ttl = cached.neg ? ADMIN_NEG_TTL_MS : ADMIN_CAP_TTL_MS;
     if ((now - cached.ts) < ttl) {
       return cached.value;
     }
   }
 
-  var isAdmin = false;
+  let isAdmin = false;
     try {
-      var s = getSessionInfo();
+      const s = getSessionInfo();
       isAdmin = !!(
-        s.User.Policy.IsAdministrator ||
-        s.IsAdministrator ||
-        s.user.Policy.IsAdministrator
+        s?.User?.Policy?.IsAdministrator ||
+        s?.IsAdministrator ||
+        s?.user?.Policy?.IsAdministrator
       );
     } catch {}
     if (!isAdmin) {
       try {
-        isAdmin = isCurrentUserAdmin();
+        isAdmin = await isCurrentUserAdmin();
       } catch {
     }
   }
 
-  var value = isAdmin === true;
+  const value = isAdmin === true;
 
   notifState._adminCapCache = {
     value,
@@ -1707,16 +1910,16 @@ function canReadActivityLog() {
   return value;
 }
 
-function fetchActivityLog(limit = 30) {
-  var allowed = canReadActivityLog();
+async function fetchActivityLog(limit = 30) {
+  const allowed = await canReadActivityLog();
   if (!allowed) return [];
   try {
-    var resp = makeApiRequest("/System/ActivityLog/Entries?StartIndex=0&Limit=" + (limit));
-    var items = Array.isArray(resp.Items) ? resp.Items : (Array.isArray(resp) ? resp : []);
+    const resp = await makeApiRequest(`/System/ActivityLog/Entries?StartIndex=0&Limit=${limit}`);
+    const items = Array.isArray(resp?.Items) ? resp.Items : (Array.isArray(resp) ? resp : []);
     return items;
   } catch (e) {
-    var msg = String(e.message || "");
-    var code = e.status;
+    const msg = String(e?.message || "");
+    const code = e?.status;
     if (code !== 401 && code !== 403 && !msg.includes("401") && !msg.includes("403")) {
       console.error("[notif] ActivityLog isteği hata:", e);
     }
@@ -1725,60 +1928,69 @@ function fetchActivityLog(limit = 30) {
 }
 
 function renderActivities(activities = []) {
-  var ul = document.querySelector("#jfActivityList");
+  const ul = document.querySelector("#jfActivityList");
   if (!ul) return;
   ul.innerHTML = "";
 
   if (!activities.length) {
-    ul.innerHTML = "<li class=\"jf-activity-empty\">" + (config.languageLabels.noSystemActivities || "Nenhuma atividade de sistema ainda.") + "</li>";
+    ul.innerHTML = `<li class="jf-activity-empty">${config.languageLabels.noSystemActivities || "Henüz sistem bildirimi yok."}</li>`;
     return;
   }
 
-  var lastSeenAct = Number(notifState.activityLastSeen || 0);
+  const lastSeenAct = Number(notifState.activityLastSeen || 0);
 
-  activities.forEach(function(a) {
-    var ts = Date.parse(a.Date || "") || 0;
-    var title = a.Name || a.Type || "Atividade";
-    var desc = a.Overview || "";
-    var id = a.Id || "act:" + (ts) + ":" + (title);
+  activities.forEach(a => {
+    const ts = Date.parse(a?.Date || "") || 0;
+    const title = a?.Name || a?.Type || "Etkinlik";
+    const desc = a?.Overview || "";
+    const id = a?.Id || `act:${ts}:${title}`;
 
-    var li = document.createElement("li");
+    const li = document.createElement("li");
     li.className = "jf-activity-item";
     if (ts > lastSeenAct) li.classList.add("unread");
-    li.innerHTML = "\n      <div class=\"icon\"><i class=\"fa-solid fa-circle-info\"></i></div>\n      <div class=\"meta\">\n        <div class=\"title\">\n          " + (escapeHtml(title)) + "\n          ${ts > lastSeenAct ? "<span class="jf-pill-unread">${escapeHtml(config.languageLabels.unread || "Novo")}</span>" : \"\"}\n        </div>\n        ${desc ? "<div class="desc">${escapeHtml(desc)}</div>" : \"\"}\n        <div class=\"time\">" + (formatTime(ts)) + "</div>\n      </div>\n    ";
+    li.innerHTML = `
+      <div class="icon"><i class="fa-solid fa-circle-info"></i></div>
+      <div class="meta">
+        <div class="title">
+          ${escapeHtml(title)}
+          ${ts > lastSeenAct ? `<span class="jf-pill-unread">${escapeHtml(config.languageLabels?.unread || "Yeni")}</span>` : ""}
+        </div>
+        ${desc ? `<div class="desc">${escapeHtml(desc)}</div>` : ""}
+        <div class="time">${formatTime(ts)}</div>
+      </div>
+    `;
 
-    if (a.ItemId) li.addEventListenerfunction("click", () playNow(a.ItemId));
+    if (a?.ItemId) li.addEventListener("click", () => playNow(a.ItemId));
 
     ul.appendChild(li);
   });
 }
 
 function isRemovalActivity(a) {
-  var t = (a.Type || "").toLowerCase();
-  var n = (a.Name || "").toLowerCase();
-  var o = (a.Overview || "").toLowerCase();
+  const t = (a?.Type || "").toLowerCase();
+  const n = (a?.Name || "").toLowerCase();
+  const o = (a?.Overview || "").toLowerCase();
 
   return (
     t.includes("remove") || t.includes("deleted") || t.includes("delete") ||
     n.includes("remove") || n.includes("deleted") || n.includes("delete") ||
     o.includes("remove") || o.includes("deleted") || o.includes("delete") ||
-    n.includes("remover") || o.includes("remover") || o.includes("apagado") || n.includes("apagado") ||
     n.includes("kaldır") || o.includes("kaldır") || o.includes("silindi") || n.includes("silindi")
   );
 }
 
- notifState._activityBackoffMs ||= 0;
-var BACKOFF_STEP_MS = 5_000;
-var BACKOFF_MAX_MS  = 60_000;
+ notifState._activityBackoffMs ??= 0;
+const BACKOFF_STEP_MS = 5_000;
+const BACKOFF_MAX_MS  = 60_000;
 
-function pollActivities({ seedIfFirstRun = false } = {}) {
+async function pollActivities({ seedIfFirstRun = false } = {}) {
   if (!isAuthReady()) return;
   if (!notifState.activitySeenIds) notifState.activitySeenIds = new Set();
    if (notifState._activityBackoffMs > 0) {
-     new Promise(function(r) setTimeout(r, notifState._activityBackoffMs));
+     await new Promise(r => setTimeout(r, notifState._activityBackoffMs));
    }
 
-   var acts = fetchActivityLog(30).catchfunction(() []);
+   const acts = await fetchActivityLog(30).catch(() => []);
     if (!acts.length) {
       notifState.activities = [];
       updateBadge();
@@ -1791,11 +2003,12 @@ function pollActivities({ seedIfFirstRun = false } = {}) {
     }
    notifState._activityBackoffMs = 0;
 
-    var newestTs = clampToNowfunction(acts.reduce((acc, a) Math.max(acc, Date.parse(a.Date || "") || 0), 0)
+    const newestTs = clampToNow(
+      acts.reduce((acc, a) => Math.max(acc, Date.parse(a?.Date || "") || 0), 0)
     );
 
     if (seedIfFirstRun && (!notifState.activityLastSeen || notifState.activitySeenIds.size === 0)) {
-       acts.forEach(function(a) notifState.activitySeenIds.add(a.Id || (a.Type) + ":" + (a.Date)));
+       acts.forEach(a => notifState.activitySeenIds.add(a.Id || `${a.Type}:${a.Date}`));
        notifState.activityLastSeen = newestTs || Date.now();
        notifState.activities = acts;
        saveState();
@@ -1805,37 +2018,37 @@ function pollActivities({ seedIfFirstRun = false } = {}) {
      }
 
    function safeParseTs(s) {
-   var t = Date.parse(s || "");
+   const t = Date.parse(s || "");
    return Number.isFinite(t) ? t : 0;
  }
 
- var fresh =
+ const fresh =
    acts
-     .mapfunction((a, idx) {
-       var id = a.Id || (a.Type) + ":" + (a.Date);
-       return { a, id, idx, ts: clampToNow(safeParseTs(a.Date)) };
+     .map((a, idx) => {
+       const id = a.Id || `${a.Type}:${a.Date}`;
+       return { a, id, idx, ts: clampToNow(safeParseTs(a?.Date)) };
      })
-     .filterfunction(({ id }) !notifState.activitySeenIds.has(id))
-     .sortfunction((x, y) (x.ts - y.ts) || (x.idx - y.idx))
-     .map(function(x) x.a);
+     .filter(({ id }) => !notifState.activitySeenIds.has(id))
+     .sort((x, y) => (x.ts - y.ts) || (x.idx - y.idx))
+     .map(x => x.a);
 
-    var nonRemoval = [];
-   var newestFreshTs = 0;
+    const nonRemoval = [];
+   let newestFreshTs = 0;
 
-    for (var a of fresh) {
-      var id = a.Id || (a.Type) + ":" + (a.Date);
+    for (const a of fresh) {
+      const id = a.Id || `${a.Type}:${a.Date}`;
       notifState.activitySeenIds.add(id);
 
-     var ts = Date.parse(a.Date || "") || 0;
+     const ts = Date.parse(a?.Date || "") || 0;
      if (ts > newestFreshTs) newestFreshTs = ts;
 
       if (isRemovalActivity(a)) {
-        var itemId = a.ItemId || a.Item.Id;
-        var title = a.Item.Name || a.Name || a.Type || "Conteúdo";
+        const itemId = a.ItemId || a.Item?.Id;
+        const title = a.Item?.Name || a.Name || a.Type || "İçerik";
         pushNotification({
           itemId,
           title,
-          timestamp: Date.parse(a.Date || "") || Date.now(),
+          timestamp: Date.parse(a?.Date || "") || Date.now(),
           status: "removed",
         });
         queueToast({ Id: itemId, Name: title }, { type: "content", status: "removed" });
@@ -1858,17 +2071,17 @@ function pollActivities({ seedIfFirstRun = false } = {}) {
   }
 
 function activityKey(a) {
-  if (a.Id) return "activity:" + (a.Id);
-  return "activity:" + (a.Type || "act") + "|" + (a.Date || "") + "|" + (a.Overview || "") + "|" + (a.Name || "");
+  if (a?.Id) return `activity:${a.Id}`;
+  return `activity:${a.Type || "act"}|${a.Date || ""}|${a.Overview || ""}|${a.Name || ""}`;
 }
 
 function enqueueActivityToastBurst(activities = []) {
   if (!config.enableToastSystem) return;
 
-  var seen = new Set();
-  var uniq = [];
-  for (var a of activities) {
-    var k = activityKey(a);
+  const seen = new Set();
+  const uniq = [];
+  for (const a of activities) {
+    const k = activityKey(a);
     if (seen.has(k)) continue;
     if (!toastShouldEnqueue(k)) continue;
     seen.add(k);
@@ -1877,9 +2090,9 @@ function enqueueActivityToastBurst(activities = []) {
 
   if (!uniq.length) return;
 
-  var LIMIT = 6;
-  var picks = uniq.length <= LIMIT ? uniq : [uniq[0], uniq[uniq.length - 1]];
-  for (var a of picks) {
+  const LIMIT = 6;
+  const picks = uniq.length <= LIMIT ? uniq : [uniq[0], uniq[uniq.length - 1]];
+  for (const a of picks) {
     notifState.toastQueue.push({ type: "activity", it: a });
   }
   runToastQueue();
@@ -1887,46 +2100,46 @@ function enqueueActivityToastBurst(activities = []) {
 
 
 function getThemeModeKey() {
-  var userId = getSafeUserId();
-  return "jf:notifThemeMode:" + (userId || "nouser");
+  const userId = getSafeUserId();
+  return `jf:notifThemeMode:${userId || "nouser"}`;
 }
 
 function setThemeMode(mode) {
-  var m = (mode === "dark") ? "dark" : "light";
+  const m = (mode === "dark") ? "dark" : "light";
   document.documentElement.setAttribute("data-notif-theme", m);
-  document.body.setAttribute.("data-notif-theme", m);
+  document.body?.setAttribute?.("data-notif-theme", m);
   try { localStorage.setItem(getThemeModeKey(), m); } catch {}
-  var btn = document.getElementById("jfNotifModeToggle");
+  const btn = document.getElementById("jfNotifModeToggle");
   if (btn) {
     btn.innerHTML = faIconHtml(m === "dark" ? "sun" : "moon", "jf-notif-icon");
     btn.title = (m === "dark")
-      ? (config.languageLabels.switchToLight || "Mudar para tema claro")
-      : (config.languageLabels.switchToDark  || "Mudar para tema escuro");
+      ? (config.languageLabels?.switchToLight || "Açık temaya geç")
+      : (config.languageLabels?.switchToDark  || "Koyu temaya geç");
   }
 }
 
 function loadThemeModePreference() {
-  var m = null;
+  let m = null;
   try { m = localStorage.getItem(getThemeModeKey()); } catch {}
   if (!m) {
-    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
     m = prefersDark ? "dark" : "light";
   }
   setThemeMode(m);
-  var mq = window.matchMedia("(prefers-color-scheme: dark)");
-  mq.addEventListener.function("change", (ev) {
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  mq.addEventListener?.("change", (ev) => {
     setThemeMode(ev.matches ? "dark" : "light");
   });
 }
 
 function toggleThemeMode() {
-  var current = document.documentElement.getAttribute("data-notif-theme") || "light";
+  const current = document.documentElement.getAttribute("data-notif-theme") || "light";
   setThemeMode(current === "dark" ? "light" : "dark");
 }
 
 function markNotificationRead(id, { silent = false } = {}) {
-  var changed = false;
-  notifState.list = notifState.list.map(function(n) {
+  let changed = false;
+  notifState.list = notifState.list.map(n => {
     if (n.id === id && !n.read) {
       changed = true;
       return { ...n, read: true };
@@ -1941,8 +2154,8 @@ function markNotificationRead(id, { silent = false } = {}) {
 }
 
 function markAllNotificationsRead() {
-  var changed = false;
-  notifState.list = notifState.list.map(function(n) {
+  let changed = false;
+  notifState.list = notifState.list.map(n => {
     if (!n.read) { changed = true; return { ...n, read: true }; }
     return n;
   });
@@ -1969,16 +2182,16 @@ function setUpdateToastShown(v) {
 }
 
 export function renderUpdateBanner() {
-  var el = document.getElementById("jfUpdateBanner");
+  const el = document.getElementById("jfUpdateBanner");
   if (!el) return;
 
-  var data = getStoredUpdateBanner();
+  const data = getStoredUpdateBanner();
   if (!data || !data.latest) {
     el.style.display = "none";
     return;
   }
 
-  var current = getCurrentVersionFromEnv();
+  const current = getCurrentVersionFromEnv();
   if (compareSemver(current, data.latest) >= 0) {
     setStoredUpdateBanner(null);
     el.style.display = "none";
@@ -1987,39 +2200,39 @@ export function renderUpdateBanner() {
 
   el.style.display = "flex";
 
-  var txt = el.querySelector(".txt");
-  var lnk = el.querySelector(".lnk");
-  var dis = el.querySelector(".dismiss");
+  const txt = el.querySelector(".txt");
+  const lnk = el.querySelector(".lnk");
+  const dis = el.querySelector(".dismiss");
 
-  txt.textContent = (config.languageLabels.updateAvailable || "Nova versão disponível") + ": " + (data.latest);
-  lnk.textContent = config.languageLabels.viewOnGithub || "Ver no GitHub / Baixar";
+  txt.textContent = `${config.languageLabels?.updateAvailable || "Yeni sürüm mevcut"}: ${data.latest}`;
+  lnk.textContent = config.languageLabels?.viewOnGithub || "GitHub'da Gör / İndir";
   lnk.href = data.url || "https://github.com/G-grbz/Jellyfin-MonWUI-Plugin/releases";
 
-  dis.onclick = function() {
+  dis.onclick = () => {
     el.style.display = "none";
     setStoredUpdateBanner(null);
   };
 }
 
-window.jfNotifyUpdateAvailable = function({ latest, url, remindMs }) {
+window.jfNotifyUpdateAvailable = ({ latest, url, remindMs }) => {
   try {
     setStoredUpdateBanner({ latest, url });
     renderUpdateBanner();
     upsertUpdateNotification({ latest, url });
 
-    var DEFAULT_REMIND = 12 * 60 * 60 * 1000;
-    var remindEvery = (typeof remindMs === "number" && remindMs >= 0) ? remindMs : DEFAULT_REMIND;
+    const DEFAULT_REMIND = 12 * 60 * 60 * 1000;
+    const remindEvery = (typeof remindMs === "number" && remindMs >= 0) ? remindMs : DEFAULT_REMIND;
 
-    var info = getUpdateToastInfo();
-    var now = Date.now();
-    var shouldShow = !info || info.latest !== latest || (now - Number(info.shownAt || 0)) >= remindEvery;
+    const info = getUpdateToastInfo();
+    const now = Date.now();
+    let shouldShow = !info || info.latest !== latest || (now - Number(info.shownAt || 0)) >= remindEvery;
 
     if (shouldShow) {
       notifState.toastQueue.push({
         type: "update",
         it: {
-          Name: config.languageLabels.updateAvailable || "Nova versão disponível",
-          Overview: (latest),
+          Name: config.languageLabels?.updateAvailable || "Yeni sürüm mevcut",
+          Overview: `${latest}`,
           Url: url
         }
       });
@@ -2032,11 +2245,11 @@ window.jfNotifyUpdateAvailable = function({ latest, url, remindMs }) {
 };
 
  function getUpdateToastInfo() {
-  var old = localStorage.getItem(UPDATE_TOAST_SHOWN_KEY());
+  const old = localStorage.getItem(UPDATE_TOAST_SHOWN_KEY());
   if (old) {
     try {
       localStorage.removeItem(UPDATE_TOAST_SHOWN_KEY());
-      var info = { latest: old, shownAt: 0 };
+      const info = { latest: old, shownAt: 0 };
       localStorage.setItem(UPDATE_TOAST_INFO_KEY(), JSON.stringify(info));
       return info;
     } catch {}
@@ -2055,37 +2268,43 @@ function formatEpisodeHeading({
   seasonNum,
   episodeNum,
   episodeTitle,
-  locale = (getConfig().defaultLanguage || "pt-br"),
-  labels = (getConfig().languageLabels || {})
+  locale = (getConfig()?.defaultLanguage || "tur"),
+  labels = (getConfig()?.languageLabels || {})
 }) {
-  var lx = {
-    season: labels.season || { "pt-br":"Temporada", eng:"Season", fre:"Saison", deu:"Staffel", rus:"Сезон" }[locale] || "Season",
-    episode: labels.episode || { "pt-br":"Episódio", eng:"Episode", fre:"Épisode", deu:"Folge",  rus:"Серия" }[locale] || "Episode",
+  const lx = {
+    season: labels.season || { tur:"Sezon", eng:"Season", fre:"Saison", deu:"Staffel", rus:"Сезон" }[locale] || "Season",
+    episode: labels.episode || { tur:"Bölüm", eng:"Episode", fre:"Épisode", deu:"Folge",  rus:"Серия" }[locale] || "Episode",
   };
 
-  var patterns = {
-    "pt-br": "{series} — {season} {seasonNum}, {episode} {episodeNum}{titlePart}",
+  const patterns = {
+    tur: "{series} - {seasonNum}. {season} {episodeNum}. {episode}{titlePart}",
     eng: "{series} — {season} {seasonNum}, {episode} {episodeNum}{titlePart}",
+    fre: "{series} — {season} {seasonNum}, {episode} {episodeNum}{titlePart}",
+    deu: "{series} — {season} {seasonNum}, {episode} {episodeNum}{titlePart}",
+    rus: "{series} — {seasonNum} {season}, {episodeNum} {episode}{titlePart}",
     default: "{series} — {season} {seasonNum}, {episode} {episodeNum}{titlePart}",
   };
-  var pat = patterns[locale] || patterns.default;
+  const pat = patterns[locale] || patterns.default;
 
-  var genericTitleTemplates = {
-    "pt-br": "{episode} {episodeNum}",
+  const genericTitleTemplates = {
+    tur: "{episodeNum}. {episode}",
     eng: "{episode} {episodeNum}",
+    fre: "{episode} {episodeNum}",
+    deu: "{episode} {episodeNum}",
+    rus: "{episode} {episodeNum}",
     default: "{episode} {episodeNum}",
   };
-  var genTitlePat = genericTitleTemplates[locale] || genericTitleTemplates.default;
+  const genTitlePat = genericTitleTemplates[locale] || genericTitleTemplates.default;
 
-  var normalizedTitle = String(episodeTitle || "").trim().toLowerCase();
-  var localizedGenericTitle = genTitlePat
+  const normalizedTitle = String(episodeTitle || "").trim().toLowerCase();
+  const localizedGenericTitle = genTitlePat
     .replace("{episode}", lx.episode)
     .replace("{episodeNum}", String(episodeNum))
     .trim()
     .toLowerCase();
 
-  var titlePart = normalizedTitle && normalizedTitle !== localizedGenericTitle
-    ? ": " + (episodeTitle.trim())
+  const titlePart = normalizedTitle && normalizedTitle !== localizedGenericTitle
+    ? `: ${episodeTitle.trim()}`
     : "";
 
   return pat
@@ -2097,10 +2316,10 @@ function formatEpisodeHeading({
     .replace("{titlePart}", titlePart);
 }
 
-function(() {
-  var TEST_ID  = 'jfNotifTestPanel';
-  var TEST_IMG = './slider/src/images/primary.webp';
-  var S = {
+(() => {
+  const TEST_ID  = 'jfNotifTestPanel';
+  const TEST_IMG = './slider/src/images/primary.webp';
+  const S = {
     enabled: false,
     lockToasts: true,
     lockModal:  true,
@@ -2110,16 +2329,16 @@ function(() {
   };
 
   (function patchImageSrcSetterOnce(){
-    var desc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+    const desc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
     if (!desc || !desc.set || HTMLImageElement.prototype.__jfNotifSrcPatched) return;
-    var origSet = desc.set;
+    const origSet = desc.set;
     Object.defineProperty(HTMLImageElement.prototype, 'src', {
       configurable: true,
       get: desc.get,
       set(v) {
         try {
-          var inNotif = this.classList.contains('thumb') || this.classList.contains('poster') ||
-                          this.closest.('#jfNotifModal') || this.closest.('#jfToastContainer');
+          const inNotif = this.classList?.contains('thumb') || this.classList?.contains('poster') ||
+                          this.closest?.('#jfNotifModal') || this.closest?.('#jfToastContainer');
           if (S.enabled && S.forceImages && inNotif) {
             if (typeof v === 'string' && (v.includes('/Items/') || v.includes('fake-') || v === '' )) {
               return origSet.call(this, TEST_IMG);
@@ -2132,21 +2351,21 @@ function(() {
     HTMLImageElement.prototype.__jfNotifSrcPatched = true;
   })();
 
-  var imgObserver, toastObserver, modalObserver, closeClickBound = false;
+  let imgObserver, toastObserver, modalObserver, closeClickBound = false;
 
   function bindImgObserver() {
     if (imgObserver) return;
-    imgObserver = new MutationObserverfunction((muts) {
+    imgObserver = new MutationObserver((muts) => {
       if (!S.enabled || !S.forceImages) return;
-      for (var m of muts) {
-        m.addedNodes.forEach(function(node) {
+      for (const m of muts) {
+        m.addedNodes?.forEach(node => {
           if (!(node instanceof Element)) return;
-          var imgs = node.matches.('img') ? [node] : Array.from(node.querySelectorAll.('img') || []);
-          imgs.forEach(function(img) {
-            var inNotif = img.classList.contains('thumb') || img.classList.contains('poster') ||
-                            img.closest.('#jfNotifModal') || img.closest.('#jfToastContainer');
+          const imgs = node.matches?.('img') ? [node] : Array.from(node.querySelectorAll?.('img') || []);
+          imgs.forEach(img => {
+            const inNotif = img.classList?.contains('thumb') || img.classList?.contains('poster') ||
+                            img.closest?.('#jfNotifModal') || img.closest?.('#jfToastContainer');
             if (!inNotif) return;
-            var cur = img.getAttribute('src') || '';
+            const cur = img.getAttribute('src') || '';
             if (cur.includes('/Items/') || cur.includes('fake-') || !cur) {
               img.setAttribute('src', TEST_IMG);
             }
@@ -2159,36 +2378,36 @@ function(() {
 
   function bindToastObserver() {
     if (toastObserver) return;
-    var host = function() document.querySelector('#jfToastContainer');
-    var resurrect = function(toast) {
+    const host = () => document.querySelector('#jfToastContainer');
+    const resurrect = (toast) => {
       if (!S.enabled || !S.lockToasts) return;
-      var h = host(); if (!h || h.contains(toast)) return;
+      const h = host(); if (!h || h.contains(toast)) return;
       try {
         h.appendChild(toast);
         toast.classList.add('show','jf-test-sticky');
-        var img = toast.querySelector('img.thumb, img.poster');
+        const img = toast.querySelector('img.thumb, img.poster');
         if (img && S.forceImages) img.src = TEST_IMG;
       } catch {}
     };
-    toastObserver = new MutationObserverfunction((muts) {
+    toastObserver = new MutationObserver((muts) => {
       if (!S.enabled || !S.lockToasts) return;
-      for (var m of muts) {
-        m.removedNodes.forEach(function(n) {
-          if (n instanceof Element && n.classList.contains('jf-toast')) {
-            requestAnimationFramefunction(() resurrect(n));
+      for (const m of muts) {
+        m.removedNodes?.forEach(n => {
+          if (n instanceof Element && n.classList?.contains('jf-toast')) {
+            requestAnimationFrame(() => resurrect(n));
           }
         });
-        m.addedNodes.forEach(function(n) {
-          if (n instanceof Element && n.classList.contains('jf-toast')) {
+        m.addedNodes?.forEach(n => {
+          if (n instanceof Element && n.classList?.contains('jf-toast')) {
             n.classList.add('show','jf-test-sticky');
-            var img = n.querySelector('img.thumb, img.poster');
+            const img = n.querySelector('img.thumb, img.poster');
             if (img && S.forceImages) img.src = TEST_IMG;
           }
         });
       }
     });
-    var tryBind = function() {
-      var h = host();
+    const tryBind = () => {
+      const h = host();
       if (h) toastObserver.observe(h, { childList:true });
       else setTimeout(tryBind, 300);
     };
@@ -2197,10 +2416,10 @@ function(() {
 
   function bindModalGuards() {
     if (!closeClickBound) {
-      document.addEventListenerfunction('click', (e) {
+      document.addEventListener('click', (e) => {
         if (!S.enabled || !S.lockModal) return;
-        var t = e.target;
-        if (t.matches.('[data-close]') || t.closest.('[data-close]')) {
+        const t = e.target;
+        if (t?.matches?.('[data-close]') || t?.closest?.('[data-close]')) {
           e.stopImmediatePropagation();
           e.preventDefault();
           openModalHard();
@@ -2209,9 +2428,9 @@ function(() {
       closeClickBound = true;
     }
     if (modalObserver) return;
-    modalObserver = new MutationObserverfunction(() { if (S.enabled && S.lockModal) keepModalOpen(); });
-    var tryBind = function() {
-      var m = document.querySelector('#jfNotifModal');
+    modalObserver = new MutationObserver(() => { if (S.enabled && S.lockModal) keepModalOpen(); });
+    const tryBind = () => {
+      const m = document.querySelector('#jfNotifModal');
       if (m) {
         modalObserver.observe(m, { attributes:true, attributeFilter:['class','hidden','aria-hidden','style'] });
         keepModalOpen();
@@ -2224,7 +2443,7 @@ function(() {
 
   function keepModalOpen() {
     if (!S.enabled || !S.lockModal) return;
-    var m = document.querySelector('#jfNotifModal');
+    const m = document.querySelector('#jfNotifModal');
     if (!m) return;
     if (!m.classList.contains('open') || m.hidden || m.getAttribute('aria-hidden') === 'true') {
       m.hidden = false;
@@ -2235,7 +2454,7 @@ function(() {
     }
   }
   function openModalHard() {
-    var m = document.querySelector('#jfNotifModal');
+    const m = document.querySelector('#jfNotifModal');
     if (!m) return;
     m.hidden = false;
     m.classList.add('open');
@@ -2244,39 +2463,39 @@ function(() {
     try { notifState.isModalOpen = true; } catch {}
   }
 
-  var dedupTimer = null;
+  let dedupTimer = null;
   function startDedupRelax() {
     if (dedupTimer) return;
-    dedupTimer = setIntervalfunction(() {
+    dedupTimer = setInterval(() => {
       if (!S.enabled || !S.bypassDedup) return;
-      try { recentToastMap.clear.(); } catch {}
+      try { recentToastMap?.clear?.(); } catch {}
     }, 2000);
   }
   function stopDedupRelax() {
     if (dedupTimer) { clearInterval(dedupTimer); dedupTimer = null; }
   }
 
-  var nowTs = function() Date.now();
-  var rand = function(a) a[Math.floor(Math.random()*a.length)];
+  const nowTs = () => Date.now();
+  const rand = a => a[Math.floor(Math.random()*a.length)];
   function fakeMovie(i=1){ return {
-    Id:"fake-movie-" + (i) + "-" + (Math.random().toString(36).slice(2)),
+    Id:`fake-movie-${i}-${Math.random().toString(36).slice(2)}`,
     Name: rand(["Dune","Arrival","Interstellar","Inception","BR 2049"])+" (Test)",
     Type:"Movie", HasPrimaryImage:true, ImageTags:{Primary:"x"},
     DateCreated:new Date(nowTs()-i*1000).toISOString()
   }; }
   function fakeEpisode(i=1){ return {
-    Id:"fake-ep-" + (i) + "-" + (Math.random().toString(36).slice(2)),
-    Name:"Episódio " + (i), Type:"Episode",
+    Id:`fake-ep-${i}-${Math.random().toString(36).slice(2)}`,
+    Name:`Bölüm ${i}`, Type:"Episode",
     SeriesName: rand(["Dark","Foundation","Severance","The Expanse"])+" (Test)",
-    ParentIndexNumber:1, IndexNumber:i, SeriesId:"fake-series-" + (i),
-    HasPrimaryImage:true, Series:{ Id:"fake-series-" + (i), ImageTags:{Primary:"x"} },
+    ParentIndexNumber:1, IndexNumber:i, SeriesId:`fake-series-${i}`,
+    HasPrimaryImage:true, Series:{ Id:`fake-series-${i}`, ImageTags:{Primary:"x"} },
     DateCreated:new Date(nowTs()-i*1200).toISOString()
   }; }
   function fakeActivity(i=1){ return {
-    Id:"fake-act-" + (i) + "-" + (Math.random().toString(36).slice(2)),
+    Id:`fake-act-${i}-${Math.random().toString(36).slice(2)}`,
     Type: rand(["PlaybackStart","LibraryScan","Transcode","UserLogin"]),
-    Name: rand(["Evento de Sistema","Atividade","Notificação"]),
-    Overview: rand(["O rato roeu a roupa do rei de Roma.","Concluído","Aviso: CPU alta","Varredura agendada"]),
+    Name: rand(["Sistem Olayı","Aktivite","Bildirim"]),
+    Overview: rand(["Pijamalı Hasta Yağız Şoföre Çabucak Güvendi.","Tamamlandı","Uyarı: yüksek CPU","Planlı tarama"]),
     Date:new Date(nowTs()-i*2300).toISOString()
   }; }
 
@@ -2289,15 +2508,15 @@ function(() {
   }
   function addGroup() {
     if (!S.enabled) return;
-    var arr = [fakeMovie(1), fakeMovie(2), fakeEpisode(3), fakeEpisode(4), fakeMovie(5)];
+    const arr = [fakeMovie(1), fakeMovie(2), fakeEpisode(3), fakeEpisode(4), fakeMovie(5)];
     try { enqueueToastGroup(arr, { type:"content" }); } catch {}
-    arr.slice(0,3).forEach(function(it) { try { pushNotification({ itemId: it.Id, title: it.Name, timestamp: nowTs(), status:"added" }); } catch {} });
+    arr.slice(0,3).forEach(it => { try { pushNotification({ itemId: it.Id, title: it.Name, timestamp: nowTs(), status:"added" }); } catch {} });
     try { runToastQueue(); } catch {}
     if (S.autoOpenModal) openModalHard();
   }
   function addSystem() {
     if (!S.enabled) return;
-    var a = fakeActivity();
+    const a = fakeActivity();
     try { notifState._systemAllowed = true; } catch {}
     try {
       notifState.activities = [a, ...(notifState.activities||[])].slice(0,30);
@@ -2309,20 +2528,39 @@ function(() {
   }
   function addUpdate() {
     if (!S.enabled) return;
-    var v = "v" + ((Math.random()*3+1).toFixed(1)) + "." + (Math.floor(Math.random()*10));
+    const v = `v${(Math.random()*3+1).toFixed(1)}.${Math.floor(Math.random()*10)}`;
     try { window.jfNotifyUpdateAvailable({ latest:v, url:"https://github.com/G-grbz/Jellyfin-MonWUI-Plugin/releases", remindMs:0 }); } catch {}
     if (S.autoOpenModal) openModalHard();
   }
   function clearToasts() {
-    document.querySelectorAll('#jfToastContainer .jf-toast').forEach(function(n) n.remove());
+    document.querySelectorAll('#jfToastContainer .jf-toast').forEach(n => n.remove());
     try { notifState.toastShowing = false; notifState.toastQueue = []; } catch {}
   }
 
   function ensurePanel() {
     if (document.getElementById(TEST_ID)) return;
-    var box = document.createElement('div');
+    const box = document.createElement('div');
     box.id = TEST_ID;
-    box.innerHTML = "\n      <div class=\"head\">Notifications Test</div>\n      <div class=\"row toggles\">\n        <label><input type=\"checkbox\" id=\"tLockToasts\"> Sticky toasts</label>\n        <label><input type=\"checkbox\" id=\"tLockModal\"> Modal lock</label>\n        <label><input type=\"checkbox\" id=\"tForceImg\"> Force images</label>\n        <label><input type=\"checkbox\" id=\"tAutoOpen\"> Auto-open modal</label>\n      </div>\n      <div class=\"row\">\n        <button data-act=\"added\">+ Added</button>\n        <button data-act=\"removed\">– Removed</button>\n        <button data-act=\"group\">Group</button>\n        <button data-act=\"system\">System</button>\n        <button data-act=\"update\">Update</button>\n      </div>\n      <div class=\"row\">\n        <button data-act=\"open\">Open Modal</button>\n        <button data-act=\"clear\">Clear Toasts</button>\n        <button data-act=\"close\">Close Panel</button>\n      </div>";
+    box.innerHTML = `
+      <div class="head">Notifications Test</div>
+      <div class="row toggles">
+        <label><input type="checkbox" id="tLockToasts"> Sticky toasts</label>
+        <label><input type="checkbox" id="tLockModal"> Modal lock</label>
+        <label><input type="checkbox" id="tForceImg"> Force images</label>
+        <label><input type="checkbox" id="tAutoOpen"> Auto-open modal</label>
+      </div>
+      <div class="row">
+        <button data-act="added">+ Added</button>
+        <button data-act="removed">– Removed</button>
+        <button data-act="group">Group</button>
+        <button data-act="system">System</button>
+        <button data-act="update">Update</button>
+      </div>
+      <div class="row">
+        <button data-act="open">Open Modal</button>
+        <button data-act="clear">Clear Toasts</button>
+        <button data-act="close">Close Panel</button>
+      </div>`;
     Object.assign(box.style, {
       position:'fixed', top:'80px', right:'16px', zIndex: 999999,
       width:'288px', font:'12px/1.4 system-ui, Segoe UI, Roboto, Ubuntu',
@@ -2330,8 +2568,8 @@ function(() {
       border:'1px solid rgba(255,255,255,0.12)', borderRadius:'12px',
       boxShadow:'0 8px 28px rgba(0,0,0,0.35)', padding:'10px', backdropFilter:'blur(6px)'
     });
-    var cssRow = 'display:flex; gap:6px; flex-wrap:wrap; margin:6px 0;';
-    [...box.querySelectorAll('.row')].forEach(function(r) r.style = cssRow);
+    const cssRow = 'display:flex; gap:6px; flex-wrap:wrap; margin:6px 0;';
+    [...box.querySelectorAll('.row')].forEach(r => r.style = cssRow);
     Object.assign(box.querySelector('.head').style, {fontWeight:'700', margin:'2px 0 6px'});
 
     box.querySelector('#tLockToasts').checked = S.lockToasts;
@@ -2339,15 +2577,15 @@ function(() {
     box.querySelector('#tForceImg').checked   = S.forceImages;
     box.querySelector('#tAutoOpen').checked   = S.autoOpenModal;
 
-    box.addEventListenerfunction('change', (e) {
+    box.addEventListener('change', (e) => {
       if (e.target.id === 'tLockToasts') S.lockToasts = e.target.checked;
       if (e.target.id === 'tLockModal')  S.lockModal  = e.target.checked;
       if (e.target.id === 'tForceImg')   S.forceImages = e.target.checked;
       if (e.target.id === 'tAutoOpen')   S.autoOpenModal = e.target.checked;
     });
 
-    box.addEventListenerfunction('click', (e) {
-      var act = e.target.getAttribute.('data-act'); if (!act) return;
+    box.addEventListener('click', (e) => {
+      const act = e.target?.getAttribute?.('data-act'); if (!act) return;
       if (act==='added')   addToast(Math.random()<0.5?fakeMovie():fakeEpisode(), 'added');
       if (act==='removed') addToast(Math.random()<0.5?fakeMovie():fakeEpisode(), 'removed');
       if (act==='group')   addGroup();
@@ -2392,9 +2630,9 @@ function(() {
     setForceImages(v=true){ S.forceImages = !!v; return this; }
   };
 
-  document.addEventListenerfunction('keydown', (e) {
-    if (e.altKey && e.shiftKey && (e.key.toLowerCase.() === 'n')) {
-      var p = document.getElementById(TEST_ID);
+  document.addEventListener('keydown', (e) => {
+    if (e.altKey && e.shiftKey && (e.key?.toLowerCase?.() === 'n')) {
+      const p = document.getElementById(TEST_ID);
       p ? p.remove() : ensurePanel();
     }
   });

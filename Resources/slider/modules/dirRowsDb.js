@@ -1,5 +1,5 @@
-var DB_NAME = 'jms_dirrows_db';
-var DB_VER  = 1;
+const DB_NAME = 'jms_dirrows_db';
+const DB_VER  = 1;
 
 export function prepareDirRowsDbForDeletion() {
   try {
@@ -11,9 +11,9 @@ export function prepareDirRowsDbForDeletion() {
 
 function normalizeUserData(raw) {
   if (!raw || typeof raw !== "object") return null;
-  var playedPct = Number(raw.PlayedPercentage);
-  var posTicks = Number(raw.PlaybackPositionTicks);
-  var out = {
+  const playedPct = Number(raw.PlayedPercentage);
+  const posTicks = Number(raw.PlaybackPositionTicks);
+  const out = {
     Played: raw.Played === true,
     PlayedPercentage: Number.isFinite(playedPct) ? playedPct : null,
     PlaybackPositionTicks: Number.isFinite(posTicks) ? posTicks : null,
@@ -25,26 +25,26 @@ function normalizeUserData(raw) {
 function normalizeCachedItem(rec) {
   if (!rec) return null;
 
-  var Id   = rec.Id   || rec.itemId || null;
+  const Id   = rec.Id   || rec.itemId || null;
   if (!Id) return null;
-  var userData = normalizeUserData(rec.UserData || rec.UserDataDto || rec.userData || rec.userDataDto || null);
+  const userData = normalizeUserData(rec.UserData || rec.UserDataDto || rec.userData || rec.userDataDto || null);
 
   return {
     Id,
     Name: rec.Name || rec.name || "",
     Type: rec.Type || rec.type || "",
-    ProductionYear: rec.ProductionYear || rec.productionYear || null,
+    ProductionYear: rec.ProductionYear ?? rec.productionYear ?? null,
     OfficialRating: rec.OfficialRating || rec.officialRating || "",
-    CommunityRating: (rec.CommunityRating || rec.communityRating || null),
+    CommunityRating: (rec.CommunityRating ?? rec.communityRating ?? null),
     ImageTags: rec.ImageTags || rec.imageTags || null,
     BackdropImageTags: rec.BackdropImageTags || rec.backdropImageTags || null,
-    PrimaryImageAspectRatio: rec.PrimaryImageAspectRatio || rec.primaryImageAspectRatio || null,
+    PrimaryImageAspectRatio: rec.PrimaryImageAspectRatio ?? rec.primaryImageAspectRatio ?? null,
     Overview: rec.Overview || rec.overview || "",
     Genres: rec.Genres || rec.genres || [],
-    RunTimeTicks: rec.RunTimeTicks || rec.runTimeTicks || null,
-    CumulativeRunTimeTicks: rec.CumulativeRunTimeTicks || rec.cumulativeRunTimeTicks || null,
+    RunTimeTicks: rec.RunTimeTicks ?? rec.runTimeTicks ?? null,
+    CumulativeRunTimeTicks: rec.CumulativeRunTimeTicks ?? rec.cumulativeRunTimeTicks ?? null,
     RemoteTrailers: rec.RemoteTrailers || rec.remoteTrailers || [],
-    DateCreatedTicks: rec.DateCreatedTicks || rec.dateCreatedTicks || 0,
+    DateCreatedTicks: rec.DateCreatedTicks ?? rec.dateCreatedTicks ?? 0,
     People: rec.People || rec.people || [],
     UserData: userData,
     UserDataDto: userData,
@@ -52,42 +52,42 @@ function normalizeCachedItem(rec) {
 }
 
 function promisify(req) {
-  return new Promisefunction((resolve, reject) {
-    req.onsuccess = function() resolve(req.result);
-    req.onerror = function() reject(req.error);
+  return new Promise((resolve, reject) => {
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
   });
 }
 
 function txDone(tx) {
-  return new Promisefunction((resolve, reject) {
-    tx.oncomplete = function() resolve(true);
-    tx.onerror = function() reject(tx.error);
-    tx.onabort = function() reject(tx.error);
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
   });
 }
 
 export function openDirRowsDB() {
-  var req = indexedDB.open(DB_NAME, DB_VER);
+  const req = indexedDB.open(DB_NAME, DB_VER);
 
-  req.onupgradeneeded = function() {
-    var db = req.result;
+  req.onupgradeneeded = () => {
+    const db = req.result;
 
     if (!db.objectStoreNames.contains('directors')) {
-      var s = db.createObjectStore('directors', { keyPath: 'key' });
+      const s = db.createObjectStore('directors', { keyPath: 'key' });
       s.createIndex('byScope', 'scope', { unique: false });
       s.createIndex('byName', 'name_lc', { unique: false });
       s.createIndex('byUpdatedAt', 'updatedAt', { unique: false });
     }
 
     if (!db.objectStoreNames.contains('items')) {
-      var s = db.createObjectStore('items', { keyPath: 'key' });
+      const s = db.createObjectStore('items', { keyPath: 'key' });
       s.createIndex('byScope', 'scope', { unique: false });
       s.createIndex('byUpdatedAt', 'updatedAt', { unique: false });
       s.createIndex('byDateCreated', 'dateCreatedTicks', { unique: false });
     }
 
     if (!db.objectStoreNames.contains('directorItems')) {
-      var s = db.createObjectStore('directorItems', { keyPath: 'key' });
+      const s = db.createObjectStore('directorItems', { keyPath: 'key' });
       s.createIndex('byDirector', ['scope', 'directorId'], { unique: false });
       s.createIndex('byItem', ['scope', 'itemId'], { unique: false });
       s.createIndex('byUpdatedAt', 'updatedAt', { unique: false });
@@ -102,70 +102,70 @@ export function openDirRowsDB() {
 }
 
 export function makeScope({ serverId, userId }) {
-  return (serverId || '') + "|" + (userId || '');
+  return `${serverId || ''}|${userId || ''}`;
 }
 
-export function upsertDirector(db, scope, director) {
-  if (!director.Id) return;
-  var key = (scope) + "|" + (director.Id);
-  var prev = null;
+export async function upsertDirector(db, scope, director) {
+  if (!director?.Id) return;
+  const key = `${scope}|${director.Id}`;
+  let prev = null;
 
   try {
-    var readTx = db.transaction(['directors'], 'readonly');
-    prev = promisify(readTx.objectStore('directors').get(key));
-    txDone(readTx);
+    const readTx = db.transaction(['directors'], 'readonly');
+    prev = await promisify(readTx.objectStore('directors').get(key));
+    await txDone(readTx);
   } catch {}
 
-  var countHint = Number(director.Count);
-  var countActual = Number(director.countActual);
-  var qualifiedMinItems = Number(director.qualifiedMinItems);
+  const countHint = Number(director.Count);
+  const countActual = Number(director.countActual);
+  const qualifiedMinItems = Number(director.qualifiedMinItems);
 
-  var tx = db.transaction(['directors'], 'readwrite');
-  var store = tx.objectStore('directors');
-  var rec = {
+  const tx = db.transaction(['directors'], 'readwrite');
+  const store = tx.objectStore('directors');
+  const rec = {
     ...(prev && typeof prev === 'object' ? prev : {}),
     key,
     scope,
     directorId: director.Id,
-    name: director.Name || prev.name || '',
-    name_lc: String(director.Name || prev.name || '').toLowerCase(),
-    countHint: Number.isFinite(countHint) ? Math.max(0, countHint | 0) : (Number(prev.countHint) || 0),
-    eligible: director.eligible === undefined ? (prev.eligible !== false) : (director.eligible !== false),
-    countActual: Number.isFinite(countActual) ? Math.max(0, countActual | 0) : (Number.isFinite(Number(prev.countActual)) ? Number(prev.countActual) : null),
+    name: director.Name || prev?.name || '',
+    name_lc: String(director.Name || prev?.name || '').toLowerCase(),
+    countHint: Number.isFinite(countHint) ? Math.max(0, countHint | 0) : (Number(prev?.countHint) || 0),
+    eligible: director.eligible === undefined ? (prev?.eligible !== false) : (director.eligible !== false),
+    countActual: Number.isFinite(countActual) ? Math.max(0, countActual | 0) : (Number.isFinite(Number(prev?.countActual)) ? Number(prev.countActual) : null),
     qualifiedMinItems: Number.isFinite(qualifiedMinItems)
       ? Math.max(0, qualifiedMinItems | 0)
-      : (Number.isFinite(Number(prev.qualifiedMinItems)) ? Number(prev.qualifiedMinItems) : null),
+      : (Number.isFinite(Number(prev?.qualifiedMinItems)) ? Number(prev.qualifiedMinItems) : null),
     updatedAt: Date.now(),
   };
 
   store.put(rec);
-  txDone(tx);
+  await txDone(tx);
 }
 
-export function getDirectorsForScope(db, scope, limit = 50) {
-  var tx = db.transaction(['directors'], 'readonly');
-  var idx = tx.objectStore('directors').index('byScope');
+export async function getDirectorsForScope(db, scope, limit = 50) {
+  const tx = db.transaction(['directors'], 'readonly');
+  const idx = tx.objectStore('directors').index('byScope');
 
-  var out = [];
-  var cursor = promisify(idx.openCursor(IDBKeyRange.only(scope)));
+  const out = [];
+  let cursor = await promisify(idx.openCursor(IDBKeyRange.only(scope)));
 
   while (cursor && out.length < limit) {
     out.push(cursor.value);
-    cursor = new Promisefunction((resolve) {
+    cursor = await new Promise((resolve) => {
       cursor.continue();
-      idx.openCursor().onsuccess = function(e) resolve(e.target.result);
-    }).catchfunction(() null);
+      idx.openCursor().onsuccess = (e) => resolve(e.target.result);
+    }).catch(() => null);
   }
-  txDone(tx);
+  await txDone(tx);
   return out;
 }
 
-function cursorCollect(req, limit, mapFn) {
-  return new Promisefunction((resolve, reject) {
-    var out = [];
-    req.onerror = function() reject(req.error);
-    req.onsuccess = function(e) {
-      var cur = e.target.result;
+async function cursorCollect(req, limit, mapFn) {
+  return new Promise((resolve, reject) => {
+    const out = [];
+    req.onerror = () => reject(req.error);
+    req.onsuccess = (e) => {
+      const cur = e.target.result;
       if (!cur) return resolve(out);
       out.push(mapFn ? mapFn(cur.value) : cur.value);
       if (limit && out.length >= limit) return resolve(out);
@@ -174,23 +174,23 @@ function cursorCollect(req, limit, mapFn) {
   });
 }
 
-export function listDirectors(db, scope, { limit = 50 } = {}) {
-  var tx = db.transaction(['directors'], 'readonly');
-  var idx = tx.objectStore('directors').index('byScope');
-  var req = idx.openCursor(IDBKeyRange.only(scope));
-  var rows = cursorCollect(req, limit);
-  txDone(tx);
+export async function listDirectors(db, scope, { limit = 50 } = {}) {
+  const tx = db.transaction(['directors'], 'readonly');
+  const idx = tx.objectStore('directors').index('byScope');
+  const req = idx.openCursor(IDBKeyRange.only(scope));
+  const rows = await cursorCollect(req, limit);
+  await txDone(tx);
   return rows;
 }
 
-export function upsertItem(db, scope, item) {
-  if (!item.Id) return;
-  var tx = db.transaction(['items'], 'readwrite');
-  var store = tx.objectStore('items');
-  var userData = normalizeUserData(item.UserData || item.UserDataDto || null);
+export async function upsertItem(db, scope, item) {
+  if (!item?.Id) return;
+  const tx = db.transaction(['items'], 'readwrite');
+  const store = tx.objectStore('items');
+  const userData = normalizeUserData(item.UserData || item.UserDataDto || null);
 
-  var rec = {
-    key: (scope) + "|" + (item.Id),
+  const rec = {
+    key: `${scope}|${item.Id}`,
     scope,
     Id: item.Id,
     Name: item.Name || '',
@@ -231,58 +231,58 @@ export function upsertItem(db, scope, item) {
   };
 
   store.put(rec);
-  txDone(tx);
+  await txDone(tx);
 }
 
-export function linkDirectorItem(db, scope, directorId, itemId) {
+export async function linkDirectorItem(db, scope, directorId, itemId) {
   if (!directorId || !itemId) return;
-  var tx = db.transaction(['directorItems'], 'readwrite');
-  var store = tx.objectStore('directorItems');
+  const tx = db.transaction(['directorItems'], 'readwrite');
+  const store = tx.objectStore('directorItems');
 
   store.put({
-    key: (scope) + "|" + (directorId) + "|" + (itemId),
+    key: `${scope}|${directorId}|${itemId}`,
     scope,
     directorId,
     itemId,
     updatedAt: Date.now(),
   });
 
-  txDone(tx);
+  await txDone(tx);
 }
 
-export function getItemsForDirector(db, scope, directorId, limit = 20) {
-  var tx = db.transaction(['directorItems', 'items'], 'readonly');
-  var relIdx = tx.objectStore('directorItems').index('byDirector');
-  var scanLimit = Math.max(limit * 4, limit);
-  var relReq = relIdx.openCursor(IDBKeyRange.only([scope, directorId]));
-  var rels = cursorCollectfunction(relReq, scanLimit, (v) v.itemId);
-  var itemStore = tx.objectStore('items');
-  var items = [];
+export async function getItemsForDirector(db, scope, directorId, limit = 20) {
+  const tx = db.transaction(['directorItems', 'items'], 'readonly');
+  const relIdx = tx.objectStore('directorItems').index('byDirector');
+  const scanLimit = Math.max(limit * 4, limit);
+  const relReq = relIdx.openCursor(IDBKeyRange.only([scope, directorId]));
+  const rels = await cursorCollect(relReq, scanLimit, (v) => v.itemId);
+  const itemStore = tx.objectStore('items');
+  const items = [];
 
-  for (var itemId of rels) {
+  for (const itemId of rels) {
     if (items.length >= limit) break;
-    var rec = promisify(itemStore.get((scope) + "|" + (itemId)));
-    var norm = normalizeCachedItem(rec);
+    const rec = await promisify(itemStore.get(`${scope}|${itemId}`));
+    const norm = normalizeCachedItem(rec);
     if (norm) items.push(norm);
   }
-  txDone(tx);
+  await txDone(tx);
   return items;
 }
 
-export function deleteItemsAndRelationsByIds(db, scope, ids) {
-  var list = Array.isArray(ids) ? Array.from(new Set(ids.map(function(x) String(x || "").trim()).filter(Boolean))) : [];
+export async function deleteItemsAndRelationsByIds(db, scope, ids) {
+  const list = Array.isArray(ids) ? Array.from(new Set(ids.map(x => String(x || "").trim()).filter(Boolean))) : [];
   if (!db || !scope || !list.length) return 0;
 
-  var tx = db.transaction(['items', 'directorItems'], 'readwrite');
-  var itemStore = tx.objectStore('items');
-  var relIdx = tx.objectStore('directorItems').index('byItem');
-  var removed = 0;
+  const tx = db.transaction(['items', 'directorItems'], 'readwrite');
+  const itemStore = tx.objectStore('items');
+  const relIdx = tx.objectStore('directorItems').index('byItem');
+  let removed = 0;
 
-  for (var itemId of list) {
-    try { itemStore.delete((scope) + "|" + (itemId)); } catch {}
+  for (const itemId of list) {
+    try { itemStore.delete(`${scope}|${itemId}`); } catch {}
 
-    new Promisefunction((resolve) {
-      var req;
+    await new Promise((resolve) => {
+      let req;
       try {
         req = relIdx.openCursor(IDBKeyRange.only([scope, itemId]));
       } catch {
@@ -290,9 +290,9 @@ export function deleteItemsAndRelationsByIds(db, scope, ids) {
         return;
       }
 
-      req.onerror = function() resolve();
-      req.onsuccess = function(e) {
-        var cur = e.target.result;
+      req.onerror = () => resolve();
+      req.onsuccess = (e) => {
+        const cur = e.target.result;
         if (!cur) {
           resolve();
           return;
@@ -303,19 +303,19 @@ export function deleteItemsAndRelationsByIds(db, scope, ids) {
     });
   }
 
-  txDone(tx);
+  await txDone(tx);
   return removed;
 }
 
-export function getMeta(db, key) {
-  var tx = db.transaction(['meta'], 'readonly');
-  var val = promisify(tx.objectStore('meta').get(key));
-  txDone(tx);
-  return val.value || null;
+export async function getMeta(db, key) {
+  const tx = db.transaction(['meta'], 'readonly');
+  const val = await promisify(tx.objectStore('meta').get(key));
+  await txDone(tx);
+  return val?.value ?? null;
 }
 
-export function setMeta(db, key, value) {
-  var tx = db.transaction(['meta'], 'readwrite');
+export async function setMeta(db, key, value) {
+  const tx = db.transaction(['meta'], 'readwrite');
   tx.objectStore('meta').put({ key, value, updatedAt: Date.now() });
-  txDone(tx);
+  await txDone(tx);
 }

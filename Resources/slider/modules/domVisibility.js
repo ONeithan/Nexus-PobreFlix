@@ -1,15 +1,15 @@
 export function isVisible(el) {
   if (!el) return false;
-  if (el.classList.contains("hide")) return false;
-  var rect = el.getBoundingClientRect.();
+  if (el.classList?.contains("hide")) return false;
+  const rect = el.getBoundingClientRect?.();
   return !!rect && rect.width >= 1 && rect.height >= 1;
 }
 
 export function waitForAnyVisible(selectors, { timeout = 20000 } = {}) {
-  return new Promisefunction((resolve) {
-    var check = function() {
-      for (var selector of selectors) {
-        var el = document.querySelector(selector);
+  return new Promise((resolve) => {
+    const check = () => {
+      for (const selector of selectors) {
+        const el = document.querySelector(selector);
         if (el && isVisible(el)) {
           cleanup();
           resolve(el);
@@ -19,7 +19,7 @@ export function waitForAnyVisible(selectors, { timeout = 20000 } = {}) {
       return false;
     };
 
-    var observer = new MutationObserverfunction(() {
+    const observer = new MutationObserver(() => {
       check();
     });
 
@@ -29,7 +29,7 @@ export function waitForAnyVisible(selectors, { timeout = 20000 } = {}) {
       attributes: true
     });
 
-    var timeoutId = setTimeoutfunction(() {
+    const timeoutId = setTimeout(() => {
       cleanup();
       resolve(null);
     }, timeout);

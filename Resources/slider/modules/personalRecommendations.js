@@ -3,7 +3,7 @@ import { getConfig, getHomeSectionsRuntimeConfig, normalizeManagedCardTitleDispl
 import { getLanguageLabels, getDefaultLanguage } from "../language/index.js";
 import { attachMiniPosterHover } from "./studioHubsUtils.js";
 import { openGenreExplorer, openPersonalExplorer } from "./genreExplorer.js";
-import { REOPEN_COOLDOWN_MS, getOpenHoverDelay } from "./hoverTrailerModal.js";
+import { REOPEN_COOLDOWN_MS, OPEN_HOVER_DELAY_MS } from "./hoverTrailerModal.js";
 import { createTrailerIframe, formatOfficialRatingLabel } from "./utils.js";
 import { openDetailsModal } from "./detailsModalLoader.js";
 import {
@@ -34,64 +34,64 @@ import {
   waitForSectionTailAdvance
 } from "./homeSectionChain.js";
 
-var config = getConfig();
-var labels = getLanguageLabels.() || {};
-var IS_MOBILE = (navigator.maxTouchPoints > 0) || (window.innerWidth <= 820);
-var UNIFIED_ROW_ITEM_LIMIT = 20;
-var MIN_RATING = Number.isFinite(config.studioHubsMinRating)
+const config = getConfig();
+const labels = getLanguageLabels?.() || {};
+const IS_MOBILE = (navigator.maxTouchPoints > 0) || (window.innerWidth <= 820);
+const UNIFIED_ROW_ITEM_LIMIT = 20;
+const MIN_RATING = Number.isFinite(config.studioHubsMinRating)
   ? Math.max(0, Number(config.studioHubsMinRating))
   : 0;
-var PLACEHOLDER_URL = resolveSliderAssetHref(
+const PLACEHOLDER_URL = resolveSliderAssetHref(
   config.placeholderImage || "/slider/src/images/placeholder.png"
 );
-var ENABLE_GENRE_HUBS = !!config.enableGenreHubs;
-var HOME_DEBUG_STORAGE_KEY = "jms:debug:home-sections";
-var __hoverIntent = new WeakMap();
-var __enterTimers = new WeakMap();
-var __enterSeq     = new WeakMap();
-var __cooldownUntil= new WeakMap();
-var __openTokenMap = new WeakMap();
-var __boundPreview = new WeakMap();
-var GENRE_LAZY = true;
-var MOBILE_ROW_BATCH_SIZE = 1;
-var DESKTOP_INITIAL_GENRE_LOADS = 1;
-var GENRE_BATCH_SIZE = 1;
-var GENRE_ROOT_MARGIN = '500px 0px';
-var MANAGED_ROW_RELEASE_ROOT_MARGIN = IS_MOBILE
+const ENABLE_GENRE_HUBS = !!config.enableGenreHubs;
+const HOME_DEBUG_STORAGE_KEY = "jms:debug:home-sections";
+const __hoverIntent = new WeakMap();
+const __enterTimers = new WeakMap();
+const __enterSeq     = new WeakMap();
+const __cooldownUntil= new WeakMap();
+const __openTokenMap = new WeakMap();
+const __boundPreview = new WeakMap();
+const GENRE_LAZY = true;
+const MOBILE_ROW_BATCH_SIZE = 1;
+const DESKTOP_INITIAL_GENRE_LOADS = 1;
+const GENRE_BATCH_SIZE = 1;
+const GENRE_ROOT_MARGIN = '500px 0px';
+const MANAGED_ROW_RELEASE_ROOT_MARGIN = IS_MOBILE
   ? "0px 0px 60% 0px"
   : "0px 0px 22% 0px";
-var GENRE_FIRST_SCROLL_PX = Number(getConfig().genreRowsFirstBatchScrollPx) || 200;
-var MIN_GENRE_VISIBLE_CARD_COUNT = 3;
-var PRC_LOCK_DOWN_SCROLL = (getConfig().prcLockDownScrollDuringLoad === true);
+const GENRE_FIRST_SCROLL_PX = Number(getConfig()?.genreRowsFirstBatchScrollPx) || 200;
+const MIN_GENRE_VISIBLE_CARD_COUNT = 3;
+const PRC_LOCK_DOWN_SCROLL = (getConfig()?.prcLockDownScrollDuringLoad === true);
 
 function clampConfiguredCount(value, fallback, max = UNIFIED_ROW_ITEM_LIMIT) {
-  var n = Number(value);
+  const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
   return Math.max(1, Math.min(max, n | 0));
 }
 
 function getPersonalRecsCardCount(source = null) {
-  var cfg = source || getConfig.() || config || {};
+  const cfg = source || getConfig?.() || config || {};
   return clampConfiguredCount(cfg.personalRecsCardCount, 9);
 }
 
 function getBywRowCount(source = null) {
-  var cfg = source || getConfig.() || config || {};
+  const cfg = source || getConfig?.() || config || {};
   return clampConfiguredCount(cfg.becauseYouWatchedRowCount, 1, 50);
 }
 
 function getBywCardCount(source = null) {
-  var cfg = source || getConfig.() || config || {};
+  const cfg = source || getConfig?.() || config || {};
   return clampConfiguredCount(cfg.becauseYouWatchedCardCount, 10);
 }
 
 function getGenreRowsCount(source = null) {
-  var cfg = source || getConfig.() || config || {};
+  const cfg = source || getConfig?.() || config || {};
   return clampConfiguredCount(cfg.studioHubsGenreRowsCount, 4, 50);
 }
 
 function getGenreRowCardCount(source = null) {
-  var cfg = source || getConfig.() || config || {};
+  const cfg = source || getConfig?.() || config || {};
   return clampConfiguredCount(cfg.studioHubsGenreCardCount, 10);
 }
 
@@ -103,7 +103,7 @@ function isPlaybackCompletedUserData(userData) {
   if (!userData || typeof userData !== "object") return false;
   if (userData.Played === true) return true;
 
-  var playedPercentage = Number(userData.PlayedPercentage);
+  const playedPercentage = Number(userData.PlayedPercentage);
   return Number.isFinite(playedPercentage) && playedPercentage >= 100;
 }
 
@@ -111,41 +111,41 @@ function hasPartialPlaybackUserData(userData) {
   if (!userData || typeof userData !== "object") return false;
   if (isPlaybackCompletedUserData(userData)) return false;
 
-  var playedPercentage = Number(userData.PlayedPercentage);
+  const playedPercentage = Number(userData.PlayedPercentage);
   if (Number.isFinite(playedPercentage) && playedPercentage > 0 && playedPercentage < 100) {
     return true;
   }
 
-  var positionTicks = Number(userData.PlaybackPositionTicks || 0);
+  const positionTicks = Number(userData.PlaybackPositionTicks || 0);
   return positionTicks > 0;
 }
 
 function isPartialPlaybackItem(item) {
-  var userData = item.UserData || item.UserDataDto || null;
+  const userData = item?.UserData || item?.UserDataDto || null;
   if (!hasPartialPlaybackUserData(userData)) return false;
 
-  var positionTicks = Number(userData.PlaybackPositionTicks || 0);
-  var runtimeTicks = Number(item.RunTimeTicks || item.CumulativeRunTimeTicks || 0);
+  const positionTicks = Number(userData?.PlaybackPositionTicks || 0);
+  const runtimeTicks = Number(item?.RunTimeTicks || item?.CumulativeRunTimeTicks || 0);
   return runtimeTicks > 0 ? positionTicks < runtimeTicks : positionTicks > 0;
 }
 
 function getHomeRecommendationRuntimeConfig(source = null) {
-  return getHomeSectionsRuntimeConfig(source || (getConfig.() || config || {}));
+  return getHomeSectionsRuntimeConfig(source || (getConfig?.() || config || {}));
 }
 
 function isPersonalRecsHeroEnabled() {
-  return getConfig().showPersonalRecsHeroCards !== false;
+  return getConfig()?.showPersonalRecsHeroCards !== false;
 }
 
 function isGenreHubsHeroEnabled() {
-  return getConfig().showGenreHubsHeroCards !== false;
+  return getConfig()?.showGenreHubsHeroCards !== false;
 }
 
 function isPrcDebugEnabled() {
   try {
     if (window.__JMS_DEBUG_HOME_SECTIONS === true) return true;
     if (window.__JMS_DEBUG_HOME_SECTIONS === false) return false;
-    var raw = localStorage.getItem(HOME_DEBUG_STORAGE_KEY);
+    const raw = localStorage.getItem(HOME_DEBUG_STORAGE_KEY);
     return raw === "1" || raw === "true" || raw === "on";
   } catch {
     return window.__JMS_DEBUG_HOME_SECTIONS === true;
@@ -153,13 +153,13 @@ function isPrcDebugEnabled() {
 }
 
 function buildPrcDebugPayload(payload) {
-  var extra = payload && typeof payload === "object" && !Array.isArray(payload)
+  const extra = payload && typeof payload === "object" && !Array.isArray(payload)
     ? payload
     : { value: payload };
   return {
     at: new Date().toISOString(),
     hash: String(window.location.hash || ""),
-    page: currentIndexPage.().id || null,
+    page: currentIndexPage?.()?.id || null,
     ...extra,
   };
 }
@@ -174,7 +174,7 @@ function prcWarn(event, payload = {}) {
   try { console.warn("[JMS:PRC]", event, buildPrcDebugPayload(payload)); } catch {}
 }
 
-var PRC_DB_STATE = {
+const PRC_DB_STATE = {
   db: null,
   scope: null,
   userId: null,
@@ -182,9 +182,9 @@ var PRC_DB_STATE = {
   failed: false,
 };
 
-var PRC_SESSION_PERSONAL_CACHE = new Map();
-var PRC_SESSION_BYW_SEEDS_CACHE = new Map();
-var PRC_SESSION_BYW_ITEMS_CACHE = new Map();
+const PRC_SESSION_PERSONAL_CACHE = new Map();
+const PRC_SESSION_BYW_SEEDS_CACHE = new Map();
+const PRC_SESSION_BYW_ITEMS_CACHE = new Map();
 
 function getPrcSessionScope(userId, serverId) {
   return makeScope({ userId, serverId });
@@ -192,45 +192,45 @@ function getPrcSessionScope(userId, serverId) {
 
 function __appendCb(url, cb) {
   if (!url) return url;
-  var u = String(url);
-  var sep = u.includes('?') ? '&' : '?';
-  return (u) + (sep) + "cb=" + (encodeURIComponent(String(cb)));
+  const u = String(url);
+  const sep = u.includes('?') ? '&' : '?';
+  return `${u}${sep}cb=${encodeURIComponent(String(cb))}`;
 }
 
 function __appendCbToSrcset(srcset, cb) {
   if (!srcset || typeof srcset !== 'string') return '';
   return srcset
     .split(',')
-    .map(function(s) s.trim())
+    .map(s => s.trim())
     .filter(Boolean)
-    .map(function(part) {
-      var m = part.match(/^(\S+)(\s+.+)?$/);
+    .map(part => {
+      const m = part.match(/^(\S+)(\s+.+)?$/);
       if (!m) return part;
-      return (__appendCb(m[1], cb)) + (m[2] || '');
+      return `${__appendCb(m[1], cb)}${m[2] || ''}`;
     })
     .join(', ');
 }
 
 function __preloadOk(src) {
-  return new Promisefunction((resolve) {
-    var im = new Image();
+  return new Promise((resolve) => {
+    const im = new Image();
     im.decoding = 'async';
-    im.onload = function() resolve(true);
-    im.onerror = function() resolve(false);
+    im.onload = () => resolve(true);
+    im.onerror = () => resolve(false);
     im.src = src;
   });
 }
 
-function __preloadDecode(src) {
+async function __preloadDecode(src) {
   if (!src) return false;
   try {
-    var im = new Image();
+    const im = new Image();
     im.decoding = 'async';
     im.src = src;
     if (typeof im.decode === 'function') {
-      im.decode();
+      await im.decode();
     } else {
-      new Promisefunction((res, rej) { im.onload = res; im.onerror = rej; });
+      await new Promise((res, rej) => { im.onload = res; im.onerror = rej; });
     }
     return true;
   } catch {
@@ -239,7 +239,7 @@ function __preloadDecode(src) {
 }
 
 function __prcCfg() {
-  var cfg = getConfig.() || config || {};
+  const cfg = getConfig?.() || config || {};
   return {
     enabled: (cfg.prcUseDirRowsDb !== false),
     personalTtlMs: Number.isFinite(cfg.prcDbPersonalTtlMs) ? Math.max(60_000, cfg.prcDbPersonalTtlMs|0) : 6 * 60 * 60 * 1000,
@@ -250,30 +250,30 @@ function __prcCfg() {
   };
 }
 
-function __metaKeyGenresList(scope){ return "prc:genresList:" + (scope); }
+function __metaKeyGenresList(scope){ return `prc:genresList:${scope}`; }
 
 function __isoWeekKey(d = new Date()) {
-  var date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  var dayNum = date.getUTCDay() || 7;
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
   date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-  var yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  var weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
-  var y = date.getUTCFullYear();
-  return (y) + "-W" + (String(weekNo).padStart(2, '0'));
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+  const y = date.getUTCFullYear();
+  return `${y}-W${String(weekNo).padStart(2, '0')}`;
 }
 
-function __metaKeyPersonal(scope){ return "prc:personal:" + (scope); }
-function __metaKeyPersonalLast(scope){ return "prc:personal:lastShown:" + (scope); }
+function __metaKeyPersonal(scope){ return `prc:personal:${scope}`; }
+function __metaKeyPersonalLast(scope){ return `prc:personal:lastShown:${scope}`; }
 function __metaKeyGenre(scope, genre){
-  return "prc:genre:" + (scope) + ":" + (String(genre||"").trim().toLowerCase());
+  return `prc:genre:${scope}:${String(genre||"").trim().toLowerCase()}`;
 }
-function __metaKeyByw(scope){ return "prc:byw:" + (scope); }
-function __metaKeyBywSeed(scope){ return "prc:byw:seed:" + (scope); }
-function __metaKeyBywLast(scope){ return "prc:byw:lastShown:" + (scope); }
-function __metaKeyBywScoped(scope, seedKey){ return "prc:byw:" + (seedKey) + ":" + (scope); }
-function __metaKeyBywLastScoped(scope, seedKey){ return "prc:byw:lastShown:" + (seedKey) + ":" + (scope); }
+function __metaKeyByw(scope){ return `prc:byw:${scope}`; }
+function __metaKeyBywSeed(scope){ return `prc:byw:seed:${scope}`; }
+function __metaKeyBywLast(scope){ return `prc:byw:lastShown:${scope}`; }
+function __metaKeyBywScoped(scope, seedKey){ return `prc:byw:${seedKey}:${scope}`; }
+function __metaKeyBywLastScoped(scope, seedKey){ return `prc:byw:lastShown:${seedKey}:${scope}`; }
 
-var PRC_PURGE_KEY = function(scope) "prc:purge:last:" + (scope);
+const PRC_PURGE_KEY = (scope) => `prc:purge:last:${scope}`;
 
 function getPrcTypeToken(itemType) {
   if (itemType === "Series") return "series";
@@ -282,29 +282,29 @@ function getPrcTypeToken(itemType) {
 }
 
 function getPrcCardTypeBadge(itemType) {
-  var ll = config.languageLabels || {};
+  const ll = config.languageLabels || {};
   if (itemType === "Series") {
-    return { label: ll.dizi || labels.dizi || "Série", icon: "tv" };
+    return { label: ll.dizi || labels.dizi || "Dizi", icon: "tv" };
   }
   if (itemType === "BoxSet") {
     return {
-      label: ll.collectionTitle || ll.boxset || labels.collectionTitle || labels.boxset || "Coleção",
+      label: ll.collectionTitle || ll.boxset || labels.collectionTitle || labels.boxset || "Collection",
       icon: "layerGroup"
     };
   }
-  return { label: ll.film || labels.film || "Filme", icon: "film" };
+  return { label: ll.film || labels.film || "Film", icon: "film" };
 }
 
-function maybePurgePrcDb(st) {
+async function maybePurgePrcDb(st) {
   try {
-    var cfg = __prcCfg();
-    if (!st.db || !st.scope) return;
+    const cfg = __prcCfg();
+    if (!st?.db || !st?.scope) return;
 
-    var last = getMeta(st.db, PRC_PURGE_KEY(st.scope));
-    var lastTs = Number(last.ts || 0);
+    const last = await getMeta(st.db, PRC_PURGE_KEY(st.scope));
+    const lastTs = Number(last?.ts || 0);
     if (lastTs && (Date.now() - lastTs) < 24 * 60 * 60 * 1000) return;
 
-    purgePrcDb(st.db, st.scope, {
+    await purgePrcDb(st.db, st.scope, {
       items: {
         ttlMs: Math.max(cfg.genreTtlMs, cfg.personalTtlMs, cfg.bywTtlMs) * 6,
         maxItems: Math.max(600, cfg.maxCacheIds * 20),
@@ -317,25 +317,25 @@ function maybePurgePrcDb(st) {
       }
     });
 
-    setMeta(st.db, PRC_PURGE_KEY(st.scope), { ts: Date.now() });
+    await setMeta(st.db, PRC_PURGE_KEY(st.scope), { ts: Date.now() });
   } catch {}
 }
 
-function ensurePrcDb(userId, serverId) {
-  var cfg = __prcCfg();
+async function ensurePrcDb(userId, serverId) {
+  const cfg = __prcCfg();
   if (!cfg.enabled) return null;
   if (PRC_DB_STATE.failed) return null;
 
-  var scope = makeScope({ userId, serverId });
+  const scope = makeScope({ userId, serverId });
   if (PRC_DB_STATE.db && PRC_DB_STATE.scope === scope) return PRC_DB_STATE;
 
   try {
-    PRC_DB_STATE.db = openPrcDB();
+    PRC_DB_STATE.db = await openPrcDB();
     PRC_DB_STATE.scope = scope;
     PRC_DB_STATE.userId = userId;
     PRC_DB_STATE.serverId = serverId;
     PRC_DB_STATE.failed = false;
-    try { maybePurgePrcDb(PRC_DB_STATE); } catch {}
+    try { await maybePurgePrcDb(PRC_DB_STATE); } catch {}
     return PRC_DB_STATE;
   } catch (e) {
     console.warn("PRC DB init failed:", e);
@@ -348,128 +348,128 @@ function ensurePrcDb(userId, serverId) {
 
 function normalizeCachedItemLocal(rec) {
   if (!rec) return null;
-  var Id = rec.Id || rec.itemId || null;
+  const Id = rec.Id || rec.itemId || null;
   if (!Id) return null;
   return {
     Id,
     Name: rec.Name || rec.name || "",
     Type: rec.Type || rec.type || "",
-    ProductionYear: rec.ProductionYear || rec.productionYear || null,
+    ProductionYear: rec.ProductionYear ?? rec.productionYear ?? null,
     OfficialRating: rec.OfficialRating || rec.officialRating || "",
-    CommunityRating: (rec.CommunityRating || rec.communityRating || null),
+    CommunityRating: (rec.CommunityRating ?? rec.communityRating ?? null),
     ImageTags: rec.ImageTags || rec.imageTags || null,
     BackdropImageTags: rec.BackdropImageTags || rec.backdropImageTags || null,
-    PrimaryImageAspectRatio: rec.PrimaryImageAspectRatio || rec.primaryImageAspectRatio || null,
+    PrimaryImageAspectRatio: rec.PrimaryImageAspectRatio ?? rec.primaryImageAspectRatio ?? null,
     Overview: rec.Overview || rec.overview || "",
     Genres: rec.Genres || rec.genres || [],
-    RunTimeTicks: rec.RunTimeTicks || rec.runTimeTicks || null,
-    CumulativeRunTimeTicks: rec.CumulativeRunTimeTicks || rec.cumulativeRunTimeTicks || null,
+    RunTimeTicks: rec.RunTimeTicks ?? rec.runTimeTicks ?? null,
+    CumulativeRunTimeTicks: rec.CumulativeRunTimeTicks ?? rec.cumulativeRunTimeTicks ?? null,
     RemoteTrailers: rec.RemoteTrailers || rec.remoteTrailers || [],
-    DateCreatedTicks: rec.DateCreatedTicks || rec.dateCreatedTicks || 0,
+    DateCreatedTicks: rec.DateCreatedTicks ?? rec.dateCreatedTicks ?? 0,
     People: rec.People || rec.people || [],
     PrimaryImageTag: rec.PrimaryImageTag || rec.primaryImageTag || null,
     __preferTaglessImages: true,
   };
 }
 
-function dbGetItemsByIds(db, scope, ids) {
-  var clean = (ids || []).filter(Boolean);
+async function dbGetItemsByIds(db, scope, ids) {
+  const clean = (ids || []).filter(Boolean);
   if (!db || !scope || !clean.length) return [];
 
-  return new Promisefunction((resolve) {
-    var out = [];
-    var pending = 0;
-    var aborted = false;
+  return new Promise((resolve) => {
+    const out = [];
+    let pending = 0;
+    let aborted = false;
 
-    var tx = null;
+    let tx = null;
     try {
       tx = db.transaction(["items"], "readonly");
     } catch {
       resolve([]);
       return;
     }
-    var store = tx.objectStore("items");
+    const store = tx.objectStore("items");
 
-    tx.onabort = function() { aborted = true; resolve(out); };
-    tx.onerror = function() { aborted = true; resolve(out); };
-    tx.oncomplete = function() resolve(out);
+    tx.onabort = () => { aborted = true; resolve(out); };
+    tx.onerror = () => { aborted = true; resolve(out); };
+    tx.oncomplete = () => resolve(out);
 
-    for (var id of clean) {
+    for (const id of clean) {
       pending++;
-      var req;
+      let req;
       try {
-        req = store.get((scope) + "|" + (id));
+        req = store.get(`${scope}|${id}`);
       } catch {
         pending--;
         continue;
       }
-      req.onsuccess = function() {
+      req.onsuccess = () => {
         if (aborted) return;
-        var norm = normalizeCachedItemLocal(req.result);
+        const norm = normalizeCachedItemLocal(req.result);
         if (norm) out.push(norm);
         pending--;
       };
-      req.onerror = function() { pending--; };
+      req.onerror = () => { pending--; };
     }
   });
 }
 
-function dbWriteThroughItems(db, scope, items) {
-  if (!db || !scope || !items.length) return;
+async function dbWriteThroughItems(db, scope, items) {
+  if (!db || !scope || !items?.length) return;
   try {
-    putItems(db, scope, items);
+    await putItems(db, scope, items);
   } catch (e) {
     console.warn("PRC DB write-through failed:", e);
   }
 }
 
-function filterOutPlayedIds(userId, ids) {
-  var cfg = __prcCfg();
-  var clean = Array.isArray(ids) ? Array.from(new Set(ids.filter(Boolean))) : [];
+async function filterOutPlayedIds(userId, ids) {
+  const cfg = __prcCfg();
+  const clean = Array.isArray(ids) ? Array.from(new Set(ids.filter(Boolean))) : [];
   if (!cfg.validateUserData || !clean.length) return clean;
 
-  var played = new Set();
-  var alive = new Set();
-  var failed = new Set();
-  var CHUNK = 60;
-  var PAR = 2;
-  var hadSuccess = false;
+  const played = new Set();
+  const alive = new Set();
+  const failed = new Set();
+  const CHUNK = 60;
+  const PAR = 2;
+  let hadSuccess = false;
 
   try {
-    for (var i = 0; i < clean.length; i += CHUNK * PAR) {
-      var ps = [];
-      for (var j = i; j < Math.min(clean.length, i + CHUNK * PAR); j += CHUNK) {
-        var chunk = clean.slice(j, j + CHUNK);
-        var url =
-          "/Users/" + (encodeURIComponent(userId)) + "/Items?" +
-          "Ids=" + (encodeURIComponent(chunk.join(","))) + "&Fields=UserData";
+    for (let i = 0; i < clean.length; i += CHUNK * PAR) {
+      const ps = [];
+      for (let j = i; j < Math.min(clean.length, i + CHUNK * PAR); j += CHUNK) {
+        const chunk = clean.slice(j, j + CHUNK);
+        const url =
+          `/Users/${encodeURIComponent(userId)}/Items?` +
+          `Ids=${encodeURIComponent(chunk.join(","))}&Fields=UserData`;
 
         ps.push(
           makeApiRequest(url)
-            .thenfunction((r) {
+            .then((r) => {
               hadSuccess = true;
-              var items = Array.isArray(r.Items) ? r.Items : (Array.isArray(r) ? r : []);
-              for (var it of items) {
-                if (!it.Id) continue;
+              const items = Array.isArray(r?.Items) ? r.Items : (Array.isArray(r) ? r : []);
+              for (const it of items) {
+                if (!it?.Id) continue;
                 alive.add(it.Id);
-                if (it.UserData.Played === true) played.add(it.Id);
+                if (it?.UserData?.Played === true) played.add(it.Id);
               }
             })
-            .catchfunction(() {
-              for (var id of chunk) failed.add(id);
+            .catch(() => {
+              for (const id of chunk) failed.add(id);
             })
         );
       }
-      Promise.all(ps);
+      await Promise.all(ps);
     }
     if (!hadSuccess) return clean;
-    return clean.filter(function(id) (alive.has(id) && !played.has(id)) || failed.has(id));
+    return clean.filter(id => (alive.has(id) && !played.has(id)) || failed.has(id));
   } catch {
     return clean;
   }
 }
 
-var GENRE_STATE = {
+const GENRE_STATE = {
   genres: [],
   sections: [],
   nextIndex: 0,
@@ -485,23 +485,23 @@ var GENRE_STATE = {
 };
 
 function makeManagedGenreHubSectionId(index = 0) {
-  return "genre-hubs--" + (Math.max(0, index | 0));
+  return `genre-hubs--${Math.max(0, index | 0)}`;
 }
 
 function getManagedGenreHubSections(root = getHomeSectionsContainer(currentIndexPage()) || document) {
-  return Array.from(root.querySelectorAll.('[id^="genre-hubs--"]') || [])
-    .filterfunction((el) el.isConnected)
-    .sortfunction((left, right) {
-      var li = Number(String(left.id || "").split("--")[1]) || 0;
-      var ri = Number(String(right.id || "").split("--")[1]) || 0;
+  return Array.from(root?.querySelectorAll?.('[id^="genre-hubs--"]') || [])
+    .filter((el) => el?.isConnected)
+    .sort((left, right) => {
+      const li = Number(String(left.id || "").split("--")[1]) || 0;
+      const ri = Number(String(right.id || "").split("--")[1]) || 0;
       return li - ri;
     });
 }
 
 function cleanupManagedGenreHubSections(root = getHomeSectionsContainer(currentIndexPage()) || document) {
-  for (var section of getManagedGenreHubSections(root)) {
+  for (const section of getManagedGenreHubSections(root)) {
     try {
-      section.querySelectorAll('.personal-recs-card, .dir-row-hero').forEach(function((el) {
+      section.querySelectorAll('.personal-recs-card, .dir-row-hero').forEach((el) => {
         try { el.dispatchEvent(new Event('jms:cleanup')); } catch {}
       });
     } catch {}
@@ -510,10 +510,10 @@ function cleanupManagedGenreHubSections(root = getHomeSectionsContainer(currentI
 }
 
 function placeGenreHubSection(section) {
-  var parent = GENRE_STATE.hostEl || getHomeSectionsContainer(currentIndexPage()) || document.body;
-  var siblings = getManagedGenreHubSections(parent);
-  var last = siblings[siblings.length - 1] || null;
-  if (last.parentElement === parent) {
+  const parent = GENRE_STATE.hostEl || getHomeSectionsContainer(currentIndexPage()) || document.body;
+  const siblings = getManagedGenreHubSections(parent);
+  const last = siblings[siblings.length - 1] || null;
+  if (last?.parentElement === parent) {
     last.insertAdjacentElement("afterend", section);
   } else {
     appendToParent(parent, section);
@@ -535,20 +535,20 @@ function __signalGenreHubsDone() {
 
 function __maybeSignalGenreHubsDone() {
   try {
-    var total = (GENRE_STATE.genres && GENRE_STATE.genres.length) || 0;
+    const total = (GENRE_STATE.genres && GENRE_STATE.genres.length) || 0;
     if (!total) return;
     if (GENRE_STATE.nextIndex >= total) __signalGenreHubsDone();
   } catch {}
 }
 
 function setGenreArrowLoading(isLoading) {
-  var arrow = GENRE_STATE._loadMoreArrow;
+  const arrow = GENRE_STATE._loadMoreArrow;
   if (!arrow) return;
 
   if (isLoading) {
     arrow.classList.add('is-loading');
     arrow.disabled = true;
-    arrow.innerHTML = "<span class=\"gh-spinner\" aria-hidden=\"true\"></span>";
+    arrow.innerHTML = `<span class="gh-spinner" aria-hidden="true"></span>`;
     arrow.setAttribute('aria-busy', 'true');
   } else {
     arrow.classList.remove('is-loading');
@@ -559,39 +559,39 @@ function setGenreArrowLoading(isLoading) {
 }
 
 function placeGenreLoadMoreArrow() {
-  var parent = GENRE_STATE.hostEl || getHomeSectionsContainer(currentIndexPage()) || document.body;
-  var arrow = GENRE_STATE._loadMoreArrow;
+  const parent = GENRE_STATE.hostEl || getHomeSectionsContainer(currentIndexPage()) || document.body;
+  const arrow = GENRE_STATE._loadMoreArrow;
   if (!parent || !arrow) return;
-  var siblings = getManagedGenreHubSections(parent);
-  var last = siblings[siblings.length - 1] || null;
-  if (last.parentElement === parent) {
+  const siblings = getManagedGenreHubSections(parent);
+  const last = siblings[siblings.length - 1] || null;
+  if (last?.parentElement === parent) {
     last.insertAdjacentElement("afterend", arrow);
   } else {
     appendToParent(parent, arrow);
   }
 }
 
-var __genreScrollIdleTimer = null;
-var __genreScrollIdleAttached = false;
-var __genreArrowObserver = null;
-var __genreScrollHandler = null;
-var __genreAutoPumpTimer = null;
-var __personalRecsInitDone = false;
-var __genreHubsBusy = false;
-var __deferredHomeSectionSeq = 0;
-var __bywDeferredPromise = null;
-var __genreDeferredPromise = null;
-var __personalRecsRetryTo = null;
-var __personalRecsMountPromise = null;
+let __genreScrollIdleTimer = null;
+let __genreScrollIdleAttached = false;
+let __genreArrowObserver = null;
+let __genreScrollHandler = null;
+let __genreAutoPumpTimer = null;
+let __personalRecsInitDone = false;
+let __genreHubsBusy = false;
+let __deferredHomeSectionSeq = 0;
+let __bywDeferredPromise = null;
+let __genreDeferredPromise = null;
+let __personalRecsRetryTo = null;
+let __personalRecsMountPromise = null;
 
 function isPersonalRecsHomeRoute() {
-  var h = String(window.location.hash || "").toLowerCase();
+  const h = String(window.location.hash || "").toLowerCase();
   return h.startsWith("#/home") || h.startsWith("#/index") || h === "" || h === "#";
 }
 
 function setDoneFlag(flagName, eventName, done) {
-  var next = !!done;
-  var prev = false;
+  const next = !!done;
+  let prev = false;
   try { prev = window[flagName] === true; } catch {}
   try { window[flagName] = next; } catch {}
   if (next && !prev && eventName) {
@@ -619,8 +619,8 @@ function getBywDone() {
 
 function hasActivePersonalRecsHomeSections() {
   if (!isPersonalRecsHomeRoute()) return false;
-  var page = currentIndexPage();
-  return !!page.querySelector.(".homeSectionsContainer");
+  const page = currentIndexPage();
+  return !!page?.querySelector?.(".homeSectionsContainer");
 }
 
 function clearPersonalRecsRetry() {
@@ -635,9 +635,9 @@ function schedulePersonalRecsRetry(ms = 1000, options = {}, reason = "retry") {
   prcWarn("retry:scheduled", {
     delayMs: Math.max(120, ms | 0),
     reason,
-    force: options.force === true,
+    force: options?.force === true,
   });
-  __personalRecsRetryTo = setTimeoutfunction(() {
+  __personalRecsRetryTo = setTimeout(() => {
     __personalRecsRetryTo = null;
     void renderPersonalRecommendations(options);
   }, Math.max(120, ms | 0));
@@ -673,12 +673,12 @@ function scheduleDeferredBecauseYouWatchedRender({
     return __bywDeferredPromise;
   }
 
-  var resolvePage = function() (
-    (indexPage.isConnected ? indexPage : null) ||
+  const resolvePage = () => (
+    (indexPage?.isConnected ? indexPage : null) ||
     currentIndexPage()
   );
 
-  var run = enqueueManagedSectionRenderfunction("becauseYouWatched", () {
+  const run = enqueueManagedSectionRender("becauseYouWatched", async () => {
     try {
       prcLog("BYW:start", { force, seq });
       if (seq !== __deferredHomeSectionSeq) return false;
@@ -686,7 +686,7 @@ function scheduleDeferredBecauseYouWatchedRender({
         prcWarn("BYW:abort:no-home-sections", { force, seq });
         return false;
       }
-      renderBecauseYouWatchedAuto(resolvePage(), { force });
+      await renderBecauseYouWatchedAuto(resolvePage(), { force });
       prcLog("BYW:success", { force, seq });
       return true;
     } catch (e) {
@@ -694,7 +694,7 @@ function scheduleDeferredBecauseYouWatchedRender({
       prcWarn("BYW:error", {
         force,
         seq,
-        error: e.message || String(e),
+        error: e?.message || String(e),
       });
       setBywDone(true);
       return false;
@@ -703,19 +703,19 @@ function scheduleDeferredBecauseYouWatchedRender({
     timeoutMs: 25000,
     force,
     reuseKey: false,
-    getAnchor: function() {
-      var page = resolvePage();
-      var section = getScopedSection("because-you-watched--0", page);
-      return section.isConnected ? section : null;
+    getAnchor: () => {
+      const page = resolvePage();
+      const section = getScopedSection("because-you-watched--0", page);
+      return section?.isConnected ? section : null;
     },
-    isStillValid: function() (
+    isStillValid: () => (
       seq === __deferredHomeSectionSeq &&
       hasActivePersonalRecsHomeSections()
     ),
   });
 
   __bywDeferredPromise = run;
-  run.finallyfunction(() {
+  run.finally(() => {
     if (__bywDeferredPromise === run) {
       __bywDeferredPromise = null;
     }
@@ -734,11 +734,11 @@ function scheduleDeferredGenreHubsRender({ force = false, seq = __deferredHomeSe
     return __genreDeferredPromise;
   }
 
-  var anchorWrap = hasActivePersonalRecsHomeSections()
+  const anchorWrap = hasActivePersonalRecsHomeSections()
     ? ensureGenreHubsShell(currentIndexPage())
     : null;
 
-  var run = enqueueManagedSectionRenderfunction("genreHubs", () {
+  const run = enqueueManagedSectionRender("genreHubs", async () => {
     try {
       prcLog("GENRE:start", { force, seq });
       if (seq !== __deferredHomeSectionSeq) return false;
@@ -746,7 +746,7 @@ function scheduleDeferredGenreHubsRender({ force = false, seq = __deferredHomeSe
         prcWarn("GENRE:abort:no-home-sections", { force, seq });
         return false;
       }
-      renderGenreHubs(currentIndexPage());
+      await renderGenreHubs(currentIndexPage());
       prcLog("GENRE:success", { force, seq });
       return true;
     } catch (e) {
@@ -754,7 +754,7 @@ function scheduleDeferredGenreHubsRender({ force = false, seq = __deferredHomeSe
       prcWarn("GENRE:error", {
         force,
         seq,
-        error: e.message || String(e),
+        error: e?.message || String(e),
       });
       try { __signalGenreHubsDone(); } catch {}
       return false;
@@ -763,20 +763,20 @@ function scheduleDeferredGenreHubsRender({ force = false, seq = __deferredHomeSe
     timeoutMs: 25000,
     force,
     reuseKey: false,
-    getAnchor: function() {
-      var wrap = anchorWrap.isConnected
+    getAnchor: () => {
+      const wrap = anchorWrap?.isConnected
         ? anchorWrap
         : ensureGenreHubsShell(currentIndexPage());
-      return wrap.isConnected ? wrap : null;
+      return wrap?.isConnected ? wrap : null;
     },
-    isStillValid: function() (
+    isStillValid: () => (
       seq === __deferredHomeSectionSeq &&
       hasActivePersonalRecsHomeSections()
     ),
   });
 
   __genreDeferredPromise = run;
-  run.finallyfunction(() {
+  run.finally(() => {
     if (__genreDeferredPromise === run) {
       __genreDeferredPromise = null;
     }
@@ -801,40 +801,40 @@ function getInitialGenreLoadCount() {
 }
 
 function isGenreLoadTriggerNearViewport() {
-  var viewportH = window.innerHeight || document.documentElement.clientHeight || 800;
-  var preloadPx = Math.max(120, Number(GENRE_FIRST_SCROLL_PX) || 0);
-  var arrow = GENRE_STATE._loadMoreArrow;
+  const viewportH = window.innerHeight || document.documentElement.clientHeight || 800;
+  const preloadPx = Math.max(120, Number(GENRE_FIRST_SCROLL_PX) || 0);
+  const arrow = GENRE_STATE._loadMoreArrow;
 
-  if (arrow.isConnected) {
-    var rect = arrow.getBoundingClientRect();
+  if (arrow?.isConnected) {
+    const rect = arrow.getBoundingClientRect();
     if (rect.top <= (viewportH + preloadPx) && rect.bottom >= -preloadPx) {
       return true;
     }
   }
 
-  var anchor = GENRE_STATE._loadMoreArrow || getManagedGenreHubSections(GENRE_STATE.hostEl || getHomeSectionsContainer(currentIndexPage()) || document).slice(-1)[0] || null;
-  if (!anchor.isConnected) return false;
+  const anchor = GENRE_STATE._loadMoreArrow || getManagedGenreHubSections(GENRE_STATE.hostEl || getHomeSectionsContainer(currentIndexPage()) || document).slice(-1)[0] || null;
+  if (!anchor?.isConnected) return false;
 
-  var rect = anchor.getBoundingClientRect();
+  const rect = anchor.getBoundingClientRect();
   return rect.bottom <= (viewportH + preloadPx);
 }
 
 function queueGenreViewportLoad(delayMs = 220) {
   if (!__genreScrollIdleAttached) return;
   if (GENRE_STATE.loading) return;
-  if (GENRE_STATE.nextIndex >= (GENRE_STATE.genres.length || 0)) {
+  if (GENRE_STATE.nextIndex >= (GENRE_STATE.genres?.length || 0)) {
     detachGenreScrollIdleLoader();
     return;
   }
   if (__genreScrollIdleTimer) return;
   if (!isGenreLoadTriggerNearViewport()) return;
 
-  __genreScrollIdleTimer = setTimeoutfunction(() {
+  __genreScrollIdleTimer = setTimeout(() => {
     __genreScrollIdleTimer = null;
 
     if (!__genreScrollIdleAttached) return;
     if (GENRE_STATE.loading) return;
-    if (GENRE_STATE.nextIndex >= (GENRE_STATE.genres.length || 0)) {
+    if (GENRE_STATE.nextIndex >= (GENRE_STATE.genres?.length || 0)) {
       detachGenreScrollIdleLoader();
       return;
     }
@@ -846,14 +846,14 @@ function queueGenreViewportLoad(delayMs = 220) {
 
 function requestNextGenreLoad({ force = false } = {}) {
   if (GENRE_STATE.loading) return;
-  if (GENRE_STATE.nextIndex >= (GENRE_STATE.genres.length || 0)) {
+  if (GENRE_STATE.nextIndex >= (GENRE_STATE.genres?.length || 0)) {
     detachGenreScrollIdleLoader();
     return;
   }
 
-  var start = function() {
+  const start = () => {
     if (GENRE_STATE.loading) return;
-    if (GENRE_STATE.nextIndex >= (GENRE_STATE.genres.length || 0)) {
+    if (GENRE_STATE.nextIndex >= (GENRE_STATE.genres?.length || 0)) {
       detachGenreScrollIdleLoader();
       return;
     }
@@ -873,27 +873,27 @@ function requestNextGenreLoad({ force = false } = {}) {
 
   if (GENRE_STATE.advancePromise) return;
 
-  var anchor = getManagedGenreHubSections(
+  const anchor = getManagedGenreHubSections(
     GENRE_STATE.hostEl || getHomeSectionsContainer(currentIndexPage()) || document
   ).slice(-1)[0] || null;
-  if (!anchor.isConnected) {
+  if (!anchor?.isConnected) {
     GENRE_STATE.awaitingAdvance = false;
     start();
     return;
   }
 
-  var gateSeq = GENRE_STATE.renderSeq;
+  const gateSeq = GENRE_STATE.renderSeq;
   GENRE_STATE.advancePromise = Promise.resolve(
     waitForSectionTailAdvance(anchor, {
       timeoutMs: 25000,
       rootMargin: MANAGED_ROW_RELEASE_ROOT_MARGIN,
     })
-  ).catchfunction(() {
-  }).thenfunction(() {
+  ).catch(() => {
+  }).then(() => {
     if (gateSeq !== GENRE_STATE.renderSeq) return;
     GENRE_STATE.awaitingAdvance = false;
     start();
-  }).finallyfunction(() {
+  }).finally(() => {
     if (gateSeq === GENRE_STATE.renderSeq) {
       GENRE_STATE.advancePromise = null;
     }
@@ -907,20 +907,20 @@ function attachGenreScrollIdleLoader() {
   __genreScrollIdleAttached = true;
 
   if (!GENRE_STATE._loadMoreArrow) {
-    var arrow = document.createElement('button');
+    const arrow = document.createElement('button');
     arrow.className = 'genre-load-more-arrow';
     arrow.type = 'button';
     arrow.innerHTML = faIconHtml("chevronDown");
     arrow.setAttribute(
       'aria-label',
       (labels.loadMoreGenres ||
-        config.languageLabels.loadMoreGenres ||
+        config.languageLabels?.loadMoreGenres ||
         'Daha fazla tür göster')
     );
 
     GENRE_STATE._loadMoreArrow = arrow;
 
-    arrow.addEventListenerfunction('click', (e) {
+    arrow.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       requestNextGenreLoad({ force: true });
@@ -935,8 +935,8 @@ function attachGenreScrollIdleLoader() {
   }
 
   if (typeof IntersectionObserver === "function") {
-    __genreArrowObserver = new IntersectionObserverfunction((entries) {
-      for (var ent of entries) {
+    __genreArrowObserver = new IntersectionObserver((entries) => {
+      for (const ent of entries) {
         if (!ent.isIntersecting) continue;
         requestNextGenreLoad({ force: false });
         break;
@@ -953,7 +953,7 @@ function attachGenreScrollIdleLoader() {
     } catch {}
   }
 
-  var onScroll = function() {
+  const onScroll = () => {
     queueGenreViewportLoad(220);
     scheduleGenreAutoPump(110, 0);
   };
@@ -976,14 +976,14 @@ function scheduleGenreAutoPump(delayMs = 90, retryCount = 0) {
   if (__genreAutoPumpTimer) return;
   if (!__genreScrollIdleAttached) return;
   if (GENRE_STATE.loading) return;
-  if (GENRE_STATE.nextIndex >= (GENRE_STATE.genres.length || 0)) return;
+  if (GENRE_STATE.nextIndex >= (GENRE_STATE.genres?.length || 0)) return;
 
-  __genreAutoPumpTimer = window.setTimeoutfunction(() {
+  __genreAutoPumpTimer = window.setTimeout(() => {
     __genreAutoPumpTimer = null;
 
     if (!__genreScrollIdleAttached) return;
     if (GENRE_STATE.loading) return;
-    if (GENRE_STATE.nextIndex >= (GENRE_STATE.genres.length || 0)) {
+    if (GENRE_STATE.nextIndex >= (GENRE_STATE.genres?.length || 0)) {
       detachGenreScrollIdleLoader();
       return;
     }
@@ -1000,7 +1000,7 @@ function scheduleGenreAutoPump(delayMs = 90, retryCount = 0) {
 
 function loadNextGenreViaArrow() {
   if (GENRE_STATE.loading) return;
-  if (GENRE_STATE.nextIndex >= (GENRE_STATE.genres.length || 0)) {
+  if (GENRE_STATE.nextIndex >= (GENRE_STATE.genres?.length || 0)) {
     detachGenreScrollIdleLoader();
     return;
   }
@@ -1009,16 +1009,16 @@ function loadNextGenreViaArrow() {
   setGenreArrowLoading(true);
   lockDownScroll();
 
-  var start = GENRE_STATE.nextIndex;
-  var end = Math.min(start + GENRE_BATCH_SIZE, GENRE_STATE.genres.length);
+  const start = GENRE_STATE.nextIndex;
+  const end = Math.min(start + GENRE_BATCH_SIZE, GENRE_STATE.genres.length);
 
   GENRE_STATE.nextIndex = end;
 
-  function(() {
-    for (var i = start; i < end; i++) {
-      ensureGenreLoaded(i);
+  (async () => {
+    for (let i = start; i < end; i++) {
+      await ensureGenreLoaded(i);
     }
-  })().finallyfunction(() {
+  })().finally(() => {
     GENRE_STATE.loading = false;
     setGenreArrowLoading(false);
     unlockDownScroll();
@@ -1068,7 +1068,7 @@ function detachGenreScrollIdleLoader() {
 }
 
 function setPrimaryCtaText(cardEl, text, isResume = false) {
-  var btn =
+  const btn =
     cardEl.querySelector('.dir-row-hero-play') ||
     cardEl.querySelector('.preview-play-button') ||
     cardEl.querySelector('.cardImageContainer .play') ||
@@ -1076,8 +1076,8 @@ function setPrimaryCtaText(cardEl, text, isResume = false) {
 
   if (btn) {
     if (btn.classList.contains('dir-row-hero-play')) {
-      var icon = findFaIcon(btn);
-      btn.innerHTML = (icon ? icon.outerHTML : '') + " " + (escapeHtml(text));
+      const icon = findFaIcon(btn);
+      btn.innerHTML = `${icon ? icon.outerHTML : ''} ${escapeHtml(text)}`;
     } else {
       btn.textContent = text;
     }
@@ -1087,35 +1087,35 @@ function setPrimaryCtaText(cardEl, text, isResume = false) {
 }
 
 function __idle(fn, timeout = 800) {
-  var ric = window.requestIdleCallback;
+  const ric = window.requestIdleCallback;
   if (typeof ric === "function") return ric(fn, { timeout });
   return setTimeout(fn, 0);
 }
 
 function yieldManagedHomeSectionStep(timeout = IS_MOBILE ? 96 : 44) {
-  return new Promisefunction((resolve) {
-    __idlefunction(() resolve(), Math.max(24, timeout | 0));
+  return new Promise((resolve) => {
+    __idle(() => resolve(), Math.max(24, timeout | 0));
   });
 }
 
-function prunePlayedCardsInRow(rowEl, userId) {
+async function prunePlayedCardsInRow(rowEl, userId) {
   try {
-    var cards = Array.from(rowEl.querySelectorAll.('.personal-recs-card') || []);
+    const cards = Array.from(rowEl?.querySelectorAll?.('.personal-recs-card') || []);
     if (!cards.length) return;
 
-    var ids = cards.map(function(el) el.dataset.itemId).filter(Boolean);
+    const ids = cards.map(el => el?.dataset?.itemId).filter(Boolean);
     if (!ids.length) return;
 
-    var alive = filterOutPlayedIds(userId, ids);
-    var aliveSet = new Set((alive || []).filter(Boolean));
+    const alive = await filterOutPlayedIds(userId, ids);
+    const aliveSet = new Set((alive || []).filter(Boolean));
 
     if (aliveSet.size === ids.length) return;
 
-    for (var el of cards) {
-      var id = el.dataset.itemId;
+    for (const el of cards) {
+      const id = el?.dataset?.itemId;
       if (id && !aliveSet.has(id)) {
         try { el.dispatchEvent(new Event('jms:cleanup')); } catch {}
-        try { el.remove(); } catch { try { el.parentElement.removeChild(el); } catch {} }
+        try { el.remove(); } catch { try { el.parentElement?.removeChild(el); } catch {} }
       }
     }
 
@@ -1125,70 +1125,70 @@ function prunePlayedCardsInRow(rowEl, userId) {
 
 function schedulePrunePlayedAfterPaint(rowEl, userId, delayMs = 380) {
   try {
-    setTimeoutfunction(() {
-      __idlefunction(() { prunePlayedCardsInRow(rowEl, userId); }, 1200);
+    setTimeout(() => {
+      __idle(() => { prunePlayedCardsInRow(rowEl, userId); }, 1200);
     }, Math.max(0, delayMs|0));
   } catch {}
 }
 
-function applyResumeLabelsToCards(cardEls, userId) {
-  var ids = cardEls
-    .map(function(el) el.dataset.itemId)
+async function applyResumeLabelsToCards(cardEls, userId) {
+  const ids = cardEls
+    .map(el => el?.dataset?.itemId)
     .filter(Boolean);
 
   if (!ids.length) return;
-  var url =
-    "/Users/" + (encodeURIComponent(userId)) + "/Items?" +
-    "Ids=" + (encodeURIComponent(ids.join(','))) + "&Fields=UserData";
+  const url =
+    `/Users/${encodeURIComponent(userId)}/Items?` +
+    `Ids=${encodeURIComponent(ids.join(','))}&Fields=UserData`;
 
-  var items = [];
+  let items = [];
   try {
-    var r = makeApiRequest(url);
-    items = Array.isArray(r.Items) ? r.Items : (Array.isArray(r) ? r : []);
+    const r = await makeApiRequest(url);
+    items = Array.isArray(r?.Items) ? r.Items : (Array.isArray(r) ? r : []);
   } catch {
     return;
   }
 
-  var byId = new Map(items.map(function(it) [it.Id, it]));
-  for (var el of cardEls) {
-    var id = el.dataset.itemId;
-    var it = byId.get(id);
-    var isResume = hasPartialPlaybackUserData(it.UserData);
-    var resumeText = (config.languageLabels.devamet || 'Sürdür');
-    var playText   = (config.languageLabels.izle    || 'Oynat');
+  const byId = new Map(items.map(it => [it.Id, it]));
+  for (const el of cardEls) {
+    const id = el?.dataset?.itemId;
+    const it = byId.get(id);
+    const isResume = hasPartialPlaybackUserData(it?.UserData);
+    const resumeText = (config.languageLabels?.devamet || 'Sürdür');
+    const playText   = (config.languageLabels?.izle    || 'Oynat');
     setPrimaryCtaText(el, isResume ? resumeText : playText, isResume);
   }
 }
 
 function scheduleResumeLabels(cardEls, userId) {
   try {
-    setTimeoutfunction(() __idlefunction(() applyResumeLabelsToCards(cardEls, userId), 900), 420);
+    setTimeout(() => __idle(() => applyResumeLabelsToCards(cardEls, userId), 900), 420);
   } catch {}
 }
 
-var __personalRecsBusy = false;
-var   __lastMoveTS   = 0;
-var __pmLast = 0;
-window.addEventListenerfunction('pointermove', () {
-  var now = Date.now();
+let __personalRecsBusy = false;
+let   __lastMoveTS   = 0;
+let __pmLast = 0;
+window.addEventListener('pointermove', () => {
+  const now = Date.now();
   if (now - __pmLast > 80) { __pmLast = now; __lastMoveTS = now; }
 }, {passive:true});
-var __touchStickyOpen = false;
-var __touchLastOpenTS = 0;
-var __activeGenre = null;
-var __currentGenreCtrl = null;
-var __genreCache = new Map();
-var __globalGenreHeroLoose = new Set();
-var __globalGenreHeroStrict = new Set();
-var TOUCH_STICKY_GRACE_MS = 1500;
-var SCROLLER_BUSY_ATTR = "data-jms-scroll-active";
-var SCROLLER_BUSY_IDLE_MS = 140;
-var SCROLLER_BUSY_COOLDOWN_MS = 220;
-var SCROLLER_BUSY_MAX_MS = 700;
+let __touchStickyOpen = false;
+let __touchLastOpenTS = 0;
+let __activeGenre = null;
+let __currentGenreCtrl = null;
+const __genreCache = new Map();
+const __globalGenreHeroLoose = new Set();
+const __globalGenreHeroStrict = new Set();
+const TOUCH_STICKY_GRACE_MS = 1500;
+const SCROLLER_BUSY_ATTR = "data-jms-scroll-active";
+const SCROLLER_BUSY_IDLE_MS = 140;
+const SCROLLER_BUSY_COOLDOWN_MS = 220;
+const SCROLLER_BUSY_MAX_MS = 700;
 function clearHeroHost(heroHost) {
   if (!heroHost) return;
   try {
-    heroHost.querySelectorAll('.dir-row-hero').forEach(function(el) {
+    heroHost.querySelectorAll('.dir-row-hero').forEach(el => {
       try { el.dispatchEvent(new Event('jms:cleanup')); } catch {}
     });
   } catch {}
@@ -1196,14 +1196,14 @@ function clearHeroHost(heroHost) {
 }
 
 function mountHero(heroHost, heroItem, serverId, heroLabel, { aboveFold=false } = {}) {
-  var heroItemId = resolveItemId(heroItem);
+  const heroItemId = resolveItemId(heroItem);
   if (!heroHost || !heroItemId) return { hero: null, changed: false };
 
-  var existing = heroHost.querySelector('.dir-row-hero');
-  var same = existing && (existing.dataset.itemId === String(heroItemId));
+  const existing = heroHost.querySelector('.dir-row-hero');
+  const same = existing && (existing.dataset.itemId === String(heroItemId));
 
   if (same) {
-    var lbl = existing.querySelector('.dir-row-hero-label');
+    const lbl = existing.querySelector('.dir-row-hero-label');
     if (lbl && heroLabel) lbl.textContent = heroLabel;
     return { hero: existing, changed: false };
   }
@@ -1212,10 +1212,10 @@ function mountHero(heroHost, heroItem, serverId, heroLabel, { aboveFold=false } 
     clearHeroHost(heroHost);
   }
 
-  var hero = createGenreHeroCard(heroItem, serverId, heroLabel, { aboveFold });
+  const hero = createGenreHeroCard(heroItem, serverId, heroLabel, { aboveFold });
   hero.classList.add('is-entering');
   heroHost.appendChild(hero);
-  requestAnimationFramefunction(() hero.classList.remove('is-entering'));
+  requestAnimationFrame(() => hero.classList.remove('is-entering'));
   return { hero, changed: true };
 }
 
@@ -1245,9 +1245,9 @@ export function setManagedImageSource(img, src, { fallback = PLACEHOLDER_URL } =
 
   cleanupManagedImage(img);
 
-  var primarySrc = resolveManagedImageUrl(src, "");
-  var fallbackSrc = resolveManagedImageUrl(fallback, "");
-  var nextSrc = primarySrc || fallbackSrc;
+  const primarySrc = resolveManagedImageUrl(src, "");
+  const fallbackSrc = resolveManagedImageUrl(fallback, "");
+  const nextSrc = primarySrc || fallbackSrc;
 
   try { img.removeAttribute("srcset"); } catch {}
   try {
@@ -1261,14 +1261,14 @@ export function setManagedImageSource(img, src, { fallback = PLACEHOLDER_URL } =
     return;
   }
 
-  var onLoad = function() {
+  const onLoad = () => {
     cleanupManagedImage(img);
     finalizeManagedImage(img);
   };
 
-  var onError = function() {
+  const onError = () => {
     cleanupManagedImage(img);
-    var currentSrc = img.currentSrc || img.src || "";
+    const currentSrc = img.currentSrc || img.src || "";
     if (fallbackSrc && currentSrc !== fallbackSrc) {
       setManagedImageSource(img, fallbackSrc, { fallback: "" });
       return;
@@ -1290,29 +1290,29 @@ export function setManagedImageSource(img, src, { fallback = PLACEHOLDER_URL } =
 }
 
 function makePRCKey(it) {
-  var nm = String(it.Name || "")
-    .normalize.('NFKD')
+  const nm = String(it?.Name || "")
+    .normalize?.('NFKD')
     .replace(/[^\p{Letter}\p{Number} ]+/gu, ' ')
     .replace(/\s+/g,' ')
     .trim()
     .toLowerCase();
-  var yr = it.ProductionYear
+  const yr = it?.ProductionYear
     ? String(it.ProductionYear)
-    : (it.PremiereDate ? String(new Date(it.PremiereDate).getUTCFullYear() || '') : '');
-   var tp = getPrcTypeToken(it.Type);
-   return (tp) + "::" + (nm) + "|" + (yr);
+    : (it?.PremiereDate ? String(new Date(it.PremiereDate).getUTCFullYear() || '') : '');
+   const tp = getPrcTypeToken(it?.Type);
+   return `${tp}::${nm}|${yr}`;
  }
 
 function makePRCLooseKey(it) {
-  var nm = String(it.Name || "")
-    .normalize.('NFKD')
+  const nm = String(it?.Name || "")
+    .normalize?.('NFKD')
     .replace(/[^\p{Letter}\p{Number} ]+/gu, ' ')
     .replace(/\s+/g,' ')
     .trim()
     .toLowerCase();
 
-  var tp = getPrcTypeToken(it.Type);
-  return (tp) + "::" + (nm);
+  const tp = getPrcTypeToken(it?.Type);
+  return `${tp}::${nm}`;
 }
 
 function buildPosterImageUrl(item) {
@@ -1320,55 +1320,55 @@ function buildPosterImageUrl(item) {
 }
 
 function shouldPreferTaglessImages(item) {
-  return item.__preferTaglessImages === true;
+  return item?.__preferTaglessImages === true;
 }
 
 function sanitizeResolvedId(value) {
   if (value == null) return null;
-  var out = String(value).trim();
+  const out = String(value).trim();
   if (!out || out === "undefined" || out === "null") return null;
   return out;
 }
 
 function resolveItemId(item) {
   return (
-    sanitizeResolvedId(item.Id) ||
-    sanitizeResolvedId(item.itemId) ||
-    sanitizeResolvedId(item.id) ||
-    sanitizeResolvedId(item.__posterSource.Id) ||
-    sanitizeResolvedId(item.__posterSource.itemId) ||
-    sanitizeResolvedId(item.__posterSource.id) ||
-    sanitizeResolvedId(item.AlbumId) ||
-    sanitizeResolvedId(item.ParentBackdropItemId) ||
-    sanitizeResolvedId(item.ParentId) ||
-    sanitizeResolvedId(item.SeriesId) ||
+    sanitizeResolvedId(item?.Id) ||
+    sanitizeResolvedId(item?.itemId) ||
+    sanitizeResolvedId(item?.id) ||
+    sanitizeResolvedId(item?.__posterSource?.Id) ||
+    sanitizeResolvedId(item?.__posterSource?.itemId) ||
+    sanitizeResolvedId(item?.__posterSource?.id) ||
+    sanitizeResolvedId(item?.AlbumId) ||
+    sanitizeResolvedId(item?.ParentBackdropItemId) ||
+    sanitizeResolvedId(item?.ParentId) ||
+    sanitizeResolvedId(item?.SeriesId) ||
     null
   );
 }
 
 function resolveItemName(item) {
   return String(
-    item.Name ||
-    item.SeriesName ||
-    item.__posterSource.Name ||
-    item.__posterSource.SeriesName ||
+    item?.Name ||
+    item?.SeriesName ||
+    item?.__posterSource?.Name ||
+    item?.__posterSource?.SeriesName ||
     ""
   ).trim();
 }
 
 function primeItemIdentity(item) {
   if (!item || typeof item !== "object") return { item, itemId: null, itemName: "" };
-  var itemId = resolveItemId(item);
-  var itemName = resolveItemName(item);
-  if (itemId && !sanitizeResolvedId(item.Id)) {
+  const itemId = resolveItemId(item);
+  const itemName = resolveItemName(item);
+  if (itemId && !sanitizeResolvedId(item?.Id)) {
     try { item.Id = itemId; } catch {}
   }
-  if (itemName && !item.Name) {
+  if (itemName && !item?.Name) {
     try { item.Name = itemName; } catch {}
   }
-  if (item.__posterSource && typeof item.__posterSource === "object") {
-    var posterId = resolveItemId(item.__posterSource);
-    if (posterId && !sanitizeResolvedId(item.__posterSource.Id)) {
+  if (item?.__posterSource && typeof item.__posterSource === "object") {
+    const posterId = resolveItemId(item.__posterSource);
+    if (posterId && !sanitizeResolvedId(item.__posterSource?.Id)) {
       try { item.__posterSource.Id = posterId; } catch {}
     }
   }
@@ -1377,10 +1377,10 @@ function primeItemIdentity(item) {
 
 function isRenderableGenreCardItem(item) {
   if (!item || typeof item !== "object") return false;
-  var { itemId, itemName } = primeItemIdentity(item);
+  const { itemId, itemName } = primeItemIdentity(item);
   if (!itemId || !itemName) return false;
 
-  var mediaType = String(item.Type || "").trim();
+  const mediaType = String(item?.Type || "").trim();
   if (mediaType && !["Movie", "Series", "BoxSet"].includes(mediaType)) {
     return false;
   }
@@ -1389,30 +1389,30 @@ function isRenderableGenreCardItem(item) {
 }
 
 function getPrimaryImageCandidate(item) {
-  var itemId = item.Id || item.AlbumId || null;
-  var tag =
-    item.ImageTags.Primary ||
-    item.PrimaryImageTag ||
-    item.AlbumPrimaryImageTag ||
+  const itemId = item?.Id || item?.AlbumId || null;
+  const tag =
+    item?.ImageTags?.Primary ||
+    item?.PrimaryImageTag ||
+    item?.AlbumPrimaryImageTag ||
     null;
   if (!itemId || !tag) return null;
   return { itemId, imageType: "Primary", tag };
 }
 
 function getThumbImageCandidate(item) {
-  var itemId = item.Id || null;
-  var tag = item.ImageTags.Thumb || item.ThumbImageTag || null;
+  const itemId = item?.Id || null;
+  const tag = item?.ImageTags?.Thumb || item?.ThumbImageTag || null;
   if (!itemId || !tag) return null;
   return { itemId, imageType: "Thumb", tag, aspectRatio: 16 / 9 };
 }
 
 function getBackdropImageCandidate(item) {
-  var itemId = item.ParentBackdropItemId || item.Id || null;
-  var tag =
-    (Array.isArray(item.ParentBackdropImageTags) && item.ParentBackdropImageTags[0]) ||
-    (Array.isArray(item.BackdropImageTags) && item.BackdropImageTags[0]) ||
-    item.BackdropImageTag ||
-    item.ImageTags.Backdrop ||
+  const itemId = item?.ParentBackdropItemId || item?.Id || null;
+  const tag =
+    (Array.isArray(item?.ParentBackdropImageTags) && item.ParentBackdropImageTags[0]) ||
+    (Array.isArray(item?.BackdropImageTags) && item.BackdropImageTags[0]) ||
+    item?.BackdropImageTag ||
+    item?.ImageTags?.Backdrop ||
     null;
   if (!itemId || !tag) return null;
   return { itemId, imageType: "Backdrop", tag, aspectRatio: 16 / 9 };
@@ -1428,55 +1428,55 @@ function getPosterLikeImageCandidate(item) {
 }
 
 function buildCandidateImageUrl(item, candidate, height = 540, quality = 72, { omitTag = false } = {}) {
-  if (!candidate.itemId || !candidate.imageType) return null;
-  var skipTag = omitTag || shouldPreferTaglessImages(item);
-  var parts = [];
+  if (!candidate?.itemId || !candidate?.imageType) return null;
+  const skipTag = omitTag || shouldPreferTaglessImages(item);
+  const parts = [];
 
-  if (!skipTag && candidate.tag) parts.push("tag=" + (encodeURIComponent(candidate.tag)));
+  if (!skipTag && candidate.tag) parts.push(`tag=${encodeURIComponent(candidate.tag)}`);
   if (candidate.imageType === "Primary") {
-    parts.push("maxHeight=" + (height));
+    parts.push(`maxHeight=${height}`);
   } else {
-    var aspectRatio = Number(candidate.aspectRatio) || (16 / 9);
-    parts.push("maxWidth=" + (Math.max(96, Math.round(height * aspectRatio))));
+    const aspectRatio = Number(candidate.aspectRatio) || (16 / 9);
+    parts.push(`maxWidth=${Math.max(96, Math.round(height * aspectRatio))}`);
   }
-  parts.push("quality=" + (quality));
-  parts.push("EnableImageEnhancers=false");
+  parts.push(`quality=${quality}`);
+  parts.push(`EnableImageEnhancers=false`);
 
-  return withServer("/Items/" + (candidate.itemId) + "/Images/" + (candidate.imageType) + "?" + (parts.join("&")));
+  return withServer(`/Items/${candidate.itemId}/Images/${candidate.imageType}?${parts.join("&")}`);
 }
 
 function buildLogoUrl(item, width = 220, quality = 80) {
   if (!item) return null;
 
-  var tag =
+  const tag =
     (item.ImageTags && (item.ImageTags.Logo || item.ImageTags.logo || item.ImageTags.LogoImageTag)) ||
     item.LogoImageTag ||
     null;
 
   if (!tag) return null;
 
-  var omitTag = shouldPreferTaglessImages(item);
-  var parts = [];
-  if (!omitTag) parts.push("tag=" + (encodeURIComponent(tag)));
-  parts.push("maxWidth=" + (width));
-  parts.push("quality=" + (quality));
-  parts.push("EnableImageEnhancers=false");
-  var url = "/Items/" + (item.Id) + "/Images/Logo?" + (parts.join("&"));
+  const omitTag = shouldPreferTaglessImages(item);
+  const parts = [];
+  if (!omitTag) parts.push(`tag=${encodeURIComponent(tag)}`);
+  parts.push(`maxWidth=${width}`);
+  parts.push(`quality=${quality}`);
+  parts.push(`EnableImageEnhancers=false`);
+  const url = `/Items/${item.Id}/Images/Logo?${parts.join("&")}`;
   return withServer(url);
 }
 
 function buildBackdropUrl(item, width = "auto", quality = 90) {
   if (!item) return null;
-  var candidate = getBackdropImageCandidate(item);
+  const candidate = getBackdropImageCandidate(item);
   if (!candidate) return null;
 
-  var omitTag = shouldPreferTaglessImages(item);
-  var parts = [];
-  if (!omitTag && candidate.tag) parts.push("tag=" + (encodeURIComponent(candidate.tag)));
-  parts.push("maxWidth=" + (width));
-  parts.push("quality=" + (quality));
-  parts.push("EnableImageEnhancers=false");
-  var url = "/Items/" + (candidate.itemId) + "/Images/Backdrop?" + (parts.join("&"));
+  const omitTag = shouldPreferTaglessImages(item);
+  const parts = [];
+  if (!omitTag && candidate.tag) parts.push(`tag=${encodeURIComponent(candidate.tag)}`);
+  parts.push(`maxWidth=${width}`);
+  parts.push(`quality=${quality}`);
+  parts.push(`EnableImageEnhancers=false`);
+  const url = `/Items/${candidate.itemId}/Images/Backdrop?${parts.join("&")}`;
   return withServer(url);
 }
 
@@ -1485,36 +1485,36 @@ function buildBackdropImageUrl(item) {
 }
 
 function hardWipeHoverModalDom() {
-  var modal = document.querySelector('.video-preview-modal');
+  const modal = document.querySelector('.video-preview-modal');
   if (!modal) return;
   try { modal.dataset.itemId = ""; } catch {}
-  modal.querySelectorAll('img').forEach(function(img) {
+  modal.querySelectorAll('img').forEach(img => {
     try { img.removeAttribute('src'); img.removeAttribute('srcset'); } catch {}
   });
-  modal.querySelectorAll('[data-field="title"],[data-field="subtitle"],[data-field="meta"],[data-field="genres"]').forEach(function(el) {
+  modal.querySelectorAll('[data-field="title"],[data-field="subtitle"],[data-field="meta"],[data-field="genres"]').forEach(el => {
     el.textContent = '';
   });
   try {
-    var matchBtn = modal.querySelector('.preview-match-button');
+    const matchBtn = modal.querySelector('.preview-match-button');
     if (matchBtn) {
       matchBtn.textContent = '';
       matchBtn.style.display = 'none';
     }
   } catch {}
   try {
-    var btns = modal.querySelector('.preview-buttons');
+    const btns = modal.querySelector('.preview-buttons');
     if (btns) {
       btns.style.opacity = '0';
       btns.style.pointerEvents = 'none';
     }
-    var playBtn = modal.querySelector('.preview-play-button');
+    const playBtn = modal.querySelector('.preview-play-button');
     if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
-    var favBtn = modal.querySelector('.preview-favorite-button');
+    const favBtn = modal.querySelector('.preview-favorite-button');
     if (favBtn) {
       favBtn.classList.remove('favorited');
       favBtn.innerHTML = '<i class="fa-solid fa-plus"></i>';
     }
-    var volBtn = modal.querySelector('.preview-volume-button');
+    const volBtn = modal.querySelector('.preview-volume-button');
     if (volBtn) volBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
   } catch {}
 
@@ -1525,7 +1525,7 @@ function currentIndexPage() {
 }
 
 function getHomeSectionsContainer(indexPage) {
-  var scopedContainer = indexPage.querySelector.(".homeSectionsContainer");
+  const scopedContainer = indexPage?.querySelector?.(".homeSectionsContainer");
   if (scopedContainer) return scopedContainer;
   if (indexPage && indexPage !== document.body) return indexPage;
 
@@ -1538,24 +1538,24 @@ function getHomeSectionsContainer(indexPage) {
 
 function getScopedSection(id, indexPage = currentIndexPage()) {
   if (!id) return null;
-  var selector = "#" + (id);
-  return indexPage.querySelector.(selector) || document.getElementById(id);
+  const selector = `#${id}`;
+  return indexPage?.querySelector?.(selector) || document.getElementById(id);
 }
 
 function getParentSection(parent, id, indexPage = currentIndexPage()) {
   if (!parent || !id) return null;
-  var selector = "#" + (id);
-  var localMatch =
-    indexPage.querySelector.(selector) ||
-    parent.querySelector.(selector) ||
+  const selector = `#${id}`;
+  const localMatch =
+    indexPage?.querySelector?.(selector) ||
+    parent.querySelector?.(selector) ||
     document.getElementById(id);
-  return localMatch.parentElement === parent ? localMatch : null;
+  return localMatch?.parentElement === parent ? localMatch : null;
 }
 
 function ensureIntoHomeSections(el, indexPage, { placeAfterId } = {}) {
   if (!el) return;
-  var apply = function() {
-    var container = indexPage.querySelector.(".homeSectionsContainer") || (
+  const apply = () => {
+    const container = indexPage?.querySelector?.(".homeSectionsContainer") || (
       (!indexPage || indexPage === document.body)
         ? (
             document.querySelector("#indexPage:not(.hide) .homeSectionsContainer, #homePage:not(.hide) .homeSectionsContainer") ||
@@ -1565,7 +1565,7 @@ function ensureIntoHomeSections(el, indexPage, { placeAfterId } = {}) {
     );
     if (!container) return false;
 
-    var ref = placeAfterId ? getScopedSection(placeAfterId, indexPage) : null;
+    const ref = placeAfterId ? getScopedSection(placeAfterId, indexPage) : null;
     if (ref && ref.parentElement === container) {
       insertAfter(container, el, ref);
     } else {
@@ -1576,9 +1576,9 @@ function ensureIntoHomeSections(el, indexPage, { placeAfterId } = {}) {
 
   if (apply()) return;
 
-  var tries = 0;
-  var maxTries = 100;
-  var mo = new MutationObserverfunction(() {
+  let tries = 0;
+  const maxTries = 100;
+  const mo = new MutationObserver(() => {
     tries++;
     if (apply() || tries >= maxTries) { try { mo.disconnect(); } catch {} }
   });
@@ -1609,7 +1609,7 @@ function insertAfter(parent, node, ref) {
   if (ref && ref.parentElement === parent) {
     if (node === ref) return;
     if (node.parentElement === parent && node.previousElementSibling === ref) return;
-    var next = ref.nextElementSibling;
+    const next = ref.nextElementSibling;
     if (next) {
       if (next === node) return;
       parent.insertBefore(node, next);
@@ -1622,17 +1622,17 @@ function insertAfter(parent, node, ref) {
 }
 
 function enforceOrder(homeSectionsHint) {
-  var indexPage = homeSectionsHint.closest.("#indexPage, #homePage") || currentIndexPage();
-  var parent = homeSectionsHint || getHomeSectionsContainer(indexPage);
+  const indexPage = homeSectionsHint?.closest?.("#indexPage, #homePage") || currentIndexPage();
+  const parent = homeSectionsHint || getHomeSectionsContainer(indexPage);
   if (!parent) return;
   bindManagedSectionsBelowNative(parent);
   try { keepManagedSectionsBelowNative(parent); } catch {}
-  try { parent.__jmsManagedBelowNativeSchedule.(); } catch {}
+  try { parent.__jmsManagedBelowNativeSchedule?.(); } catch {}
 }
 
 function placeSection(sectionEl, homeSections) {
   if (!sectionEl) return;
-  var targetParent = homeSections || getHomeSectionsContainer(currentIndexPage());
+  const targetParent = homeSections || getHomeSectionsContainer(currentIndexPage());
   appendToParent(targetParent || document.body, sectionEl);
   enforceOrder(targetParent);
   try { ensureIntoHomeSections(sectionEl, currentIndexPage()); } catch {}
@@ -1641,15 +1641,15 @@ function placeSection(sectionEl, homeSections) {
 (function ensureGlobalTouchOutsideCloser(){
   if (window.__jmsTouchCloserBound) return;
   window.__jmsTouchCloserBound = true;
-  document.addEventListenerfunction('pointerdown', (e) {
+  document.addEventListener('pointerdown', (e) => {
     if (!__touchStickyOpen) return;
-    var inModal = e.target.closest.('.video-preview-modal');
+    const inModal = e.target?.closest?.('.video-preview-modal');
     if (!inModal) {
       try { safeCloseHoverModal(); } catch {}
       __touchStickyOpen = false;
     }
   }, { passive: true });
-  document.addEventListenerfunction('keydown', (e) {
+  document.addEventListener('keydown', (e) => {
     if (!__touchStickyOpen) return;
     if (e.key === 'Escape') {
       try { safeCloseHoverModal(); } catch {}
@@ -1658,30 +1658,30 @@ function placeSection(sectionEl, homeSections) {
   });
 })();
 
-window.addEventListenerfunction('jms:hoverTrailer:close', () {
+window.addEventListener('jms:hoverTrailer:close', () => {
   __touchStickyOpen = false;
   __touchLastOpenTS = 0;
 }, { passive: true });
-window.addEventListenerfunction('jms:hoverTrailer:closed', () {
+window.addEventListener('jms:hoverTrailer:closed', () => {
   __touchStickyOpen = false;
   __touchLastOpenTS = 0;
 }, { passive: true });
 
 function clearEnterTimer(cardEl) {
-  var t = __enterTimers.get(cardEl);
+  const t = __enterTimers.get(cardEl);
   if (t) { clearTimeout(t); __enterTimers.delete(cardEl); }
 }
 
 function isHoveringCardOrModal(cardEl) {
   try {
-    var overCard  = cardEl.isConnected && cardEl.matches(':hover');
-    var overModal = !!document.querySelector('.video-preview-modal:hover');
+    const overCard  = cardEl?.isConnected && cardEl.matches(':hover');
+    const overModal = !!document.querySelector('.video-preview-modal:hover');
     return !!(overCard || overModal);
   } catch { return false; }
 }
 
 function schedulePostOpenGuard(cardEl, token, delay=340) {
-  setTimeoutfunction(() {
+  setTimeout(() => {
     if (__openTokenMap.get(cardEl) !== token) return;
     if (!isHoveringCardOrModal(cardEl)) {
       try { safeCloseHoverModal(); } catch {}
@@ -1690,8 +1690,8 @@ function schedulePostOpenGuard(cardEl, token, delay=340) {
 }
 
 function scheduleClosePollingGuard(cardEl, tries=6, interval=90) {
-  var count = 0;
-  var iid = setIntervalfunction(() {
+  let count = 0;
+  const iid = setInterval(() => {
     count++;
     if (isHoveringCardOrModal(cardEl)) { clearInterval(iid); return; }
     if (Date.now() - __lastMoveTS > 240 || count >= tries) {
@@ -1706,7 +1706,7 @@ function hasActiveHomePage() {
 }
 
 function hasRenderablePersonalRecsContent(indexPage) {
-  var section = getScopedSection("personal-recommendations", indexPage);
+  const section = getScopedSection("personal-recommendations", indexPage);
   if (!section) return false;
   return !!section.querySelector(
     ".personal-recs-row .personal-recs-card, .personal-recs-row .no-recommendations"
@@ -1715,42 +1715,42 @@ function hasRenderablePersonalRecsContent(indexPage) {
 
 function getBecauseYouWatchedSections(indexPage) {
   return Array.from(
-    indexPage.querySelectorAll.('[id^="because-you-watched--"], #because-you-watched') || []
-  ).filterfunction((section) !!section.isConnected);
+    indexPage?.querySelectorAll?.('[id^="because-you-watched--"], #because-you-watched') || []
+  ).filter((section) => !!section?.isConnected);
 }
 
 function hasRenderableBecauseYouWatchedContent(indexPage) {
-  var sections = getBecauseYouWatchedSections(indexPage);
+  const sections = getBecauseYouWatchedSections(indexPage);
   if (!sections.length) return false;
-  return sections.somefunction((section) !!section.querySelector(
+  return sections.some((section) => !!section.querySelector(
     ".byw-row .personal-recs-card, .byw-row .no-recommendations"
   ));
 }
 
 function hasReadyBecauseYouWatchedState(indexPage) {
   if (hasRenderableBecauseYouWatchedContent(indexPage)) return true;
-  var sections = getBecauseYouWatchedSections(indexPage);
+  const sections = getBecauseYouWatchedSections(indexPage);
   return sections.length === 0 && getBywDone();
 }
 
 function hasMountedRecommendationUi(runtimeConfig, indexPage) {
   if (!indexPage) return false;
 
-  var personalOk =
+  const personalOk =
     !runtimeConfig.enablePersonalRecommendations ||
     hasRenderablePersonalRecsContent(indexPage);
-  var genreOk =
+  const genreOk =
     !runtimeConfig.enableGenreHubs ||
     hasRenderableGenreHubContent(getScopedSection("genre-hubs", indexPage));
-  var bywOk =
+  const bywOk =
     !runtimeConfig.enableBecauseYouWatched ||
     hasReadyBecauseYouWatchedState(indexPage);
 
   return personalOk && genreOk && bywOk;
 }
 
-function renderPersonalRecommendationsInternal(options = {}) {
-  var force = options.force === true;
+async function renderPersonalRecommendationsInternal(options = {}) {
+  const force = options?.force === true;
   if (force) {
     __deferredHomeSectionSeq += 1;
     __bywDeferredPromise = null;
@@ -1760,8 +1760,8 @@ function renderPersonalRecommendationsInternal(options = {}) {
       seq: __deferredHomeSectionSeq,
     });
   }
-  var deferredSeq = __deferredHomeSectionSeq;
-  var runtimeConfig = getHomeRecommendationRuntimeConfig();
+  const deferredSeq = __deferredHomeSectionSeq;
+  const runtimeConfig = getHomeRecommendationRuntimeConfig();
   prcLog("render:start", {
     force,
     deferredSeq,
@@ -1769,7 +1769,7 @@ function renderPersonalRecommendationsInternal(options = {}) {
     enableGenreHubs: runtimeConfig.enableGenreHubs,
     enableBecauseYouWatched: runtimeConfig.enableBecauseYouWatched,
   });
-  var activeIndexPage =
+  let activeIndexPage =
     document.querySelector("#indexPage:not(.hide)") ||
     document.querySelector("#homePage:not(.hide)");
   if (
@@ -1788,16 +1788,16 @@ function renderPersonalRecommendationsInternal(options = {}) {
       prcWarn("render:skip:not-home-route", { force, deferredSeq });
       return;
     }
-    var host = waitForVisibleHomeSections({
+    const host = await waitForVisibleHomeSections({
       timeout: 12000
     });
-    activeIndexPage = host.page || null;
+    activeIndexPage = host?.page || null;
     if (!activeIndexPage) {
       prcWarn("render:retry:no-active-page-after-wait", {
         force,
         deferredSeq,
-        hostPageId: host.page.id || null,
-        hasContainer: !!host.container,
+        hostPageId: host?.page?.id || null,
+        hasContainer: !!host?.container,
       });
       schedulePersonalRecsRetry(1000, options, "no-active-page-after-wait");
       return false;
@@ -1805,31 +1805,31 @@ function renderPersonalRecommendationsInternal(options = {}) {
   }
 
   if (!activeIndexPage.querySelector(".homeSectionsContainer")) {
-    var host = waitForVisibleHomeSections({
+    const host = await waitForVisibleHomeSections({
       timeout: 12000
     });
-    activeIndexPage = host.page || activeIndexPage;
+    activeIndexPage = host?.page || activeIndexPage;
   }
 
-  if (!activeIndexPage.querySelector(".homeSectionsContainer")) {
+  if (!activeIndexPage?.querySelector(".homeSectionsContainer")) {
     __personalRecsInitDone = false;
     prcWarn("render:retry:no-homeSectionsContainer", {
       force,
       deferredSeq,
-      activePageId: activeIndexPage.id || null,
+      activePageId: activeIndexPage?.id || null,
     });
     schedulePersonalRecsRetry(900, options, "no-homeSectionsContainer");
     return false;
   }
 
-  var homeSections = getHomeSectionsContainer(activeIndexPage);
+  const homeSections = getHomeSectionsContainer(activeIndexPage);
   if (
-    homeSections.isConnected &&
+    homeSections?.isConnected &&
     runtimeConfig.enablePersonalRecommendations &&
     !getScopedSection("personal-recommendations", activeIndexPage)
   ) {
     try {
-      waitForNativeHomeSectionStability(homeSections, {
+      await waitForNativeHomeSectionStability(homeSections, {
         timeoutMs: 1800,
         stableMs: 220,
         minVisibleCount: 1,
@@ -1841,7 +1841,7 @@ function renderPersonalRecommendationsInternal(options = {}) {
     prcLog("render:skip:already-rendered", {
       force,
       deferredSeq,
-      activePageId: activeIndexPage.id || null,
+      activePageId: activeIndexPage?.id || null,
     });
     clearPersonalRecsRetry();
     __personalRecsInitDone = true;
@@ -1859,13 +1859,13 @@ function renderPersonalRecommendationsInternal(options = {}) {
   }
 
   if (__personalRecsInitDone) {
-    var personalOk =
+    const personalOk =
       !runtimeConfig.enablePersonalRecommendations ||
       (getPersonalRecsDone() && hasRenderablePersonalRecsContent(activeIndexPage));
-    var genreOk =
+    const genreOk =
       !runtimeConfig.enableGenreHubs ||
       (!!window.__jmsGenreHubsDone && hasRenderableGenreHubContent(getScopedSection("genre-hubs", activeIndexPage)));
-    var bywOk =
+    const bywOk =
       !runtimeConfig.enableBecauseYouWatched ||
       hasReadyBecauseYouWatchedState(activeIndexPage);
     if (personalOk && genreOk && bywOk) {
@@ -1878,10 +1878,10 @@ function renderPersonalRecommendationsInternal(options = {}) {
     }
   }
   if (!force) {
-    var hasPersonalShell = !!getScopedSection("personal-recommendations", activeIndexPage);
-    var hasBywShell = getBecauseYouWatchedSections(activeIndexPage).length > 0;
-    var hasGenreShell = !!getScopedSection("genre-hubs", activeIndexPage);
-    var hasPartialShellOnly =
+    const hasPersonalShell = !!getScopedSection("personal-recommendations", activeIndexPage);
+    const hasBywShell = getBecauseYouWatchedSections(activeIndexPage).length > 0;
+    const hasGenreShell = !!getScopedSection("genre-hubs", activeIndexPage);
+    const hasPartialShellOnly =
       (runtimeConfig.enablePersonalRecommendations && hasPersonalShell && !hasRenderablePersonalRecsContent(activeIndexPage)) ||
       (runtimeConfig.enableBecauseYouWatched && hasBywShell && !hasRenderableBecauseYouWatchedContent(activeIndexPage)) ||
       (runtimeConfig.enableGenreHubs && hasGenreShell && !hasRenderableGenreHubContent(getScopedSection("genre-hubs", activeIndexPage)));
@@ -1912,10 +1912,10 @@ function renderPersonalRecommendationsInternal(options = {}) {
   try {
     lockDownScroll();
     try {
-      var { userId, serverId } = getSessionInfo();
-      ensurePrcDb(userId, serverId);
+      const { userId, serverId } = getSessionInfo();
+      await ensurePrcDb(userId, serverId);
     } catch {}
-    var indexPage = activeIndexPage;
+    const indexPage = activeIndexPage;
     if (!indexPage) {
       __personalRecsInitDone = false;
       prcWarn("render:retry:no-index-page-inside-run", {
@@ -1925,7 +1925,7 @@ function renderPersonalRecommendationsInternal(options = {}) {
       schedulePersonalRecsRetry(1000, options, "no-index-page-inside-run");
       return false;
     }
-    var hasHomeSections = !!(
+    const hasHomeSections = !!(
       indexPage.querySelector(".homeSectionsContainer")
     );
     if (!hasHomeSections) {
@@ -1933,16 +1933,16 @@ function renderPersonalRecommendationsInternal(options = {}) {
       prcWarn("render:retry:no-homeSections-inside-run", {
         force,
         deferredSeq,
-        indexPageId: indexPage.id || null,
+        indexPageId: indexPage?.id || null,
       });
       schedulePersonalRecsRetry(900, options, "no-homeSections-inside-run");
       return false;
     }
 
-    var tasks = [];
+    const tasks = [];
 
     if (runtimeConfig.enablePersonalRecommendations) {
-      var personalAlreadyReady =
+      const personalAlreadyReady =
         !force &&
         getPersonalRecsDone() &&
         hasRenderablePersonalRecsContent(indexPage);
@@ -1950,20 +1950,20 @@ function renderPersonalRecommendationsInternal(options = {}) {
       if (!personalAlreadyReady) {
         setPersonalRecsDone(false);
       }
-      var personalCardCount = getPersonalRecsCardCount();
+      const personalCardCount = getPersonalRecsCardCount();
       if (!personalAlreadyReady) {
         try {
-          waitForManagedHomeRowRelease({
+          await waitForManagedHomeRowRelease({
             timeoutMs: 25000,
             rootMargin: MANAGED_ROW_RELEASE_ROOT_MARGIN,
           });
         } catch {}
       }
-      var section = ensurePersonalRecsContainer(indexPage);
+      const section = ensurePersonalRecsContainer(indexPage);
       try { registerManagedHomeRowAnchor(section); } catch {}
-      var row = section.querySelector.(".personal-recs-row") || null;
+      const row = section?.querySelector?.(".personal-recs-row") || null;
       if (row && !personalAlreadyReady) {
-        tasks.pushfunction(enqueueManagedSectionRender("personalRecommendations", () {
+        tasks.push(enqueueManagedSectionRender("personalRecommendations", async () => {
           try {
             prcLog("PERSONAL:queue:start", {
               force,
@@ -1981,8 +1981,8 @@ function renderPersonalRecommendationsInternal(options = {}) {
               row.dataset.mounted = "1";
               setupScroller(row);
             }
-            var { userId, serverId } = getSessionInfo();
-            var recommendations = fetchPersonalRecommendations(
+            const { userId, serverId } = getSessionInfo();
+            const recommendations = await fetchPersonalRecommendations(
               userId,
               personalCardCount,
               MIN_RATING,
@@ -1999,8 +1999,8 @@ function renderPersonalRecommendationsInternal(options = {}) {
           timeoutMs: 25000,
           force,
           reuseKey: false,
-          getAnchor: function() section.isConnected ? section : null,
-          isStillValid: function() (
+          getAnchor: () => section?.isConnected ? section : null,
+          isStillValid: () => (
             deferredSeq === __deferredHomeSectionSeq &&
             row.isConnected &&
             hasActivePersonalRecsHomeSections()
@@ -2012,7 +2012,7 @@ function renderPersonalRecommendationsInternal(options = {}) {
     }
 
     if (runtimeConfig.enableBecauseYouWatched) {
-      var bywAlreadyReady =
+      const bywAlreadyReady =
         !force &&
         getBywDone() &&
         hasReadyBecauseYouWatchedState(indexPage);
@@ -2029,7 +2029,7 @@ function renderPersonalRecommendationsInternal(options = {}) {
     }
 
     if (runtimeConfig.enableGenreHubs) {
-      var genreAlreadyReady =
+      const genreAlreadyReady =
         !force &&
         window.__jmsGenreHubsDone === true &&
         hasRenderableGenreHubContent(getScopedSection("genre-hubs", indexPage));
@@ -2051,28 +2051,28 @@ function renderPersonalRecommendationsInternal(options = {}) {
     });
 
     if (tasks.length) {
-      Promise.allSettled(tasks);
+      await Promise.allSettled(tasks);
     }
 
     try {
-      var hsc = getHomeSectionsContainer(indexPage);
+      const hsc = getHomeSectionsContainer(indexPage);
       enforceOrder(hsc);
     } catch {}
 
-    var personalMounted =
+    const personalMounted =
       !runtimeConfig.enablePersonalRecommendations ||
       hasRenderablePersonalRecsContent(indexPage);
-    var bywMounted =
+    const bywMounted =
       !runtimeConfig.enableBecauseYouWatched ||
       hasReadyBecauseYouWatchedState(indexPage);
-    var genreMounted =
+    const genreMounted =
       !runtimeConfig.enableGenreHubs ||
       hasRenderableGenreHubContent(getScopedSection("genre-hubs", indexPage));
     if (personalMounted && bywMounted && genreMounted) {
       prcLog("render:success:managed-blocks-ready", {
         force,
         deferredSeq,
-        indexPageId: indexPage.id || null,
+        indexPageId: indexPage?.id || null,
         personalMounted,
         bywMounted,
         genreMounted,
@@ -2082,7 +2082,7 @@ function renderPersonalRecommendationsInternal(options = {}) {
       prcWarn("render:retry:managed-blocks-incomplete", {
         force,
         deferredSeq,
-        indexPageId: indexPage.id || null,
+        indexPageId: indexPage?.id || null,
         personalMounted,
         bywMounted,
         genreMounted,
@@ -2095,7 +2095,7 @@ function renderPersonalRecommendationsInternal(options = {}) {
     prcWarn("render:error", {
       force,
       deferredSeq,
-      error: error.message || String(error),
+      error: error?.message || String(error),
     });
     schedulePersonalRecsRetry(1400, options, "render-error");
   } finally {
@@ -2104,15 +2104,15 @@ function renderPersonalRecommendationsInternal(options = {}) {
   }
 }
 
-export function renderPersonalRecommendations(options = {}) {
+export async function renderPersonalRecommendations(options = {}) {
   if (__personalRecsMountPromise) {
     return __personalRecsMountPromise;
   }
 
-  var run = renderPersonalRecommendationsInternal(options);
+  const run = renderPersonalRecommendationsInternal(options);
   __personalRecsMountPromise = run;
   try {
-    return run;
+    return await run;
   } finally {
     if (__personalRecsMountPromise === run) {
       __personalRecsMountPromise = null;
@@ -2121,15 +2121,15 @@ export function renderPersonalRecommendations(options = {}) {
 }
 
 function ensureBecauseContainer(indexPage, key = "0") {
-  var homeSections = getHomeSectionsContainer(indexPage);
-  var id = "because-you-watched--" + (key);
-  var existing = getScopedSection(id, indexPage);
+  const homeSections = getHomeSectionsContainer(indexPage);
+  const id = `because-you-watched--${key}`;
+  let existing = getScopedSection(id, indexPage);
   if (existing) {
-    var parent = homeSections || getHomeSectionsContainer(indexPage) || getHomeSectionsContainer(currentIndexPage());
+    const parent = homeSections || getHomeSectionsContainer(indexPage) || getHomeSectionsContainer(currentIndexPage());
     placeSection(existing, homeSections, false);
-    var heroHost = existing.querySelector('.dir-row-hero-host');
+    const heroHost = existing.querySelector('.dir-row-hero-host');
     if (heroHost) {
-      var showHero = isPersonalRecsHeroEnabled();
+      const showHero = isPersonalRecsHeroEnabled();
       heroHost.style.display = showHero ? '' : 'none';
       if (!showHero) clearHeroHost(heroHost);
     }
@@ -2137,18 +2137,33 @@ function ensureBecauseContainer(indexPage, key = "0") {
     return existing;
   }
 
-  var section = document.createElement("div");
+  const section = document.createElement("div");
   section.id = id;
   section.classList.add("homeSection", "personal-recs-section", "byw-section");
-  section.innerHTML = "\n    <div class=\"sectionTitleContainer sectionTitleContainer-cards\">\n      <h2 class=\"sectionTitle sectionTitle-cards\">\n        <span class=\"byw-title-text\">" + ((config.languageLabels.becauseYouWatched) || (labels.becauseYouWatched) || "İzlediğin için") + "</span>\n      </h2>\n    </div>\n    <div class=\"personal-recs-scroll-wrap\">\n      <button class=\"hub-scroll-btn hub-scroll-left\" aria-label=\"" + ((config.languageLabels.scrollLeft) || "Sola kaydır") + "\" aria-disabled=\"true\">\n        <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z\"/></svg>\n      </button>\n      <div class=\"itemsContainer personal-recs-row byw-row\" role=\"list\"></div>\n      <button class=\"hub-scroll-btn hub-scroll-right\" aria-label=\"" + ((config.languageLabels.scrollRight) || "Sağa kaydır") + "\" aria-disabled=\"true\">\n        <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z\"/></svg>\n      </button>\n    </div>\n  ";
-  var scrollWrap = section.querySelector('.personal-recs-scroll-wrap');
-  var heroHost = document.createElement('div');
+  section.innerHTML = `
+    <div class="sectionTitleContainer sectionTitleContainer-cards">
+      <h2 class="sectionTitle sectionTitle-cards">
+        <span class="byw-title-text">${(config.languageLabels?.becauseYouWatched) || (labels.becauseYouWatched) || "İzlediğin için"}</span>
+      </h2>
+    </div>
+    <div class="personal-recs-scroll-wrap">
+      <button class="hub-scroll-btn hub-scroll-left" aria-label="${(config.languageLabels?.scrollLeft) || "Sola kaydır"}" aria-disabled="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+      </button>
+      <div class="itemsContainer personal-recs-row byw-row" role="list"></div>
+      <button class="hub-scroll-btn hub-scroll-right" aria-label="${(config.languageLabels?.scrollRight) || "Sağa kaydır"}" aria-disabled="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+      </button>
+    </div>
+  `;
+  const scrollWrap = section.querySelector('.personal-recs-scroll-wrap');
+  const heroHost = document.createElement('div');
   heroHost.className = 'dir-row-hero-host';
   heroHost.style.display = isPersonalRecsHeroEnabled() ? '' : 'none';
   section.insertBefore(heroHost, scrollWrap);
   section.__heroHost = heroHost;
 
-  var parent = homeSections || getHomeSectionsContainer(indexPage) || getHomeSectionsContainer(currentIndexPage());
+  const parent = homeSections || getHomeSectionsContainer(indexPage) || getHomeSectionsContainer(currentIndexPage());
   placeSection(section, homeSections, false);
   try { enforceOrder(parent); } catch {}
   return section;
@@ -2157,29 +2172,29 @@ function ensureBecauseContainer(indexPage, key = "0") {
 function cleanupBecauseYouWatchedSection(section) {
   if (!section) return;
   try {
-    section.querySelectorAll('.personal-recs-card, .dir-row-hero').forEach(function((el) {
+    section.querySelectorAll('.personal-recs-card, .dir-row-hero').forEach((el) => {
       try { el.dispatchEvent(new Event('jms:cleanup')); } catch {}
     });
   } catch {}
   try {
-    section.querySelectorAll('.byw-row').forEach(function((row) {
+    section.querySelectorAll('.byw-row').forEach((row) => {
       try { row.dispatchEvent(new Event('jms:cleanup')); } catch {}
     });
   } catch {}
   try {
-    var heroHost = section.__heroHost || section.querySelector('.dir-row-hero-host');
+    const heroHost = section.__heroHost || section.querySelector('.dir-row-hero-host');
     if (heroHost) clearHeroHost(heroHost);
   } catch {}
   try { section.remove(); } catch {}
 }
 
 function getEffectiveLang3() {
-  var l = '';
-  try { l = String(getDefaultLanguage.() || '').toLowerCase().trim(); } catch {}
+  let l = '';
+  try { l = String(getDefaultLanguage?.() || '').toLowerCase().trim(); } catch {}
 
-  var base = l.split('-')[0];
+  const base = l.split('-')[0];
 
-  var map2to3 = {
+  const map2to3 = {
     tr: 'tur',
     en: 'eng',
     de: 'deu',
@@ -2193,14 +2208,14 @@ function getEffectiveLang3() {
 }
 
 function getLangKeyCandidates() {
-  var raw = '';
-  try { raw = String(getDefaultLanguage.() || '').trim(); } catch {}
+  let raw = '';
+  try { raw = String(getDefaultLanguage?.() || '').trim(); } catch {}
 
-  var lower = raw.toLowerCase();
-  var base = lower.split('-')[0];
-  var map2to3 = { tr:'tur', en:'eng', de:'deu', fr:'fre', ru:'rus', es:'spa' };
-  var three = map2to3[base] || base;
-  var out = [];
+  const lower = raw.toLowerCase();
+  const base = lower.split('-')[0];
+  const map2to3 = { tr:'tur', en:'eng', de:'deu', fr:'fre', ru:'rus', es:'spa' };
+  const three = map2to3[base] || base;
+  const out = [];
   if (lower) out.push(lower);
   if (base)  out.push(base);
   if (three) out.push(three);
@@ -2215,8 +2230,8 @@ function pickTpl(raw) {
   if (typeof raw === 'string') return raw;
 
   if (raw && typeof raw === 'object') {
-    var cand = getLangKeyCandidates();
-    for (var k of cand) {
+    const cand = getLangKeyCandidates();
+    for (const k of cand) {
       if (raw[k]) return raw[k];
     }
   }
@@ -2224,17 +2239,17 @@ function pickTpl(raw) {
 }
 
 function formatBecauseYouWatchedTitle(seedName) {
-  var title = String(seedName || "").trim();
+  const title = String(seedName || "").trim();
   if (!title) return "";
 
-  var raw =
-    config.languageLabels.becauseYouWatched ||
-    labels.becauseYouWatched ||
+  const raw =
+    config.languageLabels?.becauseYouWatched ??
+    labels.becauseYouWatched ??
     null;
 
-  var tpl = pickTpl(raw);
+  let tpl = pickTpl(raw);
   if (!tpl) {
-    var cand = getLangKeyCandidates();
+    const cand = getLangKeyCandidates();
     if (cand.includes('de') || cand.includes('deu')) tpl = "Weil du {title} angesehen hast";
     else if (cand.includes('eng') || cand.includes('en')) tpl = "Because you watched {title}";
     else tpl = "{title} izlediğiniz için";
@@ -2244,117 +2259,117 @@ function formatBecauseYouWatchedTitle(seedName) {
 }
 
 function setBywTitle(section, seedName) {
-  var el = section.querySelector.(".byw-title-text");
+  const el = section?.querySelector?.(".byw-title-text");
   if (!el) return;
   el.textContent = formatBecauseYouWatchedTitle(seedName);
 }
 
-function fetchLastPlayedSeedItems(userId, count = 1) {
-  var fields = COMMON_FIELDS + ",UserData";
+async function fetchLastPlayedSeedItems(userId, count = 1) {
+  const fields = COMMON_FIELDS + ",UserData";
   try {
-    var url =
-      "/Users/" + (encodeURIComponent(userId)) + "/Items?" +
-      "Recursive=true&IncludeItemTypes=Movie,Series&Filters=IsPlayed&" +
-      "SortBy=DatePlayed,LastPlayedDate&SortOrder=Descending&Limit=" + (Math.max(1, count)) + "&Fields=" + (encodeURIComponent(fields));
-    var r = makeApiRequest(url);
-    var items = Array.isArray(r.Items) ? r.Items : [];
-    return items.filter(function(x) x.Id);
+    const url =
+      `/Users/${encodeURIComponent(userId)}/Items?` +
+      `Recursive=true&IncludeItemTypes=Movie,Series&Filters=IsPlayed&` +
+      `SortBy=DatePlayed,LastPlayedDate&SortOrder=Descending&Limit=${Math.max(1, count)}&Fields=${encodeURIComponent(fields)}`;
+    const r = await makeApiRequest(url);
+    const items = Array.isArray(r?.Items) ? r.Items : [];
+    return items.filter(x => x?.Id);
   } catch {}
 
   try {
-    var url =
-      "/Users/" + (encodeURIComponent(userId)) + "/Items?" +
-      "Recursive=true&Filters=IsResumable&MediaTypes=Video&EnableUserData=true&" +
-      "SortBy=DatePlayed,DateCreated&SortOrder=Descending&Limit=" + (Math.max(1, count)) + "&Fields=" + (encodeURIComponent(fields));
-    var r = makeApiRequest(url);
-    var items = Array.isArray(r.Items) ? r.Items : [];
-    return items.filter(function(x) x.Id && isPartialPlaybackItem(x));
+    const url =
+      `/Users/${encodeURIComponent(userId)}/Items?` +
+      `Recursive=true&Filters=IsResumable&MediaTypes=Video&EnableUserData=true&` +
+      `SortBy=DatePlayed,DateCreated&SortOrder=Descending&Limit=${Math.max(1, count)}&Fields=${encodeURIComponent(fields)}`;
+    const r = await makeApiRequest(url);
+    const items = Array.isArray(r?.Items) ? r.Items : [];
+    return items.filter(x => x?.Id && isPartialPlaybackItem(x));
   } catch {}
 
   return [];
 }
 
-function fetchBecauseYouWatchedPool(userId, seedId, limit = 60, minRating = 0) {
-  var url =
-    "/Items/" + (encodeURIComponent(seedId)) + "/Similar?" +
-    "UserId=" + (encodeURIComponent(userId)) + "&Limit=" + (Math.max(60, limit)) + "&Fields=" + (encodeURIComponent(COMMON_FIELDS));
+async function fetchBecauseYouWatchedPool(userId, seedId, limit = 60, minRating = 0) {
+  const url =
+    `/Items/${encodeURIComponent(seedId)}/Similar?` +
+    `UserId=${encodeURIComponent(userId)}&Limit=${Math.max(60, limit)}&Fields=${encodeURIComponent(COMMON_FIELDS)}`;
   try {
-    var r = makeApiRequest(url);
-    var items = Array.isArray(r.Items) ? r.Items : (Array.isArray(r) ? r : []);
+    const r = await makeApiRequest(url);
+    const items = Array.isArray(r?.Items) ? r.Items : (Array.isArray(r) ? r : []);
     return filterAndTrimByRating(items, minRating, limit);
   } catch {
     return [];
   }
 }
 
-function fetchBecauseYouWatched(userId, targetCount, minRating, seedKey, options = {}) {
-  var force = options.force === true;
-  var cfg = __prcCfg();
-  var { serverId } = getSessionInfo();
-  var st = ensurePrcDb(userId, serverId);
-  var sessionScope = getPrcSessionScope(userId, serverId);
+async function fetchBecauseYouWatched(userId, targetCount, minRating, seedKey, options = {}) {
+  const force = options?.force === true;
+  const cfg = __prcCfg();
+  const { serverId } = getSessionInfo();
+  const st = await ensurePrcDb(userId, serverId);
+  const sessionScope = getPrcSessionScope(userId, serverId);
 
-  var seedId = String(seedKey || "").trim();
+  let seedId = String(seedKey || "").trim();
   if (!seedId) return { seedId: null, items: [] };
   try {
-    if (!seedId && st.db && st.scope) {
-      var seed = getMeta(st.db, __metaKeyBywSeed(st.scope));
-      if (seed.id) seedId = seed.id;
+    if (!seedId && st?.db && st?.scope) {
+      const seed = await getMeta(st.db, __metaKeyBywSeed(st.scope));
+      if (seed?.id) seedId = seed.id;
     }
   } catch {}
 
   if (!seedId) {
-    var seedItem = fetchLastPlayedSeedItem(userId);
-    seedId = seedItem.Id || null;
-    if (seedId && st.db && st.scope) {
-      try { setMeta(st.db, __metaKeyBywSeed(st.scope), { id: seedId, ts: Date.now() }); } catch {}
+    const seedItem = await fetchLastPlayedSeedItem(userId);
+    seedId = seedItem?.Id || null;
+    if (seedId && st?.db && st?.scope) {
+      try { await setMeta(st.db, __metaKeyBywSeed(st.scope), { id: seedId, ts: Date.now() }); } catch {}
     }
   }
   if (!seedId) return { seedId: null, items: [] };
 
-  var bywSessionKey = (sessionScope) + "|" + (seedId);
+  const bywSessionKey = `${sessionScope}|${seedId}`;
   if (!force) {
-    var sessionItems = PRC_SESSION_BYW_ITEMS_CACHE.get(bywSessionKey);
+    const sessionItems = PRC_SESSION_BYW_ITEMS_CACHE.get(bywSessionKey);
     if (Array.isArray(sessionItems) && sessionItems.length >= targetCount) {
       return { seedId, items: sessionItems.slice(0, targetCount) };
     }
   }
 
   try {
-    if (st.db && st.scope) {
-      var cache = getMeta(st.db, __metaKeyBywScoped(st.scope, seedId));
-      var ts = Number(cache.ts || 0);
-      var ids = Array.isArray(cache.ids) ? cache.ids : [];
-      var cacheSeed = String(cache.seedId || "");
-      var fresh = ts && (Date.now() - ts) <= cfg.bywTtlMs;
+    if (st?.db && st?.scope) {
+      const cache = await getMeta(st.db, __metaKeyBywScoped(st.scope, seedId));
+      const ts = Number(cache?.ts || 0);
+      const ids = Array.isArray(cache?.ids) ? cache.ids : [];
+      const cacheSeed = String(cache?.seedId || "");
+      const fresh = ts && (Date.now() - ts) <= cfg.bywTtlMs;
 
       if (fresh && ids.length && cacheSeed === String(seedId)) {
-        var lastShownIds = [];
+        let lastShownIds = [];
         try {
-          var last = getMeta(st.db, __metaKeyBywLastScoped(st.scope, seedId));
-          lastShownIds = Array.isArray(last.ids) ? last.ids : [];
+          const last = await getMeta(st.db, __metaKeyBywLastScoped(st.scope, seedId));
+          lastShownIds = Array.isArray(last?.ids) ? last.ids : [];
         } catch {}
-        var lastSet = new Set(lastShownIds);
+        const lastSet = new Set(lastShownIds);
 
-        var candidates = ids.filter(function(id) id && !lastSet.has(id));
+        let candidates = ids.filter(id => id && !lastSet.has(id));
         if (candidates.length < Math.max(6, targetCount * 2)) candidates = ids.slice();
         shuffle(candidates);
 
-        var alive = filterOutPlayedIds(userId, candidates.slice(0, Math.min(candidates.length, cfg.maxCacheIds)));
-        var itemsFromDb = dbGetItemsByIds(st.db, st.scope, alive);
+        const alive = await filterOutPlayedIds(userId, candidates.slice(0, Math.min(candidates.length, cfg.maxCacheIds)));
+        const itemsFromDb = await dbGetItemsByIds(st.db, st.scope, alive);
         shuffle(itemsFromDb);
 
-        var picked = filterAndTrimByRating(itemsFromDb, minRating, targetCount);
+        const picked = filterAndTrimByRating(itemsFromDb, minRating, targetCount);
         if (picked.length >= targetCount) {
           PRC_SESSION_BYW_ITEMS_CACHE.set(bywSessionKey, picked.slice(0, targetCount));
-          try { setMeta(st.db, __metaKeyBywLastScoped(st.scope, seedId), { ids: picked.map(function(x)x.Id).filter(Boolean), ts: Date.now() }); } catch {}
+          try { await setMeta(st.db, __metaKeyBywLastScoped(st.scope, seedId), { ids: picked.map(x=>x.Id).filter(Boolean), ts: Date.now() }); } catch {}
           return { seedId, items: picked.slice(0, targetCount) };
         }
       }
     }
   } catch {}
 
-  var pool = fetchBecauseYouWatchedPool(
+  const pool = await fetchBecauseYouWatchedPool(
     userId,
     seedId,
     Math.max(60, targetCount * 4),
@@ -2362,15 +2377,15 @@ function fetchBecauseYouWatched(userId, targetCount, minRating, seedKey, options
   );
 
   shuffle(pool);
-  var uniq = dedupeStrong(pool).slice(0, cfg.maxCacheIds);
+  let uniq = dedupeStrong(pool).slice(0, cfg.maxCacheIds);
   shuffle(uniq);
 
   try {
-    if (st.db && st.scope && uniq.length) {
-      dbWriteThroughItems(st.db, st.scope, uniq);
-      setMeta(st.db, __metaKeyBywScoped(st.scope, seedId), { seedId, ids: uniq.map(function(x)x.Id).filter(Boolean), ts: Date.now() });
-      setMeta(st.db, __metaKeyBywLastScoped(st.scope, seedId), {
-        ids: uniq.slice(0, targetCount).map(function(x)x.Id).filter(Boolean),
+    if (st?.db && st?.scope && uniq.length) {
+      await dbWriteThroughItems(st.db, st.scope, uniq);
+      await setMeta(st.db, __metaKeyBywScoped(st.scope, seedId), { seedId, ids: uniq.map(x=>x.Id).filter(Boolean), ts: Date.now() });
+      await setMeta(st.db, __metaKeyBywLastScoped(st.scope, seedId), {
+        ids: uniq.slice(0, targetCount).map(x=>x.Id).filter(Boolean),
         ts: Date.now()
       });
     }
@@ -2382,13 +2397,13 @@ function fetchBecauseYouWatched(userId, targetCount, minRating, seedKey, options
 }
 
 function runWithConcurrency(fns, limit = 1) {
-  var queue = (fns || []).slice();
-  var n = Math.max(1, Math.min(limit | 0, queue.length || 1));
-  var workers = new Array(n).fill(0).mapfunction(() {
+  const queue = (fns || []).slice();
+  const n = Math.max(1, Math.min(limit | 0, queue.length || 1));
+  const workers = new Array(n).fill(0).map(async () => {
     while (queue.length) {
-      var fn = queue.shift();
+      const fn = queue.shift();
       if (!fn) continue;
-      try { fn(); } catch {}
+      try { await fn(); } catch {}
     }
   });
   return Promise.all(workers);
@@ -2401,21 +2416,21 @@ function waitForBywSectionAdvance(section, {
   return yieldManagedHomeSectionStep(timeoutMs);
 }
 
-function renderBecauseYouWatchedAuto(indexPage, options = {}) {
-  var force = options.force === true;
-  var bywRowCount = getBywRowCount();
-  var bywCardCount = getBywCardCount();
-  var { userId, serverId } = getSessionInfo();
-  var sessionScope = getPrcSessionScope(userId, serverId);
-  var seeds = (!force ? PRC_SESSION_BYW_SEEDS_CACHE.get(sessionScope) : null) || null;
+async function renderBecauseYouWatchedAuto(indexPage, options = {}) {
+  const force = options?.force === true;
+  const bywRowCount = getBywRowCount();
+  const bywCardCount = getBywCardCount();
+  const { userId, serverId } = getSessionInfo();
+  const sessionScope = getPrcSessionScope(userId, serverId);
+  let seeds = (!force ? PRC_SESSION_BYW_SEEDS_CACHE.get(sessionScope) : null) || null;
 
   if (!Array.isArray(seeds) || seeds.length < bywRowCount) {
-    var seedsRaw = fetchLastPlayedSeedItems(userId, Math.max(1, bywRowCount * 2));
+    const seedsRaw = await fetchLastPlayedSeedItems(userId, Math.max(1, bywRowCount * 2));
     shuffleCrypto(seedsRaw);
-    var seen = new Set();
+    const seen = new Set();
     seeds = [];
-    for (var it of seedsRaw) {
-      var id = it.Id;
+    for (const it of seedsRaw) {
+      const id = it?.Id;
       if (!id || seen.has(id)) continue;
       seen.add(id);
       seeds.push(it);
@@ -2425,7 +2440,7 @@ function renderBecauseYouWatchedAuto(indexPage, options = {}) {
   }
 
   if (!seeds.length) {
-    for (var section of getBecauseYouWatchedSections(indexPage)) {
+    for (const section of getBecauseYouWatchedSections(indexPage)) {
       cleanupBecauseYouWatchedSection(section);
     }
     scheduleHomeScrollerRefresh(0);
@@ -2433,67 +2448,68 @@ function renderBecauseYouWatchedAuto(indexPage, options = {}) {
     return;
   }
 
-  var activeSectionIds = new Setfunction(seeds.map((_, index) "because-you-watched--" + (index))
+  const activeSectionIds = new Set(
+    seeds.map((_, index) => `because-you-watched--${index}`)
   );
-  for (var section of getBecauseYouWatchedSections(indexPage)) {
-    var sectionId = String(section.id || "").trim();
+  for (const section of getBecauseYouWatchedSections(indexPage)) {
+    const sectionId = String(section?.id || "").trim();
     if (!activeSectionIds.has(sectionId)) {
       cleanupBecauseYouWatchedSection(section);
     }
   }
 
-  var lastRenderedSection = null;
-  for (var i = 0; i < seeds.length; i++) {
+  let lastRenderedSection = null;
+  for (let i = 0; i < seeds.length; i++) {
     try {
-      waitForManagedHomeRowRelease({
-        anchor: lastRenderedSection.isConnected ? lastRenderedSection : null,
+      await waitForManagedHomeRowRelease({
+        anchor: lastRenderedSection?.isConnected ? lastRenderedSection : null,
         timeoutMs: 25000,
         rootMargin: MANAGED_ROW_RELEASE_ROOT_MARGIN,
       });
     } catch {}
 
-    var seed = seeds[i];
-    var seedId = seed.Id;
-    var seedName = seed.Name || "";
-    var section = ensureBecauseContainer(indexPage, String(i));
+    const seed = seeds[i];
+    const seedId = seed.Id;
+    const seedName = seed.Name || "";
+    const section = ensureBecauseContainer(indexPage, String(i));
     try { registerManagedHomeRowAnchor(section); } catch {}
     setBywTitle(section, seedName);
-    var row = section.querySelector(".byw-row");
+    const row = section.querySelector(".byw-row");
     if (!row) continue;
     if (!row.dataset.mounted || row.childElementCount === 0) {
       row.dataset.mounted = "1";
       setupScroller(row);
     }
-    var showHero = isPersonalRecsHeroEnabled();
-    var fetchCount = showHero
+    const showHero = isPersonalRecsHeroEnabled();
+    const fetchCount = showHero
       ? Math.min(UNIFIED_ROW_ITEM_LIMIT, bywCardCount + 1)
       : bywCardCount;
-    var { items } = fetchBecauseYouWatched(userId, fetchCount, MIN_RATING, seedId, { force });
+    const { items } = await fetchBecauseYouWatched(userId, fetchCount, MIN_RATING, seedId, { force });
     clearRowWithCleanup(row);
     if (!items || !items.length) {
       cleanupBecauseYouWatchedSection(section);
       continue;
     }
 
-    var heroItem = showHero ? (items[0] || null) : null;
-    var rowItems = showHero
+    const heroItem = showHero ? (items[0] || null) : null;
+    let rowItems = showHero
       ? items.slice(1, 1 + bywCardCount)
       : items.slice(0, bywCardCount);
     if (!rowItems.length) rowItems = items.slice(0, bywCardCount);
 
     try {
-      var heroHost = section.__heroHost || section.querySelector('.dir-row-hero-host');
+      const heroHost = section.__heroHost || section.querySelector('.dir-row-hero-host');
       if (heroHost) {
         heroHost.style.display = showHero ? '' : 'none';
         if (!showHero) {
           clearHeroHost(heroHost);
         } else {
           if (resolveItemId(heroItem)) {
-            var heroLabel = formatBecauseYouWatchedTitle(seedName);
-            var { hero: heroEl, changed } = mountHero(heroHost, heroItem, serverId, heroLabel, { aboveFold: i === 0 });
+            const heroLabel = formatBecauseYouWatchedTitle(seedName);
+            const { hero: heroEl, changed } = mountHero(heroHost, heroItem, serverId, heroLabel, { aboveFold: i === 0 });
             try {
-              var backdropImg = heroEl.querySelector.('.dir-row-hero-bg');
-              var RemoteTrailers =
+              const backdropImg = heroEl?.querySelector?.('.dir-row-hero-bg');
+              const RemoteTrailers =
                 heroItem.RemoteTrailers ||
                 heroItem.RemoteTrailerItems ||
                 heroItem.RemoteTrailerUrls ||
@@ -2507,7 +2523,7 @@ function renderBecauseYouWatchedAuto(indexPage, options = {}) {
                   itemId: heroItem.Id,
                   serverId,
                   detailsUrl: getDetailsUrl(heroItem.Id, serverId),
-                  detailsText: (config.languageLabels.details || labels.details || "Ayrıntılar"),
+                  detailsText: (config.languageLabels?.details || labels.details || "Ayrıntılar"),
                   showDetailsOverlay: false,
                 });
               }
@@ -2519,9 +2535,9 @@ function renderBecauseYouWatchedAuto(indexPage, options = {}) {
       }
     } catch {}
 
-    new Promisefunction((resolve) {
-      var allCards = [];
-      var scrollerReady = false;
+    await new Promise((resolve) => {
+      const allCards = [];
+      let scrollerReady = false;
       progressivelyRenderCardRow({
         row,
         items: rowItems,
@@ -2532,22 +2548,22 @@ function renderBecauseYouWatchedAuto(indexPage, options = {}) {
         ),
         chunkSize: getProgressiveRowChunkSize({ mobileCount: 2, desktopCount: 3 }),
         delayMs: IS_MOBILE ? 82 : 38,
-        appendCard: function(item, index) {
-          var card = createRecommendationCard(item, serverId, {
+        appendCard: (item, index) => {
+          const card = createRecommendationCard(item, serverId, {
             aboveFold: index < (IS_MOBILE ? 2 : 3),
             sizeHint: "byw"
           });
           allCards.push(card);
           return card;
         },
-        onAppend: function() {
+        onAppend: () => {
           if (!scrollerReady) {
             setupScroller(row);
             scrollerReady = true;
           }
           triggerScrollerUpdate(row);
         },
-        onComplete: function() {
+        onComplete: () => {
           if (!scrollerReady) {
             setupScroller(row);
           }
@@ -2558,7 +2574,7 @@ function renderBecauseYouWatchedAuto(indexPage, options = {}) {
       });
     });
 
-    if (section.isConnected) {
+    if (section?.isConnected) {
       lastRenderedSection = section;
     }
   }
@@ -2568,26 +2584,51 @@ function renderBecauseYouWatchedAuto(indexPage, options = {}) {
 }
 
 function ensurePersonalRecsContainer(indexPage) {
-  var homeSections = getHomeSectionsContainer(indexPage);
-  var existing = getScopedSection("personal-recommendations", indexPage);
+  const homeSections = getHomeSectionsContainer(indexPage);
+  let existing = getScopedSection("personal-recommendations", indexPage);
   if (existing) {
     placeSection(existing, homeSections);
     return existing;
   }
-  var section = document.createElement("div");
+  const section = document.createElement("div");
   section.id = "personal-recommendations";
   section.classList.add("homeSection", "personal-recs-section");
-  section.innerHTML = "\n  <div class=\"sectionTitleContainer sectionTitleContainer-cards\">\n    <h2 class=\"sectionTitle sectionTitle-cards prc-title\">\n      <span class=\"prc-title-text\" role=\"button\" tabindex=\"0\"\n        aria-label=\"" + ((config.languageLabels.seeAll || 'Tümünü gör')) + ": " + ((config.languageLabels.personalRecommendations) || labels.personalRecommendations || "Sana Özel Öneriler") + "\">\n        " + ((config.languageLabels.personalRecommendations) || labels.personalRecommendations || "Sana Özel Öneriler") + "\n      </span>\n      <div class=\"prc-see-all\"\n           aria-label=\"" + ((config.languageLabels.seeAll) || "Tümünü gör") + "\"\n           title=\"" + ((config.languageLabels.seeAll) || "Tümünü gör") + "\">\n        " + (faIconHtml("chevronRight")) + "\n      </div>\n      <span class=\"prc-see-all-tip\">" + ((config.languageLabels.seeAll) || "Tümünü gör") + "</span>\n    </h2>\n  </div>\n\n  <div class=\"personal-recs-scroll-wrap\">\n    <button class=\"hub-scroll-btn hub-scroll-left\" aria-label=\"" + ((config.languageLabels && config.languageLabels.scrollLeft) || "Sola kaydır") + "\" aria-disabled=\"true\">\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z\"/></svg>\n    </button>\n    <div class=\"itemsContainer personal-recs-row\" role=\"list\"></div>\n    <button class=\"hub-scroll-btn hub-scroll-right\" aria-label=\"" + ((config.languageLabels && config.languageLabels.scrollRight) || "Sağa kaydır") + "\" aria-disabled=\"true\">\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z\"/></svg>\n    </button>\n  </div>\n";
+  section.innerHTML = `
+  <div class="sectionTitleContainer sectionTitleContainer-cards">
+    <h2 class="sectionTitle sectionTitle-cards prc-title">
+      <span class="prc-title-text" role="button" tabindex="0"
+        aria-label="${(config.languageLabels?.seeAll || 'Tümünü gör')}: ${(config.languageLabels?.personalRecommendations) || labels.personalRecommendations || "Sana Özel Öneriler"}">
+        ${(config.languageLabels?.personalRecommendations) || labels.personalRecommendations || "Sana Özel Öneriler"}
+      </span>
+      <div class="prc-see-all"
+           aria-label="${(config.languageLabels?.seeAll) || "Tümünü gör"}"
+           title="${(config.languageLabels?.seeAll) || "Tümünü gör"}">
+        ${faIconHtml("chevronRight")}
+      </div>
+      <span class="prc-see-all-tip">${(config.languageLabels?.seeAll) || "Tümünü gör"}</span>
+    </h2>
+  </div>
 
-  var t = section.querySelector('.prc-title-text');
+  <div class="personal-recs-scroll-wrap">
+    <button class="hub-scroll-btn hub-scroll-left" aria-label="${(config.languageLabels && config.languageLabels.scrollLeft) || "Sola kaydır"}" aria-disabled="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+    </button>
+    <div class="itemsContainer personal-recs-row" role="list"></div>
+    <button class="hub-scroll-btn hub-scroll-right" aria-label="${(config.languageLabels && config.languageLabels.scrollRight) || "Sağa kaydır"}" aria-disabled="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+    </button>
+  </div>
+`;
+
+  const t = section.querySelector('.prc-title-text');
     if (t) {
-      var open = function(e) { e.preventDefault(); e.stopPropagation(); openPersonalExplorer(); };
+      const open = (e) => { e.preventDefault(); e.stopPropagation(); openPersonalExplorer(); };
       t.addEventListener('click', open, { passive:false });
-      t.addEventListenerfunction('keydown', (e) { if (e.key === 'Enter' || e.key === ' ') open(e); });
+      t.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') open(e); });
     }
-    var seeAll = section.querySelector('.prc-see-all');
+    const seeAll = section.querySelector('.prc-see-all');
     if (seeAll) {
-      seeAll.addEventListenerfunction('click', (e) { e.preventDefault(); e.stopPropagation(); openPersonalExplorer(); }, { passive:false });
+      seeAll.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openPersonalExplorer(); }, { passive:false });
     }
 
       placeSection(section, homeSections);
@@ -2595,10 +2636,10 @@ function ensurePersonalRecsContainer(indexPage) {
     }
 
 function ensureGenreHubsShell(indexPage) {
-  var page = indexPage || currentIndexPage();
+  const page = indexPage || currentIndexPage();
   if (!page) return null;
 
-  var wrap = getScopedSection("genre-hubs", page);
+  let wrap = getScopedSection("genre-hubs", page);
   if (!wrap) {
     wrap = document.createElement("div");
     wrap.id = "genre-hubs";
@@ -2614,61 +2655,61 @@ function ensureGenreHubsShell(indexPage) {
   return wrap;
 }
 
-function fetchPersonalRecommendations(userId, targetCount = null, minRating = 0, options = {}) {
-  var force = options.force === true;
-  var effectiveTargetCount = clampConfiguredCount(targetCount, getPersonalRecsCardCount());
-  var cfg = __prcCfg();
-  var cacheGoal = Math.min(
+async function fetchPersonalRecommendations(userId, targetCount = null, minRating = 0, options = {}) {
+  const force = options?.force === true;
+  const effectiveTargetCount = clampConfiguredCount(targetCount, getPersonalRecsCardCount());
+  const cfg = __prcCfg();
+  const cacheGoal = Math.min(
     cfg.maxCacheIds,
     Math.max(effectiveTargetCount * 12, 40)
   );
-  var { serverId } = getSessionInfo();
-  var sessionScope = getPrcSessionScope(userId, serverId);
+  const { serverId } = getSessionInfo();
+  const sessionScope = getPrcSessionScope(userId, serverId);
 
   if (!force) {
-    var sessionItems = PRC_SESSION_PERSONAL_CACHE.get(sessionScope);
+    const sessionItems = PRC_SESSION_PERSONAL_CACHE.get(sessionScope);
     if (Array.isArray(sessionItems) && sessionItems.length >= effectiveTargetCount) {
       return sessionItems.slice(0, effectiveTargetCount);
     }
   }
 
   try {
-    var st = ensurePrcDb(userId, serverId);
+    const st = await ensurePrcDb(userId, serverId);
 
-    if (st.db && st.scope) {
-      var cache = getMeta(st.db, __metaKeyPersonal(st.scope));
-      var ts = Number(cache.ts || 0);
-      var ids = Array.isArray(cache.ids) ? cache.ids : [];
-      var fresh = ts && (Date.now() - ts) <= cfg.personalTtlMs;
+    if (st?.db && st?.scope) {
+      const cache = await getMeta(st.db, __metaKeyPersonal(st.scope));
+      const ts = Number(cache?.ts || 0);
+      const ids = Array.isArray(cache?.ids) ? cache.ids : [];
+      const fresh = ts && (Date.now() - ts) <= cfg.personalTtlMs;
 
       if (fresh && ids.length) {
-        var lastShownIds = [];
+        let lastShownIds = [];
         try {
-          var last = getMeta(st.db, __metaKeyPersonalLast(st.scope));
-          lastShownIds = Array.isArray(last.ids) ? last.ids : [];
+          const last = await getMeta(st.db, __metaKeyPersonalLast(st.scope));
+          lastShownIds = Array.isArray(last?.ids) ? last.ids : [];
         } catch {}
 
-        var lastSet = new Set(lastShownIds);
+        const lastSet = new Set(lastShownIds);
 
-        var candidates = ids.filter(function(id) id && !lastSet.has(id));
+        let candidates = ids.filter(id => id && !lastSet.has(id));
 
         if (candidates.length < Math.max(6, effectiveTargetCount * 2)) {
           candidates = ids.slice();
         }
         shuffle(candidates);
 
-        var sampleIds = candidates.slice(0, Math.min(candidates.length, cacheGoal));
-        var aliveIds = filterOutPlayedIds(userId, sampleIds);
-        var itemsFromDb = dbGetItemsByIds(st.db, st.scope, aliveIds);
+        const sampleIds = candidates.slice(0, Math.min(candidates.length, cacheGoal));
+        const aliveIds = await filterOutPlayedIds(userId, sampleIds);
+        const itemsFromDb = await dbGetItemsByIds(st.db, st.scope, aliveIds);
 
         shuffle(itemsFromDb);
 
-        var picked = filterAndTrimByRating(itemsFromDb, minRating, effectiveTargetCount);
+        const picked = filterAndTrimByRating(itemsFromDb, minRating, effectiveTargetCount);
         if (picked.length >= effectiveTargetCount) {
           PRC_SESSION_PERSONAL_CACHE.set(sessionScope, picked.slice(0, effectiveTargetCount));
           try {
-            setMeta(st.db, __metaKeyPersonalLast(st.scope), {
-              ids: picked.map(function(x) x.Id).filter(Boolean),
+            await setMeta(st.db, __metaKeyPersonalLast(st.scope), {
+              ids: picked.map(x => x.Id).filter(Boolean),
               ts: Date.now()
             });
           } catch {}
@@ -2678,30 +2719,30 @@ function fetchPersonalRecommendations(userId, targetCount = null, minRating = 0,
     }
   } catch {}
 
-  var requested = Math.max(effectiveTargetCount * 4, 80);
-  var fallbackP = getFallbackRecommendations(userId, requested).catchfunction(()[]);
-  var topGenres = getCachedUserTopGenres(3).catchfunction(()[]);
-  var pool = [];
+  const requested = Math.max(effectiveTargetCount * 4, 80);
+  const fallbackP = getFallbackRecommendations(userId, requested).catch(()=>[]);
+  const topGenres = await getCachedUserTopGenres(3).catch(()=>[]);
+  let pool = [];
 
   if (topGenres && topGenres.length) {
-    var byGenre = fetchUnwatchedByGenres(userId, topGenres, requested, minRating).catchfunction(()[]);
+    const byGenre = await fetchUnwatchedByGenres(userId, topGenres, requested, minRating).catch(()=>[]);
     pool = pool.concat(byGenre);
   }
-  var fallback = fallbackP;
+  const fallback = await fallbackP;
   pool = pool.concat(fallback);
 
   shuffle(pool);
 
-  var seen = new Set();
-  var uniq = [];
+  const seen = new Set();
+  const uniq = [];
 
-  for (var item of pool) {
-    if (!item.Id) continue;
+  for (const item of pool) {
+    if (!item?.Id) continue;
 
-    var key = makePRCKey(item);
+    const key = makePRCKey(item);
     if (!key || seen.has(key)) continue;
 
-    var score = Number(item.CommunityRating);
+    const score = Number(item.CommunityRating);
     if (minRating > 0 && !(Number.isFinite(score) && score >= minRating)) continue;
 
     seen.add(key);
@@ -2711,10 +2752,10 @@ function fetchPersonalRecommendations(userId, targetCount = null, minRating = 0,
   }
 
   if (uniq.length < cacheGoal) {
-    for (var item of pool) {
-      if (!item.Id) continue;
+    for (const item of pool) {
+      if (!item?.Id) continue;
 
-      var key = makePRCKey(item);
+      const key = makePRCKey(item);
       if (!key || seen.has(key)) continue;
 
       seen.add(key);
@@ -2725,13 +2766,13 @@ function fetchPersonalRecommendations(userId, targetCount = null, minRating = 0,
   }
 
   shuffle(uniq);
-  var final = uniq.slice(0, effectiveTargetCount);
+  const final = uniq.slice(0, effectiveTargetCount);
 
   try {
-    var st = ensurePrcDb(userId, serverId);
-    if (st.db && st.scope && final.length) {
-      setMeta(st.db, __metaKeyPersonalLast(st.scope), {
-        ids: final.map(function(x) x.Id).filter(Boolean),
+    const st = await ensurePrcDb(userId, serverId);
+    if (st?.db && st?.scope && final?.length) {
+      await setMeta(st.db, __metaKeyPersonalLast(st.scope), {
+        ids: final.map(x => x.Id).filter(Boolean),
         ts: Date.now()
       });
     }
@@ -2743,10 +2784,10 @@ function fetchPersonalRecommendations(userId, targetCount = null, minRating = 0,
 }
 
 function dedupeStrong(items = []) {
-  var seen = new Set();
-  var out = [];
-  for (var it of items) {
-    var k = makePRCKey(it);
+  const seen = new Set();
+  const out = [];
+  for (const it of items) {
+    const k = makePRCKey(it);
     if (!k || seen.has(k)) continue;
     seen.add(k);
     out.push(it);
@@ -2754,45 +2795,45 @@ function dedupeStrong(items = []) {
   return out;
 }
 
-function fetchUnwatchedByGenres(userId, genres, targetCount = 20, minRating = 0) {
+async function fetchUnwatchedByGenres(userId, genres, targetCount = 20, minRating = 0) {
   if (!genres || !genres.length) {
-    var fb = getFallbackRecommendations(userId, targetCount * 3);
+    const fb = await getFallbackRecommendations(userId, targetCount * 3);
     return filterAndTrimByRating(fb, minRating, targetCount);
   }
 
-  var genresParam = encodeURIComponent(genres.join("|"));
-  var fields = LIGHT_FIELDS;
-  var requested = Math.max(targetCount * 2, 20);
-  var sort = "Random,CommunityRating,DateCreated";
+  const genresParam = encodeURIComponent(genres.join("|"));
+  const fields = LIGHT_FIELDS;
+  const requested = Math.max(targetCount * 2, 20);
+  const sort = "Random,CommunityRating,DateCreated";
 
-  var url =
-    "/Users/" + (userId) + "/Items?" +
-    "IncludeItemTypes=Movie,Series&Recursive=true&Filters=IsUnplayed&" +
-    "Genres=" + (genresParam) + "&Fields=" + (fields) + "&" +
-    "SortBy=" + (sort) + "&SortOrder=Descending&Limit=" + (requested);
+  const url =
+    `/Users/${userId}/Items?` +
+    `IncludeItemTypes=Movie,Series&Recursive=true&Filters=IsUnplayed&` +
+    `Genres=${genresParam}&Fields=${fields}&` +
+    `SortBy=${sort}&SortOrder=Descending&Limit=${requested}`;
 
   try {
-    var data = makeApiRequest(url);
-    var items = Array.isArray(data.Items) ? data.Items : [];
+    const data = await makeApiRequest(url);
+    const items = Array.isArray(data?.Items) ? data.Items : [];
     return filterAndTrimByRating(items, minRating, targetCount);
   } catch (err) {
     console.error("Türe göre içerik alınırken hata:", err);
-    var fb = getFallbackRecommendations(userId, requested);
+    const fb = await getFallbackRecommendations(userId, requested);
     return filterAndTrimByRating(fb, minRating, targetCount);
   }
 }
 
-function getFallbackRecommendations(userId, limit = 20) {
-  var fields = LIGHT_FIELDS;
-  var url =
-    "/Users/" + (userId) + "/Items?" +
-    "IncludeItemTypes=Movie,Series&Recursive=true&Filters=IsUnplayed&" +
-    "Fields=" + (fields) + "&" +
-    "SortBy=Random,CommunityRating&SortOrder=Descending&Limit=" + (limit);
+async function getFallbackRecommendations(userId, limit = 20) {
+  const fields = LIGHT_FIELDS;
+  const url =
+    `/Users/${userId}/Items?` +
+    `IncludeItemTypes=Movie,Series&Recursive=true&Filters=IsUnplayed&` +
+    `Fields=${fields}&` +
+    `SortBy=Random,CommunityRating&SortOrder=Descending&Limit=${limit}`;
 
   try {
-    var data = makeApiRequest(url);
-    return Array.isArray(data.Items) ? data.Items : [];
+    const data = await makeApiRequest(url);
+    return Array.isArray(data?.Items) ? data.Items : [];
   } catch (err) {
     console.error("Fallback öneriler alınırken hata:", err);
     return [];
@@ -2801,12 +2842,12 @@ function getFallbackRecommendations(userId, limit = 20) {
 
 function pickBestItemByRating(items) {
   if (!items || !items.length) return null;
-  var best = null;
-  var bestScore = -Infinity;
-  for (var it of items) {
+  let best = null;
+  let bestScore = -Infinity;
+  for (const it of items) {
     if (!it) continue;
-    var score = Number(it.CommunityRating);
-    var s = Number.isFinite(score) ? score : 0;
+    const score = Number(it.CommunityRating);
+    const s = Number.isFinite(score) ? score : 0;
     if (!best || s > bestScore) {
       bestScore = s;
       best = it;
@@ -2816,13 +2857,13 @@ function pickBestItemByRating(items) {
 }
 
 function filterAndTrimByRating(items, minRating, maxCount) {
-  var seen = new Set();
-  var out = [];
-  for (var it of items || []) {
+  const seen = new Set();
+  const out = [];
+  for (const it of items || []) {
     if (!it || !it.Id) continue;
     if (seen.has(it.Id)) continue;
     seen.add(it.Id);
-    var score = Number(it.CommunityRating);
+    const score = Number(it.CommunityRating);
     if (minRating > 0 && !(Number.isFinite(score) && score >= minRating)) continue;
     out.push(it);
     if (out.length >= maxCount) break;
@@ -2833,7 +2874,7 @@ function filterAndTrimByRating(items, minRating, maxCount) {
 function clearRowWithCleanup(row) {
   if (!row) return;
   try {
-    row.querySelectorAll('.personal-recs-card').forEach(function(el) {
+    row.querySelectorAll('.personal-recs-card').forEach(el => {
       el.dispatchEvent(new Event('jms:cleanup'));
     });
   } catch {}
@@ -2843,7 +2884,7 @@ function clearRowWithCleanup(row) {
 function cleanupRow(row) {
   if (!row) return;
   try {
-    row.querySelectorAll('.personal-recs-card').forEach(function(el) {
+    row.querySelectorAll('.personal-recs-card').forEach(el => {
       el.dispatchEvent(new Event('jms:cleanup'));
     });
   } catch {}
@@ -2851,14 +2892,14 @@ function cleanupRow(row) {
 }
 
 function getProgressiveRowInitialCount(limit, { mobileCount = 2, desktopCount = 4 } = {}) {
-  var max = Math.max(0, Number(limit) || 0);
+  const max = Math.max(0, Number(limit) || 0);
   if (!max) return 0;
-  var configured = IS_MOBILE ? mobileCount : desktopCount;
+  const configured = IS_MOBILE ? mobileCount : desktopCount;
   return Math.max(1, Math.min(max, configured | 0));
 }
 
 function getProgressiveRowChunkSize({ mobileCount = 2, desktopCount = 3 } = {}) {
-  var configured = IS_MOBILE ? mobileCount : desktopCount;
+  const configured = IS_MOBILE ? mobileCount : desktopCount;
   return Math.max(1, configured | 0);
 }
 
@@ -2874,34 +2915,34 @@ export function progressivelyRenderCardRow({
   onAppend = null,
   onComplete = null,
 } = {}) {
-  if (!row.isConnected || !Array.isArray(items) || !items.length || typeof appendCard !== "function") {
-    try { onComplete.({ rendered: 0, total: 0, aborted: false }); } catch {}
+  if (!row?.isConnected || !Array.isArray(items) || !items.length || typeof appendCard !== "function") {
+    try { onComplete?.({ rendered: 0, total: 0, aborted: false }); } catch {}
     return { cancel() {} };
   }
 
-  var total = Math.max(0, Math.min(
+  const total = Math.max(0, Math.min(
     Number.isFinite(Number(limit)) ? Number(limit) : items.length,
     items.length
   ));
   if (!total) {
-    try { onComplete.({ rendered: 0, total: 0, aborted: false }); } catch {}
+    try { onComplete?.({ rendered: 0, total: 0, aborted: false }); } catch {}
     return { cancel() {} };
   }
 
-  var rendered = 0;
-  var cancelled = false;
-  var timerId = 0;
-  var idleId = 0;
-  var usedIdle = false;
+  let rendered = 0;
+  let cancelled = false;
+  let timerId = 0;
+  let idleId = 0;
+  let usedIdle = false;
 
-  var clearScheduled = function() {
+  const clearScheduled = () => {
     if (timerId) {
       try { clearTimeout(timerId); } catch {}
       timerId = 0;
     }
     if (idleId) {
       try {
-        var cancelIdle = window.cancelIdleCallback;
+        const cancelIdle = window.cancelIdleCallback;
         if (typeof cancelIdle === "function") {
           cancelIdle(idleId);
         }
@@ -2911,26 +2952,26 @@ export function progressivelyRenderCardRow({
     usedIdle = false;
   };
 
-  var isAlive = function() (
+  const isAlive = () => (
     !cancelled &&
-    !!row.isConnected &&
+    !!row?.isConnected &&
     (typeof isCurrent !== "function" || isCurrent() === true)
   );
 
-  var finish = function({ aborted = false } = {}) {
+  const finish = ({ aborted = false } = {}) => {
     clearScheduled();
     if (cancelled) return;
     cancelled = true;
-    try { onComplete.({ rendered, total, aborted }); } catch {}
+    try { onComplete?.({ rendered, total, aborted }); } catch {}
   };
 
-  var appendNext = function(count) {
+  const appendNext = (count) => {
     if (!isAlive()) return false;
-    var frag = document.createDocumentFragment();
-    var appended = 0;
+    const frag = document.createDocumentFragment();
+    let appended = 0;
 
     while (rendered < total && appended < count) {
-      var card = appendCard(items[rendered], rendered);
+      const card = appendCard(items[rendered], rendered);
       rendered += 1;
       if (!card) continue;
       frag.appendChild(card);
@@ -2939,11 +2980,11 @@ export function progressivelyRenderCardRow({
 
     if (!appended) return false;
     row.appendChild(frag);
-    try { onAppend.({ rendered, total, appended }); } catch {}
+    try { onAppend?.({ rendered, total, appended }); } catch {}
     return true;
   };
 
-  var pump = function() {
+  const pump = () => {
     clearScheduled();
     if (!isAlive()) {
       finish({ aborted: true });
@@ -2953,8 +2994,8 @@ export function progressivelyRenderCardRow({
       finish();
       return;
     }
-    var nextChunkSize = Math.max(1, chunkSize | 0);
-    var appended = appendNext(nextChunkSize);
+    const nextChunkSize = Math.max(1, chunkSize | 0);
+    const appended = appendNext(nextChunkSize);
     if (!appended || rendered >= total) {
       finish({ aborted: !appended });
       return;
@@ -2962,7 +3003,7 @@ export function progressivelyRenderCardRow({
     schedule();
   };
 
-  var schedule = function() {
+  const schedule = () => {
     if (!isAlive()) {
       finish({ aborted: true });
       return;
@@ -2972,10 +3013,10 @@ export function progressivelyRenderCardRow({
       return;
     }
 
-    var waitMs = Math.max(16, Number(delayMs) || (IS_MOBILE ? 80 : 32));
+    const waitMs = Math.max(16, Number(delayMs) || (IS_MOBILE ? 80 : 32));
     if (typeof window.requestIdleCallback === "function") {
       usedIdle = true;
-      idleId = window.requestIdleCallbackfunction(() {
+      idleId = window.requestIdleCallback(() => {
         idleId = 0;
         usedIdle = false;
         pump();
@@ -2983,42 +3024,42 @@ export function progressivelyRenderCardRow({
       return;
     }
 
-    timerId = window.setTimeoutfunction(() {
+    timerId = window.setTimeout(() => {
       timerId = 0;
       pump();
     }, waitMs);
   };
 
-  var head = Math.max(
+  const head = Math.max(
     1,
     Math.min(total, Number.isFinite(Number(initialCount)) ? Number(initialCount) : total)
   );
 
-  var appended = appendNext(head);
+  const appended = appendNext(head);
   if (!appended || rendered >= total) {
     finish({ aborted: !appended });
-    return { cancel: function() finish({ aborted: true }) };
+    return { cancel: () => finish({ aborted: true }) };
   }
 
   schedule();
   return {
-    cancel: function() finish({ aborted: true })
+    cancel: () => finish({ aborted: true })
   };
 }
 
 function renderRecommendationCards(row, items, serverId) {
-  var personalCardCount = getPersonalRecsCardCount();
+  const personalCardCount = getPersonalRecsCardCount();
   clearRowWithCleanup(row);
   if (!items || !items.length) {
-    row.innerHTML = "<div class=\"no-recommendations\">" + ((config.languageLabels.noRecommendations) || labels.noRecommendations || "Öneri bulunamadı") + "</div>";
+    row.innerHTML = `<div class="no-recommendations">${(config.languageLabels?.noRecommendations) || labels.noRecommendations || "Öneri bulunamadı"}</div>`;
     return;
   }
 
-  var unique = items;
-  var slice = unique;
-  var allCards = [];
-  var domSeen = new Set();
-  var scrollerReady = false;
+  const unique = items;
+  const slice = unique;
+  const allCards = [];
+  const domSeen = new Set();
+  let scrollerReady = false;
 
   progressivelyRenderCardRow({
     row,
@@ -3030,38 +3071,38 @@ function renderRecommendationCards(row, items, serverId) {
     ),
     chunkSize: getProgressiveRowChunkSize({ mobileCount: 2, desktopCount: 3 }),
     delayMs: IS_MOBILE ? 76 : 34,
-    appendCard: function(it, index) {
-      var key = makePRCKey(it);
+    appendCard: (it, index) => {
+      const key = makePRCKey(it);
       if (key && domSeen.has(key)) return null;
       if (key) domSeen.add(key);
-      var card = createRecommendationCard(it, serverId, {
+      const card = createRecommendationCard(it, serverId, {
         aboveFold: index < (IS_MOBILE ? 2 : 4),
         sizeHint: "personal"
       });
       allCards.push(card);
       return card;
     },
-    onAppend: function() {
+    onAppend: () => {
       if (!scrollerReady) {
         setupScroller(row);
         scrollerReady = true;
       }
       triggerScrollerUpdate(row);
     },
-    onComplete: function() {
+    onComplete: () => {
       if (!scrollerReady) {
         setupScroller(row);
       }
       triggerScrollerUpdate(row);
       try {
-        var { userId } = getSessionInfo();
+        const { userId } = getSessionInfo();
         scheduleResumeLabels(allCards, userId);
       } catch {}
     }
   });
 }
 
-var LIGHT_FIELDS = [
+const LIGHT_FIELDS = [
   "Type",
   "PrimaryImageAspectRatio",
   "ImageTags",
@@ -3078,7 +3119,7 @@ var LIGHT_FIELDS = [
   "RunTimeTicks"
 ].join(",");
 
-var COMMON_FIELDS = [
+const COMMON_FIELDS = [
   "Type",
   "PrimaryImageAspectRatio",
   "ImageTags",
@@ -3098,84 +3139,110 @@ var COMMON_FIELDS = [
 ].join(",");
 
 function clampText(s, max = 220) {
-  var t = String(s || "").replace(/\s+/g, " ").trim();
+  const t = String(s || "").replace(/\s+/g, " ").trim();
   if (!t) return "";
   return t.length > max ? (t.slice(0, max - 1) + "…") : t;
 }
 
 function formatRuntime(ticks) {
   if (!ticks) return null;
-  var minutes = Math.floor(ticks / 600000000);
-  if (minutes < 60) return (minutes) + "d";
-  var hours = Math.floor(minutes / 60);
-  var remainingMinutes = minutes % 60;
-  return remainingMinutes > 0 ? (hours) + "s " + (remainingMinutes) + "d" : (hours) + "s";
+  const minutes = Math.floor(ticks / 600000000);
+  if (minutes < 60) return `${minutes}d`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes > 0 ? `${hours}s ${remainingMinutes}d` : `${hours}s`;
 }
 
 function getRuntimeWithIcons(runtime) {
   if (!runtime) return '';
-  return runtime.replace(/(\d+)s/g, "$1" + (config.languageLabels.sa || 'sa'))
-  .replace(/(\d+)d/g, "$1" + (config.languageLabels.dk || 'dk'));
+  return runtime.replace(/(\d+)s/g, `$1${config.languageLabels?.sa || 'sa'}`)
+  .replace(/(\d+)d/g, `$1${config.languageLabels?.dk || 'dk'}`);
 }
 
 function getDetailsUrl(itemId, serverId) {
-  return "#/details?id=" + (itemId) + "&serverId=" + (encodeURIComponent(serverId));
+  return `#/details?id=${itemId}&serverId=${encodeURIComponent(serverId)}`;
 }
 
 function buildPosterUrl(item, height = 540, quality = 72, { omitTag = false } = {}) {
-  var candidate = getPosterLikeImageCandidate(item);
+  const candidate = getPosterLikeImageCandidate(item);
   return buildCandidateImageUrl(item, candidate, height, quality, { omitTag });
 }
 
 function createGenreHeroCard(item, serverId, genreName, { aboveFold = false } = {}) {
-  var { itemId, itemName } = primeItemIdentity(item);
-  var hero = document.createElement('div');
+  const { itemId, itemName } = primeItemIdentity(item);
+  const hero = document.createElement('div');
   hero.className = 'dir-row-hero';
   if (itemId) hero.dataset.itemId = itemId;
 
-  var bgSrc = buildBackdropImageUrl(item);
+  const bgSrc = buildBackdropImageUrl(item);
 
-  var logo = buildLogoUrl(item);
-  var year = item.ProductionYear || '';
-  var plot = clampText(item.Overview, 1200);
-  var ageChip = formatOfficialRatingLabel(item.OfficialRating || '');
-  var genres = Array.isArray(item.Genres) ? item.Genres.slice(0, 3).join(", ") : "";
+  const logo = buildLogoUrl(item);
+  const year = item.ProductionYear || '';
+  const plot = clampText(item.Overview, 1200);
+  const ageChip = formatOfficialRatingLabel(item.OfficialRating || '');
+  const genres = Array.isArray(item.Genres) ? item.Genres.slice(0, 3).join(", ") : "";
 
-  var heroMetaItems = [];
+  const heroMetaItems = [];
   if (ageChip) heroMetaItems.push({ text: ageChip, variant: "age" });
   if (year) heroMetaItems.push({ text: year, variant: "year" });
   if (genres) heroMetaItems.push({ text: genres, variant: "genres" });
-  var metaHtml = heroMetaItems.length
+  const metaHtml = heroMetaItems.length
     ? heroMetaItems
-        .mapfunction(({ text, variant })
-          "<span class=\"dir-row-hero-meta dir-row-hero-meta--" + (variant) + "\">" + (escapeHtml(text)) + "</span>"
+        .map(({ text, variant }) =>
+          `<span class="dir-row-hero-meta dir-row-hero-meta--${variant}">${escapeHtml(text)}</span>`
         )
         .join("")
     : "";
 
-  hero.innerHTML = "\n    <div class=\"dir-row-hero-bg-wrap\">\n      <img class=\"dir-row-hero-bg\"\n           alt=\"" + (escapeHtml(itemName)) + "\"\n           decoding=\"async\"\n           loading=\"" + (aboveFold ? 'eager' : 'lazy') + "\"\n           " + (aboveFold ? 'fetchpriority="high"' : '') + ">\n    </div>\n\n    <div class=\"dir-row-hero-inner\">\n      <div class=\"dir-row-hero-meta-container\">\n\n        <div class=\"dir-row-hero-label\">\n          " + (escapeHtml(genreName || "")) + "\n        </div>\n\n        ${logo ? "
+  hero.innerHTML = `
+    <div class="dir-row-hero-bg-wrap">
+      <img class="dir-row-hero-bg"
+           alt="${escapeHtml(itemName)}"
+           decoding="async"
+           loading="${aboveFold ? 'eager' : 'lazy'}"
+           ${aboveFold ? 'fetchpriority="high"' : ''}>
+    </div>
+
+    <div class="dir-row-hero-inner">
+      <div class="dir-row-hero-meta-container">
+
+        <div class="dir-row-hero-label">
+          ${escapeHtml(genreName || "")}
+        </div>
+
+        ${logo ? `
           <div class="dir-row-hero-logo">
             <img src="${logo}"
                  alt="${escapeHtml(itemName)} logo"
                  decoding="async"
                  loading="lazy">
           </div>
-        " : ""}\n\n        <div class=\"dir-row-hero-title\">" + (escapeHtml(itemName)) + "</div>\n\n        ${metaHtml ? "<div class="dir-row-hero-submeta">${metaHtml}</div>" : \"\"}\n\n        ${plot ? "<div class="dir-row-hero-plot">${escapeHtml(plot)}</div>" : \"\"}\n\n      </div>\n    </div>\n  ";
+        ` : ``}
+
+        <div class="dir-row-hero-title">${escapeHtml(itemName)}</div>
+
+        ${metaHtml ? `<div class="dir-row-hero-submeta">${metaHtml}</div>` : ""}
+
+        ${plot ? `<div class="dir-row-hero-plot">${escapeHtml(plot)}</div>` : ""}
+
+      </div>
+    </div>
+  `;
 
   try {
-    var img = hero.querySelector('.dir-row-hero-bg');
+    const img = hero.querySelector('.dir-row-hero-bg');
     if (img) {
       setManagedImageSource(img, bgSrc, { fallback: PLACEHOLDER_URL });
     }
   } catch {}
 
-  var openDetails = function(e) {
-    try { e.preventDefault.(); e.stopPropagation.(); } catch {}
-    var backdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
-    var originEl = hero.querySelector('.dir-row-hero-bg') || hero;
+  const openDetails = async (e) => {
+    try { e?.preventDefault?.(); e?.stopPropagation?.(); } catch {}
+    const backdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
+    const originEl = hero.querySelector('.dir-row-hero-bg') || hero;
     try {
       if (!itemId) return;
-      openDetailsModal({
+      await openDetailsModal({
         itemId,
         serverId,
         preferBackdropIndex: backdropIndex,
@@ -3188,16 +3255,16 @@ function createGenreHeroCard(item, serverId, genreName, { aboveFold = false } = 
 
   hero.addEventListener('click', openDetails);
   hero.tabIndex = 0;
-  hero.addEventListenerfunction('keydown', (e) {
+  hero.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') openDetails(e);
   });
 
   hero.classList.add('active');
 
-  hero.addEventListenerfunction('jms:cleanup', () {
+  hero.addEventListener('jms:cleanup', () => {
     detachPreviewHandlers(hero);
     try {
-      var img = hero.querySelector('.dir-row-hero-bg');
+      const img = hero.querySelector('.dir-row-hero-bg');
       if (img) cleanupManagedImage(img);
     } catch {}
   }, { once: true });
@@ -3208,11 +3275,11 @@ function createGenreHeroCard(item, serverId, genreName, { aboveFold = false } = 
 function queueEnterAnimation(el) {
   if (!el) return el;
   el.classList.add('is-entering');
-  var clear = function() {
+  const clear = () => {
     try { el.classList.remove('is-entering'); } catch {}
   };
   try {
-    requestAnimationFramefunction(() {
+    requestAnimationFrame(() => {
       requestAnimationFrame(clear);
     });
   } catch {
@@ -3222,15 +3289,20 @@ function queueEnterAnimation(el) {
 }
 
 export function getManagedCardTitleDisplayMode(source = null) {
-  var cfg = source || getConfig.() || config || {};
+  const cfg = source || getConfig?.() || config || {};
   return normalizeManagedCardTitleDisplayMode(cfg.managedCardTitleDisplayMode);
 }
 
 function buildManagedCardTitleLineHtml(titleText, subtitleText = "", { maxTitleLength = 42 } = {}) {
-  var safeTitle = escapeHtml(clampText(titleText, maxTitleLength));
-  var safeSubtitle = escapeHtml(String(subtitleText || "").trim());
+  const safeTitle = escapeHtml(clampText(titleText, maxTitleLength));
+  const safeSubtitle = escapeHtml(String(subtitleText || "").trim());
   if (!safeTitle && !safeSubtitle) return "";
-  return "\n    <div class=\"prc-titleline\">\n      " + (safeTitle) + "\n      ${safeSubtitle ? "<div class="prc-subtitleline">${safeSubtitle}</div>" : \"\"}\n    </div>\n  ";
+  return `
+    <div class="prc-titleline">
+      ${safeTitle}
+      ${safeSubtitle ? `<div class="prc-subtitleline">${safeSubtitle}</div>` : ""}
+    </div>
+  `;
 }
 
 export function resolveManagedCardTitleRender({
@@ -3242,20 +3314,28 @@ export function resolveManagedCardTitleRender({
   maxTitleLength = 42,
   mode = null,
 } = {}) {
-  var resolvedMode = normalizeManagedCardTitleDisplayMode(
-    mode || getManagedCardTitleDisplayMode()
+  const resolvedMode = normalizeManagedCardTitleDisplayMode(
+    mode ?? getManagedCardTitleDisplayMode()
   );
-  var titleHtml = buildManagedCardTitleLineHtml(titleText, subtitleText, {
+  const titleHtml = buildManagedCardTitleLineHtml(titleText, subtitleText, {
     maxTitleLength,
   });
-  var canRenderLogo = !!logoUrl && (
+  const canRenderLogo = !!logoUrl && (
     resolvedMode === "logo" ||
     resolvedMode === "logoTitle"
   );
-  var safeSubtitle = escapeHtml(String(subtitleText || "").trim());
-  var safeLogoAlt = escapeHtml(String(logoAltText || titleText || "").trim());
-  var logoHtml = canRenderLogo
-    ? "\n      <div class=\"prc-card-logo\">\n        <img src=\"" + (escapeHtml(logoUrl)) + "\"\n          alt=\"" + (safeLogoAlt) + "\"\n          loading=\"" + (aboveFold ? "eager" : "lazy") + "\"\n          decoding=\"async\"\n          " + (aboveFold ? 'fetchpriority="high"' : "") + ">\n      </div>\n    "
+  const safeSubtitle = escapeHtml(String(subtitleText || "").trim());
+  const safeLogoAlt = escapeHtml(String(logoAltText || titleText || "").trim());
+  const logoHtml = canRenderLogo
+    ? `
+      <div class="prc-card-logo">
+        <img src="${escapeHtml(logoUrl)}"
+          alt="${safeLogoAlt}"
+          loading="${aboveFold ? "eager" : "lazy"}"
+          decoding="async"
+          ${aboveFold ? 'fetchpriority="high"' : ""}>
+      </div>
+    `
     : "";
 
   switch (resolvedMode) {
@@ -3267,7 +3347,7 @@ export function resolveManagedCardTitleRender({
     case "logoTitle":
       return {
         html: canRenderLogo
-          ? (logoHtml) + "${safeSubtitle ? "<div class="prc-subtitleline prc-logo-subtitle">${safeSubtitle}</div>" : \"\"}"
+          ? `${logoHtml}${safeSubtitle ? `<div class="prc-subtitleline prc-logo-subtitle">${safeSubtitle}</div>` : ""}`
           : titleHtml,
         hasLogo: canRenderLogo,
       };
@@ -3286,53 +3366,82 @@ export function resolveManagedCardTitleRender({
 }
 
 function createRecommendationCard(item, serverId, renderOptions = false) {
-  var normalizedOptions = (typeof renderOptions === "object" && renderOptions !== null)
+  const normalizedOptions = (typeof renderOptions === "object" && renderOptions !== null)
     ? renderOptions
     : { aboveFold: !!renderOptions };
-  var {
+  const {
     aboveFold = false,
     sizeHint = "personal"
   } = normalizedOptions;
-  var { itemId, itemName } = primeItemIdentity(item);
-  var card = document.createElement("div");
+  const { itemId, itemName } = primeItemIdentity(item);
+  const card = document.createElement("div");
   card.className = "card personal-recs-card";
   queueEnterAnimation(card);
   if (itemId) card.dataset.itemId = itemId;
   card.setAttribute('data-key', makePRCKey(item));
 
-  var posterUrlStatic = buildPosterImageUrl(item);
-  var year = item.ProductionYear || "";
-  var ageChip = formatOfficialRatingLabel(item.OfficialRating || "");
-  var runtimeTicks = item.Type === "Series" ? item.CumulativeRunTimeTicks : item.RunTimeTicks;
-  var runtime = formatRuntime(runtimeTicks);
-  var genres = Array.isArray(item.Genres) ? item.Genres.slice(0, 3).join(", ") : "";
-  var { label: typeLabel, icon: typeIcon } = getPrcCardTypeBadge(item.Type);
-  var community = Number.isFinite(item.CommunityRating)
-    ? "<div class=\"community-rating\" title=\"Community Rating\">⭐ " + (item.CommunityRating.toFixed(1)) + "</div>"
+  const posterUrlStatic = buildPosterImageUrl(item);
+  const year = item.ProductionYear || "";
+  const ageChip = formatOfficialRatingLabel(item.OfficialRating || "");
+  const runtimeTicks = item.Type === "Series" ? item.CumulativeRunTimeTicks : item.RunTimeTicks;
+  const runtime = formatRuntime(runtimeTicks);
+  const genres = Array.isArray(item.Genres) ? item.Genres.slice(0, 3).join(", ") : "";
+  const { label: typeLabel, icon: typeIcon } = getPrcCardTypeBadge(item.Type);
+  const community = Number.isFinite(item.CommunityRating)
+    ? `<div class="community-rating" title="Community Rating">⭐ ${item.CommunityRating.toFixed(1)}</div>`
     : "";
-  var logoUrl = buildLogoUrl(item);
-  var titleRender = resolveManagedCardTitleRender({
+  const logoUrl = buildLogoUrl(item);
+  const titleRender = resolveManagedCardTitleRender({
     titleText: itemName,
     logoUrl,
-    logoAltText: (itemName) + " logo",
+    logoAltText: `${itemName} logo`,
     aboveFold,
     maxTitleLength: 42,
   });
 
-  card.innerHTML = "\n    <div class=\"cardBox\">\n      <a class=\"cardLink\" href=\"" + (itemId ? getDetailsUrl(itemId, serverId) : '#') + "\">\n        <div class=\"cardImageContainer\">\n          <img class=\"cardImage\"\n            alt=\"" + (escapeHtml(itemName)) + "\"\n            loading=\"" + (aboveFold ? 'eager' : 'lazy') + "\"\n            decoding=\"async\"\n            " + (aboveFold ? 'fetchpriority="high"' : '') + ">\n          <div class=\"prc-top-badges\">\n            " + (community) + "\n            <div class=\"prc-type-badge\">\n              " + (faIconHtml(typeIcon, "prc-type-icon")) + "\n              " + (typeLabel) + "\n            </div>\n          </div>\n          <div class=\"prc-gradient\"></div>\n          <div class=\"prc-overlay\">\n            " + (titleRender.html) + "\n            <div class=\"prc-meta\">\n              ${ageChip ? "<span class="prc-age">${ageChip}</span><span class="prc-dot">•</span>" : \"\"}\n              ${year ? "<span class="prc-year">${year}</span><span class="prc-dot">•</span>" : \"\"}\n              ${runtime ? "<span class="prc-runtime">${getRuntimeWithIcons(runtime)}</span>" : \"\"}\n            </div>\n            ${genres ? "<div class="prc-genres">${genres}</div>" : \"\"}\n          </div>\n        </div>\n      </a>\n    </div>\n  ";
+  card.innerHTML = `
+    <div class="cardBox">
+      <a class="cardLink" href="${itemId ? getDetailsUrl(itemId, serverId) : '#'}">
+        <div class="cardImageContainer">
+          <img class="cardImage"
+            alt="${escapeHtml(itemName)}"
+            loading="${aboveFold ? 'eager' : 'lazy'}"
+            decoding="async"
+            ${aboveFold ? 'fetchpriority="high"' : ''}>
+          <div class="prc-top-badges">
+            ${community}
+            <div class="prc-type-badge">
+              ${faIconHtml(typeIcon, "prc-type-icon")}
+              ${typeLabel}
+            </div>
+          </div>
+          <div class="prc-gradient"></div>
+          <div class="prc-overlay">
+            ${titleRender.html}
+            <div class="prc-meta">
+              ${ageChip ? `<span class="prc-age">${ageChip}</span><span class="prc-dot">•</span>` : ""}
+              ${year ? `<span class="prc-year">${year}</span><span class="prc-dot">•</span>` : ""}
+              ${runtime ? `<span class="prc-runtime">${getRuntimeWithIcons(runtime)}</span>` : ""}
+            </div>
+            ${genres ? `<div class="prc-genres">${genres}</div>` : ""}
+          </div>
+        </div>
+      </a>
+    </div>
+  `;
 
-  var logoImg = card.querySelector('.prc-card-logo img');
+  const logoImg = card.querySelector('.prc-card-logo img');
   if (logoImg) {
-    logoImg.addEventListenerfunction('error', () {
+    logoImg.addEventListener('error', () => {
       try {
-        logoImg.closest('.prc-card-logo').remove();
+        logoImg.closest('.prc-card-logo')?.remove();
       } catch {}
     }, { once: true });
   }
 
-  var img = card.querySelector('.cardImage');
+  const img = card.querySelector('.cardImage');
   try {
-    var sizePreset = sizeHint === "byw"
+    const sizePreset = sizeHint === "byw"
       ? {
           mobile: '(max-width: 640px) 42vw, (max-width: 820px) 37vw, 252px',
           desktop: '(max-width: 1200px) 21vw, 252px'
@@ -3352,7 +3461,7 @@ function createRecommendationCard(item, serverId, renderOptions = false) {
     setManagedImageSource(img, posterUrlStatic, { fallback: PLACEHOLDER_URL });
   } else {
     try { img.style.display = 'none'; } catch {}
-    var noImg = document.createElement('div');
+    const noImg = document.createElement('div');
     noImg.className = 'prc-noimg-label';
     noImg.textContent =
       (config.languageLabels && (config.languageLabels.noImage || config.languageLabels.loadingText))
@@ -3365,23 +3474,23 @@ function createRecommendationCard(item, serverId, renderOptions = false) {
     noImg.style.textAlign = 'center';
     noImg.style.padding = '12px';
     noImg.style.fontWeight = '600';
-    card.querySelector('.cardImageContainer').prepend(noImg);
+    card.querySelector('.cardImageContainer')?.prepend(noImg);
   }
 
-  var cardLink = card.querySelector(".cardLink");
+  const cardLink = card.querySelector(".cardLink");
   if (cardLink) {
-    cardLink.addEventListenerfunction("click", (e) {
+    cardLink.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
       if (!itemId) return;
-      var hostEl = card.querySelector(".cardImageContainer");
-      var backdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
+      const hostEl = card.querySelector(".cardImageContainer");
+      const backdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
       try {
-        openDetailsModal({
+        await openDetailsModal({
           itemId,
           serverId,
           preferBackdropIndex: backdropIndex,
-          originEl: hostEl.querySelector.("img.cardImage") || hostEl || card,
+          originEl: hostEl?.querySelector?.("img.cardImage") || hostEl || card,
           originEvent: e,
         });
       } catch (err) {
@@ -3390,10 +3499,10 @@ function createRecommendationCard(item, serverId, renderOptions = false) {
     }, { passive: false });
   }
 
-  var mode = (getConfig().globalPreviewMode === 'studioMini') ? 'studioMini' : 'modal';
-  var defer = window.requestIdleCallback || function((fn)setTimeout(fn, 0));
-  deferfunction(() attachPreviewByMode(card, { ...item, Id: itemId, Name: itemName }, mode));
-  card.addEventListenerfunction('jms:cleanup', () {
+  const mode = (getConfig()?.globalPreviewMode === 'studioMini') ? 'studioMini' : 'modal';
+  const defer = window.requestIdleCallback || ((fn)=>setTimeout(fn, 0));
+  defer(() => attachPreviewByMode(card, { ...item, Id: itemId, Name: itemName }, mode));
+  card.addEventListener('jms:cleanup', () => {
     cleanupManagedImage(img);
     detachPreviewHandlers(card);
   }, { once: true });
@@ -3401,7 +3510,7 @@ function createRecommendationCard(item, serverId, renderOptions = false) {
 }
 
 function cleanupScroller(row) {
-  var s = row && row.__scroller;
+  const s = row && row.__scroller;
   if (!s) {
     try { row.classList.remove("is-animating"); } catch {}
     try { row.removeAttribute(SCROLLER_BUSY_ATTR); } catch {}
@@ -3410,9 +3519,9 @@ function cleanupScroller(row) {
     return;
   }
 
-  try { s.clearAnimCleanupTimer.(); } catch {}
-  try { s.mo.disconnect.(); } catch {}
-  try { s.ro.disconnect.(); } catch {}
+  try { s.clearAnimCleanupTimer?.(); } catch {}
+  try { s.mo?.disconnect?.(); } catch {}
+  try { s.ro?.disconnect?.(); } catch {}
 
   try { row.removeEventListener("wheel", s.onWheel); } catch {}
   try { row.removeEventListener("scroll", s.onScroll); } catch {}
@@ -3421,8 +3530,8 @@ function cleanupScroller(row) {
   try { row.removeEventListener("touchmove", s.onTouchMoveStop); } catch {}
   try { row.removeEventListener("load", s.onLoadCapture, true); } catch {}
 
-  try { s.btnL.removeEventListener.("click", s.onClickL); } catch {}
-  try { s.btnR.removeEventListener.("click", s.onClickR); } catch {}
+  try { s.btnL?.removeEventListener?.("click", s.onClickL); } catch {}
+  try { s.btnR?.removeEventListener?.("click", s.onClickR); } catch {}
   try { row.classList.remove("is-animating"); } catch {}
   try { row.removeAttribute(SCROLLER_BUSY_ATTR); } catch {}
   try { delete row.__jmsScrollerBusyUntil; } catch {}
@@ -3434,11 +3543,11 @@ function cleanupScroller(row) {
 
 export function setupScroller(row) {
   if (row.dataset.scrollerMounted === "1") {
-    var s = row.__scroller;
-    var btnOk =
-      !!(s && (s.btnL.isConnected || s.btnR.isConnected));
+    const s = row.__scroller;
+    const btnOk =
+      !!(s && (s.btnL?.isConnected || s.btnR?.isConnected));
     if (btnOk) {
-      requestAnimationFramefunction(() row.dispatchEvent(new Event("scroll")));
+      requestAnimationFrame(() => row.dispatchEvent(new Event("scroll")));
       return;
     }
     try { cleanupScroller(row); } catch {}
@@ -3446,25 +3555,25 @@ export function setupScroller(row) {
 
   row.dataset.scrollerMounted = "1";
 
-  var wrap = row.closest(".personal-recs-scroll-wrap") || row.parentElement;
-  var btnL = wrap.querySelector.(".hub-scroll-left") || null;
-  var btnR = wrap.querySelector.(".hub-scroll-right") || null;
-  var canScroll = function() row.scrollWidth > row.clientWidth + 2;
-  var prefersReducedMotion = window.matchMedia.("(prefers-reduced-motion: reduce)").matches === true;
-  var supportsNativeSmoothScroll =
+  const wrap = row.closest(".personal-recs-scroll-wrap") || row.parentElement;
+  const btnL = wrap?.querySelector?.(".hub-scroll-left") || null;
+  const btnR = wrap?.querySelector?.(".hub-scroll-right") || null;
+  const canScroll = () => row.scrollWidth > row.clientWidth + 2;
+  const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
+  const supportsNativeSmoothScroll =
     typeof row.scrollTo === "function" &&
     "scrollBehavior" in document.documentElement.style;
-  var scrollIdleMs = prefersReducedMotion || !supportsNativeSmoothScroll ? 40 : SCROLLER_BUSY_IDLE_MS;
-  var scrollMaxMs = prefersReducedMotion || !supportsNativeSmoothScroll ? 140 : SCROLLER_BUSY_MAX_MS;
-  var stepPx = function() Math.max(240, Math.floor(row.clientWidth * 0.9));
-  var SNAP_EPSILON = 2;
-  var maxScrollLeft = function() Math.max(0, row.scrollWidth - row.clientWidth);
+  const scrollIdleMs = prefersReducedMotion || !supportsNativeSmoothScroll ? 40 : SCROLLER_BUSY_IDLE_MS;
+  const scrollMaxMs = prefersReducedMotion || !supportsNativeSmoothScroll ? 140 : SCROLLER_BUSY_MAX_MS;
+  const stepPx = () => Math.max(240, Math.floor(row.clientWidth * 0.9));
+  const SNAP_EPSILON = 2;
+  const maxScrollLeft = () => Math.max(0, row.scrollWidth - row.clientWidth);
 
-  var _rafToken = null;
-  var _animCleanupTimer = 0;
-  var _animHardStopTimer = 0;
+  let _rafToken = null;
+  let _animCleanupTimer = 0;
+  let _animHardStopTimer = 0;
 
-  var clearAnimCleanupTimer = function() {
+  const clearAnimCleanupTimer = () => {
     if (_animCleanupTimer) {
       clearTimeout(_animCleanupTimer);
       _animCleanupTimer = 0;
@@ -3475,14 +3584,14 @@ export function setupScroller(row) {
     }
   };
 
-  var endProgrammaticScroll = function() {
+  const endProgrammaticScroll = () => {
     clearAnimCleanupTimer();
     try { row.classList.remove("is-animating"); } catch {}
     try { row.removeAttribute(SCROLLER_BUSY_ATTR); } catch {}
     row.__jmsScrollerBusyUntil = Date.now() + SCROLLER_BUSY_COOLDOWN_MS;
   };
 
-  var armProgrammaticScroll = function() {
+  const armProgrammaticScroll = () => {
     clearAnimCleanupTimer();
     try { row.setAttribute(SCROLLER_BUSY_ATTR, "1"); } catch {}
     row.__jmsScrollerBusyUntil = Date.now() + scrollMaxMs + SCROLLER_BUSY_COOLDOWN_MS;
@@ -3490,11 +3599,11 @@ export function setupScroller(row) {
     _animHardStopTimer = window.setTimeout(endProgrammaticScroll, scrollMaxMs);
   };
 
-  var updateButtonsNow = function() {
-    var scrollable = canScroll();
-    var max = maxScrollLeft();
-    var atStart = row.scrollLeft <= SNAP_EPSILON;
-    var atEnd = row.scrollLeft >= max - SNAP_EPSILON;
+  const updateButtonsNow = () => {
+    const scrollable = canScroll();
+    const max = maxScrollLeft();
+    const atStart = row.scrollLeft <= SNAP_EPSILON;
+    const atEnd = row.scrollLeft >= max - SNAP_EPSILON;
     if (btnL) {
       btnL.setAttribute("aria-disabled", scrollable ? "false" : "true");
       btnL.disabled = !scrollable;
@@ -3515,24 +3624,24 @@ export function setupScroller(row) {
     }
   };
 
-  var scheduleUpdate = function() {
+  const scheduleUpdate = () => {
     if (_rafToken) return;
-    _rafToken = requestAnimationFramefunction(() {
+    _rafToken = requestAnimationFrame(() => {
       _rafToken = null;
       updateButtonsNow();
     });
   };
 
-  var mo = new MutationObserverfunction(() scheduleUpdate());
+  const mo = new MutationObserver(() => scheduleUpdate());
   mo.observe(row, { childList: true });
 
-  var onLoadCapture = function() scheduleUpdate();
+  const onLoadCapture = () => scheduleUpdate();
   row.addEventListener("load", onLoadCapture, true);
 
-  var scrollToPosition = function(left) {
+  const scrollToPosition = (left) => {
     if (!canScroll()) return;
     armProgrammaticScroll();
-    var target = Math.max(0, Math.min(maxScrollLeft(), Number(left) || 0));
+    const target = Math.max(0, Math.min(maxScrollLeft(), Number(left) || 0));
     if (prefersReducedMotion || !supportsNativeSmoothScroll) {
       row.scrollLeft = target;
       scheduleUpdate();
@@ -3546,16 +3655,16 @@ export function setupScroller(row) {
     scheduleUpdate();
   };
 
-  var scrollByStep = function(dir, evt) {
+  const scrollByStep = (dir, evt) => {
     if (!canScroll()) return;
-    var fast = evt.shiftKey ? 1.35 : 1;
-    var delta = stepPx() * fast * dir;
+    const fast = evt?.shiftKey ? 1.35 : 1;
+    const delta = stepPx() * fast * dir;
     scrollToPosition(row.scrollLeft + delta);
   };
 
   function doScroll(dir, evt) {
     if (!canScroll()) return;
-    var max = maxScrollLeft();
+    const max = maxScrollLeft();
     if (dir > 0 && row.scrollLeft >= max - SNAP_EPSILON) {
       scrollToPosition(0);
       return;
@@ -3567,35 +3676,35 @@ export function setupScroller(row) {
     scrollByStep(dir, evt);
   }
 
-  var onClickL = function(e) { e.preventDefault(); e.stopPropagation(); doScroll(-1, e); };
-  var onClickR = function(e) { e.preventDefault(); e.stopPropagation(); doScroll( 1, e); };
-  var blurAfterPointerClick = function(btn, e) {
+  const onClickL = (e) => { e.preventDefault(); e.stopPropagation(); doScroll(-1, e); };
+  const onClickR = (e) => { e.preventDefault(); e.stopPropagation(); doScroll( 1, e); };
+  const blurAfterPointerClick = (btn, e) => {
     if (!btn) return;
-    if ((e.detail || 0) <= 0) return;
-    requestAnimationFramefunction(() { try { btn.blur(); } catch {} });
+    if ((e?.detail || 0) <= 0) return;
+    requestAnimationFrame(() => { try { btn.blur(); } catch {} });
   };
-  var onClickL2 = function(e) { onClickL(e); blurAfterPointerClick(btnL, e); };
-  var onClickR2 = function(e) { onClickR(e); blurAfterPointerClick(btnR, e); };
+  const onClickL2 = (e) => { onClickL(e); blurAfterPointerClick(btnL, e); };
+  const onClickR2 = (e) => { onClickR(e); blurAfterPointerClick(btnR, e); };
   if (btnL) btnL.addEventListener("click", onClickL2);
   if (btnR) btnR.addEventListener("click", onClickR2);
 
-  var onWheel = function(e) {
-    var horizontalIntent = Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey;
+  const onWheel = (e) => {
+    const horizontalIntent = Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey;
     if (!horizontalIntent) return;
-    var delta = e.deltaX !== 0 ? e.deltaX : e.deltaY;
+    const delta = e.deltaX !== 0 ? e.deltaX : e.deltaY;
     row.scrollLeft += delta;
     e.preventDefault();
     scheduleUpdate();
   };
   row.addEventListener("wheel", onWheel, { passive: false });
 
-  var onTouchStartStop = function(e) { e.stopPropagation(); };
-  var onTouchMoveStop = function(e) { e.stopPropagation(); };
+  const onTouchStartStop = (e) => { e.stopPropagation(); };
+  const onTouchMoveStop = (e) => { e.stopPropagation(); };
   row.addEventListener("touchstart", onTouchStartStop, { passive: true });
   row.addEventListener("touchmove", onTouchMoveStop, { passive: true });
 
-  var onScroll = function() {
-    if (row.getAttribute.(SCROLLER_BUSY_ATTR) === "1") {
+  const onScroll = () => {
+    if (row.getAttribute?.(SCROLLER_BUSY_ATTR) === "1") {
       if (_animCleanupTimer) clearTimeout(_animCleanupTimer);
       _animCleanupTimer = window.setTimeout(endProgrammaticScroll, scrollIdleMs);
       row.__jmsScrollerBusyUntil = Date.now() + scrollIdleMs + SCROLLER_BUSY_COOLDOWN_MS;
@@ -3603,12 +3712,12 @@ export function setupScroller(row) {
     scheduleUpdate();
   };
   row.addEventListener("scroll", onScroll, { passive: true });
-  var onScrollEnd = function() endProgrammaticScroll();
+  const onScrollEnd = () => endProgrammaticScroll();
   if ("onscrollend" in row) {
     row.addEventListener("scrollend", onScrollEnd, { passive: true });
   }
 
-  var ro = new ResizeObserverfunction(() scheduleUpdate());
+  const ro = new ResizeObserver(() => scheduleUpdate());
   ro.observe(row);
   row.__scroller = {
     btnL,
@@ -3625,12 +3734,12 @@ export function setupScroller(row) {
     onLoadCapture,
     clearAnimCleanupTimer
   };
-  row.addEventListenerfunction("jms:cleanup", () {
+  row.addEventListener("jms:cleanup", () => {
     try { cleanupScroller(row); } catch {}
   }, { once: true });
 
-  requestAnimationFramefunction(() updateButtonsNow());
-  setTimeoutfunction(() updateButtonsNow(), 400);
+  requestAnimationFrame(() => updateButtonsNow());
+  setTimeout(() => updateButtonsNow(), 400);
 }
 
 function normalizeGenreKey(genre) {
@@ -3647,28 +3756,28 @@ function makeGenreHubsRenderKey(userId, serverId, genres) {
 
 function hasRenderableGenreHubContent(wrap) {
   return getManagedGenreHubSections(GENRE_STATE.hostEl || getHomeSectionsContainer(currentIndexPage()) || document)
-    .somefunction((section) !!section.querySelector(
+    .some((section) => !!section.querySelector(
       ".genre-row .personal-recs-card, .genre-row .no-recommendations"
     ));
 }
 
-function renderGenreHubs(indexPage) {
+async function renderGenreHubs(indexPage) {
   try { window.__jmsGenreHubsStarted = true; } catch {}
-  var homeSections = getHomeSectionsContainer(indexPage);
+  const homeSections = getHomeSectionsContainer(indexPage);
 
-  var wrap = ensureGenreHubsShell(indexPage);
-  var parent = homeSections || getHomeSectionsContainer(indexPage) || document.body;
+  const wrap = ensureGenreHubsShell(indexPage);
+  const parent = homeSections || getHomeSectionsContainer(indexPage) || document.body;
   GENRE_STATE.hostEl = parent;
   enforceOrder(homeSections);
 
-  var { userId, serverId } = getSessionInfo();
-  var allGenres = getCachedGenresWeekly(userId);
+  const { userId, serverId } = getSessionInfo();
+  const allGenres = await getCachedGenresWeekly(userId);
   if (!allGenres || !allGenres.length) { __signalGenreHubsDone(); return; }
 
-  var picked = pickOrderedFirstK(allGenres, getGenreRowsCount());
+  const picked = pickOrderedFirstK(allGenres, getGenreRowsCount());
   if (!picked.length) { __signalGenreHubsDone(); return; }
-  var renderKey = makeGenreHubsRenderKey(userId, serverId, picked);
-  var sameRender =
+  const renderKey = makeGenreHubsRenderKey(userId, serverId, picked);
+  const sameRender =
     wrap.dataset.genreRenderKey === renderKey &&
     GENRE_STATE.wrap === wrap &&
     Array.isArray(GENRE_STATE.sections) &&
@@ -3688,7 +3797,7 @@ function renderGenreHubs(indexPage) {
     GENRE_STATE.awaitingAdvance = GENRE_STATE.nextIndex < picked.length;
 
     if (GENRE_STATE.nextIndex < GENRE_STATE.genres.length) {
-      drainGenreHubsSequentially(GENRE_STATE.renderSeq);
+      await drainGenreHubsSequentially(GENRE_STATE.renderSeq);
     } else {
       detachGenreScrollIdleLoader();
       __signalGenreHubsDone();
@@ -3725,30 +3834,30 @@ function renderGenreHubs(indexPage) {
     GENRE_STATE.renderSeq += 1;
     GENRE_STATE.serverId  = serverId;
 
-    var initialLoads = Math.min(getInitialGenreLoadCount(), picked.length);
-    var initialJobs = [];
-    for (var i = 0; i < initialLoads; i++) {
-      initialJobs.pushfunction((() {
+    const initialLoads = Math.min(getInitialGenreLoadCount(), picked.length);
+    const initialJobs = [];
+    for (let i = 0; i < initialLoads; i++) {
+      initialJobs.push((async () => {
         try {
-          waitForManagedHomeRowRelease({
+          await waitForManagedHomeRowRelease({
             timeoutMs: 25000,
             rootMargin: MANAGED_ROW_RELEASE_ROOT_MARGIN,
           });
         } catch {}
-        ensureGenreLoaded(i);
+        await ensureGenreLoaded(i);
         try {
-          registerManagedHomeRowAnchor(GENRE_STATE.sections[i].section || null);
+          registerManagedHomeRowAnchor(GENRE_STATE.sections[i]?.section || null);
         } catch {}
       })());
     }
-    Promise.allSettled(initialJobs);
+    await Promise.allSettled(initialJobs);
     GENRE_STATE.nextIndex = initialLoads;
 
     __maybeSignalGenreHubsDone();
 
     if (GENRE_STATE.nextIndex < GENRE_STATE.genres.length) {
       GENRE_STATE.awaitingAdvance = false;
-      drainGenreHubsSequentially(GENRE_STATE.renderSeq);
+      await drainGenreHubsSequentially(GENRE_STATE.renderSeq);
     } else {
       detachGenreScrollIdleLoader();
       __signalGenreHubsDone();
@@ -3758,44 +3867,44 @@ function renderGenreHubs(indexPage) {
   }
 }
 
-function drainGenreHubsSequentially(renderSeq = GENRE_STATE.renderSeq) {
+async function drainGenreHubsSequentially(renderSeq = GENRE_STATE.renderSeq) {
   detachGenreScrollIdleLoader();
   try {
     GENRE_STATE.loading = true;
     while (
       renderSeq === GENRE_STATE.renderSeq &&
-      GENRE_STATE.wrap.isConnected &&
-      GENRE_STATE.hostEl.isConnected &&
-      GENRE_STATE.nextIndex < (GENRE_STATE.genres.length || 0)
+      GENRE_STATE.wrap?.isConnected &&
+      GENRE_STATE.hostEl?.isConnected &&
+      GENRE_STATE.nextIndex < (GENRE_STATE.genres?.length || 0)
     ) {
-      var index = GENRE_STATE.nextIndex;
+      const index = GENRE_STATE.nextIndex;
       GENRE_STATE.nextIndex = index + 1;
-      var previousSection =
-        GENRE_STATE.sections[index - 1].section ||
+      const previousSection =
+        GENRE_STATE.sections[index - 1]?.section ||
         getManagedGenreHubSections(GENRE_STATE.hostEl || getHomeSectionsContainer(currentIndexPage()) || document).slice(-1)[0] ||
         null;
       try {
-        waitForManagedHomeRowRelease({
-          anchor: previousSection.isConnected ? previousSection : null,
+        await waitForManagedHomeRowRelease({
+          anchor: previousSection?.isConnected ? previousSection : null,
           timeoutMs: 25000,
           rootMargin: MANAGED_ROW_RELEASE_ROOT_MARGIN,
         });
       } catch {}
-      ensureGenreLoaded(index);
+      await ensureGenreLoaded(index);
       try {
-        registerManagedHomeRowAnchor(GENRE_STATE.sections[index].section || null);
+        registerManagedHomeRowAnchor(GENRE_STATE.sections[index]?.section || null);
       } catch {}
 
       if (
         renderSeq !== GENRE_STATE.renderSeq ||
-        !GENRE_STATE.wrap.isConnected ||
-        !GENRE_STATE.hostEl.isConnected
+        !GENRE_STATE.wrap?.isConnected ||
+        !GENRE_STATE.hostEl?.isConnected
       ) {
         break;
       }
 
-      if (GENRE_STATE.nextIndex < (GENRE_STATE.genres.length || 0)) {
-        yieldManagedHomeSectionStep();
+      if (GENRE_STATE.nextIndex < (GENRE_STATE.genres?.length || 0)) {
+        await yieldManagedHomeSectionStep();
       }
     }
   } finally {
@@ -3810,40 +3919,64 @@ function drainGenreHubsSequentially(renderSeq = GENRE_STATE.renderSeq) {
 }
 
 function ensureGenreSectionElement(idx) {
-  var genres = GENRE_STATE.genres || [];
-  var wrap   = GENRE_STATE.wrap;
-  var serverId = GENRE_STATE.serverId;
+  const genres = GENRE_STATE.genres || [];
+  const wrap   = GENRE_STATE.wrap;
+  const serverId = GENRE_STATE.serverId;
 
   if (!wrap || !genres[idx]) return null;
 
-  var rec = GENRE_STATE.sections[idx];
+  let rec = GENRE_STATE.sections[idx];
   if (rec && rec.section && rec.row) return rec;
 
-  var genre = genres[idx];
+  const genre = genres[idx];
 
-  var section = document.createElement("div");
+  const section = document.createElement("div");
   section.id = makeManagedGenreHubSectionId(idx);
   section.className = "homeSection genre-hub-section";
   section.dataset.genreKey = normalizeGenreKey(genre);
-  section.innerHTML = "\n    <div class=\"sectionTitleContainer sectionTitleContainer-cards\">\n      <h2 class=\"sectionTitle sectionTitle-cards gh-title\">\n        <span class=\"gh-title-text\" role=\"button\" tabindex=\"0\"\n          aria-label=\"" + ((config.languageLabels.seeAll || 'Tümünü gör')) + ": " + (escapeHtml(genre)) + "\">\n          " + (escapeHtml(genre)) + "\n        </span>\n        <div class=\"gh-see-all\" data-genre=\"" + (escapeHtml(genre)) + "\"\n             aria-label=\"" + ((config.languageLabels.seeAll) || "Tümünü gör") + "\"\n             title=\"" + ((config.languageLabels.seeAll) || "Tümünü gör") + "\">\n          " + (faIconHtml("chevronRight")) + "\n        </div>\n        <span class=\"gh-see-all-tip\">" + ((config.languageLabels.seeAll) || "Tümünü gör") + "</span>\n      </h2>\n    </div>\n    <div class=\"personal-recs-scroll-wrap\">\n      <button class=\"hub-scroll-btn hub-scroll-left\" aria-label=\"" + ((config.languageLabels && config.languageLabels.scrollLeft) || "Sola kaydır") + "\" aria-disabled=\"true\">\n        <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z\"/></svg>\n      </button>\n      <div class=\"itemsContainer genre-row\" role=\"list\"></div>\n      <button class=\"hub-scroll-btn hub-scroll-right\" aria-label=\"" + ((config.languageLabels && config.languageLabels.scrollRight) || "Sağa kaydır") + "\" aria-disabled=\"true\">\n        <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z\"/></svg>\n      </button>\n    </div>\n  ";
+  section.innerHTML = `
+    <div class="sectionTitleContainer sectionTitleContainer-cards">
+      <h2 class="sectionTitle sectionTitle-cards gh-title">
+        <span class="gh-title-text" role="button" tabindex="0"
+          aria-label="${(config.languageLabels?.seeAll || 'Tümünü gör')}: ${escapeHtml(genre)}">
+          ${escapeHtml(genre)}
+        </span>
+        <div class="gh-see-all" data-genre="${escapeHtml(genre)}"
+             aria-label="${(config.languageLabels?.seeAll) || "Tümünü gör"}"
+             title="${(config.languageLabels?.seeAll) || "Tümünü gör"}">
+          ${faIconHtml("chevronRight")}
+        </div>
+        <span class="gh-see-all-tip">${(config.languageLabels?.seeAll) || "Tümünü gör"}</span>
+      </h2>
+    </div>
+    <div class="personal-recs-scroll-wrap">
+      <button class="hub-scroll-btn hub-scroll-left" aria-label="${(config.languageLabels && config.languageLabels.scrollLeft) || "Sola kaydır"}" aria-disabled="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+      </button>
+      <div class="itemsContainer genre-row" role="list"></div>
+      <button class="hub-scroll-btn hub-scroll-right" aria-label="${(config.languageLabels && config.languageLabels.scrollRight) || "Sağa kaydır"}" aria-disabled="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+      </button>
+    </div>
+  `;
 
-  var scrollWrap = section.querySelector('.personal-recs-scroll-wrap');
-  var heroHost = document.createElement('div');
+  const scrollWrap = section.querySelector('.personal-recs-scroll-wrap');
+  const heroHost = document.createElement('div');
   heroHost.className = 'dir-row-hero-host';
   heroHost.style.display = isPersonalRecsHeroEnabled() ? '' : 'none';
   section.insertBefore(heroHost, scrollWrap);
-  var titleBtn  = section.querySelector('.gh-title-text');
-  var seeAllBtn = section.querySelector('.gh-see-all');
+  const titleBtn  = section.querySelector('.gh-title-text');
+  const seeAllBtn = section.querySelector('.gh-see-all');
   if (titleBtn) {
-    var open = function(e) { e.preventDefault(); e.stopPropagation(); openGenreExplorer(genre); };
+    const open = (e) => { e.preventDefault(); e.stopPropagation(); openGenreExplorer(genre); };
     titleBtn.addEventListener('click', open, { passive: false });
-    titleBtn.addEventListenerfunction('keydown', (e) { if (e.key === 'Enter' || e.key === ' ') open(e); });
+    titleBtn.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') open(e); });
   }
   if (seeAllBtn) {
-    seeAllBtn.addEventListenerfunction('click', (e) { e.preventDefault(); e.stopPropagation(); openGenreExplorer(genre); }, { passive: false });
+    seeAllBtn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openGenreExplorer(genre); }, { passive: false });
   }
 
-  var row = section.querySelector(".genre-row");
+  const row = section.querySelector(".genre-row");
 
   placeGenreHubSection(section);
   placeGenreLoadMoreArrow();
@@ -3864,14 +3997,14 @@ function ensureGenreSectionElement(idx) {
 function skipGenreSection(rec) {
   if (!rec) return;
   try {
-    rec.section.querySelectorAll.('.personal-recs-card, .dir-row-hero').forEach(function((el) {
+    rec.section?.querySelectorAll?.('.personal-recs-card, .dir-row-hero')?.forEach((el) => {
       try { el.dispatchEvent(new Event('jms:cleanup')); } catch {}
     });
   } catch {}
   try {
     if (rec.heroHost) clearHeroHost(rec.heroHost);
   } catch {}
-  try { rec.section.remove.(); } catch {}
+  try { rec.section?.remove?.(); } catch {}
 
   rec.section = null;
   rec.row = null;
@@ -3881,8 +4014,8 @@ function skipGenreSection(rec) {
   rec.loadingPromise = null;
 }
 
-function ensureGenreLoaded(idx) {
-  var rec = GENRE_STATE.sections[idx];
+async function ensureGenreLoaded(idx) {
+  let rec = GENRE_STATE.sections[idx];
   if (!rec) rec = ensureGenreSectionElement(idx);
   if (!rec) return;
 
@@ -3890,19 +4023,19 @@ function ensureGenreLoaded(idx) {
   if (rec.loadingPromise) return rec.loadingPromise;
 
   rec.loading = true;
-  var mySeq = ++rec.seq;
+  const mySeq = ++rec.seq;
 
-  rec.loadingPromise = function(() {
-    var { genre, row, serverId, heroHost } = rec;
-    var { userId } = getSessionInfo();
+  rec.loadingPromise = (async () => {
+    const { genre, row, serverId, heroHost } = rec;
+    const { userId } = getSessionInfo();
 
     try {
-      var genreRowCardCount = getGenreRowCardCount();
+      const genreRowCardCount = getGenreRowCardCount();
       if (!row.dataset.mounted || row.childElementCount === 0) {
         row.dataset.mounted = "1";
         setupScroller(row);
       }
-      var items = fetchItemsBySingleGenre(userId, genre, genreRowCardCount * 3, MIN_RATING);
+      const items = await fetchItemsBySingleGenre(userId, genre, genreRowCardCount * 3, MIN_RATING);
       if (rec.seq !== mySeq) return;
 
       row.innerHTML = '';
@@ -3913,17 +4046,17 @@ function ensureGenreLoaded(idx) {
         return;
       }
 
-      var pool = dedupeStrong(items).filter(isRenderableGenreCardItem).slice();
+      const pool = dedupeStrong(items).filter(isRenderableGenreCardItem).slice();
       shuffle(pool);
-      var showHero = isGenreHubsHeroEnabled();
+      const showHero = isGenreHubsHeroEnabled();
 
-      var best = null;
-      var bestIndex = -1;
+      let best = null;
+      let bestIndex = -1;
       if (showHero) {
-        for (var i = 0; i < pool.length; i++) {
-          var it = pool[i];
-          var kLoose  = makePRCLooseKey(it);
-          var kStrict = makePRCKey(it);
+        for (let i = 0; i < pool.length; i++) {
+          const it = pool[i];
+          const kLoose  = makePRCLooseKey(it);
+          const kStrict = makePRCKey(it);
           if ((kLoose && __globalGenreHeroLoose.has(kLoose)) || (kStrict && __globalGenreHeroStrict.has(kStrict))) continue;
           best = it; bestIndex = i;
           if (kLoose)  __globalGenreHeroLoose.add(kLoose);
@@ -3932,15 +4065,15 @@ function ensureGenreLoaded(idx) {
         }
         if (!best && pool.length) {
           best = pool[0]; bestIndex = 0;
-          var kLoose  = makePRCLooseKey(best);
-          var kStrict = makePRCKey(best);
+          const kLoose  = makePRCLooseKey(best);
+          const kStrict = makePRCKey(best);
           if (kLoose)  __globalGenreHeroLoose.add(kLoose);
           if (kStrict) __globalGenreHeroStrict.add(kStrict);
         }
       }
 
-      var remaining = (showHero && bestIndex >= 0)
-        ? pool.filterfunction((_, i) i !== bestIndex)
+      const remaining = (showHero && bestIndex >= 0)
+        ? pool.filter((_, i) => i !== bestIndex)
         : pool.slice();
 
       if (heroHost) {
@@ -3948,10 +4081,10 @@ function ensureGenreLoaded(idx) {
         if (!showHero || !best) {
           clearHeroHost(heroHost);
         } else {
-          var { hero: heroEl, changed } = mountHero(heroHost, best, serverId, genre, { aboveFold: idx === 0 });
+          const { hero: heroEl, changed } = mountHero(heroHost, best, serverId, genre, { aboveFold: idx === 0 });
           try {
-            var backdropImg = heroEl.querySelector.('.dir-row-hero-bg');
-            var RemoteTrailers = best.RemoteTrailers || best.RemoteTrailerItems || best.RemoteTrailerUrls || [];
+            const backdropImg = heroEl?.querySelector?.('.dir-row-hero-bg');
+            const RemoteTrailers = best.RemoteTrailers || best.RemoteTrailerItems || best.RemoteTrailerUrls || [];
             if (heroEl && (changed || !heroEl.querySelector('.intro-video-container'))) {
               createTrailerIframe({
                 config,
@@ -3961,7 +4094,7 @@ function ensureGenreLoaded(idx) {
                 itemId: best.Id,
                 serverId,
                 detailsUrl: getDetailsUrl(best.Id, serverId),
-                detailsText: (config.languageLabels.details || labels.details || "Ayrıntılar"),
+                detailsText: (config.languageLabels?.details || labels.details || "Ayrıntılar"),
                 showDetailsOverlay: false,
               });
             }
@@ -3974,10 +4107,10 @@ function ensureGenreLoaded(idx) {
         return;
       }
 
-      var unique = remaining.slice(0, genreRowCardCount);
-      var scrollerReady = false;
+      const unique = remaining.slice(0, genreRowCardCount);
+      let scrollerReady = false;
 
-      new Promisefunction((resolve) {
+      await new Promise((resolve) => {
         progressivelyRenderCardRow({
           row,
           items: unique,
@@ -3988,19 +4121,19 @@ function ensureGenreLoaded(idx) {
           ),
           chunkSize: getProgressiveRowChunkSize({ mobileCount: 2, desktopCount: 3 }),
           delayMs: IS_MOBILE ? 78 : 34,
-          isCurrent: function() rec.seq === mySeq,
-          appendCard: function(item, index) createRecommendationCard(item, serverId, {
+          isCurrent: () => rec.seq === mySeq,
+          appendCard: (item, index) => createRecommendationCard(item, serverId, {
             aboveFold: index < (IS_MOBILE ? 2 : 4),
             sizeHint: "genre"
           }),
-          onAppend: function() {
+          onAppend: () => {
             if (!scrollerReady) {
               setupScroller(row);
               scrollerReady = true;
             }
             triggerScrollerUpdate(row);
           },
-          onComplete: function({ aborted = false } = {}) {
+          onComplete: ({ aborted = false } = {}) => {
             if (rec.seq === mySeq && !aborted) {
               if (!scrollerReady) {
                 setupScroller(row);
@@ -4019,7 +4152,7 @@ function ensureGenreLoaded(idx) {
 
     } catch (err) {
       if (rec.seq !== mySeq) return;
-      console.warn('Genre hub load failed:', rec.genre, err);
+      console.warn('Genre hub load failed:', rec?.genre, err);
       skipGenreSection(rec);
     } finally {
       if (rec.seq === mySeq) {
@@ -4036,100 +4169,100 @@ function triggerScrollerUpdate(row) {
   if (!row) return;
   try { row.dispatchEvent(new Event('scroll')); } catch {}
   if (row.__tsuRaf) return;
-  row.__tsuRaf = requestAnimationFramefunction(() {
+  row.__tsuRaf = requestAnimationFrame(() => {
     row.__tsuRaf = 0;
     try { row.dispatchEvent(new Event('scroll')); } catch {}
   });
 }
 
-function fetchItemsBySingleGenre(userId, genre, limit = 30, minRating = 0) {
-  var genreRenderableMin = getGenreRenderableMin();
+async function fetchItemsBySingleGenre(userId, genre, limit = 30, minRating = 0) {
+  const genreRenderableMin = getGenreRenderableMin();
   try {
-    var { serverId } = getSessionInfo();
-    var st = ensurePrcDb(userId, serverId);
-    var cfg = __prcCfg();
-    var scope = st.scope || makeScope({ userId, serverId });
-    var memKey = (scope) + "|" + (normalizeGenreKey(genre));
-    var mem = __genreCache.get(memKey);
-    if (mem.ts && Array.isArray(mem.items) && (Date.now() - mem.ts) <= cfg.genreTtlMs) {
-      var pickedFromMem = filterAndTrimByRating(mem.items, minRating, limit);
+    const { serverId } = getSessionInfo();
+    const st = await ensurePrcDb(userId, serverId);
+    const cfg = __prcCfg();
+    const scope = st?.scope || makeScope({ userId, serverId });
+    const memKey = `${scope}|${normalizeGenreKey(genre)}`;
+    const mem = __genreCache.get(memKey);
+    if (mem?.ts && Array.isArray(mem?.items) && (Date.now() - mem.ts) <= cfg.genreTtlMs) {
+      const pickedFromMem = filterAndTrimByRating(mem.items, minRating, limit);
       if (pickedFromMem.length >= Math.min(limit, genreRenderableMin)) {
         return pickedFromMem.slice(0, limit);
       }
     }
 
-    if (st.db && st.scope) {
-      var key = __metaKeyGenre(st.scope, genre);
-      var cache = getMeta(st.db, key);
-      var ts = Number(cache.ts || 0);
-      var ids = Array.isArray(cache.ids) ? cache.ids : [];
-      var fresh = ts && (Date.now() - ts) <= cfg.genreTtlMs;
+    if (st?.db && st?.scope) {
+      const key = __metaKeyGenre(st.scope, genre);
+      const cache = await getMeta(st.db, key);
+      const ts = Number(cache?.ts || 0);
+      const ids = Array.isArray(cache?.ids) ? cache.ids : [];
+      const fresh = ts && (Date.now() - ts) <= cfg.genreTtlMs;
       if (fresh && ids.length) {
-        var aliveIds = filterOutPlayedIds(userId, ids);
-        var itemsFromDb = dbGetItemsByIds(st.db, st.scope, aliveIds);
+        const aliveIds = await filterOutPlayedIds(userId, ids);
+        const itemsFromDb = await dbGetItemsByIds(st.db, st.scope, aliveIds);
         if (itemsFromDb.length) {
           __genreCache.set(memKey, { ts: Date.now(), items: itemsFromDb.slice() });
         }
-        var picked = filterAndTrimByRating(itemsFromDb, minRating, limit);
+        const picked = filterAndTrimByRating(itemsFromDb, minRating, limit);
         if (picked.length >= Math.min(limit, genreRenderableMin)) {
           return picked.slice(0, limit);
         }
       }
     }
   } catch {}
-  var fields = COMMON_FIELDS;
-  var g = encodeURIComponent(genre);
-  var url =
-    "/Users/" + (userId) + "/Items?" +
-    "IncludeItemTypes=Movie,Series&Recursive=true&Filters=IsUnplayed&" +
-    "Genres=" + (g) + "&Fields=" + (fields) + "&" +
-    "SortBy=Random,CommunityRating,DateCreated&SortOrder=Descending&Limit=" + (Math.max(60, limit * 3));
+  const fields = COMMON_FIELDS;
+  const g = encodeURIComponent(genre);
+  const url =
+    `/Users/${userId}/Items?` +
+    `IncludeItemTypes=Movie,Series&Recursive=true&Filters=IsUnplayed&` +
+    `Genres=${g}&Fields=${fields}&` +
+    `SortBy=Random,CommunityRating,DateCreated&SortOrder=Descending&Limit=${Math.max(60, limit * 3)}`;
 
-  var ctrl = new AbortController();
+  const ctrl = new AbortController();
   __genreFetchCtrls.add(ctrl);
   try {
-    var data = makeApiRequest(url, { signal: ctrl.signal });
-    var items = Array.isArray(data.Items) ? data.Items : [];
-    var picked = filterAndTrimByRating(items, minRating, limit);
+    const data = await makeApiRequest(url, { signal: ctrl.signal });
+    const items = Array.isArray(data?.Items) ? data.Items : [];
+    const picked = filterAndTrimByRating(items, minRating, limit);
 
     try {
-      var { serverId } = getSessionInfo();
-      var st = ensurePrcDb(userId, serverId);
-      var cfg = __prcCfg();
-      var scope = st.scope || makeScope({ userId, serverId });
-      var memKey = (scope) + "|" + (normalizeGenreKey(genre));
+      const { serverId } = getSessionInfo();
+      const st = await ensurePrcDb(userId, serverId);
+      const cfg = __prcCfg();
+      const scope = st?.scope || makeScope({ userId, serverId });
+      const memKey = `${scope}|${normalizeGenreKey(genre)}`;
       if (items.length) {
         __genreCache.set(memKey, { ts: Date.now(), items: items.slice() });
       }
-      if (st.db && st.scope && items.length) {
-        dbWriteThroughItems(st.db, st.scope, items);
-        var ids = items.map(function(x) x.Id).filter(Boolean).slice(0, cfg.maxCacheIds);
-        setMeta(st.db, __metaKeyGenre(st.scope, genre), { ids, ts: Date.now() });
+      if (st?.db && st?.scope && items.length) {
+        await dbWriteThroughItems(st.db, st.scope, items);
+        const ids = items.map(x => x?.Id).filter(Boolean).slice(0, cfg.maxCacheIds);
+        await setMeta(st.db, __metaKeyGenre(st.scope, genre), { ids, ts: Date.now() });
       }
     } catch {}
 
     return picked;
   } catch (e) {
-    if (e.name !== 'AbortError') console.error("fetchItemsBySingleGenre hata:", e);
+    if (e?.name !== 'AbortError') console.error("fetchItemsBySingleGenre hata:", e);
     return [];
   } finally {
     __genreFetchCtrls.delete(ctrl);
   }
 }
 
-var __genreFetchCtrls = new Set();
+const __genreFetchCtrls = new Set();
 function abortAllGenreFetches(){
-  for (var c of __genreFetchCtrls) { try { c.abort(); } catch {} }
+  for (const c of __genreFetchCtrls) { try { c.abort(); } catch {} }
   __genreFetchCtrls.clear();
 }
 
 function pickOrderedFirstK(allGenres, k) {
-  var order = Array.isArray(config.genreHubsOrder) && config.genreHubsOrder.length
+  const order = Array.isArray(config.genreHubsOrder) && config.genreHubsOrder.length
     ? config.genreHubsOrder
     : allGenres;
-  var setAvail = new Set(allGenres.map(function(g) String(g).toLowerCase()));
-  var picked = [];
-  for (var g of order) {
+  const setAvail = new Set(allGenres.map(g => String(g).toLowerCase()));
+  const picked = [];
+  for (const g of order) {
     if (!g) continue;
     if (setAvail.has(String(g).toLowerCase())) {
       picked.push(g);
@@ -4137,7 +4270,7 @@ function pickOrderedFirstK(allGenres, k) {
     }
   }
   if (picked.length < k) {
-    for (var g of allGenres) {
+    for (const g of allGenres) {
       if (picked.includes(g)) continue;
       picked.push(g);
       if (picked.length >= k) break;
@@ -4148,12 +4281,12 @@ function pickOrderedFirstK(allGenres, k) {
 
 function shuffleCrypto(arr) {
   if (!Array.isArray(arr)) return arr;
-  var a = arr;
-  var rnd = new Uint32Array(1);
+  const a = arr;
+  const rnd = new Uint32Array(1);
 
-  for (var i = a.length - 1; i > 0; i--) {
-    var j;
-    if (window.crypto.getRandomValues) {
+  for (let i = a.length - 1; i > 0; i--) {
+    let j;
+    if (window.crypto?.getRandomValues) {
       window.crypto.getRandomValues(rnd);
       j = rnd[0] % (i + 1);
     } else {
@@ -4165,49 +4298,49 @@ function shuffleCrypto(arr) {
 }
 
 function shuffle(arr) {
-  for (var i = arr.length - 1; i > 0; i--) {
-    var j = (Math.random() * (i + 1)) | 0;
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = (Math.random() * (i + 1)) | 0;
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
 }
 
-function getCachedGenresWeekly(userId) {
-  var weekKey = __isoWeekKey();
+async function getCachedGenresWeekly(userId) {
+  const weekKey = __isoWeekKey();
 
   try {
-    var { serverId } = getSessionInfo();
-    var st = ensurePrcDb(userId, serverId);
-    var scope = st.scope || makeScope({ userId, serverId });
+    const { serverId } = getSessionInfo();
+    const st = await ensurePrcDb(userId, serverId);
+    const scope = st?.scope || makeScope({ userId, serverId });
 
-    if (st.db && scope) {
-      var cache = getMeta(st.db, __metaKeyGenresList(scope));
-      var cachedWeek = String(cache.weekKey || "");
-      var cachedList = Array.isArray(cache.genres) ? cache.genres : [];
+    if (st?.db && scope) {
+      const cache = await getMeta(st.db, __metaKeyGenresList(scope));
+      const cachedWeek = String(cache?.weekKey || "");
+      const cachedList = Array.isArray(cache?.genres) ? cache.genres : [];
       if (cachedWeek === weekKey && cachedList.length) {
         return cachedList;
       }
     }
 
-    var lsKey = "prc:genresListLS:" + (scope);
+    const lsKey = `prc:genresListLS:${scope}`;
     try {
-      var raw = localStorage.getItem(lsKey);
+      const raw = localStorage.getItem(lsKey);
       if (raw) {
-        var obj = JSON.parse(raw);
-        var cachedWeek = String(obj.weekKey || "");
-        var cachedList = Array.isArray(obj.genres) ? obj.genres : [];
+        const obj = JSON.parse(raw);
+        const cachedWeek = String(obj?.weekKey || "");
+        const cachedList = Array.isArray(obj?.genres) ? obj.genres : [];
         if (cachedWeek === weekKey && cachedList.length) {
           return cachedList;
         }
       }
     } catch {}
 
-    var list = fetchAllGenres(userId);
-    var genres = uniqueNormalizedGenres(list).slice(0, 400);
-    var payload = { weekKey, genres, ts: Date.now() };
+    const list = await fetchAllGenres(userId);
+    const genres = uniqueNormalizedGenres(list).slice(0, 400);
+    const payload = { weekKey, genres, ts: Date.now() };
 
-    if (st.db && scope) {
-      try { setMeta(st.db, __metaKeyGenresList(scope), payload); } catch {}
+    if (st?.db && scope) {
+      try { await setMeta(st.db, __metaKeyGenresList(scope), payload); } catch {}
     }
     try { localStorage.setItem(lsKey, JSON.stringify(payload)); } catch {}
 
@@ -4215,7 +4348,7 @@ function getCachedGenresWeekly(userId) {
   } catch (e) {
     console.warn("Weekly genre cache failed, falling back to live fetch:", e);
     try {
-      var list = fetchAllGenres(userId);
+      const list = await fetchAllGenres(userId);
       return uniqueNormalizedGenres(list);
     } catch {
       return [];
@@ -4223,21 +4356,21 @@ function getCachedGenresWeekly(userId) {
   }
 }
 
-function fetchAllGenres(userId) {
-  var url =
-    "/Items/Filters?UserId=" + (encodeURIComponent(userId)) +
-    "&IncludeItemTypes=Movie,Series&Recursive=true";
+async function fetchAllGenres(userId) {
+  const url =
+    `/Items/Filters?UserId=${encodeURIComponent(userId)}` +
+    `&IncludeItemTypes=Movie,Series&Recursive=true`;
 
-  var r = makeApiRequest(url);
-  var genres = Array.isArray(r.Genres) ? r.Genres : [];
-  return genres.map(function(g) String(g || "").trim()).filter(Boolean);
+  const r = await makeApiRequest(url);
+  const genres = Array.isArray(r?.Genres) ? r.Genres : [];
+  return genres.map(g => String(g || "").trim()).filter(Boolean);
 }
 
 function uniqueNormalizedGenres(list) {
-  var seen = new Set();
-  var out = [];
-  for (var g of list) {
-    var k = g.toLowerCase();
+  const seen = new Set();
+  const out = [];
+  for (const g of list) {
+    const k = g.toLowerCase();
     if (!seen.has(k)) { seen.add(k); out.push(g); }
   }
   return out;
@@ -4264,7 +4397,7 @@ function safeCloseHoverModal() {
   try { hardWipeHoverModalDom(); } catch {}
 }
 
-var CACHE_ITEM_FIELDS = [
+const CACHE_ITEM_FIELDS = [
   "Id","Name","Type","ImageTags","PrimaryImageTag",
   "CommunityRating","OfficialRating","ProductionYear","RunTimeTicks","CumulativeRunTimeTicks",
   "Genres",
@@ -4273,21 +4406,21 @@ var CACHE_ITEM_FIELDS = [
 
 function toSlimItem(it){
   if (!it) return null;
-  var slim = {};
-  for (var k of CACHE_ITEM_FIELDS) slim[k] = it[k];
+  const slim = {};
+  for (const k of CACHE_ITEM_FIELDS) slim[k] = it[k];
   if (!slim.Type) {
-    if (it.Type) {
+    if (it?.Type) {
       slim.Type = it.Type;
-    } else if (it.Series || it.SeriesId || it.SeriesName) {
+    } else if (it?.Series || it?.SeriesId || it?.SeriesName) {
       slim.Type = "Series";
     } else {
       slim.Type = "Movie";
     }
   }
   if (!slim.Name) {
-    slim.Name = it.SeriesName || it.Name || "";
-    if (!slim.ProductionYear && it.PremiereDate) {
-  var y = new Date(it.PremiereDate).getUTCFullYear();
+    slim.Name = it?.SeriesName || it?.Name || "";
+    if (!slim.ProductionYear && it?.PremiereDate) {
+  const y = new Date(it.PremiereDate).getUTCFullYear();
   if (y) slim.ProductionYear = y;
 }
   }
@@ -4296,22 +4429,22 @@ function toSlimItem(it){
 function toSlimList(list){ return (list||[]).map(toSlimItem).filter(Boolean); }
 
 function attachHoverTrailer(cardEl, itemLike) {
-  var itemId = resolveItemId(itemLike) || sanitizeResolvedId(cardEl.dataset.itemId);
+  const itemId = resolveItemId(itemLike) || sanitizeResolvedId(cardEl?.dataset?.itemId);
   if (!cardEl || !itemId) return;
   if (!__enterSeq.has(cardEl)) __enterSeq.set(cardEl, 0);
 
-  var onEnter = function(e) {
-    var isTouch = e.pointerType === 'touch';
-    var until = __cooldownUntil.get(cardEl) || 0;
+  const onEnter = (e) => {
+    const isTouch = e?.pointerType === 'touch';
+    const until = __cooldownUntil.get(cardEl) || 0;
     if (Date.now() < until) return;
 
     __hoverIntent.set(cardEl, true);
     clearEnterTimer(cardEl);
 
-    var seq = (__enterSeq.get(cardEl) || 0) + 1;
+    const seq = (__enterSeq.get(cardEl) || 0) + 1;
     __enterSeq.set(cardEl, seq);
 
-    var timer = setTimeoutfunction(() {
+    const timer = setTimeout(() => {
       if ((__enterSeq.get(cardEl) || 0) !== seq) return;
       if (!__hoverIntent.get(cardEl)) return;
       if (!isTouch) {
@@ -4319,7 +4452,7 @@ function attachHoverTrailer(cardEl, itemLike) {
       }
       try { document.dispatchEvent(new Event('closeAllMiniPopovers')); } catch {}
 
-      var token = (Date.now() ^ Math.random()*1e9) | 0;
+      const token = (Date.now() ^ Math.random()*1e9) | 0;
       __openTokenMap.set(cardEl, token);
 
       try { hardWipeHoverModalDom(); } catch {}
@@ -4330,13 +4463,13 @@ function attachHoverTrailer(cardEl, itemLike) {
         __touchLastOpenTS = Date.now();
       }
       if (!isTouch) schedulePostOpenGuard(cardEl, token, 340);
-    }, getOpenHoverDelay());
+    }, OPEN_HOVER_DELAY_MS);
 
     __enterTimers.set(cardEl, timer);
   };
 
-  var onLeave = function(e) {
-    var isTouch = e.pointerType === 'touch';
+  const onLeave = (e) => {
+    const isTouch = e?.pointerType === 'touch';
     __hoverIntent.set(cardEl, false);
     clearEnterTimer(cardEl);
     __enterSeq.set(cardEl, (__enterSeq.get(cardEl) || 0) + 1);
@@ -4348,8 +4481,8 @@ function attachHoverTrailer(cardEl, itemLike) {
       }
     }
 
-    var rt = e.relatedTarget || null;
-    var goingToModal = !!(rt && (rt.closest ? rt.closest('.video-preview-modal') : null));
+    const rt = e?.relatedTarget || null;
+    const goingToModal = !!(rt && (rt.closest ? rt.closest('.video-preview-modal') : null));
     if (goingToModal) return;
 
     try { safeCloseHoverModal(); } catch {}
@@ -4358,7 +4491,7 @@ function attachHoverTrailer(cardEl, itemLike) {
     scheduleClosePollingGuard(cardEl, 6, 90);
   };
   cardEl.addEventListener('pointerenter', onEnter, { passive: true });
-  var onDown = function(e) { if (e.pointerType === 'touch') onEnter(e); };
+  const onDown = (e) => { if (e?.pointerType === 'touch') onEnter(e); };
   cardEl.addEventListener('pointerdown', onDown, { passive: true });
 
   cardEl.addEventListener('pointerleave', onLeave,  { passive: true });
@@ -4367,7 +4500,7 @@ function attachHoverTrailer(cardEl, itemLike) {
 
 
 function detachPreviewHandlers(cardEl) {
-  var rec = __boundPreview.get(cardEl);
+  const rec = __boundPreview.get(cardEl);
   if (!rec) return;
   cardEl.removeEventListener('pointerenter', rec.onEnter);
   cardEl.removeEventListener('pointerleave', rec.onLeave);
@@ -4380,25 +4513,25 @@ function detachPreviewHandlers(cardEl) {
 
 function attachPreviewByMode(cardEl, itemLike, mode) {
   detachPreviewHandlers(cardEl);
-  var itemId = resolveItemId(itemLike) || sanitizeResolvedId(cardEl.dataset.itemId);
+  const itemId = resolveItemId(itemLike) || sanitizeResolvedId(cardEl?.dataset?.itemId);
   if (!itemId) return;
-  var normalizedItem = { ...(itemLike || {}), Id: itemId, Name: resolveItemName(itemLike) };
+  const normalizedItem = { ...(itemLike || {}), Id: itemId, Name: resolveItemName(itemLike) };
   if (mode === 'studioMini') {
     attachMiniPosterHover(cardEl, normalizedItem);
-    __boundPreview.setfunction(cardEl, { mode: 'studioMini', onEnter: (){}, onLeave: function(){} });
+    __boundPreview.set(cardEl, { mode: 'studioMini', onEnter: ()=>{}, onLeave: ()=>{} });
   } else {
     attachHoverTrailer(cardEl, normalizedItem);
   }
 }
 
-window.addEventListenerfunction('jms:globalPreviewModeChanged', (ev) {
-  var mode = ev.detail.mode === 'studioMini' ? 'studioMini' : 'modal';
-  document.querySelectorAll('.personal-recs-card').forEach(function(cardEl) {
-    var itemId = cardEl.dataset.itemId;
+window.addEventListener('jms:globalPreviewModeChanged', (ev) => {
+  const mode = ev?.detail?.mode === 'studioMini' ? 'studioMini' : 'modal';
+  document.querySelectorAll('.personal-recs-card').forEach(cardEl => {
+    const itemId = cardEl?.dataset?.itemId;
     if (!itemId) return;
-    var itemLike = {
+    const itemLike = {
    Id: itemId,
-   Name: cardEl.querySelector('.cardImage').alt || ''
+   Name: cardEl.querySelector('.cardImage')?.alt || ''
  };
     attachPreviewByMode(cardEl, itemLike, mode);
   });
@@ -4416,7 +4549,7 @@ function escapeHtml(s) {
 
 export function resetPersonalRecsAndGenreState() {
   prcLog("cleanup:start", {
-    genreSections: GENRE_STATE.sections.length || 0,
+    genreSections: GENRE_STATE.sections?.length || 0,
   });
   clearPersonalRecsRetry();
   invalidatePersonalManagedQueue();
@@ -4444,21 +4577,21 @@ export function resetPersonalRecsAndGenreState() {
   __genreHubsBusy = false;
   try { detachGenreScrollIdleLoader(); } catch {}
   try {
-    var bywSections = Array.from(document.querySelectorAll('[id^="because-you-watched--"], #because-you-watched'));
-    for (var sec of bywSections) {
+    const bywSections = Array.from(document.querySelectorAll('[id^="because-you-watched--"], #because-you-watched'));
+    for (const sec of bywSections) {
       if (!sec) continue;
       try {
-        sec.querySelectorAll('.personal-recs-card').forEach(function(el) {
+        sec.querySelectorAll('.personal-recs-card').forEach(el => {
           try { el.dispatchEvent(new Event('jms:cleanup')); } catch {}
         });
       } catch {}
       try {
-        sec.querySelectorAll('.dir-row-hero').forEach(function(el) {
+        sec.querySelectorAll('.dir-row-hero').forEach(el => {
           try { el.dispatchEvent(new Event('jms:cleanup')); } catch {}
         });
       } catch {}
       try {
-        var row = sec.querySelector('.byw-row');
+        const row = sec.querySelector('.byw-row');
         if (row) {
           row.dispatchEvent(new Event('jms:cleanup'));
         }
@@ -4467,20 +4600,20 @@ export function resetPersonalRecsAndGenreState() {
   } catch {}
 
   try {
-    var sections = Array.from(new Set([
+    const sections = Array.from(new Set([
       document.getElementById("personal-recommendations"),
       document.getElementById("genre-hubs"),
       ...Array.from(document.querySelectorAll('[id^="because-you-watched--"], #because-you-watched'))
     ].filter(Boolean)));
 
-    for (var section of sections) {
+    for (const section of sections) {
       try {
-        section.querySelectorAll('.personal-recs-card, .dir-row-hero').forEach(function(el) {
+        section.querySelectorAll('.personal-recs-card, .dir-row-hero').forEach(el => {
           try { el.dispatchEvent(new Event('jms:cleanup')); } catch {}
         });
       } catch {}
       try {
-        section.querySelectorAll('.personal-recs-row, .genre-row, .byw-row').forEach(function(row) {
+        section.querySelectorAll('.personal-recs-row, .genre-row, .byw-row').forEach(row => {
           try { row.dispatchEvent(new Event('jms:cleanup')); } catch {}
         });
       } catch {}
@@ -4492,7 +4625,7 @@ export function resetPersonalRecsAndGenreState() {
 }
 
 export function releasePrcDbConnection() {
-  try { PRC_DB_STATE.db.close.(); } catch {}
+  try { PRC_DB_STATE.db?.close?.(); } catch {}
   PRC_DB_STATE.db = null;
   PRC_DB_STATE.scope = null;
   PRC_DB_STATE.userId = null;
@@ -4508,20 +4641,20 @@ export function releasePrcDbConnection() {
   if (window.__jmsPrcDbReleaseBound) return;
   window.__jmsPrcDbReleaseBound = true;
 
-  window.addEventListenerfunction('jms:indexeddb:release', (event) {
-    var dbName = event.detail.dbName;
+  window.addEventListener('jms:indexeddb:release', (event) => {
+    const dbName = event?.detail?.dbName;
     if (!dbName || dbName === 'jms_prc_db' || dbName === '*') {
       releasePrcDbConnection();
     }
   });
 })();
 
-var __homeScrollerRefreshTimer = null;
+let __homeScrollerRefreshTimer = null;
 
 function refreshHomeScrollers() {
-  var page = currentIndexPage();
+  const page = currentIndexPage();
   if (!page) return;
-  page.querySelectorAll(".personal-recs-row, .genre-row").forEach(function(row) {
+  page.querySelectorAll(".personal-recs-row, .genre-row").forEach(row => {
     try { setupScroller(row); } catch {}
     try { triggerScrollerUpdate(row); } catch {}
   });
@@ -4529,7 +4662,7 @@ function refreshHomeScrollers() {
 
 function scheduleHomeScrollerRefresh(ms = 120) {
   clearTimeout(__homeScrollerRefreshTimer);
-  __homeScrollerRefreshTimer = setTimeoutfunction(() {
+  __homeScrollerRefreshTimer = setTimeout(() => {
     __homeScrollerRefreshTimer = null;
     refreshHomeScrollers();
   }, ms);
@@ -4539,15 +4672,15 @@ function scheduleHomeScrollerRefresh(ms = 120) {
   if (window.__jmsHomeScrollerRefreshBound) return;
   window.__jmsHomeScrollerRefreshBound = true;
 
-  window.addEventListenerfunction("hashchange", () scheduleHomeScrollerRefresh(180), { passive: true });
-  window.addEventListenerfunction("pageshow",   () scheduleHomeScrollerRefresh(0),   { passive: true });
+  window.addEventListener("hashchange", () => scheduleHomeScrollerRefresh(180), { passive: true });
+  window.addEventListener("pageshow",   () => scheduleHomeScrollerRefresh(0),   { passive: true });
 
-  document.addEventListenerfunction("visibilitychange", () {
+  document.addEventListener("visibilitychange", () => {
     if (!document.hidden) scheduleHomeScrollerRefresh(0);
   });
 
-  document.addEventListenerfunction("viewshow",  () scheduleHomeScrollerRefresh(0));
-  document.addEventListenerfunction("viewshown", () scheduleHomeScrollerRefresh(0));
+  document.addEventListener("viewshow",  () => scheduleHomeScrollerRefresh(0));
+  document.addEventListener("viewshown", () => scheduleHomeScrollerRefresh(0));
 })();
 
 

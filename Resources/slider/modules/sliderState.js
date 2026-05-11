@@ -1,9 +1,9 @@
 import { getConfig } from "./config.js";
 
-var currentIndex = 0;
-var autoSlideTimeout = null;
-var slideStartTime = 0;
-var remainingTime = 0;
+let currentIndex = 0;
+let autoSlideTimeout = null;
+let slideStartTime = 0;
+let remainingTime = 0;
 
 export function setCurrentIndex(index) {
   currentIndex = index;
@@ -41,19 +41,19 @@ export function getRemainingTime() {
   return remainingTime;
 }
 
-var sliderMemory = {
+let sliderMemory = {
   lastIndex: 0,
   remainingTime: 0
 };
 
-export var saveSliderState = function() {
+export const saveSliderState = () => {
   sliderMemory = {
     lastIndex: getCurrentIndex(),
     remainingTime: getRemainingTime()
   };
 };
 
-export var restoreSliderState = function() {
+export const restoreSliderState = () => {
   if (sliderMemory) {
     setCurrentIndex(sliderMemory.lastIndex);
     setRemainingTime(sliderMemory.remainingTime);

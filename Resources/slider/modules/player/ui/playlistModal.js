@@ -11,56 +11,56 @@ import { getAuthToken } from "../core/auth.js";
 import { isRadioTrack, resolveRadioStationArtUrl } from "../core/radio.js";
 import { enhanceFormAccessibility } from "../../accessibility.js";
 
-var config = getConfig();
+const config = getConfig();
 
-var playlistItemsObserver = null;
-var outsideClickListener = null;
+let playlistItemsObserver = null;
+let outsideClickListener = null;
 
 export function createPlaylistModal() {
-  var modal = document.createElement("div");
+  const modal = document.createElement("div");
   modal.id = "playlist-modal";
   modal.setAttribute("aria-modal", "true");
   modal.setAttribute("role", "dialog");
 
-  var container = document.createElement("div");
+  const container = document.createElement("div");
   container.className = "playlist-container";
 
-  var header = document.createElement("div");
+  const header = document.createElement("div");
   header.className = "playlist-header";
 
-  var title = document.createElement("h3");
+  const title = document.createElement("h3");
   title.className = "playlist-title";
   title.textContent = config.languageLabels.playlist;
   title.id = "playlist-modal-title";
 
-  var closeBtn = document.createElement("button");
+  const closeBtn = document.createElement("button");
   closeBtn.className = "playlist-close";
   closeBtn.innerHTML = '<i class="fas fa-times"></i>';
-  closeBtn.title = config.languageLabels.close || "Fechar";
+  closeBtn.title = config.languageLabels.close || "Kapat";
   closeBtn.setAttribute("aria-label", "Close playlist");
   closeBtn.onclick = togglePlaylistModal;
 
-  var selectAllBtn = document.createElement("button");
+  const selectAllBtn = document.createElement("button");
   selectAllBtn.className = "playlist-select-all";
   selectAllBtn.innerHTML = '<i class="fa-solid fa-check-double"></i>';
-  selectAllBtn.title = config.languageLabels.selectAll || "Selecionar/Desmarcar Todos";
+  selectAllBtn.title = config.languageLabels.selectAll || "Tümünü Seç/Bırak";
   selectAllBtn.setAttribute("aria-label", "Select all tracks");
-  selectAllBtn.onclick = function(e) {
+  selectAllBtn.onclick = (e) => {
     e.stopPropagation();
     toggleSelectAll();
   };
 
-  var saveBtn = document.createElement("button");
+  const saveBtn = document.createElement("button");
   saveBtn.className = "playlist-save";
   saveBtn.innerHTML = '<i class="fas fa-save"></i>';
   saveBtn.title = config.languageLabels.savePlaylist;
   saveBtn.setAttribute("aria-label", "Save playlist");
   saveBtn.onclick = showSaveModal;
 
-  var searchContainer = document.createElement("div");
+  const searchContainer = document.createElement("div");
   searchContainer.className = "playlist-search-container";
 
-  var searchInput = document.createElement("input");
+  const searchInput = document.createElement("input");
   searchInput.type = "text";
   searchInput.placeholder = config.languageLabels.searchTracks;
   searchInput.className = "playlist-search-input";
@@ -70,30 +70,30 @@ export function createPlaylistModal() {
   searchInput.setAttribute("aria-labelledby", "playlist-modal-title");
   searchInput.setAttribute("aria-label", "Search in playlist");
 
-  searchInput.addEventListenerfunction("input", (e) {
+  searchInput.addEventListener("input", (e) => {
     filterPlaylistItems(e.target.value.toLowerCase());
   });
 
   searchContainer.appendChild(searchInput);
 
-  var removeSelectedBtn = document.createElement("button");
+  const removeSelectedBtn = document.createElement("button");
   removeSelectedBtn.className = "playlist-remove-selected";
   removeSelectedBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-  removeSelectedBtn.title = config.languageLabels.removeSelected || "Remover Selecionados";
+  removeSelectedBtn.title = config.languageLabels.removeSelected || "Seçilenleri Kaldır";
   removeSelectedBtn.setAttribute("aria-label", "Remove selected tracks");
-  removeSelectedBtn.onclick = function(e) {
+  removeSelectedBtn.onclick = (e) => {
     e.stopPropagation();
     showRemoveSelectedConfirmModal();
   };
 
-  var headerButtons = document.createElement("div");
+  const headerButtons = document.createElement("div");
   headerButtons.className = "playlist-header-buttons";
   headerButtons.appendChild(selectAllBtn);
   headerButtons.appendChild(removeSelectedBtn);
   headerButtons.appendChild(saveBtn);
   headerButtons.appendChild(closeBtn);
 
-  var itemsContainer = document.createElement("div");
+  const itemsContainer = document.createElement("div");
   itemsContainer.className = "playlist-items";
   itemsContainer.setAttribute("role", "list");
   itemsContainer.setAttribute("aria-label", "Playlist items");
@@ -114,149 +114,150 @@ export function createPlaylistModal() {
 }
 
 function updateSelectAllBtnState() {
-  var itemsCount = musicPlayerState.playlistItemsContainer
+  const itemsCount = musicPlayerState.playlistItemsContainer
     .querySelectorAll(".playlist-item").length;
-  var selectedCount = musicPlayerState.selectedTracks.size;
-  var selectAllBtn = document.querySelector(".playlist-select-all");
+  const selectedCount = musicPlayerState.selectedTracks.size;
+  const selectAllBtn = document.querySelector(".playlist-select-all");
   if (!selectAllBtn) return;
 
-  var allSelected = selectedCount === itemsCount && itemsCount > 0;
+  const allSelected = selectedCount === itemsCount && itemsCount > 0;
   if (allSelected) {
     selectAllBtn.innerHTML = '<i class="fa-solid fa-minus"></i>';
-    selectAllBtn.title = config.languageLabels.deselectAll || "Desmarcar Tudo";
+    selectAllBtn.title = config.languageLabels.deselectAll || "Seçimi Kaldır";
   } else {
     selectAllBtn.innerHTML = '<i class="fa-solid fa-check-double"></i>';
-    selectAllBtn.title = config.languageLabels.selectAll || "Selecionar Tudo";
+    selectAllBtn.title = config.languageLabels.selectAll || "Tümünü Seç";
   }
 }
 
-function showSaveModal() {
-  var selectedCount = musicPlayerState.selectedTracks.size;
-  var saveSelected = selectedCount > 0;
+async function showSaveModal() {
+  const selectedCount = musicPlayerState.selectedTracks.size;
+  const saveSelected = selectedCount > 0;
 
-  var modal = document.createElement("div");
+  const modal = document.createElement("div");
   modal.className = "playlist-save-modal";
   modal.setAttribute("aria-modal", "true");
   modal.setAttribute("role", "dialog");
 
-  var modalContent = document.createElement("div");
+  const modalContent = document.createElement("div");
   modalContent.className = "playlist-save-modal-content";
 
-  var modalHeader = document.createElement("div");
+  const modalHeader = document.createElement("div");
   modalHeader.className = "playlist-save-modal-header";
 
-  var modalTitle = document.createElement("h3");
+  const modalTitle = document.createElement("h3");
   modalTitle.textContent = config.languageLabels.savePlaylist;
   modalTitle.id = "save-modal-title";
   modalHeader.appendChild(modalTitle);
 
-  var closeButton = document.createElement("div");
+  const closeButton = document.createElement("div");
   closeButton.className = "playlist-save-modal-close";
   closeButton.innerHTML = '<i class="fas fa-times"></i>';
   closeButton.setAttribute("aria-label", "Close save dialog");
-  closeButton.onclick = function() closeModal();
+  closeButton.onclick = () => closeModal();
   modalHeader.appendChild(closeButton);
 
-  var modalBody = document.createElement("div");
+  const modalBody = document.createElement("div");
   modalBody.className = "playlist-save-modal-body";
 
-  var nameInputContainer = document.createElement("div");
+  const nameInputContainer = document.createElement("div");
   nameInputContainer.className = "name-input-container";
-  var nameInput = document.createElement("input");
+  const nameInput = document.createElement("input");
   nameInput.type = "text";
   nameInput.placeholder = config.languageLabels.enterPlaylistName;
   nameInput.id = "playlist-save-name-input";
   nameInput.name = "playlist-save-name-input";
-  nameInput.value = "GMMP Playlist " + (new Date().toLocaleString(config.dateLocale || 'pt-BR', {
+  nameInput.value = `GMMP Oynatma Listesi ${new Date().toLocaleString(config.dateLocale || 'tr-TR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit'
-  ) + ")}";
+  })}`;
   nameInput.setAttribute("aria-labelledby", "save-modal-title");
   nameInputContainer.appendChild(nameInput);
 
-  var publicLabel = document.createElement("label");
+  const publicLabel = document.createElement("label");
   publicLabel.className = "public-checkbox-label";
   publicLabel.htmlFor = "playlist-save-public";
-  var publicCheckbox = document.createElement("input");
+  const publicCheckbox = document.createElement("input");
   publicCheckbox.type = "checkbox";
   publicCheckbox.id = "playlist-save-public";
   publicCheckbox.name = "playlist-save-public";
   publicLabel.appendChild(publicCheckbox);
   publicLabel.appendChild(document.createTextNode(config.languageLabels.makePlaylistPublic));
 
-  var actionContainer = document.createElement("div");
+  const actionContainer = document.createElement("div");
   actionContainer.className = "action-container";
 
-  var newPlaylistOption = document.createElement("div");
+  const newPlaylistOption = document.createElement("div");
   newPlaylistOption.className = "radio-option";
-  var newPlaylistRadio = document.createElement("input");
+  const newPlaylistRadio = document.createElement("input");
   newPlaylistRadio.type = "radio";
   newPlaylistRadio.name = "saveAction";
   newPlaylistRadio.id = "playlist-save-new-playlist";
   newPlaylistRadio.value = "new";
   newPlaylistRadio.checked = true;
   newPlaylistRadio.onchange = togglePlaylistSelection;
-  var newPlaylistLabel = document.createElement("label");
+  const newPlaylistLabel = document.createElement("label");
   newPlaylistLabel.htmlFor = "playlist-save-new-playlist";
-  newPlaylistLabel.textContent = config.languageLabels.newPlaylist || "Criar nova lista";
+  newPlaylistLabel.textContent = config.languageLabels.newPlaylist || "Yeni liste oluştur";
   newPlaylistOption.appendChild(newPlaylistRadio);
   newPlaylistOption.appendChild(newPlaylistLabel);
 
-  var existingPlaylistOption = document.createElement("div");
+  const existingPlaylistOption = document.createElement("div");
   existingPlaylistOption.className = "radio-option";
-  var existingPlaylistRadio = document.createElement("input");
+  const existingPlaylistRadio = document.createElement("input");
   existingPlaylistRadio.type = "radio";
   existingPlaylistRadio.name = "saveAction";
   existingPlaylistRadio.id = "playlist-save-existing-playlist";
   existingPlaylistRadio.value = "existing";
   existingPlaylistRadio.onchange = togglePlaylistSelection;
-  var existingPlaylistLabel = document.createElement("label");
+  const existingPlaylistLabel = document.createElement("label");
   existingPlaylistLabel.htmlFor = "playlist-save-existing-playlist";
-  existingPlaylistLabel.textContent = config.languageLabels.addToExisting || "Adicionar a uma lista existente";
+  existingPlaylistLabel.textContent = config.languageLabels.addToExisting || "Mevcut listeye ekle";
   existingPlaylistOption.appendChild(existingPlaylistRadio);
   existingPlaylistOption.appendChild(existingPlaylistLabel);
 
   actionContainer.appendChild(newPlaylistOption);
   actionContainer.appendChild(existingPlaylistOption);
 
-  var playlistSelectContainer = document.createElement("div");
+  const playlistSelectContainer = document.createElement("div");
   playlistSelectContainer.className = "playlist-select-container";
   playlistSelectContainer.style.display = "none";
 
-  var playlistSelectLabel = document.createElement("label");
-  playlistSelectLabel.textContent = config.languageLabels.selectPlaylist || "Selecione uma lista:";
+  const playlistSelectLabel = document.createElement("label");
+  playlistSelectLabel.textContent = config.languageLabels.selectPlaylist || "Liste seçin:";
   playlistSelectLabel.htmlFor = "playlist-save-existing-playlist-select";
 
-  var playlistSelect = document.createElement("select");
+  const playlistSelect = document.createElement("select");
   playlistSelect.className = "playlist-select";
   playlistSelect.id = "playlist-save-existing-playlist-select";
   playlistSelect.name = "playlist-save-existing-playlist-select";
   playlistSelect.disabled = true;
 
-  var loadingOption = document.createElement("option");
+  const loadingOption = document.createElement("option");
   loadingOption.value = "";
-  loadingOption.textContent = config.languageLabels.loadingPlaylists || "Carregando listas...";
+  loadingOption.textContent = config.languageLabels.loadingPlaylists || "Listeler yükleniyor...";
   playlistSelect.appendChild(loadingOption);
 
   playlistSelectContainer.appendChild(playlistSelectLabel);
   playlistSelectContainer.appendChild(playlistSelect);
 
-  var selectedOnlyContainer = document.createElement("div");
+  const selectedOnlyContainer = document.createElement("div");
   selectedOnlyContainer.className = "selected-only-container";
-  var selectedOnlyCheckbox = document.createElement("input");
+  const selectedOnlyCheckbox = document.createElement("input");
   selectedOnlyCheckbox.type = "checkbox";
   selectedOnlyCheckbox.id = "playlist-save-selected-only";
   selectedOnlyCheckbox.name = "playlist-save-selected-only";
   selectedOnlyCheckbox.checked = saveSelected;
   selectedOnlyCheckbox.disabled = (selectedCount === 0);
-  var selectedOnlyLabel = document.createElement("label");
+  const selectedOnlyLabel = document.createElement("label");
   selectedOnlyLabel.htmlFor = "playlist-save-selected-only";
   selectedOnlyLabel.textContent = saveSelected
-    : config.languageLabels.noSelection || "Nenhuma música selecionada";
+    ? `${config.languageLabels.saveSelected || "Seçilenleri kaydet"} (${selectedCount})`
+    : config.languageLabels.noSelection || "Hiç parça seçilmediii";
   selectedOnlyContainer.appendChild(selectedOnlyCheckbox);
   selectedOnlyContainer.appendChild(selectedOnlyLabel);
 
@@ -266,26 +267,26 @@ function showSaveModal() {
   modalBody.appendChild(playlistSelectContainer);
   modalBody.appendChild(selectedOnlyContainer);
 
-  var modalFooter = document.createElement("div");
+  const modalFooter = document.createElement("div");
   modalFooter.className = "playlist-save-modal-footer";
 
-  var saveButton = document.createElement("button");
+  const saveButton = document.createElement("button");
   saveButton.className = "playlist-save-modal-save";
   saveButton.textContent = config.languageLabels.kaydet;
-  saveButton.onclick = function() {
-    var selectedIdx = Array.from(musicPlayerState.selectedTracks);
-    var tracksToSave = selectedOnlyCheckbox.checked
-      ? selectedIdx.map(function(i) musicPlayerState.playlist[i])
+  saveButton.onclick = async () => {
+    const selectedIdx = Array.from(musicPlayerState.selectedTracks);
+    const tracksToSave = selectedOnlyCheckbox.checked
+      ? selectedIdx.map(i => musicPlayerState.playlist[i])
       : musicPlayerState.playlist;
 
-    var isNew = newPlaylistRadio.checked;
-    var playlistId = isNew ? null : playlistSelect.value;
-    var playlistName = isNew
+    const isNew = newPlaylistRadio.checked;
+    const playlistId = isNew ? null : playlistSelect.value;
+    const playlistName = isNew
       ? nameInput.value
       : playlistSelect.options[playlistSelect.selectedIndex].text;
 
     try {
-      saveCurrentPlaylistToJellyfin(
+      await saveCurrentPlaylistToJellyfin(
         playlistName,
         publicCheckbox.checked,
         tracksToSave,
@@ -293,7 +294,7 @@ function showSaveModal() {
         playlistId
       );
       showNotification(
-        "<i class=\"fas fa-check-circle\"></i> " + (config.languageLabels.playlistCreatedSuccessfully || "Lista salva com sucesso"),
+        `<i class="fas fa-check-circle"></i> ${config.languageLabels.playlistCreatedSuccessfully || "Liste kaydedildi"}`,
         2500,
         'addlist'
       );
@@ -301,7 +302,7 @@ function showSaveModal() {
     } catch (err) {
       console.error(err);
       showNotification(
-        "<i class=\"fas fa-exclamation-circle\"></i> " + (config.languageLabels.playlistSaveError || "Erro ao salvar lista"),
+        `<i class="fas fa-exclamation-circle"></i> ${config.languageLabels.playlistSaveError || "Liste kaydedilemedi"}`,
         3000,
         'error'
       );
@@ -318,7 +319,7 @@ function showSaveModal() {
 
   loadExistingPlaylists(playlistSelect);
 
-  modal.onclick = function(e) {
+  modal.onclick = (e) => {
     if (e.target === modal) {
       closeModal();
     }
@@ -326,7 +327,7 @@ function showSaveModal() {
 
   nameInput.focus();
 
-  var handleKeyDown = function(e) {
+  const handleKeyDown = (e) => {
     if (e.key === "Escape") {
       closeModal();
     }
@@ -334,7 +335,7 @@ function showSaveModal() {
   document.addEventListener("keydown", handleKeyDown);
 
   function togglePlaylistSelection() {
-    var isNew = newPlaylistRadio.checked;
+    const isNew = newPlaylistRadio.checked;
     nameInputContainer.style.display = isNew ? "block" : "none";
     playlistSelectContainer.style.display = isNew ? "none" : "block";
     publicLabel.style.display = isNew ? "block" : "none";
@@ -346,24 +347,24 @@ function showSaveModal() {
   }
 }
 
-function loadExistingPlaylists(selectElement) {
+async function loadExistingPlaylists(selectElement) {
   try {
-    var playlists = fetchJellyfinPlaylists();
+    const playlists = await fetchJellyfinPlaylists();
     selectElement.innerHTML = '';
 
     if (playlists.length === 0) {
-      var noPlaylistOption = document.createElement("option");
+      const noPlaylistOption = document.createElement("option");
       noPlaylistOption.value = "";
-      noPlaylistOption.textContent = config.languageLabels.noPlaylists || "Nenhuma playlist encontrada";
+      noPlaylistOption.textContent = config.languageLabels.noPlaylists || "Hiç çalma listesi bulunamadı";
       selectElement.appendChild(noPlaylistOption);
       selectElement.disabled = true;
       return;
     }
 
-    playlists.sortfunction((a, b) a.name.localeCompare(b.name));
+    playlists.sort((a, b) => a.name.localeCompare(b.name));
 
-    playlists.forEach(function(playlist) {
-      var option = document.createElement("option");
+    playlists.forEach(playlist => {
+      const option = document.createElement("option");
       option.value = playlist.id;
       option.textContent = playlist.name;
       selectElement.appendChild(option);
@@ -371,47 +372,47 @@ function loadExistingPlaylists(selectElement) {
 
     selectElement.disabled = false;
   } catch (error) {
-    console.error("Erro ao carregar listas:", error);
+    console.error("Listeler yüklenirken hata:", error);
     selectElement.innerHTML = '';
 
-    var errorOption = document.createElement("option");
+    const errorOption = document.createElement("option");
     errorOption.value = "";
-    errorOption.textContent = config.languageLabels.loadError || "Erro ao carregar listas";
+    errorOption.textContent = config.languageLabels.loadError || "Listeler yüklenemedi";
     selectElement.appendChild(errorOption);
     selectElement.disabled = true;
   }
 }
 
 function toggleSelectAll() {
-  var itemsContainer = musicPlayerState.playlistItemsContainer;
-  var items = itemsContainer.querySelectorAll(".playlist-item");
-  var checkboxes = itemsContainer.querySelectorAll(".playlist-item-checkbox");
-  var selectAllBtn = document.querySelector(".playlist-select-all");
+  const itemsContainer = musicPlayerState.playlistItemsContainer;
+  const items = itemsContainer.querySelectorAll(".playlist-item");
+  const checkboxes = itemsContainer.querySelectorAll(".playlist-item-checkbox");
+  const selectAllBtn = document.querySelector(".playlist-select-all");
 
-  var allSelected = items.length === musicPlayerState.selectedTracks.size;
+  const allSelected = items.length === musicPlayerState.selectedTracks.size;
 
   if (allSelected) {
     musicPlayerState.selectedTracks.clear();
-    checkboxes.forEach(function(checkbox) {
+    checkboxes.forEach(checkbox => {
       checkbox.checked = false;
       checkbox.parentElement.classList.remove("selected");
     });
     selectAllBtn.innerHTML = '<i class="fa-solid fa-check-double"></i>';
-    selectAllBtn.title = config.languageLabels.selectAll || "Selecionar Tudo";
+    selectAllBtn.title = config.languageLabels.selectAll || "Tümünü Seç";
   } else {
     musicPlayerState.selectedTracks = new Set([...Array(items.length).keys()]);
-    checkboxes.forEach(function((checkbox) {
+    checkboxes.forEach((checkbox) => {
       checkbox.checked = true;
       checkbox.parentElement.classList.add("selected");
     });
     selectAllBtn.innerHTML = '<i class="fa-solid fa-minus"></i>';
-    selectAllBtn.title = config.languageLabels.deselectAll || "Desmarcar Tudo";
+    selectAllBtn.title = config.languageLabels.deselectAll || "Seçimi Kaldır";
   }
   updateSelectAllBtnState();
 }
 
 export function togglePlaylistModal(e) {
-  var modal = musicPlayerState.playlistModal;
+  const modal = musicPlayerState.playlistModal;
   if (!modal) return;
 
   if (modal.style.display === "flex") {
@@ -424,21 +425,21 @@ export function togglePlaylistModal(e) {
     modal.style.display = "flex";
 
     if (e) {
-      var x = e.clientX;
-      var y = e.clientY;
-      var modalWidth = 300;
-      var modalHeight = 400;
-      var left = Math.min(x, window.innerWidth - modalWidth - 20);
-      var top = Math.min(y, window.innerHeight - modalHeight - 20);
-      modal.style.left = (left) + "px";
-      modal.style.top = (top) + "px";
+      const x = e.clientX;
+      const y = e.clientY;
+      const modalWidth = 300;
+      const modalHeight = 400;
+      const left = Math.min(x, window.innerWidth - modalWidth - 20);
+      const top = Math.min(y, window.innerHeight - modalHeight - 20);
+      modal.style.left = `${left}px`;
+      modal.style.top = `${top}px`;
     } else {
       modal.style.left = "";
       modal.style.top = "";
     }
 
-    setTimeoutfunction(() {
-      var activeItem = musicPlayerState.playlistItemsContainer.querySelector(".playlist-item.active");
+    setTimeout(() => {
+      const activeItem = musicPlayerState.playlistItemsContainer.querySelector(".playlist-item.active");
       if (activeItem) {
         activeItem.scrollIntoView({ behavior: "smooth", block: "center" });
       }
@@ -450,24 +451,24 @@ export function togglePlaylistModal(e) {
 
 function resetSelectionState() {
   musicPlayerState.selectedTracks.clear();
-  var checkboxes = document.querySelectorAll(".playlist-item-checkbox");
-  checkboxes.forEach(function(checkbox) {
+  const checkboxes = document.querySelectorAll(".playlist-item-checkbox");
+  checkboxes.forEach(checkbox => {
     checkbox.checked = false;
     checkbox.parentElement.classList.remove("selected");
   });
-  var selectAllBtn = document.querySelector(".playlist-select-all");
+  const selectAllBtn = document.querySelector(".playlist-select-all");
   if (selectAllBtn) {
     selectAllBtn.innerHTML = '<i class="fa-solid fa-check-double"></i>';
-    selectAllBtn.title = config.languageLabels.selectAll || "Selecionar Tudo";
+    selectAllBtn.title = config.languageLabels.selectAll || "Tümünü Seç";
   }
 }
 
 function addOutsideClickListener() {
   if (outsideClickListener) return;
 
-  outsideClickListener = function(event) {
-    var playlistModal = musicPlayerState.playlistModal;
-    var saveModal = document.querySelector('.playlist-save-modal');
+  outsideClickListener = (event) => {
+    const playlistModal = musicPlayerState.playlistModal;
+    const saveModal = document.querySelector('.playlist-save-modal');
     if (
       (playlistModal && playlistModal.contains(event.target)) ||
       (saveModal && saveModal.contains(event.target))
@@ -481,7 +482,7 @@ function addOutsideClickListener() {
     resetSelectionState();
   };
 
-  setTimeoutfunction(() {
+  setTimeout(() => {
     document.addEventListener('click', outsideClickListener);
   }, 0);
 }
@@ -493,60 +494,60 @@ function removeOutsideClickListener() {
 }
 
 function disconnectItemsObserver() {
-  try { playlistItemsObserver.disconnect.(); } catch {}
+  try { playlistItemsObserver?.disconnect?.(); } catch {}
   playlistItemsObserver = null;
 }
 
 export function destroyPlaylistModal() {
   removeOutsideClickListener();
   disconnectItemsObserver();
-  try { musicPlayerState.selectedTracks.clear.(); } catch {}
+  try { musicPlayerState.selectedTracks?.clear?.(); } catch {}
   musicPlayerState.selectedTracks = new Set();
 
-  document.querySelectorAll(".playlist-save-modal").forEach(function((modal) {
+  document.querySelectorAll(".playlist-save-modal").forEach((modal) => {
     try { modal.remove(); } catch {}
   });
 
-  try { musicPlayerState.playlistModal.remove.(); } catch {}
+  try { musicPlayerState.playlistModal?.remove?.(); } catch {}
   musicPlayerState.playlistModal = null;
   musicPlayerState.playlistItemsContainer = null;
   musicPlayerState.playlistSearchInput = null;
 }
 
-export function updatePlaylistModal() {
-  var itemsContainer = musicPlayerState.playlistItemsContainer;
+export async function updatePlaylistModal() {
+  const itemsContainer = musicPlayerState.playlistItemsContainer;
   itemsContainer.innerHTML = "";
 
-  var DEFAULT_ARTWORK = "url('./slider/src/images/defaultArt.png')";
+  const DEFAULT_ARTWORK = "url('./slider/src/images/defaultArt.png')";
 
-  for (var [index, track] of musicPlayerState.playlist.entries()) {
-    var item = document.createElement("div");
-    item.className = "playlist-item " + (index === musicPlayerState.currentIndex ? "active" : "") + " " + (
+  for (const [index, track] of musicPlayerState.playlist.entries()) {
+    const item = document.createElement("div");
+    item.className = `playlist-item ${index === musicPlayerState.currentIndex ? "active" : ""} ${
       musicPlayerState.selectedTracks.has(index) ? "selected" : ""
-    );
+    }`;
     item.dataset.index = index;
     item.setAttribute("role", "listitem");
 
-    var removeBtn = document.createElement('div');
+    const removeBtn = document.createElement('div');
     removeBtn.className = 'playlist-item-remove';
     removeBtn.innerHTML = '&times;';
-    removeBtn.title = config.languageLabels.removeTrack || 'Remover música';
-    removeBtn.setAttribute("aria-label", "Remove " + (track.Name || 'unknown track'));
-    removeBtn.onclick = function(e) {
+    removeBtn.title = config.languageLabels.removeTrack || 'Parçayı kaldır';
+    removeBtn.setAttribute("aria-label", `Remove ${track.Name || 'unknown track'}`);
+    removeBtn.onclick = (e) => {
       e.stopPropagation();
       showRemoveConfirmModal(index, track.Name || config.languageLabels.unknownTrack);
     };
     item.appendChild(removeBtn);
 
-    var checkboxId = "playlist-item-checkbox-" + (index);
-    var checkbox = document.createElement("input");
+    const checkboxId = `playlist-item-checkbox-${index}`;
+    const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.className = "playlist-item-checkbox";
     checkbox.id = checkboxId;
-    checkbox.name = "playlist-item-" + (index);
+    checkbox.name = `playlist-item-${index}`;
     checkbox.checked = musicPlayerState.selectedTracks.has(index);
-    checkbox.setAttribute("aria-label", "Select " + (track.Name || 'unknown track'));
-    checkbox.onclick = function(e) {
+    checkbox.setAttribute("aria-label", `Select ${track.Name || 'unknown track'}`);
+    checkbox.onclick = (e) => {
       e.stopPropagation();
       if (checkbox.checked) {
         musicPlayerState.selectedTracks.add(index);
@@ -558,25 +559,25 @@ export function updatePlaylistModal() {
       updateSelectAllBtnState();
     };
 
-    var itemContent = document.createElement("div");
+    const itemContent = document.createElement("div");
     itemContent.className = "playlist-item-content";
-    itemContent.onclick = function() playTrack(index);
+    itemContent.onclick = () => playTrack(index);
 
-    var img = document.createElement("div");
+    const img = document.createElement("div");
     img.className = "playlist-item-img";
     img.style.backgroundImage = DEFAULT_ARTWORK;
     img.setAttribute("aria-hidden", "true");
 
-    var info = document.createElement("div");
+    const info = document.createElement("div");
     info.className = "playlist-item-info";
 
-    var title = document.createElement("div");
+    const title = document.createElement("div");
     title.className = "playlist-item-title";
-    title.textContent = (index + 1) + ". " + (track.Name || config.languageLabels.unknownTrack);
+    title.textContent = `${index + 1}. ${track.Name || config.languageLabels.unknownTrack}`;
 
-    var artist = document.createElement("div");
+    const artist = document.createElement("div");
     artist.className = "playlist-item-artist";
-    artist.textContent = track.Artists.join(", ") || config.languageLabels.unknownArtist || "Artista Desconhecido";
+    artist.textContent = track.Artists?.join(", ") || config.languageLabels.unknownArtist;
 
     info.appendChild(title);
     info.appendChild(artist);
@@ -589,77 +590,77 @@ export function updatePlaylistModal() {
 
   disconnectItemsObserver();
 
-  playlistItemsObserver = new IntersectionObserverfunction((entries) {
-    entries.forEach(function(entry) {
+  playlistItemsObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
       if (entry.isIntersecting) {
-        var item = entry.target;
-        var index = parseInt(item.dataset.index, 10);
+        const item = entry.target;
+        const index = parseInt(item.dataset.index, 10);
         loadImageForItem(item, index);
         playlistItemsObserver.unobserve(item);
       }
     });
   }, { threshold: 0.1, root: itemsContainer });
 
-  document.querySelectorAll('.playlist-item').forEach(function(item) {
+  document.querySelectorAll('.playlist-item').forEach(item => {
     playlistItemsObserver.observe(item);
   });
 
   updateSelectAllBtnState();
 
-  var activeItem = itemsContainer.querySelector(".playlist-item.active");
+  const activeItem = itemsContainer.querySelector(".playlist-item.active");
   if (activeItem) {
     activeItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
     activeItem.setAttribute("aria-current", "true");
   }
 }
 
-function loadImageForItem(item, index) {
-  var track = musicPlayerState.playlist[index];
+async function loadImageForItem(item, index) {
+  const track = musicPlayerState.playlist[index];
   if (!track) return;
 
-  var img = item.querySelector(".playlist-item-img");
-  var DEFAULT_ARTWORK = "url('./slider/src/images/defaultArt.png')";
+  const img = item.querySelector(".playlist-item-img");
+  const DEFAULT_ARTWORK = "url('./slider/src/images/defaultArt.png')";
   img.style.backgroundImage = DEFAULT_ARTWORK;
 
   try {
     if (isRadioTrack(track)) {
-      var radioArt = resolveRadioStationArtUrl(track);
+      const radioArt = await resolveRadioStationArtUrl(track);
       if (radioArt) {
-        img.style.backgroundImage = "url('" + (radioArt) + "')";
+        img.style.backgroundImage = `url('${radioArt}')`;
       }
       return;
     }
 
-    var imageTag = track.AlbumPrimaryImageTag || track.PrimaryImageTag;
+    const imageTag = track.AlbumPrimaryImageTag || track.PrimaryImageTag;
     if (imageTag) {
-      var imageId = track.AlbumId || track.Id;
-      var serverImageUrl = withParams("/Items/" + (imageId) + "/Images/Primary", {
+      const imageId = track.AlbumId || track.Id;
+      const serverImageUrl = withParams(`/Items/${imageId}/Images/Primary`, {
         fillHeight: 100,
         fillWidth: 100,
         quality: 70,
         tag: imageTag,
         api_key: getAuthToken(),
       });
-      img.style.backgroundImage = "url('" + (serverImageUrl) + "')";
+      img.style.backgroundImage = `url('${serverImageUrl}')`;
       return;
     }
 
-    var tags = readID3Tags(track.Id);
-    if (tags.pictureUri) {
-      img.style.backgroundImage = "url('" + (tags.pictureUri) + "')";
+    const tags = await readID3Tags(track.Id);
+    if (tags?.pictureUri) {
+      img.style.backgroundImage = `url('${tags.pictureUri}')`;
       return;
     }
   } catch (error) {
-    console.warn("Erro ao carregar capa (ID: " + (track.Id) + "):", error);
+    console.warn(`Kapak yüklenirken hata (ID: ${track?.Id}):`, error);
   }
 }
 
 function filterPlaylistItems(searchTerm) {
-  var items = musicPlayerState.playlistItemsContainer.querySelectorAll(".playlist-item");
+  const items = musicPlayerState.playlistItemsContainer.querySelectorAll(".playlist-item");
 
-  items.forEach(function((item) {
-    var title = item.querySelector(".playlist-item-title").textContent.toLowerCase() || "";
-    var artist = item.querySelector(".playlist-item-artist").textContent.toLowerCase() || "";
+  items.forEach((item) => {
+    const title = item.querySelector(".playlist-item-title")?.textContent.toLowerCase() || "";
+    const artist = item.querySelector(".playlist-item-artist")?.textContent.toLowerCase() || "";
 
     if (title.includes(searchTerm) || artist.includes(searchTerm)) {
       item.style.display = "";
@@ -670,36 +671,40 @@ function filterPlaylistItems(searchTerm) {
 }
 
 export function showRemoveConfirmModal(trackIndex, trackName) {
-  var overlay = document.createElement("div");
+  const overlay = document.createElement("div");
   overlay.className = "confirm-overlay";
-  var dialog = document.createElement("div");
+  const dialog = document.createElement("div");
   dialog.className = "confirm-dialog";
-  dialog.innerHTML = "\n    <p><strong>" + (trackName) + "</strong> " + (config.languageLabels.confirmRemove || "deve ser removida da lista?") + "</p>\n    <button class=\"confirm-yes\">" + (config.languageLabels.yes || "Sim") + "</button>\n    <button class=\"confirm-no\">" + (config.languageLabels.no || "Não") + "</button>\n  ";
+  dialog.innerHTML = `
+    <p><strong>${trackName}</strong> ${config.languageLabels.confirmRemove || "şarkı listesinden kaldırılsın mı?"}</p>
+    <button class="confirm-yes">${config.languageLabels.yes || "Evet"}</button>
+    <button class="confirm-no">${config.languageLabels.no || "Hayır"}</button>
+  `;
   overlay.appendChild(dialog);
   document.body.appendChild(overlay);
 
-  overlay.addEventListener("click", function(e) {
+  overlay.addEventListener("click", e => {
     e.stopPropagation();
     if (e.target === overlay) overlay.remove();
   });
 
-  dialog.querySelector(".confirm-yes").addEventListener("click", function(e) {
+  dialog.querySelector(".confirm-yes").addEventListener("click", async e => {
     e.stopPropagation();
     try {
-      var playlistId = musicPlayerState.currentPlaylistId;
-      var trackId = musicPlayerState.playlist[trackIndex].Id;
-      var isCurrentTrack = trackIndex === musicPlayerState.currentIndex;
+      const playlistId = musicPlayerState.currentPlaylistId;
+      const trackId = musicPlayerState.playlist[trackIndex].Id;
+      const isCurrentTrack = trackIndex === musicPlayerState.currentIndex;
 
       if (playlistId) {
-        removeItemsFromPlaylist(playlistId, [trackId]);
+        await removeItemsFromPlaylist(playlistId, [trackId]);
         showNotification(
-          "<i class=\"fas fa-check-circle\"></i> " + (config.languageLabels.trackRemoved || "Música removida"),
+          `<i class="fas fa-check-circle"></i> ${config.languageLabels.trackRemoved || "Parça kaldırıldı"}`,
           3000,
           'success'
         );
       } else {
         showNotification(
-          "<i class=\"fas fa-check-circle\"></i> " + (config.languageLabels.trackRemovedLocal || "Música removida da lista local"),
+          `<i class="fas fa-check-circle"></i> ${config.languageLabels.trackRemovedLocal || "Parça listeden kaldırıldı"}`,
           3000,
           'success'
         );
@@ -708,7 +713,7 @@ export function showRemoveConfirmModal(trackIndex, trackName) {
 
       if (isCurrentTrack) {
         if (musicPlayerState.playlist.length > 0) {
-          var newIndex = Math.min(trackIndex, musicPlayerState.playlist.length - 1);
+          const newIndex = Math.min(trackIndex, musicPlayerState.playlist.length - 1);
           playTrack(newIndex);
         } else {
           if (musicPlayerState.audioElement) {
@@ -726,7 +731,7 @@ export function showRemoveConfirmModal(trackIndex, trackName) {
     } catch (err) {
       console.error(err);
       showNotification(
-        "<i class=\"fas fa-exclamation-circle\"></i> " + (musicPlayerState.currentPlaylistId ? (config.languageLabels.removeError || "Erro ao remover") : (config.languageLabels.removeLocalError || "Erro ao remover localmente")),
+        `<i class="fas fa-exclamation-circle"></i> ${musicPlayerState.currentPlaylistId ? (config.languageLabels.removeError || "Kaldırma hatası") : (config.languageLabels.removeLocalError || "Yerel silme hatası")}`,
         3000,
         'error'
       );
@@ -735,59 +740,63 @@ export function showRemoveConfirmModal(trackIndex, trackName) {
     }
   });
 
-  dialog.querySelector(".confirm-no").addEventListener("click", function(e) {
+  dialog.querySelector(".confirm-no").addEventListener("click", e => {
     e.stopPropagation();
     overlay.remove();
   });
 }
 
 export function showRemoveSelectedConfirmModal() {
-  var selected = Array.from(musicPlayerState.selectedTracks);
-  var count = selected.length;
+  const selected = Array.from(musicPlayerState.selectedTracks);
+  const count = selected.length;
   if (!count) {
     showNotification(
-      "<i class=\"fas fa-exclamation-triangle\"></i> " + (config.languageLabels.noSelection || "Nenhuma música selecionada"),
+      `<i class="fas fa-exclamation-triangle"></i> ${config.languageLabels.noSelection || "Hiç parça seçilmedi"}`,
       3000,
       'warning'
     );
     return;
   }
 
-  var overlay = document.createElement("div");
+  const overlay = document.createElement("div");
   overlay.className = "confirm-overlay";
-  var dialog = document.createElement("div");
+  const dialog = document.createElement("div");
   dialog.className = "confirm-dialog";
-  dialog.innerHTML = "\n    <p>" + (count) + " " + (config.languageLabels.confirmRemoveSelected || "músicas devem ser removidas?") + "</p>\n    <button class=\"confirm-yes\">" + (config.languageLabels.yes || "Sim") + "</button>\n    <button class=\"confirm-no\">" + (config.languageLabels.no || "Não") + "</button>\n  ";
+  dialog.innerHTML = `
+    <p>${count} ${config.languageLabels.confirmRemoveSelected || "parça kaldırılsın mı?"}</p>
+    <button class="confirm-yes">${config.languageLabels.yes || "Evet"}</button>
+    <button class="confirm-no">${config.languageLabels.no || "Hayır"}</button>
+  `;
   overlay.appendChild(dialog);
   document.body.appendChild(overlay);
 
-  overlay.addEventListener("click", function(e) {
+  overlay.addEventListener("click", e => {
     e.stopPropagation();
     if (e.target === overlay) overlay.remove();
   });
 
-  dialog.querySelector(".confirm-yes").addEventListener("click", function(e) {
+  dialog.querySelector(".confirm-yes").addEventListener("click", async e => {
     e.stopPropagation();
     try {
-      var playlistId = musicPlayerState.currentPlaylistId;
-      var trackIds = selected.map(function(i) musicPlayerState.playlist[i].Id);
-      var currentTrackWasRemoved = selected.includes(musicPlayerState.currentIndex);
+      const playlistId = musicPlayerState.currentPlaylistId;
+      const trackIds = selected.map(i => musicPlayerState.playlist[i].Id);
+      const currentTrackWasRemoved = selected.includes(musicPlayerState.currentIndex);
 
       if (playlistId) {
-        removeItemsFromPlaylist(playlistId, trackIds);
+        await removeItemsFromPlaylist(playlistId, trackIds);
         showNotification(
-          "<i class=\"fas fa-check-circle\"></i> " + (count) + " " + (config.languageLabels.tracksRemoved || "músicas removidas"),
+          `<i class="fas fa-check-circle"></i> ${count} ${config.languageLabels.tracksRemoved || "parça kaldırıldı"}`,
           2000,
           'success'
         );
       } else {
         showNotification(
-          "<i class=\"fas fa-info-circle\"></i> " + (count) + " " + (config.languageLabels.tracksRemovedLocal || "músicas removidas da lista local"),
+          `<i class="fas fa-info-circle"></i> ${count} ${config.languageLabels.tracksRemovedLocal || "parça listeden kaldırıldı"}`,
           2000,
           'info'
         );
       }
-      selected.sortfunction((a, b) b - a).forEach(function(i) {
+      selected.sort((a, b) => b - a).forEach(i => {
         musicPlayerState.playlist.splice(i, 1);
         if (i < musicPlayerState.currentIndex) {
           musicPlayerState.currentIndex--;
@@ -796,7 +805,7 @@ export function showRemoveSelectedConfirmModal() {
 
       if (currentTrackWasRemoved) {
         if (musicPlayerState.playlist.length > 0) {
-          var newIndex = Math.min(musicPlayerState.currentIndex, musicPlayerState.playlist.length - 1);
+          const newIndex = Math.min(musicPlayerState.currentIndex, musicPlayerState.playlist.length - 1);
           playTrack(newIndex);
         } else {
           if (musicPlayerState.audioElement) {
@@ -813,7 +822,7 @@ export function showRemoveSelectedConfirmModal() {
     } catch (err) {
       console.error(err);
       showNotification(
-        "<i class=\"fas fa-exclamation-circle\"></i> " + (musicPlayerState.currentPlaylistId ? (config.languageLabels.removeError || "Erro ao remover") : (config.languageLabels.removeLocalError || "Erro ao remover localmente")),
+        `<i class="fas fa-exclamation-circle"></i> ${musicPlayerState.currentPlaylistId ? (config.languageLabels.removeError || "Kaldırma hatası") : (config.languageLabels.removeLocalError || "Yerel silme hatası")}`,
         3000,
         'error'
       );
@@ -822,7 +831,7 @@ export function showRemoveSelectedConfirmModal() {
     }
   });
 
-  dialog.querySelector(".confirm-no").addEventListener("click", function(e) {
+  dialog.querySelector(".confirm-no").addEventListener("click", e => {
     e.stopPropagation();
     overlay.remove();
   });

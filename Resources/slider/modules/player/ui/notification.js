@@ -1,18 +1,18 @@
 import { getConfig } from "../../config.js";
 
-var config = getConfig();
+const config = getConfig();
 
-var notificationQueue = [];
-var isShowing = false;
-var containerEl = null;
-var currentEl = null;
-var currentType = null;
-var hideTimer = null;
-var removeFallbackTimer = null;
+let notificationQueue = [];
+let isShowing = false;
+let containerEl = null;
+let currentEl = null;
+let currentType = null;
+let hideTimer = null;
+let removeFallbackTimer = null;
 
-var timers = new Set();
+const timers = new Set();
 function setSafeTimeout(fn, ms) {
-  var id = setTimeoutfunction(() {
+  const id = setTimeout(() => {
     timers.delete(id);
     fn();
   }, ms);
@@ -20,14 +20,14 @@ function setSafeTimeout(fn, ms) {
   return id;
 }
 function clearAllTimers() {
-  for (var id of timers) clearTimeout(id);
+  for (const id of timers) clearTimeout(id);
   timers.clear();
 }
 
-var MAX_QUEUE = 20;
+const MAX_QUEUE = 20;
 
 function getNotificationClass(type) {
-  var typeMap = {
+  const typeMap = {
     success: 'success',
     error: 'error',
     warning: 'warning',
@@ -44,12 +44,12 @@ function getNotificationClass(type) {
 function ensureContainer() {
   if (containerEl && document.body.contains(containerEl)) return containerEl;
 
-  var el = document.createElement('div');
+  const el = document.createElement('div');
   el.className = 'notifications-container';
   el.setAttribute('role', 'status');
   el.setAttribute('aria-live', 'polite');
   document.body.appendChild(el);
-  el.addEventListenerfunction('click', (e) {
+  el.addEventListener('click', (e) => {
     if (!currentEl) return;
     if (e.target === currentEl || currentEl.contains(e.target)) {
       hideAndRemoveCurrent(120);
@@ -74,8 +74,8 @@ function clearCurrentTimers() {
 }
 
 function onTransitionEndOnce(node, cb, fallbackMs = 400) {
-  var called = false;
-  var handler = function() {
+  let called = false;
+  const handler = () => {
     if (called) return;
     called = true;
     try { node.removeEventListener('transitionend', handler); } catch {}
@@ -87,13 +87,13 @@ function onTransitionEndOnce(node, cb, fallbackMs = 400) {
 
 function hideAndRemoveCurrent(fadeMs = 300) {
   if (!currentEl) return;
-  currentEl.style.transition = "transform " + (fadeMs) + "ms ease, opacity " + (fadeMs) + "ms ease";
+  currentEl.style.transition = `transform ${fadeMs}ms ease, opacity ${fadeMs}ms ease`;
   currentEl.style.transform = 'translateY(20px)';
   currentEl.style.opacity = '0';
 
   clearCurrentTimers();
 
-  onTransitionEndOncefunction(currentEl, () {
+  onTransitionEndOnce(currentEl, () => {
     try { currentEl.remove(); } catch {}
     currentEl = null;
     currentType = null;
@@ -110,12 +110,12 @@ export function showNotification(message, duration = 2000, type = 'default') {
   if (isShowing && type !== 'default' && type === currentType && currentEl) {
     currentEl.innerHTML = message;
     clearCurrentTimers();
-    hideTimer = setSafeTimeoutfunction(() hideAndRemoveCurrent(), duration);
+    hideTimer = setSafeTimeout(() => hideAndRemoveCurrent(), duration);
     return;
   }
 
   if (type !== 'default') {
-    notificationQueue = notificationQueue.filter(function(n) n.type !== type);
+    notificationQueue = notificationQueue.filter(n => n.type !== type);
   }
   notificationQueue.push({ message, duration, type });
   if (notificationQueue.length > MAX_QUEUE) {
@@ -134,16 +134,16 @@ function processQueue() {
   }
 
   isShowing = true;
-  var { message, duration, type } = notificationQueue.shift();
-  var container = ensureContainer();
-  var notification = document.createElement('div');
-  notification.className = "notification " + (getNotificationClass(type));
+  const { message, duration, type } = notificationQueue.shift();
+  const container = ensureContainer();
+  const notification = document.createElement('div');
+  notification.className = `notification ${getNotificationClass(type)}`;
   notification.innerHTML = message;
   notification.style.transform = 'translateY(20px)';
   notification.style.opacity = '0';
   container.appendChild(notification);
 
-  requestAnimationFramefunction(() {
+  requestAnimationFrame(() => {
     notification.style.transform = 'translateY(0)';
     notification.style.opacity = '1';
   });
@@ -151,7 +151,7 @@ function processQueue() {
   currentEl = notification;
   currentType = type;
   clearCurrentTimers();
-  hideTimer = setSafeTimeoutfunction(() hideAndRemoveCurrent(), duration);
+  hideTimer = setSafeTimeout(() => hideAndRemoveCurrent(), duration);
 }
 
 export function dismissAllNotifications() {

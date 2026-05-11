@@ -6,9 +6,9 @@ import { faIconHtml } from "./faIcons.js";
 import { resolveSliderAssetHref } from "./assetLinks.js";
 import { formatOfficialRatingLabel } from "./utils.js";
 
-var IS_MOBILE = (navigator.maxTouchPoints > 0) || (window.innerWidth <= 820);
+const IS_MOBILE = (navigator.maxTouchPoints > 0) || (window.innerWidth <= 820);
 
-var COMMON_FIELDS = [
+const COMMON_FIELDS = [
   "PrimaryImageAspectRatio",
   "ImageTags",
   "CommunityRating",
@@ -20,53 +20,53 @@ var COMMON_FIELDS = [
 ].join(",");
 
 function makeItemKey(it) {
-  var id  = it.Id ? String(it.Id) : "";
-  var nm  = (it.Name || "").trim().toLowerCase();
-  var yr  = it.ProductionYear || "";
-  var pt  = (it.ImageTags.Primary || it.PrimaryImageTag || "");
-  return (id) + "::" + (nm) + "|" + (yr) + "::" + (pt);
+  const id  = it?.Id ? String(it.Id) : "";
+  const nm  = (it?.Name || "").trim().toLowerCase();
+  const yr  = it?.ProductionYear || "";
+  const pt  = (it?.ImageTags?.Primary || it?.PrimaryImageTag || "");
+  return `${id}::${nm}|${yr}::${pt}`;
 }
 
 function buildPosterUrl(item, height = 540, quality = 72) {
-  var tag = item.ImageTags.Primary || item.PrimaryImageTag;
+  const tag = item.ImageTags?.Primary || item.PrimaryImageTag;
   if (!tag) return null;
   return withServer(
-    "/Items/" + (item.Id) + "/Images/Primary?tag=" + (encodeURIComponent(tag)) + "&maxHeight=" + (height) + "&quality=" + (quality) + "&EnableImageEnhancers=false"
+    `/Items/${item.Id}/Images/Primary?tag=${encodeURIComponent(tag)}&maxHeight=${height}&quality=${quality}&EnableImageEnhancers=false`
   );
 }
 function buildPosterUrlLQ(item) { return buildPosterUrl(item, 120, 25); }
 function buildPosterUrlHQ(item) { return buildPosterUrl(item, 540, 72); }
 
 function buildPosterSrcSet(item) {
-  var hs = [240, 360, 540, 720];
-  var q  = 50;
-  var ar = Number(item.PrimaryImageAspectRatio) || 0.6667;
-  return hs.map(function(h) (buildPosterUrl(item, h, q)) + " " + (Math.round(h * ar)) + "w").join(", ");
+  const hs = [240, 360, 540, 720];
+  const q  = 50;
+  const ar = Number(item.PrimaryImageAspectRatio) || 0.6667;
+  return hs.map(h => `${buildPosterUrl(item, h, q)} ${Math.round(h * ar)}w`).join(", ");
 }
 
 function getDetailsUrl(itemId, serverId) {
-  return "#/details?id=" + (itemId) + "&serverId=" + (encodeURIComponent(serverId));
+  return `#/details?id=${itemId}&serverId=${encodeURIComponent(serverId)}`;
 }
 
 function getActiveExplorerServerId() {
-  return __serverId || __d_serverId || __p_serverId || getSessionInfo().serverId || "";
+  return __serverId || __d_serverId || __p_serverId || getSessionInfo()?.serverId || "";
 }
 
 function getExplorerCardOrigin(cardEl) {
   return (
-    cardEl.querySelector.(".cardImage") ||
-    cardEl.querySelector.(".cardImageContainer") ||
+    cardEl?.querySelector?.(".cardImage") ||
+    cardEl?.querySelector?.(".cardImageContainer") ||
     cardEl
   );
 }
 
-function openExplorerCardDetails(cardEl) {
-  var itemId = String(cardEl.dataset.itemId || "");
+async function openExplorerCardDetails(cardEl) {
+  const itemId = String(cardEl?.dataset?.itemId || "");
   if (!itemId) return;
 
-  var backdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
+  const backdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
   try {
-    openDetailsModal({
+    await openDetailsModal({
       itemId,
       serverId: getActiveExplorerServerId(),
       preferBackdropIndex: backdropIndex,
@@ -80,21 +80,21 @@ function openExplorerCardDetails(cardEl) {
 function bindExplorerGridDetails(grid) {
   if (!grid) return;
 
-  grid.addEventListenerfunction('click', (e) {
-    var card = e.target.closest('a.ge-card');
+  grid.addEventListener('click', async (e) => {
+    const card = e.target.closest('a.ge-card');
     if (!card) return;
     e.preventDefault();
     e.stopPropagation();
-    openExplorerCardDetails(card);
+    await openExplorerCardDetails(card);
   }, { passive: false });
 
-  grid.addEventListenerfunction('keydown', (e) {
+  grid.addEventListener('keydown', async (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
-    var card = e.target.closest('a.ge-card');
+    const card = e.target.closest('a.ge-card');
     if (!card) return;
     e.preventDefault();
     e.stopPropagation();
-    openExplorerCardDetails(card);
+    await openExplorerCardDetails(card);
   }, { passive: false });
 }
 
@@ -113,16 +113,16 @@ function closeActiveExplorers() {
 (function bindDetailsModalPlayCloser() {
   if (window.__jmsGenreExplorerPlayCloseBound) return;
   window.__jmsGenreExplorerPlayCloseBound = true;
-  window.addEventListenerfunction("jms:details-modal-play", () {
+  window.addEventListener("jms:details-modal-play", () => {
     closeActiveExplorers();
   }, { passive: true });
 })();
 
 function buildLogoUrl(item, width = 220, quality = 72) {
-  var tag = item.ImageTags.Logo || item.LogoImageTag;
+  const tag = item.ImageTags?.Logo || item.LogoImageTag;
   if (!tag) return null;
   return withServer(
-    "/Items/" + (item.Id) + "/Images/Logo?tag=" + (encodeURIComponent(tag)) + "&width=" + (width) + "&quality=" + (quality)
+    `/Items/${item.Id}/Images/Logo?tag=${encodeURIComponent(tag)}&width=${width}&quality=${quality}`
   );
 }
 
@@ -135,30 +135,30 @@ function escapeHtml(s) {
 }
 function formatRuntime(ticks) {
   if (!ticks) return null;
-  var minutes = Math.floor(ticks / 600000000);
-  if (minutes < 60) return (minutes) + "m";
-  var hours = Math.floor(minutes / 60);
-  var remainingMinutes = minutes % 60;
-  return remainingMinutes > 0 ? (hours) + "h " + (remainingMinutes) + "m" : (hours) + "h";
+  const minutes = Math.floor(ticks / 600000000);
+  if (minutes < 60) return `${minutes}d`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes > 0 ? `${hours}s ${remainingMinutes}d` : `${hours}s`;
 }
 function getRuntimeWithIcons(runtime) {
-  var cfg = getConfig() || {};
+  const cfg = getConfig() || {};
   if (!runtime) return '';
   return runtime
-    .replace(/(\d+)h/g, "$1" + (cfg.languageLabels.sa || 'h'))
-    .replace(/(\d+)m/g, "$1" + (cfg.languageLabels.dk || 'm'));
+    .replace(/(\d+)s/g, `$1${cfg.languageLabels?.sa || 'sa'}`)
+    .replace(/(\d+)d/g, `$1${cfg.languageLabels?.dk || 'dk'}`);
 }
 
-var PLACEHOLDER_URL = resolveSliderAssetHref(
-  getConfig().placeholderImage || "/slider/src/images/placeholder.png"
+const PLACEHOLDER_URL = resolveSliderAssetHref(
+  getConfig()?.placeholderImage || "/slider/src/images/placeholder.png"
 );
 
-var __scrollActive = false;
-var __scrollIdleTimer = 0;
+let __scrollActive = false;
+let __scrollIdleTimer = 0;
 
-var HYDRATION_PER_FRAME = 12;
-var __hydrationQueue = [];
-var __hydrationRAF = 0;
+const HYDRATION_PER_FRAME = 12;
+let __hydrationQueue = [];
+let __hydrationRAF = 0;
 
 function queueHydration(fn) {
   __hydrationQueue.push(fn);
@@ -172,9 +172,9 @@ function flushHydrationFrame() {
   if (__scrollActive) {
     return;
   }
-  var budget = HYDRATION_PER_FRAME;
+  let budget = HYDRATION_PER_FRAME;
   while (budget-- > 0 && __hydrationQueue.length) {
-    var fn = __hydrationQueue.shift();
+    const fn = __hydrationQueue.shift();
     try { fn && fn(); } catch {}
   }
   if (__hydrationQueue.length) {
@@ -182,15 +182,15 @@ function flushHydrationFrame() {
   }
 }
 
-var __imgIO = new IntersectionObserverfunction((entries) {
-  for (var ent of entries) {
-    var img = ent.target;
-    var data = img.__data || {};
+const __imgIO = new IntersectionObserver((entries) => {
+  for (const ent of entries) {
+    const img = ent.target;
+    const data = img.__data || {};
     if (ent.isIntersecting) {
       if (!img.__hiRequested) {
         img.__hiRequested = true;
         img.__phase = 'hi';
-        queueHydrationfunction(() {
+        queueHydration(() => {
           if (!img.isConnected) return;
           if (data.hqSrcset) img.srcset = data.hqSrcset;
           if (data.hqSrc)    img.src    = data.hqSrc;
@@ -208,7 +208,7 @@ var __imgIO = new IntersectionObserverfunction((entries) {
 }, { rootMargin: '600px 0px' });
 
 function hydrateBlurUp(img, { lqSrc, hqSrc, hqSrcset, fallback }) {
-  var fb = fallback || PLACEHOLDER_URL;
+  const fb = fallback || PLACEHOLDER_URL;
   if (IS_MOBILE) {
     try { __imgIO.unobserve(img); } catch {}
     try { if (img.__onErr) img.removeEventListener('error', img.__onErr); } catch {}
@@ -241,7 +241,7 @@ function hydrateBlurUp(img, { lqSrc, hqSrc, hqSrcset, fallback }) {
   img.classList.add('is-lqip');
   img.__hydrated = false;
 
-  var onError = function() {
+  const onError = () => {
     if (img.__phase === 'hi') {
       try { img.removeAttribute('srcset'); } catch {}
       if (lqSrc) {
@@ -254,7 +254,7 @@ function hydrateBlurUp(img, { lqSrc, hqSrc, hqSrcset, fallback }) {
       img.__hiRequested = false;
     }
   };
-  var onLoad = function() {
+  const onLoad = () => {
     if (img.__phase === 'hi') {
       img.classList.remove('is-lqip');
       img.__hydrated = true;
@@ -278,30 +278,45 @@ function unobserveImage(img) {
 
 function injectGEPerfStyles() {
   if (document.getElementById('ge-perf-css')) return;
-  var st = document.createElement('style');
+  const st = document.createElement('style');
   st.id = 'ge-perf-css';
-  st.textContent = "\n    .genre-explorer-overlay,\n    .genre-explorer,\n    .ge-card,\n    .ge-card .cardImage,\n    .ge-card .cardBox {\n      contain: none !important;\n      content-visibility: visible !important;\n      contain-intrinsic-size: auto !important;\n      will-change: auto !important;\n      backface-visibility: visible !important;\n      -webkit-backface-visibility: visible !important;\n    }\n\n    .ge-card .cardBox:hover { transform: scale(1.01); }\n  ";
+  st.textContent = `
+    .genre-explorer-overlay,
+    .genre-explorer,
+    .ge-card,
+    .ge-card .cardImage,
+    .ge-card .cardBox {
+      contain: none !important;
+      content-visibility: visible !important;
+      contain-intrinsic-size: auto !important;
+      will-change: auto !important;
+      backface-visibility: visible !important;
+      -webkit-backface-visibility: visible !important;
+    }
+
+    .ge-card .cardBox:hover { transform: scale(1.01); }
+  `;
   document.head.appendChild(st);
 }
 
-var __overlay = null;
-var __abort = null;
-var __busy = false;
-var __startIndex = 0;
-var __genre = "";
-var __serverId = "";
-var __io = null;
-var __originPoint = null;
-var __isClosing = false;
+let __overlay = null;
+let __abort = null;
+let __busy = false;
+let __startIndex = 0;
+let __genre = "";
+let __serverId = "";
+let __io = null;
+let __originPoint = null;
+let __isClosing = false;
 
-var MAX_CARDS = 600;
+const MAX_CARDS = 600;
 function pruneGridIfNeeded() {
-  var grid = __overlay.querySelector('.ge-grid');
+  const grid = __overlay?.querySelector('.ge-grid');
   if (!grid) return;
-  var extra = grid.children.length - MAX_CARDS;
+  const extra = grid.children.length - MAX_CARDS;
   if (extra > 0) {
-    for (var i = 0; i < extra; i++) {
-      var el = grid.firstElementChild;
+    for (let i = 0; i < extra; i++) {
+      const el = grid.firstElementChild;
       if (!el) break;
       try { el.dispatchEvent(new Event('jms:cleanup')); } catch {}
       el.remove();
@@ -312,7 +327,7 @@ function pruneGridIfNeeded() {
 (function bindGlobalPointerOrigin(){
   if (window.__jmsPointerOriginBound) return;
   window.__jmsPointerOriginBound = true;
-  document.addEventListenerfunction('pointerdown', (e) {
+  document.addEventListener('pointerdown', (e) => {
     try { __originPoint = { x: e.clientX, y: e.clientY }; } catch {}
   }, { capture: true, passive: true });
 })();
@@ -322,31 +337,49 @@ export function openGenreExplorer(genre) {
   if (__overlay) { try { closeGenreExplorer(true); } catch {} }
 
   __genre = String(genre || "").trim();
-  var { serverId } = getSessionInfo();
+  const { serverId } = getSessionInfo();
   __serverId = serverId;
   __startIndex = 0;
 
   __overlay = document.createElement('div');
   __overlay.className = 'genre-explorer-overlay';
-  __overlay.innerHTML = "\n    <div class=\"genre-explorer\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Genre Explorer\">\n      <div class=\"ge-header\">\n        <div class=\"ge-title\">\n          " + (escapeHtml(__genre)) + " • " + ((getConfig().languageLabels.all) || "Tudo") + "\n        </div>\n        <div class=\"ge-actions\">\n          <button class=\"ge-close\" aria-label=\"" + ((getConfig().languageLabels.close) || "Fechar") + "\">✕</button>\n        </div>\n      </div>\n      <div class=\"ge-content\">\n        <div class=\"ge-grid\" role=\"list\"></div>\n        <div class=\"ge-empty\" style=\"display:none\">\n          " + ((getConfig().languageLabels.noResults) || "Nenhum conteúdo encontrado") + "\n        </div>\n        <div class=\"ge-sentinel\"></div>\n      </div>\n    </div>\n  ";
+  __overlay.innerHTML = `
+    <div class="genre-explorer" role="dialog" aria-modal="true" aria-label="Genre Explorer">
+      <div class="ge-header">
+        <div class="ge-title">
+          ${escapeHtml(__genre)} • ${(getConfig()?.languageLabels?.all) || "Tümü"}
+        </div>
+        <div class="ge-actions">
+          <button class="ge-close" aria-label="${(getConfig()?.languageLabels?.close) || "Kapat"}">✕</button>
+        </div>
+      </div>
+      <div class="ge-content">
+        <div class="ge-grid" role="list"></div>
+        <div class="ge-empty" style="display:none">
+          ${(getConfig()?.languageLabels?.noResults) || "İçerik bulunamadı"}
+        </div>
+        <div class="ge-sentinel"></div>
+      </div>
+    </div>
+  `;
   document.body.appendChild(__overlay);
   injectGEPerfStyles();
   try { playOpenAnimation(__overlay); } catch {}
-  var grid = __overlay.querySelector('.ge-grid');
+  const grid = __overlay.querySelector('.ge-grid');
   bindExplorerGridDetails(grid);
 
   window.addEventListener('hashchange', hashCloser, { passive: true });
 
-  __overlay.querySelector('.ge-close').addEventListenerfunction('click', () animatedCloseThen(), { passive:true });
-  __overlay.addEventListenerfunction('click', (e) {
+  __overlay.querySelector('.ge-close').addEventListener('click', () => animatedCloseThen(), { passive:true });
+  __overlay.addEventListener('click', (e) => {
     if (e.target === __overlay) animatedCloseThen();
   }, { passive:true });
   document.addEventListener('keydown', escCloser, { passive:true });
-  var scroller = __overlay.querySelector('.ge-content');
-  var onScrollPerf = function() {
+  const scroller = __overlay.querySelector('.ge-content');
+  const onScrollPerf = () => {
     __scrollActive = true;
     if (__scrollIdleTimer) clearTimeout(__scrollIdleTimer);
-    __scrollIdleTimer = setTimeoutfunction(() {
+    __scrollIdleTimer = setTimeout(() => {
       __scrollActive = false;
       if (!__hydrationRAF && __hydrationQueue.length) {
         __hydrationRAF = requestAnimationFrame(flushHydrationFrame);
@@ -357,30 +390,30 @@ export function openGenreExplorer(genre) {
   __overlay.__onScrollPerf = onScrollPerf;
   loadMore();
 
-  var sentinel = __overlay.querySelector('.ge-sentinel');
-  __io = new IntersectionObserverfunction((ents){
-    for (var ent of ents) {
+  const sentinel = __overlay.querySelector('.ge-sentinel');
+  __io = new IntersectionObserver((ents)=>{
+    for (const ent of ents) {
       if (ent.isIntersecting) loadMore();
     }
   }, { root: scroller, rootMargin: '800px 0px' });
   __io.observe(sentinel);
 }
 
-var __d_overlay = null;
-var __d_abort = null;
-var __d_busy = false;
-var __d_startIndex = 0;
-var __d_serverId = "";
-var __d_io = null;
-var __d_originPoint = null;
-var __d_isClosing = false;
-var __d_person = { Id: "", Name: "" };
+let __d_overlay = null;
+let __d_abort = null;
+let __d_busy = false;
+let __d_startIndex = 0;
+let __d_serverId = "";
+let __d_io = null;
+let __d_originPoint = null;
+let __d_isClosing = false;
+let __d_person = { Id: "", Name: "" };
 
 function d_playOpenAnimation(overlayEl) {
-  var sheet = overlayEl;
-  var dialog = overlayEl.querySelector('.genre-explorer');
-  var origin = __d_originPoint || { x: (window.innerWidth/2)|0, y: (window.innerHeight/2)|0 };
-  dialog.style.transformOrigin = (origin.x) + "px " + (origin.y) + "px";
+  const sheet = overlayEl;
+  const dialog = overlayEl.querySelector('.genre-explorer');
+  const origin = __d_originPoint || { x: (window.innerWidth/2)|0, y: (window.innerHeight/2)|0 };
+  dialog.style.transformOrigin = `${origin.x}px ${origin.y}px`;
   sheet.animate([{opacity:0},{opacity:1}], {duration:220, easing:'ease-out', fill:'both'});
   dialog.animate([{transform:'scale(0.84)',opacity:0},{transform:'scale(1)',opacity:1}], {duration:280, easing:'cubic-bezier(.2,.8,.2,1)', fill:'both'});
 }
@@ -388,16 +421,16 @@ function d_playOpenAnimation(overlayEl) {
 function d_animatedCloseThen(cb) {
   if (!__d_overlay || __d_isClosing) { if (cb) cb(); return; }
   __d_isClosing = true;
-  var sheet = __d_overlay;
-  var dialog = __d_overlay.querySelector('.genre-explorer');
-  var origin = __d_originPoint || { x: (window.innerWidth/2)|0, y: (window.innerHeight/2)|0 };
-  dialog.style.transformOrigin = (origin.x) + "px " + (origin.y) + "px";
+  const sheet = __d_overlay;
+  const dialog = __d_overlay.querySelector('.genre-explorer');
+  const origin = __d_originPoint || { x: (window.innerWidth/2)|0, y: (window.innerHeight/2)|0 };
+  dialog.style.transformOrigin = `${origin.x}px ${origin.y}px`;
 
-  var a = sheet.animate([{opacity:1},{opacity:0}], {duration:180, easing:'ease-in', fill:'forwards'});
-  var b = dialog.animate([{transform:'scale(1)',opacity:1},{transform:'scale(0.84)',opacity:0}], {duration:220, easing:'cubic-bezier(.4,0,.6,1)', fill:'forwards'});
+  const a = sheet.animate([{opacity:1},{opacity:0}], {duration:180, easing:'ease-in', fill:'forwards'});
+  const b = dialog.animate([{transform:'scale(1)',opacity:1},{transform:'scale(0.84)',opacity:0}], {duration:220, easing:'cubic-bezier(.4,0,.6,1)', fill:'forwards'});
 
-  var done = function() { if (cb) try{cb();}catch{}; if (__d_overlay) try{closeDirectorExplorer(true);}catch{} };
-  var fin = 0; var mark=function(){ if(++fin>=2) done(); };
+  const done = () => { if (cb) try{cb();}catch{}; if (__d_overlay) try{closeDirectorExplorer(true);}catch{} };
+  let fin = 0; const mark=()=>{ if(++fin>=2) done(); };
   a.addEventListener('finish', mark, {once:true});
   b.addEventListener('finish', mark, {once:true});
   setTimeout(mark, 260);
@@ -407,8 +440,8 @@ function d_escCloser(e){ if (e.key === 'Escape') d_animatedCloseThen(); }
 function d_hashCloser(){ d_animatedCloseThen(); }
 
 function d_renderIntoGrid(items){
-  var grid = __d_overlay.querySelector('.ge-grid');
-  var empty = __d_overlay.querySelector('.ge-empty');
+  const grid = __d_overlay.querySelector('.ge-grid');
+  const empty = __d_overlay.querySelector('.ge-empty');
 
   if ((!items || items.length === 0) && grid.children.length === 0) {
     empty.style.display = '';
@@ -416,22 +449,22 @@ function d_renderIntoGrid(items){
   }
   empty.style.display = 'none';
 
-  var frag = document.createDocumentFragment();
-  for (var it of items) frag.appendChild(createCardFor(it));
+  const frag = document.createDocumentFragment();
+  for (const it of items) frag.appendChild(createCardFor(it));
   grid.appendChild(frag);
   pruneGridIfNeeded();
 }
 
-function d_loadMore() {
+async function d_loadMore() {
   if (!__d_overlay || __d_busy) return;
   __d_busy = true;
 
   if (__d_abort) { try { __d_abort.abort(); } catch {} }
   __d_abort = new AbortController();
 
-  var LIMIT = 40;
-  var { userId } = getSessionInfo();
-  var params = new URLSearchParams();
+  const LIMIT = 40;
+  const { userId } = getSessionInfo();
+  const params = new URLSearchParams();
   params.set("IncludeItemTypes", "Movie,Series");
   params.set("Recursive", "true");
   params.set("Fields", COMMON_FIELDS);
@@ -441,16 +474,16 @@ function d_loadMore() {
   params.set("StartIndex", String(__d_startIndex));
   params.set("PersonIds", __d_person.Id);
 
-  var url = "/Users/" + (encodeURIComponent(userId)) + "/Items?" + params.toString();
+  const url = `/Users/${encodeURIComponent(userId)}/Items?` + params.toString();
 
   try {
-    var data = makeApiRequest(url, { signal: __d_abort.signal });
-    var items = Array.isArray(data.Items) ? data.Items : [];
+    const data = await makeApiRequest(url, { signal: __d_abort.signal });
+    const items = Array.isArray(data?.Items) ? data.Items : [];
     d_renderIntoGrid(items);
     __d_startIndex += items.length;
-    if (items.length < LIMIT) { try { __d_io.disconnect(); } catch {} }
+    if (items.length < LIMIT) { try { __d_io?.disconnect(); } catch {} }
   } catch (e) {
-    if (e.name !== 'AbortError') console.error("Erro ao buscar explorador de diretor:", e);
+    if (e?.name !== 'AbortError') console.error("Director explorer fetch error:", e);
   } finally {
     __d_busy = false;
   }
@@ -459,30 +492,48 @@ function d_loadMore() {
 export function openDirectorExplorer(person) {
   if (__d_overlay) { try { closeDirectorExplorer(true); } catch {} }
 
-  __d_person = { Id: String(person.Id || ""), Name: String(person.Name || "") };
-  var { serverId } = getSessionInfo();
+  __d_person = { Id: String(person?.Id || ""), Name: String(person?.Name || "") };
+  const { serverId } = getSessionInfo();
   __d_serverId = serverId;
   __d_startIndex = 0;
 
   __d_overlay = document.createElement('div');
   __d_overlay.className = 'genre-explorer-overlay';
-  __d_overlay.innerHTML = "\n    <div class=\"genre-explorer\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Director Explorer\">\n      <div class=\"ge-header\">\n        <div class=\"ge-title\">\n          " + (escapeHtml(__d_person.Name)) + " • " + ((getConfig().languageLabels.all) || "Tudo") + "\n        </div>\n        <div class=\"ge-actions\">\n          <button class=\"ge-close\" aria-label=\"" + ((getConfig().languageLabels.close) || "Fechar") + "\">✕</button>\n        </div>\n      </div>\n      <div class=\"ge-content\">\n        <div class=\"ge-grid\" role=\"list\"></div>\n        <div class=\"ge-empty\" style=\"display:none\">\n          " + ((getConfig().languageLabels.noResults) || "Nenhum conteúdo encontrado") + "\n        </div>\n        <div class=\"ge-sentinel\"></div>\n      </div>\n    </div>\n  ";
+  __d_overlay.innerHTML = `
+    <div class="genre-explorer" role="dialog" aria-modal="true" aria-label="Director Explorer">
+      <div class="ge-header">
+        <div class="ge-title">
+          ${escapeHtml(__d_person.Name)} • ${(getConfig()?.languageLabels?.all) || "Tümü"}
+        </div>
+        <div class="ge-actions">
+          <button class="ge-close" aria-label="${(getConfig()?.languageLabels?.close) || "Kapat"}">✕</button>
+        </div>
+      </div>
+      <div class="ge-content">
+        <div class="ge-grid" role="list"></div>
+        <div class="ge-empty" style="display:none">
+          ${(getConfig()?.languageLabels?.noResults) || "İçerik bulunamadı"}
+        </div>
+        <div class="ge-sentinel"></div>
+      </div>
+    </div>
+  `;
   document.body.appendChild(__d_overlay);
   injectGEPerfStyles();
   try { d_playOpenAnimation(__d_overlay); } catch {}
 
-  var grid = __d_overlay.querySelector('.ge-grid');
+  const grid = __d_overlay.querySelector('.ge-grid');
   bindExplorerGridDetails(grid);
 
   window.addEventListener('hashchange', d_hashCloser, { passive: true });
-  __d_overlay.querySelector('.ge-close').addEventListenerfunction('click', () d_animatedCloseThen(), { passive:true });
-  __d_overlay.addEventListenerfunction('click', (e) { if (e.target === __d_overlay) d_animatedCloseThen(); }, { passive:true });
+  __d_overlay.querySelector('.ge-close').addEventListener('click', () => d_animatedCloseThen(), { passive:true });
+  __d_overlay.addEventListener('click', (e) => { if (e.target === __d_overlay) d_animatedCloseThen(); }, { passive:true });
   document.addEventListener('keydown', d_escCloser, { passive:true });
-  var scroller = __d_overlay.querySelector('.ge-content');
-  var onScrollPerf = function() {
+  const scroller = __d_overlay.querySelector('.ge-content');
+  const onScrollPerf = () => {
     __scrollActive = true;
     if (__scrollIdleTimer) clearTimeout(__scrollIdleTimer);
-    __scrollIdleTimer = setTimeoutfunction(() {
+    __scrollIdleTimer = setTimeout(() => {
       __scrollActive = false;
       if (!__hydrationRAF && __hydrationQueue.length) {
         __hydrationRAF = requestAnimationFrame(flushHydrationFrame);
@@ -493,9 +544,9 @@ export function openDirectorExplorer(person) {
   __d_overlay.__onScrollPerf = onScrollPerf;
 
   d_loadMore();
-  var sentinel = __d_overlay.querySelector('.ge-sentinel');
-  __d_io = new IntersectionObserverfunction((ents){
-    for (var ent of ents) {
+  const sentinel = __d_overlay.querySelector('.ge-sentinel');
+  __d_io = new IntersectionObserver((ents)=>{
+    for (const ent of ents) {
       if (ent.isIntersecting) d_loadMore();
     }
   }, { root: scroller, rootMargin: '800px 0px' });
@@ -506,17 +557,17 @@ export function closeDirectorExplorer(skipAnimation = false) {
   if (!__d_overlay) return;
   try { document.removeEventListener('keydown', d_escCloser); } catch {}
   try { window.removeEventListener('hashchange', d_hashCloser); } catch {}
-  try { __d_io.disconnect(); } catch {}
+  try { __d_io?.disconnect(); } catch {}
   __d_io = null;
   if (__d_abort) { try { __d_abort.abort(); } catch {} __d_abort = null; }
 
-  var cleanup = function() {
+  const cleanup = () => {
     try {
-      var scroller = __d_overlay.querySelector('.ge-content');
-      scroller.removeEventListener('scroll', __d_overlay.__onScrollPerf);
+      const scroller = __d_overlay.querySelector('.ge-content');
+      scroller?.removeEventListener('scroll', __d_overlay.__onScrollPerf);
       __d_overlay.__onScrollPerf = null;
     } catch {}
-    __d_overlay.remove();
+    __d_overlay?.remove();
     __d_overlay = null;
     __d_busy = false;
     __d_startIndex = 0;
@@ -534,17 +585,17 @@ export function closeGenreExplorer(skipAnimation = false) {
   try { window.removeEventListener('hashchange', hashCloser); } catch {}
 
   try {
-    var scroller = __overlay.querySelector('.ge-content');
-    scroller.removeEventListener('scroll', __overlay.__onScrollPerf);
+    const scroller = __overlay.querySelector('.ge-content');
+    scroller?.removeEventListener('scroll', __overlay.__onScrollPerf);
     __overlay.__onScrollPerf = null;
   } catch {}
 
-  try { __io.disconnect(); } catch {}
+  try { __io?.disconnect(); } catch {}
   __io = null;
   if (__abort) { try { __abort.abort(); } catch {} __abort = null; }
 
-  var cleanup = function() {
-    __overlay.remove();
+  const cleanup = () => {
+    __overlay?.remove();
     __overlay = null;
     __busy = false;
     __startIndex = 0;
@@ -560,11 +611,11 @@ export function closeGenreExplorer(skipAnimation = false) {
 }
 
 function playOpenAnimation(overlayEl) {
-  var sheet = overlayEl;
-  var dialog = overlayEl.querySelector('.genre-explorer');
-  var origin = __originPoint || { x: (window.innerWidth/2)|0, y: (window.innerHeight/2)|0 };
+  const sheet = overlayEl;
+  const dialog = overlayEl.querySelector('.genre-explorer');
+  const origin = __originPoint || { x: (window.innerWidth/2)|0, y: (window.innerHeight/2)|0 };
 
-  var setOrigin = function(el) { el.style.transformOrigin = (origin.x) + "px " + (origin.y) + "px"; };
+  const setOrigin = (el) => { el.style.transformOrigin = `${origin.x}px ${origin.y}px`; };
   setOrigin(dialog);
 
   sheet.animate(
@@ -581,29 +632,29 @@ function playOpenAnimation(overlayEl) {
 function animatedCloseThen(cb) {
   if (!__overlay || __isClosing) { if (cb) cb(); return; }
   __isClosing = true;
-  var sheet = __overlay;
-  var dialog = __overlay.querySelector('.genre-explorer');
-  var origin = __originPoint || { x: (window.innerWidth/2)|0, y: (window.innerHeight/2)|0 };
+  const sheet = __overlay;
+  const dialog = __overlay.querySelector('.genre-explorer');
+  const origin = __originPoint || { x: (window.innerWidth/2)|0, y: (window.innerHeight/2)|0 };
 
-  var setOrigin = function(el) { el.style.transformOrigin = (origin.x) + "px " + (origin.y) + "px"; };
+  const setOrigin = (el) => { el.style.transformOrigin = `${origin.x}px ${origin.y}px`; };
   setOrigin(dialog);
 
-  var sheetAnim = sheet.animate(
+  const sheetAnim = sheet.animate(
     [{ opacity: 1 }, { opacity: 0 }],
     { duration: 180, easing: 'ease-in', fill: 'forwards' }
   );
-  var dlgAnim = dialog.animate(
+  const dlgAnim = dialog.animate(
     [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(0.84)', opacity: 0 }],
     { duration: 220, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' }
   );
 
-  var done = function() {
+  const done = () => {
     if (cb) { try { cb(); } catch {} }
     if (__overlay) { try { closeGenreExplorer(true); } catch {} }
   };
 
-  var finished = 0;
-  var mark = function() { finished++; if (finished >= 2) done(); };
+  let finished = 0;
+  const mark = () => { finished++; if (finished >= 2) done(); };
   sheetAnim.addEventListener('finish', mark, { once: true });
   dlgAnim.addEventListener('finish', mark, { once: true });
   setTimeout(mark, 260);
@@ -612,37 +663,37 @@ function animatedCloseThen(cb) {
 function escCloser(e){ if (e.key === 'Escape') animatedCloseThen(); }
 function hashCloser(){ animatedCloseThen(); }
 
-function loadMore() {
+async function loadMore() {
   if (!__overlay || __busy) return;
   __busy = true;
 
   if (__abort) { try { __abort.abort(); } catch {} }
   __abort = new AbortController();
 
-  var LIMIT = 40;
-  var { userId } = getSessionInfo();
-  var url =
-    "/Users/" + (encodeURIComponent(userId)) + "/Items?" +
-    "IncludeItemTypes=Movie,Series&Recursive=true&" +
-    "Genres=" + (encodeURIComponent(__genre)) + "&Fields=" + (COMMON_FIELDS) + "&" +
-    "SortBy=CommunityRating,DateCreated&SortOrder=Descending&Limit=" + (LIMIT) + "&StartIndex=" + (__startIndex);
+  const LIMIT = 40;
+  const { userId } = getSessionInfo();
+  const url =
+    `/Users/${encodeURIComponent(userId)}/Items?` +
+    `IncludeItemTypes=Movie,Series&Recursive=true&` +
+    `Genres=${encodeURIComponent(__genre)}&Fields=${COMMON_FIELDS}&` +
+    `SortBy=CommunityRating,DateCreated&SortOrder=Descending&Limit=${LIMIT}&StartIndex=${__startIndex}`;
 
   try {
-    var data = makeApiRequest(url, { signal: __abort.signal });
-    var items = Array.isArray(data.Items) ? data.Items : [];
+    const data = await makeApiRequest(url, { signal: __abort.signal });
+    const items = Array.isArray(data?.Items) ? data.Items : [];
     renderIntoGrid(items);
     __startIndex += items.length;
-    if (items.length < LIMIT) { try { __io.disconnect(); } catch {} }
+    if (items.length < LIMIT) { try { __io?.disconnect(); } catch {} }
   } catch (e) {
-    if (e.name !== 'AbortError') console.error("Erro ao buscar explorador de gênero:", e);
+    if (e?.name !== 'AbortError') console.error("Genre explorer fetch error:", e);
   } finally {
     __busy = false;
   }
 }
 
 function renderIntoGrid(items){
-  var grid = __overlay.querySelector('.ge-grid');
-  var empty = __overlay.querySelector('.ge-empty');
+  const grid = __overlay.querySelector('.ge-grid');
+  const empty = __overlay.querySelector('.ge-empty');
 
   if ((!items || items.length === 0) && grid.children.length === 0) {
     empty.style.display = '';
@@ -650,9 +701,9 @@ function renderIntoGrid(items){
   }
   empty.style.display = 'none';
 
-  var frag = document.createDocumentFragment();
-  for (var it of items) {
-    var card = createCardFor(it);
+  const frag = document.createDocumentFragment();
+  for (const it of items) {
+    const card = createCardFor(it);
     frag.appendChild(card);
   }
   grid.appendChild(frag);
@@ -660,38 +711,63 @@ function renderIntoGrid(items){
 }
 
 function createCardFor(item) {
-  var serverId = __serverId || __p_serverId || "";
-  var posterUrlHQ = buildPosterUrlHQ(item);
-  var posterSetHQ = posterUrlHQ ? buildPosterSrcSet(item) : "";
-  var posterUrlLQ = buildPosterUrlLQ(item);
-  var isSeries = item.Type === "Series";
-  var cfg = getConfig() || {};
-  var typeLabel = isSeries
-    ? ((cfg.languageLabels && cfg.languageLabels.dizi) || "Série")
-    : ((cfg.languageLabels && cfg.languageLabels.film) || "Filme");
-  var typeIcon = isSeries ? 'tv' : 'film';
+  const serverId = __serverId || __p_serverId || "";
+  const posterUrlHQ = buildPosterUrlHQ(item);
+  const posterSetHQ = posterUrlHQ ? buildPosterSrcSet(item) : "";
+  const posterUrlLQ = buildPosterUrlLQ(item);
+  const isSeries = item.Type === "Series";
+  const cfg = getConfig() || {};
+  const typeLabel = isSeries
+    ? ((cfg.languageLabels && cfg.languageLabels.dizi) || "Dizi")
+    : ((cfg.languageLabels && cfg.languageLabels.film) || "Film");
+  const typeIcon = isSeries ? 'tv' : 'film';
 
-  var ageChip = formatOfficialRatingLabel(item.OfficialRating || "");
-  var year = item.ProductionYear || "";
-  var runtimeTicks = isSeries ? item.CumulativeRunTimeTicks : item.RunTimeTicks;
-  var runtime = formatRuntime(runtimeTicks);
-  var runtimeText = runtime ? getRuntimeWithIcons(runtime) : "";
-  var genresText = Array.isArray(item.Genres) ? item.Genres.slice(0, 3).join(", ") : "";
+  const ageChip = formatOfficialRatingLabel(item.OfficialRating || "");
+  const year = item.ProductionYear || "";
+  const runtimeTicks = isSeries ? item.CumulativeRunTimeTicks : item.RunTimeTicks;
+  const runtime = formatRuntime(runtimeTicks);
+  const runtimeText = runtime ? getRuntimeWithIcons(runtime) : "";
+  const genresText = Array.isArray(item.Genres) ? item.Genres.slice(0, 3).join(", ") : "";
 
-  var community = Number.isFinite(item.CommunityRating)
-    ? "<div class=\"community-rating\" title=\"Community Rating\">⭐ " + (Number(item.CommunityRating).toFixed(1)) + "</div>"
+  const community = Number.isFinite(item.CommunityRating)
+    ? `<div class="community-rating" title="Community Rating">⭐ ${Number(item.CommunityRating).toFixed(1)}</div>`
     : "";
 
-  var a = document.createElement('a');
+  const a = document.createElement('a');
   a.className = 'card ge-card personal-recs-card';
   a.href = getDetailsUrl(item.Id, serverId);
   a.setAttribute('role','listitem');
   a.dataset.itemId = item.Id;
   a.setAttribute('data-key', makeItemKey(item));
 
-  a.innerHTML = "\n    <div class=\"cardBox\">\n      <div class=\"cardImageContainer\">\n        <img class=\"cardImage\" alt=\"" + (escapeHtml(item.Name)) + "\" loading=\"lazy\" decoding=\"async\">\n        <div class=\"prc-top-badges\">\n          " + (community) + "\n          <div class=\"prc-type-badge\">\n            " + (faIconHtml(typeIcon, "prc-type-icon")) + "\n            " + (escapeHtml(typeLabel)) + "\n          </div>\n        </div>\n        <div class=\"prc-gradient\"></div>\n        <div class=\"prc-overlay\">\n          <div class=\"prc-titleline\">\n            " + (escapeHtml(item.Name || "")) + "\n          </div>\n          <div class=\"prc-meta\">\n            ${ageChip ? "<span class="prc-age">${ageChip}</span><span class="prc-dot">•</span>" : \"\"}\n            ${year ? "<span class="prc-year">${year}</span><span class="prc-dot">•</span>" : \"\"}\n            ${runtimeText ? "<span class="prc-runtime">${runtimeText}</span>" : \"\"}\n          </div>\n          ${genresText ? "<div class="prc-genres">${escapeHtml(genresText)}</div>" : \"\"}\n        </div>\n      </div>\n    </div>\n  ";
+  a.innerHTML = `
+    <div class="cardBox">
+      <div class="cardImageContainer">
+        <img class="cardImage" alt="${escapeHtml(item.Name)}" loading="lazy" decoding="async">
+        <div class="prc-top-badges">
+          ${community}
+          <div class="prc-type-badge">
+            ${faIconHtml(typeIcon, "prc-type-icon")}
+            ${escapeHtml(typeLabel)}
+          </div>
+        </div>
+        <div class="prc-gradient"></div>
+        <div class="prc-overlay">
+          <div class="prc-titleline">
+            ${escapeHtml(item.Name || "")}
+          </div>
+          <div class="prc-meta">
+            ${ageChip ? `<span class="prc-age">${ageChip}</span><span class="prc-dot">•</span>` : ""}
+            ${year ? `<span class="prc-year">${year}</span><span class="prc-dot">•</span>` : ""}
+            ${runtimeText ? `<span class="prc-runtime">${runtimeText}</span>` : ""}
+          </div>
+          ${genresText ? `<div class="prc-genres">${escapeHtml(genresText)}</div>` : ""}
+        </div>
+      </div>
+    </div>
+  `;
 
-  var img = a.querySelector('.cardImage');
+  const img = a.querySelector('.cardImage');
   try { img.setAttribute('sizes', '(max-width: 640px) 45vw, (max-width: 1200px) 22vw, 220px'); } catch {}
   if (posterUrlHQ) {
     hydrateBlurUp(img, {
@@ -702,11 +778,11 @@ function createCardFor(item) {
     });
   } else {
     try { img.style.display = 'none'; } catch {}
-    var noImg = document.createElement('div');
+    const noImg = document.createElement('div');
     noImg.className = 'prc-noimg-label';
     noImg.textContent =
       (cfg.languageLabels && (cfg.languageLabels.noImage || cfg.languageLabels.loadingText))
-      || 'Sem imagem';
+      || 'Görsel yok';
     noImg.style.minHeight = '220px';
     noImg.style.display = 'flex';
     noImg.style.alignItems = 'center';
@@ -714,10 +790,10 @@ function createCardFor(item) {
     noImg.style.textAlign = 'center';
     noImg.style.padding = '12px';
     noImg.style.fontWeight = '600';
-    a.querySelector('.cardImageContainer').prepend(noImg);
+    a.querySelector('.cardImageContainer')?.prepend(noImg);
   }
 
-  a.addEventListenerfunction('jms:cleanup', () {
+  a.addEventListener('jms:cleanup', () => {
     unobserveImage(img);
   }, { once: true });
 
@@ -725,27 +801,27 @@ function createCardFor(item) {
 }
 
 
-var __p_overlay = null;
-var __p_abort = null;
-var __p_busy = false;
-var __p_startIndex = 0;
-var __p_serverId = "";
-var __p_io = null;
-var __p_originPoint = null;
-var __p_isClosing = false;
-var __p_seenIds = new Set();
-var __p_seenKeys = new Set();
-var __p_topGenres = [];
-var __p_genreStartIndex = 0;
-var __p_fallbackStartIndex = 0;
-var __p_genreDone = false;
-var __p_fallbackDone = false;
+let __p_overlay = null;
+let __p_abort = null;
+let __p_busy = false;
+let __p_startIndex = 0;
+let __p_serverId = "";
+let __p_io = null;
+let __p_originPoint = null;
+let __p_isClosing = false;
+let __p_seenIds = new Set();
+let __p_seenKeys = new Set();
+let __p_topGenres = [];
+let __p_genreStartIndex = 0;
+let __p_fallbackStartIndex = 0;
+let __p_genreDone = false;
+let __p_fallbackDone = false;
 
 function p_playOpenAnimation(overlayEl) {
-  var sheet = overlayEl;
-  var dialog = overlayEl.querySelector('.genre-explorer');
-  var origin = __p_originPoint || { x: (window.innerWidth/2)|0, y: (window.innerHeight/2)|0 };
-  dialog.style.transformOrigin = (origin.x) + "px " + (origin.y) + "px";
+  const sheet = overlayEl;
+  const dialog = overlayEl.querySelector('.genre-explorer');
+  const origin = __p_originPoint || { x: (window.innerWidth/2)|0, y: (window.innerHeight/2)|0 };
+  dialog.style.transformOrigin = `${origin.x}px ${origin.y}px`;
   sheet.animate([{opacity:0},{opacity:1}], {duration:220, easing:'ease-out', fill:'both'});
   dialog.animate([{transform:'scale(0.84)',opacity:0},{transform:'scale(1)',opacity:1}], {duration:280, easing:'cubic-bezier(.2,.8,.2,1)', fill:'both'});
 }
@@ -753,33 +829,33 @@ function p_playOpenAnimation(overlayEl) {
 function p_animatedCloseThen(cb) {
   if (!__p_overlay || __p_isClosing) { if (cb) cb(); return; }
   __p_isClosing = true;
-  var sheet = __p_overlay;
-  var dialog = __p_overlay.querySelector('.genre-explorer');
-  var origin = __p_originPoint || { x: (window.innerWidth/2)|0, y: (window.innerHeight/2)|0 };
-  dialog.style.transformOrigin = (origin.x) + "px " + (origin.y) + "px";
+  const sheet = __p_overlay;
+  const dialog = __p_overlay.querySelector('.genre-explorer');
+  const origin = __p_originPoint || { x: (window.innerWidth/2)|0, y: (window.innerHeight/2)|0 };
+  dialog.style.transformOrigin = `${origin.x}px ${origin.y}px`;
 
-  var a = sheet.animate([{opacity:1},{opacity:0}], {duration:180, easing:'ease-in', fill:'forwards'});
-  var b = dialog.animate([{transform:'scale(1)',opacity:1},{transform:'scale(0.84)',opacity:0}], {duration:220, easing:'cubic-bezier(.4,0,.6,1)', fill:'forwards'});
-  var done = function() { if (cb) try{cb();}catch{}; if (__p_overlay) try{closePersonalExplorer(true);}catch{} };
-  var fin = 0; var mark=function(){ if(++fin>=2) done(); };
+  const a = sheet.animate([{opacity:1},{opacity:0}], {duration:180, easing:'ease-in', fill:'forwards'});
+  const b = dialog.animate([{transform:'scale(1)',opacity:1},{transform:'scale(0.84)',opacity:0}], {duration:220, easing:'cubic-bezier(.4,0,.6,1)', fill:'forwards'});
+  const done = () => { if (cb) try{cb();}catch{}; if (__p_overlay) try{closePersonalExplorer(true);}catch{} };
+  let fin = 0; const mark=()=>{ if(++fin>=2) done(); };
   a.addEventListener('finish', mark, {once:true}); b.addEventListener('finish', mark, {once:true}); setTimeout(mark,260);
 }
 
 function p_escCloser(e){ if (e.key === 'Escape') p_animatedCloseThen(); }
 function p_hashCloser(){ p_animatedCloseThen(); }
 
-function p_loadMore() {
+async function p_loadMore() {
   if (!__p_overlay || __p_busy) return;
   __p_busy = true;
 
   if (__p_abort) { try { __p_abort.abort(); } catch {} }
   __p_abort = new AbortController();
 
-  var LIMIT = 40;
-  var { userId } = getSessionInfo();
+  const LIMIT = 40;
+  const { userId } = getSessionInfo();
   if (!Array.isArray(__p_topGenres) || !__p_topGenres.length) {
     try {
-      __p_topGenres = getCachedUserTopGenres(3);
+      __p_topGenres = await getCachedUserTopGenres(3);
     } catch {
       __p_topGenres = [];
     }
@@ -787,30 +863,30 @@ function p_loadMore() {
   }
 
   try {
-    var unique = [];
-    var attempts = 0;
+    const unique = [];
+    let attempts = 0;
 
-    var fetchSourceBatch = function({ genres = null, startIndex = 0, limit = 80 } = {}) {
-      var params = new URLSearchParams();
+    const fetchSourceBatch = async ({ genres = null, startIndex = 0, limit = 80 } = {}) => {
+      const params = new URLSearchParams();
       params.set("IncludeItemTypes", "Movie,Series");
       params.set("Recursive", "true");
       params.set("Filters", "IsUnplayed");
       params.set("Fields", COMMON_FIELDS);
-      params.set("SortBy", genres.length ? "CommunityRating,DateCreated" : "Random,CommunityRating,DateCreated");
+      params.set("SortBy", genres?.length ? "CommunityRating,DateCreated" : "Random,CommunityRating,DateCreated");
       params.set("SortOrder", "Descending");
       params.set("Limit", String(limit));
       params.set("StartIndex", String(startIndex));
-      if (genres.length) params.set("Genres", genres.join("|"));
+      if (genres?.length) params.set("Genres", genres.join("|"));
 
-      var url = "/Users/" + (encodeURIComponent(userId)) + "/Items?" + params.toString();
-      var data = makeApiRequest(url, { signal: __p_abort.signal });
-      return Array.isArray(data.Items) ? data.Items : [];
+      const url = `/Users/${encodeURIComponent(userId)}/Items?` + params.toString();
+      const data = await makeApiRequest(url, { signal: __p_abort.signal });
+      return Array.isArray(data?.Items) ? data.Items : [];
     };
 
-    var appendUniqueItems = function(items) {
-      for (var it of items) {
-        if (!it.Id) continue;
-        var k = makeItemKey(it);
+    const appendUniqueItems = (items) => {
+      for (const it of items) {
+        if (!it?.Id) continue;
+        const k = makeItemKey(it);
         if (!k || __p_seenKeys.has(k)) continue;
         __p_seenKeys.add(k);
         __p_seenIds.add(it.Id);
@@ -821,10 +897,10 @@ function p_loadMore() {
 
     while (unique.length < LIMIT && attempts < 6 && (!__p_genreDone || !__p_fallbackDone)) {
       attempts++;
-      var roundProgress = false;
+      let roundProgress = false;
 
       if (!__p_genreDone && unique.length < LIMIT) {
-        var genreBatch = fetchSourceBatch({
+        const genreBatch = await fetchSourceBatch({
           genres: __p_topGenres,
           startIndex: __p_genreStartIndex,
           limit: Math.max(LIMIT * 2, 80),
@@ -836,7 +912,7 @@ function p_loadMore() {
       }
 
       if (!__p_fallbackDone && unique.length < LIMIT) {
-        var fallbackBatch = fetchSourceBatch({
+        const fallbackBatch = await fetchSourceBatch({
           startIndex: __p_fallbackStartIndex,
           limit: Math.max(LIMIT * 2, 80),
         });
@@ -849,22 +925,22 @@ function p_loadMore() {
       if (!roundProgress) break;
     }
 
-    var items = unique.slice(0, LIMIT);
+    const items = unique.slice(0, LIMIT);
     p_renderIntoGrid(items);
     __p_startIndex += items.length;
     if ((!items.length && __p_genreDone && __p_fallbackDone) || ((__p_genreDone && __p_fallbackDone) && items.length < LIMIT)) {
-      try { __p_io.disconnect(); } catch {}
+      try { __p_io?.disconnect(); } catch {}
     }
   } catch (e) {
-    if (e.name !== 'AbortError') console.error("Personal explorer fetch error:", e);
+    if (e?.name !== 'AbortError') console.error("Personal explorer fetch error:", e);
   } finally {
     __p_busy = false;
   }
 }
 
 function p_renderIntoGrid(items){
-  var grid = __p_overlay.querySelector('.ge-grid');
-  var empty = __p_overlay.querySelector('.ge-empty');
+  const grid = __p_overlay.querySelector('.ge-grid');
+  const empty = __p_overlay.querySelector('.ge-empty');
 
   if ((!items || items.length === 0) && grid.children.length === 0) {
     empty.style.display = '';
@@ -872,8 +948,8 @@ function p_renderIntoGrid(items){
   }
   empty.style.display = 'none';
 
-  var frag = document.createDocumentFragment();
-  for (var it of items) frag.appendChild(createCardFor(it));
+  const frag = document.createDocumentFragment();
+  for (const it of items) frag.appendChild(createCardFor(it));
   grid.appendChild(frag);
   pruneGridIfNeeded();
 }
@@ -881,11 +957,11 @@ function p_renderIntoGrid(items){
 export function openPersonalExplorer() {
   if (__p_overlay) { try { closePersonalExplorer(true); } catch {} }
 
-  var { serverId } = getSessionInfo();
+  const { serverId } = getSessionInfo();
   __p_serverId = serverId;
   __p_startIndex = 0;
-  __p_seenIds.clear.();
-  __p_seenKeys.clear.();
+  __p_seenIds.clear?.();
+  __p_seenKeys.clear?.();
   __p_topGenres = [];
   __p_genreStartIndex = 0;
   __p_fallbackStartIndex = 0;
@@ -893,23 +969,41 @@ export function openPersonalExplorer() {
   __p_fallbackDone = false;
   __p_overlay = document.createElement('div');
   __p_overlay.className = 'genre-explorer-overlay';
-  __p_overlay.innerHTML = "\n    <div class=\"genre-explorer\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Personal Explorer\">\n      <div class=\"ge-header\">\n        <div class=\"ge-title\">\n          " + ((getConfig().languageLabels.personalRecommendations) || "Sana Özel Öneriler") + " • " + ((getConfig().languageLabels.all) || "Tümü") + "\n        </div>\n        <div class=\"ge-actions\">\n          <button class=\"ge-close\" aria-label=\"" + ((getConfig().languageLabels.close) || "Fechar") + "\">✕</button>\n        </div>\n      </div>\n      <div class=\"ge-content\">\n        <div class=\"ge-grid\" role=\"list\"></div>\n        <div class=\"ge-empty\" style=\"display:none\">\n          " + ((getConfig().languageLabels.noResults) || "Nenhum conteúdo encontrado") + "\n        </div>\n        <div class=\"ge-sentinel\"></div>\n      </div>\n    </div>\n  ";
+  __p_overlay.innerHTML = `
+    <div class="genre-explorer" role="dialog" aria-modal="true" aria-label="Personal Explorer">
+      <div class="ge-header">
+        <div class="ge-title">
+          ${(getConfig()?.languageLabels?.personalRecommendations) || "Sana Özel Öneriler"} • ${(getConfig()?.languageLabels?.all) || "Tümü"}
+        </div>
+        <div class="ge-actions">
+          <button class="ge-close" aria-label="${(getConfig()?.languageLabels?.close) || "Kapat"}">✕</button>
+        </div>
+      </div>
+      <div class="ge-content">
+        <div class="ge-grid" role="list"></div>
+        <div class="ge-empty" style="display:none">
+          ${(getConfig()?.languageLabels?.noResults) || "İçerik bulunamadı"}
+        </div>
+        <div class="ge-sentinel"></div>
+      </div>
+    </div>
+  `;
   document.body.appendChild(__p_overlay);
   injectGEPerfStyles();
   try { p_playOpenAnimation(__p_overlay); } catch {}
 
-  var grid = __p_overlay.querySelector('.ge-grid');
+  const grid = __p_overlay.querySelector('.ge-grid');
   bindExplorerGridDetails(grid);
 
   window.addEventListener('hashchange', p_hashCloser, { passive: true });
-  __p_overlay.querySelector('.ge-close').addEventListenerfunction('click', () p_animatedCloseThen(), { passive:true });
-  __p_overlay.addEventListenerfunction('click', (e) { if (e.target === __p_overlay) p_animatedCloseThen(); }, { passive:true });
+  __p_overlay.querySelector('.ge-close').addEventListener('click', () => p_animatedCloseThen(), { passive:true });
+  __p_overlay.addEventListener('click', (e) => { if (e.target === __p_overlay) p_animatedCloseThen(); }, { passive:true });
   document.addEventListener('keydown', p_escCloser, { passive:true });
-  var scroller = __p_overlay.querySelector('.ge-content');
-  var onScrollPerf = function() {
+  const scroller = __p_overlay.querySelector('.ge-content');
+  const onScrollPerf = () => {
     __scrollActive = true;
     if (__scrollIdleTimer) clearTimeout(__scrollIdleTimer);
-    __scrollIdleTimer = setTimeoutfunction(() {
+    __scrollIdleTimer = setTimeout(() => {
       __scrollActive = false;
       if (!__hydrationRAF && __hydrationQueue.length) {
         __hydrationRAF = requestAnimationFrame(flushHydrationFrame);
@@ -920,9 +1014,9 @@ export function openPersonalExplorer() {
   __p_overlay.__onScrollPerf = onScrollPerf;
 
   p_loadMore();
-  var sentinel = __p_overlay.querySelector('.ge-sentinel');
-  __p_io = new IntersectionObserverfunction((ents){
-    for (var ent of ents) {
+  const sentinel = __p_overlay.querySelector('.ge-sentinel');
+  __p_io = new IntersectionObserver((ents)=>{
+    for (const ent of ents) {
       if (ent.isIntersecting) p_loadMore();
     }
   }, { root: scroller, rootMargin: '800px 0px' });
@@ -933,22 +1027,22 @@ export function closePersonalExplorer(skipAnimation = false) {
   if (!__p_overlay) return;
   try { document.removeEventListener('keydown', p_escCloser); } catch {}
   try { window.removeEventListener('hashchange', p_hashCloser); } catch {}
-  try { __p_io.disconnect(); } catch {}
+  try { __p_io?.disconnect(); } catch {}
   __p_io = null;
   if (__p_abort) { try { __p_abort.abort(); } catch {} __p_abort = null; }
-  var cleanup = function() {
+  const cleanup = () => {
     try {
-      var scroller = __p_overlay.querySelector('.ge-content');
-      scroller.removeEventListener('scroll', __p_overlay.__onScrollPerf);
+      const scroller = __p_overlay.querySelector('.ge-content');
+      scroller?.removeEventListener('scroll', __p_overlay.__onScrollPerf);
       __p_overlay.__onScrollPerf = null;
     } catch {}
-    __p_overlay.remove();
+    __p_overlay?.remove();
     __p_overlay = null;
     __p_busy = false;
     __p_startIndex = 0;
     __p_isClosing = false;
-    __p_seenIds.clear.();
-    __p_seenKeys.clear.();
+    __p_seenIds.clear?.();
+    __p_seenKeys.clear?.();
     __p_topGenres = [];
     __p_genreStartIndex = 0;
     __p_fallbackStartIndex = 0;

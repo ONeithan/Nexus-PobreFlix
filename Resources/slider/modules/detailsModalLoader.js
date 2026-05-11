@@ -1,9 +1,9 @@
 import { isDetailsModalModuleEnabled } from "./config.js";
 
-var detailsModalModulePromise = null;
+let detailsModalModulePromise = null;
 
 function resolveServerId(serverId = "") {
-  var direct = String(serverId || "").trim();
+  const direct = String(serverId || "").trim();
   if (direct) return direct;
 
   return String(
@@ -16,16 +16,16 @@ function resolveServerId(serverId = "") {
 }
 
 function buildDetailsUrl({ itemId, serverId = "", detailsHref = "" } = {}) {
-  var explicitHref = String(detailsHref || "").trim();
+  const explicitHref = String(detailsHref || "").trim();
   if (explicitHref) return explicitHref;
 
-  var safeItemId = encodeURIComponent(String(itemId || "").trim());
-  var safeServerId = encodeURIComponent(resolveServerId(serverId));
-  return "#/details?id=" + (safeItemId) + "${safeServerId ? "&serverId=${safeServerId}" : \"\"}";
+  const safeItemId = encodeURIComponent(String(itemId || "").trim());
+  const safeServerId = encodeURIComponent(resolveServerId(serverId));
+  return `#/details?id=${safeItemId}${safeServerId ? `&serverId=${safeServerId}` : ""}`;
 }
 
 export function navigateToDetailsPage(options = {}) {
-  var href = buildDetailsUrl(options);
+  const href = buildDetailsUrl(options);
   if (!href) return false;
 
   try {
@@ -44,8 +44,8 @@ function loadDetailsModalModule() {
   return detailsModalModulePromise || (detailsModalModulePromise = import("./detailsModal.js"));
 }
 
-export function openDetailsModal(options = {}) {
-  if (!options.itemId) return null;
+export async function openDetailsModal(options = {}) {
+  if (!options?.itemId) return null;
 
   if (!isDetailsModalModuleEnabled()) {
     navigateToDetailsPage(options);
@@ -53,8 +53,8 @@ export function openDetailsModal(options = {}) {
   }
 
   try {
-    var { openDetailsModal: openDetailsModalInner } = loadDetailsModalModule();
-    return openDetailsModalInner(options);
+    const { openDetailsModal: openDetailsModalInner } = await loadDetailsModalModule();
+    return await openDetailsModalInner(options);
   } catch (error) {
     console.warn("detailsModalLoader fallback navigation:", error);
     navigateToDetailsPage(options);
@@ -62,12 +62,12 @@ export function openDetailsModal(options = {}) {
   }
 }
 
-export function closeDetailsModalIfLoaded() {
+export async function closeDetailsModalIfLoaded() {
   if (!detailsModalModulePromise) return null;
 
   try {
-    var mod = detailsModalModulePromise;
-    return mod.closeDetailsModal.();
+    const mod = await detailsModalModulePromise;
+    return mod?.closeDetailsModal?.();
   } catch {
     return null;
   }

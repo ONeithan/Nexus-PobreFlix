@@ -4,11 +4,11 @@ import { togglePlayerVisibility } from "./ui/playerUI.js";
 import { makeCleanupBag, addEvent } from "./cleanup.js";
 
 export function createPlayButton() {
-  var button = document.createElement("button");
+  const button = document.createElement("button");
   button.className = "music-button";
   button.innerHTML = '<i class="fas fa-music"></i>';
-  var bag = makeCleanupBag(button);
-  var onClick = function() {
+  const bag = makeCleanupBag(button);
+  const onClick = () => {
     if (!musicPlayerState.playlist.length) {
       initPlayer();
     } else {

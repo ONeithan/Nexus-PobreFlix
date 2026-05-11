@@ -1,7 +1,7 @@
-var DB_NAME = "jms-slider-cache";
-var DB_VER = 1;
+const DB_NAME = "jms-slider-cache";
+const DB_VER = 1;
 
-var DEFAULTS = {
+const DEFAULTS = {
   itemTtlMs: 24 * 60 * 60 * 1000,
   queryTtlMs: 2 * 60 * 1000,
   resumeTtlMs: 30 * 1000,
@@ -10,19 +10,19 @@ var DEFAULTS = {
   maxConcurrent: 6,
 };
 
-var _dbPromise = null;
-var _dbDisabled = false;
+let _dbPromise = null;
+let _dbDisabled = false;
 
-var mem = {
+const mem = {
   item: new Map(),
   query: new Map(),
   meta: new Map(),
 };
 
-var BACKGROUND_WARM_META_PREFIX = "itemWarmQueue:";
-var backgroundWarmJobs = new Map();
+const BACKGROUND_WARM_META_PREFIX = "itemWarmQueue:";
+const backgroundWarmJobs = new Map();
 
-export function prepareSliderCacheDbForDeletion() {
+export async function prepareSliderCacheDbForDeletion() {
   stopAllBackgroundWarmJobs();
 
   try {
@@ -31,8 +31,8 @@ export function prepareSliderCacheDbForDeletion() {
     }));
   } catch {}
 
-  var db = Promise.resolve(_dbPromise).catchfunction(() null);
-  try { db.close.(); } catch {}
+  const db = await Promise.resolve(_dbPromise).catch(() => null);
+  try { db?.close?.(); } catch {}
 
   _dbPromise = null;
   _dbDisabled = false;
@@ -44,8 +44,8 @@ export function prepareSliderCacheDbForDeletion() {
 function now() { return Date.now(); }
 
 function fnv1a(str) {
-  var h = 0x811c9dc5;
-  for (var i = 0; i < str.length; i++) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
     h ^= str.charCodeAt(i);
     h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
   }
@@ -53,7 +53,7 @@ function fnv1a(str) {
 }
 
 function makeKey(parts) {
-  var s = parts.map(function(p) {
+  const s = parts.map(p => {
     if (p == null) return "";
     if (typeof p === "string" || typeof p === "number" || typeof p === "boolean") return String(p);
     try { return JSON.stringify(p); } catch { return String(p); }
@@ -62,21 +62,21 @@ function makeKey(parts) {
 }
 
 function reqToPromise(req) {
-  return new Promisefunction((resolve, reject) {
-    req.onsuccess = function() resolve(req.result);
-    req.onerror = function() reject(req.error || new Error("IndexedDB request error"));
+  return new Promise((resolve, reject) => {
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error("IndexedDB request error"));
   });
 }
 
 function txDone(tx) {
-  return new Promisefunction((resolve, reject) {
-    tx.oncomplete = function() resolve();
-    tx.onabort = function() reject(tx.error || new Error("IndexedDB tx aborted"));
-    tx.onerror = function() reject(tx.error || new Error("IndexedDB tx error"));
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onabort = () => reject(tx.error || new Error("IndexedDB tx aborted"));
+    tx.onerror = () => reject(tx.error || new Error("IndexedDB tx error"));
   });
 }
 
-function openDb() {
+async function openDb() {
   if (_dbDisabled) return null;
   if (_dbPromise) return _dbPromise;
 
@@ -85,21 +85,21 @@ function openDb() {
     return null;
   }
 
-  _dbPromise = new Promisefunction((resolve) {
+  _dbPromise = new Promise((resolve) => {
     try {
-      var req = indexedDB.open(DB_NAME, DB_VER);
+      const req = indexedDB.open(DB_NAME, DB_VER);
 
-      req.onupgradeneeded = function() {
-        var db = req.result;
+      req.onupgradeneeded = () => {
+        const db = req.result;
 
         if (!db.objectStoreNames.contains("itemDetails")) {
-          var st = db.createObjectStore("itemDetails", { keyPath: "id" });
+          const st = db.createObjectStore("itemDetails", { keyPath: "id" });
           st.createIndex("expiresAt", "expiresAt", { unique: false });
           st.createIndex("fetchedAt", "fetchedAt", { unique: false });
         }
 
         if (!db.objectStoreNames.contains("queryCache")) {
-          var st = db.createObjectStore("queryCache", { keyPath: "key" });
+          const st = db.createObjectStore("queryCache", { keyPath: "key" });
           st.createIndex("expiresAt", "expiresAt", { unique: false });
           st.createIndex("fetchedAt", "fetchedAt", { unique: false });
         }
@@ -109,8 +109,8 @@ function openDb() {
         }
       };
 
-      req.onsuccess = function() resolve(req.result);
-      req.onerror = function() {
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => {
         console.warn("[JMS][cache] IndexedDB open failed, fallback to memory:", req.error);
         _dbDisabled = true;
         resolve(null);
@@ -125,14 +125,14 @@ function openDb() {
   return _dbPromise;
 }
 
-function withStore(storeName, mode, fn) {
-  var db = openDb();
+async function withStore(storeName, mode, fn) {
+  const db = await openDb();
   if (!db) return fn(null, null, true);
 
-  var tx = db.transaction(storeName, mode);
-  var store = tx.objectStore(storeName);
-  var out = fn(store, tx, false);
-  txDone(tx);
+  const tx = db.transaction(storeName, mode);
+  const store = tx.objectStore(storeName);
+  const out = await fn(store, tx, false);
+  await txDone(tx);
   return out;
 }
 
@@ -141,12 +141,12 @@ function isFresh(entry) {
 }
 
 function normalizeTtlMs(ttlMs, fallbackMs) {
-  var value = Number(ttlMs);
+  const value = Number(ttlMs);
   return Math.max(fallbackMs, Number.isFinite(value) ? value : fallbackMs);
 }
 
 function createItemCacheEntry(id, data, ttlMs = DEFAULTS.itemTtlMs) {
-  var fetchedAt = now();
+  const fetchedAt = now();
   return {
     id,
     data,
@@ -156,11 +156,11 @@ function createItemCacheEntry(id, data, ttlMs = DEFAULTS.itemTtlMs) {
 }
 
 function dedupeIds(ids) {
-  var out = [];
-  var seen = new Set();
+  const out = [];
+  const seen = new Set();
 
-  for (var raw of Array.isArray(ids) ? ids : []) {
-    var id = raw == null ? "" : String(raw).trim();
+  for (const raw of Array.isArray(ids) ? ids : []) {
+    const id = raw == null ? "" : String(raw).trim();
     if (!id || seen.has(id)) continue;
     seen.add(id);
     out.push(id);
@@ -169,53 +169,53 @@ function dedupeIds(ids) {
   return out;
 }
 
-export function cacheGetItem(id, { allowStale = false } = {}) {
+export async function cacheGetItem(id, { allowStale = false } = {}) {
   if (!id) return null;
 
-  return withStorefunction("itemDetails", "readonly", (store, _tx, memFallback) {
+  return withStore("itemDetails", "readonly", async (store, _tx, memFallback) => {
     if (memFallback) {
-      var e = mem.item.get(id) || null;
+      const e = mem.item.get(id) || null;
       if (!e) return null;
       if (isFresh(e) || allowStale) return e.data;
       return null;
     }
 
-    var row = reqToPromise(store.get(id)).catchfunction(() null);
+    const row = await reqToPromise(store.get(id)).catch(() => null);
     if (!row) return null;
     if (row.expiresAt > now() || allowStale) return row.data;
     return null;
   });
 }
 
-export function cacheGetItemEntry(id, { allowStale = false } = {}) {
+export async function cacheGetItemEntry(id, { allowStale = false } = {}) {
   if (!id) return null;
 
-  return withStorefunction("itemDetails", "readonly", (store, _tx, memFallback) {
+  return withStore("itemDetails", "readonly", async (store, _tx, memFallback) => {
     if (memFallback) {
-      var entry = mem.item.get(id) || null;
+      const entry = mem.item.get(id) || null;
       if (!entry) return null;
       if (isFresh(entry) || allowStale) return entry;
       return null;
     }
 
-    var row = reqToPromise(store.get(id)).catchfunction(() null);
+    const row = await reqToPromise(store.get(id)).catch(() => null);
     if (!row) return null;
     if (row.expiresAt > now() || allowStale) return row;
     return null;
   });
 }
 
-export function cachePutItem(id, data, { ttlMs = DEFAULTS.itemTtlMs } = {}) {
+export async function cachePutItem(id, data, { ttlMs = DEFAULTS.itemTtlMs } = {}) {
   if (!id) return false;
-  var entry = createItemCacheEntry(id, data, ttlMs);
+  const entry = createItemCacheEntry(id, data, ttlMs);
 
-  return withStorefunction("itemDetails", "readwrite", (store, _tx, memFallback) {
+  return withStore("itemDetails", "readwrite", async (store, _tx, memFallback) => {
     try {
       if (memFallback) {
         mem.item.set(id, entry);
         return true;
       }
-      reqToPromise(store.put(entry));
+      await reqToPromise(store.put(entry));
       return true;
     } catch (e) {
       console.warn("[JMS][cache] cachePutItem failed:", e);
@@ -224,16 +224,16 @@ export function cachePutItem(id, data, { ttlMs = DEFAULTS.itemTtlMs } = {}) {
   });
 }
 
-export function cacheDeleteItem(id) {
+export async function cacheDeleteItem(id) {
   if (!id) return false;
 
-  return withStorefunction("itemDetails", "readwrite", (store, _tx, memFallback) {
+  return withStore("itemDetails", "readwrite", async (store, _tx, memFallback) => {
     try {
       if (memFallback) {
         mem.item.delete(id);
         return true;
       }
-      reqToPromise(store.delete(id));
+      await reqToPromise(store.delete(id));
       return true;
     } catch (e) {
       console.warn("[JMS][cache] cacheDeleteItem failed:", e);
@@ -242,27 +242,28 @@ export function cacheDeleteItem(id) {
   });
 }
 
-export function cacheGetItemsMap(ids, { allowStale = false } = {}) {
-  var uniq = dedupeIds(ids);
+export async function cacheGetItemsMap(ids, { allowStale = false } = {}) {
+  const uniq = dedupeIds(ids);
   if (!uniq.length) return new Map();
 
-  return withStorefunction("itemDetails", "readonly", (store, _tx, memFallback) {
-    var out = new Map();
+  return withStore("itemDetails", "readonly", async (store, _tx, memFallback) => {
+    const out = new Map();
 
     if (memFallback) {
-      for (var id of uniq) {
-        var entry = mem.item.get(id) || null;
+      for (const id of uniq) {
+        const entry = mem.item.get(id) || null;
         if (!entry) continue;
         if (isFresh(entry) || allowStale) out.set(id, entry.data);
       }
       return out;
     }
 
-    var requests = uniq.mapfunction((id) [id, store.get(id)]);
-    var rows = Promise.allfunction(requests.map(([id, req]) [id, reqToPromise(req).catchfunction(() null)])
+    const requests = uniq.map((id) => [id, store.get(id)]);
+    const rows = await Promise.all(
+      requests.map(async ([id, req]) => [id, await reqToPromise(req).catch(() => null)])
     );
 
-    for (var [id, row] of rows) {
+    for (const [id, row] of rows) {
       if (!row) continue;
       if (row.expiresAt > now() || allowStale) out.set(id, row.data);
     }
@@ -271,27 +272,28 @@ export function cacheGetItemsMap(ids, { allowStale = false } = {}) {
   });
 }
 
-export function cacheGetItemEntriesMap(ids, { allowStale = false } = {}) {
-  var uniq = dedupeIds(ids);
+export async function cacheGetItemEntriesMap(ids, { allowStale = false } = {}) {
+  const uniq = dedupeIds(ids);
   if (!uniq.length) return new Map();
 
-  return withStorefunction("itemDetails", "readonly", (store, _tx, memFallback) {
-    var out = new Map();
+  return withStore("itemDetails", "readonly", async (store, _tx, memFallback) => {
+    const out = new Map();
 
     if (memFallback) {
-      for (var id of uniq) {
-        var entry = mem.item.get(id) || null;
+      for (const id of uniq) {
+        const entry = mem.item.get(id) || null;
         if (!entry) continue;
         if (isFresh(entry) || allowStale) out.set(id, entry);
       }
       return out;
     }
 
-    var requests = uniq.mapfunction((id) [id, store.get(id)]);
-    var rows = Promise.allfunction(requests.map(([id, req]) [id, reqToPromise(req).catchfunction(() null)])
+    const requests = uniq.map((id) => [id, store.get(id)]);
+    const rows = await Promise.all(
+      requests.map(async ([id, req]) => [id, await reqToPromise(req).catch(() => null)])
     );
 
-    for (var [id, row] of rows) {
+    for (const [id, row] of rows) {
       if (!row) continue;
       if (row.expiresAt > now() || allowStale) out.set(id, row);
     }
@@ -300,22 +302,22 @@ export function cacheGetItemEntriesMap(ids, { allowStale = false } = {}) {
   });
 }
 
-export function cachePutItems(items, { ttlMs = DEFAULTS.itemTtlMs } = {}) {
-  var fetchedAt = now();
-  var expiresAt = fetchedAt + normalizeTtlMs(ttlMs, 5_000);
-  var entries = [];
+export async function cachePutItems(items, { ttlMs = DEFAULTS.itemTtlMs } = {}) {
+  const fetchedAt = now();
+  const expiresAt = fetchedAt + normalizeTtlMs(ttlMs, 5_000);
+  const entries = [];
 
-  for (var raw of Array.isArray(items) ? items : []) {
-    var hasWrappedData = !!(
+  for (const raw of Array.isArray(items) ? items : []) {
+    const hasWrappedData = !!(
       raw &&
       typeof raw === "object" &&
       Object.prototype.hasOwnProperty.call(raw, "data") &&
       (Object.prototype.hasOwnProperty.call(raw, "id") || Object.prototype.hasOwnProperty.call(raw, "Id"))
     );
-    var data = hasWrappedData ? raw.data : raw;
-    var id = hasWrappedData
+    const data = hasWrappedData ? raw.data : raw;
+    const id = hasWrappedData
       ? (raw.id || raw.Id)
-      : (data.Id || data.id);
+      : (data?.Id || data?.id);
     if (!id || !data) continue;
     entries.push({
       id: String(id),
@@ -327,15 +329,15 @@ export function cachePutItems(items, { ttlMs = DEFAULTS.itemTtlMs } = {}) {
 
   if (!entries.length) return 0;
 
-  return withStorefunction("itemDetails", "readwrite", (store, _tx, memFallback) {
+  return withStore("itemDetails", "readwrite", async (store, _tx, memFallback) => {
     try {
       if (memFallback) {
-        for (var entry of entries) mem.item.set(entry.id, entry);
+        for (const entry of entries) mem.item.set(entry.id, entry);
         return entries.length;
       }
 
-      var puts = entries.mapfunction((entry) reqToPromise(store.put(entry)));
-      Promise.all(puts);
+      const puts = entries.map((entry) => reqToPromise(store.put(entry)));
+      await Promise.all(puts);
       return entries.length;
     } catch (e) {
       console.warn("[JMS][cache] cachePutItems failed:", e);
@@ -344,40 +346,40 @@ export function cachePutItems(items, { ttlMs = DEFAULTS.itemTtlMs } = {}) {
   });
 }
 
-export function cacheGetQuery(key, { allowStale = false } = {}) {
+export async function cacheGetQuery(key, { allowStale = false } = {}) {
   if (!key) return null;
 
-  return withStorefunction("queryCache", "readonly", (store, _tx, memFallback) {
+  return withStore("queryCache", "readonly", async (store, _tx, memFallback) => {
     if (memFallback) {
-      var e = mem.query.get(key) || null;
+      const e = mem.query.get(key) || null;
       if (!e) return null;
       if (isFresh(e) || allowStale) return e.data;
       return null;
     }
 
-    var row = reqToPromise(store.get(key)).catchfunction(() null);
+    const row = await reqToPromise(store.get(key)).catch(() => null);
     if (!row) return null;
     if (row.expiresAt > now() || allowStale) return row.data;
     return null;
   });
 }
 
-export function cachePutQuery(key, data, { ttlMs = DEFAULTS.queryTtlMs } = {}) {
+export async function cachePutQuery(key, data, { ttlMs = DEFAULTS.queryTtlMs } = {}) {
   if (!key) return false;
-  var entry = {
+  const entry = {
     key,
     data,
     fetchedAt: now(),
     expiresAt: now() + normalizeTtlMs(ttlMs, 3_000),
   };
 
-  return withStorefunction("queryCache", "readwrite", (store, _tx, memFallback) {
+  return withStore("queryCache", "readwrite", async (store, _tx, memFallback) => {
     try {
       if (memFallback) {
         mem.query.set(key, entry);
         return true;
       }
-      reqToPromise(store.put(entry));
+      await reqToPromise(store.put(entry));
       return true;
     } catch (e) {
       console.warn("[JMS][cache] cachePutQuery failed:", e);
@@ -386,14 +388,14 @@ export function cachePutQuery(key, data, { ttlMs = DEFAULTS.queryTtlMs } = {}) {
   });
 }
 
-export function cacheClearQueries() {
-  return withStorefunction("queryCache", "readwrite", (store, _tx, memFallback) {
+export async function cacheClearQueries() {
+  return withStore("queryCache", "readwrite", async (store, _tx, memFallback) => {
     try {
       if (memFallback) {
         mem.query.clear();
         return true;
       }
-      reqToPromise(store.clear());
+      await reqToPromise(store.clear());
       return true;
     } catch (e) {
       console.warn("[JMS][cache] cacheClearQueries failed:", e);
@@ -402,21 +404,21 @@ export function cacheClearQueries() {
   });
 }
 
-export function metaGet(k) {
+export async function metaGet(k) {
   if (!k) return null;
-  return withStorefunction("meta", "readonly", (store, _tx, memFallback) {
-    if (memFallback) return mem.meta.get(k) || null;
-    var row = reqToPromise(store.get(k)).catchfunction(() null);
+  return withStore("meta", "readonly", async (store, _tx, memFallback) => {
+    if (memFallback) return mem.meta.get(k) ?? null;
+    const row = await reqToPromise(store.get(k)).catch(() => null);
     return row ? row.v : null;
   });
 }
 
-export function metaPut(k, v) {
+export async function metaPut(k, v) {
   if (!k) return false;
-  return withStorefunction("meta", "readwrite", (store, _tx, memFallback) {
+  return withStore("meta", "readwrite", async (store, _tx, memFallback) => {
     try {
       if (memFallback) { mem.meta.set(k, v); return true; }
-      reqToPromise(store.put({ k, v }));
+      await reqToPromise(store.put({ k, v }));
       return true;
     } catch (e) {
       console.warn("[JMS][cache] metaPut failed:", e);
@@ -426,7 +428,7 @@ export function metaPut(k, v) {
 }
 
 function createScheduledTask(run, delayMs = 0) {
-  var delay = Math.max(0, Number(delayMs) || 0);
+  const delay = Math.max(0, Number(delayMs) || 0);
 
   if (delay > 0) {
     return { kind: "timeout", id: setTimeout(run, delay) };
@@ -454,8 +456,8 @@ function cancelScheduledTask(task) {
   } catch {}
 }
 
-function persistBackgroundWarmJob(job) {
-  if (!job.metaKey) return false;
+async function persistBackgroundWarmJob(job) {
+  if (!job?.metaKey) return false;
 
   return metaPut(job.metaKey, {
     version: 1,
@@ -468,12 +470,12 @@ function persistBackgroundWarmJob(job) {
   });
 }
 
-function restoreBackgroundWarmIds(scopeKey) {
-  var state = metaGet((BACKGROUND_WARM_META_PREFIX) + (scopeKey));
+async function restoreBackgroundWarmIds(scopeKey) {
+  const state = await metaGet(`${BACKGROUND_WARM_META_PREFIX}${scopeKey}`);
   if (!state || state.done !== false) return [];
 
-  var ids = Array.isArray(state.ids) ? state.ids : [];
-  var cursor = Math.max(0, Math.min(ids.length, Number(state.cursor) || 0));
+  const ids = Array.isArray(state.ids) ? state.ids : [];
+  const cursor = Math.max(0, Math.min(ids.length, Number(state.cursor) || 0));
   return dedupeIds(ids.slice(cursor));
 }
 
@@ -486,16 +488,16 @@ function stopBackgroundWarmJob(job) {
 }
 
 function stopAllBackgroundWarmJobs() {
-  for (var job of backgroundWarmJobs.values()) {
+  for (const job of backgroundWarmJobs.values()) {
     stopBackgroundWarmJob(job);
   }
   backgroundWarmJobs.clear();
 }
 
 function applyBackgroundWarmQueueUpdate(job) {
-  if (!job.nextIds.length) return false;
+  if (!job?.nextIds?.length) return false;
 
-  var pending = Array.isArray(job.ids)
+  const pending = Array.isArray(job.ids)
     ? job.ids.slice(Math.max(0, Number(job.cursor) || 0))
     : [];
 
@@ -506,50 +508,50 @@ function applyBackgroundWarmQueueUpdate(job) {
   return true;
 }
 
-function scheduleBackgroundWarmJob(job, delayMs = job.delayMs || 0) {
+function scheduleBackgroundWarmJob(job, delayMs = job?.delayMs || 0) {
   if (!job || job.stopped) return;
   cancelScheduledTask(job.scheduled);
-  job.scheduled = createScheduledTaskfunction(() {
+  job.scheduled = createScheduledTask(() => {
     job.scheduled = null;
     void runBackgroundWarmJob(job);
   }, delayMs);
 }
 
-function runBackgroundWarmJob(job) {
+async function runBackgroundWarmJob(job) {
   if (!job || job.stopped || job.running) return;
 
   job.running = true;
 
   try {
     if (applyBackgroundWarmQueueUpdate(job)) {
-      persistBackgroundWarmJob(job);
+      await persistBackgroundWarmJob(job);
     }
 
-    var cursor = Math.max(0, Math.min(job.ids.length, Number(job.cursor) || 0));
+    const cursor = Math.max(0, Math.min(job.ids.length, Number(job.cursor) || 0));
     if (cursor >= job.ids.length) {
       job.done = true;
-      persistBackgroundWarmJob(job);
+      await persistBackgroundWarmJob(job);
       stopBackgroundWarmJob(job);
       return;
     }
 
-    var chunk = job.ids.slice(cursor, cursor + job.batchSize);
+    const chunk = job.ids.slice(cursor, cursor + job.batchSize);
     if (!chunk.length) {
       job.done = true;
-      persistBackgroundWarmJob(job);
+      await persistBackgroundWarmJob(job);
       stopBackgroundWarmJob(job);
       return;
     }
 
-    job.warmChunk(chunk);
+    await job.warmChunk(chunk);
 
     job.cursor = cursor + chunk.length;
     job.done = job.cursor >= job.ids.length;
     job.lastError = "";
-    persistBackgroundWarmJob(job);
+    await persistBackgroundWarmJob(job);
 
     if (applyBackgroundWarmQueueUpdate(job)) {
-      persistBackgroundWarmJob(job);
+      await persistBackgroundWarmJob(job);
     }
 
     if (job.done) {
@@ -559,28 +561,28 @@ function runBackgroundWarmJob(job) {
 
     scheduleBackgroundWarmJob(job, job.delayMs);
   } catch (e) {
-    job.lastError = e.message ? String(e.message) : String(e || "warmup failed");
-    persistBackgroundWarmJob(job);
+    job.lastError = e?.message ? String(e.message) : String(e || "warmup failed");
+    await persistBackgroundWarmJob(job);
     scheduleBackgroundWarmJob(job, Math.min(5_000, Math.max(job.delayMs, job.delayMs * 2)));
   } finally {
     job.running = false;
   }
 }
 
-function startBackgroundWarmJob({
+async function startBackgroundWarmJob({
   scopeKey,
   ids,
   batchSize = 60,
   delayMs = 180,
   warmChunk,
 }) {
-  var cleanScopeKey = String(scopeKey || "").trim();
+  const cleanScopeKey = String(scopeKey || "").trim();
   if (!cleanScopeKey || typeof warmChunk !== "function") return null;
 
-  var incomingIds = dedupeIds(ids);
+  const incomingIds = dedupeIds(ids);
   if (!incomingIds.length) return null;
 
-  var existing = backgroundWarmJobs.get(cleanScopeKey);
+  const existing = backgroundWarmJobs.get(cleanScopeKey);
   if (existing) {
     existing.batchSize = Math.max(10, Math.min(200, Number(batchSize) || 60));
     existing.delayMs = Math.max(80, Number(delayMs) || 180);
@@ -589,20 +591,20 @@ function startBackgroundWarmJob({
 
     if (!existing.running) {
       applyBackgroundWarmQueueUpdate(existing);
-      persistBackgroundWarmJob(existing);
+      await persistBackgroundWarmJob(existing);
       scheduleBackgroundWarmJob(existing, 0);
     }
 
     return existing;
   }
 
-  var resumedIds = restoreBackgroundWarmIds(cleanScopeKey);
-  var queue = dedupeIds([...resumedIds, ...incomingIds]);
+  const resumedIds = await restoreBackgroundWarmIds(cleanScopeKey);
+  const queue = dedupeIds([...resumedIds, ...incomingIds]);
   if (!queue.length) return null;
 
-  var job = {
+  const job = {
     scopeKey: cleanScopeKey,
-    metaKey: (BACKGROUND_WARM_META_PREFIX) + (cleanScopeKey),
+    metaKey: `${BACKGROUND_WARM_META_PREFIX}${cleanScopeKey}`,
     ids: queue,
     cursor: 0,
     nextIds: [],
@@ -617,43 +619,43 @@ function startBackgroundWarmJob({
   };
 
   backgroundWarmJobs.set(cleanScopeKey, job);
-  persistBackgroundWarmJob(job);
+  await persistBackgroundWarmJob(job);
   scheduleBackgroundWarmJob(job, 0);
   return job;
 }
 
-function mapLimit(arr, limit, mapper) {
-  var out = new Array(arr.length);
-  var idx = 0;
+async function mapLimit(arr, limit, mapper) {
+  const out = new Array(arr.length);
+  let idx = 0;
 
-  var workers = new Array(Math.max(1, limit)).fill(0).mapfunction(() {
+  const workers = new Array(Math.max(1, limit)).fill(0).map(async () => {
     while (idx < arr.length) {
-      var cur = idx++;
-      try { out[cur] = mapper(arr[cur], cur); }
+      const cur = idx++;
+      try { out[cur] = await mapper(arr[cur], cur); }
       catch (e) { out[cur] = null; }
     }
   });
 
-  Promise.all(workers);
+  await Promise.all(workers);
   return out;
 }
 
-export function cachedFetchText({
+export async function cachedFetchText({
   keyParts,
   fetchText,
   url,
   ttlMs = DEFAULTS.listFileTtlMs,
   allowStaleOnError = DEFAULTS.allowStaleOnError,
 }){
-  var key = makeKey(["text", ...keyParts]);
-  var cached = cacheGetQuery(key, { allowStale: allowStaleOnError });
+  const key = makeKey(["text", ...keyParts]);
+  const cached = await cacheGetQuery(key, { allowStale: allowStaleOnError });
   if (cached && cached.__type === "text") {
     if (cached.expiresAt > now()) return cached.text;
   }
 
   try {
-    var text = fetchText(url);
-    cachePutQuery(key, { __type: "text", text, expiresAt: now() + ttlMs }, { ttlMs });
+    const text = await fetchText(url);
+    await cachePutQuery(key, { __type: "text", text, expiresAt: now() + ttlMs }, { ttlMs });
     return text;
   } catch (e) {
     if (allowStaleOnError && cached && cached.__type === "text") return cached.text;
@@ -661,7 +663,7 @@ export function cachedFetchText({
   }
 }
 
-export function cachedFetchJson({
+export async function cachedFetchJson({
   keyParts,
   fetchJson,
   url,
@@ -669,15 +671,15 @@ export function cachedFetchJson({
   ttlMs = DEFAULTS.queryTtlMs,
   allowStaleOnError = DEFAULTS.allowStaleOnError,
 }){
-  var key = makeKey(["json", ...keyParts]);
-  var cached = cacheGetQuery(key, { allowStale: allowStaleOnError });
+  const key = makeKey(["json", ...keyParts]);
+  const cached = await cacheGetQuery(key, { allowStale: allowStaleOnError });
   if (cached && cached.__type === "json") {
     if (cached.expiresAt > now()) return cached.data;
   }
 
   try {
-    var data = fetchJson(url, opts);
-    cachePutQuery(key, { __type: "json", data, expiresAt: now() + ttlMs }, { ttlMs });
+    const data = await fetchJson(url, opts);
+    await cachePutQuery(key, { __type: "json", data, expiresAt: now() + ttlMs }, { ttlMs });
     return data;
   } catch (e) {
     if (allowStaleOnError && cached && cached.__type === "json") return cached.data;
@@ -696,33 +698,33 @@ export function createCachedItemDetailsFetcher({
 }) {
   if (typeof fetchOne !== "function") throw new Error("fetchOne required");
 
-  var inflight = new Map();
-  var resolvedBatchSize = Math.max(10, Math.min(200, Number(batchSize) || 60));
-  var resolvedRevalidateAfterMs = Math.max(0, Number(revalidateAfterMs) || 0);
+  const inflight = new Map();
+  const resolvedBatchSize = Math.max(10, Math.min(200, Number(batchSize) || 60));
+  const resolvedRevalidateAfterMs = Math.max(0, Number(revalidateAfterMs) || 0);
 
   function shouldRevalidateEntry(entry) {
     if (!entry || !(resolvedRevalidateAfterMs > 0)) return false;
-    var fetchedAt = Number(entry.fetchedAt || 0);
+    const fetchedAt = Number(entry.fetchedAt || 0);
     if (!(fetchedAt > 0)) return true;
     return (Date.now() - fetchedAt) > resolvedRevalidateAfterMs;
   }
 
-  function getOne(id) {
+  async function getOne(id) {
     if (!id) return null;
 
-    var freshEntry = cacheGetItemEntry(id, { allowStale: false });
+    const freshEntry = await cacheGetItemEntry(id, { allowStale: false });
     if (freshEntry && !shouldRevalidateEntry(freshEntry)) return freshEntry.data;
     if (inflight.has(id)) return inflight.get(id);
 
-    var p = function(() {
-      var staleEntry = allowStaleOnError
-        ? (freshEntry || cacheGetItemEntry(id, { allowStale: true }))
+    const p = (async () => {
+      const staleEntry = allowStaleOnError
+        ? (freshEntry || await cacheGetItemEntry(id, { allowStale: true }))
         : null;
-      var stale = staleEntry.data || null;
+      const stale = staleEntry?.data || null;
 
       try {
-        var data = fetchOne(id);
-        if (data) cachePutItem(id, data, { ttlMs });
+        const data = await fetchOne(id);
+        if (data) await cachePutItem(id, data, { ttlMs });
         return data || stale;
       } catch (e) {
         if (allowStaleOnError && stale) return stale;
@@ -736,33 +738,33 @@ export function createCachedItemDetailsFetcher({
     return p;
   }
 
-  function hydrateMissingWithBulk(ids) {
-    var uniq = dedupeIds(ids);
+  async function hydrateMissingWithBulk(ids) {
+    const uniq = dedupeIds(ids);
     if (!uniq.length || typeof fetchMany !== "function") return false;
 
-    for (var start = 0; start < uniq.length; start += resolvedBatchSize) {
-      var chunk = uniq.slice(start, start + resolvedBatchSize);
-      var items = fetchMany(chunk);
+    for (let start = 0; start < uniq.length; start += resolvedBatchSize) {
+      const chunk = uniq.slice(start, start + resolvedBatchSize);
+      const items = await fetchMany(chunk);
       if (Array.isArray(items) && items.length) {
-        cachePutItems(items, { ttlMs });
+        await cachePutItems(items, { ttlMs });
       }
     }
 
     return true;
   }
 
-  getOne.many = function(ids, { prefetchOnly = false } = {}) {
-    var list = Array.isArray(ids) ? ids : [];
+  getOne.many = async function(ids, { prefetchOnly = false } = {}) {
+    const list = Array.isArray(ids) ? ids : [];
     if (!list.length) return prefetchOnly ? { total: 0, missing: 0 } : [];
 
-    var freshEntriesMap = cacheGetItemEntriesMap(list, { allowStale: false });
-    var out = prefetchOnly ? null : new Array(list.length).fill(null);
-    var missing = [];
+    const freshEntriesMap = await cacheGetItemEntriesMap(list, { allowStale: false });
+    const out = prefetchOnly ? null : new Array(list.length).fill(null);
+    const missing = [];
 
-    for (var i = 0; i < list.length; i++) {
-      var id = list[i];
+    for (let i = 0; i < list.length; i++) {
+      const id = list[i];
       if (!id) continue;
-      var hitEntry = freshEntriesMap.get(id) || null;
+      const hitEntry = freshEntriesMap.get(id) || null;
       if (hitEntry && !shouldRevalidateEntry(hitEntry)) {
         if (out) out[i] = hitEntry.data;
         continue;
@@ -772,49 +774,49 @@ export function createCachedItemDetailsFetcher({
 
     if (missing.length && typeof fetchMany === "function") {
       try {
-        hydrateMissingWithBulk(missing);
+        await hydrateMissingWithBulk(missing);
       } catch {}
     }
 
-    var hydratedEntriesMap = missing.length
-      ? cacheGetItemEntriesMap(missing, { allowStale: false })
+    const hydratedEntriesMap = missing.length
+      ? await cacheGetItemEntriesMap(missing, { allowStale: false })
       : freshEntriesMap;
 
     if (out) {
-      for (var i = 0; i < list.length; i++) {
+      for (let i = 0; i < list.length; i++) {
         if (out[i]) continue;
-        var id = list[i];
-        var hitEntry = hydratedEntriesMap.get(id) || null;
+        const id = list[i];
+        const hitEntry = hydratedEntriesMap.get(id) || null;
         if (hitEntry && !shouldRevalidateEntry(hitEntry)) out[i] = hitEntry.data;
       }
     }
 
-    var remainingIds = prefetchOnly
-      ? dedupeIdsfunction(missing.filter((id) {
-          var hitEntry = hydratedEntriesMap.get(id) || null;
+    const remainingIds = prefetchOnly
+      ? dedupeIds(missing.filter((id) => {
+          const hitEntry = hydratedEntriesMap.get(id) || null;
           return !hitEntry || shouldRevalidateEntry(hitEntry);
         }))
       : list
-          .mapfunction((id, idx) (!out[idx] ? id : null))
+          .map((id, idx) => (!out[idx] ? id : null))
           .filter(Boolean);
 
     if (remainingIds.length) {
-      var uniqueRemainingIds = prefetchOnly ? remainingIds : dedupeIds(remainingIds);
-      var fetchedRemaining = mapLimitfunction(uniqueRemainingIds, maxConcurrent, (id) getOne(id));
+      const uniqueRemainingIds = prefetchOnly ? remainingIds : dedupeIds(remainingIds);
+      const fetchedRemaining = await mapLimit(uniqueRemainingIds, maxConcurrent, async (id) => getOne(id));
 
       if (out) {
-        var remainingById = new Map();
-        for (var i = 0; i < uniqueRemainingIds.length; i++) {
-          var item = fetchedRemaining[i];
+        const remainingById = new Map();
+        for (let i = 0; i < uniqueRemainingIds.length; i++) {
+          const item = fetchedRemaining[i];
           if (!item) continue;
-          var id = item.Id || item.id || uniqueRemainingIds[i];
+          const id = item?.Id || item?.id || uniqueRemainingIds[i];
           if (id) remainingById.set(id, item);
         }
 
-        for (var i = 0; i < list.length; i++) {
+        for (let i = 0; i < list.length; i++) {
           if (out[i]) continue;
-          var id = list[i];
-          var hit = remainingById.get(id) || null;
+          const id = list[i];
+          const hit = remainingById.get(id) || null;
           if (hit) out[i] = hit;
         }
       }
@@ -830,19 +832,19 @@ export function createCachedItemDetailsFetcher({
     return out;
   };
 
-  getOne.startWarmup = function({
+  getOne.startWarmup = async function({
     scopeKey = "default",
     ids = [],
     batchSize: warmBatchSize = resolvedBatchSize,
     delayMs = 180,
   } = {}) {
-    return startBackgroundWarmJobfunction({
+    return startBackgroundWarmJob({
       scopeKey,
       ids,
       batchSize: warmBatchSize,
       delayMs,
-      warmChunk: (chunkIds) {
-        getOne.many(chunkIds, { prefetchOnly: true });
+      warmChunk: async (chunkIds) => {
+        await getOne.many(chunkIds, { prefetchOnly: true });
       },
     });
   };
@@ -867,86 +869,86 @@ export function startLibraryDeltaWatcher({
   limit = 50,
   includeItemTypes = null,
 }) {
-  if (!userId) return function() {};
+  if (!userId) return () => {};
   if (typeof fetchJson !== "function") throw new Error("fetchJson required");
   if (typeof getAuthHeaders !== "function") throw new Error("getAuthHeaders required");
   if (typeof fetchItemDetailsCached !== "function") throw new Error("fetchItemDetailsCached required");
 
-  var stopped = false;
-  var timer = null;
+  let stopped = false;
+  let timer = null;
 
-  var metaKey = "latestCursor:" + (userId);
+  const metaKey = `latestCursor:${userId}`;
 
-  function tick() {
+  async function tick() {
     if (stopped) return;
 
-    var headers = getAuthHeaders() || {};
-    var opts = { headers };
+    const headers = getAuthHeaders() || {};
+    const opts = { headers };
 
-    var latest = null;
+    let latest = null;
     try {
-      var qs = new URLSearchParams();
+      const qs = new URLSearchParams();
       qs.set("Limit", String(limit));
       if (includeItemTypes) qs.set("IncludeItemTypes", includeItemTypes);
       qs.set("Fields", "DateCreated,ImageTags,BackdropImageTags");
-      latest = fetchJson("/Users/" + (userId) + "/Items/Latest?" + (qs.toString()), opts);
+      latest = await fetchJson(`/Users/${userId}/Items/Latest?${qs.toString()}`, opts);
     } catch {
       latest = null;
     }
 
     if (!latest) {
       try {
-        var qs = new URLSearchParams();
+        const qs = new URLSearchParams();
         qs.set("Recursive", "true");
         qs.set("SortBy", "DateCreated");
         qs.set("SortOrder", "Descending");
         qs.set("Limit", String(limit));
         if (includeItemTypes) qs.set("IncludeItemTypes", includeItemTypes);
         qs.set("Fields", "DateCreated,ImageTags,BackdropImageTags");
-        var data = fetchJson("/Users/" + (userId) + "/Items?" + (qs.toString()), opts);
-        latest = data.Items || [];
+        const data = await fetchJson(`/Users/${userId}/Items?${qs.toString()}`, opts);
+        latest = data?.Items || [];
       } catch {
         latest = [];
       }
     }
 
-    var arr = Array.isArray(latest) ? latest : (latest.Items || []);
+    const arr = Array.isArray(latest) ? latest : (latest?.Items || []);
     if (!arr.length) return;
 
-    var cursor = metaGet(metaKey);
-    var lastSeen = cursor.lastSeenDateCreated ? Date.parse(cursor.lastSeenDateCreated) : 0;
-    var newOnes = [];
-    var maxSeen = lastSeen;
+    const cursor = await metaGet(metaKey);
+    const lastSeen = cursor?.lastSeenDateCreated ? Date.parse(cursor.lastSeenDateCreated) : 0;
+    const newOnes = [];
+    let maxSeen = lastSeen;
 
-    for (var it of arr) {
-      var id = it.Id || it.id;
-      var dc = it.DateCreated || it.dateCreated;
-      var t = dc ? Date.parse(dc) : 0;
+    for (const it of arr) {
+      const id = it?.Id || it?.id;
+      const dc = it?.DateCreated || it?.dateCreated;
+      const t = dc ? Date.parse(dc) : 0;
       if (t && t > maxSeen) maxSeen = t;
       if (id && t && t > lastSeen) newOnes.push(id);
     }
 
     if (newOnes.length) {
       try {
-        fetchItemDetailsCached.many(newOnes.slice(0, 20));
+        await fetchItemDetailsCached.many(newOnes.slice(0, 20));
       } catch {}
     }
 
     if (maxSeen > lastSeen) {
-      metaPut(metaKey, { lastSeenDateCreated: new Date(maxSeen).toISOString() });
+      await metaPut(metaKey, { lastSeenDateCreated: new Date(maxSeen).toISOString() });
     }
   }
 
-  function loop() {
+  async function loop() {
     if (stopped) return;
-    try { tick(); } catch {}
+    try { await tick(); } catch {}
     if (stopped) return;
     timer = setTimeout(loop, Math.max(10_000, intervalMs | 0));
   }
 
   loop();
 
-  return function() {
+  return () => {
     stopped = true;
     if (timer) clearTimeout(timer);
     timer = null;

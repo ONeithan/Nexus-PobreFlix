@@ -30,11 +30,11 @@ import {
   sanitizeStudioHubOrderNames
 } from "./studioHubsShared.js";
 
-var config = getConfig();
-var PLACEHOLDER_URL = resolveSliderAssetHref(
+const config = getConfig();
+const PLACEHOLDER_URL = resolveSliderAssetHref(
   config.placeholderImage || "/slider/src/images/placeholder.png"
 );
-var ALIASES = {
+const ALIASES = {
   "Marvel Studios": ["marvel studios","marvel","marvel entertainment","marvel studios llc"],
   "Pixar": ["pixar","pixar animation studios","disney pixar"],
   "Walt Disney Pictures": ["walt disney","walt disney pictures"],
@@ -46,7 +46,7 @@ var ALIASES = {
   "Paramount Pictures": ["paramount","paramount pictures","paramount pictures corporation"],
   "DreamWorks Animation": ["dreamworks","dreamworks animation","dreamworks pictures"]
 };
-var CORE_TOKENS = {
+const CORE_TOKENS = {
   "Marvel Studios": ["marvel"],
   "Pixar": ["pixar"],
   "Walt Disney Pictures": ["walt","disney"],
@@ -60,47 +60,47 @@ var CORE_TOKENS = {
   "DreamWorks Animation": ["dreamworks", "animation"]
 };
 
-var LOGO_H = 160;
-var CACHE_TTL = 6 * 60 * 60 * 1000;
-var MAP_TTL   = 30 * 24 * 60 * 60 * 1000;
-var IMG_TTL   = 7  * 24 * 60 * 60 * 1000;
-var LS_KEY    = "studioHub_cache_v5";
-var MAP_KEY   = "studioHub_nameIdMap_v5";
-var IMG_KEY   = "studioHub_backdropMap_v1";
-var STUDIO_ITEMS_LIMIT = 120;
-var nbase = function(s) (s||"").toLowerCase().replace(/[().,™©®\-:_+]/g," ").replace(/\s+/g," ").trim();
-var strip = function(s) {
-  var out = " " + nbase(s) + " ";
-  for (var w of JUNK_WORDS) out = out.replace(new RegExp("\\\\s" + (w) + "\\\\s", "g"), " ");
+const LOGO_H = 160;
+const CACHE_TTL = 6 * 60 * 60 * 1000;
+const MAP_TTL   = 30 * 24 * 60 * 60 * 1000;
+const IMG_TTL   = 7  * 24 * 60 * 60 * 1000;
+const LS_KEY    = "studioHub_cache_v5";
+const MAP_KEY   = "studioHub_nameIdMap_v5";
+const IMG_KEY   = "studioHub_backdropMap_v1";
+const STUDIO_ITEMS_LIMIT = 120;
+const nbase = s => (s||"").toLowerCase().replace(/[().,™©®\-:_+]/g," ").replace(/\s+/g," ").trim();
+const strip = s => {
+  let out = " " + nbase(s) + " ";
+  for (const w of JUNK_WORDS) out = out.replace(new RegExp(`\\s${w}\\s`, "g"), " ");
   return out.trim();
 };
-var toks = function(s) strip(s).split(" ").filter(Boolean);
-var DEFAULT_ORDER = [
+const toks = s => strip(s).split(" ").filter(Boolean);
+const DEFAULT_ORDER = [
   "Marvel Studios","Pixar","Walt Disney Pictures","Disney+","DC",
   "Warner Bros. Pictures","Lucasfilm Ltd.","Columbia Pictures","Paramount Pictures",
   "Netflix","DreamWorks Animation"
 ];
-var CANONICALS = new Map(DEFAULT_ORDER.map(function(n) [n.toLowerCase(), n]));
-var DEFAULT_NAME_KEYS = new Set(DEFAULT_ORDER.map(function(name) String(name || "").trim().toLowerCase()));
-var JUNK_WORDS = ["ltd","ltd.","llc","inc","inc.","company","co.","corp","corp.","the","pictures","studios","animation","film","films","pictures.","studios."];
-var ALIAS_TO_CANON = function(() {
-  var m = new Map();
-  for (var [canon, aliases] of Object.entries(ALIASES)) {
+const CANONICALS = new Map(DEFAULT_ORDER.map(n => [n.toLowerCase(), n]));
+const DEFAULT_NAME_KEYS = new Set(DEFAULT_ORDER.map(name => String(name || "").trim().toLowerCase()));
+const JUNK_WORDS = ["ltd","ltd.","llc","inc","inc.","company","co.","corp","corp.","the","pictures","studios","animation","film","films","pictures.","studios."];
+const ALIAS_TO_CANON = (() => {
+  const m = new Map();
+  for (const [canon, aliases] of Object.entries(ALIASES)) {
     m.set(canon.toLowerCase(), canon);
-    for (var a of aliases) m.set(String(a).toLowerCase(), canon);
+    for (const a of aliases) m.set(String(a).toLowerCase(), canon);
   }
   return m;
 })();
 
-var __studioHubBusy = false;
-var __fetchAbort = null;
-var __studioHubsMounting = false;
-var __studioHubsMountedOnce = false;
-var __studioHubsRetryTo = null;
+let __studioHubBusy = false;
+let __fetchAbort = null;
+let __studioHubsMounting = false;
+let __studioHubsMountedOnce = false;
+let __studioHubsRetryTo = null;
 
 function setStudioHubsReady(done) {
-  var next = done === true;
-  var prev = false;
+  const next = done === true;
+  let prev = false;
   try { prev = window.__jmsStudioHubsReady === true; } catch {}
   try { window.__jmsStudioHubsReady = next; } catch {}
   if (next && !prev) {
@@ -109,19 +109,22 @@ function setStudioHubsReady(done) {
 }
 
 function stringToColor(str) {
-  var hash = 0;
-  for (var i = 0; i < str.length; i++) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
 
-  var h = Math.abs(hash % 360);
-  var isCool = (h >= 200 && h <= 280);
-  var isWarm = (h < 45 || h > 300);
-  var s = isCool ? 55 : isWarm ? 65 : 50;
+  const h = Math.abs(hash % 360);
+  const isCool = (h >= 200 && h <= 280);
+  const isWarm = (h < 45 || h > 300);
+  const s = isCool ? 55 : isWarm ? 65 : 50;
 
   return {
-    bg: "linear-gradient(145deg,\n          hsla(" + (h) + ", " + (s) + "%, 14%, 0.97),\n          hsla(" + (h) + ", " + (s - 10) + "%, 9%, 0.98),\n          hsla(" + ((h + 25) % 360) + ", " + (s - 15) + "%, 6%, 1))",
-    shadow: "hsla(" + (h) + ", " + (s + 10) + "%, 35%, 0.40)"
+    bg: `linear-gradient(145deg,
+          hsla(${h}, ${s}%, 14%, 0.97),
+          hsla(${h}, ${s - 10}%, 9%, 0.98),
+          hsla(${(h + 25) % 360}, ${s - 15}%, 6%, 1))`,
+    shadow: `hsla(${h}, ${s + 10}%, 35%, 0.40)`
   };
 }
 
@@ -130,14 +133,14 @@ function getActiveHomePage() {
 }
 
 function hasMountedStudioHubsSection() {
-  var page = getActiveHomePage();
-  var section = page.querySelector.("#studio-hubs");
-  var row = section.querySelector.(".hub-row");
+  const page = getActiveHomePage();
+  const section = page?.querySelector?.("#studio-hubs");
+  const row = section?.querySelector?.(".hub-row");
   return !!section && !!row;
 }
 
 function upsertImg(card, className) {
-  var img = card.querySelector('img.hub-img');
+  let img = card.querySelector('img.hub-img');
   if (!img) {
     img = document.createElement('img');
     img.className = className;
@@ -145,7 +148,7 @@ function upsertImg(card, className) {
     img.decoding = 'async';
     img.fetchPriority = 'low';
     img.style.opacity = '0';
-    img.addEventListenerfunction('load', () {
+    img.addEventListener('load', () => {
       card.classList.remove('skeleton');
       img.style.opacity = '1';
     }, { once: true });
@@ -158,7 +161,7 @@ function upsertImg(card, className) {
 
 function toCanonicalStudioName(name) {
   if (!name) return null;
-  var key = String(name).toLowerCase();
+  const key = String(name).toLowerCase();
   return ALIAS_TO_CANON.get(key) || CANONICALS.get(key) || null;
 }
 
@@ -169,15 +172,15 @@ function ensurePreviewButton(card, studioName, studioId, userId) {
 }
 
 function mergeOrder(defaults, custom) {
-  var out = [];
-  var seen = new Set();
-  for (var n of (custom || [])) {
-    var canon = toCanonicalStudioName(n) || n;
-    var k = canon.toLowerCase();
+  const out = [];
+  const seen = new Set();
+  for (const n of (custom || [])) {
+    const canon = toCanonicalStudioName(n) || n;
+    const k = canon.toLowerCase();
     if (!seen.has(k)) { out.push(canon); seen.add(k); }
   }
-  for (var n of defaults) {
-    var k = n.toLowerCase();
+  for (const n of defaults) {
+    const k = n.toLowerCase();
     if (!seen.has(k)) { out.push(n); seen.add(k); }
   }
   return out;
@@ -191,14 +194,14 @@ function isDefaultStudioHub(name) {
   return DEFAULT_NAME_KEYS.has(nameKey(name));
 }
 
-var LOGO_BASE = "./slider/src/images/studios/";
-var LOCAL_EXTS = [".webp"];
-var LOGO_CACHE_KEY = "studioHub_logoUrlCache_v1";
-var LOGO_CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
-var VIDEO_EXTS = [".mp4"];
-var HOVER_VIDEO_TIMEOUT = 4000;
-var MIN_RATING = Number.isFinite(config.studioHubsMinRating) ? config.studioHubsMinRating : 6.5;
-var LOCAL_STUDIO_LOGO_SLUGS = new Set([
+const LOGO_BASE = "./slider/src/images/studios/";
+const LOCAL_EXTS = [".webp"];
+const LOGO_CACHE_KEY = "studioHub_logoUrlCache_v1";
+const LOGO_CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
+const VIDEO_EXTS = [".mp4"];
+const HOVER_VIDEO_TIMEOUT = 4000;
+const MIN_RATING = Number.isFinite(config.studioHubsMinRating) ? config.studioHubsMinRating : 6.5;
+const LOCAL_STUDIO_LOGO_SLUGS = new Set([
   "columbia-pictures",
   "dc",
   "disney",
@@ -212,7 +215,7 @@ var LOCAL_STUDIO_LOGO_SLUGS = new Set([
   "walt-disney-pictures",
   "warner-bros-pictures"
 ]);
-var LOCAL_STUDIO_VIDEO_SLUGS = new Set([
+const LOCAL_STUDIO_VIDEO_SLUGS = new Set([
   "columbia-pictures",
   "dc",
   "disney",
@@ -227,39 +230,39 @@ var LOCAL_STUDIO_VIDEO_SLUGS = new Set([
   "warner-bros-pictures"
 ]);
 
-var getRating = function(it) Number(it.CommunityRating || it.CriticRating || 0);
+const getRating = (it) => Number(it?.CommunityRating ?? it?.CriticRating ?? 0);
 function randomSample(arr, n) {
-  var a = arr.slice();
-  for (var i = a.length - 1; i > 0; i--) {
-    var j = Math.floor(Math.random() * (i + 1));
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a.slice(0, Math.max(0, n));
 }
 function selectTopNWithMinRating(items, min = MIN_RATING, count = 5) {
-  var pool = items.filter(function(it) getRating(it) >= min);
+  const pool = items.filter(it => getRating(it) >= min);
   if (pool.length <= count) return pool;
   return randomSample(pool, count);
 }
 
 function isLocalStudioAssetUrl(url) {
-  var clean = String(url || "");
+  const clean = String(url || "");
   return clean.includes("/slider/src/images/studios/") || clean.includes("./slider/src/images/studios/");
 }
 function getStudioAssetSlugFromUrl(url) {
-  var clean = String(url || "");
-  var match = clean.match(/\/([^/?#]+)\.[a-z0-9]+(?:\?|#|$)/i);
-  return String(match.[1] || "").trim().toLowerCase();
+  const clean = String(url || "");
+  const match = clean.match(/\/([^/?#]+)\.[a-z0-9]+(?:\?|#|$)/i);
+  return String(match?.[1] || "").trim().toLowerCase();
 }
 function hasKnownLocalStudioLogo(url) {
-  var slug = getStudioAssetSlugFromUrl(url);
+  const slug = getStudioAssetSlugFromUrl(url);
   return !!slug && LOCAL_STUDIO_LOGO_SLUGS.has(slug);
 }
 function deriveVideoCandidatesFromLogo(logoUrl) {
   if (!isLocalStudioAssetUrl(logoUrl) || !hasKnownLocalStudioLogo(logoUrl)) return [];
-  var slug = getStudioAssetSlugFromUrl(logoUrl);
+  const slug = getStudioAssetSlugFromUrl(logoUrl);
   if (!slug || !LOCAL_STUDIO_VIDEO_SLUGS.has(slug)) return [];
-  return VIDEO_EXTS.map(function(ext) withVer((LOGO_BASE) + (slug) + (ext)));
+  return VIDEO_EXTS.map(ext => withVer(`${LOGO_BASE}${slug}${ext}`));
 }
 
 function markCardReady(card, { textOnly = false } = {}) {
@@ -270,48 +273,54 @@ function markCardReady(card, { textOnly = false } = {}) {
 }
 
 function clearCardImage(card) {
-  var img = card.querySelector.("img.hub-img");
+  const img = card?.querySelector?.("img.hub-img");
   if (!img) return;
   try { img.removeAttribute("src"); } catch {}
   try { img.remove(); } catch {}
 }
-var __hubPreviewPopover = null;
-var __hubPreviewCloseTimer = null;
-var __userInteracted = false;
-window.addEventListenerfunction('pointermove', () { __userInteracted = true; }, { once: true, passive: true });
+let __hubPreviewPopover = null;
+let __hubPreviewCloseTimer = null;
+let __userInteracted = false;
+window.addEventListener('pointermove', () => { __userInteracted = true; }, { once: true, passive: true });
 
 function ensurePreviewPopover() {
   if (__hubPreviewPopover) return __hubPreviewPopover;
-  var pop = document.createElement('div');
+  const pop = document.createElement('div');
   pop.className = 'hub-preview-popover';
-  pop.innerHTML = "\n    <div class=\"hub-preview-header\">\n      <h3 class=\"hub-preview-title\"></h3>\n      <button class=\"hub-preview-close\" aria-label=\"Close\">×</button>\n    </div>\n    <div class=\"hub-preview-body\"></div>\n  ";
+  pop.innerHTML = `
+    <div class="hub-preview-header">
+      <h3 class="hub-preview-title"></h3>
+      <button class="hub-preview-close" aria-label="Close">×</button>
+    </div>
+    <div class="hub-preview-body"></div>
+  `;
   document.body.appendChild(pop);
   pop.querySelector('.hub-preview-close').addEventListener('click', hidePreviewPopover);
-  pop.addEventListenerfunction('mouseenter', () {
+  pop.addEventListener('mouseenter', () => {
     if (__hubPreviewCloseTimer) { clearTimeout(__hubPreviewCloseTimer); __hubPreviewCloseTimer = null; }
   });
-  pop.addEventListenerfunction('mouseleave', () scheduleHidePopover());
+  pop.addEventListener('mouseleave', () => scheduleHidePopover());
   __hubPreviewPopover = pop;
-  var autoHide = function() hidePreviewPopover();
+  const autoHide = () => hidePreviewPopover();
   window.addEventListener('beforeunload', autoHide);
-  document.addEventListenerfunction('visibilitychange', () { if (document.hidden) autoHide(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) autoHide(); });
   window.addEventListener('hashchange', autoHide);
   return pop;
 }
 
- var OPEN_INTENT_MS   = Number(config.studioHubsOpenIntentMs || 180);
- var CLOSE_GRACE_MS   = Number(config.studioHubsCloseGraceMs || 300);
+ const OPEN_INTENT_MS   = Number(config.studioHubsOpenIntentMs ?? 180);
+ const CLOSE_GRACE_MS   = Number(config.studioHubsCloseGraceMs ?? 300);
  function scheduleHidePopover(delay = CLOSE_GRACE_MS) {
   if (__hubPreviewCloseTimer) clearTimeout(__hubPreviewCloseTimer);
-  __hubPreviewCloseTimer = setTimeoutfunction(() { hidePreviewPopover(); }, delay);
+  __hubPreviewCloseTimer = setTimeout(() => { hidePreviewPopover(); }, delay);
 }
 
 function hidePreviewPopover() {
   if (__hubPreviewCloseTimer) { clearTimeout(__hubPreviewCloseTimer); __hubPreviewCloseTimer = null; }
   if (!__hubPreviewPopover) return;
-  try { __hubPreviewPopover.__cleanup.(); __hubPreviewPopover.__cleanup = null; } catch {}
+  try { __hubPreviewPopover.__cleanup?.(); __hubPreviewPopover.__cleanup = null; } catch {}
   __hubPreviewPopover.classList.remove('visible');
-  setTimeoutfunction(() {
+  setTimeout(() => {
     if (!__hubPreviewPopover.classList.contains('visible')) {
       __hubPreviewPopover.style.display = 'none';
     }
@@ -319,35 +328,48 @@ function hidePreviewPopover() {
 }
 
 function setPopoverContent(studioName, items) {
-  var pop = ensurePreviewPopover();
-  var title = pop.querySelector('.hub-preview-title');
-  var body = pop.querySelector('.hub-preview-body');
+  const pop = ensurePreviewPopover();
+  const title = pop.querySelector('.hub-preview-title');
+  const body = pop.querySelector('.hub-preview-body');
 
-  title.textContent = (studioName) + " - " + ((config.languageLabels.previewModalTitle || 'Mais Bem Avaliados'));
-  pop.querySelector('.hub-preview-close').setAttribute('aria-label', config.languageLabels.closeButton || 'Fechar');
+  title.textContent = `${studioName} - ${(config.languageLabels.previewModalTitle || 'Mais Bem Avaliados')}`;
+  pop.querySelector('.hub-preview-close').setAttribute('aria-label', config.languageLabels.closeButton || config.languageLabels.kapat || 'Fechar');
 
   body.innerHTML = '';
-  var { serverId } = getSessionInfo();
+  const { serverId } = getSessionInfo();
 
-  items.slice(0, 5).forEach(function(item) {
-    var itemEl = document.createElement('div');
+  items.slice(0, 5).forEach(item => {
+    const itemEl = document.createElement('div');
     itemEl.className = 'hub-preview-item';
-    var posterUrl = buildPosterUrl(item, 300, 95);
-    var ratingVal = item.CommunityRating || item.CriticRating;
-    var rating = (typeof ratingVal === "number") ? ratingVal.toFixed(1) : (config.languageLabels.noRating || 'N/A');
-    var isFavorite = getCachedWatchlistMembership(item.Id, item.UserData.IsFavorite);
+    const posterUrl = buildPosterUrl(item, 300, 95);
+    let ratingVal = item.CommunityRating || item.CriticRating;
+    let rating = (typeof ratingVal === "number") ? ratingVal.toFixed(1) : (config.languageLabels.noRating || 'S/A');
+    let isFavorite = getCachedWatchlistMembership(item.Id, item.UserData?.IsFavorite);
     item.UserData = item.UserData || {};
     item.UserData.IsFavorite = isFavorite;
-    var favAddText = getWatchlistButtonText(item, false);
-    var favRemoveText = getWatchlistButtonText(item, true);
-    itemEl.innerHTML = "\n      <img class=\"hub-preview-poster\" src=\"" + (posterUrl || PLACEHOLDER_URL) + "\" alt=\"" + (item.Name) + "\" loading=\"lazy\">\n      <div class=\"hub-preview-info\">\n        <div class=\"hub-preview-item-title\">" + (item.Name) + "</div>\n        <div class=\"hub-preview-rating\">\n          ⭐ " + (rating) + "\n          <button class=\"favorite-heart " + (isFavorite ? 'favorited' : '') + "\"\n                  data-item-id=\"" + (item.Id) + "\"\n                  aria-label=\"" + (isFavorite ? favRemoveText : favAddText) + "\">\n            " + (isFavorite ? '❤️' : '🤍') + "\n          </button>\n        </div>\n      </div>\n    ";
-    var favoriteBtn = itemEl.querySelector('.favorite-heart');
-    favoriteBtn.addEventListenerfunction('click', (e) {
+    const favAddText = getWatchlistButtonText(item, false);
+    const favRemoveText = getWatchlistButtonText(item, true);
+    itemEl.innerHTML = `
+      <img class="hub-preview-poster" src="${posterUrl || PLACEHOLDER_URL}" alt="${item.Name}" loading="lazy">
+      <div class="hub-preview-info">
+        <div class="hub-preview-item-title">${item.Name}</div>
+        <div class="hub-preview-rating">
+          ⭐ ${rating}
+          <button class="favorite-heart ${isFavorite ? 'favorited' : ''}"
+                  data-item-id="${item.Id}"
+                  aria-label="${isFavorite ? favRemoveText : favAddText}">
+            ${isFavorite ? '❤️' : '🤍'}
+          </button>
+        </div>
+      </div>
+    `;
+    const favoriteBtn = itemEl.querySelector('.favorite-heart');
+    favoriteBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
       if (favoriteBtn.__busy) return;
       favoriteBtn.__busy = true;
-      var next = !isFavorite;
-      var ok = toggleFavorite(item.Id, next, favoriteBtn, item);
+      const next = !isFavorite;
+      const ok = await toggleFavorite(item.Id, next, favoriteBtn, item);
       favoriteBtn.__busy = false;
       if (ok) {
         isFavorite = next;
@@ -359,22 +381,22 @@ function setPopoverContent(studioName, items) {
       }
     });
 
-    ensureWatchlistLoaded().thenfunction(() {
-      var synced = getCachedWatchlistMembership(item.Id, isFavorite);
+    ensureWatchlistLoaded().then(() => {
+      const synced = getCachedWatchlistMembership(item.Id, isFavorite);
       isFavorite = synced;
       item.UserData.IsFavorite = synced;
       favoriteBtn.classList.toggle('favorited', synced);
       favoriteBtn.innerHTML = synced ? '❤️' : '🤍';
       favoriteBtn.setAttribute('aria-label', synced ? favRemoveText : favAddText);
-    }).catchfunction(() {});
+    }).catch(() => {});
 
-    itemEl.addEventListenerfunction('click', (e) {
+    itemEl.addEventListener('click', async (e) => {
       if (!e.target.closest('.favorite-heart')) {
         e.preventDefault();
         e.stopPropagation();
-        var backdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
+        const backdropIndex = localStorage.getItem("jms_backdrop_index") || "0";
         try {
-          openDetailsModal({
+          await openDetailsModal({
             itemId: item.Id,
             serverId,
             preferBackdropIndex: backdropIndex,
@@ -394,11 +416,11 @@ function setPopoverContent(studioName, items) {
   return pop;
 }
 
-function toggleFavorite(itemId, isFavorite, buttonElement, item) {
-  var favAddText = getWatchlistButtonText(item, false);
-  var favRemoveText = getWatchlistButtonText(item, true);
+async function toggleFavorite(itemId, isFavorite, buttonElement, item) {
+  const favAddText = getWatchlistButtonText(item, false);
+  const favRemoveText = getWatchlistButtonText(item, true);
   try {
-    updateFavoriteStatus(itemId, isFavorite, { item });
+    await updateFavoriteStatus(itemId, isFavorite, { item });
     if (isFavorite) {
       buttonElement.innerHTML = '❤️';
       buttonElement.classList.add('favorited');
@@ -409,51 +431,51 @@ function toggleFavorite(itemId, isFavorite, buttonElement, item) {
       buttonElement.setAttribute('aria-label', favAddText);
     }
     buttonElement.style.transform = 'scale(1.2)';
-    setTimeoutfunction(() { buttonElement.style.transform = 'scale(1)'; }, 200);
+    setTimeout(() => { buttonElement.style.transform = 'scale(1)'; }, 200);
     return true;
   } catch (error) {
-    console.error('Erro na operação de favorito:', error);
+    console.error('Favori işlemi hatası:', error);
     buttonElement.style.animation = 'shake 0.5s';
-    setTimeoutfunction(() { buttonElement.style.animation = ''; }, 500);
+    setTimeout(() => { buttonElement.style.animation = ''; }, 500);
     return false;
   }
 }
 
 function positionPopover(anchorEl, pop) {
-  var margin = 8;
-  var docEl = document.documentElement;
-  var vw = docEl.clientWidth;
-  var vh = docEl.clientHeight;
-  var r = anchorEl.getBoundingClientRect();
-  var prevDisplay = pop.style.display;
+  const margin = 8;
+  const docEl = document.documentElement;
+  const vw = docEl.clientWidth;
+  const vh = docEl.clientHeight;
+  const r = anchorEl.getBoundingClientRect();
+  const prevDisplay = pop.style.display;
   pop.style.display = 'block';
   pop.style.opacity = '0';
   pop.style.pointerEvents = 'none';
 
-  var pw = Math.min(pop.offsetWidth || 360, vw - 2 * margin);
-  var ph = Math.min(pop.offsetHeight || 300, vh - 2 * margin);
+  const pw = Math.min(pop.offsetWidth || 360, vw - 2 * margin);
+  const ph = Math.min(pop.offsetHeight || 300, vh - 2 * margin);
 
-  var spaceRight  = vw - r.right  - margin;
-  var spaceLeft   = r.left        - margin;
-  var spaceBottom = vh - r.bottom - margin;
-  var spaceTop    = r.top         - margin;
+  const spaceRight  = vw - r.right  - margin;
+  const spaceLeft   = r.left        - margin;
+  const spaceBottom = vh - r.bottom - margin;
+  const spaceTop    = r.top         - margin;
 
-  var placement = 'right';
+  let placement = 'right';
   if (spaceRight >= pw) placement = 'right';
   else if (spaceLeft >= pw) placement = 'left';
   else if (spaceBottom >= ph) placement = 'bottom';
   else if (spaceTop >= ph) placement = 'top';
   else {
-    var candidates = [
+    const candidates = [
       { side: 'right',  size: spaceRight },
       { side: 'left',   size: spaceLeft },
       { side: 'bottom', size: spaceBottom },
       { side: 'top',    size: spaceTop },
-    ].sortfunction((a,b) b.size - a.size);
+    ].sort((a,b) => b.size - a.size);
     placement = candidates[0].side;
   }
 
-  var left, top;
+  let left, top;
   switch (placement) {
     case 'right':  left = r.right + margin;          top = r.top + (r.height - ph) / 2; break;
     case 'left':   left = r.left - margin - pw;      top = r.top + (r.height - ph) / 2; break;
@@ -463,15 +485,15 @@ function positionPopover(anchorEl, pop) {
 
   left = Math.max(margin, Math.min(left, vw - margin - pw));
   top  = Math.max(margin, Math.min(top,  vh - margin - ph));
-  pop.style.left = (Math.round(left + window.scrollX)) + "px";
-  pop.style.top  = (Math.round(top  + window.scrollY)) + "px";
+  pop.style.left = `${Math.round(left + window.scrollX)}px`;
+  pop.style.top  = `${Math.round(top  + window.scrollY)}px`;
   pop.style.display = prevDisplay || 'block';
   pop.style.opacity = '';
   pop.style.pointerEvents = '';
 }
 
 function showPreviewPopover(anchorEl, studioName, items) {
-  var pop = setPopoverContent(studioName, items);
+  const pop = setPopoverContent(studioName, items);
   pop.style.position = 'absolute';
   pop.style.maxWidth = 'min(520px, 90vw)';
   pop.style.maxHeight = 'min(70vh, 600px)';
@@ -479,24 +501,24 @@ function showPreviewPopover(anchorEl, studioName, items) {
   pop.style.display = 'block';
   pop.classList.remove('visible');
 
-  var reposition = function() positionPopover(anchorEl, pop);
-  requestAnimationFramefunction(() {
+  const reposition = () => positionPopover(anchorEl, pop);
+  requestAnimationFrame(() => {
     reposition();
-    requestAnimationFramefunction(() { pop.classList.add('visible'); });
+    requestAnimationFrame(() => { pop.classList.add('visible'); });
   });
 
-  var onWin = function() reposition();
+  const onWin = () => reposition();
   window.addEventListener('resize', onWin, { passive: true });
   window.addEventListener('scroll', onWin, { passive: true });
 
-  var row = anchorEl.closest('.hub-row');
-  var onRow = function() reposition();
+  const row = anchorEl.closest('.hub-row');
+  const onRow = () => reposition();
   if (row) row.addEventListener('scroll', onRow, { passive: true });
 
-  var closeIfLeft = function() {
+  const closeIfLeft = () => {
     if (!anchorEl.matches(':hover') && !pop.matches(':hover')) {
       scheduleHidePopover(CLOSE_GRACE_MS);
-      var cancelOnReHover = function() {
+      const cancelOnReHover = () => {
         if (__hubPreviewCloseTimer && (anchorEl.matches(':hover') || pop.matches(':hover'))) {
           clearTimeout(__hubPreviewCloseTimer);
           __hubPreviewCloseTimer = null;
@@ -507,10 +529,10 @@ function showPreviewPopover(anchorEl, studioName, items) {
     }
   };
   anchorEl.addEventListener('mouseleave', closeIfLeft, { passive: true });
-  var onPopLeave = function() scheduleHidePopover(CLOSE_GRACE_MS);
+  const onPopLeave = () => scheduleHidePopover(CLOSE_GRACE_MS);
   pop.addEventListener('mouseleave', onPopLeave, { passive: true });
 
-  var cleanup = function() {
+  const cleanup = () => {
     window.removeEventListener('resize', onWin);
     window.removeEventListener('scroll', onWin);
     if (row) row.removeEventListener('scroll', onRow);
@@ -522,25 +544,25 @@ function showPreviewPopover(anchorEl, studioName, items) {
 }
 
 function createPreviewButton(card, studioName, studioId, userId) {
-  var btn = document.createElement('button');
+  const btn = document.createElement('button');
   btn.className = 'hub-preview-btn';
-  btn.setAttribute('aria-label', (studioName) + " " + ((config.languageLabels.previewButtonLabel || "Pré-visualização")));
+  btn.setAttribute('aria-label', `${studioName} ${(config.languageLabels.previewButtonLabel || "Pré-visualização")}`);
   btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>';
 
-  var isFetching = false;
-  var studioItems = null;
-  var hoverOpenTimer = null;
+  let isFetching = false;
+  let studioItems = null;
+  let hoverOpenTimer = null;
 
-  function ensureItems() {
+  async function ensureItems() {
     if (studioItems || isFetching) return;
     isFetching = true;
     btn.style.opacity = '0.5';
     try {
-      var signal = __fetchAbort ? __fetchAbort.signal : null;
-      var fetched = fetchStudioItemsViaUsers(studioId, studioName, userId, signal);
+      const signal = __fetchAbort ? __fetchAbort.signal : null;
+      const fetched = await fetchStudioItemsViaUsers(studioId, studioName, userId, signal);
       studioItems = selectTopNWithMinRating(fetched, MIN_RATING, 5);
     } catch (err) {
-      console.error('Não foi possível carregar os dados de pré-visualização:', err);
+      console.error('Ön izleme verileri alınamadı:', err);
       studioItems = [];
     } finally {
       isFetching = false;
@@ -548,73 +570,73 @@ function createPreviewButton(card, studioName, studioId, userId) {
     }
   }
 
-  btn.addEventListenerfunction('click', (e) {
+  btn.addEventListener('click', async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    ensureItems();
+    await ensureItems();
     if (studioItems && studioItems.length) { showPreviewPopover(btn, studioName, studioItems); }
   });
 
-  btn.addEventListenerfunction('mouseenter', () {
+  btn.addEventListener('mouseenter', async () => {
     if (!__userInteracted) return;
     if (hoverOpenTimer) clearTimeout(hoverOpenTimer);
-    ensureItems();
-    hoverOpenTimer = setTimeoutfunction(() {
+    await ensureItems();
+    hoverOpenTimer = setTimeout(() => {
       if (btn.matches(':hover') && studioItems && studioItems.length) {
         showPreviewPopover(btn, studioName, studioItems);
       }
     }, OPEN_INTENT_MS);
   });
 
-  btn.addEventListenerfunction('mouseleave', () {
+  btn.addEventListener('mouseleave', () => {
     if (hoverOpenTimer) { clearTimeout(hoverOpenTimer); hoverOpenTimer = null; }
     scheduleHidePopover(160);
   });
 
-  btn.addEventListenerfunction('focus', () {
-    ensureItems();
+  btn.addEventListener('focus', async () => {
+    await ensureItems();
     if (studioItems && studioItems.length) { showPreviewPopover(btn, studioName, studioItems); }
   });
-  btn.addEventListenerfunction('blur', () scheduleHidePopover(160));
+  btn.addEventListener('blur', () => scheduleHidePopover(160));
 
   card.appendChild(btn);
   return btn;
 }
 
-function setupHoverVideo(card, options = {}) {
+async function setupHoverVideo(card, options = {}) {
   if (!card) return;
 
   try {
-    card.__hoverVideoCleanup.();
+    card.__hoverVideoCleanup?.();
   } catch {}
   card.__hoverVideoCleanup = null;
 
-  var oldVideo = card.querySelector("video.hub-video");
+  const oldVideo = card.querySelector("video.hub-video");
   if (oldVideo) {
     try { oldVideo.pause(); } catch {}
-    try { oldVideo.removeAttribute("src"); oldVideo.load.(); } catch {}
+    try { oldVideo.removeAttribute("src"); oldVideo.load?.(); } catch {}
     try { oldVideo.remove(); } catch {}
   }
 
-  var logoUrl = options.logoUrl || null;
-  var customVideoUrl = options.customVideoUrl || null;
-  var studioName = options.studioName || "";
-  var studioId = options.studioId || "";
-  var userId = options.userId || "";
+  const logoUrl = options.logoUrl || null;
+  const customVideoUrl = options.customVideoUrl || null;
+  const studioName = options.studioName || "";
+  const studioId = options.studioId || "";
+  const userId = options.userId || "";
 
-  var derivedVideoUrls = logoUrl ? deriveVideoCandidatesFromLogo(logoUrl) : [];
-  var playableUrl = customVideoUrl || derivedVideoUrls[0] || null;
+  const derivedVideoUrls = logoUrl ? deriveVideoCandidatesFromLogo(logoUrl) : [];
+  const playableUrl = customVideoUrl || derivedVideoUrls[0] || null;
   if (!playableUrl) return;
 
-  var vidEl = null;
+  let vidEl = null;
 
-  var ensureVideo = function() {
+  const ensureVideo = () => {
     if (vidEl) return vidEl;
     vidEl = document.createElement("video");
     vidEl.className = "hub-video";
     vidEl.src = playableUrl;
     
-    var vol = config.studioHubsVolume;
+    const vol = config.studioHubsVolume;
     if (vol === 'muted' || vol === 0) {
       vidEl.muted = true;
       vidEl.volume = 0;
@@ -635,29 +657,29 @@ function setupHoverVideo(card, options = {}) {
     return vidEl;
   };
 
-  var play = function() {
-    var v = ensureVideo();
+  const play = () => {
+    const v = ensureVideo();
     v.currentTime = 0;
     v.style.opacity = "1";
-    v.play().catchfunction(() {});
+    v.play().catch(() => {});
   };
-  var stop = function(remove = false) {
+  const stop = (remove = false) => {
     if (!vidEl) return;
     try { vidEl.pause(); } catch {}
     vidEl.style.opacity = "0";
     if (remove) {
-      var v = vidEl;
+      const v = vidEl;
       vidEl = null;
-      try { v.removeAttribute('src'); v.load.(); } catch {}
+      try { v.removeAttribute('src'); v.load?.(); } catch {}
       try { v.remove(); } catch {}
     }
   };
 
-  var onMouseEnter = function() { if (__userInteracted) play(); };
-  var onMouseLeave = function() stop(false);
-  var onFocus = function() play();
-  var onBlur = function() stop(false);
-  var stopAndRemove = function() stop(true);
+  const onMouseEnter = () => { if (__userInteracted) play(); };
+  const onMouseLeave = () => stop(false);
+  const onFocus = () => play();
+  const onBlur = () => stop(false);
+  const stopAndRemove = () => stop(true);
   card.addEventListener("mouseenter", onMouseEnter);
   card.addEventListener("mouseleave", onMouseLeave);
   card.addEventListener("focus", onFocus);
@@ -665,15 +687,15 @@ function setupHoverVideo(card, options = {}) {
   card.addEventListener("click", stopAndRemove);
   card.addEventListener("pointerdown", stopAndRemove);
 
-  var onRouteOrHide = function() stop(true);
-  var onVisibilityChange = function() {
+  const onRouteOrHide = () => stop(true);
+  const onVisibilityChange = () => {
     if (document.hidden) onRouteOrHide();
   };
   window.addEventListener("hashchange", onRouteOrHide);
   window.addEventListener("beforeunload", onRouteOrHide);
   document.addEventListener("visibilitychange", onVisibilityChange);
 
-  card.__hoverVideoCleanup = function() {
+  card.__hoverVideoCleanup = () => {
     stop(true);
     card.removeEventListener("mouseenter", onMouseEnter);
     card.removeEventListener("mouseleave", onMouseLeave);
@@ -688,16 +710,16 @@ function setupHoverVideo(card, options = {}) {
 }
 
 
-function withVer(url, v = "1") { return (url) + (url.includes("?") ? "&" : "?") + "v=" + (encodeURIComponent(v)); }
+function withVer(url, v = "1") { return `${url}${url.includes("?") ? "&" : "?"}v=${encodeURIComponent(v)}`; }
 function loadLogoCache() {
-  try { var raw = localStorage.getItem(LOGO_CACHE_KEY); if (!raw) return {}; var { ts, data } = JSON.parse(raw); if (!ts || Date.now() - ts > LOGO_CACHE_TTL) return {}; return data || {}; } catch { return {}; }
+  try { const raw = localStorage.getItem(LOGO_CACHE_KEY); if (!raw) return {}; const { ts, data } = JSON.parse(raw); if (!ts || Date.now() - ts > LOGO_CACHE_TTL) return {}; return data || {}; } catch { return {}; }
 }
 function saveLogoCache(map) {
   try {
-    var entries = Object.entries(map);
-    var MAX = 100;
-    var trimmed = entries.slice(-MAX);
-    var out = Object.fromEntries(trimmed);
+    const entries = Object.entries(map);
+    const MAX = 100;
+    const trimmed = entries.slice(-MAX);
+    const out = Object.fromEntries(trimmed);
     localStorage.setItem(LOGO_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: out }));
   } catch {}
 }
@@ -709,13 +731,13 @@ function slugify(name) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
-function tryLocalLogo(name) {
-  var slug = slugify(name);
+async function tryLocalLogo(name) {
+  const slug = slugify(name);
   if (!slug || !LOCAL_STUDIO_LOGO_SLUGS.has(slug)) return null;
-  var ext = LOCAL_EXTS[0];
+  const ext = LOCAL_EXTS[0];
   if (!ext) return null;
-  var base = LOGO_BASE + slug;
-  return withVer((base) + (ext));
+  const base = LOGO_BASE + slug;
+  return withVer(`${base}${ext}`);
 }
 function isCachedLocalStudioLogo(url) {
   return isLocalStudioAssetUrl(url) && hasKnownLocalStudioLogo(url);
@@ -727,42 +749,42 @@ function sanitizeLogoCacheEntry(cache, key) {
   saveLogoCache(cache);
   return null;
 }
-function resolveLogoUrl(name) {
-  var cache = loadLogoCache();
-  var cachedUrl = sanitizeLogoCacheEntry(cache, name);
+async function resolveLogoUrl(name) {
+  const cache = loadLogoCache();
+  const cachedUrl = sanitizeLogoCacheEntry(cache, name);
   if (cachedUrl) return cachedUrl;
-  var localUrl = tryLocalLogo(name);
+  const localUrl = await tryLocalLogo(name);
   if (localUrl) { cache[name] = localUrl; saveLogoCache(cache); return localUrl; }
   return null;
 }
 
-function fetchStudios(signal) {
-  var url = "/Studios?Limit=300&Recursive=true&SortBy=SortName&SortOrder=Ascending";
-  var res = fetch(withServer(url), { headers: hJSON(), signal, credentials: 'same-origin' });
-  if (!res.ok) throw new Error("Não foi possível carregar os estúdios");
-  var data = res.json();
-  var items = Array.isArray(data.Items) ? data.Items : (Array.isArray(data) ? data : []);
-  return items.map(function(s) ({
+async function fetchStudios(signal) {
+  const url = `/Studios?Limit=300&Recursive=true&SortBy=SortName&SortOrder=Ascending`;
+  const res = await fetch(withServer(url), { headers: hJSON(), signal, credentials: 'same-origin' });
+  if (!res.ok) throw new Error("Studios alınamadı");
+  const data = await res.json();
+  const items = Array.isArray(data?.Items) ? data.Items : (Array.isArray(data) ? data : []);
+  return items.map(s => ({
     Id: s.Id,
     Name: s.Name,
     ImageTags: s.ImageTags || {},
-    PrimaryImageTag: s.PrimaryImageTag || (s.ImageTags.Primary) || null
+    PrimaryImageTag: s.PrimaryImageTag || (s.ImageTags?.Primary) || null
   }));
 }
 
-function fetchStudioItemsViaUsers(studioId, studioName, userId, signal) {
-  var ratingPart = Number.isFinite(MIN_RATING) ? "&MinCommunityRating=" + (MIN_RATING) : "";
-  var common = "StartIndex=0&Limit=" + (STUDIO_ITEMS_LIMIT) + "&Fields=PrimaryImageAspectRatio,ImageTags,BackdropImageTags,CommunityRating,CriticRating&Recursive=true&SortOrder=Descending" + (ratingPart);
-  var urls = [
-    "/Users/" + (userId) + "/Items?" + (common) + "&IncludeItemTypes=Movie,Series&StudioIds=" + (encodeURIComponent(studioId)),
-    "/Users/" + (userId) + "/Items?" + (common) + "&IncludeItemTypes=Movie,Series&Studios=" + (encodeURIComponent(studioName))
+async function fetchStudioItemsViaUsers(studioId, studioName, userId, signal) {
+  const ratingPart = Number.isFinite(MIN_RATING) ? `&MinCommunityRating=${MIN_RATING}` : "";
+  const common = `StartIndex=0&Limit=${STUDIO_ITEMS_LIMIT}&Fields=PrimaryImageAspectRatio,ImageTags,BackdropImageTags,CommunityRating,CriticRating&Recursive=true&SortOrder=Descending${ratingPart}`;
+  const urls = [
+    `/Users/${userId}/Items?${common}&IncludeItemTypes=Movie,Series&StudioIds=${encodeURIComponent(studioId)}`,
+    `/Users/${userId}/Items?${common}&IncludeItemTypes=Movie,Series&Studios=${encodeURIComponent(studioName)}`
   ];
-  for (var u of urls) {
+  for (const u of urls) {
     try {
-      var r = fetch(withServer(u), { headers: hJSON(), signal, credentials: 'same-origin' });
+      const r = await fetch(withServer(u), { headers: hJSON(), signal, credentials: 'same-origin' });
       if (!r.ok) continue;
-      var data = r.json();
-      var items = Array.isArray(data.Items) ? data.Items : (Array.isArray(data) ? data : []);
+      const data = await r.json();
+      const items = Array.isArray(data?.Items) ? data.Items : (Array.isArray(data) ? data : []);
       if (items.length) return items;
     } catch {}
   }
@@ -774,46 +796,46 @@ function hJSON() {
 }
 
 function buildBackdropUrl(item, index = 0) {
-  var tags = item.BackdropImageTags || [];
-  var tag = tags[index];
+  const tags = item.BackdropImageTags || [];
+  const tag = tags[index];
   if (!tag) return null;
-  return withServer("/Items/" + (item.Id) + "/Images/Backdrop/" + (index) + "?tag=" + (encodeURIComponent(tag)) + "&quality=90");
+  return withServer(`/Items/${item.Id}/Images/Backdrop/${index}?tag=${encodeURIComponent(tag)}&quality=90`);
 }
 function buildPosterUrl(item, height = 300, quality = 95) {
-  var tag = item.ImageTags.Primary || item.PrimaryImageTag;
+  const tag = item.ImageTags?.Primary || item.PrimaryImageTag;
   if (!tag) return null;
-  return withServer("/Items/" + (item.Id) + "/Images/Primary?tag=" + (encodeURIComponent(tag)) + "&fillHeight=" + (height) + "&quality=" + (quality));
+  return withServer(`/Items/${item.Id}/Images/Primary?tag=${encodeURIComponent(tag)}&fillHeight=${height}&quality=${quality}`);
 }
 function pickRandom(arr) { return arr.length ? arr[Math.floor(Math.random()*arr.length)] : null; }
 
-function getHiddenStudioNameSet(manualEntries = []) {
-  var liveConfig = getConfig();
-  if (liveConfig.forceGlobalUserSettings) {
-    var globalHidden = Array.isArray(liveConfig.studioHubsHidden) ? liveConfig.studioHubsHidden : [];
+async function getHiddenStudioNameSet(manualEntries = []) {
+  const liveConfig = getConfig();
+  if (liveConfig?.forceGlobalUserSettings) {
+    const globalHidden = Array.isArray(liveConfig?.studioHubsHidden) ? liveConfig.studioHubsHidden : [];
     return new Set(sanitizeStudioHubHiddenNames(globalHidden, manualEntries).map(nameKey));
   }
 
   try {
-    var profile = getDeviceProfileAuto();
-    var visibility = fetchStudioHubVisibility({ profile });
-    return new Set(sanitizeStudioHubHiddenNames(visibility.hiddenNames || [], manualEntries).map(nameKey));
+    const profile = getDeviceProfileAuto();
+    const visibility = await fetchStudioHubVisibility({ profile });
+    return new Set(sanitizeStudioHubHiddenNames(visibility?.hiddenNames || [], manualEntries).map(nameKey));
   } catch {
     return new Set();
   }
 }
 
-function getStudioOrderList(manualEntries = []) {
-  var liveConfig = getConfig();
-  var globalOrder = Array.isArray(liveConfig.studioHubsOrder) ? liveConfig.studioHubsOrder : [];
+async function getStudioOrderList(manualEntries = []) {
+  const liveConfig = getConfig();
+  const globalOrder = Array.isArray(liveConfig?.studioHubsOrder) ? liveConfig.studioHubsOrder : [];
 
-  if (liveConfig.forceGlobalUserSettings) {
+  if (liveConfig?.forceGlobalUserSettings) {
     return mergeOrder(DEFAULT_ORDER, sanitizeStudioHubOrderNames(globalOrder, manualEntries));
   }
 
   try {
-    var profile = getDeviceProfileAuto();
-    var visibility = fetchStudioHubVisibility({ profile });
-    var userOrder = Array.isArray(visibility.orderNames) && visibility.orderNames.length
+    const profile = getDeviceProfileAuto();
+    const visibility = await fetchStudioHubVisibility({ profile });
+    const userOrder = Array.isArray(visibility?.orderNames) && visibility.orderNames.length
       ? visibility.orderNames
       : globalOrder;
     return mergeOrder(DEFAULT_ORDER, sanitizeStudioHubOrderNames(userOrder, manualEntries));
@@ -822,43 +844,43 @@ function getStudioOrderList(manualEntries = []) {
   }
 }
 
-function chooseBackdropForStudio(studio, userId, signal, options = {}) {
-  var map = loadCache(IMG_KEY, IMG_TTL) || {};
-  var cached = map[studio.Id];
-  if (cached.itemId && Number.isInteger(cached.index)) {
-    var itemId = cached.itemId;
-    var idx    = cached.index;
-    var tag    = cached.tag || null;
-    var url = tag
-      ? withServer("/Items/" + (itemId) + "/Images/Backdrop/" + (idx) + "?tag=" + (encodeURIComponent(tag)) + "&quality=90")
-      : withServer("/Items/" + (itemId) + "/Images/Backdrop/" + (idx) + "?quality=90");
+async function chooseBackdropForStudio(studio, userId, signal, options = {}) {
+  const map = loadCache(IMG_KEY, IMG_TTL) || {};
+  const cached = map[studio.Id];
+  if (cached?.itemId && Number.isInteger(cached?.index)) {
+    const itemId = cached.itemId;
+    const idx    = cached.index;
+    const tag    = cached.tag || null;
+    const url = tag
+      ? withServer(`/Items/${itemId}/Images/Backdrop/${idx}?tag=${encodeURIComponent(tag)}&quality=90`)
+      : withServer(`/Items/${itemId}/Images/Backdrop/${idx}?quality=90`);
     return { itemId, index: idx, url };
   }
 
-  var items = Array.isArray(options.items)
+  const items = Array.isArray(options.items)
     ? options.items
-    : fetchStudioItemsViaUsers(studio.Id, studio.Name, userId, signal);
+    : await fetchStudioItemsViaUsers(studio.Id, studio.Name, userId, signal);
   if (!items.length) return null;
 
-  var withBd = items.filter(function(it) Array.isArray(it.BackdropImageTags) && it.BackdropImageTags.length);
-  var candidate = pickRandom(withBd.length ? withBd : items);
+  const withBd = items.filter(it => Array.isArray(it.BackdropImageTags) && it.BackdropImageTags.length);
+  const candidate = pickRandom(withBd.length ? withBd : items);
   if (!candidate) return null;
 
-  var idx = 0;
-  var url = buildBackdropUrl(candidate, idx);
+  let idx = 0;
+  let url = buildBackdropUrl(candidate, idx);
 
   if (!url) {
-    var purl = buildPosterUrl(candidate);
+    const purl = buildPosterUrl(candidate);
     if (!purl) return null;
-    var payload = { studioId: studio.Id, itemId: candidate.Id, index: -1, tag: candidate.ImageTags.Primary || candidate.PrimaryImageTag || null };
-    var newMap = { ...map, [studio.Id]: payload };
+    const payload = { studioId: studio.Id, itemId: candidate.Id, index: -1, tag: candidate.ImageTags?.Primary || candidate.PrimaryImageTag || null };
+    const newMap = { ...map, [studio.Id]: payload };
     saveCache(IMG_KEY, newMap);
     return { itemId: candidate.Id, index: -1, url: purl };
   }
 
-  var tag = (candidate.BackdropImageTags||[])[idx] || null;
-  var payload = { studioId: studio.Id, itemId: candidate.Id, index: idx, tag };
-  var newMap = { ...map, [studio.Id]: payload };
+  const tag = (candidate.BackdropImageTags||[])[idx] || null;
+  const payload = { studioId: studio.Id, itemId: candidate.Id, index: idx, tag };
+  const newMap = { ...map, [studio.Id]: payload };
   saveCache(IMG_KEY, newMap);
 
   return { itemId: candidate.Id, index: idx, url };
@@ -866,19 +888,19 @@ function chooseBackdropForStudio(studio, userId, signal, options = {}) {
 
 function loadCache(k, ttl) {
   try {
-    var raw = localStorage.getItem(k);
+    const raw = localStorage.getItem(k);
     if (!raw) return null;
-    var obj = JSON.parse(raw);
+    const obj = JSON.parse(raw);
     if (Date.now() - obj.ts > ttl) return null;
     return obj.data;
   } catch { return null; }
 }
 function saveCache(k, data) {
   try {
-    var d = data;
+    let d = data;
     if (d && typeof d === 'object' && !Array.isArray(d)) {
-      var MAX = 300;
-      var ent = Object.entries(d);
+      const MAX = 300;
+      const ent = Object.entries(d);
       if (ent.length > MAX) d = Object.fromEntries(ent.slice(-MAX));
     }
     localStorage.setItem(k, JSON.stringify({ ts: Date.now(), data: d }));
@@ -886,20 +908,20 @@ function saveCache(k, data) {
 }
 
 function buildStudioHref(studioId, serverId) {
-  return "#/list?studioId=" + (encodeURIComponent(studioId)) + "${serverId ? "&serverId=${encodeURIComponent(serverId)}" : \"\"}";
+  return `#/list?studioId=${encodeURIComponent(studioId)}${serverId ? `&serverId=${encodeURIComponent(serverId)}` : ""}`;
 }
 
 function createBackdropCardShell(title, studio, serverId) {
-  var a = document.createElement("a");
+  const a = document.createElement("a");
   a.className = "hub-card skeleton";
   a.dataset.hub = title;
-  a.href = studio.Id ? buildStudioHref(studio.Id, serverId) : "javascript:void(0)";
+  a.href = studio?.Id ? buildStudioHref(studio.Id, serverId) : "javascript:void(0)";
   a.setAttribute("aria-label", title);
 
-  var overlay = document.createElement("div");
+  const overlay = document.createElement("div");
   overlay.className = "hub-overlay";
 
-  var label = document.createElement("div");
+  const label = document.createElement("div");
   label.className = "hub-title-text";
   label.textContent = title;
 
@@ -921,11 +943,11 @@ function cleanupStudioHubsSection() {
   }
   __fetchAbort = null;
 
-  document.querySelectorAll("#studio-hubs").forEach(function((section) {
+  document.querySelectorAll("#studio-hubs").forEach((section) => {
     try {
-      section.querySelectorAll('video.hub-video').forEach(function(v) {
+      section.querySelectorAll('video.hub-video').forEach(v => {
         try { v.pause(); } catch {}
-        try { v.removeAttribute('src'); v.load.(); } catch {}
+        try { v.removeAttribute('src'); v.load?.(); } catch {}
       });
     } catch {}
 
@@ -937,9 +959,9 @@ export function cleanupStudioHubs() {
   cleanupStudioHubsSection();
 }
 
-export function renderStudioHubs() {
-  var runtimeConfig = getConfig.() || config || {};
-  var homeSectionsConfig = getHomeSectionsRuntimeConfig(runtimeConfig);
+export async function renderStudioHubs() {
+  const runtimeConfig = getConfig?.() || config || {};
+  const homeSectionsConfig = getHomeSectionsRuntimeConfig(runtimeConfig);
   if (!homeSectionsConfig.enableStudioHubs) {
     cleanupStudioHubsSection();
     return;
@@ -952,112 +974,112 @@ export function renderStudioHubs() {
   __fetchAbort = new AbortController();
 
   try {
-    var indexPage =
+    const indexPage =
       document.querySelector("#indexPage:not(.hide)") ||
       document.querySelector("#homePage:not(.hide)");
     if (!indexPage) {
       return;
     }
-     var row = ensureContainer(indexPage);
+     const row = ensureContainer(indexPage);
     if (!row) {
       return;
     }
-    var section = row.closest("#studio-hubs");
+    const section = row.closest("#studio-hubs");
      setupScroller(row);
      resetHubRowScrollPosition(row);
      row.innerHTML = "";
-     var { serverId, userId } = getSessionInfo();
+     let { serverId, userId } = getSessionInfo();
      serverId = serverId || localStorage.getItem("serverId") || sessionStorage.getItem("serverId") || null;
-     var shells = {};
+     const shells = {};
 
-    var manualEntries = fetchStudioHubManualEntries().catchfunction(() []);
-    var hiddenNames = getHiddenStudioNameSet(manualEntries);
-    var userOrder = getStudioOrderList(manualEntries);
-    var manualOrder = (manualEntries || [])
-      .map(function(entry) String(entry.name || entry.Name || "").trim())
+    const manualEntries = await fetchStudioHubManualEntries().catch(() => []);
+    const hiddenNames = await getHiddenStudioNameSet(manualEntries);
+    const userOrder = await getStudioOrderList(manualEntries);
+    const manualOrder = (manualEntries || [])
+      .map(entry => String(entry?.name || entry?.Name || "").trim())
       .filter(Boolean);
-    var effectiveOrder = mergeOrder(manualOrder, userOrder);
-    var visibleOrder = effectiveOrder.filter(function(name) !hiddenNames.has(nameKey(name)));
+    const effectiveOrder = mergeOrder(manualOrder, userOrder);
+    const visibleOrder = effectiveOrder.filter(name => !hiddenNames.has(nameKey(name)));
     if (!visibleOrder.length) {
       if (section) section.style.display = "none";
       setStudioHubsReady(true);
       return;
     }
 
-    var maxCards = Number.isFinite(config.studioHubsCardCount) ? config.studioHubsCardCount : visibleOrder.length;
-    var wanted = visibleOrder.slice(0, Math.max(1, maxCards));
-    var sharedVideos = config.studioHubsHoverVideo
-      ? fetchStudioHubVideoEntries().catchfunction(() [])
+    const maxCards = Number.isFinite(config.studioHubsCardCount) ? config.studioHubsCardCount : visibleOrder.length;
+    const wanted = visibleOrder.slice(0, Math.max(1, maxCards));
+    const sharedVideos = config.studioHubsHoverVideo
+      ? await fetchStudioHubVideoEntries().catch(() => [])
       : [];
 
-    for (var desired of wanted) {
-      var existing = row.querySelector(".hub-card[data-hub=\"" + (CSS.escape(desired)) + "\"]");
-      var card = existing || createBackdropCardShell(desired, null, null);
+    for (const desired of wanted) {
+      const existing = row.querySelector(`.hub-card[data-hub="${CSS.escape(desired)}"]`);
+      const card = existing || createBackdropCardShell(desired, null, null);
       if (!existing) row.appendChild(card);
       shells[desired] = card;
     }
     if (section) section.style.display = "";
 
-    var cached = loadCache(LS_KEY, CACHE_TTL);
-    var studios = cached || fetchStudios(__fetchAbort.signal).catchfunction(() []);
+    const cached = loadCache(LS_KEY, CACHE_TTL);
+    const studios = cached || await fetchStudios(__fetchAbort.signal).catch(() => []);
     if (!cached && studios.length) saveCache(LS_KEY, studios);
 
-    var nameMap = loadCache(MAP_KEY, MAP_TTL) || {};
-    var resolved = [];
-    for (var desired of wanted) {
-      var manualEntry = (manualEntries || []).find(function(entry) nameKey(entry.name || entry.Name) === nameKey(desired)) || null;
-      var manualId = String(manualEntry.studioId || manualEntry.StudioId || "").trim();
-      var studio = manualId
+    const nameMap = loadCache(MAP_KEY, MAP_TTL) || {};
+    const resolved = [];
+    for (const desired of wanted) {
+      const manualEntry = (manualEntries || []).find(entry => nameKey(entry?.name || entry?.Name) === nameKey(desired)) || null;
+      const manualId = String(manualEntry?.studioId || manualEntry?.StudioId || "").trim();
+      let studio = manualId
         ? { Id: manualId, Name: desired }
-        : (nameMap[desired] || studios.find(function(s) matches(desired, s.Name)) || searchStudiosByAliases(desired, __fetchAbort.signal));
+        : (nameMap[desired] || studios.find(s => matches(desired, s.Name)) || await searchStudiosByAliases(desired, __fetchAbort.signal));
       if (studio) { resolved.push({ name: desired, studio }); nameMap[desired] = studio; }
     }
     saveCache(MAP_KEY, nameMap);
 
-    var resolvedNames = new Setfunction(resolved.map(({ name }) nameKey(name)));
-    for (var desired of wanted) {
+    const resolvedNames = new Set(resolved.map(({ name }) => nameKey(name)));
+    for (const desired of wanted) {
       if (resolvedNames.has(nameKey(desired))) continue;
       if (!isDefaultStudioHub(desired)) continue;
-      try { shells[desired].remove.(); } catch {}
+      try { shells[desired]?.remove?.(); } catch {}
       delete shells[desired];
     }
 
-    Promise.allSettledfunction(resolved.map(({ name, studio }) {
-      var card = shells[name];
+    await Promise.allSettled(resolved.map(async ({ name, studio }) => {
+      const card = shells[name];
       if (!card) return;
-      var enableColorize = config.studioHubsColorize !== false;
+      const enableColorize = config.studioHubsColorize !== false;
 
       if (enableColorize) {
-        var { bg, shadow } = stringToColor(name);
+        const { bg, shadow } = stringToColor(name);
         card.style.setProperty('--hub-card-bg', bg);
         card.style.setProperty('--hub-card-shadow', shadow);
       } else {
         card.style.removeProperty('--hub-card-bg');
         card.style.removeProperty('--hub-card-shadow');
       }
-      var detailsHref = buildStudioHref(studio.Id, serverId);
+      const detailsHref = buildStudioHref(studio.Id, serverId);
       card.href = detailsHref;
       card.classList.remove("hub-card-textonly");
 
-      var isDefaultHub = isDefaultStudioHub(name);
-      var studioItems = isDefaultHub
-        ? fetchStudioItemsViaUsers(studio.Id, studio.Name || name, userId, __fetchAbort.signal)
+      const isDefaultHub = isDefaultStudioHub(name);
+      const studioItems = isDefaultHub
+        ? await fetchStudioItemsViaUsers(studio.Id, studio.Name || name, userId, __fetchAbort.signal)
         : null;
-      if (isDefaultHub && !studioItems.length) {
+      if (isDefaultHub && !studioItems?.length) {
         try { card.remove(); } catch {}
         return;
       }
 
-      var used = false;
-      var manualEntry = (manualEntries || []).find(function(entry) nameKey(entry.name || entry.Name) === nameKey(name)) || null;
-      var customLogoUrl = buildStudioHubLogoUrl(manualEntry);
-      var logoUrl = customLogoUrl || resolveLogoUrl(name);
-      var sharedVideoEntry = findStudioHubVideoEntry(sharedVideos, name);
-      var customVideoUrl = buildStudioHubVideoUrl(sharedVideoEntry);
+      let used = false;
+      const manualEntry = (manualEntries || []).find(entry => nameKey(entry?.name || entry?.Name) === nameKey(name)) || null;
+      const customLogoUrl = buildStudioHubLogoUrl(manualEntry);
+      const logoUrl = customLogoUrl || await resolveLogoUrl(name);
+      const sharedVideoEntry = findStudioHubVideoEntry(sharedVideos, name);
+      const customVideoUrl = buildStudioHubVideoUrl(sharedVideoEntry);
 
       if (logoUrl) {
-        var img = upsertImg(card, "hub-img hub-logo");
-        img.alt = (name) + " logo";
+        const img = upsertImg(card, "hub-img hub-logo");
+        img.alt = `${name} logo`;
         if (img.src !== logoUrl) {
           img.style.opacity = '0';
           img.src = logoUrl;
@@ -1067,9 +1089,9 @@ export function renderStudioHubs() {
       }
 
       if (!used) {
-        var chosen = chooseBackdropForStudio(studio, userId, __fetchAbort.signal, { items: studioItems });
-        if (chosen.url) {
-          var img = upsertImg(card, "hub-img");
+        const chosen = await chooseBackdropForStudio(studio, userId, __fetchAbort.signal, { items: studioItems });
+        if (chosen?.url) {
+          const img = upsertImg(card, "hub-img");
           img.alt = name;
           if (img.src !== chosen.url) {
             img.style.opacity = '0';
@@ -1088,7 +1110,7 @@ export function renderStudioHubs() {
       ensurePreviewButton(card, name, studio.Id, userId);
 
       if (config.studioHubsHoverVideo) {
-        setupHoverVideo(card, {
+        await setupHoverVideo(card, {
           logoUrl,
           customVideoUrl,
           studioName: name,
@@ -1098,13 +1120,13 @@ export function renderStudioHubs() {
       }
     }));
 
-    requestAnimationFramefunction(() {
+    requestAnimationFrame(() => {
       try {
-        row.__updateButtons.();
+        row.__updateButtons?.();
       } catch {}
     });
 
-    var renderedCards = row.querySelectorAll(".hub-card").length;
+    const renderedCards = row.querySelectorAll(".hub-card").length;
     if (section) section.style.display = renderedCards ? "" : "none";
 
     if (!resolved.length || !renderedCards) {
@@ -1112,7 +1134,7 @@ export function renderStudioHubs() {
     }
 
   } catch (e) {
-    console.warn("Erro na renderização do Studio hubs:", e);
+    console.warn("Studio hubs render hatası:", e);
     setStudioHubsReady(true);
   } finally {
     __studioHubBusy = false;
@@ -1120,7 +1142,7 @@ export function renderStudioHubs() {
   }
 }
 
-window.addEventListenerfunction("jms:studio-hubs-visibility-updated", () {
+window.addEventListener("jms:studio-hubs-visibility-updated", () => {
   try {
     void renderStudioHubs();
   } catch {}
@@ -1130,38 +1152,51 @@ function enforceStudioHubsOrder(homeSections) {
   if (!homeSections) return;
   bindManagedSectionsBelowNative(homeSections);
   try { keepManagedSectionsBelowNative(homeSections); } catch {}
-  try { homeSections.__jmsManagedBelowNativeSchedule.(); } catch {}
+  try { homeSections.__jmsManagedBelowNativeSchedule?.(); } catch {}
 }
 
 function ensureContainer(indexPage) {
-  var all = document.querySelectorAll("#studio-hubs");
+  const all = document.querySelectorAll("#studio-hubs");
   if (all.length > 1) {
-    var keep = indexPage.querySelector("#studio-hubs") || all[0];
-    for (var i = 0; i < all.length; i++) {
+    const keep = indexPage.querySelector("#studio-hubs") || all[0];
+    for (let i = 0; i < all.length; i++) {
      if (all[i] === keep) continue;
-     all[i].querySelectorAll('video.hub-video').forEach(function(v) {
+     all[i].querySelectorAll('video.hub-video').forEach(v => {
        try { v.pause(); } catch {}
-       try { v.removeAttribute('src'); v.load.(); } catch {}
+       try { v.removeAttribute('src'); v.load?.(); } catch {}
      });
      all[i].remove();
     }
   }
-  var homeSections = indexPage.querySelector(".homeSectionsContainer");
+  const homeSections = indexPage.querySelector(".homeSectionsContainer");
   if (!homeSections) return null;
   enforceStudioHubsOrder(homeSections);
-  var moveSectionIntoPlace = function(section) {
+  const moveSectionIntoPlace = (section) => {
     if (section.parentElement !== homeSections) {
       homeSections.appendChild(section);
     }
     enforceStudioHubsOrder(homeSections);
   };
 
-  var section = indexPage.querySelector("#studio-hubs") || document.getElementById("studio-hubs");
+  let section = indexPage.querySelector("#studio-hubs") || document.getElementById("studio-hubs");
   if (!section) {
     section = document.createElement("div");
     section.id = "studio-hubs";
     section.classList.add("homeSection");
-    section.innerHTML = "\n      <div class=\"sectionTitleContainer sectionTitleContainer-cards\">\n        <h2 class=\"sectionTitle sectionTitle-cards\">" + (config.languageLabels.studioHubs || 'Coleções de Estúdios') + "</h2>\n      </div>\n      <div class=\"hub-scroll-wrap\">\n        <button class=\"hub-scroll-btn hub-scroll-left\" aria-label=\"" + (config.languageLabels.scrollLeft || 'Rolar para esquerda') + "\" aria-disabled=\"true\">\n          <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z\"/></svg>\n        </button>\n        <div class=\"itemsContainer hub-row backdrop-mode\" role=\"list\"></div>\n        <button class=\"hub-scroll-btn hub-scroll-right\" aria-label=\"" + (config.languageLabels.scrollRight || 'Rolar para direita') + "\" aria-disabled=\"true\">\n          <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z\"/></svg>\n        </button>\n      </div>\n    ";
+    section.innerHTML = `
+      <div class="sectionTitleContainer sectionTitleContainer-cards">
+        <h2 class="sectionTitle sectionTitle-cards">${config.languageLabels.studioHubs || 'Studio Collections'}</h2>
+      </div>
+      <div class="hub-scroll-wrap">
+        <button class="hub-scroll-btn hub-scroll-left" aria-label="${config.languageLabels.scrollLeft || 'Scroll left'}" aria-disabled="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </button>
+        <div class="itemsContainer hub-row backdrop-mode" role="list"></div>
+        <button class="hub-scroll-btn hub-scroll-right" aria-label="${config.languageLabels.scrollRight || 'Scroll right'}" aria-disabled="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+        </button>
+      </div>
+    `;
     moveSectionIntoPlace(section);
   } else if (section.parentElement !== homeSections) {
     moveSectionIntoPlace(section);
@@ -1176,107 +1211,107 @@ function resetHubRowScrollPosition(row) {
   row.style.overflowAnchor = "none";
   if (Math.abs(Number(row.scrollLeft) || 0) <= 1) {
     try {
-      row.__updateButtons.();
+      row.__updateButtons?.();
     } catch {}
     return;
   }
 
-  var previousInlineBehavior = row.style.scrollBehavior;
+  const previousInlineBehavior = row.style.scrollBehavior;
   row.style.scrollBehavior = "auto";
   row.scrollLeft = 0;
 
-  requestAnimationFramefunction(() {
+  requestAnimationFrame(() => {
     if (!row.isConnected) return;
     row.style.scrollBehavior = previousInlineBehavior;
     try {
-      row.__updateButtons.();
+      row.__updateButtons?.();
     } catch {}
   });
 }
 
 function setupScroller(row) {
   if (row.dataset.scrollerMounted === "1") {
-    requestAnimationFramefunction(() {
+    requestAnimationFrame(() => {
       try {
-        row.__updateButtons.();
+        row.__updateButtons?.();
       } catch {}
     });
     return;
   }
   row.dataset.scrollerMounted = "1";
-  var section = row.closest("#studio-hubs");
+  const section = row.closest("#studio-hubs");
   if (!section) return;
-  var btnL = section.querySelector(".hub-scroll-left");
-  var btnR = section.querySelector(".hub-scroll-right");
-  var step = function() Math.max(240, Math.floor(row.clientWidth * 0.9));
-  var updateButtons = function() {
-    var max = row.scrollWidth - row.clientWidth - 1;
-    var atStart = row.scrollLeft <= 1;
-    var atEnd   = row.scrollLeft >= max;
+  const btnL = section.querySelector(".hub-scroll-left");
+  const btnR = section.querySelector(".hub-scroll-right");
+  const step = () => Math.max(240, Math.floor(row.clientWidth * 0.9));
+  const updateButtons = () => {
+    const max = row.scrollWidth - row.clientWidth - 1;
+    const atStart = row.scrollLeft <= 1;
+    const atEnd   = row.scrollLeft >= max;
     if (btnL) btnL.setAttribute("aria-disabled", atStart ? "true" : "false");
     if (btnR) btnR.setAttribute("aria-disabled", atEnd   ? "true" : "false");
   };
   row.__updateButtons = updateButtons;
-  var blurAfterPointerClick = function(btn, e) {
+  const blurAfterPointerClick = (btn, e) => {
     if (!btn) return;
-    if ((e.detail || 0) <= 0) return;
-    requestAnimationFramefunction(() { try { btn.blur(); } catch {} });
+    if ((e?.detail || 0) <= 0) return;
+    requestAnimationFrame(() => { try { btn.blur(); } catch {} });
   };
-  if (btnL) btnL.onclick = function(e) {
+  if (btnL) btnL.onclick = (e) => {
     row.scrollBy({ left: -step(), behavior: "smooth" });
     blurAfterPointerClick(btnL, e);
   };
-  if (btnR) btnR.onclick = function(e) {
+  if (btnR) btnR.onclick = (e) => {
     row.scrollBy({ left: step(), behavior: "smooth" });
     blurAfterPointerClick(btnR, e);
   };
 
   row.addEventListener("scroll", updateButtons, { passive: true });
-  var ro = new ResizeObserverfunction(() updateButtons());
+  const ro = new ResizeObserver(() => updateButtons());
   ro.observe(row);
   row.__ro = ro;
 
-  row.addEventListenerfunction('touchstart', (e) { e.stopPropagation(); }, { passive: true });
-  row.addEventListenerfunction('touchmove',  (e) { e.stopPropagation(); }, { passive: true });
+  row.addEventListener('touchstart', (e) => { e.stopPropagation(); }, { passive: true });
+  row.addEventListener('touchmove',  (e) => { e.stopPropagation(); }, { passive: true });
 
   requestAnimationFrame(updateButtons);
 }
 
 function scoreMatch(desired, candidate) {
-  var a = new Set(toks(desired));
-  var b = new Set(toks(candidate));
+  const a = new Set(toks(desired));
+  const b = new Set(toks(candidate));
   if (!a.size || !b.size) return 0;
-  var inter = 0;
-  for (var t of a) if (b.has(t)) inter++;
-  var core = (CORE_TOKENS[desired]||[]).some(function(c) b.has(nbase(c)));
+  let inter = 0;
+  for (const t of a) if (b.has(t)) inter++;
+  const core = (CORE_TOKENS[desired]||[]).some(c => b.has(nbase(c)));
   if (!core) return 0;
   return 1.0 + inter / Math.min(a.size, b.size);
 }
-var matches = function(desired, cand) scoreMatch(desired, cand) >= 1.3;
+const matches = (desired, cand) => scoreMatch(desired, cand) >= 1.3;
 
-function searchStudiosByAliases(desired, signal) {
-  var list = [desired, ...(ALIASES[desired] || [])];
-  var best = null, bestScore = 0;
-  for (var term of list) {
-    var url = "/Studios?SearchTerm=" + (encodeURIComponent(term)) + "&Limit=20";
+async function searchStudiosByAliases(desired, signal) {
+  const list = [desired, ...(ALIASES[desired] || [])];
+  let best = null, bestScore = 0;
+  for (const term of list) {
+    const url = `/Studios?SearchTerm=${encodeURIComponent(term)}&Limit=20`;
     try {
-      var r = fetch(withServer(url), { headers: hJSON(), signal });
+      const r = await fetch(withServer(url), { headers: hJSON(), signal });
       if (!r.ok) continue;
-      var data = r.json();
-      var items = Array.isArray(data.Items) ? data.Items : (Array.isArray(data) ? data : []);
-      for (var s of items) {
-        var sc = scoreMatch(desired, s.Name);
+      const data = await r.json();
+      const items = Array.isArray(data?.Items) ? data.Items : (Array.isArray(data) ? data : []);
+      for (const s of items) {
+        const sc = scoreMatch(desired, s.Name);
         if (sc > bestScore) { best = s; bestScore = sc; }
       }
     } catch {}
   }
   if (!best || bestScore < 1.3) return null;
-  return { Id: best.Id, Name: best.Name, ImageTags: best.ImageTags || {}, PrimaryImageTag: best.PrimaryImageTag || (best.ImageTags.Primary) || null };
+  return { Id: best.Id, Name: best.Name, ImageTags: best.ImageTags || {}, PrimaryImageTag: best.PrimaryImageTag || (best.ImageTags?.Primary) || null };
 }
 
 export function ensureStudioHubsMounted({ eager=false, force=false } = {}) {
-  var runtimeConfig = getConfig.() || config || {};
-  var homeSectionsConfig = getHomeSectionsRuntimeConfig(runtimeConfig);
+  const runtimeConfig = getConfig?.() || config || {};
+  const homeSectionsConfig = getHomeSectionsRuntimeConfig(runtimeConfig);
   if (!homeSectionsConfig.enableStudioHubs) {
     cleanupStudioHubsSection();
     return;
@@ -1286,25 +1321,25 @@ export function ensureStudioHubsMounted({ eager=false, force=false } = {}) {
     return;
   }
 
-  var kick = function() {
+  const kick = async () => {
     if (__studioHubsMounting) return;
     __studioHubsMounting = true;
     try {
-      var host = waitForVisibleHomeSections({
+      const host = await waitForVisibleHomeSections({
         timeout: eager ? 4000 : 12000
       });
-      if (!host.page) {
+      if (!host?.page) {
         scheduleRetry(1200);
         return;
       }
-      var homeSections = host.page.querySelector(".homeSectionsContainer");
+      const homeSections = host.page.querySelector(".homeSectionsContainer");
       if (!homeSections) {
         scheduleRetry(900);
         return;
       }
       if (!host.page.querySelector("#studio-hubs")) {
         try {
-          waitForNativeHomeSectionStability(homeSections, {
+          await waitForNativeHomeSectionStability(homeSections, {
             timeoutMs: 1800,
             stableMs: 220,
             minVisibleCount: 1,
@@ -1312,20 +1347,20 @@ export function ensureStudioHubsMounted({ eager=false, force=false } = {}) {
         } catch {}
       }
 
-      enqueueManagedSectionRenderfunction("studioHubs", () {
-        waitForManagedSectionGate("studioHubs", { timeoutMs: 25000 });
-        waitForManagedSectionDependencyCompletion("studioHubs", { timeoutMs: 25000 });
-        if (!host.page.isConnected || !getActiveHomePage()) {
+      await enqueueManagedSectionRender("studioHubs", async () => {
+        await waitForManagedSectionGate("studioHubs", { timeoutMs: 25000 });
+        await waitForManagedSectionDependencyCompletion("studioHubs", { timeoutMs: 25000 });
+        if (!host.page?.isConnected || !getActiveHomePage()) {
           scheduleRetry(800);
           return false;
         }
         try {
-          waitForManagedHomeRowRelease({
+          await waitForManagedHomeRowRelease({
             timeoutMs: 25000,
             rootMargin: "0px 0px 0px 0px",
           });
         } catch {}
-        var row = ensureContainer(host.page);
+        const row = ensureContainer(host.page);
         if (!row) {
           scheduleRetry(800);
           return false;
@@ -1335,21 +1370,21 @@ export function ensureStudioHubsMounted({ eager=false, force=false } = {}) {
           setStudioHubsReady(true);
           return true;
         }
-        renderStudioHubs();
+        await renderStudioHubs();
         __studioHubsMountedOnce = true;
         return true;
       }, {
         force,
-        isStillValid: function() !!(host.page.isConnected && getActiveHomePage()),
+        isStillValid: () => !!(host.page?.isConnected && getActiveHomePage()),
       });
     } finally {
       __studioHubsMounting = false;
     }
   };
 
-  var scheduleRetry = function(ms=1000) {
+  const scheduleRetry = (ms=1000) => {
     clearTimeout(__studioHubsRetryTo);
-    __studioHubsRetryTo = setTimeoutfunction(() ensureStudioHubsMounted(), ms);
+    __studioHubsRetryTo = setTimeout(() => ensureStudioHubsMounted(), ms);
   };
 
   kick();

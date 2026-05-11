@@ -1,42 +1,35 @@
-var CONFIG_URL = "/NexusPobreFlix/config";
-var CONFIG_CACHE_MS = 30_000;
+const CONFIG_URL = "/NexusPobreFlix/config";
+const CONFIG_CACHE_MS = 30_000;
 
-var __pluginConfigCache = null;
-var __pluginConfigLoadedAt = 0;
-var __pluginConfigPromise = null;
+let __pluginConfigCache = null;
+let __pluginConfigLoadedAt = 0;
+let __pluginConfigPromise = null;
 
 function getTokenSafe() {
   try {
-    var apiClient = window.ApiClient;
-    if (!apiClient) return "";
-    var token = (typeof apiClient.accessToken === "function")
-      ? apiClient.accessToken()
-      : (apiClient._accessToken || "");
-    return token || "";
-  } catch (e) {
+    return window.ApiClient?.accessToken?.() || window.ApiClient?._accessToken || "";
+  } catch {
     return "";
   }
 }
 
-function getUserIdSafe() {
+async function getUserIdSafe() {
   try {
-    var apiClient = window.ApiClient;
-    if (!apiClient || typeof apiClient.getCurrentUser !== "function") return "";
-    var user = apiClient.getCurrentUser();
-    return (user && user.Id) || "";
-  } catch (e) {
+    const user = await window.ApiClient?.getCurrentUser?.();
+    return user?.Id || "";
+  } catch {
     return "";
   }
 }
 
-function getAuthHeaders() {
-  var headers = {
+async function getAuthHeaders() {
+  const headers = {
     Accept: "application/json",
     "Content-Type": "application/json",
   };
 
-  var token = getTokenSafe();
-  var userId = getUserIdSafe();
+  const token = getTokenSafe();
+  const userId = await getUserIdSafe();
   if (token) headers["X-Emby-Token"] = token;
   if (userId) headers["X-Emby-UserId"] = userId;
   return headers;
@@ -45,90 +38,81 @@ function getAuthHeaders() {
 function normalizePluginConfigResponse(payload) {
   if (!payload || typeof payload !== "object") return {};
 
-  var raw = (payload.cfg && typeof payload.cfg === "object")
+  const raw = (payload.cfg && typeof payload.cfg === "object")
     ? payload.cfg
     : payload;
 
   if (!raw || typeof raw !== "object") return {};
 
-  var out = {};
-  for (var k in raw) {
-    if (Object.prototype.hasOwnProperty.call(raw, k)) {
-      out[k] = raw[k];
-    }
-  }
-
-  out.enableCastModule = (raw.enableCastModule !== undefined) ? raw.enableCastModule : raw.EnableCastModule;
-  out.allowSharedCastViewerForUsers = (raw.allowSharedCastViewerForUsers !== undefined) ? raw.allowSharedCastViewerForUsers : raw.AllowSharedCastViewerForUsers;
-  out.tmdbApiKey = (raw.tmdbApiKey !== undefined) ? raw.tmdbApiKey : raw.TmdbApiKey;
-
-  return out;
+  return {
+    ...raw,
+    enableCastModule: raw.enableCastModule ?? raw.EnableCastModule,
+    allowSharedCastViewerForUsers:
+      raw.allowSharedCastViewerForUsers ?? raw.AllowSharedCastViewerForUsers,
+    tmdbApiKey: raw.tmdbApiKey ?? raw.TmdbApiKey
+  };
 }
 
 export function sanitizeTmdbApiKey(value) {
-  var key = String(value || "").trim();
+  const key = String(value || "").trim();
   if (!key || /^CHANGE_ME$/i.test(key)) return "";
   return key;
 }
 
-export function fetchJmsPluginConfig(options) {
-  var force = (options && options.force === true);
-  var now = Date.now();
+export async function fetchJmsPluginConfig({ force = false } = {}) {
+  const now = Date.now();
   if (!force && __pluginConfigCache && (now - __pluginConfigLoadedAt) < CONFIG_CACHE_MS) {
     return __pluginConfigCache;
   }
   if (!force && __pluginConfigPromise) return __pluginConfigPromise;
 
-  __pluginConfigPromise = (function() {
-    var headers = getAuthHeaders();
-    var res = fetch(CONFIG_URL, {
+  __pluginConfigPromise = (async () => {
+    const headers = await getAuthHeaders();
+    const res = await fetch(CONFIG_URL, {
       method: "GET",
       cache: "no-store",
-      headers: headers,
+      headers,
     });
     if (!res.ok) {
-      throw new Error("JMS config HTTP " + res.status);
+      throw new Error(`JMS config HTTP ${res.status}`);
     }
-    var data = res.json();
+    const data = await res.json();
     __pluginConfigCache = normalizePluginConfigResponse(data);
     __pluginConfigLoadedAt = Date.now();
     return __pluginConfigCache;
   })();
 
   try {
-    return __pluginConfigPromise;
+    return await __pluginConfigPromise;
   } finally {
     __pluginConfigPromise = null;
   }
 }
 
-export function updateJmsPluginConfig(patch) {
-  var patchData = patch || {};
-  var headers = getAuthHeaders();
-  var res = fetch(CONFIG_URL, {
+export async function updateJmsPluginConfig(patch = {}) {
+  const headers = await getAuthHeaders();
+  const res = await fetch(CONFIG_URL, {
     method: "POST",
     cache: "no-store",
-    headers: headers,
-    body: JSON.stringify(patchData),
+    headers,
+    body: JSON.stringify(patch || {}),
   });
   if (!res.ok) {
-    var msg = "JMS config HTTP " + res.status;
+    let msg = `JMS config HTTP ${res.status}`;
     try {
-      var raw = res.text();
+      const raw = await res.text();
       if (raw) msg = raw;
-    } catch (e) {}
+    } catch {}
     throw new Error(msg);
   }
 
-  var data = res.json().catch(function() { return {}; });
+  const data = await res.json().catch(() => ({}));
   __pluginConfigCache = normalizePluginConfigResponse(data);
   __pluginConfigLoadedAt = Date.now();
   return __pluginConfigCache;
 }
 
-export function getGlobalTmdbApiKey(options) {
-  var force = (options && options.force === true);
-  var cfg = fetchJmsPluginConfig({ force: force });
-  var key = (cfg && (cfg.TmdbApiKey !== undefined ? cfg.TmdbApiKey : cfg.tmdbApiKey));
-  return sanitizeTmdbApiKey(key);
+export async function getGlobalTmdbApiKey({ force = false } = {}) {
+  const cfg = await fetchJmsPluginConfig({ force });
+  return sanitizeTmdbApiKey(cfg?.TmdbApiKey ?? cfg?.tmdbApiKey);
 }

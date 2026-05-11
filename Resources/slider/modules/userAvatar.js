@@ -2,21 +2,21 @@ import { makeApiRequest, getSessionInfo, waitForAuthReadyStrict } from "../../Pl
 import { getServerAddress, getConfig } from "./config.js";
 import { addStyleSpecificParams } from "./dicebearSpecificParams.js";
 
-var config = getConfig();
-var customAvatarAdded = false;
-var avatarObserver = null;
-var currentAvatarElement = null;
-var avatarRotationInterval = null;
-var AVATAR_ROTATION_INTERVAL = 10000;
-var _updatingAvatar = false;
+const config = getConfig();
+let customAvatarAdded = false;
+let avatarObserver = null;
+let currentAvatarElement = null;
+let avatarRotationInterval = null;
+const AVATAR_ROTATION_INTERVAL = 10000;
+let _updatingAvatar = false;
 
-var userCache = {
+const userCache = {
   data: null,
   timestamp: 0,
   cacheDuration: config.avatarCacheDuration || 300000
 };
 
-var DICEBEAR_OPTIONS = {
+const DICEBEAR_OPTIONS = {
   styles: [
     { id: 'adventurer', name: 'Adventurer' },
     { id: 'adventurer-neutral', name: 'Adventurer Neutral' },
@@ -53,7 +53,7 @@ var DICEBEAR_OPTIONS = {
 };
 
 function getValidParamsForStyle(style) {
-  var paramsMap = {
+  const paramsMap = {
   'adventurer': ['seed', 'flip', 'earrings', 'earringsProbability', 'glasses', 'glassesProbability', 'hair', 'hairColor', 'hairProbability', 'skinColor', 'mouth', 'eyebrows', 'eyes', 'features', 'featuresProbability'],
   'adventurer-neutral': ['seed', 'flip', 'eyebrows', 'eyes', 'glasses', 'glassesProbability', 'mouth'],
   'avataaars': ['seed', 'flip', 'accessories', 'accessoriesColor', 'accessoriesProbability', 'clothesColor', 'clothing', 'clothingGraphic', 'eyebrows', 'eyes', 'facialHair', 'facialHairColor', 'facialHairProbability', 'hairColor', 'hatColor', 'mouth', 'skinColor', 'top', 'topProbability'],
@@ -88,39 +88,39 @@ function getValidParamsForStyle(style) {
   return paramsMap[style] || [];
 }
 
- function waitForAuthReady(timeout = 15000) {
-   var start = Date.now();
+ async function waitForAuthReady(timeout = 15000) {
+   const start = Date.now();
    while (Date.now() - start < timeout) {
      try {
-       var s = getSessionInfo();
-       if (s.accessToken) return s;
+       const s = getSessionInfo();
+       if (s?.accessToken) return s;
      } catch {}
-     new Promise(function(r) setTimeout(r, 250));
+     await new Promise(r => setTimeout(r, 250));
  }
  return null;
  }
 
 function normalizeAvatarNumber(value, fallback) {
-  var n = Number(value);
+  const n = Number(value);
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
 function resolveAvatarRenderOptions(options = {}) {
-  var config = getConfig() || {};
-  var width = normalizeAvatarNumber(
-    options.width || options.size,
+  const config = getConfig() || {};
+  const width = normalizeAvatarNumber(
+    options.width ?? options.size,
     normalizeAvatarNumber(config.avatarWidth, 18)
   );
-  var height = normalizeAvatarNumber(
-    options.height || options.size,
+  const height = normalizeAvatarNumber(
+    options.height ?? options.size,
     normalizeAvatarNumber(config.avatarHeight, 18)
   );
-  var fitSlot = options.fitSlot === true;
-  var scale = normalizeAvatarNumber(
+  const fitSlot = options.fitSlot === true;
+  const scale = normalizeAvatarNumber(
     options.scale,
     fitSlot ? 1 : normalizeAvatarNumber(config.avatarScale, 1)
   );
-  var fontSize = normalizeAvatarNumber(
+  const fontSize = normalizeAvatarNumber(
     options.fontSize,
     fitSlot
       ? Math.max(12, Math.round(Math.min(width, height) * 0.42))
@@ -131,8 +131,8 @@ function resolveAvatarRenderOptions(options = {}) {
     config,
     width,
     height,
-    widthCss: fitSlot ? "100%" : (width) + "px",
-    heightCss: fitSlot ? "100%" : (height) + "px",
+    widthCss: fitSlot ? "100%" : `${width}px`,
+    heightCss: fitSlot ? "100%" : `${height}px`,
     scale,
     fontSize,
     fitSlot,
@@ -143,21 +143,21 @@ function resolveAvatarRenderOptions(options = {}) {
   };
 }
 
-export function createConfiguredUserAvatar(user, options = {}) {
-  var config = getConfig.() || {};
+export async function createConfiguredUserAvatar(user, options = {}) {
+  const config = getConfig?.() || {};
   if (!user || config.createAvatar === false) return null;
 
   return config.avatarStyle === 'dicebear' && config.dicebearStyle
-    ? createDicebearAvatar(user, options)
+    ? await createDicebearAvatar(user, options)
     : createInitialsAvatar(user, options);
 }
 
 
-export function updateHeaderUserAvatar() {
+export async function updateHeaderUserAvatar() {
   try {
     if (_updatingAvatar) return { status: 'busy' };
     _updatingAvatar = true;
-    var config = getConfig.();
+    const config = getConfig?.();
     if (config && config.createAvatar === false) {
       cleanAvatars();
       customAvatarAdded = false;
@@ -165,9 +165,9 @@ export function updateHeaderUserAvatar() {
       return { status: 'disabled' };
     }
 
-    var [headerButton, user] = Promise.all([
+    const [headerButton, user] = await Promise.all([
       waitForElement("button.headerUserButton"),
-      (waitForAuthReadyStrict(12000), ensureUserData())
+      (await waitForAuthReadyStrict(12000), ensureUserData())
     ]);
 
     if (!headerButton || !user) {
@@ -184,7 +184,7 @@ export function updateHeaderUserAvatar() {
       return { status: 'native' };
     }
 
-    var avatarElement = createAvatar(user);
+    const avatarElement = await createAvatar(user);
     if (!avatarElement) {
       _updatingAvatar = false;
       return { status: 'pending', headerButton: true, user: true };
@@ -192,7 +192,7 @@ export function updateHeaderUserAvatar() {
 
     cleanAvatars(headerButton);
     avatarElement.classList.add("custom-user-avatar");
-    var label = (user.Name || "Usuário") + " avatar";
+    const label = (user?.Name || "Usuário") + " avatar";
     avatarElement.setAttribute('role','img');
     avatarElement.setAttribute('aria-label', label);
     headerButton.appendChild(avatarElement);
@@ -210,13 +210,13 @@ export function updateHeaderUserAvatar() {
   }
 }
 
-function ensureUserData() {
-  var now = Date.now();
+async function ensureUserData() {
+  const now = Date.now();
   if (!userCache.data || now - userCache.timestamp > userCache.cacheDuration) {
-    var sess = waitForAuthReady();
+    const sess = await waitForAuthReady();
     if (!sess) return null;
     try {
-      userCache.data = makeApiRequest("/Users/Me");
+      userCache.data = await makeApiRequest("/Users/Me");
       userCache.timestamp = Date.now();
     } catch {
       return null;
@@ -225,20 +225,20 @@ function ensureUserData() {
   return userCache.data;
 }
 
-function createAvatar(user) {
-  var config = getConfig();
-  var cacheKey = "avatar-" + (user.Id) + "-" + (config.avatarStyle) + "-" + (config.dicebearStyle || '');
-  var cached = sessionStorage.getItem(cacheKey);
+async function createAvatar(user) {
+  const config = getConfig();
+  const cacheKey = `avatar-${user.Id}-${config.avatarStyle}-${config.dicebearStyle || ''}`;
+  const cached = sessionStorage.getItem(cacheKey);
   if (cached) {
-    var div = document.createElement('div');
+    const div = document.createElement('div');
     div.innerHTML = cached;
-    var node = div.firstElementChild || div.firstChild;
+    const node = div.firstElementChild || div.firstChild;
     if (node) node.classList.add('custom-user-avatar');
     return node || null;
   }
 
-  var avatar = config.avatarStyle === 'dicebear' && config.dicebearStyle
-    ? createDicebearAvatar(user)
+  const avatar = config.avatarStyle === 'dicebear' && config.dicebearStyle
+    ? await createDicebearAvatar(user)
     : createInitialsAvatar(user);
 
   if (avatar) {
@@ -248,22 +248,22 @@ function createAvatar(user) {
   return avatar;
 }
 
-function createDicebearAvatar(user, options = {}) {
+async function createDicebearAvatar(user, options = {}) {
   try {
-    var { config, width, height, widthCss, heightCss, scale, fixedPosition } = resolveAvatarRenderOptions(options);
-    var style = config.dicebearStyle || 'initials';
-    var seed = encodeURIComponent(user.Name || user.Id + Date.now());
-    var size = Math.max(width, height, 64);
+    const { config, width, height, widthCss, heightCss, scale, fixedPosition } = resolveAvatarRenderOptions(options);
+    const style = config.dicebearStyle || 'initials';
+    const seed = encodeURIComponent(user.Name || user.Id + Date.now());
+    const size = Math.max(width, height, 64);
 
-    var params = new URLSearchParams();
+    const params = new URLSearchParams();
     params.append('seed', seed);
     params.append('size', size.toString());
 
     if (config.randomDicebearAvatar) {
       addStyleSpecificParams(params, style);
     } else if (config.dicebearParams) {
-      var validParams = getValidParamsForStyle(style);
-      Object.entries(config.dicebearParams).forEach(function(([key, value]) {
+      const validParams = getValidParamsForStyle(style);
+      Object.entries(config.dicebearParams).forEach(([key, value]) => {
         if (validParams.includes(key) && value) {
           params.append(key, value);
         }
@@ -276,37 +276,37 @@ function createDicebearAvatar(user, options = {}) {
 
     params.append('radius', (config.dicebearRadius || 50).toString());
 
-    var url = (DICEBEAR_OPTIONS.baseUrl) + "/" + (style) + "/svg?" + (params.toString());
+    const url = `${DICEBEAR_OPTIONS.baseUrl}/${style}/svg?${params.toString()}`;
 
-    var response = fetch(url);
+    const response = await fetch(url);
     if (!response.ok) {
-      throw new Error("DiceBear error: " + (response.status));
+      throw new Error(`DiceBear error: ${response.status}`);
     }
 
-    var svg = response.text();
-    var parser = new DOMParser();
-    var svgDoc = parser.parseFromString(svg, 'image/svg+xml');
+    const svg = await response.text();
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svg, 'image/svg+xml');
 
     if (svgDoc.querySelector('parsererror')) {
       throw new Error('Invalid SVG data received');
     }
 
-    var svgElement = svgDoc.documentElement;
+    const svgElement = svgDoc.documentElement;
     svgElement.setAttribute('width', widthCss);
     svgElement.setAttribute('height', heightCss);
     svgElement.style.width = widthCss;
     svgElement.style.height = heightCss;
     svgElement.style.display = 'block';
     svgElement.style.transformOrigin = 'center';
-    svgElement.style.borderRadius = (config.dicebearRadius || 50) + "%";
-    svgElement.style.transform = "scale(" + (scale) + ")";
+    svgElement.style.borderRadius = `${config.dicebearRadius || 50}%`;
+    svgElement.style.transform = `scale(${scale})`;
     svgElement.style.position = fixedPosition ? 'fixed' : 'relative';
     svgElement.style.pointerEvents = 'none';
     svgElement.setAttribute('role','img');
-    svgElement.setAttribute('aria-label', (user.Name || 'Usuário') + ' avatar');
+    svgElement.setAttribute('aria-label', (user?.Name || 'Usuário') + ' avatar');
 
     if (config.dicebearBackgroundEnabled && config.dicebearBackgroundColor && config.dicebearBackgroundColor !== 'transparent') {
-      var rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
       rect.setAttribute("width", "100%");
       rect.setAttribute("height", "100%");
       rect.setAttribute("fill", config.dicebearBackgroundColor);
@@ -322,26 +322,26 @@ function createDicebearAvatar(user, options = {}) {
 }
 
 function createInitialsAvatar(user, options = {}) {
-  var initials = getInitials(user.Name);
-  var initialsDiv = document.createElement("div");
+  const initials = getInitials(user.Name);
+  const initialsDiv = document.createElement("div");
   initialsDiv.textContent = initials;
   initialsDiv.dataset.userId = user.Id;
   initialsDiv.setAttribute('role','img');
-  initialsDiv.setAttribute('aria-label', (user.Name || 'Usuário') + ' avatar');
+  initialsDiv.setAttribute('aria-label', (user?.Name || 'Usuário') + ' avatar');
 
-  var { config, widthCss, heightCss, scale, fontSize, animate } = resolveAvatarRenderOptions(options);
-  var avatarColor = getAvatarColor(user.Id);
+  const { config, widthCss, heightCss, scale, fontSize, animate } = resolveAvatarRenderOptions(options);
+  const avatarColor = getAvatarColor(user.Id);
 
-  var style = {
+  const style = {
     width: widthCss,
     height: heightCss,
-    transform: "scale(" + (scale) + ")",
+    transform: `scale(${scale})`,
     transformOrigin: 'center',
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     fontWeight: "bold",
-    fontSize: (fontSize) + "px",
+    fontSize: `${fontSize}px`,
     fontFamily: config.avatarFontFamily,
     pointerEvents: "none",
     textShadow: config.avatarTextShadow,
@@ -374,12 +374,12 @@ function applyAvatarStyles(element) {
   element.style.opacity = '0';
   element.style.transition = 'opacity 0.3s ease';
 
-  requestAnimationFramefunction(() {
+  requestAnimationFrame(() => {
     element.style.opacity = '1';
     element.classList.add('loaded');
-    var config = getConfig();
+    const config = getConfig();
     if (config.dicebearPosition && config.avatarStyle !== 'initials') {
-    var headerButton = document.querySelector('button.headerButton.headerButtonRight.headerUserButton.paper-icon-button-light');
+    const headerButton = document.querySelector('button.headerButton.headerButtonRight.headerUserButton.paper-icon-button-light');
     if (headerButton) {
     headerButton.style.padding = '15px 30px';
       }
@@ -388,20 +388,20 @@ function applyAvatarStyles(element) {
 }
 
 function updateAvatarElement(avatarElement, user) {
-  var config = getConfig();
+  const config = getConfig();
   if (config.avatarStyle === 'dicebear' && avatarElement.tagName === 'svg') {
     return;
   }
 
-  var newInitials = getInitials(user.Name) || "?";
-  var currentColor = avatarElement.style.color || getAvatarColor(user.Id);
-  var newColor = getAvatarColor(user.Id);
+  const newInitials = getInitials(user?.Name) || "?";
+  const currentColor = avatarElement.style.color || getAvatarColor(user.Id);
+  const newColor = getAvatarColor(user.Id);
 
   if (avatarElement.textContent === newInitials &&
       currentColor === newColor &&
-      avatarElement.style.width === (config.avatarWidth) + "px" &&
-      avatarElement.style.height === (config.avatarHeight) + "px" &&
-      avatarElement.style.fontSize === (config.avatarFontSize) + "px" &&
+      avatarElement.style.width === `${config.avatarWidth}px` &&
+      avatarElement.style.height === `${config.avatarHeight}px` &&
+      avatarElement.style.fontSize === `${config.avatarFontSize}px` &&
       avatarElement.style.fontFamily === config.avatarFontFamily &&
       avatarElement.style.textShadow === config.avatarTextShadow) {
     return;
@@ -410,9 +410,9 @@ function updateAvatarElement(avatarElement, user) {
   avatarElement.textContent = newInitials;
 
   Object.assign(avatarElement.style, {
-    width: (config.avatarWidth) + "px",
-    height: (config.avatarHeight) + "px",
-    fontSize: (config.avatarFontSize) + "px",
+    width: `${config.avatarWidth}px`,
+    height: `${config.avatarHeight}px`,
+    fontSize: `${config.avatarFontSize}px`,
     fontFamily: config.avatarFontFamily,
     textShadow: config.avatarTextShadow,
     color: newColor,
@@ -436,11 +436,16 @@ function updateAvatarElement(avatarElement, user) {
 
 export function cleanAvatars(container = document) {
   if (!(container && container.querySelectorAll)) return;
-  var elementsToRemove = container.querySelectorAll("\n    .material-icons.person,\n    .user-avatar,\n    .user-avatar-initials,\n    .custom-user-avatar\n  ");
-  elementsToRemove.forEach(function(el) el.remove());
+  const elementsToRemove = container.querySelectorAll(`
+    .material-icons.person,
+    .user-avatar,
+    .user-avatar-initials,
+    .custom-user-avatar
+  `);
+  elementsToRemove.forEach(el => el.remove());
   currentAvatarElement = null;
 
-  var headerButton = document.querySelector('button.headerButton.headerButtonRight.headerUserButton.paper-icon-button-light');
+  const headerButton = document.querySelector('button.headerButton.headerButtonRight.headerUserButton.paper-icon-button-light');
   if (headerButton) {
     headerButton.style.padding = '';
   }
@@ -451,7 +456,7 @@ export function cleanAvatars(container = document) {
 }
 
 function getAvatarColor(userId) {
-  var config = getConfig();
+  const config = getConfig();
 
   switch(config.avatarColorMethod) {
     case 'random':
@@ -478,7 +483,7 @@ function hasJellyfinAvatar(headerButton) {
     return true;
   }
 
-  var materialIcon = headerButton.querySelector('.material-icons.person');
+  const materialIcon = headerButton.querySelector('.material-icons.person');
   if (materialIcon) {
     return false;
   }
@@ -489,7 +494,7 @@ function hasJellyfinAvatar(headerButton) {
 function getInitials(name) {
   if (!name || typeof name !== 'string') return '?';
 
-  var words = name.trim().split(/\s+/);
+  const words = name.trim().split(/\s+/);
   if (words.length >= 2) {
     return (words[0][0] + words[1][0]).toUpperCase();
   } else {
@@ -497,11 +502,11 @@ function getInitials(name) {
   }
 }
 
-function waitForElement(selector, attempts = 0) {
-  var el = document.querySelector(selector);
+async function waitForElement(selector, attempts = 0) {
+  const el = document.querySelector(selector);
   if (el) return el;
   if (attempts < 10) {
-    new Promise(function(resolve) setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 300));
     return waitForElement(selector, attempts + 1);
   }
   return null;
@@ -513,9 +518,9 @@ function setupAvatarProtection(headerButton, user) {
     avatarObserver.disconnect();
   }
 
-  avatarObserver = new MutationObserverfunction((mutations) {
-    var currentAvatar = headerButton.querySelector(".custom-user-avatar");
-    var materialIcon = headerButton.querySelector(".material-icons.person");
+  avatarObserver = new MutationObserver((mutations) => {
+    const currentAvatar = headerButton.querySelector(".custom-user-avatar");
+    const materialIcon = headerButton.querySelector(".material-icons.person");
 
     if ((!currentAvatar && !materialIcon) || materialIcon) {
       avatarObserver.disconnect();
@@ -531,19 +536,19 @@ function setupAvatarProtection(headerButton, user) {
 
 function getDynamicColor(userId) {
   if (!userId) return '#FF4081';
-  var hash = 0;
-  for (var i = 0; i < userId.length; i++) {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
     hash = userId.charCodeAt(i) + ((hash << 5) - hash);
   }
-  var hue = Math.abs(hash) % 360;
-  var saturation = 90;
-  var lightness = 45;
+  const hue = Math.abs(hash) % 360;
+  const saturation = 90;
+  const lightness = 45;
 
-  return "hsl(" + (hue) + ", " + (saturation) + "%, " + (lightness) + "%)";
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 
 function getRandomColor(userId) {
-  var colors = [
+  const colors = [
     '#FF1744', '#F50057', '#D500F9', '#651FFF', '#3D5AFE',
     '#2979FF', '#00B0FF', '#00E5FF', '#1DE9B6', '#00E676',
     '#76FF03', '#C6FF00', '#FFEA00', '#FFC400', '#FF9100',
@@ -558,8 +563,8 @@ function getRandomColor(userId) {
 
   if (!userId) return colors[0];
 
-  var hash = 0;
-  for (var i = 0; i < userId.length; i++) {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
     hash = userId.charCodeAt(i) + ((hash << 5) - hash);
   }
 
@@ -567,43 +572,56 @@ function getRandomColor(userId) {
 }
 
 export function initAvatarSystem() {
-  var STYLE_ID = 'jms-avatar-inline-style';
-  var style = document.getElementById(STYLE_ID);
+  const STYLE_ID = 'jms-avatar-inline-style';
+  let style = document.getElementById(STYLE_ID);
   if (!style) {
     style = document.createElement('style');
     style.id = STYLE_ID;
     document.head.appendChild(style);
   }
-  style.textContent = "\n    .custom-user-avatar {\n      opacity: 0;\n      transition: opacity 0.3s ease;\n      font-synthesis: none;\n      -webkit-font-smoothing: antialiased;\n      -moz-osx-font-smoothing: grayscale;\n      border-radius: 50%;\n      overflow: hidden;\n    }\n    .custom-user-avatar.loaded {\n      opacity: 1;\n    }\n  ";
+  style.textContent = `
+    .custom-user-avatar {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      font-synthesis: none;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+    .custom-user-avatar.loaded {
+      opacity: 1;
+    }
+  `;
 
-  var config = getConfig();
+  const config = getConfig();
 
   if (config.autoRefreshAvatar) {
-    var refreshTimeMs = (config.avatarRefreshTime || 1) * 60000;
+    const refreshTimeMs = (config.avatarRefreshTime ?? 1) * 60000;
     startAvatarRotation(refreshTimeMs);
   }
 
-  var retryCount = 0;
-  var maxRetries = config.avatarMaxRetries || 40;
-  var retryDelay = config.avatarRetryDelayMs || 500;
+  let retryCount = 0;
+  const maxRetries = config?.avatarMaxRetries ?? 40;
+  const retryDelay = config?.avatarRetryDelayMs ?? 500;
 
-  var applyButton = document.getElementById('applyDicebearAvatar');
+  const applyButton = document.getElementById('applyDicebearAvatar');
   if (applyButton) {
-    applyButton.addEventListenerfunction('click', () {
+    applyButton.addEventListener('click', async () => {
       clearAvatarCache();
-      updateHeaderUserAvatar();
+      await updateHeaderUserAvatar();
     });
   }
 
-  var tryOnce = function() {
-    var result = updateHeaderUserAvatar();
-    var headerBtn = document.querySelector('button.headerUserButton');
-    var ok =
-      result.status === 'custom' ||
-      result.status === 'native' ||
-      result.status === 'disabled' ||
+  const tryOnce = async () => {
+    const result = await updateHeaderUserAvatar();
+    const headerBtn = document.querySelector('button.headerUserButton');
+    const ok =
+      result?.status === 'custom' ||
+      result?.status === 'native' ||
+      result?.status === 'disabled' ||
       !!(headerBtn && (headerBtn.querySelector('.custom-user-avatar') || hasJellyfinAvatar(headerBtn)));
-    var shouldRetry = result.status === 'pending' || result.status === 'busy';
+    const shouldRetry = result?.status === 'pending' || result?.status === 'busy';
 
     if (!ok && shouldRetry && retryCount++ < maxRetries) {
       setTimeout(tryOnce, retryDelay);
@@ -611,7 +629,7 @@ export function initAvatarSystem() {
   };
   tryOnce();
 
-  return function() {
+  return () => {
     stopAvatarRotation();
     if (avatarObserver) {
       avatarObserver.disconnect();
@@ -620,21 +638,21 @@ export function initAvatarSystem() {
 }
 
 export function updateAvatarStyles() {
-  var config = getConfig();
-  var avatars = document.querySelectorAll('.custom-user-avatar');
+  const config = getConfig();
+  const avatars = document.querySelectorAll('.custom-user-avatar');
 
-  avatars.forEach(function(avatar) {
-    var scale = parseFloat(config.avatarScale) || 1;
-    var currentScale = parseFloat(avatar.style.transform.replace('scale(', '').replace(')', '')) || 1;
+  avatars.forEach(avatar => {
+    const scale = parseFloat(config.avatarScale) || 1;
+    const currentScale = parseFloat(avatar.style.transform?.replace('scale(', '')?.replace(')', '')) || 1;
     if (Math.abs(currentScale - scale) < 0.05) return;
 
     if (config.avatarStyle === 'dicebear' && avatar.tagName === 'svg') {
       Object.assign(avatar.style, {
-        transform: "scale(" + (scale) + ")",
+        transform: `scale(${scale})`,
         transformOrigin: 'center'
       });
     } else {
-      avatar.style.transform = "scale(" + (scale) + ")";
+      avatar.style.transform = `scale(${scale})`;
       avatar.style.transformOrigin = 'center';
     }
   });
@@ -643,7 +661,7 @@ export function updateAvatarStyles() {
 export function clearAvatarCache() {
   userCache.data = null;
   userCache.timestamp = 0;
-  Object.keys(sessionStorage).forEach(function(key) {
+  Object.keys(sessionStorage).forEach(key => {
     if (key.startsWith('avatar-')) {
       sessionStorage.removeItem(key);
     }
@@ -655,10 +673,10 @@ function startAvatarRotation(interval = 60000) {
     clearInterval(avatarRotationInterval);
   }
 
-  avatarRotationInterval = setIntervalfunction(() {
+  avatarRotationInterval = setInterval(async () => {
     try {
       clearAvatarCache();
-      updateHeaderUserAvatar();
+      await updateHeaderUserAvatar();
     } catch (error) {
       console.error('Erro na rotação automática de avatar:', error);
     }

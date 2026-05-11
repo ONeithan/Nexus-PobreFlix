@@ -9,36 +9,36 @@ import { createTomatoIconElement } from "./customIcons.js";
 import { openDetailsModal } from "./detailsModalLoader.js";
 import { getWatchlistButtonText } from "./watchlist.js";
 
-var S = function(u) withServer(u);
-var config = getConfig();
-var LOW_POWER_PEAK = function(() {
+const S = (u) => withServer(u);
+const config = getConfig();
+const LOW_POWER_PEAK = (() => {
   try {
-    var ua = String((typeof navigator !== 'undefined' && navigator.userAgent) || '');
-    var uaMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-    var coarse = window.matchMedia.('(pointer: coarse)').matches === true || navigator.maxTouchPoints > 0;
-    var shortestSide = Math.min(
-      window.innerWidth || window.screen.width || 0,
-      window.innerHeight || window.screen.height || 0
+    const ua = String((typeof navigator !== 'undefined' && navigator.userAgent) || '');
+    const uaMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    const coarse = window.matchMedia?.('(pointer: coarse)')?.matches === true || navigator.maxTouchPoints > 0;
+    const shortestSide = Math.min(
+      window.innerWidth || window.screen?.width || 0,
+      window.innerHeight || window.screen?.height || 0
     );
     return !!config.peakSlider && coarse && (!!window.ReactNativeWebView || uaMobile || (shortestSide > 0 && shortestSide <= 1280));
   } catch {
     return false;
   }
 })();
-var settingsBackgroundSlides = [];
-var backdropWarmQueue = createImageWarmQueue({ concurrency: LOW_POWER_PEAK ? 1 : 3 });
+const settingsBackgroundSlides = [];
+const backdropWarmQueue = createImageWarmQueue({ concurrency: LOW_POWER_PEAK ? 1 : 3 });
 window.__backdropWarmQueue = backdropWarmQueue;
 
-var BG_HYDRATION_PER_FRAME = LOW_POWER_PEAK ? 4 : 12;
-var NEIGHBOR_WARM_COUNT = 2;
-var BG_IO_ROOT_MARGIN = LOW_POWER_PEAK ? '240px 0px' : '800px 0px';
-var WARM_OBSERVER_ROOT_MARGIN = LOW_POWER_PEAK ? '160px 0px' : '600px 0px';
-var PRELOAD_IO_ROOT_MARGIN = LOW_POWER_PEAK ? '220px 0px' : '800px 0px';
-var BG_SCROLL_IDLE_MS = LOW_POWER_PEAK ? 160 : 120;
-var __bgHydrationQueue = [];
-var __bgHydrationRAF = 0;
-var __bgScrollActive = false;
-var __bgScrollIdleTimer = 0;
+const BG_HYDRATION_PER_FRAME = LOW_POWER_PEAK ? 4 : 12;
+const NEIGHBOR_WARM_COUNT = 2;
+const BG_IO_ROOT_MARGIN = LOW_POWER_PEAK ? '240px 0px' : '800px 0px';
+const WARM_OBSERVER_ROOT_MARGIN = LOW_POWER_PEAK ? '160px 0px' : '600px 0px';
+const PRELOAD_IO_ROOT_MARGIN = LOW_POWER_PEAK ? '220px 0px' : '800px 0px';
+const BG_SCROLL_IDLE_MS = LOW_POWER_PEAK ? 160 : 120;
+let __bgHydrationQueue = [];
+let __bgHydrationRAF = 0;
+let __bgScrollActive = false;
+let __bgScrollIdleTimer = 0;
 
 function bgQueueHydration(fn) {
   __bgHydrationQueue.push(fn);
@@ -50,9 +50,9 @@ function bgQueueHydration(fn) {
 function bgFlushHydrationFrame() {
   __bgHydrationRAF = 0;
   if (__bgScrollActive) return;
-  var budget = BG_HYDRATION_PER_FRAME;
+  let budget = BG_HYDRATION_PER_FRAME;
   while (budget-- > 0 && __bgHydrationQueue.length) {
-    var fn = __bgHydrationQueue.shift();
+    const fn = __bgHydrationQueue.shift();
     try { fn && fn(); } catch {}
   }
   if (__bgHydrationQueue.length) {
@@ -62,33 +62,46 @@ function bgFlushHydrationFrame() {
 
 (function injectBackdropPerfStyles(){
   if (document.getElementById('backdrop-perf-css')) return;
-  var st = document.createElement('style');
+  const st = document.createElement('style');
   st.id = 'backdrop-perf-css';
-  st.textContent = "\n    .monwui-backdrop {\n      opacity: 1;\n      transition: opacity .28s ease, filter .34s ease, transform .34s cubic-bezier(.2,.6,.2,1);\n    }\n    .monwui-backdrop.is-lqip { filter: blur(14px); transform: scale(1.02); }\n    .monwui-backdrop.is-hi-pending { opacity: .94; }\n    #monwui-slides-container.is-scrolling *,\n    #monwui-slides-container.is-scrolling .monwui-backdrop,\n    #monwui-slides-container.is-scrolling .monwui-horizontal-gradient-overlay {\n      transition: none !important;\n      animation: none !important;\n    }\n  ";
+  st.textContent = `
+    .monwui-backdrop {
+      opacity: 1;
+      transition: opacity .28s ease, filter .34s ease, transform .34s cubic-bezier(.2,.6,.2,1);
+    }
+    .monwui-backdrop.is-lqip { filter: blur(14px); transform: scale(1.02); }
+    .monwui-backdrop.is-hi-pending { opacity: .94; }
+    #monwui-slides-container.is-scrolling *,
+    #monwui-slides-container.is-scrolling .monwui-backdrop,
+    #monwui-slides-container.is-scrolling .monwui-horizontal-gradient-overlay {
+      transition: none !important;
+      animation: none !important;
+    }
+  `;
   document.head.appendChild(st);
 })();
 
-var __bgIO = new IntersectionObserverfunction((entries) {
-  for (var ent of entries) {
-    var img = ent.target;
+const __bgIO = new IntersectionObserver((entries) => {
+  for (const ent of entries) {
+    const img = ent.target;
     if (!ent.isIntersecting) continue;
     if (img.__peakManaged && !isPeakBackdropEligible(img)) continue;
-    img.__requestHi.();
+    img.__requestHi?.();
   }
 }, { rootMargin: BG_IO_ROOT_MARGIN });
 
 function toNoTagUrl(url) {
   if (!url) return "";
-  var s = String(url);
+  const s = String(url);
   try {
-    var u = new URL(s, window.location.origin || "http://localhost");
+    const u = new URL(s, window.location?.origin || "http://localhost");
     u.searchParams.delete("tag");
     return u.toString();
   } catch {
-    var [base, q = ""] = s.split("?");
+    const [base, q = ""] = s.split("?");
     if (!q) return s;
-    var rest = q.split("&").filter(Boolean).filterfunction((p) !/^tag=/i.test(p));
-    return rest.length ? (base) + "?" + (rest.join("&")) : base;
+    const rest = q.split("&").filter(Boolean).filter((p) => !/^tag=/i.test(p));
+    return rest.length ? `${base}?${rest.join("&")}` : base;
   }
 }
 
@@ -96,12 +109,12 @@ function toNoTagSrcset(srcset) {
   if (!srcset || typeof srcset !== "string") return "";
   return srcset
     .split(",")
-    .mapfunction((part) {
-      var p = part.trim();
+    .map((part) => {
+      const p = part.trim();
       if (!p) return "";
-      var m = p.match(/^(\S+)(\s+.+)?$/);
+      const m = p.match(/^(\S+)(\s+.+)?$/);
       if (!m) return p;
-      return (toNoTagUrl(m[1])) + (m[2] || "");
+      return `${toNoTagUrl(m[1])}${m[2] || ""}`;
     })
     .filter(Boolean)
     .join(", ");
@@ -111,11 +124,11 @@ function isPlaybackCompleted(userData, runtimeTicks = 0) {
   if (!userData || typeof userData !== "object") return false;
   if (userData.Played === true) return true;
 
-  var playedPercentage = Number(userData.PlayedPercentage);
+  const playedPercentage = Number(userData.PlayedPercentage);
   if (Number.isFinite(playedPercentage) && playedPercentage >= 100) return true;
 
-  var positionTicks = Number(userData.PlaybackPositionTicks || 0);
-  var totalTicks = Number(runtimeTicks || 0);
+  const positionTicks = Number(userData.PlaybackPositionTicks || 0);
+  const totalTicks = Number(runtimeTicks || 0);
   return positionTicks > 0 && totalTicks > 0 && positionTicks >= totalTicks;
 }
 
@@ -129,41 +142,41 @@ function promoteTaglessBackdropData(data) {
 }
 
 function isPeakBackdropEligible(img) {
-  if (!img.__peakManaged) return true;
-  var slide = img.closest.('.monwui-slide');
+  if (!img?.__peakManaged) return true;
+  const slide = img.closest?.('.monwui-slide');
   if (!slide) return false;
   return slide.classList.contains('active') || slide.classList.contains('peak-neighbor');
 }
 
 function hydrateBackdrop(img, { lqSrc, hqSrc, hqSrcset = '', fallback = '', eager = false, onHiLoaded }) {
-  var fb = fallback || lqSrc || '';
-  var lqSrcNoTag = toNoTagUrl(lqSrc);
-  var hqSrcNoTag = toNoTagUrl(hqSrc);
-  var hqSrcsetNoTag = toNoTagSrcset(hqSrcset);
+  const fb = fallback || lqSrc || '';
+  const lqSrcNoTag = toNoTagUrl(lqSrc);
+  const hqSrcNoTag = toNoTagUrl(hqSrc);
+  const hqSrcsetNoTag = toNoTagSrcset(hqSrcset);
   img.__bgData = { lqSrc, hqSrc, hqSrcset, lqSrcNoTag, hqSrcNoTag, hqSrcsetNoTag, fallback: fb };
   img.__phase = 'lq';
   img.__hiRequested = false;
   img.__peakHiTimer = 0;
   img.__fetchPriorityTarget = '';
 
-  img.__clearPeakHiTimer = function() {
+  img.__clearPeakHiTimer = () => {
     if (!img.__peakHiTimer) return;
     clearTimeout(img.__peakHiTimer);
     img.__peakHiTimer = 0;
   };
 
-  img.__requestHi = function({ eagerLoad = false, fetchPriority = '' } = {}) {
-    var data = img.__bgData || {};
+  img.__requestHi = ({ eagerLoad = false, fetchPriority = '' } = {}) => {
+    const data = img.__bgData || {};
     if (!data.hqSrc || !img.isConnected) return;
     if (img.__phase === 'hi' && img.__hiRequested && (!data.hqSrcset || img.srcset === data.hqSrcset) && img.src === data.hqSrc) {
       return;
     }
-    img.__clearPeakHiTimer.();
+    img.__clearPeakHiTimer?.();
     img.__hiRequested = true;
     img.__phase = 'hi';
     img.__fetchPriorityTarget = fetchPriority || '';
     img.classList.add('is-hi-pending');
-    bgQueueHydrationfunction(() {
+    bgQueueHydration(() => {
       if (!img.isConnected) return;
       try {
         if (fetchPriority) img.setAttribute('fetchpriority', fetchPriority);
@@ -176,16 +189,16 @@ function hydrateBackdrop(img, { lqSrc, hqSrc, hqSrcset = '', fallback = '', eage
     });
   };
 
-  img.__requestLq = function() {
-    var data = img.__bgData || {};
-    var target = data.lqSrc || data.fallback;
+  img.__requestLq = () => {
+    const data = img.__bgData || {};
+    const target = data.lqSrc || data.fallback;
     if (!target || !img.isConnected) return;
     if (img.__phase === 'lq' && img.src === target && !img.srcset) return;
-    img.__clearPeakHiTimer.();
+    img.__clearPeakHiTimer?.();
     img.__hiRequested = false;
     img.__phase = 'lq';
     img.__fetchPriorityTarget = '';
-    bgQueueHydrationfunction(() {
+    bgQueueHydration(() => {
       if (!img.isConnected) return;
       try { img.removeAttribute('srcset'); } catch {}
       try { img.removeAttribute('fetchpriority'); } catch {}
@@ -208,8 +221,8 @@ function hydrateBackdrop(img, { lqSrc, hqSrc, hqSrcset = '', fallback = '', eage
     img.style.opacity = '1';
   }
 
-  var onError = function() {
-    var data = img.__bgData || {};
+  const onError = () => {
+    const data = img.__bgData || {};
     if (img.__phase === 'hi') {
       if (!data.__taglessPromoted && data.hqSrcNoTag && data.hqSrcNoTag !== data.hqSrc) {
         promoteTaglessBackdropData(data);
@@ -240,7 +253,7 @@ function hydrateBackdrop(img, { lqSrc, hqSrc, hqSrcset = '', fallback = '', eage
       if (fb) img.src = fb;
     }
   };
-  var onLoad = function() {
+  const onLoad = () => {
     if (img.__phase === 'hi') {
       img.classList.remove('is-lqip');
       img.classList.remove('is-hi-pending');
@@ -270,7 +283,7 @@ function hydrateBackdrop(img, { lqSrc, hqSrc, hqSrcset = '', fallback = '', eage
 }
 
 function unobserveBackdrop(img) {
-  try { img.__clearPeakHiTimer.(); } catch {}
+  try { img.__clearPeakHiTimer?.(); } catch {}
   try { __bgIO.unobserve(img); } catch {}
   try { img.removeEventListener('error', img.__bgOnErr); } catch {}
   try { img.removeEventListener('load',  img.__bgOnLoad); } catch {}
@@ -281,72 +294,72 @@ function unobserveBackdrop(img) {
 
 function warmImageOnce(url, { timeout = 2500 } = {}) {
   if (!url) return Promise.resolve();
-  var LRU_MAX = 500;
-  warmImageOnce._set  ||= new Set();
-  warmImageOnce._list ||= [];
+  const LRU_MAX = 500;
+  warmImageOnce._set  ??= new Set();
+  warmImageOnce._list ??= [];
   if (warmImageOnce._set.has(url)) return Promise.resolve();
   warmImageOnce._set.add(url);
   warmImageOnce._list.push(url);
   if (warmImageOnce._list.length > LRU_MAX) {
-    var drop = warmImageOnce._list.splice(0, warmImageOnce._list.length - LRU_MAX);
-    for (var u of drop) warmImageOnce._set.delete(u);
+    const drop = warmImageOnce._list.splice(0, warmImageOnce._list.length - LRU_MAX);
+    for (const u of drop) warmImageOnce._set.delete(u);
   }
 
-  return new Promisefunction((res) {
-    var img = new Image();
-    var done = false;
-    var finish = function() { if (!done) { done = true; res(); } };
-    var t = setTimeout(finish, timeout);
-    img.onload = function() { clearTimeout(t); finish(); };
-    img.onerror = function() { clearTimeout(t); finish(); };
+  return new Promise((res) => {
+    const img = new Image();
+    let done = false;
+    const finish = () => { if (!done) { done = true; res(); } };
+    const t = setTimeout(finish, timeout);
+    img.onload = () => { clearTimeout(t); finish(); };
+    img.onerror = () => { clearTimeout(t); finish(); };
     img.src = url;
   });
 }
 
 function shortPreload(url, ms = 1200) {
   if (!url) return;
-  var sel = "link[rel=\"preload\"][as=\"image\"][href=\"" + (url) + "\"]";
+  const sel = `link[rel="preload"][as="image"][href="${url}"]`;
   if (document.querySelector(sel)) return;
-  var link = document.createElement('link');
+  const link = document.createElement('link');
   link.rel = 'preload';
   link.as = 'image';
   link.href = url;
   document.head.appendChild(link);
-  var id = setTimeoutfunction(() {
+  const id = setTimeout(() => {
     try { link.remove(); } catch {}
   }, ms);
-  return function() { clearTimeout(id); try { link.remove(); } catch {} };
+  return () => { clearTimeout(id); try { link.remove(); } catch {} };
 }
 
-function createSlide(item, options = {}) {
-  var {
+async function createSlide(item, options = {}) {
+  const {
     insertAt = null,
     suppressInitialDisplay = false,
     deferPeakReveal = false
   } = options || {};
-  var indexPage = document.querySelector("#indexPage:not(.hide)") || document.querySelector("#homePage:not(.hide)");
+  const indexPage = document.querySelector("#indexPage:not(.hide)") || document.querySelector("#homePage:not(.hide)");
   if (!indexPage) return;
 
-  var parentId = item.Id;
-  var itemIdRaw = item.Id;
+  let parentId = item.Id;
+  const itemIdRaw = item.Id;
 
   if ((item.Type === "Episode" || item.Type === "Season") && item.SeriesId) {
     try {
-      var parentItem = fetchItemDetails(item.SeriesId);
+      const parentItem = await fetchItemDetails(item.SeriesId);
       parentId = parentItem.Id;
 
-      var mergeTrailers = function(a = [], b = []) {
-      var all = [...a, ...b];
-      var seen = new Set();
-      return all.filter(function(t) {
-        var key = (t.Url || '').trim();
+      const mergeTrailers = (a = [], b = []) => {
+      const all = [...a, ...b];
+      const seen = new Set();
+      return all.filter(t => {
+        const key = (t?.Url || '').trim();
         if (!key || seen.has(key)) return false;
         seen.add(key);
         return true;
       });
     };
 
-    var effectiveRemoteTrailers = [];
+    let effectiveRemoteTrailers = [];
     if (Array.isArray(item.RemoteTrailers) && item.RemoteTrailers.length) {
       effectiveRemoteTrailers = mergeTrailers(item.RemoteTrailers, parentItem.RemoteTrailers);
     } else {
@@ -369,25 +382,25 @@ function createSlide(item, options = {}) {
       Name: item.Name
     };
         } catch (err) {
-      console.error("Não foi possível obter informações da série:", err);
+      console.error("Dizi bilgileri alınamadı:", err);
     }
   }
 
-  var ac = new AbortController();
-  var { signal } = ac;
-  var perSlideObservers = [];
-  var perSlideCleanups = [];
-  var slidesContainer = createSlidesContainer(indexPage);
-  var existing = slidesContainer.querySelector(".monwui-slide[data-item-id=\"" + (itemIdRaw) + "\"]");
+  const ac = new AbortController();
+  const { signal } = ac;
+  const perSlideObservers = [];
+  const perSlideCleanups = [];
+  const slidesContainer = createSlidesContainer(indexPage);
+  const existing = slidesContainer.querySelector(`.monwui-slide[data-item-id="${itemIdRaw}"]`);
   (function bindSlidesScrollPerf(){
     if (window.__jmsSlidesScrollBound) return;
     window.__jmsSlidesScrollBound = true;
-    var scroller = document.querySelector('#monwui-slides-container');
+    const scroller = document.querySelector('#monwui-slides-container');
     if (!scroller) return;
-    var onScrollPerf = function() {
+    const onScrollPerf = () => {
       __bgScrollActive = true;
       if (__bgScrollIdleTimer) clearTimeout(__bgScrollIdleTimer);
-      __bgScrollIdleTimer = setTimeoutfunction(() {
+      __bgScrollIdleTimer = setTimeout(() => {
         __bgScrollActive = false;
         if (!__bgHydrationRAF && __bgHydrationQueue.length) {
           __bgHydrationRAF = requestAnimationFrame(bgFlushHydrationFrame);
@@ -397,17 +410,17 @@ function createSlide(item, options = {}) {
     scroller.addEventListener('scroll', onScrollPerf, { passive: true });
   })();
   if (existing) {
-   try { existing.__cleanupSlide.(); } catch {}
+   try { existing.__cleanupSlide?.(); } catch {}
    try { existing.remove(); } catch {}
  }
   if (!slidesContainer.__cleanupMO) {
-    var mo = new MutationObserverfunction((muts) {
-      for (var m of muts) {
-        m.removedNodes.forEach.(function(node) {
+    const mo = new MutationObserver((muts) => {
+      for (const m of muts) {
+        m.removedNodes?.forEach?.(node => {
           if (node && node.__cleanupSlide) {
             try { node.__cleanupSlide(); } catch {}
           }
-          node.querySelectorAll.('.monwui-slide').forEach(function(el) {
+          node?.querySelectorAll?.('.monwui-slide')?.forEach(el => {
             if (el.__cleanupSlide) { try { el.__cleanupSlide(); } catch {} }
           });
         });
@@ -416,11 +429,11 @@ function createSlide(item, options = {}) {
     mo.observe(slidesContainer, { childList:true, subtree:true });
     slidesContainer.__cleanupMO = mo;
   }
-  var existingSlides = Array.from(slidesContainer.children).filterfunction((child) child.classList.contains("monwui-slide"));
-  var isFirstSlide = existingSlides.length === 0;
-  var itemId = item.Id;
+  const existingSlides = Array.from(slidesContainer.children).filter((child) => child.classList?.contains("monwui-slide"));
+  const isFirstSlide = existingSlides.length === 0;
+  const itemId = item.Id;
 
-  var {
+  const {
     Overview,
     Type: itemType,
     People,
@@ -441,50 +454,50 @@ function createSlide(item, options = {}) {
     ProviderIds
   } = item;
 
-  var highestQualityBackdropIndex;
+  let highestQualityBackdropIndex;
   if (config.manualBackdropSelection || config.indexZeroSelection) {
     highestQualityBackdropIndex = "0";
   } else {
-    highestQualityBackdropIndex = getHighestQualityBackdropIndex(parentId, { itemDetails: item });
+    highestQualityBackdropIndex = await getHighestQualityBackdropIndex(parentId, { itemDetails: item });
   }
 
   function storeBackdropUrl(id, url) {
     try {
-      var stored = JSON.parse(localStorage.getItem("backdropUrls")) || [];
+      const stored = JSON.parse(localStorage.getItem("backdropUrls")) || [];
       if (!stored.includes(url)) {
         stored.push(url);
-        var MAX = 500;
-        var trimmed = stored.slice(-MAX);
+        const MAX = 500;
+        const trimmed = stored.slice(-MAX);
         localStorage.setItem("backdropUrls", JSON.stringify(trimmed));
       }
     } catch {}
   }
 
-  var autoBackdropUrl = S("/Items/" + (parentId) + "/Images/Backdrop/" + (highestQualityBackdropIndex));
-  var landscapeUrl = S("/Items/" + (parentId) + "/Images/Thumb/0");
-  var primaryUrl  = S("/Items/" + (parentId) + "/Images/Primary");
-  var logoUrl = S("/Items/" + (parentId) + "/Images/Logo");
-  var bannerUrl = "/Items/" + (parentId) + "/Images/Banner";
-  var artUrl = "/Items/" + (parentId) + "/Images/Art";
-  var discUrl = "/Items/" + (parentId) + "/Images/Disc";
-  var logoExists = true;
+  const autoBackdropUrl = S(`/Items/${parentId}/Images/Backdrop/${highestQualityBackdropIndex}`);
+  const landscapeUrl = S(`/Items/${parentId}/Images/Thumb/0`);
+  const primaryUrl  = S(`/Items/${parentId}/Images/Primary`);
+  let logoUrl = S(`/Items/${parentId}/Images/Logo`);
+  const bannerUrl = `/Items/${parentId}/Images/Banner`;
+  const artUrl = `/Items/${parentId}/Images/Art`;
+  const discUrl = `/Items/${parentId}/Images/Disc`;
+  const logoExists = true;
 
   storeBackdropUrl(parentId, autoBackdropUrl);
 
-  var manualBackdropUrl = {
-    backdropUrl: S("/Items/" + (parentId) + "/Images/Backdrop/0"),
+  const manualBackdropUrl = {
+    backdropUrl: S(`/Items/${parentId}/Images/Backdrop/0`),
     landscapeUrl,
     primaryUrl,
-    logoUrl: logoExists ? logoUrl : "/Items/" + (parentId) + "/Images/Backdrop/0",
-    bannerUrl: S("/Items/" + (parentId) + "/Images/Banner"),
-    artUrl: S("/Items/" + (parentId) + "/Images/Art"),
-    discUrl: S("/Items/" + (parentId) + "/Images/Disc"),
+    logoUrl: logoExists ? logoUrl : `/Items/${parentId}/Images/Backdrop/0`,
+    bannerUrl: S(`/Items/${parentId}/Images/Banner`),
+    artUrl: S(`/Items/${parentId}/Images/Art`),
+    discUrl: S(`/Items/${parentId}/Images/Disc`),
     none: ""
   }[config.backdropImageType];
 
   addSlideToSettingsBackground(parentId, autoBackdropUrl);
 
-  var slide = document.createElement("div");
+  const slide = document.createElement("div");
   slide.className = "monwui-slide";
   if (deferPeakReveal && config.peakSlider) {
     slide.classList.add("peak-batch-pending");
@@ -492,53 +505,53 @@ function createSlide(item, options = {}) {
   slide.dataset.backdropReady = "0";
   slide.style.position = "absolute";
   slide.style.display = "none";
-  slide.dataset.detailUrl = "/web/#/details?id=" + (itemId);
+  slide.dataset.detailUrl = `/web/#/details?id=${itemId}`;
   slide.dataset.itemId = itemId;
   slide.setAttribute('data-media-streams', JSON.stringify(MediaStreams || []));
   slide.dataset.played = isPlaybackCompleted(UserData, RunTimeTicks) ? "true" : "false";
 
-  if (typeof UserData.PlaybackPositionTicks === "number") {
+  if (typeof UserData?.PlaybackPositionTicks === "number") {
     slide.dataset.playbackpositionticks = UserData.PlaybackPositionTicks;
   }
   if (typeof RunTimeTicks === "number") {
     slide.dataset.runtimeticks = RunTimeTicks;
   }
 
-  var backdropSyncDone = false;
-  var backdropSyncReason = "0";
-  var resolveBackdropSync = null;
-  var backdropSyncPromise = new Promisefunction((resolve) {
+  let backdropSyncDone = false;
+  let backdropSyncReason = "0";
+  let resolveBackdropSync = null;
+  const backdropSyncPromise = new Promise((resolve) => {
     resolveBackdropSync = resolve;
   });
-  var finishBackdropSync = function(reason = "loaded") {
+  const finishBackdropSync = (reason = "loaded") => {
     if (backdropSyncDone) return backdropSyncReason;
     backdropSyncDone = true;
     backdropSyncReason = reason;
     slide.dataset.backdropReady = reason === "loaded" ? "1" : String(reason || "1");
     slide.classList.add("backdrop-ready");
-    try { resolveBackdropSync.(backdropSyncReason); } catch {}
+    try { resolveBackdropSync?.(backdropSyncReason); } catch {}
     return backdropSyncReason;
   };
 
-  slide.__waitForBackdropReady = function({ timeoutMs = LOW_POWER_PEAK ? 2400 : 1600 } = {}) {
+  slide.__waitForBackdropReady = ({ timeoutMs = LOW_POWER_PEAK ? 2400 : 1600 } = {}) => {
     if (backdropSyncDone) return Promise.resolve(backdropSyncReason);
-    var safeTimeout = Math.max(350, Number(timeoutMs) || 0);
-    return new Promisefunction((resolve) {
-      var timer = setTimeoutfunction(() {
+    const safeTimeout = Math.max(350, Number(timeoutMs) || 0);
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => {
         resolve(finishBackdropSync("timeout"));
       }, safeTimeout);
-      backdropSyncPromise.thenfunction((reason) {
+      backdropSyncPromise.then((reason) => {
         clearTimeout(timer);
         resolve(reason);
       });
     });
   };
 
-  slide.__releasePeakReveal = function({ timeoutMs = LOW_POWER_PEAK ? 2600 : 1800 } = {}) {
+  slide.__releasePeakReveal = ({ timeoutMs = LOW_POWER_PEAK ? 2600 : 1800 } = {}) => {
     if (!config.peakSlider || !slide.classList.contains("peak-batch-pending")) return;
     if (slide.__peakRevealArmed) return;
     slide.__peakRevealArmed = true;
-    slide.__waitForBackdropReady({ timeoutMs }).finallyfunction(() {
+    slide.__waitForBackdropReady({ timeoutMs }).finally(() => {
       slide.__peakRevealArmed = false;
       if (!slide.isConnected) return;
       slide.classList.remove("peak-batch-pending");
@@ -549,43 +562,43 @@ function createSlide(item, options = {}) {
   slide.dataset.landscapeUrl = landscapeUrl;
   slide.dataset.primaryUrl = primaryUrl;
   slide.dataset.logoUrl = logoUrl;
-  slide.dataset.bannerUrl = S("/Items/" + (parentId) + "/Images/Banner");
-  slide.dataset.artUrl  = S("/Items/" + (parentId) + "/Images/Art");
-  slide.dataset.discUrl = S("/Items/" + (parentId) + "/Images/Disc");
+  slide.dataset.bannerUrl = S(`/Items/${parentId}/Images/Banner`);
+  slide.dataset.artUrl  = S(`/Items/${parentId}/Images/Art`);
+  slide.dataset.discUrl = S(`/Items/${parentId}/Images/Disc`);
 
-  var { backdropUrl, placeholderUrl, srcset } = getHighResImageUrls(
+  const { backdropUrl, placeholderUrl, srcset } = await getHighResImageUrls(
     { ...item, Id: parentId },
     highestQualityBackdropIndex
   );
-  var absBackdrop = config.manualBackdropSelection ? manualBackdropUrl : S(backdropUrl);
-  var absPlaceholder = S(placeholderUrl);
-  var absSrcset = withServerSrcset(srcset || "");
-  var finalBackdropForWarm = absBackdrop;
-  var allowPeakWarm = !config.peakSlider || isFirstSlide;
+  const absBackdrop = config.manualBackdropSelection ? manualBackdropUrl : S(backdropUrl);
+  const absPlaceholder = S(placeholderUrl);
+  const absSrcset = withServerSrcset(srcset || "");
+  const finalBackdropForWarm = absBackdrop;
+  const allowPeakWarm = !config.peakSlider || isFirstSlide;
   slide.dataset.background = absBackdrop || S(autoBackdropUrl);
 
-  var backdropImg = document.createElement('img');
+  const backdropImg = document.createElement('img');
   backdropImg.className = 'monwui-backdrop';
   backdropImg.alt = 'Backdrop';
   backdropImg.sizes = '100vw';
   backdropImg.__peakManaged = !!config.peakSlider;
   if (isFirstSlide) backdropImg.setAttribute('fetchpriority', 'high');
 
-  hydrateBackdropfunction(backdropImg, {
+  hydrateBackdrop(backdropImg, {
     lqSrc: absPlaceholder,
     hqSrc: absBackdrop,
     hqSrcset: absSrcset,
     eager: isFirstSlide,
-    onHiLoaded: () {  }
+    onHiLoaded: () => {  }
   });
 
   if ((!LOW_POWER_PEAK || isFirstSlide) && allowPeakWarm) {
     backdropWarmQueue.enqueue(finalBackdropForWarm, { shortPreload: true });
-    var warmObserver = new IntersectionObserverfunction((entries, obs) {
-      entries.forEach(function(entry) {
+    const warmObserver = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
         if (entry.isIntersecting && (!backdropImg.__peakManaged || isPeakBackdropEligible(backdropImg))) {
           shortPreload(finalBackdropForWarm, 1500);
-          warmImageOnce(finalBackdropForWarm).catchfunction(() {});
+          warmImageOnce(finalBackdropForWarm).catch(() => {});
           obs.unobserve(entry.target);
         }
       });
@@ -594,35 +607,35 @@ function createSlide(item, options = {}) {
     perSlideObservers.push(warmObserver);
   }
 
-  var pinActiveIfNeeded = function() {
-    var slideEl = backdropImg.closest('.monwui-slide');
-    var active = slideEl.classList.contains('active');
+  const pinActiveIfNeeded = () => {
+    const slideEl = backdropImg.closest('.monwui-slide');
+    const active = slideEl?.classList.contains('active');
     if (!active) return;
     try { backdropImg.setAttribute('fetchpriority','high'); } catch {}
     try { backdropImg.loading = 'eager'; } catch {}
   };
-  backdropImg.addEventListenerfunction('load', () {
+  backdropImg.addEventListener('load', () => {
     finishBackdropSync("loaded");
   }, { passive: true, signal });
   backdropImg.addEventListener('load', pinActiveIfNeeded, { once:true, passive:true, signal });
-  requestAnimationFramefunction(() {
+  requestAnimationFrame(() => {
     if (backdropImg.complete && backdropImg.naturalWidth > 0) {
       finishBackdropSync("loaded");
     }
   });
 
-  var warmOnHover = function() { warmImageOnce(finalBackdropForWarm).catchfunction(() {}); };
+  const warmOnHover = () => { warmImageOnce(finalBackdropForWarm).catch(() => {}); };
   if (!LOW_POWER_PEAK) {
     backdropImg.addEventListener('mouseenter',  warmOnHover, { passive: true, signal });
     backdropImg.addEventListener('pointerover', warmOnHover, { passive: true, signal });
   }
   if ((!LOW_POWER_PEAK || isFirstSlide) && allowPeakWarm) {
-    var ioPreload = new IntersectionObserverfunction((entries, observer) {
-      entries.forEach(function(entry) {
+    const ioPreload = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
         if (!entry.isIntersecting) return;
         if (backdropImg.__peakManaged && !isPeakBackdropEligible(backdropImg)) return;
-        var finalBackdrop = config.manualBackdropSelection ? manualBackdropUrl : backdropUrl;
-        var preload = document.querySelector("link[rel=\"preload\"][as=\"image\"][href=\"" + (finalBackdrop) + "\"]");
+        const finalBackdrop = config.manualBackdropSelection ? manualBackdropUrl : backdropUrl;
+        let preload = document.querySelector(`link[rel="preload"][as="image"][href="${finalBackdrop}"]`);
         if (!preload) {
           preload = document.createElement('link');
           preload.rel = 'preload';
@@ -630,8 +643,8 @@ function createSlide(item, options = {}) {
           preload.href = finalBackdrop;
           document.head.appendChild(preload);
         }
-        var tid = setTimeoutfunction(() { try { if (preload && !preload.__pinned) preload.remove(); } catch {} }, 1500);
-        perSlideCleanups.pushfunction(() clearTimeout(tid));
+        const tid = setTimeout(() => { try { if (preload && !preload.__pinned) preload.remove(); } catch {} }, 1500);
+        perSlideCleanups.push(() => clearTimeout(tid));
         observer.unobserve(entry.target);
       });
     }, { rootMargin: PRELOAD_IO_ROOT_MARGIN });
@@ -639,11 +652,11 @@ function createSlide(item, options = {}) {
     perSlideObservers.push(ioPreload);
   }
 
-  backdropImg.addEventListenerfunction('click', (ev) {
-    var slideEl = ev.currentTarget.closest('.monwui-slide');
-    var sc = document.querySelector('#monwui-slides-container');
-    var isPeak = sc.classList.contains('peak-mode');
-    var isActive = slideEl.classList.contains('active');
+  backdropImg.addEventListener('click', async (ev) => {
+    const slideEl = ev.currentTarget.closest('.monwui-slide');
+    const sc = document.querySelector('#monwui-slides-container');
+    const isPeak = sc?.classList.contains('peak-mode');
+    const isActive = slideEl?.classList.contains('active');
     if (isPeak && !isActive) {
       return;
     }
@@ -651,10 +664,10 @@ function createSlide(item, options = {}) {
     ev.preventDefault();
     ev.stopPropagation();
 
-    var preferBackdropIndex = localStorage.getItem("jms_backdrop_index") || highestQualityBackdropIndex || "0";
-    var serverId = getSessionInfo.().serverId || "";
+    const preferBackdropIndex = localStorage.getItem("jms_backdrop_index") || highestQualityBackdropIndex || "0";
+    const serverId = getSessionInfo?.()?.serverId || "";
     try {
-      openDetailsModal({
+      await openDetailsModal({
         itemId,
         serverId,
         preferBackdropIndex,
@@ -665,22 +678,22 @@ function createSlide(item, options = {}) {
     }
   }, { signal });
 
-  var prevTeardown = slide.__cleanupSlide;
-  var teardown = function() {
-    try { perSlideObservers.forEach(function(o) o.disconnect()); } catch {}
+  const prevTeardown = slide.__cleanupSlide;
+  const teardown = () => {
+    try { perSlideObservers.forEach(o => o.disconnect()); } catch {}
     try { ac.abort(); } catch {}
     try { backdropImg.removeEventListener('mouseenter', warmOnHover); } catch {}
     try { backdropImg.removeEventListener('pointerover', warmOnHover); } catch {}
     try { unobserveBackdrop(backdropImg); } catch {}
-    try { perSlideCleanups.forEach(function(fn) { try { fn(); } catch {} }); } catch {}
+    try { perSlideCleanups.forEach(fn => { try { fn(); } catch {} }); } catch {}
     if (typeof prevTeardown === 'function') { try { prevTeardown(); } catch {} }
   };
 
   slide.__cleanupSlide = teardown;
   slide.__backdropImg = backdropImg;
 
-  var horizontalGradientOverlay = createHorizontalGradientOverlay();
-  var backdropContainer = document.createElement('div');
+  const horizontalGradientOverlay = createHorizontalGradientOverlay();
+  const backdropContainer = document.createElement('div');
   backdropContainer.className = 'monwui-bckdrp-cntnr';
   backdropContainer.append(backdropImg, horizontalGradientOverlay);
   slide.__backdropContainer = backdropContainer;
@@ -691,25 +704,25 @@ function createSlide(item, options = {}) {
    createTrailerIframe({ config, RemoteTrailers, slide, backdropImg, itemId });
  }
 
-  var logoContainer = createLogoContainer();
-  var order = config.showDiscOnly
+  const logoContainer = createLogoContainer();
+  const order = config.showDiscOnly
     ? ["disk"]
     : config.showTitleOnly
       ? ["originalTitle"]
       : config.showLogoOrTitle
-        ? config.displayOrder.split(",").map(function(item) item.trim())
+        ? config.displayOrder.split(",").map(item => item.trim())
         : [];
 
   function createLogoElement(fallback) {
-    var logoImg = document.createElement("img");
+    const logoImg = document.createElement("img");
     logoImg.className = "monwui-logo";
     logoImg.src = logoUrl;
     logoImg.alt = "";
     logoImg.loading = "lazy";
     logoImg.decoding = "async";
-   logoImg.addEventListenerfunction('error', () {
+   logoImg.addEventListener('error', () => {
      logoImg.remove();
-     fallback.();
+     fallback?.();
    }, { once:true });
     Object.assign(logoImg.style, {
       width: "100%", maxWidth: "90%", height: "100%", maxHeight: "40%", objectFit: "contain", aspectRatio: "1", display: "block"
@@ -718,7 +731,7 @@ function createSlide(item, options = {}) {
   }
 
   function createDiskElement(fallback) {
-    var discImg = document.createElement("img");
+    const discImg = document.createElement("img");
     discImg.className = "monwui-disk";
     discImg.src = discUrl;
     discImg.alt = "";
@@ -731,7 +744,7 @@ function createSlide(item, options = {}) {
   }
 
   function createTitleElement() {
-    var titleDiv = document.createElement("div");
+    const titleDiv = document.createElement("div");
     titleDiv.className = "monwui-no-logo-container";
     titleDiv.textContent = OriginalTitle;
     Object.assign(titleDiv.style, {
@@ -743,7 +756,7 @@ function createSlide(item, options = {}) {
   function tryDisplayElement(index) {
     if (index >= order.length) {
       // Se chegamos ao fim da lista e nada foi exibido, forçamos a Logo Nexus PobreFlix
-      var nexusLogo = document.createElement("img");
+      const nexusLogo = document.createElement("img");
       nexusLogo.src = "/Resources/slider/src/images/logo_pobreflix.png";
       nexusLogo.className = "monwui-nexus-branding-logo";
       nexusLogo.style.maxHeight = "120px";
@@ -751,21 +764,21 @@ function createSlide(item, options = {}) {
       logoContainer.appendChild(nexusLogo);
       return;
     }
-    var type = order[index];
+    const type = order[index];
     if (type === "logo") {
-      var element = createLogoElementfunction(() {
+      const element = createLogoElement(() => {
         logoContainer.innerHTML = "";
         tryDisplayElement(index + 1);
       });
       logoContainer.appendChild(element);
     } else if (type === "disk") {
-      var element = createDiskElementfunction(() {
+      const element = createDiskElement(() => {
         logoContainer.innerHTML = "";
         tryDisplayElement(index + 1);
       });
       logoContainer.appendChild(element);
     } else if (type === "originalTitle") {
-      var element = createTitleElement();
+      const element = createTitleElement();
       logoContainer.appendChild(element);
     } else {
       tryDisplayElement(index + 1);
@@ -774,9 +787,9 @@ function createSlide(item, options = {}) {
 
   tryDisplayElement(0);
 
-  var buttonContainer = createButtons(slide, config, UserData, itemId, RemoteTrailers, updatePlayedStatus, updateFavoriteStatus, openTrailerModal, item);
-  var plotContainer = createPlotContainer(config, Overview, UserData, RunTimeTicks);
-  var titleContainer = createTitleContainer({
+  const buttonContainer = createButtons(slide, config, UserData, itemId, RemoteTrailers, updatePlayedStatus, updateFavoriteStatus, openTrailerModal, item);
+  const plotContainer = createPlotContainer(config, Overview, UserData, RunTimeTicks);
+  const titleContainer = createTitleContainer({
   config,
   Taglines,
   title,
@@ -786,11 +799,11 @@ function createSlide(item, options = {}) {
   IndexNumber: item.IndexNumber
 });
 
-  var statusContainer = createStatusContainer(itemType, config, UserData, ChildCount, RunTimeTicks, MediaStreams);
-  var actorSlider = createActorSlider(People, config, item);
-  var infoContainer = createInfoContainer({ config, Genres, ProductionYear, ProductionLocations });
-  var directorContainer = createDirectorContainer({ config, People, item });
-  var { container: ratingContainer, ratingExists } = createRatingContainer({
+  const statusContainer = createStatusContainer(itemType, config, UserData, ChildCount, RunTimeTicks, MediaStreams);
+  const actorSlider = await createActorSlider(People, config, item);
+  const infoContainer = createInfoContainer({ config, Genres, ProductionYear, ProductionLocations });
+  const directorContainer = await createDirectorContainer({ config, People, item });
+  const { container: ratingContainer, ratingExists } = await createRatingContainer({
   config,
   CommunityRating,
   CriticRating,
@@ -798,24 +811,24 @@ function createSlide(item, options = {}) {
   UserData,
   item
 });
-  var providerContainer = createProviderContainer({ config, ProviderIds, RemoteTrailers, itemId, slide, item });
-  var languageContainer = createLanguageContainer({ config, MediaStreams, itemType });
+  const providerContainer = createProviderContainer({ config, ProviderIds, RemoteTrailers, itemId, slide, item });
+  const languageContainer = createLanguageContainer({ config, MediaStreams, itemType });
 
-  var metaContainer = createMetaContainer(
-    item.Id || item.Name || item.BackdropImageTags.[0] || Date.now()
+  const metaContainer = createMetaContainer(
+    item?.Id || item?.Name || item?.BackdropImageTags?.[0] || Date.now()
   );
   if (statusContainer) metaContainer.appendChild(statusContainer);
   if (ratingExists) metaContainer.appendChild(ratingContainer);
   if (languageContainer) metaContainer.appendChild(languageContainer);
-  var mainContentContainer = createMainContentContainer();
+  const mainContentContainer = createMainContentContainer();
   mainContentContainer.append(logoContainer, titleContainer, plotContainer, metaContainer, providerContainer);
   slide.append(mainContentContainer, buttonContainer, actorSlider, infoContainer, directorContainer);
-  var frag = document.createDocumentFragment();
+  const frag = document.createDocumentFragment();
   frag.appendChild(slide);
-  var slideChildren = Array.from(slidesContainer.children).filterfunction((child) child.classList.contains("monwui-slide"));
-  var dotNav = Array.from(slidesContainer.children).findfunction((child) child.classList.contains("monwui-dot-navigation-container")) || null;
-  var hasExplicitInsertAt = Number.isInteger(insertAt) && insertAt >= 0;
-  var refNode = hasExplicitInsertAt && insertAt < slideChildren.length
+  const slideChildren = Array.from(slidesContainer.children).filter((child) => child.classList?.contains("monwui-slide"));
+  const dotNav = Array.from(slidesContainer.children).find((child) => child.classList?.contains("monwui-dot-navigation-container")) || null;
+  const hasExplicitInsertAt = Number.isInteger(insertAt) && insertAt >= 0;
+  const refNode = hasExplicitInsertAt && insertAt < slideChildren.length
     ? slideChildren[insertAt]
     : dotNav;
   if (refNode) {
@@ -824,28 +837,28 @@ function createSlide(item, options = {}) {
     slidesContainer.appendChild(frag);
   }
   if (!suppressInitialDisplay && slideChildren.length === 0) {
-    import("./navigation.js").then(function(mod) mod.displaySlide(0));
+    import("./navigation.js").then(mod => mod.displaySlide(0));
   }
   return slide;
 }
 
 function addSlideToSettingsBackground(itemId, backdropUrl) {
-  var settingsSlider = document.getElementById("settingsBackgroundSlider");
+  const settingsSlider = document.getElementById("settingsBackgroundSlider");
   if (!settingsSlider) return;
-  var existingSlide = settingsSlider.querySelector("[data-item-id=\"" + (itemId) + "\"]");
+  const existingSlide = settingsSlider.querySelector(`[data-item-id="${itemId}"]`);
   if (existingSlide) return;
-  var slide = document.createElement("div");
+  const slide = document.createElement("div");
   slide.className = "monwui-slide";
   slide.dataset.itemId = itemId;
-  slide.style.backgroundImage = "url('" + (backdropUrl) + "')";
-  var img = new Image();
+  slide.style.backgroundImage = `url('${backdropUrl}')`;
+  const img = new Image();
   img.src = backdropUrl;
-  img.onerror = function() {
+  img.onerror = () => {
     if (slide.parentNode) {
       slide.parentNode.removeChild(slide);
     }
   };
-  img.onload = function() { img.onload = img.onerror = null; };
+  img.onload = () => { img.onload = img.onerror = null; };
   settingsSlider.appendChild(slide);
   if (settingsSlider.children.length === 1) {
     slide.classList.add("active");
@@ -853,11 +866,11 @@ function addSlideToSettingsBackground(itemId, backdropUrl) {
 }
 
 function buildStarLayer(useSolid) {
-  var layer = document.createElement("span");
+  const layer = document.createElement("span");
   layer.className = useSolid ? "monwui-trailer-star-fill" : "monwui-trailer-star-track";
 
-  for (var i = 0; i < 5; i++) {
-    var star = document.createElement("i");
+  for (let i = 0; i < 5; i++) {
+    const star = document.createElement("i");
     star.className = useSolid ? "fa-solid fa-star" : "fa-regular fa-star";
     layer.appendChild(star);
   }
@@ -865,24 +878,24 @@ function buildStarLayer(useSolid) {
 }
 
 function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '', isFavorite = false, itemId = null, updateFavoriteCallback = null, CommunityRating = null, CriticRating = null, OfficialRating = null) {
-  var embedUrl = getYoutubeEmbedUrl(trailerUrl);
-  var sep = embedUrl.includes('?') ? '&' : '?';
-  var logoUrl = withServer("/Items/" + (itemId) + "/Images/Logo");
-  var overlay = document.createElement("div");
+  const embedUrl = getYoutubeEmbedUrl(trailerUrl);
+  const sep = embedUrl.includes('?') ? '&' : '?';
+  const logoUrl = withServer(`/Items/${itemId}/Images/Logo`);
+  const overlay = document.createElement("div");
   overlay.className = "monwui-trailer-modal-overlay";
   overlay.style.opacity = "0";
   overlay.style.transition = "opacity 0.3s ease-in-out";
 
-  var modal = document.createElement("div");
+  const modal = document.createElement("div");
   modal.className = "monwui-trailer-modal";
   modal.style.maxWidth = "90vw";
   modal.style.maxHeight = "90vh";
   modal.style.width = "800px";
 
-  var modalHeader = document.createElement("div");
+  const modalHeader = document.createElement("div");
   modalHeader.className = "monwui-trailer-modal-header";
 
-  var logoContainer = document.createElement("div");
+  const logoContainer = document.createElement("div");
   logoContainer.className = "monwui-trailer-modal-logo";
   logoContainer.style.display = "flex";
   logoContainer.style.alignItems = "center";
@@ -890,7 +903,7 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
   logoContainer.style.maxWidth = "200px";
   logoContainer.style.marginRight = "auto";
 
-  var logoImg = document.createElement("img");
+  const logoImg = document.createElement("img");
   logoImg.src = itemId ? logoUrl : "/Resources/slider/src/images/logo_pobreflix.png";
   logoImg.alt = itemName;
   logoImg.style.maxHeight = "100%";
@@ -898,22 +911,22 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
   logoImg.style.objectFit = "contain";
   logoImg.style.display = "block";
 
-  logoImg.onerror = function() {
+  logoImg.onerror = () => {
     logoImg.src = "/Resources/slider/src/images/logo_pobreflix.png";
   };
 
   logoContainer.appendChild(logoImg);
 
-  var titleElement = document.createElement("h3");
-  var itemDisplayName = itemName ? itemName : 'Conteúdo Desconhecido';
-  titleElement.textContent = (itemDisplayName) + " - " + (config.languageLabels.trailer);
+  const titleElement = document.createElement("h3");
+  const itemDisplayName = itemName ? itemName : 'Conteúdo Desconhecido';
+  titleElement.textContent = `${itemDisplayName} - ${config.languageLabels.fragman}`;
   titleElement.style.margin = "0";
   titleElement.style.marginLeft = "15px";
   titleElement.style.flex = "1";
   titleElement.style.textAlign = "center";
   titleElement.style.color = "var(--monwui-primary, #7B2FBE)";
 
-  var closeBtn = document.createElement("button");
+  const closeBtn = document.createElement("button");
   closeBtn.className = "monwui-trailer-modal-close";
   closeBtn.innerHTML = "&times;";
   closeBtn.style.cursor = "pointer";
@@ -921,17 +934,17 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
 
   modalHeader.append(logoContainer, titleElement, closeBtn);
 
-  var videoContainer = document.createElement("div");
+  const videoContainer = document.createElement("div");
   videoContainer.className = "monwui-trailer-video-container";
   videoContainer.style.paddingBottom = "56.25%";
 
-  var loadingSpinner = document.createElement("div");
+  const loadingSpinner = document.createElement("div");
   loadingSpinner.className = "monwui-trailer-loading";
   videoContainer.appendChild(loadingSpinner);
 
-  var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-  var finalEmbedUrl = embedUrl;
+  let finalEmbedUrl = embedUrl;
   if (isMobile) {
     finalEmbedUrl = embedUrl;
 
@@ -940,9 +953,9 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
     }
   }
 
-  var iframe = document.createElement("iframe");
+  const iframe = document.createElement("iframe");
   try {
-    var u = new URL(finalEmbedUrl, window.location.origin);
+    const u = new URL(finalEmbedUrl, window.location.origin);
     u.searchParams.set('autoplay', '1');
     u.searchParams.set('mute', '0');
     u.searchParams.set('playsinline', '1');
@@ -964,20 +977,20 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
   iframe.style.height = "100%";
   iframe.style.border = "none";
 
-  var audioUnlocked = false;
-  var hasJsApi = function(() {
+  let audioUnlocked = false;
+  const hasJsApi = (() => {
    try { return new URL(finalEmbedUrl).searchParams.get("enablejsapi") === "1"; }
    catch { return false; }
  })();
 
- var playViaAPI = function() {
+ const playViaAPI = () => {
     if (!hasJsApi) return;
     try {
       iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
     } catch {}
   };
 
-  var unlockAudio = function() {
+  const unlockAudio = () => {
     if (audioUnlocked) return;
 
     if (!hasJsApi) return;
@@ -987,15 +1000,15 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
       iframe.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[50]}', '*');
       audioUnlocked = true;
     } catch (e) {
-      console.log("Erro ao abrir áudio:", e);
+      console.log("Ses açma hatası:", e);
     }
   };
 
-  iframe.onload = function() {
+  iframe.onload = () => {
     loadingSpinner.style.display = "none";
     playViaAPI();
     if (isMobile) {
-      var userInteractionHandler = function() {
+      const userInteractionHandler = () => {
         unlockAudio();
         document.removeEventListener('click', userInteractionHandler);
         document.removeEventListener('touchstart', userInteractionHandler);
@@ -1008,7 +1021,7 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
   };
 
   videoContainer.appendChild(iframe);
-  var modalFooter = document.createElement("div");
+  const modalFooter = document.createElement("div");
   modalFooter.className = "monwui-trailer-modal-footer";
   modalFooter.style.display = "flex";
   modalFooter.style.justifyContent = "space-between";
@@ -1017,47 +1030,47 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
   modalFooter.style.padding = "10px 20px";
   modalFooter.style.boxSizing = "border-box";
 
-  var infoContainer = document.createElement("div");
+  const infoContainer = document.createElement("div");
   infoContainer.style.display = "flex";
   infoContainer.style.gap = "8px";
 
-  var itemTitleElement = document.createElement("div");
-  var contentType = itemType === 'Movie' ? config.languageLabels.movie :
-                    itemType === 'Series' ? config.languageLabels.series :
-                    itemType === 'Episode' ? config.languageLabels.series :
-                    "Conteúdo: ";
-  itemTitleElement.textContent = (contentType) + ": " + (itemDisplayName);
+  const itemTitleElement = document.createElement("div");
+  const contentType = itemType === 'Movie' ? config.languageLabels.film :
+                    itemType === 'Series' ? config.languageLabels.dizi :
+                    itemType === 'Episode' ? config.languageLabels.dizi :
+                    "İçerik: ";
+  itemTitleElement.textContent = `${contentType}: ${itemDisplayName}`;
   itemTitleElement.style.fontWeight = "bold";
   infoContainer.appendChild(itemTitleElement);
-  var ratingContainer = document.createElement("div");
+  const ratingContainer = document.createElement("div");
   ratingContainer.style.display = "flex";
   ratingContainer.style.gap = "15px";
   ratingContainer.style.alignItems = "center";
 
   if (CommunityRating != null) {
-    var rating10 = Array.isArray(CommunityRating)
-      ? function(CommunityRating.reduce((a, b) a + b, 0) / CommunityRating.length)
+    let rating10 = Array.isArray(CommunityRating)
+      ? (CommunityRating.reduce((a, b) => a + b, 0) / CommunityRating.length)
       : CommunityRating;
     rating10 = Math.max(0, Math.min(10, Number(rating10) || 0));
 
-    var rating5 = rating10 / 2;
-    var fillPercent = (rating5 / 5) * 100;
+    const rating5 = rating10 / 2;
+    const fillPercent = (rating5 / 5) * 100;
 
-    var communityRatingElement = document.createElement("div");
+    const communityRatingElement = document.createElement("div");
     communityRatingElement.style.display = "flex";
     communityRatingElement.style.alignItems = "center";
     communityRatingElement.style.gap = "8px";
 
-    var starWrap = document.createElement("span");
+    const starWrap = document.createElement("span");
     starWrap.className = "monwui-trailer-star-rating";
-    starWrap.setAttribute("aria-label", (rating5.toFixed(1)) + " / 5");
+    starWrap.setAttribute("aria-label", `${rating5.toFixed(1)} / 5`);
 
-    var track = buildStarLayer(false);
-    var fill = buildStarLayer(true);
+    const track = buildStarLayer(false);
+    const fill = buildStarLayer(true);
     starWrap.style.display = 'inline-flex';
     starWrap.style.position = 'relative';
     starWrap.style.width = 'fit-content';
-    fill.style.width = (fillPercent) + "%";
+    fill.style.width = `${fillPercent}%`;
     fill.style.overflow = 'hidden';
     fill.style.position = 'absolute';
     fill.style.top = '0';
@@ -1069,8 +1082,8 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
     starWrap.appendChild(track);
     starWrap.appendChild(fill);
 
-    var ratingText = document.createElement("span");
-    ratingText.textContent = (rating5.toFixed(1)) + " / 5";
+    const ratingText = document.createElement("span");
+    ratingText.textContent = `${rating5.toFixed(1)} / 5`;
 
     communityRatingElement.appendChild(starWrap);
     communityRatingElement.appendChild(ratingText);
@@ -1078,15 +1091,15 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
   }
 
   if (CriticRating) {
-    var criticRatingElement = document.createElement("div");
+    const criticRatingElement = document.createElement("div");
     criticRatingElement.style.display = "flex";
     criticRatingElement.style.alignItems = "center";
     criticRatingElement.style.gap = "5px";
 
-    var tomatoIcon = createTomatoIconElement();
+    const tomatoIcon = createTomatoIconElement();
 
-    var ratingValue = document.createElement("span");
-    ratingValue.textContent = (CriticRating) + "%";
+    const ratingValue = document.createElement("span");
+    ratingValue.textContent = `${CriticRating}%`;
 
     criticRatingElement.appendChild(tomatoIcon);
     criticRatingElement.appendChild(ratingValue);
@@ -1094,7 +1107,7 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
 }
 
   if (OfficialRating) {
-    var officialRatingElement = document.createElement("div");
+    const officialRatingElement = document.createElement("div");
     officialRatingElement.className = "official-rating";
     officialRatingElement.textContent = OfficialRating;
     officialRatingElement.style.padding = "2px 5px";
@@ -1105,35 +1118,35 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
   }
 
   if (itemId && updateFavoriteCallback) {
-    var favoriteContainer = document.createElement("div");
+    const favoriteContainer = document.createElement("div");
     favoriteContainer.style.cursor = "pointer";
 
-    var initiallyFav = Boolean(isFavorite);
-    var favoriteIcon = document.createElement("i");
+    const initiallyFav = Boolean(isFavorite);
+    const favoriteIcon = document.createElement("i");
     favoriteIcon.className = initiallyFav
       ? "fa-solid fa-heart"
       : "fa-regular fa-heart";
     favoriteIcon.style.color = initiallyFav ? "#FFC107" : "#fff";
 
-    var favoriteText = document.createElement("span");
+    const favoriteText = document.createElement("span");
     favoriteText.textContent = getWatchlistButtonText({ Type: itemType }, initiallyFav);
 
-    favoriteContainer.addEventListenerfunction("click", (e) {
+    favoriteContainer.addEventListener("click", async (e) => {
       e.stopPropagation();
       if (!itemId || !updateFavoriteCallback) return;
 
-      var newFavoriteStatus = !favoriteIcon.classList.contains("fa-solid");
+      const newFavoriteStatus = !favoriteIcon.classList.contains("fa-solid");
       try {
-        updateFavoriteCallback(itemId, newFavoriteStatus, { item: { Id: itemId, Type: itemType, Name: itemName } });
+        await updateFavoriteCallback(itemId, newFavoriteStatus, { item: { Id: itemId, Type: itemType, Name: itemName } });
         favoriteIcon.className = newFavoriteStatus
           ? "fa-solid fa-heart"
           : "fa-regular fa-heart";
         favoriteIcon.style.color = newFavoriteStatus ? "#FFC107" : "#fff";
         favoriteText.textContent = getWatchlistButtonText({ Type: itemType }, newFavoriteStatus);
         favoriteIcon.style.transform = "scale(1.2)";
-        setTimeoutfunction(() (favoriteIcon.style.transform = ""), 200);
+        setTimeout(() => (favoriteIcon.style.transform = ""), 200);
       } catch (err) {
-        console.error("Erro ao atualizar status de favorito:", err);
+        console.error("Favori durumu güncellenirken hata:", err);
       }
     });
 
@@ -1149,15 +1162,75 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
   overlay.appendChild(modal);
 
   if (!document.getElementById('trailer-modal-styles')) {
-    var style = document.createElement('style');
+    const style = document.createElement('style');
     style.id = 'trailer-modal-styles';
-    style.textContent = "\n      .monwui-trailer-modal-header {\n        display: flex;\n        align-items: center;\n        justify-content: space-between;\n        padding: 15px 20px;\n        background: rgba(0, 0, 0, 0.8);\n        border-bottom: 1px solid rgba(255, 255, 255, 0.1);\n        position: relative;\n      }\n\n      .monwui-trailer-modal-logo {\n        flex-shrink: 0;\n      }\n\n      .monwui-trailer-loading {\n        position: absolute;\n        top: 50%;\n        left: 50%;\n        transform: translate(-50%, -50%);\n        width: 50px;\n        height: 50px;\n        border: 5px solid rgba(255, 255, 255, 0.3);\n        border-radius: 50%;\n        border-top-color: #fff;\n        animation: spin 1s ease-in-out infinite;\n        z-index: 10;\n      }\n\n      @keyframes spin {\n        to { transform: translate(-50%, -50%) rotate(360deg); }\n      }\n\n      @media (max-width: 768px) {\n        .monwui-trailer-modal {\n          width: 95vw !important;\n          height: auto !important;\n        }\n\n        .monwui-trailer-modal-header h3 {\n          font-size: 14px;\n          margin-left: 10px !important;\n        }\n\n        .monwui-trailer-modal-logo {\n          max-width: 120px !important;\n          height: 30px !important;\n        }\n\n        .trailer-audio-notice {\n          background: rgba(255, 193, 7, 0.2);\n          border: 1px solid #FFC107;\n          border-radius: 5px;\n          padding: 8px 12px;\n          margin: 10px 20px;\n          font-size: 12px;\n          text-align: center;\n          color: #FFC107;\n        }\n      }\n    ";
+    style.textContent = `
+      .monwui-trailer-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 20px;
+        background: rgba(0, 0, 0, 0.8);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+      }
+
+      .monwui-trailer-modal-logo {
+        flex-shrink: 0;
+      }
+
+      .monwui-trailer-loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 50px;
+        height: 50px;
+        border: 5px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+        z-index: 10;
+      }
+
+      @keyframes spin {
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+
+      @media (max-width: 768px) {
+        .monwui-trailer-modal {
+          width: 95vw !important;
+          height: auto !important;
+        }
+
+        .monwui-trailer-modal-header h3 {
+          font-size: 14px;
+          margin-left: 10px !important;
+        }
+
+        .monwui-trailer-modal-logo {
+          max-width: 120px !important;
+          height: 30px !important;
+        }
+
+        .trailer-audio-notice {
+          background: rgba(255, 193, 7, 0.2);
+          border: 1px solid #FFC107;
+          border-radius: 5px;
+          padding: 8px 12px;
+          margin: 10px 20px;
+          font-size: 12px;
+          text-align: center;
+          color: #FFC107;
+        }
+      }
+    `;
     document.head.appendChild(style);
   }
 
-  var closeModal = function() {
+  const closeModal = () => {
     overlay.style.opacity = "0";
-    setTimeoutfunction(() {
+    setTimeout(() => {
       if (document.body.contains(overlay)) {
         try { iframe.src = "about:blank"; } catch {}
         document.body.removeChild(overlay);
@@ -1167,13 +1240,13 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
   };
 
   closeBtn.addEventListener("click", closeModal);
-  overlay.addEventListenerfunction("click", (e) {
+  overlay.addEventListener("click", (e) => {
     if (e.target === overlay) {
       closeModal();
     }
   });
 
-  var escListener = function(e) {
+  const escListener = (e) => {
     if (e.key === "Escape" || e.keyCode === 27) {
       closeModal();
     }
@@ -1182,13 +1255,13 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
   document.addEventListener("keydown", escListener);
   document.body.appendChild(overlay);
 
-  setTimeoutfunction(() {
+  setTimeout(() => {
     overlay.style.opacity = "1";
   }, 10);
 
   return {
     close: closeModal,
-    getIframe: function() iframe
+    getIframe: () => iframe
   };
 }
 

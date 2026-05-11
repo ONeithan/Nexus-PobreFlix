@@ -1,9 +1,9 @@
-export var PARENTAL_PIN_THRESHOLDS = [7, 10, 13, 16, 18];
+export const PARENTAL_PIN_THRESHOLDS = [7, 10, 13, 16, 18];
 
 export function normalizeOfficialRatingAge(rawRating) {
   if (!rawRating) return null;
 
-  var rating = String(rawRating)
+  const rating = String(rawRating)
     .toUpperCase()
     .trim()
     .replace(/\s+/g, "")
@@ -24,32 +24,32 @@ export function normalizeOfficialRatingAge(rawRating) {
   if (/(TVPG|^PG$|TVG|^G$|EVERYONE|U$|UC|UNIVERSAL|TR6|DE0|FSK0)/.test(rating)) return 7;
   if (/(ALLYEARS|ALLAGES|ALL|TVY|KIDS|^Y$|0\+|TR0|GENEL)/.test(rating)) return 0;
 
-  var match = rating.match(/^(\d{1,2})\+?$/);
+  const match = rating.match(/^(\d{1,2})\+?$/);
   if (!match) return null;
 
-  var age = Number.parseInt(match[1], 10);
+  const age = Number.parseInt(match[1], 10);
   return Number.isFinite(age) ? age : null;
 }
 
 export function doesRatingRequirePin(rawRating, threshold) {
-  var minAge = Number(threshold || 0);
+  const minAge = Number(threshold || 0);
   if (!(minAge > 0)) return false;
 
-  var ratingAge = normalizeOfficialRatingAge(rawRating);
+  const ratingAge = normalizeOfficialRatingAge(rawRating);
   return Number.isFinite(ratingAge) && ratingAge > minAge;
 }
 
 export function formatThresholdLabel(threshold, labels = {}) {
-  var age = Number(threshold || 0);
+  const age = Number(threshold || 0);
   return age > 0
-    ? (age) + "+ " + (labels.parentalPinThresholdSuffix || "and above")
+    ? `${age}+ ${labels.parentalPinThresholdSuffix || "and above"}`
     : (labels.parentalPinThresholdOff || "Off");
 }
 
 export function formatResolvedRating(rawRating) {
-  var raw = String(rawRating || "").trim();
+  const raw = String(rawRating || "").trim();
   if (!raw) return "";
 
-  var age = normalizeOfficialRatingAge(raw);
-  return Number.isFinite(age) ? (raw) + " (" + (age) + "+)" : raw;
+  const age = normalizeOfficialRatingAge(raw);
+  return Number.isFinite(age) ? `${raw} (${age}+)` : raw;
 }

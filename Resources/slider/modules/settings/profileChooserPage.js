@@ -1,67 +1,67 @@
 import { createCheckbox, createSection, bindCheckboxKontrol } from "./shared.js";
 
 export function createProfileChooserPanel(config, labels) {
-  var panel = document.createElement("div");
+  const panel = document.createElement("div");
   panel.id = "profile-chooser-panel";
   panel.className = "settings-panel";
 
-  var section = createSection(labels.profileChooserHeader || "Configurações de Quem Está Assistindo");
-  var enableRow = document.createElement("div");
+  const section = createSection(labels?.profileChooserHeader || "Kim İzliyor Ayarları");
+  const enableRow = document.createElement("div");
   enableRow.className = "fsetting-item";
 
-  var enableCb = createCheckbox(
+  const enableCb = createCheckbox(
     "enableProfileChooser",
-    labels.enableProfileChooser || "Habilitar seletor de perfil (Quem está assistindo?)",
+    labels?.enableProfileChooser || "Profil seçiciyi (Kim izliyor?) etkinleştir",
     config.enableProfileChooser
   );
 
   enableRow.appendChild(enableCb);
 
-  var subWrap = document.createElement("div");
+  const subWrap = document.createElement("div");
   subWrap.className = "profile-chooser-sub";
 
-  var autoRow = document.createElement("div");
+  const autoRow = document.createElement("div");
   autoRow.className = "fsetting-item profile-chooser-container";
 
-  var autoCb = createCheckbox(
+  const autoCb = createCheckbox(
     "profileChooserAutoOpen",
-    labels.profileChooserAutoOpen || "Mostrar automaticamente ao abrir a página",
+    labels?.profileChooserAutoOpen || "Sayfa açılınca otomatik göster",
     config.profileChooserAutoOpen
   );
 
   autoRow.appendChild(autoCb);
 
-  var autoRuleWrap = document.createElement("div");
+  const autoRuleWrap = document.createElement("div");
   autoRuleWrap.className = "profile-chooser-auto-sub";
 
-  var autoRuleRow = document.createElement("div");
+  const autoRuleRow = document.createElement("div");
   autoRuleRow.className = "fsetting-item profile-chooser-container";
 
-  var autoRuleCb = createCheckbox(
+  const autoRuleCb = createCheckbox(
     "profileChooserAutoOpenRequireQuickLogin",
-    labels.profileChooserAutoOpenRequireQuickLogin || "Mostrar se houver ao menos 1 login rápido",
+    labels?.profileChooserAutoOpenRequireQuickLogin || "En az 1 hızlı giriş varsa otomatik göster",
     config.profileChooserAutoOpenRequireQuickLogin
   );
 
   autoRuleRow.appendChild(autoRuleCb);
   autoRuleWrap.appendChild(autoRuleRow);
 
-  var rememberRow = document.createElement("div");
+  const rememberRow = document.createElement("div");
   rememberRow.className = "fsetting-item profile-chooser-container";
 
-  var rememberCb = createCheckbox(
+  const rememberCb = createCheckbox(
     "profileChooserRememberTokens",
-    labels.profileChooserRememberTokens || "Lembrar tokens (Armazenamento local)",
+    labels?.profileChooserRememberTokens || "Tokenları hatırla (Yerel depolama)",
     config.profileChooserRememberTokens
   );
 
   rememberRow.appendChild(rememberCb);
 
-  var desc = document.createElement("div");
+  const desc = document.createElement("div");
   desc.className = "description-text";
   desc.textContent =
-    labels.profileChooserDesc ||
-    "Esta configuração abre a tela de seleção de usuários estilo Netflix na interface do Jellyfin. A exibição automática, regras de login rápido e opções de lembrança de tokens são gerenciadas aqui.";
+    labels?.profileChooserDesc ||
+    "Bu ayar, Jellyfin arayüzünde Netflix benzeri kullanıcı seçme ekranını açar. Otomatik gösterim, hızlı giriş kuralı ve token hatırlama seçenekleri burada yönetilir.";
 
   subWrap.append(autoRow, autoRuleWrap, rememberRow, desc);
 
@@ -82,16 +82,16 @@ export function createProfileChooserPanel(config, labels) {
     [autoRuleCb]
   );
 
-  var enableInput = enableCb.querySelector("input");
-  var autoInput = autoCb.querySelector("input");
+  const enableInput = enableCb.querySelector("input");
+  const autoInput = autoCb.querySelector("input");
 
-  var syncAutoRuleVisibility = function() {
-    var visible = !!(enableInput.checked && autoInput.checked);
+  const syncAutoRuleVisibility = () => {
+    const visible = !!(enableInput?.checked && autoInput?.checked);
     autoRuleWrap.style.display = visible ? "" : "none";
   };
 
-  enableInput.addEventListener("change", syncAutoRuleVisibility);
-  autoInput.addEventListener("change", syncAutoRuleVisibility);
+  enableInput?.addEventListener("change", syncAutoRuleVisibility);
+  autoInput?.addEventListener("change", syncAutoRuleVisibility);
   syncAutoRuleVisibility();
 
   return panel;

@@ -1,54 +1,54 @@
-var LEGACY_HEADER_CONTAINER_SELECTORS = [
+const LEGACY_HEADER_CONTAINER_SELECTORS = [
   ".skinHeader .headerRight",
   ".skinHeader .headerButtons",
   ".headerRight",
   ".headerButtons"
 ];
 
-var MUI_HEADER_ACTION_TRIGGER_SELECTORS = [
+const MUI_HEADER_ACTION_TRIGGER_SELECTORS = [
   '[aria-controls="app-sync-play-menu"]',
   '[aria-controls="app-remote-play-menu"]',
   'a[href="#/search"]'
 ];
 
-var MUI_HEADER_USER_TRIGGER_SELECTORS = [
+const MUI_HEADER_USER_TRIGGER_SELECTORS = [
   '[aria-controls="app-user-menu"]'
 ];
 
 function firstMatch(selectors, root = document) {
-  if (!root.querySelector) return null;
-  for (var selector of selectors) {
-    var node = root.querySelector(selector);
+  if (!root?.querySelector) return null;
+  for (const selector of selectors) {
+    const node = root.querySelector(selector);
     if (node) return node;
   }
   return null;
 }
 
 function getActionMountFromTrigger(trigger) {
-  return trigger.parentElement || null;
+  return trigger?.parentElement || null;
 }
 
 function getUserMountFromTrigger(trigger) {
-  return trigger.parentElement || trigger || null;
+  return trigger?.parentElement || trigger || null;
 }
 
 export function findHeaderMountTarget({ variant = "actions", root = document } = {}) {
   if (variant === "profile") {
-    var userTrigger = firstMatch(MUI_HEADER_USER_TRIGGER_SELECTORS, root);
-    var userMount = getUserMountFromTrigger(userTrigger);
+    const userTrigger = firstMatch(MUI_HEADER_USER_TRIGGER_SELECTORS, root);
+    const userMount = getUserMountFromTrigger(userTrigger);
     if (userMount) return { element: userMount, mode: "mui-user" };
   } else {
-    var actionTrigger = firstMatch(MUI_HEADER_ACTION_TRIGGER_SELECTORS, root);
-    var actionMount = getActionMountFromTrigger(actionTrigger);
+    const actionTrigger = firstMatch(MUI_HEADER_ACTION_TRIGGER_SELECTORS, root);
+    const actionMount = getActionMountFromTrigger(actionTrigger);
     if (actionMount) return { element: actionMount, mode: "mui-actions" };
   }
 
-  var legacyMount = firstMatch(LEGACY_HEADER_CONTAINER_SELECTORS, root);
+  const legacyMount = firstMatch(LEGACY_HEADER_CONTAINER_SELECTORS, root);
   if (legacyMount) return { element: legacyMount, mode: "legacy" };
 
   if (variant === "profile") {
-    var actionTrigger = firstMatch(MUI_HEADER_ACTION_TRIGGER_SELECTORS, root);
-    var actionMount = getActionMountFromTrigger(actionTrigger);
+    const actionTrigger = firstMatch(MUI_HEADER_ACTION_TRIGGER_SELECTORS, root);
+    const actionMount = getActionMountFromTrigger(actionTrigger);
     if (actionMount) return { element: actionMount, mode: "mui-actions" };
   }
 
@@ -56,7 +56,7 @@ export function findHeaderMountTarget({ variant = "actions", root = document } =
 }
 
 export function getHeaderMountWaitSelector(variant = "actions") {
-  var selectors = variant === "profile"
+  const selectors = variant === "profile"
     ? [...MUI_HEADER_USER_TRIGGER_SELECTORS, ...LEGACY_HEADER_CONTAINER_SELECTORS]
     : [...MUI_HEADER_ACTION_TRIGGER_SELECTORS, ...LEGACY_HEADER_CONTAINER_SELECTORS];
   return selectors.join(", ");

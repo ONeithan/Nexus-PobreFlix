@@ -5,53 +5,45 @@ import { clearQualityBadgesCacheAndRefresh } from "../qualityBadges.js";
 import { fetchJmsPluginConfig } from "../jmsPluginConfig.js";
 
 export function createStatusRatingPanel(config, labels) {
-        var panel = document.createElement('div');
+        const panel = document.createElement('div');
         panel.id = 'status-rating-panel';
         panel.className = 'settings-panel';
 
-        var statusSection = createSection(labels.showStatusInfo || 'Informações de Status');
-        var statusCheckbox = createCheckbox('showStatusInfo', labels.showStatusInfo || 'Mostrar Informações de Status', config.showStatusInfo);
+        const statusSection = createSection(labels.showStatusInfo || 'Durum Bilgileri');
+        const statusCheckbox = createCheckbox('showStatusInfo', labels.showStatusInfo || 'Durum Bilgilerini Göster', config.showStatusInfo);
         statusSection.appendChild(statusCheckbox);
 
-        var statusSubOptions = document.createElement('div');
+        const statusSubOptions = document.createElement('div');
         statusSubOptions.className = 'sub-options status-sub-options';
-        statusSubOptions.appendChild(createCheckbox('showTypeInfo', labels.showTypeInfo || 'Tipo de Mídia', config.showTypeInfo));
-        statusSubOptions.appendChild(createCheckbox('showWatchedInfo', labels.showWatchedInfo || 'Visto', config.showWatchedInfo));
-        statusSubOptions.appendChild(createCheckbox('showRuntimeInfo', labels.showRuntimeInfo || 'Duração', config.showRuntimeInfo));
-        statusSubOptions.appendChild(createCheckbox('showQualityInfo', labels.showQualityInfo || 'Qualidade', config.showQualityInfo));
+        statusSubOptions.appendChild(createCheckbox('showTypeInfo', labels.showTypeInfo || 'Medya Türü', config.showTypeInfo));
+        statusSubOptions.appendChild(createCheckbox('showWatchedInfo', labels.showWatchedInfo || 'İzlenme', config.showWatchedInfo));
+        statusSubOptions.appendChild(createCheckbox('showRuntimeInfo', labels.showRuntimeInfo || 'Süre', config.showRuntimeInfo));
+        statusSubOptions.appendChild(createCheckbox('showQualityInfo', labels.showQualityInfo || 'Kalite', config.showQualityInfo));
 
-        var qualityDetailSubOptions = document.createElement('div');
+        const qualityDetailSubOptions = document.createElement('div');
         qualityDetailSubOptions.className = 'sub-options quality-detail-options';
-        qualityDetailSubOptions.appendChild(createCheckbox('showQualityDetail', labels.showQualityDetail || 'Detalhes da Qualidade', config.showQualityDetail));
+        qualityDetailSubOptions.appendChild(createCheckbox('showQualityDetail', labels.showQualityDetail || 'Kalite Detayı', config.showQualityDetail));
         statusSubOptions.appendChild(qualityDetailSubOptions);
         statusSection.appendChild(statusSubOptions);
 
-        statusSubOptions.appendChild(createCheckbox('enableQualityBadges', labels.enableQualityBadges || 'Mostrar selo de qualidade nos posters', config.enableQualityBadges));
+        statusSubOptions.appendChild(createCheckbox('enableQualityBadges', labels.enableQualityBadges || 'Posterlerin üzerinde kalite etiketi göster', config.enableQualityBadges));
 
-        var badgeCacheControls = document.createElement('div');
+        const badgeCacheControls = document.createElement('div');
         badgeCacheControls.className = 'inline-actions quality-badge-actions';
 
-        var btnClear = document.createElement('button');
+        const btnClear = document.createElement('button');
         btnClear.type = 'button';
         btnClear.className = 'btn btn-warning';
-        btnClear.title = (labels.clearQualityCacheTitle || 'Limpar cache de selos de qualidade');
-        btnClear.textContent = (labels.clearQualityCache || 'Limpar cache de selos de qualidade');
-        btnClear.addEventListener('click', function() {
+        btnClear.title = (labels.clearQualityCacheTitle || 'Kalite rozet önbelleğini temizle');
+        btnClear.textContent = (labels.clearQualityCache || 'Kalite rozet önbelleğini temizle');
+        btnClear.addEventListener('click', () => {
             try {
                 clearQualityBadgesCacheAndRefresh();
-                var showToast = window.showToast;
-                if (showToast && typeof showToast === "function") {
-                    showToast(labels.qualityCacheCleared || 'Cache de selos de qualidade limpo e reconstruído.');
-                } else {
-                    alert(labels.qualityCacheCleared || 'Cache de selos de qualidade limpo e reconstruído.');
-                }
+                (window.showToast?.(labels.qualityCacheCleared || 'Kalite rozet önbelleği temizlendi ve yeniden oluşturuldu.'))
+                ?? alert(labels.qualityCacheCleared || 'Kalite rozet önbelleği temizlendi ve yeniden oluşturuldu.');
             } catch (e) {
-                var showToast = window.showToast;
-                if (showToast && typeof showToast === "function") {
-                    showToast(labels.qualityCacheClearError || 'Ocorreu um erro ao limpar o cache.');
-                } else {
-                    alert(labels.qualityCacheClearError || 'Ocorreu um erro ao limpar o cache.');
-                }
+                (window.showToast?.(labels.qualityCacheClearError || 'Önbellek temizlenirken bir hata oluştu.'))
+                ?? alert(labels.qualityCacheClearError || 'Önbellek temizlenirken bir hata oluştu.');
                 console.warn('clearQualityBadgesCacheAndRefresh error:', e);
             }
         });
@@ -62,26 +54,26 @@ export function createStatusRatingPanel(config, labels) {
         bindCheckboxKontrol('#showStatusInfo', '.status-sub-options');
         bindCheckboxKontrol('#showQualityInfo', '.quality-detail-options');
 
-        var ratingSection = createSection(labels.ratingInfoHeader || 'Informações de Avaliação');
-        var ratingCheckbox = createCheckbox('showRatingInfo', labels.ratingInfo || 'Mostrar Avaliações', config.showRatingInfo);
+        const ratingSection = createSection(labels.ratingInfoHeader || 'Puan Bilgileri');
+        const ratingCheckbox = createCheckbox('showRatingInfo', labels.ratingInfo || 'Derecelendirmeleri Göster', config.showRatingInfo);
         ratingSection.appendChild(ratingCheckbox);
 
-        var ratingSubOptions = document.createElement('div');
+        const ratingSubOptions = document.createElement('div');
         ratingSubOptions.className = 'sub-options rating-sub-options';
-        ratingSubOptions.appendChild(createCheckbox('showCommunityRating', labels.showCommunityRating || 'Comunidade', config.showCommunityRating));
-        ratingSubOptions.appendChild(createCheckbox('showCriticRating', labels.showCriticRating || 'Rotten Tomatoes', config.showCriticRating));
-        ratingSubOptions.appendChild(createCheckbox('showOfficialRating', labels.showOfficialRating || 'Certificação', config.showOfficialRating));
-        ratingSubOptions.appendChild(createCheckbox('showMatchPercentage', labels.showMatchPercentage || 'Sugestão', config.showMatchPercentage));
+        ratingSubOptions.appendChild(createCheckbox('showCommunityRating', labels.showCommunityRating || 'Topluluk', config.showCommunityRating));
+        ratingSubOptions.appendChild(createCheckbox('showCriticRating', labels.showCriticRating || 'Rotten Tomato', config.showCriticRating));
+        ratingSubOptions.appendChild(createCheckbox('showOfficialRating', labels.showOfficialRating || 'Sertifikasyon', config.showOfficialRating));
+        ratingSubOptions.appendChild(createCheckbox('showMatchPercentage', labels.showMatchPercentage || 'Öneri', config.showMatchPercentage));
         ratingSection.appendChild(ratingSubOptions);
 
         bindCheckboxKontrol('#showRatingInfo', '.rating-sub-options');
 
-        var metaIconColorsCheckbox = createCheckbox('metaIconColors', labels.metaIconColors || 'Usar cores nos ícones de metadados', config.metaIconColors);
+        const metaIconColorsCheckbox = createCheckbox('metaIconColors', labels.metaIconColors || 'Metaveri ikonlarında renk kullan', config.metaIconColors);
         ratingSection.appendChild(metaIconColorsCheckbox);
 
-        var description = document.createElement('div');
+        const description = document.createElement('div');
         description.className = 'description-text';
-        description.textContent = labels.statusRatingDescription || 'Este ajuste controla a visibilidade de qualidade, status de visualização, tipo de mídia, duração e informações de avaliação do conteúdo.';
+        description.textContent = labels.statusRatingDescription || 'Bu ayar, içeriğin kalite, izlenme durumu, medya türü, süre ve puanlama bilgilerinin görünürlüğünü kontrol eder.';
         ratingSection.appendChild(description);
 
         panel.append(statusSection, ratingSection);
@@ -89,41 +81,41 @@ export function createStatusRatingPanel(config, labels) {
     }
 
 export function createActorPanel(config, labels) {
-        var panel = document.createElement('div');
+        const panel = document.createElement('div');
         panel.id = 'actor-panel';
         panel.className = 'settings-panel';
 
-        var section = createSection(labels.actorInfo || 'Informações de Artistas');
+        const section = createSection(labels.actorInfo || 'Artist Bilgileri');
 
-        var actorAllCheckbox = createCheckbox('showActorAll', labels.showActorAll || 'Nenhum', config.showActorAll);
+        const actorAllCheckbox = createCheckbox('showActorAll', labels.showActorAll || 'Hiçbiri', config.showActorAll);
         section.appendChild(actorAllCheckbox);
 
-        var actorCheckbox = createCheckbox('showActorInfo', labels.showActorInfo || 'Mostrar Nomes dos Artistas', config.showActorInfo);
-        var actorCheckboxInput = actorCheckbox.querySelector('input');
+        const actorCheckbox = createCheckbox('showActorInfo', labels.showActorInfo || 'Artist İsimlerini Göster', config.showActorInfo);
+        const actorCheckboxInput = actorCheckbox.querySelector('input');
         actorCheckboxInput.setAttribute('data-group', 'actor');
         section.appendChild(actorCheckbox);
 
-        var actorSubOptions = document.createElement('div');
+        const actorSubOptions = document.createElement('div');
         actorSubOptions.className = 'sub-options actor-sub-options';
-        var actorImgCheckbox = createCheckbox('showActorImg', labels.showActorImg || 'Mostrar Fotos dos Artistas', config.showActorImg);
-        var actorImgCheckboxInput = actorImgCheckbox.querySelector('input');
+        const actorImgCheckbox = createCheckbox('showActorImg', labels.showActorImg || 'Artist Resimlerini Göster', config.showActorImg);
+        const actorImgCheckboxInput = actorImgCheckbox.querySelector('input');
         actorImgCheckboxInput.setAttribute('data-group', 'actor');
         actorSubOptions.appendChild(actorImgCheckbox);
         section.appendChild(actorSubOptions);
 
-        var actorRolOptions = document.createElement('div');
+        const actorRolOptions = document.createElement('div');
         actorRolOptions.className = 'sub-options actor-rol-options';
-        var actorRoleCheckbox = createCheckbox('showActorRole', labels.showActorRole || 'Mostrar Papéis dos Artistas', config.showActorRole);
-        var actorRoleCheckboxInput = actorRoleCheckbox.querySelector('input');
+        const actorRoleCheckbox = createCheckbox('showActorRole', labels.showActorRole || 'Artist Rollerini Göster', config.showActorRole);
+        const actorRoleCheckboxInput = actorRoleCheckbox.querySelector('input');
         actorRoleCheckboxInput.setAttribute('data-group', 'actor');
         actorRolOptions.appendChild(actorRoleCheckbox);
         section.appendChild(actorRolOptions);
 
-        var artistLimitDiv = document.createElement('div');
+        const artistLimitDiv = document.createElement('div');
         artistLimitDiv.className = 'setting-item artist-limit-container';
-        var artistLimitLabel = document.createElement('label');
-        artistLimitLabel.textContent = labels.artistLimit || 'Número de Atores a Exibir:';
-        var artistLimitInput = document.createElement('input');
+        const artistLimitLabel = document.createElement('label');
+        artistLimitLabel.textContent = labels.artistLimit || 'Gösterilecek Aktör Sayısı:';
+        const artistLimitInput = document.createElement('input');
         artistLimitInput.type = 'number';
         artistLimitInput.value = config.artistLimit || 3;
         artistLimitInput.name = 'artistLimit';
@@ -135,14 +127,14 @@ export function createActorPanel(config, labels) {
         artistLimitDiv.append(artistLimitLabel, artistLimitInput);
         section.appendChild(artistLimitDiv);
 
-        var description = document.createElement('div');
+        const description = document.createElement('div');
         description.className = 'description-text';
-        description.textContent = labels.actorInfoDescription || 'Este ajuste controla a visibilidade das informações dos primeiros artistas do conteúdo.';
+        description.textContent = labels.actorInfoDescription || 'Bu ayar, içeriğin ilk 3 artist bilgilerinin görünürlüğünü kontrol eder.';
         section.appendChild(description);
 
         panel.appendChild(section);
 
-    setTimeoutfunction(() {
+    setTimeout(() => {
         bindTersCheckboxKontrol(
             'input[name="showActorAll"]',
             null,
@@ -155,102 +147,102 @@ export function createActorPanel(config, labels) {
 }
 
  export function createDirectorPanel(config, labels) {
-        var panel = document.createElement('div');
+        const panel = document.createElement('div');
         panel.id = 'director-panel';
         panel.className = 'settings-panel';
 
-        var section = createSection(labels.directorWriter || 'Configurações de Diretor e Roteirista');
-        var directorCheckbox = createCheckbox('showDirectorWriter', labels.showDirectorWriter || 'Mostrar Informações de Diretor e Roteirista', config.showDirectorWriter);
+        const section = createSection(labels.directorWriter || 'Yönetmen ve Yazar Ayarları');
+        const directorCheckbox = createCheckbox('showDirectorWriter', labels.showDirectorWriter || 'Yönetmen ve Yazar Bilgilerini Göster', config.showDirectorWriter);
         section.appendChild(directorCheckbox);
 
-        var subOptions = document.createElement('div');
+        const subOptions = document.createElement('div');
         subOptions.className = 'sub-options director-sub-options';
-        subOptions.appendChild(createCheckbox('showDirector', labels.showDirector || 'Diretor', config.showDirector));
-        subOptions.appendChild(createCheckbox('showWriter', labels.showWriter || 'Roteirista', config.showWriter));
+        subOptions.appendChild(createCheckbox('showDirector', labels.showDirector || 'Yönetmen', config.showDirector));
+        subOptions.appendChild(createCheckbox('showWriter', labels.showWriter || 'Yazar', config.showWriter));
         section.appendChild(subOptions);
 
         bindCheckboxKontrol('#showDirectorWriter', '.director-sub-options');
 
-        var description = document.createElement('div');
+        const description = document.createElement('div');
         description.className = 'description-text';
-        description.textContent = labels.directorWriterDescription || 'Este ajuste controla a visibilidade do roteirista e diretor do conteúdo. (Apenas se estiverem na lista abaixo)';
+        description.textContent = labels.directorWriterDescription || 'Bu ayar, içeriğin yazar ve yönetmen görünürlüğünü kontrol eder. (Yazar bilgisi sadece aşağıdaki listede var ise)';
         section.appendChild(description);
 
-        var writersHeader = document.createElement('h2');
-        writersHeader.textContent = labels.writersListHeader || 'Lista de Roteiristas';
+        const writersHeader = document.createElement('h2');
+        writersHeader.textContent = labels.writersListHeader || 'Yazarlar Listesi';
         section.appendChild(writersHeader);
 
-        var writersDiv = document.createElement('div');
+        const writersDiv = document.createElement('div');
         writersDiv.className = 'setting-item writersLabel';
-        var writersLabel = document.createElement('label');
-        writersLabel.textContent = labels.writersListLabel || 'Separe os nomes por vírgula:';
-        var writersInput = document.createElement('textarea');
+        const writersLabel = document.createElement('label');
+        writersLabel.textContent = labels.writersListLabel || 'İsimleri virgül ile ayırınız:';
+        const writersInput = document.createElement('textarea');
         writersInput.id = 'allowedWritersInput';
         writersInput.name = 'allowedWriters';
         writersInput.rows = 4;
-        writersInput.placeholder = labels.writersListPlaceholder || 'Exemplo: Quentin TARANTINO, Steven SPIELBERG';
+        writersInput.placeholder = labels.writersListPlaceholder || 'Örnek: Quentin TARANTINO, Nuri Bilge CEYLAN';
         writersInput.value = config.allowedWriters ? config.allowedWriters.join(', ') : '';
         writersLabel.htmlFor = 'writersInput';
         writersInput.id = 'writersInput';
         writersDiv.append(writersLabel, writersInput);
         section.appendChild(writersDiv);
 
-        var entryTimeDiv = document.createElement('div');
-        entryTimeDiv.className = 'setting-item writersLabel';
-        var entryTimeLabel = document.createElement('label');
-        entryTimeLabel.textContent = labels.entryTime || 'Tempo de Entrada (ms):';
-        var entryTimeInput = document.createElement('input');
-        entryTimeInput.type = 'number';
-        entryTimeInput.value = config.tempoEntrada || 1000;
-        entryTimeInput.name = 'tempoEntrada';
-        entryTimeInput.min = 50;
-        entryTimeInput.step = 50;
+        const girisSureDiv = document.createElement('div');
+        girisSureDiv.className = 'setting-item writersLabel';
+        const girisSureLabel = document.createElement('label');
+        girisSureLabel.textContent = labels.girisSure || 'Giriş Süresi (ms):';
+        const girisSureInput = document.createElement('input');
+        girisSureInput.type = 'number';
+        girisSureInput.value = config.girisSure || 1000;
+        girisSureInput.name = 'girisSure';
+        girisSureInput.min = 50;
+        girisSureInput.step = 50;
 
-        entryTimeLabel.htmlFor = 'entryTimeInput';
-        entryTimeInput.id = 'entryTimeInput';
-        entryTimeDiv.append(entryTimeLabel, entryTimeInput);
-        section.appendChild(entryTimeDiv);
+        girisSureLabel.htmlFor = 'girisSureInput';
+        girisSureInput.id = 'girisSureInput';
+        girisSureDiv.append(girisSureLabel, girisSureInput);
+        section.appendChild(girisSureDiv);
 
-        var activeTimeDiv = document.createElement('div');
-        activeTimeDiv.className = 'setting-item writersLabel';
-        var activeTimeLabel = document.createElement('label');
-        activeTimeLabel.textContent = labels.activeTime || 'Tempo de Atividade (ms):';
-        var activeTimeInput = document.createElement('input');
-        activeTimeInput.type = 'number';
-        activeTimeInput.value = config.tempoAtivo || 5000;
-        activeTimeInput.name = 'tempoAtivo';
-        activeTimeInput.min = 50;
-        activeTimeInput.step = 50;
-        activeTimeLabel.htmlFor = 'activeTimeInput';
-        activeTimeInput.id = 'activeTimeInput';
-        activeTimeDiv.append(activeTimeLabel, activeTimeInput);
-        section.appendChild(activeTimeDiv);
+        const aktifSureDiv = document.createElement('div');
+        aktifSureDiv.className = 'setting-item writersLabel';
+        const aktifSureLabel = document.createElement('label');
+        aktifSureLabel.textContent = labels.aktifSure || 'Aktiflik Süresi (ms):';
+        const aktifSureInput = document.createElement('input');
+        aktifSureInput.type = 'number';
+        aktifSureInput.value = config.aktifSure || 5000;
+        aktifSureInput.name = 'aktifSure';
+        aktifSureInput.min = 50;
+        aktifSureInput.step = 50;
+        aktifSureLabel.htmlFor = 'aktifSureInput';
+        aktifSureInput.id = 'aktifSureInput';
+        aktifSureDiv.append(aktifSureLabel, aktifSureInput);
+        section.appendChild(aktifSureDiv);
 
         panel.appendChild(section);
         return panel;
     }
 
 export function createInfoPanel(config, labels) {
-    var panel = document.createElement('div');
+    const panel = document.createElement('div');
     panel.id = 'info-panel';
     panel.className = 'settings-panel';
 
-    var section = createSection(labels.infoHeader || 'Informações de Gênero, Ano e País');
-    var infoCheckbox = createCheckbox('showInfo', labels.showInfo || 'Mostrar Gênero, Ano e País', config.showInfo);
+    const section = createSection(labels.infoHeader || 'Tür, Yıl ve Ülke Bilgileri');
+    const infoCheckbox = createCheckbox('showInfo', labels.showInfo || 'Tür, Yıl ve Ülke Bilgilerini Göster', config.showInfo);
     section.appendChild(infoCheckbox);
 
-    var subOptions = document.createElement('div');
+    const subOptions = document.createElement('div');
     subOptions.className = 'sub-options info-sub-options';
-    subOptions.appendChild(createCheckbox('showGenresInfo', labels.showGenresInfo || 'Gênero', config.showGenresInfo));
-    subOptions.appendChild(createCheckbox('showYearInfo', labels.showYearInfo || 'Ano', config.showYearInfo));
-    subOptions.appendChild(createCheckbox('showCountryInfo', labels.showCountryInfo || 'País', config.showCountryInfo));
+    subOptions.appendChild(createCheckbox('showGenresInfo', labels.showGenresInfo || 'Tür', config.showGenresInfo));
+    subOptions.appendChild(createCheckbox('showYearInfo', labels.showYearInfo || 'Yıl', config.showYearInfo));
+    subOptions.appendChild(createCheckbox('showCountryInfo', labels.showCountryInfo || 'Ülke', config.showCountryInfo));
     section.appendChild(subOptions);
 
     bindCheckboxKontrol('#showInfo', '.info-sub-options');
 
-    var description = document.createElement('div');
+    const description = document.createElement('div');
     description.className = 'description-text';
-    description.textContent = labels.infoDescription || 'Este ajuste controla a visibilidade de gênero, ano de produção e país de origem do conteúdo.';
+    description.textContent = labels.infoDescription || 'Bu ayar, içeriğin türü, yapım yılı ve yapımcı ülke bilgilerinin görünürlüğünü kontrol eder.';
     section.appendChild(description);
 
     panel.appendChild(section);
@@ -259,49 +251,49 @@ export function createInfoPanel(config, labels) {
 
 
 export function createLogoTitlePanel(config, labels) {
-    var panel = document.createElement('div');
+    const panel = document.createElement('div');
     panel.id = 'logo-title-panel';
     panel.className = 'settings-panel';
 
-    var section = createSection(labels.logoOrTitleHeader || 'Configurações de Logo / Título');
-    var logoCheckbox = createCheckbox('showLogoOrTitle', labels.showLogoOrTitle || 'Mostrar Logo', config.showLogoOrTitle);
+    const section = createSection(labels.logoOrTitleHeader || 'Logo / Başlık Ayarları');
+    const logoCheckbox = createCheckbox('showLogoOrTitle', labels.showLogoOrTitle || 'Logo Görselini Göster', config.showLogoOrTitle);
     section.appendChild(logoCheckbox);
 
-    var displayOrderDiv = document.createElement('div');
+    const displayOrderDiv = document.createElement('div');
     displayOrderDiv.className = 'sub-options logo-sub-options';
     displayOrderDiv.id = 'displayOrderContainer';
-    var displayOrderLabel = document.createElement('label');
-    var displayOrderSpan = document.createElement('span');
-    displayOrderSpan.textContent = labels.displayOrderlabel || 'Ordem de Exibição:';
-    var displayOrderInput = document.createElement('input');
+    const displayOrderLabel = document.createElement('label');
+    const displayOrderSpan = document.createElement('span');
+    displayOrderSpan.textContent = labels.displayOrderlabel || 'Görüntüleme Sırası:';
+    const displayOrderInput = document.createElement('input');
     displayOrderInput.type = 'text';
     displayOrderInput.id = 'displayOrderInput';
     displayOrderInput.name = 'displayOrder';
     displayOrderInput.placeholder = 'logo,disk,originalTitle';
     displayOrderInput.value = config.displayOrder || 'logo,disk,originalTitle';
-    var displayOrderSmall = document.createElement('small');
-    displayOrderSmall.textContent = labels.displayOrderhelp || '(Exemplo: logo,disk,originalTitle)';
+    const displayOrderSmall = document.createElement('small');
+    displayOrderSmall.textContent = labels.displayOrderhelp || '(Örnek: logo,disk,originalTitle)';
     displayOrderLabel.append(displayOrderSpan, displayOrderInput, displayOrderSmall);
     displayOrderDiv.appendChild(displayOrderLabel);
     section.appendChild(displayOrderDiv);
 
-    var titleOnlyCheckbox = createCheckbox('showTitleOnly', labels.showTitleOnly || 'Mostrar Título Original em vez do Logo', config.showTitleOnly);
-    var titleOnlyDiv = document.createElement('div');
+    const titleOnlyCheckbox = createCheckbox('showTitleOnly', labels.showTitleOnly || 'Logo Yerine Orijinal Başlık Göster', config.showTitleOnly);
+    const titleOnlyDiv = document.createElement('div');
     titleOnlyDiv.className = 'sub-options title-sub-options';
     titleOnlyDiv.id = 'showTitleOnlyLabel';
     titleOnlyDiv.appendChild(titleOnlyCheckbox);
     section.appendChild(titleOnlyDiv);
 
-    var discOnlyCheckbox = createCheckbox('showDiscOnly', labels.showDiscOnly || 'Mostrar Disco em vez do Logo', config.showDiscOnly);
-    var discOnlyDiv = document.createElement('div');
+    const discOnlyCheckbox = createCheckbox('showDiscOnly', labels.showDiscOnly || 'Logo Yerine Disk Görseli Göster', config.showDiscOnly);
+    const discOnlyDiv = document.createElement('div');
     discOnlyDiv.className = 'sub-options disc-sub-options';
     discOnlyDiv.id = 'showDiscOnlyLabel';
     discOnlyDiv.appendChild(discOnlyCheckbox);
     section.appendChild(discOnlyDiv);
 
     function setupMutuallyExclusive(checkbox1, checkbox2) {
-        var cb1 = checkbox1.querySelector('input');
-        var cb2 = checkbox2.querySelector('input');
+        const cb1 = checkbox1.querySelector('input');
+        const cb2 = checkbox2.querySelector('input');
 
         cb1.addEventListener('change', function() {
             if (this.checked) {
@@ -326,9 +318,9 @@ export function createLogoTitlePanel(config, labels) {
         discOnlyCheckbox.querySelector('input').checked = false;
     }
 
-    var description = document.createElement('div');
+    const description = document.createElement('div');
     description.className = 'description-text';
-    description.textContent = labels.logoOrTitleDescription || 'Este ajuste controla a visibilidade do logo ou título original no slider.';
+    description.textContent = labels.logoOrTitleDescription || 'Bu ayar, slider üzerinde logo veya orijinal başlık görünürlüğünü kontrol eder.';
     section.appendChild(description);
 
     panel.appendChild(section);
@@ -336,36 +328,36 @@ export function createLogoTitlePanel(config, labels) {
 }
 
 export function createDescriptionPanel(config, labels) {
-    var panel = document.createElement('div');
+    const panel = document.createElement('div');
     panel.id = 'description-panel';
     panel.className = 'settings-panel';
 
-    var section = createSection(labels.descriptionsHeader || 'Configurações de Descrição');
-    var descCheckbox = createCheckbox('showDescriptions', labels.showDescriptions || 'Mostrar Informações', config.showDescriptions);
+    const section = createSection(labels.descriptionsHeader || 'Açıklama Ayarları');
+    const descCheckbox = createCheckbox('showDescriptions', labels.showDescriptions || 'Bilgileri Göster', config.showDescriptions);
     section.appendChild(descCheckbox);
 
-    var subOptions = document.createElement('div');
+    const subOptions = document.createElement('div');
     subOptions.className = 'sub-options desc-sub-options';
     subOptions.appendChild(createCheckbox('showSloganInfo', labels.showSloganInfo || 'Slogan', config.showSloganInfo));
-    subOptions.appendChild(createCheckbox('showTitleInfo', labels.showTitleInfo || 'Título', config.showTitleInfo));
-    subOptions.appendChild(createCheckbox('showOriginalTitleInfo', labels.showOriginalTitleInfo || 'Título Original', config.showOriginalTitleInfo));
+    subOptions.appendChild(createCheckbox('showTitleInfo', labels.showTitleInfo || 'Başlık', config.showTitleInfo));
+    subOptions.appendChild(createCheckbox('showOriginalTitleInfo', labels.showOriginalTitleInfo || 'Orijinal Başlık', config.showOriginalTitleInfo));
 
-    var hideIfSameWrapper = document.createElement('div');
+    const hideIfSameWrapper = document.createElement('div');
     hideIfSameWrapper.className = 'hide-original-if-same-wrapper';
-    hideIfSameWrapper.appendChild(createCheckbox('hideOriginalTitleIfSame', labels.hideOriginalTitleIfSame || 'Ocultar Título Original se for igual ao Título', config.hideOriginalTitleIfSame));
+    hideIfSameWrapper.appendChild(createCheckbox('hideOriginalTitleIfSame', labels.hideOriginalTitleIfSame || 'Başlık ile Aynı İse Orijinal Başlığı Gösterme', config.hideOriginalTitleIfSame));
     subOptions.appendChild(hideIfSameWrapper);
 
-    subOptions.appendChild(createCheckbox('showPlotInfo', labels.showPlotInfo || 'Sinopse', config.showPlotInfo));
-    subOptions.appendChild(createCheckbox('showPlaybackProgress', labels.showPlaybackProgress || 'Barra de Progresso de Reprodução', config.showPlaybackProgress));
+    subOptions.appendChild(createCheckbox('showPlotInfo', labels.showPlotInfo || 'Konu Metni', config.showPlotInfo));
+    subOptions.appendChild(createCheckbox('showPlaybackProgress', labels.showPlaybackProgress || 'Oynatma İlerleme Çubuğu', config.showPlaybackProgress));
 
     section.appendChild(subOptions);
 
     bindCheckboxKontrol('#showDescriptions', '.desc-sub-options');
     bindCheckboxKontrol('#showOriginalTitleInfo', '.hide-original-if-same-wrapper');
 
-    var description = document.createElement('div');
+    const description = document.createElement('div');
     description.className = 'description-text';
-    description.textContent = labels.descriptionsDescription || 'Este ajuste controla a visibilidade da sinopse, slogan, título e informações de título original do conteúdo.';
+    description.textContent = labels.descriptionsDescription || 'Bu ayar, içeriğin konu, slogan, başlık ve orijinal başlık bilgilerinin görünürlüğünü kontrol eder.';
     section.appendChild(description);
 
     panel.appendChild(section);
@@ -374,50 +366,50 @@ export function createDescriptionPanel(config, labels) {
 
 
 export  function createProviderPanel(config, labels) {
-    var panel = document.createElement('div');
+    const panel = document.createElement('div');
     panel.id = 'provider-panel';
     panel.className = 'settings-panel';
 
-    var section = createSection(labels.providerHeader || 'Links Externos / Configurações de Provedores');
-    section.appendChild(createCheckbox('showProviderInfo', labels.showProviderInfo || 'Mostrar Links de Metadados', config.showProviderInfo));
+    const section = createSection(labels.providerHeader || 'Dış Bağlantılar / Sağlayıcı Ayarları');
+    section.appendChild(createCheckbox('showProviderInfo', labels.showProviderInfo || 'Metaveri Bağlantıları Göster', config.showProviderInfo));
 
-    var castModuleCheckbox = createCheckbox(
+    const castModuleCheckbox = createCheckbox(
       'enableCastModule',
-      labels.enableCastModule || 'Ativar módulo Cast',
+      labels.enableCastModule || 'Cast modülünü etkinleştir',
       config.enableCastModule
     );
     section.appendChild(castModuleCheckbox);
 
-    var castModuleSubOptions = document.createElement('div');
+    const castModuleSubOptions = document.createElement('div');
     castModuleSubOptions.className = 'sub-options cast-module-sub-options';
-    castModuleSubOptions.appendChild(createCheckbox('showCast', labels.showCast || 'Mostrar Chromecast', config.showCast));
+    castModuleSubOptions.appendChild(createCheckbox('showCast', labels.showCast || 'Chromecast\'ı Göster', config.showCast));
     castModuleSubOptions.appendChild(createCheckbox(
       'allowSharedCastViewerForUsers',
-      labels.allowSharedCastViewerForUsers || 'Permitir que todos os usuários vejam quem está assistindo o quê no módulo Cast',
+      labels.allowSharedCastViewerForUsers || 'Tüm kullanıcılar cast modülünde kimin ne izlediğini görebilsin',
       config.allowSharedCastViewerForUsers
     ));
     section.appendChild(castModuleSubOptions);
     bindCheckboxKontrol('#enableCastModule', '.cast-module-sub-options');
 
-    var settingsLinkDiv = document.createElement('div');
+    const settingsLinkDiv = document.createElement('div');
     settingsLinkDiv.id = 'settingsLinkContainer';
-    settingsLinkDiv.appendChild(createCheckbox('showSettingsLink', labels.showSettingsLink || 'Mostrar Atalho de Configurações', config.showSettingsLink));
+    settingsLinkDiv.appendChild(createCheckbox('showSettingsLink', labels.showSettingsLink || 'Ayarlar Kısayolunu Göster', config.showSettingsLink));
     section.appendChild(settingsLinkDiv);
 
-    var trailerIconDiv = document.createElement('div');
-    trailerIconDiv.appendChild(createCheckbox('showTrailerIcon', labels.showTrailerIcon || 'Mostrar Ícone de Trailer', config.showTrailerIcon));
+    const trailerIconDiv = document.createElement('div');
+    trailerIconDiv.appendChild(createCheckbox('showTrailerIcon', labels.showTrailerIcon || 'Fragman İkonunu Göster', config.showTrailerIcon));
     section.appendChild(trailerIconDiv);
 
-    var description = document.createElement('div');
+    const description = document.createElement('div');
     description.className = 'description-text';
-    description.textContent = labels.providerDescription || 'Este ajuste controla a visibilidade dos links de metadados externos.';
+    description.textContent = labels.providerDescription || 'Bu ayar, metaveri bağlantılarının görünürlüğünü kontrol eder.';
     section.appendChild(description);
 
-    var castModuleInput = castModuleCheckbox.querySelector('input');
-    var showCastInput = castModuleSubOptions.querySelector('input[name="showCast"]');
-    var sharedViewerInput = castModuleSubOptions.querySelector('input[name="allowSharedCastViewerForUsers"]');
+    const castModuleInput = castModuleCheckbox.querySelector('input');
+    const showCastInput = castModuleSubOptions.querySelector('input[name="showCast"]');
+    const sharedViewerInput = castModuleSubOptions.querySelector('input[name="allowSharedCastViewerForUsers"]');
 
-    var syncCastOptionsWithModule = function() {
+    const syncCastOptionsWithModule = () => {
       if (!castModuleInput) return;
       if (!castModuleInput.checked) {
         if (showCastInput) {
@@ -435,11 +427,11 @@ export  function createProviderPanel(config, labels) {
     }
 
     fetchJmsPluginConfig()
-      .then(function(pluginConfig) {
-        var pluginEnableCastModule =
-          (pluginConfig && (pluginConfig.enableCastModule !== undefined ? pluginConfig.enableCastModule : pluginConfig.EnableCastModule));
-        var pluginAllowSharedCastViewerForUsers =
-          (pluginConfig && (pluginConfig.allowSharedCastViewerForUsers !== undefined ? pluginConfig.allowSharedCastViewerForUsers : pluginConfig.AllowSharedCastViewerForUsers));
+      .then((pluginConfig) => {
+        const pluginEnableCastModule =
+          pluginConfig?.enableCastModule ?? pluginConfig?.EnableCastModule;
+        const pluginAllowSharedCastViewerForUsers =
+          pluginConfig?.allowSharedCastViewerForUsers ?? pluginConfig?.AllowSharedCastViewerForUsers;
 
         if (castModuleInput) {
           castModuleInput.checked = pluginEnableCastModule !== false;
@@ -450,10 +442,10 @@ export  function createProviderPanel(config, labels) {
         }
         syncCastOptionsWithModule();
       })
-      .catchfunction(() {});
+      .catch(() => {});
 
-    if (config && config.currentUserIsAdmin !== true) {
-      [castModuleInput, sharedViewerInput].forEach(function((input) {
+    if (config?.currentUserIsAdmin !== true) {
+      [castModuleInput, sharedViewerInput].forEach((input) => {
         if (!input) return;
         input.disabled = true;
         input.style.opacity = '0.6';
@@ -465,30 +457,30 @@ export  function createProviderPanel(config, labels) {
 }
 
 export function createAboutPanel(labels) {
-  var panel = document.createElement('div');
+  const panel = document.createElement('div');
   panel.id = 'about-panel';
   panel.className = 'settings-panel';
 
-  var section = createSection('NEXUS POBREFLIX');
+  const section = createSection('NEXUS POBREFLIX');
 
-  var info = document.createElement('div');
-  info.className = 'nexus-info';
+  const info = document.createElement('div');
+  info.className = 'ggrbz-info';
   info.textContent = 'Sobre';
   section.appendChild(info);
 
-  var aboutContent = document.createElement('div');
+  const aboutContent = document.createElement('div');
   aboutContent.className = 'about-content';
 
-  var creatorInfo = document.createElement('p');
-  creatorInfo.textContent = "Nexus PobreFlix — Motor Visual Industrial";
+  const creatorInfo = document.createElement('p');
+  creatorInfo.textContent = `Nexus PobreFlix — Motor Visual Industrial`;
   creatorInfo.style.fontWeight = 'bold';
   creatorInfo.style.marginBottom = '20px';
 
-  var supportInfo = document.createElement('p');
+  const supportInfo = document.createElement('p');
   supportInfo.textContent = 'Desenvolvido por ONeithan. Para suporte e atualizações acesse o repositório:';
   supportInfo.style.marginBottom = '10px';
 
-  var githubLink = document.createElement('a');
+  const githubLink = document.createElement('a');
   githubLink.href = 'https://github.com/ONeithan/Nexus-PobreFlix';
   githubLink.target = '_blank';
   githubLink.textContent = 'GitHub: ONeithan/Nexus-PobreFlix';
@@ -496,38 +488,38 @@ export function createAboutPanel(labels) {
   githubLink.style.marginBottom = '10px';
   githubLink.style.color = '#7B2FBE';
 
-  var emailLink = document.createElement('a');
+  const emailLink = document.createElement('a');
   emailLink.href = 'https://github.com/ONeithan';
   emailLink.target = '_blank';
-  emailLink.innerHTML = "Nexus Codex: @ONeithan";
+  emailLink.innerHTML = `Nexus Codex: @ONeithan`;
   emailLink.style.display = 'block';
   emailLink.style.color = '#7B2FBE';
 
-  var updateWrap = document.createElement('div');
+  const updateWrap = document.createElement('div');
   updateWrap.className = 'update-check-wrapper';
   updateWrap.style.marginTop = '16px';
 
-  var cfg = getConfig.() || {};
-  var currentVersion =
+  const cfg = getConfig?.() || {};
+  const currentVersion =
     cfg.extensionVersion || cfg.version || (typeof window !== "undefined" && window.JMS_VERSION) || "0.0.0";
 
-  var currentP = document.createElement('p');
+  const currentP = document.createElement('p');
   currentP.className = 'current-version';
   currentP.style.margin = '8px 0';
-  currentP.textContent = (labels.currentVersionText || 'Versão Instalada') + ": " + (currentVersion);
+  currentP.textContent = (labels.currentVersionText || 'Yüklü sürüm') + `: ${currentVersion}`;
   updateWrap.appendChild(currentP);
 
-  var statusP = document.createElement('p');
+  const statusP = document.createElement('p');
   statusP.className = 'update-status';
   statusP.style.margin = '6px 0';
   statusP.style.minHeight = '20px';
   updateWrap.appendChild(statusP);
 
-  var checkBtn = document.createElement('button');
+  const checkBtn = document.createElement('button');
   checkBtn.type = 'button';
   checkBtn.className = 'btn check-update-btn';
-  checkBtn.title = labels.checkUpdateTitle || 'Verificar versão mais recente no GitHub';
-  checkBtn.textContent = labels.checkUpdateText || 'Verificar Atualização';
+  checkBtn.title = labels.checkUpdateTitle || 'GitHub’da en son sürümü denetle';
+  checkBtn.textContent = labels.checkUpdateText || 'Güncellemeyi Denetle';
   checkBtn.style.padding = '8px 12px';
   checkBtn.style.borderRadius = '8px';
   checkBtn.style.border = '1px solid var(--theme-accent, #00a8ff)';
@@ -536,58 +528,58 @@ export function createAboutPanel(labels) {
   checkBtn.style.color = 'var(--theme-accent, #00a8ff)';
   checkBtn.style.fontWeight = '600';
 
-  var resultSpan = document.createElement('span');
+  const resultSpan = document.createElement('span');
   resultSpan.className = 'update-result-link';
   resultSpan.style.marginLeft = '12px';
 
-  var btnRow = document.createElement('div');
+  const btnRow = document.createElement('div');
   btnRow.style.display = 'flex';
   btnRow.style.alignItems = 'center';
   btnRow.append(checkBtn, resultSpan);
 
   updateWrap.appendChild(btnRow);
 
-  var checking = false;
-  checkBtn.addEventListenerfunction('click', () {
+  let checking = false;
+  checkBtn.addEventListener('click', async () => {
     if (checking) return;
     checking = true;
-    var prev = checkBtn.textContent;
-    checkBtn.textContent = (labels.checkingText || 'Verificando…');
+    const prev = checkBtn.textContent;
+    checkBtn.textContent = (labels.checkingText || 'Denetleniyor…');
     checkBtn.disabled = true;
     statusP.textContent = '';
     resultSpan.textContent = '';
 
     try {
-      var { version: latest, html_url } = fetchLatestGitHubVersion("ONeithan", "Nexus-PobreFlix");
+      const { version: latest, html_url } = await fetchLatestGitHubVersion("G-grbz", "Jellyfin-MonWUI-Plugin");
       if (!latest) {
-        statusP.textContent = labels.updateUnknown || 'Não foi possível obter informações da versão.';
+        statusP.textContent = labels.updateUnknown || 'Son sürüm bilgisi alınamadı.';
       } else {
-        var cmp = compareSemver(latest, currentVersion);
+        const cmp = compareSemver(latest, currentVersion);
         if (cmp > 0) {
-          statusP.textContent = (labels.updateAvailable || 'Nova versão disponível') + ": " + (latest);
-          var a = document.createElement('a');
+          statusP.textContent = (labels.updateAvailable || 'Yeni sürüm mevcut') + `: ${latest}`;
+          const a = document.createElement('a');
           a.href = html_url;
           a.target = '_blank';
           a.rel = 'noopener';
-          a.textContent = labels.viewOnGithub || 'Ver no GitHub / Baixar';
+          a.textContent = labels.viewOnGithub || 'GitHub’da Gör / İndir';
           a.style.marginLeft = '8px';
           resultSpan.replaceChildren(a);
         } else if (cmp === 0) {
-          statusP.textContent = labels.upToDate || 'Você está atualizado.';
+          statusP.textContent = labels.upToDate || 'Güncelsiniz.';
         } else {
-          statusP.textContent = (labels.localNewer || 'A versão local parece ser mais recente') + " (" + (currentVersion) + " > " + (latest) + ")";
-          var a = document.createElement('a');
+          statusP.textContent = (labels.localNewer || 'Yerel sürüm daha yeni görünüyor') + ` (${currentVersion} > ${latest})`;
+          const a = document.createElement('a');
           a.href = html_url;
           a.target = '_blank';
           a.rel = 'noopener';
-          a.textContent = labels.viewOnGithub || 'Ver no GitHub';
+          a.textContent = labels.viewOnGithub || 'GitHub’da Gör';
           a.style.marginLeft = '8px';
           resultSpan.replaceChildren(a);
         }
       }
     } catch (err) {
-      statusP.textContent = (labels.updateError || 'Ocorreu um erro durante a verificação.');
-      if (window.console) console.warn('Update check error:', err);
+      statusP.textContent = (labels.updateError || 'Denetim sırasında bir hata oluştu.');
+      if (window?.console) console.warn('Update check error:', err);
     } finally {
       checkBtn.textContent = prev;
       checkBtn.disabled = false;

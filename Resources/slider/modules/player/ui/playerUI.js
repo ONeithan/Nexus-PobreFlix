@@ -31,16 +31,12 @@ import {
   submitStationToDirectory
 } from "../core/radio.js";
 
-var config = new Proxy({}, {
-  get(target, prop) {
-    return getConfig()[prop];
-  }
-});
-var DEFAULT_ARTWORK = "./slider/src/images/defaultArt.png";
-var DEFAULT_ARTWORK_CSS = "url('" + (DEFAULT_ARTWORK) + "')";
+const config = getConfig();
+const DEFAULT_ARTWORK = "./slider/src/images/defaultArt.png";
+const DEFAULT_ARTWORK_CSS = `url('${DEFAULT_ARTWORK}')`;
 
-var __topTracksAborter = null;
-var __playerBackgroundRequestId = 0;
+let __topTracksAborter = null;
+let __playerBackgroundRequestId = 0;
 
 function trackGlobalTimeout(id) {
   if (!musicPlayerState.__timeouts) musicPlayerState.__timeouts = new Set();
@@ -48,8 +44,8 @@ function trackGlobalTimeout(id) {
 }
 
 function setPageScrollLocked(lock) {
-  var html = document.documentElement;
-  var body = document.body;
+  const html = document.documentElement;
+  const body = document.body;
 
   if (lock) {
     if (!body.dataset._prevOverflow) body.dataset._prevOverflow = body.style.overflow || '';
@@ -66,17 +62,17 @@ function setPageScrollLocked(lock) {
 }
 
 function clearGlobalTimeouts() {
-  var set = musicPlayerState.__timeouts;
+  const set = musicPlayerState.__timeouts;
   if (!set) return;
-  for (var id of set) { try { clearTimeout(id); } catch {} }
+  for (const id of set) { try { clearTimeout(id); } catch {} }
   set.clear();
 }
 
 function createButton({ className, iconClass, title, onClick, id = "" }) {
-  var btn = document.createElement("div");
-  btn.className = "player-btn " + (className || "").trim();
+  const btn = document.createElement("div");
+  btn.className = `player-btn ${className || ""}`.trim();
   if (id) btn.id = id;
-  btn.innerHTML = "<i class=\"" + (iconClass) + "\"></i>";
+  btn.innerHTML = `<i class="${iconClass}"></i>`;
   btn.title = title;
   btn.onclick = onClick;
   return btn;
@@ -91,21 +87,21 @@ function getFavoriteIconHtml(active) {
 function isSharedRadioTrack(track) {
   if (!isRadioTrack(track)) return false;
 
-  var source = String(track.Source || track.source || "").trim().toLowerCase();
+  const source = String(track?.Source || track?.source || "").trim().toLowerCase();
   if (["shared", "manual-static", "manual-local"].includes(source)) {
     return true;
   }
 
-  var currentKey = stationKey(track);
+  const currentKey = stationKey(track);
   if (!currentKey || !Array.isArray(musicPlayerState.radioSharedStations)) {
     return false;
   }
 
-  return musicPlayerState.radioSharedStations.somefunction((station) stationKey(station) === currentKey);
+  return musicPlayerState.radioSharedStations.some((station) => stationKey(station) === currentKey);
 }
 
-export function updateFavoriteButtonState(track = musicPlayerState.playlist.[musicPlayerState.currentIndex]) {
-  var favoriteBtn = musicPlayerState.favoriteBtn;
+export function updateFavoriteButtonState(track = musicPlayerState.playlist?.[musicPlayerState.currentIndex]) {
+  const favoriteBtn = musicPlayerState.favoriteBtn;
   if (!favoriteBtn) return;
 
   if (!track) {
@@ -115,7 +111,7 @@ export function updateFavoriteButtonState(track = musicPlayerState.playlist.[mus
   }
 
   if (isRadioTrack(track)) {
-    var isShared = isSharedRadioTrack(track);
+    const isShared = isSharedRadioTrack(track);
     favoriteBtn.classList.remove("hidden");
     favoriteBtn.innerHTML = getFavoriteIconHtml(isShared);
     favoriteBtn.title = isShared
@@ -124,7 +120,7 @@ export function updateFavoriteButtonState(track = musicPlayerState.playlist.[mus
     return;
   }
 
-  var isFavorite = getCachedWatchlistMembership(track.Id, track.UserData.IsFavorite || false);
+  const isFavorite = getCachedWatchlistMembership(track?.Id, track?.UserData?.IsFavorite || false);
   track.UserData = track.UserData || {};
   track.UserData.IsFavorite = isFavorite;
   favoriteBtn.innerHTML = getFavoriteIconHtml(isFavorite);
@@ -136,60 +132,60 @@ export function createModernPlayerUI() {
     try { musicPlayerState.__teardownModern(); } catch {}
     musicPlayerState.__teardownModern = null;
   }
-  var player = Object.assign(document.createElement("div"), {
+  const player = Object.assign(document.createElement("div"), {
     id: "modern-music-player",
     role: "region",
     ariaLabel: "Music Player",
     ariaHidden: "true"
   });
-  var __bag = makeCleanupBag(player);
+  const __bag = makeCleanupBag(player);
 
   if (isMobileDevice()) {
     player.classList.add('mobile-device');
   }
 
-  var bgLayer = document.createElement("div");
+  const bgLayer = document.createElement("div");
   bgLayer.className = "player-bg-layer";
   player.appendChild(bgLayer);
 
-  var { container: nextTracksContainer, name: nextTracksName, list: nextTracksList } = createNextTracksUI();
+  const { container: nextTracksContainer, name: nextTracksName, list: nextTracksList } = createNextTracksUI();
 
   if (config.nextTracksSource === 'playlist') {
-    uiElements.name.textContent = userSettings.shuffle
+    nextTracksName.textContent = musicPlayerState.userSettings.shuffle
       ? config.languageLabels.rastgele || "Aleatório"
       : config.languageLabels.sirada || "Próximos";
   } else {
     nextTracksName.textContent = getSourceLabel(config.nextTracksSource);
     nextTracksName.title = config.languageLabels.changeSource || "Clique para mudar a fonte";
-    nextTracksName.onclick = function(e) {
+    nextTracksName.onclick = async (e) => {
       e.stopPropagation();
-      var cfg = getConfig();
-      var nextSource = getNextTrackSource(cfg.nextTracksSource);
-      var updatedConfig = { ...cfg, nextTracksSource: nextSource.value };
+      const cfg = getConfig();
+      const nextSource = getNextTrackSource(cfg.nextTracksSource);
+      const updatedConfig = { ...cfg, nextTracksSource: nextSource.value };
       updateConfig(updatedConfig);
 
       showNotification(
-        "<i class=\"fas fa-music\"></i> " + (nextSource.label),
+        `<i class="fas fa-music"></i> ${nextSource.label}`,
         2000,
         'info'
       );
 
       if (nextSource.value === 'playlist') {
-        updateNextTracks();
+        await updateNextTracks();
       } else {
-        showTopTracksInMainView(nextSource.value);
+        await showTopTracksInMainView(nextSource.value);
       }
     };
   }
 
-  setTimeoutfunction(() {
+  setTimeout(() => {
     nextTracksName.classList.remove('hidden');
   }, 4000);
 
-  var topControlsContainer = document.createElement("div");
+  const topControlsContainer = document.createElement("div");
   topControlsContainer.className = "top-controls-container";
 
-  var buttonsTop = [
+  const buttonsTop = [
     {
       className: "theme-toggle-btn",
       iconClass: config.playerTheme === 'light' ? "fas fa-moon" : "fas fa-sun",
@@ -197,35 +193,35 @@ export function createModernPlayerUI() {
       onClick: toggleTheme
     },
     { className: "playlist-btn", iconClass: "fas fa-list", title: config.languageLabels.playlist, onClick: togglePlaylistModal },
-    { className: "jplaylist-btn", iconClass: "fa-solid fa-list-ol", title: config.languageLabels.jellyfinPlaylists || "Playlists do Jellyfin", onClick: showJellyfinPlaylistsModal },
+    { className: "jplaylist-btn", iconClass: "fa-solid fa-list-ol", title: config.languageLabels.jellyfinPlaylists || "Jellyfin Oynatma Listesi", onClick: showJellyfinPlaylistsModal },
     { className: "radio-btn", iconClass: "fas fa-broadcast-tower", title: config.languageLabels.radioStations || "Rádios", onClick: showRadioModal },
     {
       className: "settingsLink",
       iconClass: "fas fa-cog",
       title: config.languageLabels.ayarlar || "Configurações",
-      onClick: function(e) {
+      onClick: async (e) => {
         e.preventDefault();
-        openSettings("music");
+        await openSettings("music");
       }
     },
     { className: "kapat-btn", iconClass: "fas fa-times", title: config.languageLabels.close || "Fechar", onClick: togglePlayerVisibility },
   ];
 
-  buttonsTop.forEach(function(btnInfo) {
-    var div = document.createElement("div");
+  buttonsTop.forEach(btnInfo => {
+    const div = document.createElement("div");
     div.className = btnInfo.className;
-    div.innerHTML = "<i class=\"" + (btnInfo.iconClass) + "\"></i>";
+    div.innerHTML = `<i class="${btnInfo.iconClass}"></i>`;
     div.title = btnInfo.title;
     div.onclick = btnInfo.onClick;
     topControlsContainer.appendChild(div);
   });
 
-  var onThemeChanged = function(ev) {
-    var theme = ev.detail.theme || getConfig().playerTheme || 'dark';
-    var themeBtn = player.querySelector('.theme-toggle-btn');
+  const onThemeChanged = (ev) => {
+    const theme = ev?.detail?.theme || getConfig().playerTheme || 'dark';
+    const themeBtn = player.querySelector('.theme-toggle-btn');
     if (themeBtn) {
-      themeBtn.innerHTML = "<i class=\"fas fa-" + (theme === 'light' ? 'moon' : 'sun') + "\"></i>";
-      var cfgNow = getConfig();
+      themeBtn.innerHTML = `<i class="fas fa-${theme === 'light' ? 'moon' : 'sun'}"></i>`;
+      const cfgNow = getConfig();
       themeBtn.title = theme === 'light'
         ? (cfgNow.languageLabels.darkTheme || 'Tema Escuro')
         : (cfgNow.languageLabels.lightTheme || 'Tema Claro');
@@ -235,42 +231,42 @@ export function createModernPlayerUI() {
   };
   addEvent(__bag, window, 'app:theme-changed', onThemeChanged);
 
-  var albumArt = document.createElement("div");
+  const albumArt = document.createElement("div");
   albumArt.id = "player-album-art";
 
-  var favoriteBtn = document.createElement("div");
+  const favoriteBtn = document.createElement("div");
   favoriteBtn.className = "musicfavorite-btn hidden";
   favoriteBtn.innerHTML = '<i class="fas fa-heart"></i>';
   favoriteBtn.title = getWatchlistButtonTitle({ Type: "Audio" }, false);
-  favoriteBtn.onclick = function(e) {
+  favoriteBtn.onclick = (e) => {
     e.stopPropagation();
     toggleFavorite();
   };
 
-  var albumArtContainer = document.createElement("div");
+  const albumArtContainer = document.createElement("div");
   albumArtContainer.className = "album-art-container";
   albumArtContainer.append(albumArt, favoriteBtn);
-  var favEnter = function() {
-    var currentTrack = musicPlayerState.playlist.[musicPlayerState.currentIndex];
+  const favEnter = () => {
+    const currentTrack = musicPlayerState.playlist?.[musicPlayerState.currentIndex];
     if (currentTrack) {
       updateFavoriteButtonState(currentTrack);
       favoriteBtn.classList.remove("hidden");
     }
   };
-  var favLeave = function() { favoriteBtn.classList.add("hidden"); };
+  const favLeave = () => { favoriteBtn.classList.add("hidden"); };
   addEvent(__bag, albumArtContainer, "mouseenter", favEnter, { passive:true });
   addEvent(__bag, albumArtContainer, "mouseleave", favLeave, { passive:true });
 
-  albumArtContainer.addEventListenerfunction("click", () {
-    var currentTrack = musicPlayerState.playlist.[musicPlayerState.currentIndex];
+  albumArtContainer.addEventListener("click", () => {
+    const currentTrack = musicPlayerState.playlist?.[musicPlayerState.currentIndex];
     if (!currentTrack) return;
     if (isRadioTrack(currentTrack)) return;
 
-    var artistName = currentTrack.Artists.join(", ") ||
+    const artistName = currentTrack.Artists?.join(", ") ||
       currentTrack.AlbumArtist ||
       config.languageLabels.unknownArtist;
 
-    var artistId = currentTrack.ArtistItems.[0].Id ||
+    const artistId = currentTrack.ArtistItems?.[0]?.Id ||
       currentTrack.AlbumArtistId ||
       currentTrack.ArtistId ||
       null;
@@ -278,48 +274,48 @@ export function createModernPlayerUI() {
     toggleArtistModal(true, artistName, artistId);
   });
 
-  var trackInfo = document.createElement("div");
+  const trackInfo = document.createElement("div");
   trackInfo.className = "player-track-info";
 
-  var titleContainer = document.createElement("div");
+  const titleContainer = document.createElement("div");
   titleContainer.id = "player-track-title";
   titleContainer.className = "marquee-container";
 
-  var titleText = document.createElement("div");
+  const titleText = document.createElement("div");
   titleText.className = "marquee-text";
   titleText.textContent = config.languageLabels.noSongSelected;
   titleContainer.appendChild(titleText);
 
-  var observer = new MutationObserverfunction(() { checkMarqueeNeeded(titleText); });
+  const observer = new MutationObserver(() => { checkMarqueeNeeded(titleText); });
   observer.observe(titleText, { childList: true, characterData: true, subtree: true });
   trackObserver(__bag, observer);
 
-  var onResize = function() { checkMarqueeNeeded(titleText); };
+  const onResize = () => { checkMarqueeNeeded(titleText); };
   addEvent(__bag, window, 'resize', onResize, { passive:true });
 
-  trackTimeoutfunction(__bag, setTimeout(() { checkMarqueeNeeded(titleText); }, 100));
+  trackTimeout(__bag, setTimeout(() => { checkMarqueeNeeded(titleText); }, 100));
 
-  var artist = document.createElement("div");
+  const artist = document.createElement("div");
   artist.id = "player-track-artist";
   artist.textContent = config.languageLabels.artistUnknown;
-  artist.onclick = function() {
-    var currentTrack = musicPlayerState.playlist.[musicPlayerState.currentIndex];
+  artist.onclick = () => {
+    const currentTrack = musicPlayerState.playlist?.[musicPlayerState.currentIndex];
     if (isRadioTrack(currentTrack)) return;
     toggleArtistModal(true, config.languageLabels.artistUnknown, null);
   };
 
-  var topTracksBtn = createButtonfunction({
+  const topTracksBtn = createButton({
     className: "top-tracks-btn",
     iconClass: "fas fa-chart-line",
     title: config.languageLabels.myMusic || "Mais Ouvidas",
-    onClick: () { showTopTracksModal(); },
+    onClick: () => { showTopTracksModal(); },
   });
 
   trackInfo.append(titleContainer, artist);
 
-  var repeatBtn = createButton({ className: "repeat-btn", iconClass: "fas fa-repeat", title: config.languageLabels.repeatModOff, onClick: toggleRepeatMode });
-  var shuffleBtn = createButton({ iconClass: "fas fa-random", title: (config.languageLabels.shuffle) + ": " + (config.languageLabels.shuffleOff), onClick: toggleShuffle });
-  var removeOnPlayBtn = createButton({
+  const repeatBtn = createButton({ className: "repeat-btn", iconClass: "fas fa-repeat", title: config.languageLabels.repeatModOff, onClick: toggleRepeatMode });
+  const shuffleBtn = createButton({ iconClass: "fas fa-random", title: `${config.languageLabels.shuffle}: ${config.languageLabels.shuffleOff}`, onClick: toggleShuffle });
+  const removeOnPlayBtn = createButton({
     className: "remove-on-play-btn",
     iconClass: "fa-solid fa-trash",
     title: musicPlayerState.userSettings.removeOnPlay
@@ -331,29 +327,29 @@ export function createModernPlayerUI() {
   if (musicPlayerState.userSettings.removeOnPlay) {
     removeOnPlayBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
   }
-  var refreshBtn = createButton({ iconClass: "fas fa-sync-alt", title: config.languageLabels.refreshPlaylist, onClick: refreshPlaylist });
+  const refreshBtn = createButton({ iconClass: "fas fa-sync-alt", title: config.languageLabels.refreshPlaylist, onClick: refreshPlaylist });
 
-  var genreFilterBtn = createButton({
+  const genreFilterBtn = createButton({
     className: "genre-filter-btn",
     iconClass: "fas fa-filter",
     title: config.languageLabels.filterByGenre || "Filtrar por Gênero",
     onClick: showGenreFilterModal
   });
-  var prevBtn = createButton({ iconClass: "fas fa-step-backward", title: config.languageLabels.previousTrack, onClick: playPrevious });
-  var playPauseBtn = createButton({ className: "main", iconClass: "fas fa-play", title: config.languageLabels.playPause, onClick: togglePlayPause, id: "play-pause-btn" });
-  var nextBtn = createButton({ iconClass: "fas fa-step-forward", title: config.languageLabels.nextTrack, onClick: playNext });
-  var lyricsBtn = createButtonfunction({
+  const prevBtn = createButton({ iconClass: "fas fa-step-backward", title: config.languageLabels.previousTrack, onClick: playPrevious });
+  const playPauseBtn = createButton({ className: "main", iconClass: "fas fa-play", title: config.languageLabels.playPause, onClick: togglePlayPause, id: "play-pause-btn" });
+  const nextBtn = createButton({ iconClass: "fas fa-step-forward", title: config.languageLabels.nextTrack, onClick: playNext });
+  const lyricsBtn = createButton({
     className: "lyrics-btn",
     iconClass: "fa-regular fa-closed-captioning",
     title: config.languageLabels.lyrics,
-    onClick: () {
+    onClick: () => {
       toggleLyrics();
       musicPlayerState.lyricsDelay = parseFloat(localStorage.getItem("lyricsDelay")) || 0;
     }
   });
-  var volumeBtn = createButton({ iconClass: "fas fa-volume-up", title: config.languageLabels.volume, onClick: toggleMute });
+  const volumeBtn = createButton({ iconClass: "fas fa-volume-up", title: config.languageLabels.volume, onClick: toggleMute });
 
-  var volumeSlider = Object.assign(document.createElement("input"), {
+  const volumeSlider = Object.assign(document.createElement("input"), {
     type: "range",
     className: "player-volume-slider",
     id: "player-volume-slider",
@@ -366,9 +362,9 @@ export function createModernPlayerUI() {
   });
   volumeSlider.setAttribute("aria-label", config.languageLabels.volumeLevel || config.languageLabels.volume || "Volume");
 
-  volumeSlider.addEventListener('input', function(e) {
-    var volume = parseFloat(e.target.value);
-    var audio = musicPlayerState.audio;
+  volumeSlider.addEventListener('input', e => {
+    const volume = parseFloat(e.target.value);
+    const audio = musicPlayerState.audio;
     audio.volume = volume;
     audio.muted = false;
     musicPlayerState.userSettings.volume = volume;
@@ -377,17 +373,17 @@ export function createModernPlayerUI() {
   });
 
   function updateVolumeIcon(volume) {
-    var icon;
+    let icon;
     if (volume === 0) icon = "fas fa-volume-mute";
     else if (volume < 0.5) icon = "fas fa-volume-down";
     else icon = "fas fa-volume-up";
-    volumeBtn.innerHTML = "<i class=\"" + (icon) + "\"></i>";
+    volumeBtn.innerHTML = `<i class="${icon}"></i>`;
   }
 
-  var controls = document.createElement("div");
+  const controls = document.createElement("div");
   controls.className = "player-controls";
 
-  var controlElements = [
+  const controlElements = [
     prevBtn, playPauseBtn, nextBtn, repeatBtn, shuffleBtn,
     removeOnPlayBtn, lyricsBtn, refreshBtn, genreFilterBtn,
     topTracksBtn, volumeBtn, createButton({
@@ -407,29 +403,29 @@ export function createModernPlayerUI() {
   addEvent(__bag, window, 'load', initializeFullscreen, { once:true });
   addEvent(__bag, document, 'DOMContentLoaded', initializeFullscreen, { once:true });
 
-  controlElements.forEach(function(btn) controls.appendChild(btn));
+  controlElements.forEach(btn => controls.appendChild(btn));
   controls.appendChild(volumeSlider);
 
-  var progressContainer = document.createElement("div");
+  const progressContainer = document.createElement("div");
   progressContainer.className = "player-progress-container";
 
-  var progressBar = document.createElement("div");
+  const progressBar = document.createElement("div");
   progressBar.className = "player-progress-bar";
 
-  var progress = document.createElement("div");
+  const progress = document.createElement("div");
   progress.className = "player-progress";
 
-  var progressHandle = document.createElement("div");
+  const progressHandle = document.createElement("div");
   progressHandle.className = "player-progress-handle";
 
-  var timeContainer = document.createElement("div");
+  const timeContainer = document.createElement("div");
   timeContainer.className = "player-time-container";
 
-  var currentTimeEl = document.createElement("span");
+  const currentTimeEl = document.createElement("span");
   currentTimeEl.className = "player-current-time";
   currentTimeEl.textContent = "0:00";
 
-  var durationEl = document.createElement("span");
+  const durationEl = document.createElement("span");
   durationEl.className = "player-duration";
   durationEl.textContent = "0:00";
 
@@ -437,12 +433,12 @@ export function createModernPlayerUI() {
   timeContainer.append(currentTimeEl, durationEl);
   progressContainer.append(progressBar, timeContainer);
 
-  timeContainer.addEventListenerfunction("click", () {
+  timeContainer.addEventListener("click", () => {
     musicPlayerState.showRemaining = !musicPlayerState.showRemaining;
     setupProgressControls();
   });
 
-  var lyricsContainer = document.createElement("div");
+  const lyricsContainer = document.createElement("div");
   lyricsContainer.id = "player-lyrics-container";
   lyricsContainer.className = "lyrics-hidden";
 
@@ -480,20 +476,20 @@ export function createModernPlayerUI() {
   initializeFullscreen();
   initializePlayerStyle();
 
-  var teardown = function() {
+  const teardown = () => {
     try { setPageScrollLocked(false); } catch {}
     try { stopFullscreenAnimation(player); } catch {}
     if (musicPlayerState.nextTracksObserver) {
       try {
-        var list = musicPlayerState.nextTracksList;
-        if (list) for (var el of Array.from(list.children)) {
+        const list = musicPlayerState.nextTracksList;
+        if (list) for (const el of Array.from(list.children)) {
           try { musicPlayerState.nextTracksObserver.unobserve(el); } catch {}
         }
       } catch {}
       try { musicPlayerState.nextTracksObserver.disconnect(); } catch {}
       musicPlayerState.nextTracksObserver = null;
     }
-    try { __topTracksAborter.abort.(); } catch {}
+    try { __topTracksAborter?.abort?.(); } catch {}
     __topTracksAborter = null;
     clearGlobalTimeouts();
 
@@ -525,9 +521,9 @@ export function createModernPlayerUI() {
   return { player, albumArt, title: titleContainer, artist, progressBar, progress, playPauseBtn, progressContainer, currentTimeEl, durationEl, volumeSlider, lyricsContainer, lyricsBtn };
 }
 
-export function updateNextTracks() {
-  var config = getConfig();
-  var {
+export async function updateNextTracks() {
+  const config = getConfig();
+  const {
     playlist,
     currentIndex,
     userSettings,
@@ -538,8 +534,8 @@ export function updateNextTracks() {
 
   if (musicPlayerState.nextTracksObserver) {
     try {
-      var prevList = musicPlayerState.nextTracksList;
-      if (prevList) for (var el of Array.from(prevList.children)) {
+      const prevList = musicPlayerState.nextTracksList;
+      if (prevList) for (const el of Array.from(prevList.children)) {
         try { musicPlayerState.nextTracksObserver.unobserve(el); } catch {}
       }
     } catch {}
@@ -547,39 +543,39 @@ export function updateNextTracks() {
     musicPlayerState.nextTracksObserver = null;
   }
 
-  var uiElements = createNextTracksUI();
+  const uiElements = createNextTracksUI();
   nextTracksContainer.innerHTML = '';
 
-  uiElements.name.onclick = function(e) {
+  uiElements.name.onclick = async (e) => {
     e.stopPropagation();
-    var cfg = getConfig();
-    var nextSource = getNextTrackSource(cfg.nextTracksSource);
-    var updatedConfig = { ...cfg, nextTracksSource: nextSource.value };
+    const cfg = getConfig();
+    const nextSource = getNextTrackSource(cfg.nextTracksSource);
+    const updatedConfig = { ...cfg, nextTracksSource: nextSource.value };
     updateConfig(updatedConfig);
 
     showNotification(
-      "<i class=\"fas fa-music\"></i> " + (nextSource.label),
+      `<i class="fas fa-music"></i> ${nextSource.label}`,
       2000,
       'info'
     );
 
     if (nextSource.value === 'playlist') {
-      updateNextTracks();
+      await updateNextTracks();
     } else {
-      showTopTracksInMainView(nextSource.value);
+      await showTopTracksInMainView(nextSource.value);
     }
   };
 
   if (config.nextTracksSource === 'playlist') {
     uiElements.name.style.cursor = 'pointer';
     uiElements.name.textContent = userSettings.shuffle
-      ? config.languageLabels.rastgele || "Aleatório"
-      : config.languageLabels.sirada || "Próximos";
+      ? config.languageLabels.rastgele || "Rastgele"
+      : config.languageLabels.sirada || "Sıradakiler";
   } else {
     return showTopTracksInMainView(config.nextTracksSource);
   }
 
-  var playlistLength = playlist.length;
+  const playlistLength = playlist.length;
   if (playlistLength <= 1) return;
 
   if (!musicPlayerState.playedHistory ||
@@ -590,30 +586,31 @@ export function updateNextTracks() {
     musicPlayerState.lastCurrentIndex = currentIndex;
   }
 
-  var nextIndices = userSettings.shuffle
+  const nextIndices = userSettings.shuffle
     ? getShuffledIndices(playlist, currentIndex, config.nextTrack)
     : getSequentialIndices(playlist, currentIndex, config.nextTrack);
 
-  var trackElements = nextIndices.map(function(nextIndex) {
-    var track = playlist[nextIndex];
+  const trackElements = nextIndices.map(nextIndex => {
+    const track = playlist[nextIndex];
     if (!track) return null;
 
-    var { trackElement, coverElement } = createTrackElementfunction(track,
+    const { trackElement, coverElement } = createTrackElement(
+      track,
       nextIndex,
-      () playTrack(nextIndex)
+      () => playTrack(nextIndex)
     );
 
     uiElements.list.appendChild(trackElement);
     return { track, trackElement, coverElement, index: nextIndex };
   }).filter(Boolean);
 
-  var observer = new IntersectionObserver(handleIntersection, {
+  const observer = new IntersectionObserver(handleIntersection, {
     root: uiElements.wrapper,
     rootMargin: '100px',
     threshold: 0.1
   });
 
-  var scrollControlsContainer = document.createElement('div');
+  const scrollControlsContainer = document.createElement('div');
   scrollControlsContainer.className = 'next-tracks-scroll-controls';
   scrollControlsContainer.append(uiElements.scrollLeft, uiElements.scrollRight);
 
@@ -629,7 +626,7 @@ export function updateNextTracks() {
 
   musicPlayerState.nextTracksObserver = observer;
   setupImageLoading(trackElements, observer);
-  requestAnimationFramefunction(() {
+  requestAnimationFrame(() => {
     setupScrollControls(
       trackElements,
       uiElements.list,
@@ -638,7 +635,7 @@ export function updateNextTracks() {
     );
   });
 
-  trackGlobalTimeoutfunction(setTimeout(() {
+  trackGlobalTimeout(setTimeout(() => {
     uiElements.name.classList.remove('hidden');
     uiElements.name.classList.add('visible');
   }, 100));
@@ -647,15 +644,15 @@ export function updateNextTracks() {
   musicPlayerState.nextTracksName = uiElements.name;
 }
 
-function getTrackImage(track) {
+async function getTrackImage(track) {
   if (isRadioTrack(track)) {
-    return resolveRadioStationArtUrl(track);
+    return await resolveRadioStationArtUrl(track);
   }
 
-  var imageTag = track.AlbumPrimaryImageTag || track.PrimaryImageTag;
-  var imageId = track.AlbumId || track.Id;
+  const imageTag = track.AlbumPrimaryImageTag || track.PrimaryImageTag;
+  const imageId = track.AlbumId || track.Id;
   if (imageTag) {
-    return withParams("/Items/" + (imageId) + "/Images/Primary", {
+    return withParams(`/Items/${imageId}/Images/Primary`, {
       fillHeight: 100,
       fillWidth: 100,
       quality: 70,
@@ -665,25 +662,25 @@ function getTrackImage(track) {
   }
 
   try {
-    var tags = readID3Tags(track.Id);
-    if (tags.pictureUri) return tags.pictureUri;
+    const tags = await readID3Tags(track.Id);
+    if (tags?.pictureUri) return tags.pictureUri;
   } catch (e) {
-    console.warn("ID3 etiqueta não pode ser lida (ID: " + (track.Id) + ")", e);
+    console.warn(`ID3 etiketi okunamadı (ID: ${track.Id})`, e);
   }
 
   return null;
 }
 
-function toggleFavorite() {
-  var { playlist, currentIndex, favoriteBtn } = musicPlayerState;
-  var track = playlist.[currentIndex];
-  if (!track.Id) return;
+async function toggleFavorite() {
+  const { playlist, currentIndex, favoriteBtn } = musicPlayerState;
+  const track = playlist?.[currentIndex];
+  if (!track?.Id) return;
 
   if (isRadioTrack(track)) {
     if (isSharedRadioTrack(track)) {
       updateFavoriteButtonState(track);
       showNotification(
-        "<i class=\"fas fa-info-circle\"></i> " + (config.languageLabels.radioAlreadyShared || "Estação já está nas rádios compartilhadas"),
+        `<i class="fas fa-info-circle"></i> ${config.languageLabels.radioAlreadyShared || "Istasyon zaten paylasilan radyolarda"}`,
         2200,
         "info"
       );
@@ -691,12 +688,12 @@ function toggleFavorite() {
     }
 
     try {
-      var merged = saveSharedRadioStation(track);
-      var info = getRadioPersistenceInfo();
+      const merged = await saveSharedRadioStation(track);
+      const info = getRadioPersistenceInfo();
 
       if (Array.isArray(merged)) {
         musicPlayerState.radioSharedStations = merged;
-        var sharedTrack = merged.findfunction((station) stationKey(station) === stationKey(track));
+        const sharedTrack = merged.find((station) => stationKey(station) === stationKey(track));
         if (sharedTrack) {
           track.Source = sharedTrack.source || sharedTrack.Source || "shared";
           track.addedBy = sharedTrack.addedBy || sharedTrack.AddedBy || track.addedBy;
@@ -711,19 +708,19 @@ function toggleFavorite() {
 
       updateFavoriteButtonState(track);
       showNotification(
-        "<i class=\"fas fa-check-circle\"></i> " + (info.supportsServerWrite
-          ? (config.languageLabels.radioSharedSaved || "Estação adicionada à lista compartilhada")
-          : (config.languageLabels.radioLocalSaved || "Estação salva neste navegador")),
+        `<i class="fas fa-check-circle"></i> ${info.supportsServerWrite
+          ? (config.languageLabels.radioSharedSaved || "Istasyon paylasilan listeye eklendi")
+          : (config.languageLabels.radioLocalSaved || "Istasyon bu tarayiciya kaydedildi")}`,
         2200,
         "success"
       );
-      submitStationToDirectory(track).catchfunction(() {});
+      submitStationToDirectory(track).catch(() => {});
     } catch (error) {
       console.error("Radyo paylasim islemi hatasi:", error);
       showNotification(
-        "<i class=\"fas fa-exclamation-circle\"></i> " + (
-          config.languageLabels.radioSharedSaveError || "Não foi possível adicionar a estação à lista compartilhada"
-        ),
+        `<i class="fas fa-exclamation-circle"></i> ${
+          config.languageLabels.radioSharedSaveError || "Istasyon paylasilan listeye eklenemedi"
+        }`,
         3000,
         "error"
       );
@@ -732,8 +729,8 @@ function toggleFavorite() {
   }
 
   try {
-    var isFavorite = track.UserData.IsFavorite || false;
-    updateFavoriteStatus(track.Id, !isFavorite, { item: track });
+    const isFavorite = track.UserData?.IsFavorite || false;
+    await updateFavoriteStatus(track.Id, !isFavorite, { item: track });
     track.UserData = track.UserData || {};
     track.UserData.IsFavorite = !isFavorite;
 
@@ -742,16 +739,16 @@ function toggleFavorite() {
     }
 
     showNotification(
-      "<i class=\"fas fa-heart\"></i> " + (getWatchlistToast(track, !isFavorite)),
+      `<i class="fas fa-heart"></i> ${getWatchlistToast(track, !isFavorite)}`,
       2000,
       'kontrol'
     );
   } catch (error) {
     console.error("Favori işlemi hatası:", error);
     showNotification(
-      "<i class=\"fas fa-exclamation-circle\"></i> " + (
+      `<i class="fas fa-exclamation-circle"></i> ${
         config.languageLabels.favoriteError || "Favori işlemi sırasında hata"
-      ),
+      }`,
       3000,
       'error'
     );
@@ -761,15 +758,15 @@ function toggleFavorite() {
 export function checkMarqueeNeeded(element) {
   if (!element || !element.parentElement) return;
 
-  var container = element.parentElement;
-  var textWidth = Math.ceil(element.scrollWidth || 0);
-  var containerWidth = Math.ceil(container.clientWidth || container.offsetWidth || 0);
-  var overflowWidth = Math.max(0, textWidth - containerWidth);
-  var marqueeGap = Math.max(32, Math.min(96, Math.round(containerWidth * 0.18) || 48));
-  var travelDistance = overflowWidth + marqueeGap;
-  var durationSec = Math.max(8, Math.min(28, travelDistance / 28));
+  const container = element.parentElement;
+  const textWidth = Math.ceil(element.scrollWidth || 0);
+  const containerWidth = Math.ceil(container.clientWidth || container.offsetWidth || 0);
+  const overflowWidth = Math.max(0, textWidth - containerWidth);
+  const marqueeGap = Math.max(32, Math.min(96, Math.round(containerWidth * 0.18) || 48));
+  const travelDistance = overflowWidth + marqueeGap;
+  const durationSec = Math.max(8, Math.min(28, travelDistance / 28));
 
-  container.style.setProperty('--container-width', (containerWidth) + "px");
+  container.style.setProperty('--container-width', `${containerWidth}px`);
   element.style.removeProperty('--marquee-distance');
   element.style.removeProperty('--marquee-duration');
   element.style.removeProperty('--marquee-gap');
@@ -778,11 +775,11 @@ export function checkMarqueeNeeded(element) {
   element.classList.remove('marquee-active');
   element.style.transform = 'translate3d(0, 0, 0)';
 
-  requestAnimationFramefunction(() {
+  requestAnimationFrame(() => {
     if (overflowWidth > 2) {
-      element.style.setProperty('--marquee-distance', "-" + (travelDistance) + "px");
-      element.style.setProperty('--marquee-duration', (durationSec) + "s");
-      element.style.setProperty('--marquee-gap', (marqueeGap) + "px");
+      element.style.setProperty('--marquee-distance', `-${travelDistance}px`);
+      element.style.setProperty('--marquee-duration', `${durationSec}s`);
+      element.style.setProperty('--marquee-gap', `${marqueeGap}px`);
       element.classList.add('marquee-active');
     } else {
       element.classList.remove('marquee-active');
@@ -792,19 +789,19 @@ export function checkMarqueeNeeded(element) {
 }
 
 function toggleTheme() {
-  var config = getConfig();
-  var newTheme = config.playerTheme === 'light' ? 'dark' : 'light';
-  var updatedConfig = { ...config, playerTheme: newTheme };
+  const config = getConfig();
+  const newTheme = config.playerTheme === 'light' ? 'dark' : 'light';
+  const updatedConfig = { ...config, playerTheme: newTheme };
   updateConfig(updatedConfig);
-  var themeBtn = document.querySelector('.theme-toggle-btn');
+  const themeBtn = document.querySelector('.theme-toggle-btn');
   if (themeBtn) {
-    themeBtn.innerHTML = "<i class=\"fas fa-" + (newTheme === 'light' ? 'moon' : 'sun') + "\"></i>";
-    themeBtn.title = newTheme === 'light' ? config.languageLabels.darkTheme || 'Tema Escuro' : config.languageLabels.lightTheme || 'Tema Claro';
+    themeBtn.innerHTML = `<i class="fas fa-${newTheme === 'light' ? 'moon' : 'sun'}"></i>`;
+    themeBtn.title = newTheme === 'light' ? config.languageLabels.darkTheme || 'Karanlık Tema' : config.languageLabels.lightTheme || 'Aydınlık Tema';
   }
   loadCSS();
 
   showNotification(
-    "<i class=\"fas fa-" + (newTheme === 'light' ? 'sun' : 'moon') + "\"></i> " + (newTheme === 'light' ? config.languageLabels.lightThemeEnabled || 'Aydınlık tema etkin' : config.languageLabels.darkThemeEnabled || 'Karanlık tema etkin'),
+    `<i class="fas fa-${newTheme === 'light' ? 'sun' : 'moon'}"></i> ${newTheme === 'light' ? config.languageLabels.lightThemeEnabled || 'Aydınlık tema etkin' : config.languageLabels.darkThemeEnabled || 'Karanlık tema etkin'}`,
     2000,
     'info'
   );
@@ -814,17 +811,17 @@ function toggleTheme() {
 }
 
 function togglePlayerStyle() {
-  var config = getConfig();
-  var newStyle = config.playerStyle === 'player' ? 'newplayer' : 'player';
-  var iconName = newStyle === 'player' ? 'up-down' : 'left-right';
-  var notifName = newStyle === 'player' ? 'left-right' : 'up-down';
-  var updatedConfig = { ...config, playerStyle: newStyle };
+  const config = getConfig();
+  const newStyle = config.playerStyle === 'player' ? 'newplayer' : 'player';
+  const iconName = newStyle === 'player' ? 'up-down' : 'left-right';
+  const notifName = newStyle === 'player' ? 'left-right' : 'up-down';
+  const updatedConfig = { ...config, playerStyle: newStyle };
 
   updateConfig(updatedConfig);
 
-  var styleBtn = document.querySelector('.style-toggle-btn');
+  const styleBtn = document.querySelector('.style-toggle-btn');
   if (styleBtn) {
-    styleBtn.innerHTML = "<i class=\"fas fa-" + (iconName) + "\"></i>";
+    styleBtn.innerHTML = `<i class="fas fa-${iconName}"></i>`;
     styleBtn.title = newStyle === 'player'
       ? config.languageLabels.dikeyStil || 'Dikey Stil'
       : config.languageLabels.yatayStil || 'Yatay Stil';
@@ -832,38 +829,38 @@ function togglePlayerStyle() {
 
   loadCSS();
   showNotification(
-    "<i class=\"fas fa-" + (notifName) + "\"></i> " + (
+    `<i class="fas fa-${notifName}"></i> ${
       newStyle === 'player'
         ? config.languageLabels.yatayStilEnabled || 'Yatay stil etkin'
         : config.languageLabels.dikeyStilEnabled || 'Dikey stil etkin'
-    ),
+    }`,
     2000,
     'info'
   );
 }
 
 export function updatePlayerBackground() {
-  var config = getConfig();
-  var bgLayer = document.querySelector('#modern-music-player .player-bg-layer');
-  var track = musicPlayerState.playlist.[musicPlayerState.currentIndex];
-  var requestId = ++__playerBackgroundRequestId;
+  const config = getConfig();
+  const bgLayer = document.querySelector('#modern-music-player .player-bg-layer');
+  const track = musicPlayerState.playlist?.[musicPlayerState.currentIndex];
+  const requestId = ++__playerBackgroundRequestId;
 
-  var applyLayerStyles = function(imageCss) {
+  const applyLayerStyles = (imageCss) => {
     if (!bgLayer || requestId !== __playerBackgroundRequestId) return;
     bgLayer.style.backgroundImage = imageCss;
     bgLayer.style.opacity = config.albumArtBackgroundOpacity;
-    bgLayer.style.filter = "blur(" + (config.albumArtBackgroundBlur) + "px)";
+    bgLayer.style.filter = `blur(${config.albumArtBackgroundBlur}px)`;
     bgLayer.style.display = 'block';
   };
 
-  var applyValidatedBackground = function(imageUrl) {
-    var candidateUrl = imageUrl || DEFAULT_ARTWORK;
-    var img = new Image();
-    img.onload = function() {
+  const applyValidatedBackground = (imageUrl) => {
+    const candidateUrl = imageUrl || DEFAULT_ARTWORK;
+    const img = new Image();
+    img.onload = () => {
       if (requestId !== __playerBackgroundRequestId) return;
-      applyLayerStyles("url('" + (candidateUrl) + "')");
+      applyLayerStyles(`url('${candidateUrl}')`);
     };
-    img.onerror = function() {
+    img.onerror = () => {
       if (requestId !== __playerBackgroundRequestId) return;
       applyLayerStyles(DEFAULT_ARTWORK_CSS);
     };
@@ -885,22 +882,22 @@ export function updatePlayerBackground() {
   if (isRadioTrack(track)) {
     applyLayerStyles(DEFAULT_ARTWORK_CSS);
     resolveRadioStationArtUrl(track)
-      .thenfunction((resolvedUrl) {
+      .then((resolvedUrl) => {
         if (requestId !== __playerBackgroundRequestId) return;
         applyValidatedBackground(resolvedUrl || DEFAULT_ARTWORK);
       })
-      .catchfunction(() {
+      .catch(() => {
         if (requestId !== __playerBackgroundRequestId) return;
         applyLayerStyles(DEFAULT_ARTWORK_CSS);
       });
     return;
   }
 
-  var bgUrl = DEFAULT_ARTWORK;
-  var tag = track.AlbumPrimaryImageTag || track.PrimaryImageTag;
-  var id = track.AlbumId || track.Id;
+  let bgUrl = DEFAULT_ARTWORK;
+  const tag = track.AlbumPrimaryImageTag || track.PrimaryImageTag;
+  const id = track.AlbumId || track.Id;
   if (tag && id) {
-    bgUrl = withParams("/Items/" + (id) + "/Images/Primary", {
+    bgUrl = withParams(`/Items/${id}/Images/Primary`, {
       fillHeight: 1000,
       fillWidth: 1000,
       quality: 96,
@@ -912,18 +909,18 @@ export function updatePlayerBackground() {
   applyValidatedBackground(bgUrl);
 }
 
-export function updateAlbumArt(artUrl) {
-  return new Promisefunction((resolve) {
-    var albumArtEl = musicPlayerState.albumArtEl;
+export async function updateAlbumArt(artUrl) {
+  return new Promise((resolve) => {
+    const albumArtEl = musicPlayerState.albumArtEl;
     if (!albumArtEl) return resolve();
 
-    var url = artUrl ? "url('" + (artUrl) + "')" : DEFAULT_ARTWORK_CSS;
-    var img = new Image();
-    img.onload = function() {
+    const url = artUrl ? `url('${artUrl}')` : DEFAULT_ARTWORK_CSS;
+    const img = new Image();
+    img.onload = () => {
       albumArtEl.style.backgroundImage = url;
       resolve();
     };
-    img.onerror = function() {
+    img.onerror = () => {
       albumArtEl.style.backgroundImage = DEFAULT_ARTWORK_CSS;
       resolve();
     };
@@ -932,9 +929,9 @@ export function updateAlbumArt(artUrl) {
 }
 
 function toggleFullscreenMode() {
-  var config = getConfig();
-  var player = document.getElementById('modern-music-player');
-  var fullscreenBtn = document.querySelector('.fullscreen-btn i');
+  const config = getConfig();
+  const player = document.getElementById('modern-music-player');
+  const fullscreenBtn = document.querySelector('.fullscreen-btn i');
 
   if (!isMobileDevice()) {
     localStorage.setItem('fullscreenMode', 'false');
@@ -944,7 +941,7 @@ function toggleFullscreenMode() {
     return;
   }
 
-  var newMode = !config.fullscreenMode;
+  const newMode = !config.fullscreenMode;
   localStorage.setItem('fullscreenMode', String(newMode));
   updateConfig({ ...config, fullscreenMode: newMode });
   setPageScrollLocked(newMode);
@@ -952,9 +949,9 @@ function toggleFullscreenMode() {
 }
 
 function initializePlayerStyle() {
-  var config = getConfig();
-  var player = document.getElementById('modern-music-player');
-  var styleToggleBtn = document.querySelector('.style-toggle-btn i');
+  const config = getConfig();
+  const player = document.getElementById('modern-music-player');
+  const styleToggleBtn = document.querySelector('.style-toggle-btn i');
 
   if (!player || !styleToggleBtn) return;
 
@@ -970,9 +967,9 @@ function initializePlayerStyle() {
 }
 
 function initializeFullscreen() {
-  var config = getConfig();
-  var player = document.getElementById('modern-music-player');
-  var fullscreenBtn = document.querySelector('.fullscreen-btn i');
+  const config = getConfig();
+  const player = document.getElementById('modern-music-player');
+  const fullscreenBtn = document.querySelector('.fullscreen-btn i');
 
   if (!isMobileDevice()) {
     setPageScrollLocked(false);
@@ -985,7 +982,7 @@ function initializeFullscreen() {
 }
 
 function applyFullscreenState(player, fullscreenBtn, enabled) {
-  player.classList.toggle('fullscreen-mode', enabled);
+  player?.classList.toggle('fullscreen-mode', enabled);
   if (fullscreenBtn) {
     fullscreenBtn.className = enabled ? 'fa-solid fa-minimize' : 'fa-solid fa-maximize';
   }
@@ -1000,10 +997,10 @@ function animateFullscreenState(player, fullscreenBtn, enabled) {
     return;
   }
 
-  var cleaned = false;
-  var unlockFrameA = 0;
-  var unlockFrameB = 0;
-  var cleanup = function() {
+  let cleaned = false;
+  let unlockFrameA = 0;
+  let unlockFrameB = 0;
+  const cleanup = () => {
     if (cleaned) return;
     cleaned = true;
     if (unlockFrameA) {
@@ -1021,45 +1018,45 @@ function animateFullscreenState(player, fullscreenBtn, enabled) {
   player.__fullscreenAnimationCleanup = cleanup;
   player.classList.add('fullscreen-layout-lock');
   applyFullscreenState(player, fullscreenBtn, enabled);
-  unlockFrameA = requestAnimationFramefunction(() {
+  unlockFrameA = requestAnimationFrame(() => {
     unlockFrameB = requestAnimationFrame(cleanup);
   });
 }
 
 function stopFullscreenAnimation(player) {
-  player.__fullscreenAnimationCleanup.();
+  player?.__fullscreenAnimationCleanup?.();
 }
 
-function showTopTracksInMainView(tab) {
+async function showTopTracksInMainView(tab) {
   if (tab === 'playlist') {
-    updateNextTracks();
+    await updateNextTracks();
     return;
   }
 
-  var { nextTracksContainer } = musicPlayerState;
+  const { nextTracksContainer } = musicPlayerState;
 
-  var uiElements = createNextTracksUI();
+  const uiElements = createNextTracksUI();
   nextTracksContainer.innerHTML = '';
 
   uiElements.name.textContent = getSourceLabel(tab);
   uiElements.name.style.cursor = 'pointer';
-  uiElements.name.onclick = function(e) {
+  uiElements.name.onclick = async (e) => {
     e.stopPropagation();
-    var cfg = getConfig();
-    var nextSource = getNextTrackSource(cfg.nextTracksSource);
-    var updatedConfig = { ...cfg, nextTracksSource: nextSource.value };
+    const cfg = getConfig();
+    const nextSource = getNextTrackSource(cfg.nextTracksSource);
+    const updatedConfig = { ...cfg, nextTracksSource: nextSource.value };
     updateConfig(updatedConfig);
 
     showNotification(
-      "<i class=\"fas fa-music\"></i> " + (nextSource.label),
+      `<i class="fas fa-music"></i> ${nextSource.label}`,
       2000,
       'info'
     );
 
     if (nextSource.value === 'playlist') {
-      updateNextTracks();
+      await updateNextTracks();
     } else {
-      showTopTracksInMainView(nextSource.value);
+      await showTopTracksInMainView(nextSource.value);
     }
   };
 
@@ -1067,44 +1064,45 @@ function showTopTracksInMainView(tab) {
   __topTracksAborter = new AbortController();
 
   try {
-    var token = getAuthToken();
-    var userId = window.ApiClient.getCurrentUserId();
-    var { apiPath, params } = getApiUrlForTab(tab, userId);
+    const token = getAuthToken();
+    const userId = await window.ApiClient.getCurrentUserId();
+    const { apiPath, params } = getApiUrlForTab(tab, userId);
 
-    var response = fetch(withParams(apiPath, params), {
+    const response = await fetch(withParams(apiPath, params), {
       headers: { "X-Emby-Token": token },
       signal: __topTracksAborter.signal
     });
 
     if (!response.ok) throw new Error('Şarkılar yüklenemedi');
 
-    var data = response.json();
-    var tracks = data.Items || [];
-    tracks = tracks.filterfunction((track, idx, arr)
-      arr.findIndex(function(t) isSameTrack(t, track)) === idx
+    const data = await response.json();
+    let tracks = data.Items || [];
+    tracks = tracks.filter((track, idx, arr) =>
+      arr.findIndex(t => isSameTrack(t, track)) === idx
     );
 
-    var trackElements = [];
+    let trackElements = [];
 
     if (tracks.length === 0) {
-      var noTracksElement = document.createElement('div');
+      const noTracksElement = document.createElement('div');
       noTracksElement.className = 'no-tracks';
       noTracksElement.textContent = config.languageLabels.noTracks || 'Şarkı bulunamadı';
       uiElements.list.appendChild(noTracksElement);
 
       showNotification(
-        "<i class=\"fas fa-info-circle\"></i> " + (getSourceLabel(tab)) + ": " + (config.languageLabels.noTracks || 'Şarkı bulunamadı'),
+        `<i class="fas fa-info-circle"></i> ${getSourceLabel(tab)}: ${config.languageLabels.noTracks || 'Şarkı bulunamadı'}`,
         2000,
         'info'
       );
     } else {
-      trackElements = tracks.mapfunction((track, index) {
-        var { trackElement, coverElement } = createTrackElementfunction(track,
+      trackElements = tracks.map((track, index) => {
+        const { trackElement, coverElement } = createTrackElement(
+          track,
           index,
-          () addAndPlayTrack(track)
+          () => addAndPlayTrack(track)
         );
         loadInitialBatch([{ track, trackElement, coverElement, index }])
-          .catch(function(err) console.error('Görsel yükleme hatası:', err));
+          .catch(err => console.error('Görsel yükleme hatası:', err));
 
         uiElements.list.appendChild(trackElement);
         return { track, trackElement, coverElement, index };
@@ -1112,7 +1110,7 @@ function showTopTracksInMainView(tab) {
 
     }
 
-    var scrollControlsContainer = document.createElement('div');
+    const scrollControlsContainer = document.createElement('div');
     scrollControlsContainer.className = 'next-tracks-scroll-controls';
     scrollControlsContainer.append(uiElements.scrollLeft, uiElements.scrollRight);
 
@@ -1127,7 +1125,7 @@ function showTopTracksInMainView(tab) {
     }
 
     if (tracks.length > 0) {
-      requestAnimationFramefunction(() {
+      requestAnimationFrame(() => {
         setupScrollControls(
           trackElements,
           uiElements.list,
@@ -1137,15 +1135,15 @@ function showTopTracksInMainView(tab) {
       });
     }
 
-    trackGlobalTimeoutfunction(setTimeout(() {
+    trackGlobalTimeout(setTimeout(() => {
       uiElements.name.classList.remove('hidden');
       uiElements.name.classList.add('visible');
     }, 100));
 
   } catch (error) {
-    if (error.name === 'AbortError') return;
+    if (error?.name === 'AbortError') return;
     console.error('Sıradaki şarkılar yüklenirken hata:', error);
-    var errorElement = document.createElement('div');
+    const errorElement = document.createElement('div');
     errorElement.className = 'error-message';
     errorElement.textContent = config.languageLabels.loadError || 'Yüklenirken hata oluştu';
     uiElements.list.appendChild(errorElement);
@@ -1153,7 +1151,7 @@ function showTopTracksInMainView(tab) {
     nextTracksContainer.append(uiElements.wrapper, uiElements.name);
 
     showNotification(
-      "<i class=\"fas fa-exclamation-circle\"></i> " + (getSourceLabel(tab)) + ": " + (config.languageLabels.loadError || 'Yüklenirken hata oluştu'),
+      `<i class="fas fa-exclamation-circle"></i> ${getSourceLabel(tab)}: ${config.languageLabels.loadError || 'Yüklenirken hata oluştu'}`,
       2000,
       'error'
     );
@@ -1163,14 +1161,14 @@ function showTopTracksInMainView(tab) {
 function isSameTrack(a, b) {
   if (a.Id === b.Id) return true;
   if (a.Name !== b.Name) return false;
-  var artistsA = (a.Artists || []).map(function(x) typeof x === 'string' ? x : x.Name).filter(Boolean).sort().join(',');
-  var artistsB = (b.Artists || []).map(function(x) typeof x === 'string' ? x : x.Name).filter(Boolean).sort().join(',');
+  const artistsA = (a.Artists || []).map(x => typeof x === 'string' ? x : x?.Name).filter(Boolean).sort().join(',');
+  const artistsB = (b.Artists || []).map(x => typeof x === 'string' ? x : x?.Name).filter(Boolean).sort().join(',');
   return artistsA === artistsB;
 }
 
 function addAndPlayTrack(track) {
-  var playlist = musicPlayerState.playlist;
-  var existingIndex = playlist.findIndex(function(t) isSameTrack(t, track));
+  const playlist = musicPlayerState.playlist;
+  const existingIndex = playlist.findIndex(t => isSameTrack(t, track));
 
   if (existingIndex >= 0) {
     musicPlayerState.currentIndex = existingIndex;
@@ -1183,25 +1181,25 @@ function addAndPlayTrack(track) {
 }
 
 function createNextTracksUI() {
-  var nextTracksContainer = document.createElement('div');
+  const nextTracksContainer = document.createElement('div');
   nextTracksContainer.className = 'next-tracks-container';
 
-  var nextTracksName = document.createElement('div');
+  const nextTracksName = document.createElement('div');
   nextTracksName.className = 'next-tracks-name hidden';
   nextTracksName.style.cursor = 'pointer';
 
-  var nextTracksList = document.createElement('div');
+  const nextTracksList = document.createElement('div');
   nextTracksList.className = 'next-tracks-list';
 
-  var scrollLeftBtn = document.createElement('div');
+  const scrollLeftBtn = document.createElement('div');
   scrollLeftBtn.className = 'track-scroll-btn track-scroll-left';
   scrollLeftBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
 
-  var scrollRightBtn = document.createElement('div');
+  const scrollRightBtn = document.createElement('div');
   scrollRightBtn.className = 'track-scroll-btn track-scroll-right';
   scrollRightBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
 
-  var wrapper = document.createElement('div');
+  const wrapper = document.createElement('div');
   wrapper.className = 'next-tracks-wrapper';
   wrapper.appendChild(nextTracksList);
 
@@ -1224,41 +1222,41 @@ function setupScrollControls(trackElements, nextTracksList, scrollLeftBtn, scrol
 
   nextTracksList.style.transform = '';
 
-  var getMetrics = function() {
-    var wrapper = nextTracksList.parentElement;
-    var firstItem = nextTracksList.querySelector('.next-track-item');
-    var wrapperWidth = wrapper.clientWidth || nextTracksList.clientWidth || 0;
-    var itemWidth = firstItem.getBoundingClientRect.().width || 70;
-    var gap = function(() {
+  const getMetrics = () => {
+    const wrapper = nextTracksList.parentElement;
+    const firstItem = nextTracksList.querySelector('.next-track-item');
+    const wrapperWidth = wrapper?.clientWidth || nextTracksList.clientWidth || 0;
+    const itemWidth = firstItem?.getBoundingClientRect?.().width || 70;
+    const gap = (() => {
       try {
-        var styles = window.getComputedStyle(nextTracksList);
-        var raw = styles.columnGap || styles.gap || '0';
-        var parsed = parseFloat(raw);
+        const styles = window.getComputedStyle(nextTracksList);
+        const raw = styles.columnGap || styles.gap || '0';
+        const parsed = parseFloat(raw);
         return Number.isFinite(parsed) ? parsed : 0;
       } catch {
         return 0;
       }
     })();
-    var step = Math.max(itemWidth + gap, wrapperWidth || 0);
-    var maxScrollLeft = Math.max(0, nextTracksList.scrollWidth - wrapperWidth);
+    const step = Math.max(itemWidth + gap, wrapperWidth || 0);
+    const maxScrollLeft = Math.max(0, nextTracksList.scrollWidth - wrapperWidth);
     return { step, maxScrollLeft };
   };
 
-  var syncButtons = function() {
-    var { maxScrollLeft } = getMetrics();
-    var pos = Math.max(0, nextTracksList.scrollLeft || 0);
-    var atStart = pos <= 2;
-    var atEnd = pos >= Math.max(0, maxScrollLeft - 2);
+  const syncButtons = () => {
+    const { maxScrollLeft } = getMetrics();
+    const pos = Math.max(0, nextTracksList.scrollLeft || 0);
+    const atStart = pos <= 2;
+    const atEnd = pos >= Math.max(0, maxScrollLeft - 2);
     scrollLeftBtn.style.opacity = atStart ? '0.45' : '1';
     scrollRightBtn.style.opacity = atEnd ? '0.45' : '1';
     scrollLeftBtn.style.pointerEvents = atStart ? 'none' : 'auto';
     scrollRightBtn.style.pointerEvents = atEnd ? 'none' : 'auto';
   };
 
-  var scrollByPage = function(direction) {
-    var { step, maxScrollLeft } = getMetrics();
-    var current = Math.max(0, nextTracksList.scrollLeft || 0);
-    var target = Math.max(0, Math.min(maxScrollLeft, current + (direction * step)));
+  const scrollByPage = (direction) => {
+    const { step, maxScrollLeft } = getMetrics();
+    const current = Math.max(0, nextTracksList.scrollLeft || 0);
+    const target = Math.max(0, Math.min(maxScrollLeft, current + (direction * step)));
     if (typeof nextTracksList.scrollTo === 'function') {
       nextTracksList.scrollTo({ left: target, behavior: 'smooth' });
     } else {
@@ -1267,8 +1265,8 @@ function setupScrollControls(trackElements, nextTracksList, scrollLeftBtn, scrol
     requestAnimationFrame(syncButtons);
   };
 
-  var onScroll = function() syncButtons();
-  var onResize = function() {
+  const onScroll = () => syncButtons();
+  const onResize = () => {
     if (!nextTracksList.isConnected) {
       window.removeEventListener('resize', onResize);
       return;
@@ -1276,11 +1274,11 @@ function setupScrollControls(trackElements, nextTracksList, scrollLeftBtn, scrol
     syncButtons();
   };
 
-  scrollLeftBtn.onclick = function() scrollByPage(-1);
-  scrollRightBtn.onclick = function() scrollByPage(1);
+  scrollLeftBtn.onclick = () => scrollByPage(-1);
+  scrollRightBtn.onclick = () => scrollByPage(1);
   nextTracksList.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onResize, { passive: true });
-  nextTracksList.__cleanupScrollControls = function() {
+  nextTracksList.__cleanupScrollControls = () => {
     try { nextTracksList.removeEventListener('scroll', onScroll); } catch {}
     try { window.removeEventListener('resize', onResize); } catch {}
     nextTracksList.__cleanupScrollControls = null;
@@ -1297,30 +1295,30 @@ export function destroyModernPlayerUI() {
 }
 
 function createTrackElement(track, index, onClickHandler) {
-  var config = getConfig();
-  var trackElement = document.createElement('div');
+  const config = getConfig();
+  const trackElement = document.createElement('div');
   trackElement.className = 'next-track-item hidden';
   trackElement.dataset.trackId = track.Id;
   trackElement.dataset.trackIndex = index;
   trackElement.dataset.loaded = "false";
   trackElement.title = track.Name || config.languageLabels.unknownTrack;
 
-  var coverElement = document.createElement('div');
+  const coverElement = document.createElement('div');
   coverElement.className = 'next-track-cover';
   coverElement.style.backgroundImage = DEFAULT_ARTWORK_CSS;
-  coverElement.onclick = function() onClickHandler(track, index);
+  coverElement.onclick = () => onClickHandler(track, index);
 
-  var titleElement = document.createElement('div');
+  const titleElement = document.createElement('div');
   titleElement.className = 'next-track-title';
   titleElement.textContent = track.Name || config.languageLabels.unknownTrack;
-  titleElement.onclick = function() onClickHandler(track, index);
+  titleElement.onclick = () => onClickHandler(track, index);
 
   trackElement.append(coverElement, titleElement);
   return { trackElement, coverElement };
 }
 
 function getShuffledIndices(playlist, currentIndex, maxNextTracks) {
-  var playedSet = new Set(musicPlayerState.playedHistory);
+  const playedSet = new Set(musicPlayerState.playedHistory);
   if (!playedSet.has(currentIndex)) playedSet.add(currentIndex);
 
   if (playedSet.size >= playlist.length) {
@@ -1328,17 +1326,17 @@ function getShuffledIndices(playlist, currentIndex, maxNextTracks) {
     playedSet.add(currentIndex);
   }
 
-  var selectedSet = new Set();
+  const selectedSet = new Set();
   while (selectedSet.size < maxNextTracks && selectedSet.size < playlist.length - 1) {
-    var randIdx = Math.floor(Math.random() * playlist.length);
+    const randIdx = Math.floor(Math.random() * playlist.length);
     if (randIdx !== currentIndex && !playedSet.has(randIdx)) {
       selectedSet.add(randIdx);
     }
   }
 
-  var nextIndices = Array.from(selectedSet);
+  const nextIndices = Array.from(selectedSet);
   if (nextIndices.length < maxNextTracks) {
-    for (var i = 0; i < playlist.length && nextIndices.length < maxNextTracks; i++) {
+    for (let i = 0; i < playlist.length && nextIndices.length < maxNextTracks; i++) {
       if (i !== currentIndex && !nextIndices.includes(i)) {
         nextIndices.push(i);
       }
@@ -1355,10 +1353,10 @@ function getShuffledIndices(playlist, currentIndex, maxNextTracks) {
 }
 
 function getSequentialIndices(playlist, currentIndex, maxNextTracks) {
-  var idx = currentIndex;
-  var attempts = 0;
-  var maxAttempts = playlist.length * 2;
-  var nextIndices = [];
+  let idx = currentIndex;
+  let attempts = 0;
+  const maxAttempts = playlist.length * 2;
+  const nextIndices = [];
 
   while (nextIndices.length < maxNextTracks && attempts < maxAttempts) {
     idx = (idx + 1) % playlist.length;
@@ -1378,10 +1376,10 @@ function getSequentialIndices(playlist, currentIndex, maxNextTracks) {
 }
 
 function getApiUrlForTab(tab, userId) {
-  var config = getConfig();
+  const config = getConfig();
 
-  var base = "/Users/" + (userId) + "/Items";
-  var common = {
+  const base = `/Users/${userId}/Items`;
+  const common = {
     IncludeItemTypes: "Audio",
     Recursive: "true",
   };
@@ -1452,23 +1450,23 @@ function getApiUrlForTab(tab, userId) {
 }
 
 function handleIntersection(entries, observer) {
-  entries.forEach(function(entry) {
+  entries.forEach(entry => {
     if (!entry.isIntersecting) return;
 
-    var el = entry.target;
+    const el = entry.target;
     if (el.dataset.loaded === "true") return;
 
-    var trackId = el.dataset.trackId;
-    var trackElements = Array.from(el.parentElement.children);
-    var trackIndex = trackElements.indexOf(el);
+    const trackId = el.dataset.trackId;
+    const trackElements = Array.from(el.parentElement.children);
+    const trackIndex = trackElements.indexOf(el);
 
     loadTrackImageForElement(el, trackIndex);
   });
 }
 
 function getNextTrackSource(currentSource) {
-  var config = getConfig();
-  var sources = [
+  const config = getConfig();
+  const sources = [
     { value: 'top', label: config.languageLabels.topTracks || 'En Çok Dinlenenler' },
     { value: 'recent', label: config.languageLabels.recentTracks || 'Son Dinlenenler' },
     { value: 'latest', label: config.languageLabels.latestTracks || 'Son Eklenenler' },
@@ -1478,40 +1476,40 @@ function getNextTrackSource(currentSource) {
         : config.languageLabels.sirada || "Sıradakiler" }
   ];
 
-  var currentIndex = sources.findIndex(function(s) s.value === currentSource);
-  var nextIndex = (currentIndex + 1) % sources.length;
+  const currentIndex = sources.findIndex(s => s.value === currentSource);
+  const nextIndex = (currentIndex + 1) % sources.length;
   return sources[nextIndex];
 }
 
-function setupImageLoading(trackElements, observer) {
-  var initialBatch = trackElements.slice(0, config.limiteId3 || 4);
-  loadInitialBatch(initialBatch);
+async function setupImageLoading(trackElements, observer) {
+  const initialBatch = trackElements.slice(0, config.id3limit || 4);
+  await loadInitialBatch(initialBatch);
 
-  trackElements.slice(config.limiteId3 || 4).forEach(function(({ trackElement }) {
+  trackElements.slice(config.id3limit || 4).forEach(({ trackElement }) => {
     trackElement.classList.remove('hidden');
     observer.observe(trackElement);
   });
 }
 
-function loadInitialBatch(trackElements) {
+async function loadInitialBatch(trackElements) {
   if (!Array.isArray(trackElements)) {
     console.error('loadInitialBatch: trackElements bir dizi olmalı', trackElements);
     return;
   }
 
-  var chunkSize = config.limiteId3 || 4;
-  for (var i = 0; i < trackElements.length; i += chunkSize) {
-    var chunk = trackElements.slice(i, i + chunkSize);
-    Promise.allfunction(chunk.map(({ track, trackElement, coverElement }) {
+  const chunkSize = config.id3limit || 4;
+  for (let i = 0; i < trackElements.length; i += chunkSize) {
+    const chunk = trackElements.slice(i, i + chunkSize);
+    await Promise.all(chunk.map(async ({ track, trackElement, coverElement }) => {
       if (!trackElement || !coverElement) return;
 
       trackElement.classList.remove('hidden');
       trackElement.classList.add('visible');
 
       try {
-        var imageUri = getTrackImage(track);
+        const imageUri = await getTrackImage(track);
         if (imageUri) {
-          coverElement.style.backgroundImage = "url('" + (imageUri) + "')";
+          coverElement.style.backgroundImage = `url('${imageUri}')`;
         }
         trackElement.dataset.loaded = "true";
       } catch (err) {
@@ -1521,28 +1519,28 @@ function loadInitialBatch(trackElements) {
   }
 }
 
-function loadTrackImageForElement(trackElement, trackIndex) {
-  var { playlist } = musicPlayerState;
-  var track = playlist[trackIndex];
+async function loadTrackImageForElement(trackElement, trackIndex) {
+  const { playlist } = musicPlayerState;
+  const track = playlist[trackIndex];
   if (!track) return;
 
   try {
-    var imageUri = getTrackImage(track);
+    const imageUri = await getTrackImage(track);
     if (imageUri) {
-      var coverElement = trackElement.querySelector('.next-track-cover');
+      const coverElement = trackElement.querySelector('.next-track-cover');
       if (coverElement) {
-        coverElement.style.backgroundImage = "url('" + (imageUri) + "')";
+        coverElement.style.backgroundImage = `url('${imageUri}')`;
       }
     }
     trackElement.dataset.loaded = "true";
   } catch (err) {
-    console.error("Track #" + (trackIndex) + " resmi yüklenirken hata:", err);
+    console.error(`Track #${trackIndex} resmi yüklenirken hata:`, err);
   }
 }
 
 function getSourceLabel(source) {
-  var config = getConfig();
-  var labels = {
+  const config = getConfig();
+  const labels = {
     'top': config.languageLabels.topTracks || "En Çok Dinlenenler",
     'recent': config.languageLabels.recentTracks || "Son Dinlenenler",
     'latest': config.languageLabels.latestTracks || "Son Eklenenler",

@@ -14,7 +14,7 @@ import {
 } from "./progressBar.js";
 
 export function setupVisibilityHandler() {
-  document.addEventListenerfunction("visibilitychange", () {
+  document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       pauseSlideTimer();
       pauseProgressBar();
@@ -26,12 +26,12 @@ export function setupVisibilityHandler() {
 }
 
 export function attachMouseEvents() {
-  var activePage =
+  const activePage =
     document.querySelector("#indexPage:not(.hide)") ||
     document.querySelector("#homePage:not(.hide)");
   if (!activePage) return;
 
-  var slidesContainer = activePage.querySelector("#monwui-slides-container");
+  const slidesContainer = activePage.querySelector("#monwui-slides-container");
   if (!slidesContainer) return;
   if (slidesContainer.__jmsHoverPauseBound) {
     if (slidesContainer.matches(":hover")) {
@@ -41,11 +41,11 @@ export function attachMouseEvents() {
     return;
   }
 
-  var onMouseEnter = function() {
+  const onMouseEnter = () => {
     pauseSlideTimer();
     pauseProgressBar();
   };
-  var onMouseLeave = function() {
+  const onMouseLeave = () => {
     resumeSlideTimer();
     resumeProgressBar();
   };

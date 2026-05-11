@@ -6,20 +6,20 @@ import { languageLabels as rusLabels } from './rus.js';
 import { languageLabels as spaLabels } from './spa.js';
 import { languageLabels as porLabels } from './por.js';
 
-export var AUTO_LANGUAGE_CHANGE_EVENT = 'jms:auto-language-changed';
+export const AUTO_LANGUAGE_CHANGE_EVENT = 'jms:auto-language-changed';
 
-var __autoLanguageSyncStarted = false;
-var __autoLanguageReloadOnChange = false;
-var __autoLanguageLastDetected = null;
-var __autoLanguagePendingReload = false;
-var __autoLanguageReloadScheduled = false;
+let __autoLanguageSyncStarted = false;
+let __autoLanguageReloadOnChange = false;
+let __autoLanguageLastDetected = null;
+let __autoLanguagePendingReload = false;
+let __autoLanguageReloadScheduled = false;
 
 export function normalizeLanguageCode(lang) {
-  var raw = String(lang || '').trim().toLowerCase();
-  if (!raw) return 'por';
+  const raw = String(lang || '').trim().toLowerCase();
+  if (!raw) return 'eng';
   if (raw === 'auto') return detectBrowserLanguage();
 
-  var base = raw.split(/[-_]/)[0];
+  const base = raw.split(/[-_]/)[0];
 
   if (raw === 'tur' || base === 'tr') return 'tur';
   if (raw === 'eng' || base === 'en') return 'eng';
@@ -33,8 +33,8 @@ export function normalizeLanguageCode(lang) {
 }
 
 export function getLanguageLabels(lang) {
-  var effective = normalizeLanguageCode(
-    lang || getEffectiveLanguage.() || detectBrowserLanguage.() || 'por'
+  const effective = normalizeLanguageCode(
+    lang || getEffectiveLanguage?.() || detectBrowserLanguage?.() || 'por'
   );
 
   switch (effective) {
@@ -50,12 +50,12 @@ export function getLanguageLabels(lang) {
 }
 
 export function detectBrowserLanguage() {
-  var candidates = Array.isArray(navigator.languages) && navigator.languages.length
+  const candidates = Array.isArray(navigator.languages) && navigator.languages.length
     ? navigator.languages
     : [navigator.language || navigator.userLanguage || ''];
-  for (var raw of candidates) {
-    var code = (raw || '').toLowerCase();
-    var base = code.split('-')[0];
+  for (const raw of candidates) {
+    const code = (raw || '').toLowerCase();
+    const base = code.split('-')[0];
     if (code.startsWith('tr') || base === 'tr') return 'tur';
     if (code.startsWith('en') || base === 'en') return 'eng';
     if (code.startsWith('de') || base === 'de') return 'deu';
@@ -72,7 +72,7 @@ export function getStoredLanguagePreference() {
 }
 
 export function getEffectiveLanguage() {
-  var pref = getStoredLanguagePreference();
+  const pref = getStoredLanguagePreference();
   if (!pref || pref === 'auto') return detectBrowserLanguage();
   return normalizeLanguageCode(pref);
 }
@@ -103,7 +103,7 @@ function scheduleAutoLanguageReload() {
   }
 
   __autoLanguageReloadScheduled = true;
-  setTimeoutfunction(() {
+  setTimeout(() => {
     window.location.reload();
   }, 0);
 }
@@ -141,7 +141,7 @@ function syncAutomaticLanguageState() {
     return;
   }
 
-  var detectedLanguage = detectBrowserLanguage();
+  const detectedLanguage = detectBrowserLanguage();
   if (!__autoLanguageLastDetected) {
     __autoLanguageLastDetected = detectedLanguage;
     return;
@@ -149,7 +149,7 @@ function syncAutomaticLanguageState() {
 
   if (detectedLanguage === __autoLanguageLastDetected) return;
 
-  var previousLanguage = __autoLanguageLastDetected;
+  const previousLanguage = __autoLanguageLastDetected;
   __autoLanguageLastDetected = detectedLanguage;
 
   dispatchAutoLanguageChanged(previousLanguage, detectedLanguage);

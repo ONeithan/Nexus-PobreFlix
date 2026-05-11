@@ -1,18 +1,18 @@
 import { makeApiRequest, fetchItemDetailsFull, fetchItemsBulk, getSessionInfo } from "../../Plugins/NexusPobreFlix/runtime/api.js";
 import { CollectionCacheDB } from "./collectionCacheDb.js";
 
-var META_CURSOR = "bg_index_cursor_movie_start";
-var META_CURSOR_BOXSET = "bg_index_cursor_boxset_start";
-var META_DONE_AT = "bg_index_done_at";
-var META_SEEN_BOXSETS = "bg_index_seen_boxsets_v1";
-var META_PHASE = "bg_index_phase_v1";
-var META_RUN_STATE = "bg_index_run_state_v1";
-var PAGE = 200;
-var IDLE_TIMEOUT = 1200;
-var TTL_MOVIE_BOXSET = 7 * 24 * 60 * 60 * 1000;
-var TTL_BOXSET_ITEMS = 2 * 24 * 60 * 60 * 1000;
-var RUN_HEARTBEAT_STALE_MS = 90 * 1000;
-var sleep = function(ms) new Promisefunction((r) setTimeout(r, ms));
+const META_CURSOR = "bg_index_cursor_movie_start";
+const META_CURSOR_BOXSET = "bg_index_cursor_boxset_start";
+const META_DONE_AT = "bg_index_done_at";
+const META_SEEN_BOXSETS = "bg_index_seen_boxsets_v1";
+const META_PHASE = "bg_index_phase_v1";
+const META_RUN_STATE = "bg_index_run_state_v1";
+const PAGE = 200;
+const IDLE_TIMEOUT = 1200;
+const TTL_MOVIE_BOXSET = 7 * 24 * 60 * 60 * 1000;
+const TTL_BOXSET_ITEMS = 2 * 24 * 60 * 60 * 1000;
+const RUN_HEARTBEAT_STALE_MS = 90 * 1000;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function idleTick(cb) {
   return CollectionCacheDB.idle(cb, { timeout: IDLE_TIMEOUT });
@@ -20,7 +20,7 @@ function idleTick(cb) {
 
 function scheduleNext(cb, { aggressive = false } = {}) {
   if (aggressive) {
-    return setTimeoutfunction(() cbfunction({ timeRemaining: () 50, didTimeout: true }), 0);
+    return setTimeout(() => cb({ timeRemaining: () => 50, didTimeout: true }), 0);
   }
   return idleTick(cb);
 }
@@ -38,24 +38,24 @@ function now() {
 }
 
 function isStale(ts, maxAgeMs) {
-  var t = Number(ts || 0);
+  const t = Number(ts || 0);
   if (!t) return true;
   return Date.now() - t > maxAgeMs;
 }
 
 function parseJsonValue(row) {
   try {
-    return row.value || null;
+    return row?.value ?? null;
   } catch {
     return null;
   }
 }
 
-function getUserIdSafe() {
+async function getUserIdSafe() {
   try {
-    var fromApiClient = (
-      (window.ApiClient.getCurrentUserId.() ||
-        window.ApiClient._currentUserId ||
+    const fromApiClient = (
+      (window.ApiClient?.getCurrentUserId?.() ||
+        window.ApiClient?._currentUserId ||
         "") + ""
     ).toString();
     if (fromApiClient) return fromApiClient;
@@ -63,59 +63,59 @@ function getUserIdSafe() {
   }
 
   try {
-    return ((getSessionInfo.().userId || "") + "").toString();
+    return ((getSessionInfo?.()?.userId || "") + "").toString();
   } catch {
     return "";
   }
 }
 
 function normalizeCursorValue(value) {
-  var num = Number(value || 0);
+  const num = Number(value || 0);
   return Number.isFinite(num) && num > 0 ? num : 0;
 }
 
 function normalizePhaseValue(value, fallback = "boxset") {
-  var phase = String(value || fallback);
+  const phase = String(value || fallback);
   if (phase === "boxset" || phase === "negative" || phase === "movie") return phase;
   return fallback;
 }
 
-export function getBackgroundCollectionIndexerStatus() {
+export async function getBackgroundCollectionIndexerStatus() {
   try {
-    var [cursorRow, boxCursorRow, phaseRow, doneRow, runRow] = Promise.all([
-      CollectionCacheDB.getMeta(META_CURSOR).catchfunction(() null),
-      CollectionCacheDB.getMeta(META_CURSOR_BOXSET).catchfunction(() null),
-      CollectionCacheDB.getMeta(META_PHASE).catchfunction(() null),
-      CollectionCacheDB.getMeta(META_DONE_AT).catchfunction(() null),
-      CollectionCacheDB.getMeta(META_RUN_STATE).catchfunction(() null),
+    const [cursorRow, boxCursorRow, phaseRow, doneRow, runRow] = await Promise.all([
+      CollectionCacheDB.getMeta(META_CURSOR).catch(() => null),
+      CollectionCacheDB.getMeta(META_CURSOR_BOXSET).catch(() => null),
+      CollectionCacheDB.getMeta(META_PHASE).catch(() => null),
+      CollectionCacheDB.getMeta(META_DONE_AT).catch(() => null),
+      CollectionCacheDB.getMeta(META_RUN_STATE).catch(() => null),
     ]);
 
-    var movieCursor = normalizeCursorValue(parseJsonValue(cursorRow));
-    var boxsetCursor = normalizeCursorValue(parseJsonValue(boxCursorRow));
-    var phase = normalizePhaseValue(parseJsonValue(phaseRow), "boxset");
-    var doneAt = normalizeCursorValue(parseJsonValue(doneRow));
-    var runState = parseJsonValue(runRow) || null;
-    var status = String(runState.status || "");
-    var startedAt = normalizeCursorValue(runState.startedAt);
-    var heartbeatAt = normalizeCursorValue(runState.heartbeatAt || runState.updatedAt);
-    var interrupted =
+    const movieCursor = normalizeCursorValue(parseJsonValue(cursorRow));
+    const boxsetCursor = normalizeCursorValue(parseJsonValue(boxCursorRow));
+    const phase = normalizePhaseValue(parseJsonValue(phaseRow), "boxset");
+    const doneAt = normalizeCursorValue(parseJsonValue(doneRow));
+    const runState = parseJsonValue(runRow) || null;
+    const status = String(runState?.status || "");
+    const startedAt = normalizeCursorValue(runState?.startedAt);
+    const heartbeatAt = normalizeCursorValue(runState?.heartbeatAt || runState?.updatedAt);
+    const interrupted =
       status === "running" ||
       status === "interrupted" ||
       status === "stopping";
-    var completedAfterStart = !!(doneAt && startedAt && doneAt >= startedAt);
-    var cursorPending =
+    const completedAfterStart = !!(doneAt && startedAt && doneAt >= startedAt);
+    const cursorPending =
       movieCursor > 0 ||
       boxsetCursor > 0 ||
       phase === "negative";
-    var staleRunning =
+    const staleRunning =
       status === "running" &&
       heartbeatAt > 0 &&
       (now() - heartbeatAt) > RUN_HEARTBEAT_STALE_MS;
-    var resumePending =
+    const resumePending =
       cursorPending ||
       (interrupted && !completedAfterStart) ||
       staleRunning;
-    var dbLikelyEmpty =
+    const dbLikelyEmpty =
       !doneAt &&
       !movieCursor &&
       !boxsetCursor &&
@@ -146,8 +146,8 @@ export function getBackgroundCollectionIndexerStatus() {
   }
 }
 
-function fetchMovieIdsPage({ userId, startIndex, signal }) {
-  var qp = new URLSearchParams();
+async function fetchMovieIdsPage({ userId, startIndex, signal }) {
+  const qp = new URLSearchParams();
   qp.set("UserId", userId);
   qp.set("IncludeItemTypes", "Movie");
   qp.set("Recursive", "true");
@@ -155,17 +155,17 @@ function fetchMovieIdsPage({ userId, startIndex, signal }) {
   qp.set("Limit", String(PAGE));
   qp.set("StartIndex", String(startIndex));
 
-  var r = makeApiRequest("/Items?" + (qp.toString()), { signal });
-  var items = Array.isArray(r.Items) ? r.Items : [];
+  const r = await makeApiRequest(`/Items?${qp.toString()}`, { signal });
+  const items = Array.isArray(r?.Items) ? r.Items : [];
   return {
-    ids: items.mapfunction((x) x.Id).filter(Boolean),
-    total: Number(r.TotalRecordCount || 0),
+    ids: items.map((x) => x?.Id).filter(Boolean),
+    total: Number(r?.TotalRecordCount || 0),
     got: items.length,
   };
 }
 
-function fetchBoxsetPage({ userId, startIndex, signal }) {
-  var qp = new URLSearchParams();
+async function fetchBoxsetPage({ userId, startIndex, signal }) {
+  const qp = new URLSearchParams();
   qp.set("UserId", userId);
   qp.set("IncludeItemTypes", "BoxSet");
   qp.set("Recursive", "true");
@@ -173,45 +173,46 @@ function fetchBoxsetPage({ userId, startIndex, signal }) {
   qp.set("Limit", String(PAGE));
   qp.set("StartIndex", String(startIndex));
 
-  var r = makeApiRequest("/Items?" + (qp.toString()), { signal });
-  var items = Array.isArray(r.Items) ? r.Items : [];
+  const r = await makeApiRequest(`/Items?${qp.toString()}`, { signal });
+  const items = Array.isArray(r?.Items) ? r.Items : [];
   return {
     boxsets: items
-      .filterfunction((x) (x.ChildCount || 1) > 0)
-      .mapfunction((x) ({ id: String(x.Id || ""), name: String(x.Name || "") }))
-      .filterfunction((x) x.id),
-    total: Number(r.TotalRecordCount || 0),
+      .filter((x) => (x?.ChildCount ?? 1) > 0)
+      .map((x) => ({ id: String(x?.Id || ""), name: String(x?.Name || "") }))
+      .filter((x) => x.id),
+    total: Number(r?.TotalRecordCount || 0),
     got: items.length,
   };
 }
 
-function getBoxSetForMovie(movieId, { userId, signal } = {}) {
+async function getBoxSetForMovie(movieId, { userId, signal } = {}) {
   try {
     if (!userId || !movieId) return null;
 
     try {
-      var anc = makeApiRequest(
-        "/Items/" + (encodeURIComponent(movieId)) + "/Ancestors?UserId=" + (encodeURIComponent(userId)),
+      const anc = await makeApiRequest(
+        `/Items/${encodeURIComponent(movieId)}/Ancestors?UserId=${encodeURIComponent(userId)}`,
         { signal }
       );
-      var list = Array.isArray(anc) ? anc : anc.Items || [];
-      var box = (list || []).findfunction((x) String(x.Type || "").toLowerCase() === "boxset"
+      const list = Array.isArray(anc) ? anc : anc?.Items || [];
+      const box = (list || []).find(
+        (x) => String(x?.Type || "").toLowerCase() === "boxset"
       );
-      if (box.Id) {
+      if (box?.Id) {
         return { id: box.Id, name: box.Name };
       }
     } catch (e) {}
 
-    var movieName = "";
+    let movieName = "";
     try {
-      var movieDetails = makeApiRequest("/Users/" + (userId) + "/Items/" + (movieId), {
+      const movieDetails = await makeApiRequest(`/Users/${userId}/Items/${movieId}`, {
         signal,
       });
-      movieName = movieDetails.Name || "";
+      movieName = movieDetails?.Name || "";
     } catch {}
 
     if (movieName) {
-      var qp = new URLSearchParams();
+      const qp = new URLSearchParams();
       qp.set("UserId", userId);
       qp.set("IncludeItemTypes", "BoxSet");
       qp.set("Recursive", "true");
@@ -219,26 +220,26 @@ function getBoxSetForMovie(movieId, { userId, signal } = {}) {
       qp.set("Fields", "ChildCount");
       qp.set("SearchTerm", movieName);
 
-      var res = makeApiRequest("/Items?" + (qp.toString()), { signal });
-      var candidates = res.Items || [];
+      let res = await makeApiRequest(`/Items?${qp.toString()}`, { signal });
+      let candidates = res?.Items || [];
 
       if (!candidates.length) {
         qp.delete("SearchTerm");
         qp.set("Limit", "200");
-        res = makeApiRequest("/Items?" + (qp.toString()), { signal });
-        candidates = res.Items || [];
+        res = await makeApiRequest(`/Items?${qp.toString()}`, { signal });
+        candidates = res?.Items || [];
       }
 
-      for (var box of (candidates || []).filterfunction((x) (x.ChildCount || 1) > 0)) {
-        var childrenQp = new URLSearchParams();
+      for (const box of (candidates || []).filter((x) => (x?.ChildCount ?? 1) > 0)) {
+        const childrenQp = new URLSearchParams();
         childrenQp.set("UserId", userId);
         childrenQp.set("ParentId", box.Id);
         childrenQp.set("Limit", "100");
 
-        var children = makeApiRequest("/Items?" + (childrenQp.toString()), {
+        const children = await makeApiRequest(`/Items?${childrenQp.toString()}`, {
           signal,
         });
-        if ((children.Items || []).somefunction((x) String(x.Id) === String(movieId))) {
+        if ((children?.Items || []).some((x) => String(x.Id) === String(movieId))) {
           return { id: box.Id, name: box.Name };
         }
       }
@@ -251,16 +252,16 @@ function getBoxSetForMovie(movieId, { userId, signal } = {}) {
   }
 }
 
-function fetchCollectionItemsAll(boxsetId, { userId, signal } = {}) {
+async function fetchCollectionItemsAll(boxsetId, { userId, signal } = {}) {
   if (!userId || !boxsetId) return [];
 
-  var out = [];
-  var seen = new Set();
-  var start = 0;
-  var PAGE_SIZE = 200;
+  const out = [];
+  const seen = new Set();
+  let start = 0;
+  const PAGE_SIZE = 200;
 
   while (true) {
-    var qp = new URLSearchParams();
+    const qp = new URLSearchParams();
     qp.set("UserId", userId);
     qp.set("ParentId", String(boxsetId));
     qp.set("IncludeItemTypes", "Movie");
@@ -273,11 +274,11 @@ function fetchCollectionItemsAll(boxsetId, { userId, signal } = {}) {
     qp.set("Limit", String(PAGE_SIZE));
     qp.set("StartIndex", String(start));
 
-    var r = makeApiRequest("/Items?" + (qp.toString()), { signal });
-    var items = Array.isArray(r.Items) ? r.Items : [];
+    const r = await makeApiRequest(`/Items?${qp.toString()}`, { signal });
+    const items = Array.isArray(r?.Items) ? r.Items : [];
 
-    for (var it of items) {
-      var id = it.Id ? String(it.Id) : "";
+    for (const it of items) {
+      const id = it?.Id ? String(it.Id) : "";
       if (!id || seen.has(id)) continue;
       seen.add(id);
       out.push(it);
@@ -291,7 +292,7 @@ function fetchCollectionItemsAll(boxsetId, { userId, signal } = {}) {
 }
 
 function minimizeItems(items = []) {
-  return (items || []).mapfunction((x) ({
+  return (items || []).map((x) => ({
     Id: x.Id,
     Name: x.Name,
     ProductionYear: x.ProductionYear,
@@ -302,25 +303,25 @@ function minimizeItems(items = []) {
   }));
 }
 
-function safePutMovieBoxset(movieId, box, { silent = true } = {}) {
+async function safePutMovieBoxset(movieId, box, { silent = true } = {}) {
   try {
-    CollectionCacheDB.setMovieBoxset(movieId, box.id || "", box.name || "");
+    await CollectionCacheDB.setMovieBoxset(movieId, box?.id || "", box?.name || "");
   } catch (e) {
     if (!silent) console.error("setMovieBoxset FAILED:", movieId, e);
   }
 }
 
-function safePutBoxsetItems(boxsetId, minimized, { silent = false } = {}) {
+async function safePutBoxsetItems(boxsetId, minimized, { silent = false } = {}) {
   try {
-    CollectionCacheDB.setBoxsetItems(boxsetId, minimized);
+    await CollectionCacheDB.setBoxsetItems(boxsetId, minimized);
 
-    var row = CollectionCacheDB.getBoxsetItems(boxsetId).catchfunction(() null);
-    var wrote = Array.isArray(minimized) ? minimized.length : 0;
-    var got = row.items.length || 0;
+    const row = await CollectionCacheDB.getBoxsetItems(boxsetId).catch(() => null);
+    const wrote = Array.isArray(minimized) ? minimized.length : 0;
+    const got = row?.items?.length || 0;
 
     if (wrote > 0) {
       if (got === 0) {
-        console.warn("[INDEXER] ⚠️ Boxset " + (boxsetId) + " write ok but readback empty!", {
+        console.warn(`[INDEXER] ⚠️ Boxset ${boxsetId} write ok but readback empty!`, {
           wrote,
           row,
         });
@@ -332,18 +333,18 @@ function safePutBoxsetItems(boxsetId, minimized, { silent = false } = {}) {
   }
 }
 
-var _running = false;
-var _ctrl = null;
-var _idleHandle = null;
+let _running = false;
+let _ctrl = null;
+let _idleHandle = null;
 
 export function stopBackgroundCollectionIndexer() {
   try {
-    _ctrl.abort();
+    _ctrl?.abort();
   } catch {}
   _ctrl = null;
 
   try {
-    if (_idleHandle != null) CollectionCacheDB.cancelIdle.(_idleHandle);
+    if (_idleHandle != null) CollectionCacheDB.cancelIdle?.(_idleHandle);
   } catch {}
   _idleHandle = null;
 
@@ -356,7 +357,7 @@ export function stopBackgroundCollectionIndexer() {
   } catch {}
 }
 
-export function startBackgroundCollectionIndexer({
+export async function startBackgroundCollectionIndexer({
   throttleMs = 250,
   boxsetThrottleMs = 500,
   maxMoviesPerSession = 400,
@@ -369,25 +370,25 @@ export function startBackgroundCollectionIndexer({
 
   _running = true;
   _ctrl = new AbortController();
-  var signal = _ctrl.signal;
+  const signal = _ctrl.signal;
 
-  var userId = getUserIdSafe();
+  const userId = await getUserIdSafe();
   if (!userId) {
     console.warn("[INDEXER] No userId, aborting");
     _running = false;
     return { started: false, reason: "no-userId" };
   }
 
-  var cursorRow = CollectionCacheDB.getMeta(META_CURSOR).catchfunction(() null);
-  var startIndex = Number(parseJsonValue(cursorRow) || 0);
+  const cursorRow = await CollectionCacheDB.getMeta(META_CURSOR).catch(() => null);
+  let startIndex = Number(parseJsonValue(cursorRow) || 0);
   if (!Number.isFinite(startIndex) || startIndex < 0) startIndex = 0;
 
-  var bcurRow = CollectionCacheDB.getMeta(META_CURSOR_BOXSET).catchfunction(() null);
-  var boxsetStartIndex = Number(parseJsonValue(bcurRow) || 0);
+  const bcurRow = await CollectionCacheDB.getMeta(META_CURSOR_BOXSET).catch(() => null);
+  let boxsetStartIndex = Number(parseJsonValue(bcurRow) || 0);
   if (!Number.isFinite(boxsetStartIndex) || boxsetStartIndex < 0) boxsetStartIndex = 0;
 
-  var phaseRow = CollectionCacheDB.getMeta(META_PHASE).catchfunction(() null);
-  var phase = String(
+  const phaseRow = await CollectionCacheDB.getMeta(META_PHASE).catch(() => null);
+  let phase = String(
     parseJsonValue(phaseRow) ||
       (mode === "movieFirst" ? "movie" : "boxset")
   );
@@ -395,20 +396,20 @@ export function startBackgroundCollectionIndexer({
   if (mode === "movieFirst") phase = "movie";
   if (phase !== "boxset" && phase !== "negative" && phase !== "movie") phase = "boxset";
 
-  var seenRow = CollectionCacheDB.getMeta(META_SEEN_BOXSETS).catchfunction(() null);
-  var seenArr = parseJsonValue(seenRow);
-  var seenBoxsets = new Set(Array.isArray(seenArr) ? seenArr.map(String) : []);
-  var fastSkip = new Set();
-  var negativeBatch = [];
+  const seenRow = await CollectionCacheDB.getMeta(META_SEEN_BOXSETS).catch(() => null);
+  const seenArr = parseJsonValue(seenRow);
+  const seenBoxsets = new Set(Array.isArray(seenArr) ? seenArr.map(String) : []);
+  const fastSkip = new Set();
+  const negativeBatch = [];
 
-  var processedInSession = 0;
-  var boxsetsFound = 0;
-  var boxsetsProcessed = 0;
-  var startedAt = now();
+  let processedInSession = 0;
+  let boxsetsFound = 0;
+  let boxsetsProcessed = 0;
+  const startedAt = now();
 
-  function persistRunState(status = "running", extra = {}) {
+  async function persistRunState(status = "running", extra = {}) {
     try {
-      CollectionCacheDB.setMeta(META_RUN_STATE, {
+      await CollectionCacheDB.setMeta(META_RUN_STATE, {
         status,
         userId,
         mode,
@@ -425,38 +426,38 @@ export function startBackgroundCollectionIndexer({
     } catch {}
   }
 
-  function markInterrupted(reason = "aborted") {
+  async function markInterrupted(reason = "aborted") {
     _running = false;
-    persistRunState("interrupted", {
+    await persistRunState("interrupted", {
       reason,
       interruptedAt: now(),
     });
   }
 
-  persistRunState("running");
+  await persistRunState("running");
 
-  var step = function() {
+  const step = async () => {
     if (signal.aborted) {
-      markInterrupted("signal-aborted");
+      await markInterrupted("signal-aborted");
       return;
     }
 
-    persistRunState("running");
+    await persistRunState("running");
 
     if (!aggressive && isHidden()) {
-      sleep(1000);
+      await sleep(1000);
       _idleHandle = scheduleNext(step, { aggressive });
       return;
     }
 
     if (phase === "boxset") {
-      var page;
+      let page;
       try {
-        page = fetchBoxsetPage({ userId, startIndex: boxsetStartIndex, signal });
+        page = await fetchBoxsetPage({ userId, startIndex: boxsetStartIndex, signal });
       } catch (e) {
         if (!signal.aborted) console.warn("[INDEXER] fetchBoxsetPage failed:", e);
-        persistRunState("running", { lastError: String(e.message || e || "") });
-        sleep(1500);
+        await persistRunState("running", { lastError: String(e?.message || e || "") });
+        await sleep(1500);
         _idleHandle = scheduleNext(step, { aggressive });
         return;
       }
@@ -465,64 +466,64 @@ export function startBackgroundCollectionIndexer({
 
       if (!page.boxsets.length) {
         phase = "negative";
-        CollectionCacheDB.setMeta(META_PHASE, "negative").catchfunction(() {});
+        await CollectionCacheDB.setMeta(META_PHASE, "negative").catch(() => {});
         startIndex = 0;
-        CollectionCacheDB.setMeta(META_CURSOR, 0).catchfunction(() {});
-        persistRunState("running");
+        await CollectionCacheDB.setMeta(META_CURSOR, 0).catch(() => {});
+        await persistRunState("running");
         _idleHandle = scheduleNext(step, { aggressive });
         return;
       }
 
-      var localBoxsetIndex = boxsetStartIndex;
+      let localBoxsetIndex = boxsetStartIndex;
 
-      for (var bs of page.boxsets) {
+      for (const bs of page.boxsets) {
         if (signal.aborted) return;
         localBoxsetIndex++;
 
-        var bid = String(bs.id || "");
-        var bnm = String(bs.name || "");
+        const bid = String(bs?.id || "");
+        const bnm = String(bs?.name || "");
         if (!bid) continue;
         if (seenBoxsets.has(bid)) continue;
 
-        var cachedItems = CollectionCacheDB.getBoxsetItems(bid).catchfunction(() null);
-        if (cachedItems.items.length && !isStale(cachedItems.updatedAt, TTL_BOXSET_ITEMS)) {
+        const cachedItems = await CollectionCacheDB.getBoxsetItems(bid).catch(() => null);
+        if (cachedItems?.items?.length && !isStale(cachedItems.updatedAt, TTL_BOXSET_ITEMS)) {
           try {
-            var childIds = (cachedItems.items || [])
-              .mapfunction((x) String(x.Id || ""))
+            const childIds = (cachedItems.items || [])
+              .map((x) => String(x?.Id || ""))
               .filter(Boolean);
             if (childIds.length) {
-              CollectionCacheDB.setMovieBoxsetMany(childIds, bid, bnm);
-              for (var cid of childIds) fastSkip.add(cid);
+              await CollectionCacheDB.setMovieBoxsetMany(childIds, bid, bnm);
+              for (const cid of childIds) fastSkip.add(cid);
             }
           } catch {}
 
           seenBoxsets.add(bid);
           if (seenBoxsets.size % 5 === 0) {
-            CollectionCacheDB.setMeta(META_SEEN_BOXSETS, Array.from(seenBoxsets)).catchfunction(() {});
+            await CollectionCacheDB.setMeta(META_SEEN_BOXSETS, Array.from(seenBoxsets)).catch(() => {});
           }
           continue;
         }
 
-        var items = [];
+        let items = [];
         try {
-          items = fetchCollectionItemsAll(bid, { userId, signal });
+          items = await fetchCollectionItemsAll(bid, { userId, signal });
         } catch (e) {
           if (!signal.aborted) console.warn("[INDEXER] fetchCollectionItemsAll FAILED:", bid, e);
           items = [];
         }
         if (signal.aborted) return;
 
-        var minimized = minimizeItems(items);
+        const minimized = minimizeItems(items);
 
         try {
-          safePutBoxsetItems(bid, minimized, { silent: true });
+          await safePutBoxsetItems(bid, minimized, { silent: true });
         } catch {}
 
         try {
-          var childIds = minimized.mapfunction((x) String(x.Id || "")).filter(Boolean);
+          const childIds = minimized.map((x) => String(x?.Id || "")).filter(Boolean);
           if (childIds.length) {
-            CollectionCacheDB.setMovieBoxsetMany(childIds, bid, bnm);
-            for (var cid of childIds) fastSkip.add(cid);
+            await CollectionCacheDB.setMovieBoxsetMany(childIds, bid, bnm);
+            for (const cid of childIds) fastSkip.add(cid);
           }
         } catch {}
 
@@ -530,30 +531,30 @@ export function startBackgroundCollectionIndexer({
         boxsetsProcessed++;
 
         if (seenBoxsets.size % 5 === 0) {
-          CollectionCacheDB.setMeta(META_SEEN_BOXSETS, Array.from(seenBoxsets)).catchfunction(() {});
+          await CollectionCacheDB.setMeta(META_SEEN_BOXSETS, Array.from(seenBoxsets)).catch(() => {});
         }
 
-        if (boxsetThrottleMs) sleep(boxsetThrottleMs);
+        if (boxsetThrottleMs) await sleep(boxsetThrottleMs);
       }
 
       boxsetStartIndex = localBoxsetIndex;
 
-      CollectionCacheDB.setMeta(META_CURSOR_BOXSET, boxsetStartIndex).catchfunction(() {});
-      CollectionCacheDB.setMeta(META_SEEN_BOXSETS, Array.from(seenBoxsets)).catchfunction(() {});
-      persistRunState("running");
+      await CollectionCacheDB.setMeta(META_CURSOR_BOXSET, boxsetStartIndex).catch(() => {});
+      await CollectionCacheDB.setMeta(META_SEEN_BOXSETS, Array.from(seenBoxsets)).catch(() => {});
+      await persistRunState("running");
 
       _idleHandle = scheduleNext(step, { aggressive });
       return;
     }
 
     if (phase === "negative") {
-      var page;
+      let page;
       try {
-        page = fetchMovieIdsPage({ userId, startIndex, signal });
+        page = await fetchMovieIdsPage({ userId, startIndex, signal });
       } catch (e) {
         if (!signal.aborted) console.warn("[INDEXER] fetchMovieIdsPage failed:", e);
-        persistRunState("running", { lastError: String(e.message || e || "") });
-        sleep(1500);
+        await persistRunState("running", { lastError: String(e?.message || e || "") });
+        await sleep(1500);
         _idleHandle = scheduleNext(step, { aggressive });
         return;
       }
@@ -561,13 +562,13 @@ export function startBackgroundCollectionIndexer({
       if (!page || signal.aborted) return;
 
       if (!page.ids.length) {
-        CollectionCacheDB.setMeta(META_DONE_AT, now()).catchfunction(() {});
-        CollectionCacheDB.setMeta(META_CURSOR, 0).catchfunction(() {});
-        CollectionCacheDB.setMeta(META_CURSOR_BOXSET, 0).catchfunction(() {});
-        CollectionCacheDB.setMeta(META_PHASE, "boxset").catchfunction(() {});
-        CollectionCacheDB.setMeta(META_SEEN_BOXSETS, Array.from(seenBoxsets)).catchfunction(() {});
+        await CollectionCacheDB.setMeta(META_DONE_AT, now()).catch(() => {});
+        await CollectionCacheDB.setMeta(META_CURSOR, 0).catch(() => {});
+        await CollectionCacheDB.setMeta(META_CURSOR_BOXSET, 0).catch(() => {});
+        await CollectionCacheDB.setMeta(META_PHASE, "boxset").catch(() => {});
+        await CollectionCacheDB.setMeta(META_SEEN_BOXSETS, Array.from(seenBoxsets)).catch(() => {});
         _running = false;
-        persistRunState("completed", {
+        await persistRunState("completed", {
           completedAt: now(),
           phase: "boxset",
           movieCursor: 0,
@@ -576,36 +577,36 @@ export function startBackgroundCollectionIndexer({
         return;
       }
 
-      var map = CollectionCacheDB.getMovieBoxsetMany(page.ids).catchfunction(() new Map());
-      var missing = [];
+      const map = await CollectionCacheDB.getMovieBoxsetMany(page.ids).catch(() => new Map());
+      const missing = [];
 
-      for (var id of page.ids) {
-        var mid = String(id || "");
+      for (const id of page.ids) {
+        const mid = String(id || "");
         if (!mid) continue;
-        var row = map.get(mid);
+        const row = map.get(mid);
         if (!row) missing.push(mid);
       }
 
       if (missing.length) {
         try {
-          CollectionCacheDB.setMovieBoxsetMany(missing, "", "");
+          await CollectionCacheDB.setMovieBoxsetMany(missing, "", "");
         } catch {}
       }
 
       startIndex += page.ids.length;
-      CollectionCacheDB.setMeta(META_CURSOR, startIndex).catchfunction(() {});
-      persistRunState("running");
+      await CollectionCacheDB.setMeta(META_CURSOR, startIndex).catch(() => {});
+      await persistRunState("running");
       _idleHandle = scheduleNext(step, { aggressive });
       return;
     }
 
-    var page;
+    let page;
     try {
-      page = fetchMovieIdsPage({ userId, startIndex, signal });
+      page = await fetchMovieIdsPage({ userId, startIndex, signal });
     } catch (e) {
       if (!signal.aborted) console.warn("[INDEXER] fetchMovieIdsPage failed:", e);
-      persistRunState("running", { lastError: String(e.message || e || "") });
-      sleep(2000);
+      await persistRunState("running", { lastError: String(e?.message || e || "") });
+      await sleep(2000);
       _idleHandle = scheduleNext(step, { aggressive });
       return;
     }
@@ -613,11 +614,11 @@ export function startBackgroundCollectionIndexer({
     if (!page || signal.aborted) return;
 
     if (!page.ids.length) {
-      CollectionCacheDB.setMeta(META_DONE_AT, now()).catchfunction(() {});
-      CollectionCacheDB.setMeta(META_CURSOR, 0).catchfunction(() {});
-      CollectionCacheDB.setMeta(META_SEEN_BOXSETS, Array.from(seenBoxsets)).catchfunction(() {});
+      await CollectionCacheDB.setMeta(META_DONE_AT, now()).catch(() => {});
+      await CollectionCacheDB.setMeta(META_CURSOR, 0).catch(() => {});
+      await CollectionCacheDB.setMeta(META_SEEN_BOXSETS, Array.from(seenBoxsets)).catch(() => {});
       _running = false;
-      persistRunState("completed", {
+      await persistRunState("completed", {
         completedAt: now(),
         movieCursor: 0,
         boxsetCursor: boxsetStartIndex,
@@ -625,12 +626,12 @@ export function startBackgroundCollectionIndexer({
       return;
     }
 
-    var pageIndex = startIndex;
+    let pageIndex = startIndex;
 
-    for (var movieId of page.ids) {
+    for (const movieId of page.ids) {
       if (signal.aborted) return;
 
-      var mid = String(movieId || "");
+      const mid = String(movieId || "");
       if (!mid) {
         pageIndex++;
         processedInSession++;
@@ -643,7 +644,7 @@ export function startBackgroundCollectionIndexer({
         continue;
       }
 
-      var cached = CollectionCacheDB.getMovieBoxset(mid).catchfunction(() null);
+      const cached = await CollectionCacheDB.getMovieBoxset(mid).catch(() => null);
 
       if (cached && !isStale(cached.updatedAt, TTL_MOVIE_BOXSET)) {
         fastSkip.add(mid);
@@ -652,30 +653,30 @@ export function startBackgroundCollectionIndexer({
         continue;
       }
 
-      var box = null;
-      var didLive = false;
+      let box = null;
+      let didLive = false;
 
       try {
         didLive = true;
-        box = getBoxSetForMovie(mid, { userId, signal });
+        box = await getBoxSetForMovie(mid, { userId, signal });
         if (box) boxsetsFound++;
       } catch (e) {}
 
-      if (!box.id) {
+      if (!box?.id) {
         negativeBatch.push(mid);
       } else {
-        safePutMovieBoxset(mid, box, { silent: true });
+        await safePutMovieBoxset(mid, box, { silent: true });
       }
       fastSkip.add(mid);
 
-      if (box.id && !seenBoxsets.has(String(box.id))) {
-        var cachedItems = CollectionCacheDB.getBoxsetItems(box.id).catchfunction(() null);
-        if (cachedItems && cachedItems.items.length && !isStale(cachedItems.updatedAt, TTL_BOXSET_ITEMS)) {
+      if (box?.id && !seenBoxsets.has(String(box.id))) {
+        const cachedItems = await CollectionCacheDB.getBoxsetItems(box.id).catch(() => null);
+        if (cachedItems && cachedItems.items?.length && !isStale(cachedItems.updatedAt, TTL_BOXSET_ITEMS)) {
           try {
-            var childIds = (cachedItems.items || []).mapfunction((x) String(x.Id || "")).filter(Boolean);
+            const childIds = (cachedItems.items || []).map((x) => String(x?.Id || "")).filter(Boolean);
             if (childIds.length) {
-              CollectionCacheDB.setMovieBoxsetMany(childIds, box.id, box.name);
-              for (var cid of childIds) fastSkip.add(cid);
+              await CollectionCacheDB.setMovieBoxsetMany(childIds, box.id, box.name);
+              for (const cid of childIds) fastSkip.add(cid);
             }
           } catch {}
 
@@ -683,14 +684,14 @@ export function startBackgroundCollectionIndexer({
           boxsetsProcessed++;
           pageIndex++;
           processedInSession++;
-          sleep(boxsetThrottleMs);
+          await sleep(boxsetThrottleMs);
           continue;
         }
 
-        var items = [];
+        let items = [];
         try {
           didLive = true;
-          items = fetchCollectionItemsAll(box.id, { userId, signal });
+          items = await fetchCollectionItemsAll(box.id, { userId, signal });
         } catch (e) {
           if (!signal.aborted) console.warn("[INDEXER] fetchCollectionItemsAll FAILED:", box.id, e);
           items = [];
@@ -698,16 +699,16 @@ export function startBackgroundCollectionIndexer({
 
         if (signal.aborted) return;
 
-        var minimized = minimizeItems(items);
+        const minimized = minimizeItems(items);
 
         try {
-          safePutBoxsetItems(box.id, minimized, { silent: false });
+          await safePutBoxsetItems(box.id, minimized, { silent: false });
 
           try {
-            var childIds = minimized.mapfunction((x) String(x.Id || "")).filter(Boolean);
+            const childIds = minimized.map((x) => String(x?.Id || "")).filter(Boolean);
             if (childIds.length) {
-              CollectionCacheDB.setMovieBoxsetMany(childIds, box.id, box.name);
-              for (var cid of childIds) fastSkip.add(cid);
+              await CollectionCacheDB.setMovieBoxsetMany(childIds, box.id, box.name);
+              for (const cid of childIds) fastSkip.add(cid);
             }
           } catch {}
 
@@ -715,13 +716,13 @@ export function startBackgroundCollectionIndexer({
           boxsetsProcessed++;
 
           if (seenBoxsets.size % 5 === 0) {
-            CollectionCacheDB.setMeta(META_SEEN_BOXSETS, Array.from(seenBoxsets)).catchfunction(() {});
+            await CollectionCacheDB.setMeta(META_SEEN_BOXSETS, Array.from(seenBoxsets)).catch(() => {});
           }
         } catch (e) {
           if (!signal.aborted) console.warn("[INDEXER] Boxset cache write failed:", box.id, e);
         }
 
-        sleep(boxsetThrottleMs);
+        await sleep(boxsetThrottleMs);
       }
 
       processedInSession++;
@@ -729,7 +730,7 @@ export function startBackgroundCollectionIndexer({
 
       if (negativeBatch.length >= 50) {
         try {
-          CollectionCacheDB.setMovieBoxsetMany(negativeBatch, "", "");
+          await CollectionCacheDB.setMovieBoxsetMany(negativeBatch, "", "");
         } catch {}
         negativeBatch.length = 0;
       }
@@ -737,38 +738,38 @@ export function startBackgroundCollectionIndexer({
       if (processedInSession >= maxMoviesPerSession) {
         if (negativeBatch.length) {
           try {
-            CollectionCacheDB.setMovieBoxsetMany(negativeBatch, "", "");
+            await CollectionCacheDB.setMovieBoxsetMany(negativeBatch, "", "");
           } catch {}
           negativeBatch.length = 0;
         }
 
-        CollectionCacheDB.setMeta(META_CURSOR, pageIndex).catchfunction(() {});
-        CollectionCacheDB.setMeta(META_SEEN_BOXSETS, Array.from(seenBoxsets)).catchfunction(() {});
+        await CollectionCacheDB.setMeta(META_CURSOR, pageIndex).catch(() => {});
+        await CollectionCacheDB.setMeta(META_SEEN_BOXSETS, Array.from(seenBoxsets)).catch(() => {});
         startIndex = pageIndex;
-        persistRunState("running");
+        await persistRunState("running");
 
         processedInSession = 0;
         boxsetsFound = 0;
         boxsetsProcessed = 0;
 
-        sleep(2000);
+        await sleep(2000);
       }
 
-      if (didLive) sleep(throttleMs);
+      if (didLive) await sleep(throttleMs);
     }
 
     startIndex = pageIndex;
 
     if (negativeBatch.length) {
       try {
-        CollectionCacheDB.setMovieBoxsetMany(negativeBatch, "", "");
+        await CollectionCacheDB.setMovieBoxsetMany(negativeBatch, "", "");
       } catch {}
       negativeBatch.length = 0;
     }
 
-    CollectionCacheDB.setMeta(META_CURSOR, startIndex).catchfunction(() {});
-    CollectionCacheDB.setMeta(META_SEEN_BOXSETS, Array.from(seenBoxsets)).catchfunction(() {});
-    persistRunState("running");
+    await CollectionCacheDB.setMeta(META_CURSOR, startIndex).catch(() => {});
+    await CollectionCacheDB.setMeta(META_SEEN_BOXSETS, Array.from(seenBoxsets)).catch(() => {});
+    await persistRunState("running");
 
     _idleHandle = scheduleNext(step, { aggressive });
   };

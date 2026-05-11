@@ -2,31 +2,26 @@ import { musicPlayerState } from "../core/state.js";
 import { getAuthToken, apiUrl } from "../core/auth.js";
 import { getConfig } from "../../config.js";
 
-var config = new Proxy({}, {
-  get(target, prop) {
-    return getConfig()[prop];
-  }
-});
+const config = getConfig();
+const MAX_QUEUE_LENGTH = 100;
+const MAX_CONCURRENT_READS = Math.max(1, Number(config.id3limit) || 2);
+const FETCH_TIMEOUT_MS = 10_000;
+const TAG_READ_TIMEOUT_MS = 5_000;
+const RANGE_BYTES = 256 * 1024;
+const MAX_TAGS_CACHE = Math.max(50, Number(config.id3TagsCacheLimit) || 200);
+const MAX_IMAGES_CACHE = Math.max(20, Number(config.id3ImagesCacheLimit) || 80);
+const enableBase64Images = Boolean(config.id3UseBase64Images === true);
 
-var MAX_QUEUE_LENGTH = 100;
-var getMaxConcurrentReads = function() Math.max(1, Number(config.limiteId3) || 2);
-var FETCH_TIMEOUT_MS = 10_000;
-var TAG_READ_TIMEOUT_MS = 5_000;
-var RANGE_BYTES = 256 * 1024;
-var getMaxTagsCache = function() Math.max(50, Number(config.limiteCacheTagsId3) || 200);
-var getMaxImagesCache = function() Math.max(20, Number(config.limiteCacheImagensId3) || 80);
-var getEnableBase64Images = function() Boolean(config.usarBase64ImagensId3 === true);
-
-var id3ReadQueue = [];
-var activeReaders = 0;
-var localTagsCache = new Map();
-var localImagesCache = new Map();
-var cachesHydratedIntoState = false;
-var jsMediaTagsReady = null;
+const id3ReadQueue = [];
+let activeReaders = 0;
+let localTagsCache = new Map();
+let localImagesCache = new Map();
+let cachesHydratedIntoState = false;
+let jsMediaTagsReady = null;
 
 function ensureCaches() {
   try {
-    var stateObj = musicPlayerState;
+    const stateObj = musicPlayerState;
     if (!stateObj || typeof stateObj !== "object") return;
 
     if (!(stateObj.id3TagsCache instanceof Map)) {
@@ -37,11 +32,11 @@ function ensureCaches() {
     }
     if (!cachesHydratedIntoState) {
       if (localTagsCache.size) {
-        for (var [k, v] of localTagsCache) stateObj.id3TagsCache.set(k, v);
+        for (const [k, v] of localTagsCache) stateObj.id3TagsCache.set(k, v);
         localTagsCache.clear();
       }
       if (localImagesCache.size) {
-        for (var [k, v] of localImagesCache) stateObj.id3ImageCache.set(k, v);
+        for (const [k, v] of localImagesCache) stateObj.id3ImageCache.set(k, v);
         localImagesCache.clear();
       }
       cachesHydratedIntoState = true;
@@ -54,39 +49,39 @@ function ensureCaches() {
 
 function getTagsCache() {
   try {
-    if (musicPlayerState.id3TagsCache instanceof Map) return musicPlayerState.id3TagsCache;
+    if (musicPlayerState?.id3TagsCache instanceof Map) return musicPlayerState.id3TagsCache;
   } catch {}
   return localTagsCache;
 }
 function getImagesCache() {
   try {
-    if (musicPlayerState.id3ImageCache instanceof Map) return musicPlayerState.id3ImageCache;
+    if (musicPlayerState?.id3ImageCache instanceof Map) return musicPlayerState.id3ImageCache;
   } catch {}
   return localImagesCache;
 }
 
 function trimTagsLRU(cache) {
-  while (cache.size > getMaxTagsCache()) {
-    var oldestKey = cache.keys().next().value;
+  while (cache.size > MAX_TAGS_CACHE) {
+    const oldestKey = cache.keys().next().value;
     cache.delete(oldestKey);
   }
 }
 function trimImagesLRU(cache) {
-  while (cache.size > getMaxImagesCache()) {
-    var oldestKey = cache.keys().next().value;
-    var val = cache.get(oldestKey);
+  while (cache.size > MAX_IMAGES_CACHE) {
+    const oldestKey = cache.keys().next().value;
+    const val = cache.get(oldestKey);
     safeRevoke(val);
     cache.delete(oldestKey);
   }
 }
 
-export function readID3Tags(trackId) {
+export async function readID3Tags(trackId) {
   ensureCaches();
 
-  return new Promisefunction((resolve) {
-    var tagsCache = getTagsCache();
+  return new Promise((resolve) => {
+    const tagsCache = getTagsCache();
     if (tagsCache.has(trackId)) {
-      var cached = tagsCache.get(trackId);
+      const cached = tagsCache.get(trackId);
       tagsCache.delete(trackId);
       tagsCache.set(trackId, cached);
       resolve(cached);
@@ -94,7 +89,7 @@ export function readID3Tags(trackId) {
     }
 
     if (id3ReadQueue.length >= MAX_QUEUE_LENGTH) {
-      console.warn("ID3 kuyruğu dolu (>=" + (MAX_QUEUE_LENGTH) + "), atlanıyor: " + (trackId));
+      console.warn(`ID3 kuyruğu dolu (>=${MAX_QUEUE_LENGTH}), atlanıyor: ${trackId}`);
       resolve(null);
       return;
     }
@@ -104,18 +99,18 @@ export function readID3Tags(trackId) {
   });
 }
 
-export function parseID3Tags(buffer) {
+export async function parseID3Tags(buffer) {
   try {
-    loadJSMediaTagsOnce();
-    return new Promisefunction((resolve) {
-      var onSuccess = function({ tags }) {
-        var uslt = tags.USLT.data.lyrics || tags.USLT.lyrics;
-        var alt = tags.lyrics.lyrics;
+    await loadJSMediaTagsOnce();
+    return new Promise((resolve) => {
+      const onSuccess = ({ tags }) => {
+        const uslt = tags?.USLT?.data?.lyrics || tags?.USLT?.lyrics;
+        const alt = tags?.lyrics?.lyrics;
         resolve(uslt || alt || null);
       };
-      var onError = function() resolve(null);
+      const onError = () => resolve(null);
 
-      var blob = new Blob([buffer]);
+      const blob = new Blob([buffer]);
       window.jsmediatags.read(blob, { onSuccess, onError });
     });
   } catch {
@@ -131,20 +126,20 @@ function loadJSMediaTagsOnce() {
   if (window.jsmediatags) return Promise.resolve();
   if (jsMediaTagsReady) return jsMediaTagsReady;
 
-  jsMediaTagsReady = new Promisefunction((resolve, reject) {
-    var existing = document.querySelector('script[data-jsmediatags]');
+  jsMediaTagsReady = new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-jsmediatags]');
     if (existing) {
-      existing.addEventListenerfunction('load', () resolve(), { once: true });
-      existing.addEventListenerfunction('error', () reject(new Error("jsmediatags yüklenemedi")), { once: true });
+      existing.addEventListener('load', () => resolve(), { once: true });
+      existing.addEventListener('error', () => reject(new Error("jsmediatags yüklenemedi")), { once: true });
       return;
     }
-    var script = document.createElement("script");
-    script.src = "./slider/modules/player/lyrics/jsmediatags/jsmediatags.min.js";
-    script.= true;
+    const script = document.createElement("script");
+    script.src = `./slider/modules/player/lyrics/jsmediatags/jsmediatags.min.js`;
+    script.async = true;
     script.defer = true;
     script.dataset.jsmediatags = "1";
-    script.onload = function() resolve();
-    script.onerror = function() reject(new Error("jsmediatags yüklenemedi"));
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("jsmediatags yüklenemedi"));
     document.head.appendChild(script);
   });
 
@@ -152,32 +147,32 @@ function loadJSMediaTagsOnce() {
 }
 
 function processQueue() {
-  while (activeReaders < getMaxConcurrentReads() && id3ReadQueue.length) {
-    var job = id3ReadQueue.shift();
+  while (activeReaders < MAX_CONCURRENT_READS && id3ReadQueue.length) {
+    const job = id3ReadQueue.shift();
     if (!job) break;
     activeReaders++;
     processSingle(job.trackId)
-      .then(function(result) job.resolve(result))
-      .catchfunction(() job.resolve(null))
-      .finallyfunction(() {
+      .then(result => job.resolve(result))
+      .catch(() => job.resolve(null))
+      .finally(() => {
         activeReaders--;
         queueMicrotask(processQueue);
       });
   }
 }
 
-function processSingle(trackId) {
+async function processSingle(trackId) {
   ensureCaches();
-  loadJSMediaTagsOnce();
-  var token = getAuthToken();
-  var controller = new AbortController();
-  var timeoutId = setTimeoutfunction(() controller.abort(), FETCH_TIMEOUT_MS);
-  var resp, arrayBuffer = null;
+  await loadJSMediaTagsOnce();
+  const token = getAuthToken();
+  let controller = new AbortController();
+  let timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  let resp, arrayBuffer = null;
   try {
-    resp = fetch(apiUrl("/Audio/" + (trackId) + "/stream?Static=true"), {
+    resp = await fetch(apiUrl(`/Audio/${trackId}/stream?Static=true`), {
       method: "GET",
       headers: {
-        Range: "bytes=0-" + (RANGE_BYTES - 1),
+        Range: `bytes=0-${RANGE_BYTES - 1}`,
         "X-Emby-Token": token
       },
       signal: controller.signal
@@ -186,28 +181,28 @@ function processSingle(trackId) {
     clearTimeout(timeoutId);
   }
 
-  if (!resp.ok && resp.status !== 206) {
+  if (!resp?.ok && resp?.status !== 206) {
     throw new Error("Kısmi müzik verisi alınamadı");
   }
 
   try {
-    arrayBuffer = resp.arrayBuffer();
-    var blob = new Blob([arrayBuffer]);
+    arrayBuffer = await resp.arrayBuffer();
+    const blob = new Blob([arrayBuffer]);
 
-    var tags = readTagsWithFallback(blob, trackId, false);
+    let tags = await readTagsWithFallback(blob, trackId, false);
     arrayBuffer = null;
 
     if (!tags) return null;
     if (tags.picture) {
-      var { data, format } = tags.picture;
-      var pictureUri = null;
+      const { data, format } = tags.picture;
+      let pictureUri = null;
 
       try {
-        if (getEnableBase64Images()) {
-          var base64 = arrayToBase64(new Uint8Array(data));
-          pictureUri = "data:" + (format || "image/jpeg") + ";base64," + (base64);
+        if (enableBase64Images) {
+          const base64 = arrayToBase64(new Uint8Array(data));
+          pictureUri = `data:${format || "image/jpeg"};base64,${base64}`;
         } else {
-          var pictureBlob = new Blob([new Uint8Array(data)], { type: format || "image/jpeg" });
+          const pictureBlob = new Blob([new Uint8Array(data)], { type: format || "image/jpeg" });
           pictureUri = URL.createObjectURL(pictureBlob);
         }
       } catch (e) {
@@ -231,61 +226,61 @@ function processSingle(trackId) {
 }
 
 function readTagsWithFallback(blob, trackId, fullFetch) {
-  return new Promisefunction((resolve) {
-    var settled = false;
-    var finish = function(val) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (val) => {
       if (!settled) {
         settled = true;
         resolve(val);
       }
     };
 
-    var timeout = setTimeoutfunction(() {
+    const timeout = setTimeout(() => {
       console.error("ID3 okuma zaman aşımı");
       finish(null);
     }, TAG_READ_TIMEOUT_MS);
 
-    var onSuccess = function(tag) {
+    const onSuccess = (tag) => {
       clearTimeout(timeout);
       if (settled) return;
 
-      var genreRaw = tag.tags.genre;
-      var genre = null;
+      const genreRaw = tag?.tags?.genre;
+      let genre = null;
       if (typeof genreRaw === "string") {
-        var parts = genreRaw
+        const parts = genreRaw
           .split(/[,;/]/)
-          .map(function(g) g.trim().toLowerCase())
-          .filterfunction((g, i, arr) g && arr.indexOf(g) === i);
-        genre = parts.map(function(g) g[0].toUpperCase() + g.slice(1)).join(", ");
+          .map(g => g.trim().toLowerCase())
+          .filter((g, i, arr) => g && arr.indexOf(g) === i);
+        genre = parts.map(g => g[0].toUpperCase() + g.slice(1)).join(", ");
       }
 
       finish({
-        lyrics: tag.tags.USLT.lyrics || tag.tags.lyrics.lyrics || null,
-        picture: tag.tags.picture || null,
+        lyrics: tag?.tags?.USLT?.lyrics || tag?.tags?.lyrics?.lyrics || null,
+        picture: tag?.tags?.picture || null,
         genre,
-        year: tag.tags.year || null
+        year: tag?.tags?.year || null
       });
     };
 
-    var onError = function(error) {
+    const onError = async (error) => {
       if (settled) return;
-      var isOffsetErr = error.type === "parseData" && /Offset \d+ hasn\'t been loaded yet/.test(error.info || "");
+      const isOffsetErr = error?.type === "parseData" && /Offset \d+ hasn\'t been loaded yet/.test(error?.info || "");
 
       if (isOffsetErr && !fullFetch) {
         try {
-          var token = getAuthToken();
-          var controller = new AbortController();
-          var t = setTimeoutfunction(() controller.abort(), FETCH_TIMEOUT_MS);
-          var fullResp = fetch(apiUrl("/Audio/" + (trackId) + "/stream?Static=true"), {
+          const token = getAuthToken();
+          const controller = new AbortController();
+          const t = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+          const fullResp = await fetch(apiUrl(`/Audio/${trackId}/stream?Static=true`), {
             headers: { "X-Emby-Token": token },
             signal: controller.signal
           });
           clearTimeout(t);
 
           if (fullResp.ok) {
-            var fullBuf = fullResp.arrayBuffer();
-            var fullBlob = new Blob([fullBuf]);
-            var retry = readTagsWithFallback(fullBlob, trackId, true);
+            const fullBuf = await fullResp.arrayBuffer();
+            const fullBlob = new Blob([fullBuf]);
+            const retry = await readTagsWithFallback(fullBlob, trackId, true);
             finish(retry);
             return;
           }
@@ -311,7 +306,7 @@ function readTagsWithFallback(blob, trackId, fullFetch) {
 
 function tagsCacheSet(key, value) {
   ensureCaches();
-  var cache = getTagsCache();
+  const cache = getTagsCache();
   if (cache.has(key)) cache.delete(key);
   cache.set(key, value);
   trimTagsLRU(cache);
@@ -319,9 +314,9 @@ function tagsCacheSet(key, value) {
 
 function imagesCacheSet(key, blobUrlOrDataUri) {
   ensureCaches();
-  var cache = getImagesCache();
+  const cache = getImagesCache();
   if (cache.has(key)) {
-    var prev = cache.get(key);
+    const prev = cache.get(key);
     safeRevoke(prev);
     cache.delete(key);
   }
@@ -336,10 +331,10 @@ function safeRevoke(uri) {
 }
 
 function arrayToBase64(uint8) {
-  var CHUNK = 0x8000;
-  var binary = "";
-  for (var i = 0; i < uint8.length; i += CHUNK) {
-    var sub = uint8.subarray(i, i + CHUNK);
+  const CHUNK = 0x8000;
+  let binary = "";
+  for (let i = 0; i < uint8.length; i += CHUNK) {
+    const sub = uint8.subarray(i, i + CHUNK);
     binary += String.fromCharCode.apply(null, sub);
   }
   return btoa(binary);

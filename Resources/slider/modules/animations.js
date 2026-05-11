@@ -1,16 +1,16 @@
 import { getConfig } from './config.js';
 
-var __animTimers = new WeakMap();
-var __animRafs   = new WeakMap();
-var __globalTimers = new Set();
-var __globalRafs   = new Set();
+const __animTimers = new WeakMap();
+const __animRafs   = new WeakMap();
+const __globalTimers = new Set();
+const __globalRafs   = new Set();
 
 export function forceReflow(el) {
   if (!el) return;
   void el.offsetWidth;
 }
 
-var __animSeq = 0;
+let __animSeq = 0;
 export function nextAnimToken() { return (++__animSeq) >>> 0; }
 
 export function hardCleanupSlide(slide) {
@@ -31,14 +31,14 @@ export function hardCleanupSlide(slide) {
 }
 
 function startTransition(el, setInitial, setFinal) {
-  setInitial.();
+  setInitial?.();
   forceReflow(el);
-  raffunction(el, () setFinal.());
+  raf(el, () => setFinal?.());
 }
 
 function trackTimer(el, id) {
   if (!el || !id) return;
-  var arr = __animTimers.get(el);
+  let arr = __animTimers.get(el);
   if (!arr) { arr = []; __animTimers.set(el, arr); }
   arr.push(id);
   __globalTimers.add(id);
@@ -47,7 +47,7 @@ function trackTimer(el, id) {
 function trackRaf(el, id) {
   if (!id) return;
   if (el) {
-    var arr = __animRafs.get(el);
+    let arr = __animRafs.get(el);
     if (!arr) { arr = []; __animRafs.set(el, arr); }
     arr.push(id);
   }
@@ -55,41 +55,41 @@ function trackRaf(el, id) {
 }
 
 function raf(el, cb) {
-  var id = requestAnimationFrame(cb);
+  const id = requestAnimationFrame(cb);
   trackRaf(el, id);
   return id;
 }
 
 function clearTimers(el) {
-  var arr = __animTimers.get(el);
+  const arr = __animTimers.get(el);
   if (arr) {
-    for (var id of arr) { clearTimeout(id); __globalTimers.delete(id); }
+    for (const id of arr) { clearTimeout(id); __globalTimers.delete(id); }
     __animTimers.delete(el);
   }
-  var rfs = __animRafs.get(el);
+  const rfs = __animRafs.get(el);
   if (rfs) {
-    for (var id of rfs) { cancelAnimationFrame(id); __globalRafs.delete(id); }
+    for (const id of rfs) { cancelAnimationFrame(id); __globalRafs.delete(id); }
     __animRafs.delete(el);
   }
   if (el.__glowSub) { stopLoop(el.__glowSub); el.__glowSub = null; }
 }
 
 export function teardownAnimations() {
-  for (var id of __globalTimers) { clearTimeout(id); }
+  for (const id of __globalTimers) { clearTimeout(id); }
   __globalTimers.clear();
-  for (var id of __globalRafs) { cancelAnimationFrame(id); }
+  for (const id of __globalRafs) { cancelAnimationFrame(id); }
   __globalRafs.clear();
-  try { __io.disconnect.(); } catch {}
+  try { __io?.disconnect?.(); } catch {}
   __io = null;
-  try { __mo.disconnect.(); } catch {}
+  try { __mo?.disconnect?.(); } catch {}
 }
 if (typeof window !== 'undefined') {
   window.addEventListener('pagehide', teardownAnimations, { once: true });
-  document.addEventListenerfunction('visibilitychange', () {
+  document.addEventListener('visibilitychange', () => {
    if (document.hidden) {
-     __rafSubscribers.forEach(function(s) s.__paused = true);
+     __rafSubscribers.forEach(s => s.__paused = true);
    } else {
-     __rafSubscribers.forEach(function(s) s.__paused = false);
+     __rafSubscribers.forEach(s => s.__paused = false);
      if (!__rafId && __rafSubscribers.size) {
        __rafId = requestAnimationFrame(__rafPump);
        __globalRafs.add(__rafId);
@@ -98,10 +98,10 @@ if (typeof window !== 'undefined') {
  });
 }
 
-var __removedSentinel = new WeakSet();
-var __mo = new MutationObserverfunction((muts) {
-  for (var m of muts) {
-    m.removedNodes && m.removedNodes.forEach(function(node) {
+const __removedSentinel = new WeakSet();
+const __mo = new MutationObserver((muts) => {
+  for (const m of muts) {
+    m.removedNodes && m.removedNodes.forEach(node => {
       if (node.nodeType === 1) cleanupTree(node);
     });
   }
@@ -114,8 +114,8 @@ function cleanupTree(root) {
     __removedSentinel.add(root);
     clearTimers(root);
   }
-  var it = document.createNodeIterator(root, NodeFilter.SHOW_ELEMENT);
-  var n;
+  const it = document.createNodeIterator(root, NodeFilter.SHOW_ELEMENT);
+  let n;
   while ((n = it.nextNode())) {
     if (!__removedSentinel.has(n)) {
       __removedSentinel.add(n);
@@ -124,10 +124,24 @@ function cleanupTree(root) {
   }
 }
 
-var animationStyles = "\n  .monwui-slide {\n    transform-style: preserve-3d;\n    transform-origin: center center;\n  }\n  .monwui-poster-dot {\n    transition: all 0.3s ease;\n    position: relative;\n    overflow: hidden;\n  }\n  .monwui-poster-dot img {\n    transition: filter 0.3s ease, transform 0.3s ease;\n    display: block; width: 100%; height: 100%; object-fit: cover;\n  }\n";
-var existingStyle = document.getElementById('slide-animation-styles');
+const animationStyles = `
+  .monwui-slide {
+    transform-style: preserve-3d;
+    transform-origin: center center;
+  }
+  .monwui-poster-dot {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .monwui-poster-dot img {
+    transition: filter 0.3s ease, transform 0.3s ease;
+    display: block; width: 100%; height: 100%; object-fit: cover;
+  }
+`;
+const existingStyle = document.getElementById('slide-animation-styles');
 if (existingStyle) existingStyle.remove();
-var styleElement = document.createElement('style');
+const styleElement = document.createElement('style');
 styleElement.id = 'slide-animation-styles';
 styleElement.innerHTML = animationStyles;
 document.head.appendChild(styleElement);
@@ -147,18 +161,18 @@ function withTransition(
   easing = 'cubic-bezier(0.33,1,0.68,1)',
   props = ['transform','opacity','filter','clip-path','border-radius']
 ) {
-  var trs = props.map(function(p) (p) + " " + (duration) + "ms " + (easing)).join(', ');
+  const trs = props.map(p => `${p} ${duration}ms ${easing}`).join(', ');
   el.style.transition = 'none';
  forceReflow(el);
  el.style.transition = trs;
   setWillChange(el, props);
 }
-function setStyles(el, styles) { for (var k in styles) el.style[k] = styles[k]; }
-function jsPropToCssProp(p) { return p.replace(/[A-Z]/g, function(m) "-" + (m.toLowerCase())); }
+function setStyles(el, styles) { for (const k in styles) el.style[k] = styles[k]; }
+function jsPropToCssProp(p) { return p.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`); }
 
 function onTransitionEndOnce(el, timeoutMs, cb) {
-  var done = false;
-  var off = function() {
+  let done = false;
+  const off = () => {
     if (done) return;
     done = true;
     el.removeEventListener('transitionend', handler);
@@ -166,9 +180,9 @@ function onTransitionEndOnce(el, timeoutMs, cb) {
     clearWillChange(el);
     cb && cb();
   };
-  var handler = function(e) { if (e.target === el) off(); };
+  const handler = (e) => { if (e.target === el) off(); };
   el.addEventListener('transitionend', handler, { once: true });
-  var tid = setTimeout(off, Math.max(16, (timeoutMs|0) + 60));
+  const tid = setTimeout(off, Math.max(16, (timeoutMs|0) + 60));
   __globalTimers.add(tid);
   trackTimer(el, tid);
   return off;
@@ -176,45 +190,45 @@ function onTransitionEndOnce(el, timeoutMs, cb) {
 
 function animateStep(el, styles, duration, easing, shouldContinue = null) {
   if (shouldContinue && !shouldContinue()) return Promise.resolve(false);
-  var props = Object.keys(styles).map(jsPropToCssProp);
+  const props = Object.keys(styles).map(jsPropToCssProp);
   withTransition(el, duration, easing, props);
-  raffunction(el, () {
+  raf(el, () => {
     if (shouldContinue && !shouldContinue()) return;
     setStyles(el, styles);
   });
-  return new Promisefunction(function(res) onTransitionEndOnce(el, duration, () {
+  return new Promise(res => onTransitionEndOnce(el, duration, () => {
     res(!shouldContinue || shouldContinue());
   }));
 }
-function animateSequence(el, steps, easing = 'cubic-bezier(0.33,1,0.68,1)', shouldContinue = null) {
-  for (var { styles, duration } of steps) {
-    var ok = animateStep(el, styles, duration, easing, shouldContinue);
+async function animateSequence(el, steps, easing = 'cubic-bezier(0.33,1,0.68,1)', shouldContinue = null) {
+  for (const { styles, duration } of steps) {
+    const ok = await animateStep(el, styles, duration, easing, shouldContinue);
     if (ok === false || (shouldContinue && !shouldContinue())) return false;
   }
   return true;
 }
 
 function afterAnimationDelay(el, timeoutMs, cb) {
-  var waitMs = Math.max(16, timeoutMs | 0);
-  var tid = setTimeoutfunction(() {
+  const waitMs = Math.max(16, timeoutMs | 0);
+  const tid = setTimeout(() => {
     __globalTimers.delete(tid);
-    cb.();
+    cb?.();
   }, waitMs);
   trackTimer(el, tid);
   return tid;
 }
 
-var __rafSubscribers = new Set();
-var GLOW_STRONG = "0 0 20px rgba(255,255,255,0.9)";
-var GLOW_WEAK   = "0 0 5px rgba(255,255,255,0.5)";
-var __rafId = null;
-var __io = null;
+const __rafSubscribers = new Set();
+const GLOW_STRONG = "0 0 20px rgba(255,255,255,0.9)";
+const GLOW_WEAK   = "0 0 5px rgba(255,255,255,0.5)";
+let __rafId = null;
+let __io = null;
 
 function ensureIO() {
   if (__io) return;
-  __io = new IntersectionObserverfunction((entries) {
-    for (var ent of entries) {
-      for (var sub of __rafSubscribers) {
+  __io = new IntersectionObserver((entries) => {
+    for (const ent of entries) {
+      for (const sub of __rafSubscribers) {
         if (sub.el === ent.target) {
           sub.__paused = !ent.isIntersecting;
         }
@@ -223,7 +237,7 @@ function ensureIO() {
   }, { root: null, threshold: 0 });
 }
 function __rafPump(ts) {
-  for (var s of __rafSubscribers) {
+  for (const s of __rafSubscribers) {
     if (!document.body.contains(s.el)) { __rafSubscribers.delete(s); continue; }
     if (s.last == null) s.last = ts;
     if (ts - s.last >= s.period) {
@@ -240,7 +254,7 @@ function __rafPump(ts) {
   }
 }
 function startLoop(el, periodMs, tick) {
-  var sub = { el, period: Math.max(60, periodMs|0), last: null, tick, __paused: false };
+  const sub = { el, period: Math.max(60, periodMs|0), last: null, tick, __paused: false };
   __rafSubscribers.add(sub);
   ensureIO();
   try { __io.observe(el); } catch {}
@@ -253,7 +267,7 @@ function startLoop(el, periodMs, tick) {
 
 function stopLoop(sub) {
   if (!sub) return;
-  try { __io.unobserve.(sub.el); } catch {}
+  try { __io?.unobserve?.(sub.el); } catch {}
   sub.tick = null;
   sub.el = null;
   __rafSubscribers.delete(sub);
@@ -264,7 +278,7 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
   if (currentSlide.__animating) hardCleanupSlide(currentSlide);
   if (newSlide.__animating)     hardCleanupSlide(newSlide);
 
-  var animToken = nextAnimToken();
+  const animToken = nextAnimToken();
   newSlide.__animating     = true;
   currentSlide.__animating = true;
   newSlide.__animToken     = animToken;
@@ -272,7 +286,7 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
   clearTimers(currentSlide);
   clearTimers(newSlide);
 
-  var config = getConfig();
+  const config = getConfig();
   if (!config.enableSlideAnimations) {
     newSlide.style.display = "block";
     newSlide.style.opacity = "1";
@@ -283,17 +297,17 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
     return;
   }
 
-  var duration = config.slideAnimationDuration || 500;
-  var easing = 'cubic-bezier(0.33,1,0.68,1)';
-  var type = config.slideTransitionType || 'fade';
-  var same = currentSlide === newSlide;
-  var cleanupMode = 'transition';
-  var cleanupWaitMs = duration;
+  const duration = config.slideAnimationDuration || 500;
+  const easing = 'cubic-bezier(0.33,1,0.68,1)';
+  const type = config.slideTransitionType || 'fade';
+  const same = currentSlide === newSlide;
+  let cleanupMode = 'transition';
+  let cleanupWaitMs = duration;
 
-  currentSlide.classList.add.('is-visible');
-  currentSlide.classList.remove.('is-hidden');
-  newSlide.classList.add.('is-visible');
-  newSlide.classList.remove.('is-hidden');
+  currentSlide.classList?.add?.('is-visible');
+  currentSlide.classList?.remove?.('is-hidden');
+  newSlide.classList?.add?.('is-visible');
+  newSlide.classList?.remove?.('is-hidden');
   newSlide.style.display = "block";
   newSlide.style.zIndex = "2";
   withTransition(newSlide, duration, easing);
@@ -303,7 +317,7 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
     currentSlide.style.zIndex = "1";
   }
 
-  var cleanupStyles = function() {
+  const cleanupStyles = () => {
     if (newSlide.__animToken !== animToken) return;
     if (currentSlide) {
       currentSlide.style.transition = "";
@@ -334,11 +348,11 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
 
   if (same) {
     newSlide.style.opacity = "0";
-    raffunction(newSlide, () {
+    raf(newSlide, () => {
       if (newSlide.__animToken !== animToken) return;
       newSlide.style.opacity = "1";
     });
-    onTransitionEndOncefunction(newSlide, duration, () {
+    onTransitionEndOnce(newSlide, duration, () => {
       if (newSlide.__animToken !== animToken) return;
      newSlide.style.transition = "";
      newSlide.style.opacity = "1";
@@ -352,28 +366,28 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
     case 'fade': {
       currentSlide.style.opacity = "0";
       newSlide.style.opacity = "0";
-      raffunction(newSlide, () { newSlide.style.opacity = "1"; });
+      raf(newSlide, () => { newSlide.style.opacity = "1"; });
       break;
     }
 
     case 'slideTop': {
-      startTransitionfunction(currentSlide,
-        () {
+      startTransition(currentSlide,
+        () => {
           currentSlide.style.transform = "translate3d(0,0,0)";
           currentSlide.style.opacity = "1";
         },
-        function() {
+        () => {
           if (currentSlide.__animToken !== animToken) return;
           currentSlide.style.transform = "translate3d(0,100%,0)";
           currentSlide.style.opacity = "0";
         }
       );
-      startTransitionfunction(newSlide,
-        () {
+      startTransition(newSlide,
+        () => {
           newSlide.style.transform = "translate3d(0,-100%,0)";
           newSlide.style.opacity = "0";
         },
-        function() {
+        () => {
           if (newSlide.__animToken !== animToken) return;
           newSlide.style.transform = "translate3d(0,0,0)";
           newSlide.style.opacity = "1";
@@ -383,23 +397,23 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
     }
 
     case 'slideBottom': {
-      startTransitionfunction(currentSlide,
-        () {
+      startTransition(currentSlide,
+        () => {
           currentSlide.style.transform = "translate3d(0,0,0)";
           currentSlide.style.opacity = "1";
         },
-        function() {
+        () => {
           if (currentSlide.__animToken !== animToken) return;
           currentSlide.style.transform = "translate3d(0,-100%,0)";
           currentSlide.style.opacity = "0";
         }
       );
-      startTransitionfunction(newSlide,
-        () {
+      startTransition(newSlide,
+        () => {
           newSlide.style.transform = "translate3d(0,100%,0)";
           newSlide.style.opacity = "0";
         },
-        function() {
+        () => {
           if (newSlide.__animToken !== animToken) return;
           newSlide.style.transform = "translate3d(0,0,0)";
           newSlide.style.opacity = "1";
@@ -413,7 +427,7 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
       currentSlide.style.opacity = "0";
       newSlide.style.transform = "rotate(-180deg) scale(0)";
       newSlide.style.opacity = "0";
-      raffunction(newSlide, () {
+      raf(newSlide, () => {
         if (newSlide.__animToken !== animToken) return;
         newSlide.style.transform = "rotate(0deg) scale(1)";
         newSlide.style.opacity = "1";
@@ -427,7 +441,7 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
       newSlide.style.transform = "perspective(400px) rotateX(90deg)";
       newSlide.style.opacity = "0";
       newSlide.style.backfaceVisibility = "hidden";
-      raffunction(newSlide, () {
+      raf(newSlide, () => {
         if (newSlide.__animToken !== animToken) return;
         newSlide.style.transform = "perspective(400px) rotateX(0deg)";
         newSlide.style.opacity = "1";
@@ -442,7 +456,7 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
       newSlide.style.transform = "perspective(400px) rotateY(90deg)";
       newSlide.style.opacity = "0";
       newSlide.style.backfaceVisibility = "hidden";
-      raffunction(newSlide, () {
+      raf(newSlide, () => {
         if (newSlide.__animToken !== animToken) return;
         newSlide.style.transform = "perspective(400px) rotateY(0deg)";
         newSlide.style.opacity = "1";
@@ -452,9 +466,9 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
     }
 
     case 'jelly': {
-      var seg = (config.slideAnimationDuration && config.slideAnimationDuration > 0) ? duration : 600;
-      var s = Math.max(40, Math.round(seg / 5));
-      var isCurrentAnimation = function() newSlide.__animToken === animToken && currentSlide.__animToken === animToken;
+      const seg = (config.slideAnimationDuration && config.slideAnimationDuration > 0) ? duration : 600;
+      const s = Math.max(40, Math.round(seg / 5));
+      const isCurrentAnimation = () => newSlide.__animToken === animToken && currentSlide.__animToken === animToken;
       cleanupMode = 'timeout';
       cleanupWaitMs = Math.max(duration, s * 4) + 48;
       currentSlide.style.transform = "scale(1.03)";
@@ -471,11 +485,11 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
     }
 
     case 'flip': {
-      currentSlide.style.transform = "rotateY(" + (direction > 0 ? -180 : 180) + "deg)";
+      currentSlide.style.transform = `rotateY(${direction > 0 ? -180 : 180}deg)`;
       currentSlide.style.opacity = "0";
-      newSlide.style.transform = "rotateY(" + (direction > 0 ? 180 : -180) + "deg)";
+      newSlide.style.transform = `rotateY(${direction > 0 ? 180 : -180}deg)`;
       newSlide.style.opacity = "0";
-      raffunction(newSlide, () {
+      raf(newSlide, () => {
         if (newSlide.__animToken !== animToken) return;
         newSlide.style.transform = "rotateY(0deg)";
         newSlide.style.opacity = "1";
@@ -484,8 +498,8 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
     }
 
     case 'eye': {
-      var seg = Math.max(600, duration);
-      var isCurrentAnimation = function() newSlide.__animToken === animToken && currentSlide.__animToken === animToken;
+      const seg = Math.max(600, duration);
+      const isCurrentAnimation = () => newSlide.__animToken === animToken && currentSlide.__animToken === animToken;
       cleanupMode = 'timeout';
       cleanupWaitMs = seg + 64;
       currentSlide.style.transform = "scale(1.05)";
@@ -501,7 +515,7 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
     }
 
     case 'glitch': {
-      var glitchFrames = 8;
+      const glitchFrames = 8;
       cleanupMode = 'timeout';
       cleanupWaitMs = duration + (glitchFrames * 18) + 64;
       currentSlide.style.filter = "blur(10px)";
@@ -509,16 +523,16 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
       newSlide.style.filter = "blur(10px)";
       newSlide.style.opacity = "0";
       newSlide.style.clipPath = "polygon(0 0,100% 0,100% 100%,0 100%)";
-      var frames = glitchFrames;
-      var jitter = function() Math.floor(Math.random() * 100);
-      var step = function() {
+      let frames = glitchFrames;
+      const jitter = () => Math.floor(Math.random() * 100);
+      const step = () => {
         if (!newSlide || frames-- <= 0) {
           newSlide.style.filter = "blur(0)";
           newSlide.style.opacity = "1";
           newSlide.style.clipPath = "polygon(0 0,100% 0,100% 100%,0 100%)";
           return;
         }
-        newSlide.style.clipPath = "polygon(0 " + (jitter()) + "%,100% " + (jitter()) + "%,100% " + (jitter()) + "%,0 " + (jitter()) + "%)";
+        newSlide.style.clipPath = `polygon(0 ${jitter()}%,100% ${jitter()}%,100% ${jitter()}%,0 ${jitter()}%)`;
         raf(newSlide, step);
       };
       raf(newSlide, step);
@@ -532,7 +546,7 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
       newSlide.style.borderRadius = "50%";
       newSlide.style.transform = "scale(0.1) rotate(-180deg)";
       newSlide.style.opacity = "0";
-      raffunction(newSlide, () {
+      raf(newSlide, () => {
         newSlide.style.borderRadius = "0";
         newSlide.style.transform = "scale(1) rotate(0deg)";
         newSlide.style.opacity = "1";
@@ -544,16 +558,16 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
   newSlide.style.backfaceVisibility = "hidden";
   currentSlide.style.backfaceVisibility = "hidden";
   currentSlide.style.transform =
-    "translate3d(0,0,-200px) rotateY(" + (direction > 0 ? -90 : 90) + "deg)";
+    `translate3d(0,0,-200px) rotateY(${direction > 0 ? -90 : 90}deg)`;
   currentSlide.style.opacity = "0";
 
-  startTransitionfunction(newSlide,
-    () {
+  startTransition(newSlide,
+    () => {
       newSlide.style.transform =
-        "translate3d(0,0,-200px) rotateY(" + (direction > 0 ? 90 : -90) + "deg)";
+        `translate3d(0,0,-200px) rotateY(${direction > 0 ? 90 : -90}deg)`;
       newSlide.style.opacity = "0";
     },
-    function() {
+    () => {
       newSlide.style.transform = "translate3d(0,0,0) rotateY(0deg)";
       newSlide.style.opacity = "1";
       newSlide.style.backfaceVisibility = "visible";
@@ -566,12 +580,12 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
   currentSlide.style.transform = "scale3d(1.5,1.5,1)";
   currentSlide.style.opacity = "0";
 
-  startTransitionfunction(newSlide,
-    () {
+  startTransition(newSlide,
+    () => {
       newSlide.style.transform = "scale3d(0.5,0.5,1)";
       newSlide.style.opacity = "0";
     },
-    function() {
+    () => {
       newSlide.style.transform = "scale3d(1,1,1)";
       newSlide.style.opacity = "1";
     }
@@ -581,16 +595,16 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
 
     case 'slide3d': {
   currentSlide.style.transform =
-    "translate3d(" + (direction > 0 ? '-100%' : '100%') + ", 0, 0) rotateY(" + (direction > 0 ? 30 : -30) + "deg)";
+    `translate3d(${direction > 0 ? '-100%' : '100%'}, 0, 0) rotateY(${direction > 0 ? 30 : -30}deg)`;
   currentSlide.style.opacity = "0";
 
-  startTransitionfunction(newSlide,
-    () {
+  startTransition(newSlide,
+    () => {
       newSlide.style.transform =
-        "translate3d(" + (direction > 0 ? '100%' : '-100%') + ", 0, 0) rotateY(" + (direction > 0 ? -30 : 30) + "deg)";
+        `translate3d(${direction > 0 ? '100%' : '-100%'}, 0, 0) rotateY(${direction > 0 ? -30 : 30}deg)`;
       newSlide.style.opacity = "0";
     },
-    function() {
+    () => {
       newSlide.style.transform = "translate3d(0,0,0) rotateY(0deg)";
       newSlide.style.opacity = "1";
     }
@@ -599,28 +613,28 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
 }
 
     case 'slide': {
-   currentSlide.style.transform = "translate3d(" + (direction > 0 ? '-100%' : '100%') + ",0,0)";
+   currentSlide.style.transform = `translate3d(${direction > 0 ? '-100%' : '100%'},0,0)`;
    currentSlide.style.opacity = '0';
-   startTransitionfunction(newSlide,
-     () {
-       newSlide.style.transform = "translate3d(" + (direction > 0 ? '100%' : '-100%') + ",0,0)";
+   startTransition(newSlide,
+     () => {
+       newSlide.style.transform = `translate3d(${direction > 0 ? '100%' : '-100%'},0,0)`;
        newSlide.style.opacity = '1';
      },
-     function() {
+     () => {
        newSlide.style.transform = 'translate3d(0,0,0)';
      }
    );
    break;
  }
     case 'diagonal': {
-   currentSlide.style.transform = "translate3d(" + (direction > 0 ? '-100%' : '100%') + ", -100%, 0)";
+   currentSlide.style.transform = `translate3d(${direction > 0 ? '-100%' : '100%'}, -100%, 0)`;
    currentSlide.style.opacity = '0';
-   startTransitionfunction(newSlide,
-     () {
-       newSlide.style.transform = "translate3d(" + (direction > 0 ? '100%' : '-100%') + ", 100%, 0)";
+   startTransition(newSlide,
+     () => {
+       newSlide.style.transform = `translate3d(${direction > 0 ? '100%' : '-100%'}, 100%, 0)`;
        newSlide.style.opacity = '0';
      },
-     function() {
+     () => {
        newSlide.style.transform = 'translate3d(0,0,0)';
        newSlide.style.opacity = '1';
      }
@@ -632,12 +646,12 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
   currentSlide.style.opacity = "0";
   currentSlide.style.transform = "scale3d(1.05,1.05,1)";
 
-  startTransitionfunction(newSlide,
-    () {
+  startTransition(newSlide,
+    () => {
       newSlide.style.opacity = "0";
       newSlide.style.transform = "scale3d(1.5,1.5,1)";
     },
-    function() {
+    () => {
       newSlide.style.opacity = "1";
       newSlide.style.transform = "scale3d(1,1,1)";
     }
@@ -646,20 +660,20 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
 }
 
   case 'parallax': {
-  var ez = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
+  const ez = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
   withTransition(currentSlide, duration, ez, ['transform','opacity']);
   withTransition(newSlide,     duration, ez, ['transform','opacity']);
 
-  currentSlide.style.transform = "translate3d(" + (direction > 0 ? '-30%' : '30%') + ", 0, 0)";
+  currentSlide.style.transform = `translate3d(${direction > 0 ? '-30%' : '30%'}, 0, 0)`;
   currentSlide.style.opacity = "0";
 
   newSlide.style.zIndex = "5";
-  startTransitionfunction(newSlide,
-    () {
-      newSlide.style.transform = "translate3d(" + (direction > 0 ? '50%' : '-50%') + ", 0, 0)";
+  startTransition(newSlide,
+    () => {
+      newSlide.style.transform = `translate3d(${direction > 0 ? '50%' : '-50%'}, 0, 0)`;
       newSlide.style.opacity = "0.5";
     },
-    function() {
+    () => {
       newSlide.style.transform = "translate3d(0,0,0)";
       newSlide.style.opacity = "1";
     }
@@ -672,7 +686,7 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
       currentSlide.style.opacity = '0';
       newSlide.style.filter = 'blur(5px)';
       newSlide.style.opacity = '0';
-      raffunction(newSlide, () {
+      raf(newSlide, () => {
         if (newSlide.__animToken !== animToken) return;
         newSlide.style.filter = 'blur(0)';
         newSlide.style.opacity = '1';
@@ -693,7 +707,7 @@ export function applySlideAnimation(currentSlide, newSlide, direction) {
 }
 
 export function applyDotPosterAnimation(dot, isActive) {
-  var config = getConfig();
+  const config = getConfig();
   if (!config.enableDotPosterAnimations || !config.dotPosterMode) {
     if (dot.__glowSub) { stopLoop(dot.__glowSub); dot.__glowSub = null; }
     clearTimers(dot);
@@ -701,12 +715,12 @@ export function applyDotPosterAnimation(dot, isActive) {
   }
   clearTimers(dot);
 
-  var duration = Math.max(1, config.dotPosterAnimationDuration || 600);
-  var transitionType = config.dotPosterTransitionType;
-  dot.style.transition = "all " + (duration) + "ms cubic-bezier(0.25, 0.1, 0.25, 1)";
+  const duration = Math.max(1, config.dotPosterAnimationDuration || 600);
+  const transitionType = config.dotPosterTransitionType;
+  dot.style.transition = `all ${duration}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
   dot.style.zIndex = isActive ? "10" : "";
   dot.style.boxShadow = "";
-  var image = dot.querySelector('img');
+  const image = dot.querySelector('img');
   setWillChange(dot, ['transform','opacity']);
   if (image) setWillChange(image, ['filter','transform']);
 
@@ -719,9 +733,9 @@ export function applyDotPosterAnimation(dot, isActive) {
 
     case 'bounce': {
       if (isActive) {
-        var up = Math.min(20, Math.max(8, Math.round(duration * 0.06)));
+        const up = Math.min(20, Math.max(8, Math.round(duration * 0.06)));
         animateSequence(dot, [
-          { styles: { transform: "translateY(-" + (up) + "px)" }, duration: Math.floor(duration * 0.5) },
+          { styles: { transform: `translateY(-${up}px)` }, duration: Math.floor(duration * 0.5) },
           { styles: { transform: "translateY(0)" }, duration: Math.ceil(duration * 0.5) },
         ], 'ease');
         dot.style.boxShadow = "0 0 15px rgba(255,255,255,0.7)";
@@ -738,7 +752,7 @@ export function applyDotPosterAnimation(dot, isActive) {
 
     case 'color': {
       if (image) {
-        image.style.transition = "filter " + (duration) + "ms ease, transform " + (duration) + "ms ease";
+        image.style.transition = `filter ${duration}ms ease, transform ${duration}ms ease`;
         image.style.filter = isActive ? "brightness(1.2) saturate(1.5)" : "brightness(1) saturate(1)";
       }
       break;
@@ -775,7 +789,7 @@ export function applyDotPosterAnimation(dot, isActive) {
 
     case 'shake': {
       if (isActive) {
-        var a = function(px) ({ styles: { transform: "translateX(" + (px) + "px)" }, duration: Math.floor(duration/5) });
+        const a = (px) => ({ styles: { transform: `translateX(${px}px)` }, duration: Math.floor(duration/5) });
         animateSequence(dot, [ a(0), a(-4), a(4), a(-2), a(0) ], 'ease');
         dot.style.boxShadow = "0 0 5px rgba(255, 255, 255, 0.4)";
       } else {
@@ -787,12 +801,12 @@ export function applyDotPosterAnimation(dot, isActive) {
     case 'glow': {
       if (isActive) {
         if (!dot.__glowSub) {
-          var initBright = dot.dataset._bright === '1' ? 1 : 0;
+          const initBright = dot.dataset._bright === '1' ? 1 : 0;
           dot.dataset._bright = String(initBright);
           dot.style.boxShadow = initBright ? GLOW_STRONG : GLOW_WEAK;
-          var sub = startLoop(dot, Math.max(300, duration), function() {
-            var cur = dot.dataset._bright === '1' ? 1 : 0;
-            var next = cur ^ 1;
+          const sub = startLoop(dot, Math.max(300, duration), () => {
+            const cur = dot.dataset._bright === '1' ? 1 : 0;
+            const next = cur ^ 1;
             if (next !== cur) {
               dot.dataset._bright = String(next);
               dot.style.boxShadow = next ? GLOW_STRONG : GLOW_WEAK;
@@ -809,7 +823,7 @@ export function applyDotPosterAnimation(dot, isActive) {
 
     case 'rubberBand': {
       if (isActive) {
-        var part = Math.max(60, Math.floor(duration/4));
+        const part = Math.max(60, Math.floor(duration/4));
         animateSequence(dot, [
           { styles: { transform: 'scale(1.25, 0.75)' }, duration: part },
           { styles: { transform: 'scale(0.75, 1.25)' }, duration: part },
@@ -824,7 +838,7 @@ export function applyDotPosterAnimation(dot, isActive) {
 
     case 'swing': {
       if (isActive) {
-        var part = Math.max(60, Math.floor(duration/5));
+        const part = Math.max(60, Math.floor(duration/5));
         animateSequence(dot, [
           { styles: { transform: 'rotate(15deg)' }, duration: part },
           { styles: { transform: 'rotate(-10deg)' }, duration: part },
@@ -866,7 +880,7 @@ export function applyDotPosterAnimation(dot, isActive) {
 
     case 'wobble': {
       if (isActive) {
-        var part = Math.max(50, Math.floor(duration/6));
+        const part = Math.max(50, Math.floor(duration/6));
         animateSequence(dot, [
           { styles: { transform: 'translateX(-25%) rotate(-5deg)' }, duration: part },
           { styles: { transform: 'translateX(20%) rotate(3deg)' }, duration: part },
@@ -884,7 +898,7 @@ export function applyDotPosterAnimation(dot, isActive) {
     default: {
     }
   }
-  onTransitionEndOncefunction(dot, duration, () {
+  onTransitionEndOnce(dot, duration, () => {
     clearWillChange(dot);
     if (image) clearWillChange(image);
   });

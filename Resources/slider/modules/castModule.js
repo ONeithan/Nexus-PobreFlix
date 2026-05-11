@@ -11,23 +11,23 @@ import { withServer } from "./jfUrl.js";
 import { getWatchlistButtonText, getWatchlistToast } from "./watchlist.js";
 import { resolveSliderAssetHref } from "./assetLinks.js";
 
-var config = getConfig();
-var CAST_MODAL_CSS_ID = "jms-css-castmodal";
-var CAST_MODAL_SYNC_MS = 4000;
-var CAST_MODAL_TICK_MS = 1000;
-var VOLUME_COMMIT_DELAY_MS = 180;
-var SCROLL_DEBOUNCE_MS = 80;
-var CAST_ACCESS_CACHE_MS = 30_000;
-var REMOTE_GMMP_STATE_STALE_MS = 12_000;
+const config = getConfig();
+const CAST_MODAL_CSS_ID = "jms-css-castmodal";
+const CAST_MODAL_SYNC_MS = 4000;
+const CAST_MODAL_TICK_MS = 1000;
+const VOLUME_COMMIT_DELAY_MS = 180;
+const SCROLL_DEBOUNCE_MS = 80;
+const CAST_ACCESS_CACHE_MS = 30_000;
+const REMOTE_GMMP_STATE_STALE_MS = 12_000;
 
-var castModalState = null;
-var castModalCssPromise = null;
-var serverInfoPromise = null;
-var supportsWebpCache = null;
-var gmmpBridgePromise = null;
-var castAccessPromise = null;
-var castAccessCache = null;
-var castAccessLoadedAt = 0;
+let castModalState = null;
+let castModalCssPromise = null;
+let serverInfoPromise = null;
+let supportsWebpCache = null;
+let gmmpBridgePromise = null;
+let castAccessPromise = null;
+let castAccessCache = null;
+let castAccessLoadedAt = 0;
 
 function getLiveConfig() {
   try {
@@ -39,18 +39,18 @@ function getLiveConfig() {
 
 function getLabels() {
   try {
-    return getLiveConfig().languageLabels || config.languageLabels || {};
+    return getLiveConfig()?.languageLabels || config.languageLabels || {};
   } catch {
     return config.languageLabels || {};
   }
 }
 
 function t(key, fallback) {
-  return getLabels().[key] || fallback;
+  return getLabels()?.[key] || fallback;
 }
 
 function escapeHtml(value) {
-  return String(value || "").replacefunction(/[&<>"']/g, (char) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => {
     switch (char) {
       case "&":
         return "&amp;";
@@ -69,7 +69,7 @@ function escapeHtml(value) {
 }
 
 function escapeSelectorValue(value) {
-  var raw = String(value || "");
+  const raw = String(value ?? "");
   if (typeof CSS !== "undefined" && typeof CSS.escape === "function") {
     return CSS.escape(raw);
   }
@@ -77,14 +77,14 @@ function escapeSelectorValue(value) {
 }
 
 function clamp(value, min, max) {
-  var number = Number(value);
+  const number = Number(value);
   if (!Number.isFinite(number)) return min;
   return Math.min(max, Math.max(min, number));
 }
 
 function joinNonEmpty(values = [], separator = ", ") {
   return values
-    .mapfunction((value) String(value || "").trim())
+    .map((value) => String(value || "").trim())
     .filter(Boolean)
     .join(separator);
 }
@@ -92,70 +92,70 @@ function joinNonEmpty(values = [], separator = ", ") {
 function isActiveModalState(state) {
   return !!state &&
     castModalState === state &&
-    !!state.root.isConnected &&
-    !state.abortController.signal.aborted;
+    !!state.root?.isConnected &&
+    !state.abortController?.signal?.aborted;
 }
 
 function isActiveEmbeddedState(state) {
   return !!state &&
     state.kind === "embedded" &&
-    !!state.root.isConnected &&
-    !state.abortController.signal.aborted;
+    !!state.root?.isConnected &&
+    !state.abortController?.signal?.aborted;
 }
 
 function isMobileClient(session) {
-  var client = session.Client.toLowerCase() || "";
-  return ["android", "ios", "iphone", "ipad"].somefunction((term) client.includes(term));
+  const client = session.Client?.toLowerCase() || "";
+  return ["android", "ios", "iphone", "ipad"].some((term) => client.includes(term));
 }
 
 function playable(session) {
-  var playableMediaTypes =
-    session.Capabilities.PlayableMediaTypes ||
-    session.PlayableMediaTypes ||
+  const playableMediaTypes =
+    session?.Capabilities?.PlayableMediaTypes ||
+    session?.PlayableMediaTypes ||
     [];
 
-  return playableMediaTypes.somefunction((type) type === "Video" || type === "Audio") ||
+  return playableMediaTypes?.some((type) => type === "Video" || type === "Audio") ||
     isMobileClient(session);
 }
 
 function isEffectivelyMuted(device) {
-  return !!device.isMuted || Number(device.volumeLevel || 0) <= 0;
+  return !!device?.isMuted || Number(device?.volumeLevel ?? 0) <= 0;
 }
 
 function formatTime(ticks) {
   if (!ticks || ticks <= 0) return "0:00";
 
-  var totalSeconds = Math.floor(ticks / 10_000_000);
-  var hours = Math.floor(totalSeconds / 3600);
-  var minutes = Math.floor((totalSeconds % 3600) / 60);
-  var seconds = totalSeconds % 60;
+  const totalSeconds = Math.floor(ticks / 10_000_000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
 
   return hours > 0
-    ? (hours) + ":" + (minutes.toString().padStart(2, "0")) + ":" + (seconds.toString().padStart(2, "0"))
-    : (minutes) + ":" + (seconds.toString().padStart(2, "0"));
+    ? `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
+    : `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
 function formatRemainingTime(positionTicks, runtimeTicks) {
   if (!runtimeTicks || runtimeTicks <= 0) return "";
-  var remaining = Math.max(0, runtimeTicks - positionTicks);
-  return "-" + (formatTime(remaining));
+  const remaining = Math.max(0, runtimeTicks - positionTicks);
+  return `-${formatTime(remaining)}`;
 }
 
 function normalizeIdentityToken(value) {
-  return String(value || "").trim().toLowerCase();
+  return String(value ?? "").trim().toLowerCase();
 }
 
 function addIdentityToken(set, value) {
-  var normalized = normalizeIdentityToken(value);
+  const normalized = normalizeIdentityToken(value);
   if (!normalized) return;
   set.add(normalized);
 }
 
 function getLocalCastAccessFallback() {
-  var liveConfig = getLiveConfig();
-  var moduleEnabled = liveConfig.enableCastModule !== false;
-  var allowSharedViewerForUsers = liveConfig.allowSharedCastViewerForUsers === true;
-  var isAdmin = liveConfig.currentUserIsAdmin === true;
+  const liveConfig = getLiveConfig();
+  const moduleEnabled = liveConfig.enableCastModule !== false;
+  const allowSharedViewerForUsers = liveConfig.allowSharedCastViewerForUsers === true;
+  const isAdmin = liveConfig.currentUserIsAdmin === true;
 
   return {
     ok: true,
@@ -168,17 +168,17 @@ function getLocalCastAccessFallback() {
   };
 }
 
-function getCastRequestUserId() {
-  var session = getSessionInfo() || {};
-  var directUserId = String(session.userId || "").trim();
+async function getCastRequestUserId() {
+  const session = getSessionInfo() || {};
+  const directUserId = String(session?.userId || "").trim();
   if (directUserId) {
     return directUserId;
   }
 
   try {
-    var api = window.ApiClient || null;
-    var apiUserId = String(
-      (typeof api.getCurrentUserId === "function" ? api.getCurrentUserId() : api._currentUserId) || ""
+    const api = window.ApiClient || null;
+    const apiUserId = String(
+      (typeof api?.getCurrentUserId === "function" ? api.getCurrentUserId() : api?._currentUserId) || ""
     ).trim();
     if (apiUserId) {
       return apiUserId;
@@ -186,25 +186,25 @@ function getCastRequestUserId() {
   } catch {}
 
   try {
-    var currentUser = window.ApiClient.getCurrentUser.();
-    return String(currentUser.Id || "").trim();
+    const currentUser = await window.ApiClient?.getCurrentUser?.();
+    return String(currentUser?.Id || "").trim();
   } catch {
     return "";
   }
 }
 
 function getCastRequestToken() {
-  var session = getSessionInfo() || {};
-  var directToken = String(session.accessToken || "").trim();
+  const session = getSessionInfo() || {};
+  const directToken = String(session?.accessToken || "").trim();
   if (directToken) {
     return directToken;
   }
 
   try {
     return String(
-      window.ApiClient.accessToken.() ||
-      window.ApiClient._accessToken ||
-      window.ApiClient._authToken ||
+      window.ApiClient?.accessToken?.() ||
+      window.ApiClient?._accessToken ||
+      window.ApiClient?._authToken ||
       ""
     ).trim();
   } catch {
@@ -212,18 +212,18 @@ function getCastRequestToken() {
   }
 }
 
-function makeCastApiRequest(path, options = {}) {
-  var userId = getCastRequestUserId();
+async function makeCastApiRequest(path, options = {}) {
+  const userId = await getCastRequestUserId();
   if (!userId) {
-    var error = new Error("Cast auth user id missing.");
+    const error = new Error("Cast auth user id missing.");
     error.status = 0;
     throw error;
   }
 
-  var token = getCastRequestToken();
-  var headers = {
+  const token = getCastRequestToken();
+  const headers = {
     Accept: "application/json",
-    ...(options.headers || {})
+    ...(options?.headers || {})
   };
 
   headers["X-Emby-UserId"] = userId;
@@ -240,8 +240,8 @@ function makeCastApiRequest(path, options = {}) {
   });
 }
 
-export function getCastAccess({ force = false } = {}) {
-  var now = Date.now();
+export async function getCastAccess({ force = false } = {}) {
+  const now = Date.now();
   if (!force && castAccessCache && (now - castAccessLoadedAt) < CAST_ACCESS_CACHE_MS) {
     return castAccessCache;
   }
@@ -250,16 +250,16 @@ export function getCastAccess({ force = false } = {}) {
     return castAccessPromise;
   }
 
-  castAccessPromise = function(() {
+  castAccessPromise = (async () => {
     try {
-      var response = makeCastApiRequest("/Plugins/NexusPobreFlix/cast/access", { __quiet: true });
-      var normalized = {
+      const response = await makeCastApiRequest("/Plugins/NexusPobreFlix/cast/access", { __quiet: true });
+      const normalized = {
         ...getLocalCastAccessFallback(),
         ...(response && typeof response === "object" ? response : {})
       };
 
       if (normalized.isAdmin !== true) {
-        normalized.isAdmin = isCurrentUserAdmin().catchfunction(() normalized.isAdmin === true);
+        normalized.isAdmin = await isCurrentUserAdmin().catch(() => normalized.isAdmin === true);
       }
 
       normalized.moduleEnabled = normalized.moduleEnabled !== false;
@@ -273,9 +273,9 @@ export function getCastAccess({ force = false } = {}) {
       castAccessLoadedAt = Date.now();
       return normalized;
     } catch {
-      var fallback = getLocalCastAccessFallback();
+      const fallback = getLocalCastAccessFallback();
       if (fallback.isAdmin !== true) {
-        fallback.isAdmin = isCurrentUserAdmin().catchfunction(() false);
+        fallback.isAdmin = await isCurrentUserAdmin().catch(() => false);
         fallback.canViewShared = fallback.moduleEnabled === true &&
           (fallback.isAdmin === true || fallback.allowSharedViewerForUsers === true);
         fallback.canControl = fallback.moduleEnabled === true && fallback.isAdmin === true;
@@ -292,16 +292,16 @@ export function getCastAccess({ force = false } = {}) {
 }
 
 function looksBase64Value(value) {
-  var text = String(value || "").trim();
+  const text = String(value ?? "").trim();
   return text.length >= 16 &&
     /^[A-Za-z0-9+/=]+$/.test(text);
 }
 
 function decodePossiblyEncodedLabel(value) {
-  var raw = String(value || "").trim();
+  const raw = String(value ?? "").trim();
   if (!raw) return "";
 
-  var decoded = raw;
+  let decoded = raw;
   if (looksBase64Value(raw) && typeof atob === "function") {
     try {
       decoded = atob(raw);
@@ -312,41 +312,41 @@ function decodePossiblyEncodedLabel(value) {
 
   if (/[À-ÿ]/.test(decoded) && typeof TextDecoder !== "undefined") {
     try {
-      var bytes = Uint8Array.fromfunction(decoded, (char) char.charCodeAt(0) & 0xff);
-      var repaired = new TextDecoder("utf-8", { fatal: false }).decode(bytes).replace(/[\u0000-\u001f\u007f]+/g, " ").trim();
+      const bytes = Uint8Array.from(decoded, (char) => char.charCodeAt(0) & 0xff);
+      const repaired = new TextDecoder("utf-8", { fatal: false }).decode(bytes).replace(/[\u0000-\u001f\u007f]+/g, " ").trim();
       if (repaired && !repaired.includes("�")) {
         decoded = repaired;
       }
     } catch {}
   }
 
-  var userAgentChunk = decoded
+  const userAgentChunk = decoded
     .split("|")
-    .mapfunction((part) part.trim())
-    .findfunction((part) /Mozilla\/|AppleWebKit\/|Chrome\/|CriOS\/|Firefox\/|FxiOS\/|Safari\/|EdgA?\/|OPR\/|SamsungBrowser\//i.test(part));
+    .map((part) => part.trim())
+    .find((part) => /Mozilla\/|AppleWebKit\/|Chrome\/|CriOS\/|Firefox\/|FxiOS\/|Safari\/|EdgA?\/|OPR\/|SamsungBrowser\//i.test(part));
 
   return userAgentChunk || decoded;
 }
 
 function looksLikeOpaqueIdentifier(value) {
-  var text = String(value || "").trim();
+  const text = String(value ?? "").trim();
   if (!text) return true;
   if (text.length > 96) return true;
   if (/^[0-9a-f]{12,}$/i.test(text)) return true;
   if (/^[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(text)) return true;
   if (looksBase64Value(text)) {
-    var decoded = decodePossiblyEncodedLabel(text);
+    const decoded = decodePossiblyEncodedLabel(text);
     if (decoded && decoded !== text) return true;
   }
   return false;
 }
 
 function looksLikeUserAgent(value) {
-  return /Mozilla\/|AppleWebKit\/|Chrome\/|CriOS\/|Firefox\/|FxiOS\/|Safari\/|EdgA?\/|OPR\/|SamsungBrowser\//i.test(String(value || ""));
+  return /Mozilla\/|AppleWebKit\/|Chrome\/|CriOS\/|Firefox\/|FxiOS\/|Safari\/|EdgA?\/|OPR\/|SamsungBrowser\//i.test(String(value ?? ""));
 }
 
 function detectBrowserLabel(value) {
-  var text = String(value || "");
+  const text = String(value ?? "");
   if (!text) return "";
   if (/SamsungBrowser\//i.test(text)) return "Samsung Internet";
   if (/EdgA?\/|EdgiOS\//i.test(text)) return "Edge";
@@ -359,7 +359,7 @@ function detectBrowserLabel(value) {
 }
 
 function detectPlatformLabel(value) {
-  var text = String(value || "");
+  const text = String(value ?? "");
   if (!text) return "";
   if (/iPhone/i.test(text)) return "iPhone";
   if (/iPad/i.test(text)) return "iPad";
@@ -372,14 +372,14 @@ function detectPlatformLabel(value) {
 }
 
 function resolveFriendlySessionClient(session) {
-  var self = isCurrentBrowserSession(session);
-  var rawClient = String(session.Client || "").trim();
-  var decodedClient = decodePossiblyEncodedLabel(rawClient);
-  var selfClientName = String(getSessionInfo().clientName || "").trim();
-  var browserUserAgent = typeof navigator !== "undefined" ? navigator.userAgent : "";
-  var source = [decodedClient, rawClient, self ? browserUserAgent : ""].filter(Boolean).join(" ");
-  var browserLabel = detectBrowserLabel(source);
-  var isGenericWebClient = /jellyfin\s*web|web client/i.test(rawClient) || /jellyfin\s*web|web client/i.test(selfClientName);
+  const self = isCurrentBrowserSession(session);
+  const rawClient = String(session?.Client || "").trim();
+  const decodedClient = decodePossiblyEncodedLabel(rawClient);
+  const selfClientName = String(getSessionInfo()?.clientName || "").trim();
+  const browserUserAgent = typeof navigator !== "undefined" ? navigator.userAgent : "";
+  const source = [decodedClient, rawClient, self ? browserUserAgent : ""].filter(Boolean).join(" ");
+  const browserLabel = detectBrowserLabel(source);
+  const isGenericWebClient = /jellyfin\s*web|web client/i.test(rawClient) || /jellyfin\s*web|web client/i.test(selfClientName);
 
   if (self && browserLabel) {
     return browserLabel;
@@ -405,15 +405,15 @@ function resolveFriendlySessionClient(session) {
 }
 
 function resolveFriendlySessionDeviceName(session) {
-  var self = isCurrentBrowserSession(session);
-  var rawDeviceName = String(session.DeviceName || "").trim();
-  var decodedDeviceName = decodePossiblyEncodedLabel(rawDeviceName);
-  var clientSource = decodePossiblyEncodedLabel(session.Client || "");
-  var selfDeviceName = String(getSessionInfo().deviceName || "").trim();
-  var browserUserAgent = typeof navigator !== "undefined" ? navigator.userAgent : "";
-  var source = [decodedDeviceName, clientSource, self ? browserUserAgent : ""].filter(Boolean).join(" ");
-  var platformLabel = detectPlatformLabel(source);
-  var browserLabel = detectBrowserLabel(source);
+  const self = isCurrentBrowserSession(session);
+  const rawDeviceName = String(session?.DeviceName || "").trim();
+  const decodedDeviceName = decodePossiblyEncodedLabel(rawDeviceName);
+  const clientSource = decodePossiblyEncodedLabel(session?.Client || "");
+  const selfDeviceName = String(getSessionInfo()?.deviceName || "").trim();
+  const browserUserAgent = typeof navigator !== "undefined" ? navigator.userAgent : "";
+  const source = [decodedDeviceName, clientSource, self ? browserUserAgent : ""].filter(Boolean).join(" ");
+  const platformLabel = detectPlatformLabel(source);
+  const browserLabel = detectBrowserLabel(source);
 
   if (rawDeviceName && !looksLikeOpaqueIdentifier(rawDeviceName) && !looksLikeUserAgent(rawDeviceName)) {
     return rawDeviceName;
@@ -434,7 +434,7 @@ function resolveFriendlySessionDeviceName(session) {
       return browserLabel;
     }
     if (platformLabel) {
-      return (platformLabel) + " Tarayici";
+      return `${platformLabel} Tarayici`;
     }
     return "Bu tarayici";
   }
@@ -443,7 +443,7 @@ function resolveFriendlySessionDeviceName(session) {
 }
 
 function isAudioLikeItem(item) {
-  var type = String(item.Type || item.ItemType || "").trim().toLowerCase();
+  const type = String(item?.Type || item?.ItemType || "").trim().toLowerCase();
   return type === "audio" ||
     type === "song" ||
     type === "musictrack" ||
@@ -453,22 +453,22 @@ function isAudioLikeItem(item) {
 }
 
 function looksLikeRemoteBrowserSession(session = null, device = null) {
-  var haystack = [
-    session.Client,
-    decodePossiblyEncodedLabel(session.Client || ""),
-    session.DeviceName,
-    decodePossiblyEncodedLabel(session.DeviceName || ""),
-    session.DeviceId,
-    decodePossiblyEncodedLabel(session.DeviceId || ""),
-    session.DeviceType,
-    device.client,
-    decodePossiblyEncodedLabel(device.client || ""),
-    device.deviceName,
-    decodePossiblyEncodedLabel(device.deviceName || ""),
-    device.deviceId,
-    decodePossiblyEncodedLabel(device.deviceId || "")
+  const haystack = [
+    session?.Client,
+    decodePossiblyEncodedLabel(session?.Client || ""),
+    session?.DeviceName,
+    decodePossiblyEncodedLabel(session?.DeviceName || ""),
+    session?.DeviceId,
+    decodePossiblyEncodedLabel(session?.DeviceId || ""),
+    session?.DeviceType,
+    device?.client,
+    decodePossiblyEncodedLabel(device?.client || ""),
+    device?.deviceName,
+    decodePossiblyEncodedLabel(device?.deviceName || ""),
+    device?.deviceId,
+    decodePossiblyEncodedLabel(device?.deviceId || "")
   ]
-    .mapfunction((value) String(value || "").trim().toLowerCase())
+    .map((value) => String(value || "").trim().toLowerCase())
     .filter(Boolean)
     .join(" ");
 
@@ -476,7 +476,7 @@ function looksLikeRemoteBrowserSession(session = null, device = null) {
 }
 
 function isVideoLikeItem(item) {
-  var type = String(item.Type || item.ItemType || "").trim().toLowerCase();
+  const type = String(item?.Type || item?.ItemType || "").trim().toLowerCase();
   return type === "video" ||
     type === "movie" ||
     type === "episode" ||
@@ -494,8 +494,8 @@ function isRenderableElement(element) {
   if (element.closest(".hide,[hidden],[aria-hidden='true'],.video-preview-modal,.intro-video-container")) return false;
 
   try {
-    var style = window.getComputedStyle(element);
-    if (style.display === "none" || style.visibility === "hidden") {
+    const style = window.getComputedStyle(element);
+    if (style?.display === "none" || style?.visibility === "hidden") {
       return false;
     }
   } catch {}
@@ -507,7 +507,7 @@ function isVisibleElement(element) {
   if (!isRenderableElement(element)) return false;
 
   try {
-    var rect = element.getBoundingClientRect.();
+    const rect = element.getBoundingClientRect?.();
     return !!rect && rect.width > 0 && rect.height > 0;
   } catch {
     return false;
@@ -524,7 +524,7 @@ function isUsableLocalVideoElement(element) {
   if (!element.closest(".videoPlayerContainer")) return false;
   if (element.closest("#studio-hubs,.hub-card,.hub-row,.studio-trailer-popover,.studio-trailer-video")) return false;
 
-  var src = String(element.currentSrc || element.src || "").trim();
+  const src = String(element.currentSrc || element.src || "").trim();
   return !!src;
 }
 
@@ -532,16 +532,16 @@ function getActiveLocalVideoElement() {
   if (typeof document === "undefined") return null;
 
   try {
-    var activeVideo = window.__jmsActiveVideo;
+    const activeVideo = window.__jmsActiveVideo;
     if (isUsableLocalVideoElement(activeVideo)) {
       return activeVideo;
     }
   } catch {}
 
-  var containers = Array.from(document.querySelectorAll(".videoPlayerContainer"));
-  for (var container of containers) {
+  const containers = Array.from(document.querySelectorAll(".videoPlayerContainer"));
+  for (const container of containers) {
     if (!isVisibleElement(container)) continue;
-    var video = container.querySelector("video.htmlvideoplayer, video");
+    const video = container.querySelector("video.htmlvideoplayer, video");
     if (isUsableLocalVideoElement(video)) {
       return video;
     }
@@ -552,14 +552,14 @@ function getActiveLocalVideoElement() {
 
 function getLocalVideoItemId(videoEl) {
   try {
-    var rawSrc = String(videoEl.currentSrc || videoEl.src || "").trim();
+    const rawSrc = String(videoEl?.currentSrc || videoEl?.src || "").trim();
     if (!rawSrc) return "";
 
-    var url = new URL(rawSrc, window.location.href);
-    var itemId = url.searchParams.get("ItemId") || url.searchParams.get("itemId");
+    const url = new URL(rawSrc, window.location.href);
+    const itemId = url.searchParams.get("ItemId") || url.searchParams.get("itemId");
     if (itemId) return String(itemId).trim();
 
-    var pathId = url.pathname.match(/\/Videos\/([^/?#]+)/i).[1];
+    const pathId = url.pathname.match(/\/Videos\/([^/?#]+)/i)?.[1];
     if (pathId) return decodeURIComponent(pathId).trim();
   } catch {}
 
@@ -567,16 +567,16 @@ function getLocalVideoItemId(videoEl) {
 }
 
 function getLocalVideoBridge() {
-  var video = getActiveLocalVideoElement();
+  const video = getActiveLocalVideoElement();
   if (!video) {
     return null;
   }
 
   return {
     getState() {
-      var itemId = getLocalVideoItemId(video);
-      var runtimeSeconds = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
-      var currentVolume = clamp(
+      const itemId = getLocalVideoItemId(video);
+      const runtimeSeconds = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
+      const currentVolume = clamp(
         Math.round((video.muted ? 0 : Number(video.volume || 0)) * 100),
         0,
         100
@@ -592,20 +592,20 @@ function getLocalVideoBridge() {
         runtimeTicks: Math.max(0, Math.floor(runtimeSeconds * 10_000_000))
       };
     },
-    setPaused(paused) {
+    async setPaused(paused) {
       if (!!video.paused !== !!paused) {
         if (paused) {
           video.pause();
         } else {
-          video.play();
+          await video.play();
         }
       }
       return this.getState();
     },
     setMuted(muted) {
-      var nextMuted = !!muted;
+      const nextMuted = !!muted;
       if (!nextMuted && Number(video.volume || 0) <= 0) {
-        var restored = clamp(
+        const restored = clamp(
           Math.round(Number(video.__jmsCastLastVolume || 0.7) * 100),
           1,
           100
@@ -621,7 +621,7 @@ function getLocalVideoBridge() {
       return this.getState();
     },
     setVolume(volumeLevel) {
-      var normalized = clamp(volumeLevel, 0, 100) / 100;
+      const normalized = clamp(volumeLevel, 0, 100) / 100;
       video.volume = normalized;
       video.muted = normalized <= 0;
       if (normalized > 0) {
@@ -633,37 +633,37 @@ function getLocalVideoBridge() {
 }
 
 function buildCurrentBrowserIdentity() {
-  var self = getSessionInfo() || {};
-  var userIds = new Set();
-  var sessionIds = new Set();
-  var deviceIds = new Set();
-  var clientHints = new Set();
-  var deviceHints = new Set();
-  var browserHints = new Set();
+  const self = getSessionInfo() || {};
+  const userIds = new Set();
+  const sessionIds = new Set();
+  const deviceIds = new Set();
+  const clientHints = new Set();
+  const deviceHints = new Set();
+  const browserHints = new Set();
 
-  addIdentityToken(userIds, self.userId);
-  addIdentityToken(sessionIds, self.sessionId);
-  addIdentityToken(deviceIds, self.deviceId);
+  addIdentityToken(userIds, self?.userId);
+  addIdentityToken(sessionIds, self?.sessionId);
+  addIdentityToken(deviceIds, self?.deviceId);
 
   try {
-    addIdentityToken(sessionIds, window.ApiClient._sessionId);
-    addIdentityToken(deviceIds, window.ApiClient._deviceId);
+    addIdentityToken(sessionIds, window.ApiClient?._sessionId);
+    addIdentityToken(deviceIds, window.ApiClient?._deviceId);
   } catch {}
 
-  [self.clientName, detectBrowserLabel(typeof navigator !== "undefined" ? navigator.userAgent : "")]
-    .mapfunction((value) String(value || "").trim().toLowerCase())
+  [self?.clientName, detectBrowserLabel(typeof navigator !== "undefined" ? navigator.userAgent : "")]
+    .map((value) => String(value || "").trim().toLowerCase())
     .filter(Boolean)
-    .forEach(function((value) clientHints.add(value));
+    .forEach((value) => clientHints.add(value));
 
-  [self.deviceName, detectPlatformLabel(typeof navigator !== "undefined" ? navigator.userAgent : "")]
-    .mapfunction((value) String(value || "").trim().toLowerCase())
+  [self?.deviceName, detectPlatformLabel(typeof navigator !== "undefined" ? navigator.userAgent : "")]
+    .map((value) => String(value || "").trim().toLowerCase())
     .filter(Boolean)
-    .forEach(function((value) deviceHints.add(value));
+    .forEach((value) => deviceHints.add(value));
 
   [detectBrowserLabel(typeof navigator !== "undefined" ? navigator.userAgent : ""), detectPlatformLabel(typeof navigator !== "undefined" ? navigator.userAgent : "")]
-    .mapfunction((value) String(value || "").trim().toLowerCase())
+    .map((value) => String(value || "").trim().toLowerCase())
     .filter(Boolean)
-    .forEach(function((value) browserHints.add(value));
+    .forEach((value) => browserHints.add(value));
 
   return {
     userIds,
@@ -676,27 +676,27 @@ function buildCurrentBrowserIdentity() {
 }
 
 function scoreLikelyCurrentGmmpSession(session, gmmpState, currentUserId = "") {
-  var gmmpTrackId = String(gmmpState.trackId || "").trim();
-  var sessionTrackId = getSessionNowPlayingItemId(session);
-  if (!gmmpState.hasCurrentTrack || !gmmpTrackId || !sessionTrackId || gmmpTrackId !== sessionTrackId) {
+  const gmmpTrackId = String(gmmpState?.trackId || "").trim();
+  const sessionTrackId = getSessionNowPlayingItemId(session);
+  if (!gmmpState?.hasCurrentTrack || !gmmpTrackId || !sessionTrackId || gmmpTrackId !== sessionTrackId) {
     return 0;
   }
 
-  var normalizedCurrentUserId = normalizeIdentityToken(currentUserId);
-  var normalizedSessionUserId = normalizeIdentityToken(session.UserId);
+  const normalizedCurrentUserId = normalizeIdentityToken(currentUserId);
+  const normalizedSessionUserId = normalizeIdentityToken(session?.UserId);
   if (normalizedCurrentUserId && normalizedSessionUserId && normalizedCurrentUserId !== normalizedSessionUserId) {
     return 0;
   }
 
-  var score = 260;
-  if (isAudioLikeItem(session.NowPlayingItem)) {
+  let score = 260;
+  if (isAudioLikeItem(session?.NowPlayingItem)) {
     score += 80;
   }
 
-  var sessionPositionTicks = Number(session.PlayState.PositionTicks || 0);
-  var gmmpPositionTicks = Number(gmmpState.positionTicks || 0);
+  const sessionPositionTicks = Number(session?.PlayState?.PositionTicks || 0);
+  const gmmpPositionTicks = Number(gmmpState?.positionTicks || 0);
   if (sessionPositionTicks > 0 && gmmpPositionTicks > 0) {
-    var deltaSeconds = Math.abs(sessionPositionTicks - gmmpPositionTicks) / 10_000_000;
+    const deltaSeconds = Math.abs(sessionPositionTicks - gmmpPositionTicks) / 10_000_000;
     if (deltaSeconds <= 5) {
       score += 170;
     } else if (deltaSeconds <= 15) {
@@ -706,7 +706,7 @@ function scoreLikelyCurrentGmmpSession(session, gmmpState, currentUserId = "") {
     }
   }
 
-  if (session.SupportsRemoteControl !== false) {
+  if (session?.SupportsRemoteControl !== false) {
     score += 10;
   }
 
@@ -719,54 +719,54 @@ function scoreCurrentBrowserSessionCandidate(
   gmmpState = null,
   currentUserId = ""
 ) {
-  var score = 0;
-  var sessionId = normalizeIdentityToken(session.Id);
-  var deviceId = normalizeIdentityToken(session.DeviceId);
-  var userId = normalizeIdentityToken(session.UserId);
-  var rawClient = String(session.Client || "").trim().toLowerCase();
-  var decodedClient = decodePossiblyEncodedLabel(session.Client || "").toLowerCase();
-  var rawDeviceName = String(session.DeviceName || "").trim().toLowerCase();
-  var decodedDeviceName = decodePossiblyEncodedLabel(session.DeviceName || "").toLowerCase();
-  var haystack = [rawClient, decodedClient, rawDeviceName, decodedDeviceName].filter(Boolean).join(" ");
+  let score = 0;
+  const sessionId = normalizeIdentityToken(session?.Id);
+  const deviceId = normalizeIdentityToken(session?.DeviceId);
+  const userId = normalizeIdentityToken(session?.UserId);
+  const rawClient = String(session?.Client || "").trim().toLowerCase();
+  const decodedClient = decodePossiblyEncodedLabel(session?.Client || "").toLowerCase();
+  const rawDeviceName = String(session?.DeviceName || "").trim().toLowerCase();
+  const decodedDeviceName = decodePossiblyEncodedLabel(session?.DeviceName || "").toLowerCase();
+  const haystack = [rawClient, decodedClient, rawDeviceName, decodedDeviceName].filter(Boolean).join(" ");
 
   if (sessionId && identity.sessionIds.has(sessionId)) score += 1200;
   if (deviceId && identity.deviceIds.has(deviceId)) score += 1000;
   if (userId && identity.userIds.has(userId)) score += 220;
 
   if (haystack) {
-    if function([...identity.clientHints].some((hint) hint && haystack.includes(hint))) score += 80;
-    if function([...identity.deviceHints].some((hint) hint && haystack.includes(hint))) score += 120;
-    if function([...identity.browserHints].some((hint) hint && haystack.includes(hint))) score += 50;
+    if ([...identity.clientHints].some((hint) => hint && haystack.includes(hint))) score += 80;
+    if ([...identity.deviceHints].some((hint) => hint && haystack.includes(hint))) score += 120;
+    if ([...identity.browserHints].some((hint) => hint && haystack.includes(hint))) score += 50;
   }
 
   score += scoreLikelyCurrentGmmpSession(session, gmmpState, currentUserId);
 
-  if (session.SupportsRemoteControl !== false) score += 6;
+  if (session?.SupportsRemoteControl !== false) score += 6;
   return score;
 }
 
 function resolveCurrentBrowserSessionId(sessions = [], gmmpState = null) {
-  var identity = buildCurrentBrowserIdentity();
-  var currentUserId = String(getSessionInfo().userId || "").trim();
-  var ranked = (Array.isArray(sessions) ? sessions : [])
-    .filterfunction((session) session.Id)
-    .mapfunction((session) ({
+  const identity = buildCurrentBrowserIdentity();
+  const currentUserId = String(getSessionInfo()?.userId || "").trim();
+  const ranked = (Array.isArray(sessions) ? sessions : [])
+    .filter((session) => session?.Id)
+    .map((session) => ({
       session,
       score: scoreCurrentBrowserSessionCandidate(session, identity, gmmpState, currentUserId)
     }))
-    .sortfunction((left, right) right.score - left.score);
+    .sort((left, right) => right.score - left.score);
 
   if (!ranked.length) return "";
 
-  var best = ranked[0];
-  var bestSessionId = normalizeIdentityToken(best.session.Id);
-  var bestDeviceId = normalizeIdentityToken(best.session.DeviceId);
-  var hasHardMatch =
+  const best = ranked[0];
+  const bestSessionId = normalizeIdentityToken(best.session?.Id);
+  const bestDeviceId = normalizeIdentityToken(best.session?.DeviceId);
+  const hasHardMatch =
     (bestSessionId && identity.sessionIds.has(bestSessionId)) ||
     (bestDeviceId && identity.deviceIds.has(bestDeviceId));
 
-  if (hasHardMatch) return String(best.session.Id || "");
-  return best.score >= 300 ? String(best.session.Id || "") : "";
+  if (hasHardMatch) return String(best.session?.Id || "");
+  return best.score >= 300 ? String(best.session?.Id || "") : "";
 }
 
 function isCurrentBrowserSession(session, gmmpState = null) {
@@ -774,17 +774,17 @@ function isCurrentBrowserSession(session, gmmpState = null) {
     session,
     buildCurrentBrowserIdentity(),
     gmmpState,
-    String(getSessionInfo().userId || "").trim()
+    String(getSessionInfo()?.userId || "").trim()
   ) >= 300;
 }
 
 function getWindowGmmpBridge() {
   try {
-    var gmmp = typeof window !== "undefined" ? window.__GMMP : null;
+    const gmmp = typeof window !== "undefined" ? window.__GMMP : null;
     if (!gmmp) return null;
 
-    var hasState = typeof gmmp.getPlaybackState === "function";
-    var hasControls =
+    const hasState = typeof gmmp.getPlaybackState === "function";
+    const hasControls =
       typeof gmmp.setPaused === "function" &&
       typeof gmmp.setMuted === "function" &&
       typeof gmmp.setVolume === "function";
@@ -812,8 +812,8 @@ function getWindowGmmpBridge() {
   }
 }
 
-function getGmmpBridge() {
-  var globalBridge = getWindowGmmpBridge();
+async function getGmmpBridge() {
+  const globalBridge = getWindowGmmpBridge();
   if (globalBridge) {
     return globalBridge;
   }
@@ -824,65 +824,65 @@ function getGmmpBridge() {
 
   gmmpBridgePromise = Promise.all([
     import("./player/core/state.js"),
-    import("./player/player/playback.js").catchfunction(() null),
-    import("./player/ui/controls.js").catchfunction(() null),
-    import("./player/main.js").catchfunction(() null)
+    import("./player/player/playback.js").catch(() => null),
+    import("./player/ui/controls.js").catch(() => null),
+    import("./player/main.js").catch(() => null)
   ])
-    .thenfunction(([stateMod, playbackMod, controlsMod, mainMod]) {
-      var { musicPlayerState, saveUserSettings } = stateMod || {};
-      if (!musicPlayerState.audio) {
+    .then(async ([stateMod, playbackMod, controlsMod, mainMod]) => {
+      const { musicPlayerState, saveUserSettings } = stateMod || {};
+      if (!musicPlayerState?.audio) {
         return null;
       }
 
       try {
-        mainMod.ensureGmmpInit.({ show: false });
+        await mainMod?.ensureGmmpInit?.({ show: false });
       } catch {}
 
-      var settle = function(ms = 60) new Promisefunction((resolve) {
+      const settle = (ms = 60) => new Promise((resolve) => {
         window.setTimeout(resolve, ms);
       });
 
       return {
         getState() {
-          var audio = musicPlayerState.audio;
-          var track = musicPlayerState.currentTrack || musicPlayerState.playlist.[musicPlayerState.currentIndex] || null;
-          var runtimeSeconds = Number.isFinite(audio.duration) && audio.duration > 0
+          const audio = musicPlayerState.audio;
+          const track = musicPlayerState.currentTrack || musicPlayerState.playlist?.[musicPlayerState.currentIndex] || null;
+          const runtimeSeconds = Number.isFinite(audio?.duration) && audio.duration > 0
             ? audio.duration
             : (Number.isFinite(musicPlayerState.currentTrackDuration) ? musicPlayerState.currentTrackDuration : 0);
-          var currentVolume = clamp(
-            Math.round((audio.muted ? 0 : Number(audio.volume || musicPlayerState.userSettings.volume || 0)) * 100),
+          const currentVolume = clamp(
+            Math.round((audio?.muted ? 0 : Number(audio?.volume ?? musicPlayerState.userSettings?.volume ?? 0)) * 100),
             0,
             100
           );
 
           return {
             hasCurrentTrack: !!track,
-            trackId: track.Id ? String(track.Id) : "",
-            isPaused: !!audio.paused,
-            isMuted: !!audio.muted || currentVolume <= 0,
+            trackId: track?.Id ? String(track.Id) : "",
+            isPaused: !!audio?.paused,
+            isMuted: !!audio?.muted || currentVolume <= 0,
             volumeLevel: currentVolume,
-            positionTicks: Math.max(0, Math.floor(Number(audio.currentTime || 0) * 10_000_000)),
+            positionTicks: Math.max(0, Math.floor(Number(audio?.currentTime || 0) * 10_000_000)),
             runtimeTicks: Math.max(0, Math.floor(Number(runtimeSeconds || 0) * 10_000_000)),
             isLiveStream: !!musicPlayerState.isLiveStream
           };
         },
-        setPaused(paused) {
-          var audio = musicPlayerState.audio;
+        async setPaused(paused) {
+          const audio = musicPlayerState.audio;
           if (!audio) {
             throw new Error("GMMP audio bulunamadi");
           }
 
           if (!!audio.paused !== !!paused) {
-            if (typeof playbackMod.togglePlayPause === "function") {
+            if (typeof playbackMod?.togglePlayPause === "function") {
               playbackMod.togglePlayPause();
-              settle(paused ? 20 : 80);
+              await settle(paused ? 20 : 80);
             }
 
             if (!!audio.paused !== !!paused) {
               if (paused) {
                 audio.pause();
               } else {
-                audio.play();
+                await audio.play();
               }
             }
           }
@@ -896,15 +896,15 @@ function getGmmpBridge() {
           return this.getState();
         },
         setMuted(muted) {
-          var audio = musicPlayerState.audio;
+          const audio = musicPlayerState.audio;
           if (!audio) {
             throw new Error("GMMP audio bulunamadi");
           }
 
-          var nextMuted = !!muted;
+          const nextMuted = !!muted;
           if (!nextMuted && Number(audio.volume || 0) <= 0) {
-            var restored = clamp(
-              Math.round(Number(musicPlayerState.userSettings.volume || 0.7) * 100),
+            const restored = clamp(
+              Math.round(Number(musicPlayerState.userSettings?.volume ?? 0.7) * 100),
               1,
               100
             ) / 100;
@@ -914,7 +914,7 @@ function getGmmpBridge() {
             }
           }
 
-          if (!!audio.muted !== nextMuted && typeof controlsMod.toggleMute === "function") {
+          if (!!audio.muted !== nextMuted && typeof controlsMod?.toggleMute === "function") {
             controlsMod.toggleMute();
           }
           if (!!audio.muted !== nextMuted) {
@@ -928,19 +928,19 @@ function getGmmpBridge() {
           }
 
           try {
-            controlsMod.updateVolumeIcon.(nextMuted ? 0 : Number(audio.volume || 0));
+            controlsMod?.updateVolumeIcon?.(nextMuted ? 0 : Number(audio.volume || 0));
           } catch {}
 
-          try { saveUserSettings.(); } catch {}
+          try { saveUserSettings?.(); } catch {}
           return this.getState();
         },
         setVolume(volumeLevel) {
-          var audio = musicPlayerState.audio;
+          const audio = musicPlayerState.audio;
           if (!audio) {
             throw new Error("GMMP audio bulunamadi");
           }
 
-          var normalized = clamp(volumeLevel, 0, 100) / 100;
+          const normalized = clamp(volumeLevel, 0, 100) / 100;
           audio.volume = normalized;
           audio.muted = normalized <= 0 ? true : false;
 
@@ -955,15 +955,15 @@ function getGmmpBridge() {
           }
 
           try {
-            controlsMod.updateVolumeIcon.(normalized);
+            controlsMod?.updateVolumeIcon?.(normalized);
           } catch {}
 
-          try { saveUserSettings.(); } catch {}
+          try { saveUserSettings?.(); } catch {}
           return this.getState();
         }
       };
     })
-    .catchfunction((error) {
+    .catch((error) => {
       console.warn("GMMP bridge yüklenemedi:", error);
       gmmpBridgePromise = null;
       return null;
@@ -972,45 +972,45 @@ function getGmmpBridge() {
   return gmmpBridgePromise;
 }
 
-function getGmmpPlaybackSnapshot() {
-  var bridge = getGmmpBridge();
-  return bridge.getState.() || null;
+async function getGmmpPlaybackSnapshot() {
+  const bridge = await getGmmpBridge();
+  return bridge?.getState?.() || null;
 }
 
 function getLocalVideoPlaybackSnapshot() {
-  var bridge = getLocalVideoBridge();
-  return bridge.getState.() || null;
+  const bridge = getLocalVideoBridge();
+  return bridge?.getState?.() || null;
 }
 
 function buildRemoteGmmpLookupKeys(target = null) {
-  var sessionId = normalizeIdentityToken(
-    target.sessionId ||
-    target.SessionId ||
-    target.Id ||
-    target.session.Id ||
+  const sessionId = normalizeIdentityToken(
+    target?.sessionId ||
+    target?.SessionId ||
+    target?.Id ||
+    target?.session?.Id ||
     ""
   );
-  var deviceId = normalizeIdentityToken(
-    target.deviceId ||
-    target.DeviceId ||
-    target.session.DeviceId ||
+  const deviceId = normalizeIdentityToken(
+    target?.deviceId ||
+    target?.DeviceId ||
+    target?.session?.DeviceId ||
     ""
   );
-  var keys = [];
+  const keys = [];
 
   if (sessionId) {
-    keys.push("session:" + (sessionId));
+    keys.push(`session:${sessionId}`);
   }
   if (deviceId) {
-    keys.push("device:" + (deviceId));
+    keys.push(`device:${deviceId}`);
   }
 
   return keys;
 }
 
 function normalizeRemoteGmmpState(rawState) {
-  var sessionId = String(rawState.SessionId || rawState.sessionId || "").trim();
-  var deviceId = String(rawState.DeviceId || rawState.deviceId || "").trim();
+  const sessionId = String(rawState?.SessionId || rawState?.sessionId || "").trim();
+  const deviceId = String(rawState?.DeviceId || rawState?.deviceId || "").trim();
   if (!sessionId && !deviceId) {
     return null;
   }
@@ -1018,22 +1018,22 @@ function normalizeRemoteGmmpState(rawState) {
   return {
     sessionId,
     deviceId,
-    userId: String(rawState.UserId || rawState.userId || "").trim(),
-    userName: String(rawState.UserName || rawState.userName || "").trim(),
-    remoteKey: sessionId ? "session:" + (sessionId) : "device:" + (deviceId),
-    trackId: String(rawState.TrackId || rawState.trackId || "").trim(),
-    itemId: String(rawState.ItemId || rawState.itemId || "").trim(),
-    hasCurrentTrack: rawState.HasCurrentTrack === true || rawState.hasCurrentTrack === true,
-    isPaused: rawState.IsPaused === true || rawState.isPaused === true,
-    isMuted: rawState.IsMuted === true || rawState.isMuted === true,
-    volumeLevel: clamp(rawState.VolumeLevel || rawState.volumeLevel || 0, 0, 100),
-    positionTicks: Math.max(0, Number(rawState.PositionTicks || rawState.positionTicks || 0) || 0),
-    runtimeTicks: Math.max(0, Number(rawState.RuntimeTicks || rawState.runtimeTicks || 0) || 0),
-    isLiveStream: rawState.IsLiveStream === true || rawState.isLiveStream === true,
-    updatedAt: String(rawState.updatedAt || rawState.UpdatedAt || "").trim(),
-    updatedAtMs: function(() {
-      var rawUpdatedAt = String(rawState.updatedAt || rawState.UpdatedAt || "").trim();
-      var parsed = rawUpdatedAt ? Date.parse(rawUpdatedAt) : NaN;
+    userId: String(rawState?.UserId || rawState?.userId || "").trim(),
+    userName: String(rawState?.UserName || rawState?.userName || "").trim(),
+    remoteKey: sessionId ? `session:${sessionId}` : `device:${deviceId}`,
+    trackId: String(rawState?.TrackId || rawState?.trackId || "").trim(),
+    itemId: String(rawState?.ItemId || rawState?.itemId || "").trim(),
+    hasCurrentTrack: rawState?.HasCurrentTrack === true || rawState?.hasCurrentTrack === true,
+    isPaused: rawState?.IsPaused === true || rawState?.isPaused === true,
+    isMuted: rawState?.IsMuted === true || rawState?.isMuted === true,
+    volumeLevel: clamp(rawState?.VolumeLevel ?? rawState?.volumeLevel ?? 0, 0, 100),
+    positionTicks: Math.max(0, Number(rawState?.PositionTicks ?? rawState?.positionTicks ?? 0) || 0),
+    runtimeTicks: Math.max(0, Number(rawState?.RuntimeTicks ?? rawState?.runtimeTicks ?? 0) || 0),
+    isLiveStream: rawState?.IsLiveStream === true || rawState?.isLiveStream === true,
+    updatedAt: String(rawState?.updatedAt || rawState?.UpdatedAt || "").trim(),
+    updatedAtMs: (() => {
+      const rawUpdatedAt = String(rawState?.updatedAt || rawState?.UpdatedAt || "").trim();
+      const parsed = rawUpdatedAt ? Date.parse(rawUpdatedAt) : NaN;
       return Number.isFinite(parsed) ? parsed : 0;
     })()
   };
@@ -1042,7 +1042,7 @@ function normalizeRemoteGmmpState(rawState) {
 function isRemoteGmmpStateFresh(remoteState) {
   if (!remoteState) return false;
 
-  var updatedAtMs = Number(remoteState.updatedAtMs || 0);
+  const updatedAtMs = Number(remoteState?.updatedAtMs || 0);
   if (!Number.isFinite(updatedAtMs) || updatedAtMs <= 0) {
     return true;
   }
@@ -1050,22 +1050,22 @@ function isRemoteGmmpStateFresh(remoteState) {
   return (Date.now() - updatedAtMs) <= REMOTE_GMMP_STATE_STALE_MS;
 }
 
-function fetchRemoteGmmpStateMap({ signal } = {}) {
+async function fetchRemoteGmmpStateMap({ signal } = {}) {
   try {
-    var response = makeCastApiRequest("/Plugins/NexusPobreFlix/gmmp/states", {
+    const response = await makeCastApiRequest("/Plugins/NexusPobreFlix/gmmp/states", {
       signal,
       __quiet: true
     });
-    var items = Array.isArray(response.items)
+    const items = Array.isArray(response?.items)
       ? response.items
       : (Array.isArray(response) ? response : []);
-    var normalized = items
-      .mapfunction((item) normalizeRemoteGmmpState(item))
+    const normalized = items
+      .map((item) => normalizeRemoteGmmpState(item))
       .filter(Boolean);
-    var stateMap = new Map();
+    const stateMap = new Map();
 
-    normalized.forEach(function((item) {
-      buildRemoteGmmpLookupKeys(item).forEach(function((key) {
+    normalized.forEach((item) => {
+      buildRemoteGmmpLookupKeys(item).forEach((key) => {
         stateMap.set(key, item);
       });
     });
@@ -1081,9 +1081,9 @@ function getRemoteGmmpStateForDevice(deviceOrSession, remoteGmmpStateMap) {
     return null;
   }
 
-  var lookupKeys = buildRemoteGmmpLookupKeys(deviceOrSession);
-  for (var key of lookupKeys) {
-    var remoteState = remoteGmmpStateMap.get(key);
+  const lookupKeys = buildRemoteGmmpLookupKeys(deviceOrSession);
+  for (const key of lookupKeys) {
+    const remoteState = remoteGmmpStateMap.get(key);
     if (isRemoteGmmpStateFresh(remoteState)) {
       return remoteState;
     }
@@ -1093,49 +1093,49 @@ function getRemoteGmmpStateForDevice(deviceOrSession, remoteGmmpStateMap) {
     return null;
   }
 
-  var allRemoteStates = Array.from(
+  const allRemoteStates = Array.from(
     new Map(
       Array.from(remoteGmmpStateMap.values())
         .filter(Boolean)
-        .mapfunction((state) [String(state.remoteKey || ""), state])
+        .map((state) => [String(state?.remoteKey || ""), state])
     ).values()
-  ).filterfunction((state) isRemoteGmmpStateFresh(state) && state.hasCurrentTrack);
+  ).filter((state) => isRemoteGmmpStateFresh(state) && state?.hasCurrentTrack);
 
   if (!allRemoteStates.length) {
     return null;
   }
 
-  var targetUserId = normalizeIdentityToken(
-    deviceOrSession.session.UserId ||
-    deviceOrSession.UserId ||
+  const targetUserId = normalizeIdentityToken(
+    deviceOrSession?.session?.UserId ||
+    deviceOrSession?.UserId ||
     ""
   );
-  var targetItemId = normalizeIdentityToken(
-    deviceOrSession.itemId ||
-    deviceOrSession.item.Id ||
-    deviceOrSession.itemDetails.Id ||
-    deviceOrSession.NowPlayingItem.Id ||
-    deviceOrSession.session.NowPlayingItem.Id ||
-    deviceOrSession.NowPlayingItemId ||
+  const targetItemId = normalizeIdentityToken(
+    deviceOrSession?.itemId ||
+    deviceOrSession?.item?.Id ||
+    deviceOrSession?.itemDetails?.Id ||
+    deviceOrSession?.NowPlayingItem?.Id ||
+    deviceOrSession?.session?.NowPlayingItem?.Id ||
+    deviceOrSession?.NowPlayingItemId ||
     ""
   );
-  var effectiveItem =
-    deviceOrSession.itemDetails ||
-    deviceOrSession.item ||
-    deviceOrSession.NowPlayingItem ||
-    deviceOrSession.session.NowPlayingItem ||
+  const effectiveItem =
+    deviceOrSession?.itemDetails ||
+    deviceOrSession?.item ||
+    deviceOrSession?.NowPlayingItem ||
+    deviceOrSession?.session?.NowPlayingItem ||
     null;
-  var mediaHint = String(deviceOrSession.mediaTypeText || "").trim().toLowerCase();
-  var iconHint = String(deviceOrSession.mediaIconClass || "").trim().toLowerCase();
-  var isAudioCandidate =
+  const mediaHint = String(deviceOrSession?.mediaTypeText || "").trim().toLowerCase();
+  const iconHint = String(deviceOrSession?.mediaIconClass || "").trim().toLowerCase();
+  const isAudioCandidate =
     isAudioLikeItem(effectiveItem) ||
     /audio|song|music|audiobook/.test(mediaHint) ||
     ["fa-music", "fa-headphones", "fa-compact-disc", "fa-book-open"].includes(iconHint);
 
   if (targetUserId && targetItemId) {
-    var exactUserAndTrack = allRemoteStates.findfunction((state) {
-      var remoteUserId = normalizeIdentityToken(state.userId);
-      var remoteTrackId = normalizeIdentityToken(state.trackId || state.itemId);
+    const exactUserAndTrack = allRemoteStates.find((state) => {
+      const remoteUserId = normalizeIdentityToken(state?.userId);
+      const remoteTrackId = normalizeIdentityToken(state?.trackId || state?.itemId);
       return remoteUserId === targetUserId && remoteTrackId === targetItemId;
     });
     if (exactUserAndTrack) {
@@ -1144,8 +1144,8 @@ function getRemoteGmmpStateForDevice(deviceOrSession, remoteGmmpStateMap) {
   }
 
   if (targetItemId) {
-    var sameTrackStates = allRemoteStates.filterfunction((state) {
-      var remoteTrackId = normalizeIdentityToken(state.trackId || state.itemId);
+    const sameTrackStates = allRemoteStates.filter((state) => {
+      const remoteTrackId = normalizeIdentityToken(state?.trackId || state?.itemId);
       return remoteTrackId === targetItemId;
     });
     if (sameTrackStates.length === 1) {
@@ -1154,14 +1154,14 @@ function getRemoteGmmpStateForDevice(deviceOrSession, remoteGmmpStateMap) {
   }
 
   if (targetUserId) {
-    var sameUserStates = allRemoteStates.filterfunction((state)
-      normalizeIdentityToken(state.userId) === targetUserId
+    const sameUserStates = allRemoteStates.filter((state) =>
+      normalizeIdentityToken(state?.userId) === targetUserId
     );
     if (sameUserStates.length === 1 && (
       isAudioCandidate ||
       !!targetItemId ||
       looksLikeRemoteBrowserSession(
-        deviceOrSession.session || deviceOrSession,
+        deviceOrSession?.session || deviceOrSession,
         deviceOrSession
       )
     )) {
@@ -1171,7 +1171,7 @@ function getRemoteGmmpStateForDevice(deviceOrSession, remoteGmmpStateMap) {
 
   if (allRemoteStates.length === 1) {
     if (isAudioCandidate || looksLikeRemoteBrowserSession(
-      deviceOrSession.session || deviceOrSession,
+      deviceOrSession?.session || deviceOrSession,
       deviceOrSession
     )) {
       return allRemoteStates[0];
@@ -1184,21 +1184,21 @@ function getRemoteGmmpStateForDevice(deviceOrSession, remoteGmmpStateMap) {
 function hasExactRemoteGmmpIdentityMatch(deviceOrSession, remoteState) {
   if (!deviceOrSession || !remoteState) return false;
 
-  var targetSessionId = normalizeIdentityToken(
-    deviceOrSession.sessionId ||
-    deviceOrSession.SessionId ||
-    deviceOrSession.Id ||
-    deviceOrSession.session.Id ||
+  const targetSessionId = normalizeIdentityToken(
+    deviceOrSession?.sessionId ||
+    deviceOrSession?.SessionId ||
+    deviceOrSession?.Id ||
+    deviceOrSession?.session?.Id ||
     ""
   );
-  var targetDeviceId = normalizeIdentityToken(
-    deviceOrSession.deviceId ||
-    deviceOrSession.DeviceId ||
-    deviceOrSession.session.DeviceId ||
+  const targetDeviceId = normalizeIdentityToken(
+    deviceOrSession?.deviceId ||
+    deviceOrSession?.DeviceId ||
+    deviceOrSession?.session?.DeviceId ||
     ""
   );
-  var remoteSessionId = normalizeIdentityToken(remoteState.sessionId);
-  var remoteDeviceId = normalizeIdentityToken(remoteState.deviceId);
+  const remoteSessionId = normalizeIdentityToken(remoteState?.sessionId);
+  const remoteDeviceId = normalizeIdentityToken(remoteState?.deviceId);
 
   return (
     (!!targetSessionId && !!remoteSessionId && targetSessionId === remoteSessionId) ||
@@ -1214,38 +1214,38 @@ function sanitizeVisiblePlaybackSessions(
     remoteGmmpStateMap = null
   } = {}
 ) {
-  var list = Array.isArray(sessions) ? sessions : [];
+  const list = Array.isArray(sessions) ? sessions : [];
   if (!list.length) return [];
 
-  var localSessionId = resolveCurrentBrowserSessionId(list, gmmpState);
+  const localSessionId = resolveCurrentBrowserSessionId(list, gmmpState);
 
-  return list.filterfunction((session) {
-    var hasPlaybackHint = !!(
+  return list.filter((session) => {
+    const hasPlaybackHint = !!(
       getSessionNowPlayingItemId(session) ||
-      String(session.NowPlayingItemName || "").trim() ||
-      String(session.NowPlayingItem.Name || "").trim()
+      String(session?.NowPlayingItemName || "").trim() ||
+      String(session?.NowPlayingItem?.Name || "").trim()
     );
     if (!hasPlaybackHint) {
       return false;
     }
 
-    var itemSnapshot = normalizeNowPlayingItem(session.NowPlayingItem, session);
+    const itemSnapshot = normalizeNowPlayingItem(session?.NowPlayingItem, session);
     if (!isAudioLikeItem(itemSnapshot)) {
       return true;
     }
 
-    var sessionId = normalizeIdentityToken(session.Id);
-    var isLocalSession = localSessionId
+    const sessionId = normalizeIdentityToken(session?.Id);
+    const isLocalSession = localSessionId
       ? sessionId === normalizeIdentityToken(localSessionId)
       : isCurrentBrowserSession(session, gmmpState);
 
     if (isLocalSession) {
-      return !!gmmpState.hasCurrentTrack || !!videoState.hasActiveVideo;
+      return !!gmmpState?.hasCurrentTrack || !!videoState?.hasActiveVideo;
     }
 
     if (looksLikeRemoteBrowserSession(session)) {
-      var remoteState = getRemoteGmmpStateForDevice(session, remoteGmmpStateMap);
-      return !!remoteState.hasCurrentTrack;
+      const remoteState = getRemoteGmmpStateForDevice(session, remoteGmmpStateMap);
+      return !!remoteState?.hasCurrentTrack;
     }
 
     return true;
@@ -1253,14 +1253,14 @@ function sanitizeVisiblePlaybackSessions(
 }
 
 function isPotentialRemoteGmmpTarget(device, controlSnapshot = null) {
-  if (!device || controlSnapshot.isLocalSession === true) {
+  if (!device || controlSnapshot?.isLocalSession === true) {
     return false;
   }
 
-  var effectiveSession = device.session || null;
-  var effectiveItem = effectiveSession.NowPlayingItem || device.itemDetails || device.item || null;
-  var mediaHint = String(device.mediaTypeText || "").trim().toLowerCase();
-  var iconHint = String(device.mediaIconClass || "").trim().toLowerCase();
+  const effectiveSession = device.session || null;
+  const effectiveItem = effectiveSession?.NowPlayingItem || device.itemDetails || device.item || null;
+  const mediaHint = String(device?.mediaTypeText || "").trim().toLowerCase();
+  const iconHint = String(device?.mediaIconClass || "").trim().toLowerCase();
 
   return looksLikeRemoteBrowserSession(effectiveSession, device) && (
     isAudioLikeItem(effectiveItem) ||
@@ -1269,25 +1269,25 @@ function isPotentialRemoteGmmpTarget(device, controlSnapshot = null) {
   );
 }
 
-function refreshDeviceControlMode(device, { signal } = {}) {
+async function refreshDeviceControlMode(device, { signal } = {}) {
   if (!device) {
     return { gmmpState: null, videoState: null, remoteGmmpState: null, controlMode: "session", isLocalSession: false };
   }
 
-  var gmmpState = getGmmpPlaybackSnapshot();
-  var videoState = getLocalVideoPlaybackSnapshot();
-  var remoteGmmpStateMap = fetchRemoteGmmpStateMap({ signal });
-  var localSessionId = "";
+  const gmmpState = await getGmmpPlaybackSnapshot();
+  const videoState = getLocalVideoPlaybackSnapshot();
+  const remoteGmmpStateMap = await fetchRemoteGmmpStateMap({ signal });
+  let localSessionId = "";
 
   try {
-    var sessions = sanitizeVisiblePlaybackSessions(
-      fetchVisiblePlaybackSessions({ signal }),
+    const sessions = sanitizeVisiblePlaybackSessions(
+      await fetchVisiblePlaybackSessions({ signal }),
       { gmmpState, videoState, remoteGmmpStateMap }
     );
     if (Array.isArray(sessions) && sessions.length) {
       localSessionId = resolveCurrentBrowserSessionId(sessions, gmmpState);
-      var freshSession = sessions.findfunction((session)
-        normalizeIdentityToken(session.Id) === normalizeIdentityToken(device.sessionId)
+      const freshSession = sessions.find((session) =>
+        normalizeIdentityToken(session?.Id) === normalizeIdentityToken(device.sessionId)
       );
       if (freshSession) {
         device.session = freshSession;
@@ -1295,13 +1295,13 @@ function refreshDeviceControlMode(device, { signal } = {}) {
     }
   } catch {}
 
-  var remoteGmmpState = getRemoteGmmpStateForDevice(device, remoteGmmpStateMap);
+  const remoteGmmpState = getRemoteGmmpStateForDevice(device, remoteGmmpStateMap);
   syncDeviceControlMode(device, device.session, gmmpState, videoState, remoteGmmpState, localSessionId);
   device.remoteGmmpState = remoteGmmpState;
-  device.hasRemoteGmmpState = !!remoteGmmpState.hasCurrentTrack;
-  var isLocalSession = localSessionId
-    ? normalizeIdentityToken(device.session.Id) === normalizeIdentityToken(localSessionId)
-    : isCurrentBrowserSession(device.session, gmmpState);
+  device.hasRemoteGmmpState = !!remoteGmmpState?.hasCurrentTrack;
+  const isLocalSession = localSessionId
+    ? normalizeIdentityToken(device?.session?.Id) === normalizeIdentityToken(localSessionId)
+    : isCurrentBrowserSession(device?.session, gmmpState);
   return {
     gmmpState,
     videoState,
@@ -1312,11 +1312,11 @@ function refreshDeviceControlMode(device, { signal } = {}) {
 }
 
 function isMatchingGmmpTrack(deviceOrSession, gmmpState) {
-  var gmmpTrackId = String(gmmpState.trackId || "").trim();
-  var targetItemId = String(
-    deviceOrSession.itemId ||
-    deviceOrSession.item.Id ||
-    deviceOrSession.NowPlayingItem.Id ||
+  const gmmpTrackId = String(gmmpState?.trackId || "").trim();
+  const targetItemId = String(
+    deviceOrSession?.itemId ||
+    deviceOrSession?.item?.Id ||
+    deviceOrSession?.NowPlayingItem?.Id ||
     ""
   ).trim();
 
@@ -1326,7 +1326,7 @@ function isMatchingGmmpTrack(deviceOrSession, gmmpState) {
 function applyGmmpStateToDevice(device, gmmpState) {
   if (!device || !gmmpState) return false;
 
-  var volumeLevel = clamp(gmmpState.volumeLevel || device.volumeLevel, 0, 100);
+  const volumeLevel = clamp(gmmpState.volumeLevel ?? device.volumeLevel, 0, 100);
   device.controlMode = "gmmp";
   device.remoteGmmpState = null;
   device.hasRemoteGmmpState = false;
@@ -1351,15 +1351,15 @@ function applyGmmpStateToDevice(device, gmmpState) {
 }
 
 function isMatchingLocalVideoItem(deviceOrSession, videoState) {
-  if (!videoState.hasActiveVideo) {
+  if (!videoState?.hasActiveVideo) {
     return false;
   }
 
-  var videoItemId = String(videoState.itemId || "").trim();
-  var targetItemId = String(
-    deviceOrSession.itemId ||
-    deviceOrSession.item.Id ||
-    deviceOrSession.NowPlayingItem.Id ||
+  const videoItemId = String(videoState?.itemId || "").trim();
+  const targetItemId = String(
+    deviceOrSession?.itemId ||
+    deviceOrSession?.item?.Id ||
+    deviceOrSession?.NowPlayingItem?.Id ||
     ""
   ).trim();
 
@@ -1369,7 +1369,7 @@ function isMatchingLocalVideoItem(deviceOrSession, videoState) {
 function applyLocalVideoStateToDevice(device, videoState) {
   if (!device || !videoState) return false;
 
-  var volumeLevel = clamp(videoState.volumeLevel || device.volumeLevel, 0, 100);
+  const volumeLevel = clamp(videoState.volumeLevel ?? device.volumeLevel, 0, 100);
   device.controlMode = "local-video";
   device.remoteGmmpState = null;
   device.hasRemoteGmmpState = false;
@@ -1394,15 +1394,15 @@ function applyLocalVideoStateToDevice(device, videoState) {
 }
 
 function isMatchingRemoteGmmpTrack(deviceOrSession, remoteState) {
-  if (!remoteState.hasCurrentTrack) {
+  if (!remoteState?.hasCurrentTrack) {
     return false;
   }
 
-  var remoteTrackId = String(remoteState.trackId || remoteState.itemId || "").trim();
-  var targetItemId = String(
-    deviceOrSession.itemId ||
-    deviceOrSession.item.Id ||
-    deviceOrSession.NowPlayingItem.Id ||
+  const remoteTrackId = String(remoteState?.trackId || remoteState?.itemId || "").trim();
+  const targetItemId = String(
+    deviceOrSession?.itemId ||
+    deviceOrSession?.item?.Id ||
+    deviceOrSession?.NowPlayingItem?.Id ||
     ""
   ).trim();
 
@@ -1412,11 +1412,11 @@ function isMatchingRemoteGmmpTrack(deviceOrSession, remoteState) {
 function applyRemoteGmmpStateToDevice(device, remoteState) {
   if (!device || !remoteState) return false;
 
-  var volumeLevel = clamp(remoteState.volumeLevel || device.volumeLevel, 0, 100);
-  var remoteTrackId = String(remoteState.trackId || remoteState.itemId || "").trim();
+  const volumeLevel = clamp(remoteState.volumeLevel ?? device.volumeLevel, 0, 100);
+  const remoteTrackId = String(remoteState.trackId || remoteState.itemId || "").trim();
   device.controlMode = "gmmp-remote";
   device.remoteGmmpState = remoteState;
-  device.hasRemoteGmmpState = !!remoteState.hasCurrentTrack;
+  device.hasRemoteGmmpState = !!remoteState?.hasCurrentTrack;
   device.deviceId = String(remoteState.deviceId || device.deviceId || "").trim();
   if (remoteTrackId) {
     device.itemId = remoteTrackId;
@@ -1442,26 +1442,26 @@ function applyRemoteGmmpStateToDevice(device, remoteState) {
 }
 
 function syncDeviceControlMode(device, session, gmmpState, videoState = null, remoteGmmpState = null, localSessionId = "") {
-  var effectiveSession = session || device.session;
-  var isLocalSession = localSessionId
-    ? normalizeIdentityToken(effectiveSession.Id) === normalizeIdentityToken(localSessionId)
+  const effectiveSession = session || device?.session;
+  const isLocalSession = localSessionId
+    ? normalizeIdentityToken(effectiveSession?.Id) === normalizeIdentityToken(localSessionId)
     : isCurrentBrowserSession(effectiveSession, gmmpState);
-  var gmmpConfidenceScore = scoreLikelyCurrentGmmpSession(
+  const gmmpConfidenceScore = scoreLikelyCurrentGmmpSession(
     effectiveSession,
     gmmpState,
-    String(getSessionInfo().userId || "").trim()
+    String(getSessionInfo()?.userId || "").trim()
   );
-  var preserveExistingGmmpMode = device.controlMode === "gmmp" &&
-    !!gmmpState.hasCurrentTrack &&
-    !gmmpState.isLiveStream &&
+  const preserveExistingGmmpMode = device?.controlMode === "gmmp" &&
+    !!gmmpState?.hasCurrentTrack &&
+    !gmmpState?.isLiveStream &&
     isMatchingGmmpTrack(device || session, gmmpState);
-  var shouldUseGmmp = preserveExistingGmmpMode || (
-    !!gmmpState.hasCurrentTrack &&
-    !gmmpState.isLiveStream &&
+  const shouldUseGmmp = preserveExistingGmmpMode || (
+    !!gmmpState?.hasCurrentTrack &&
+    !gmmpState?.isLiveStream &&
     isLocalSession &&
     isMatchingGmmpTrack(device || session, gmmpState) &&
     (
-      isAudioLikeItem(effectiveSession.NowPlayingItem || device.item) ||
+      isAudioLikeItem(effectiveSession?.NowPlayingItem || device?.item) ||
       gmmpConfidenceScore >= 260
     )
   );
@@ -1470,12 +1470,12 @@ function syncDeviceControlMode(device, session, gmmpState, videoState = null, re
     return applyGmmpStateToDevice(device, gmmpState);
   }
 
-  var effectiveItem = effectiveSession.NowPlayingItem || device.item;
-  var preserveExistingLocalVideoMode = device.controlMode === "local-video" &&
-    !!videoState.hasActiveVideo &&
+  const effectiveItem = effectiveSession?.NowPlayingItem || device?.item;
+  const preserveExistingLocalVideoMode = device?.controlMode === "local-video" &&
+    !!videoState?.hasActiveVideo &&
     isMatchingLocalVideoItem(device || session, videoState);
-  var shouldUseLocalVideo = preserveExistingLocalVideoMode || (
-    !!videoState.hasActiveVideo &&
+  const shouldUseLocalVideo = preserveExistingLocalVideoMode || (
+    !!videoState?.hasActiveVideo &&
     isLocalSession &&
     isVideoLikeItem(effectiveItem) &&
     isMatchingLocalVideoItem(device || session, videoState)
@@ -1485,13 +1485,13 @@ function syncDeviceControlMode(device, session, gmmpState, videoState = null, re
     return applyLocalVideoStateToDevice(device, videoState);
   }
 
-  var exactRemoteIdentityMatch = hasExactRemoteGmmpIdentityMatch(device || session, remoteGmmpState);
-  var hasMatchingRemoteGmmpState =
-    !!remoteGmmpState.hasCurrentTrack &&
+  const exactRemoteIdentityMatch = hasExactRemoteGmmpIdentityMatch(device || session, remoteGmmpState);
+  const hasMatchingRemoteGmmpState =
+    !!remoteGmmpState?.hasCurrentTrack &&
     (!isLocalSession || exactRemoteIdentityMatch);
-  var preserveExistingRemoteGmmpMode = device.controlMode === "gmmp-remote" &&
+  const preserveExistingRemoteGmmpMode = device?.controlMode === "gmmp-remote" &&
     hasMatchingRemoteGmmpState;
-  var shouldUseRemoteGmmp = preserveExistingRemoteGmmpMode || hasMatchingRemoteGmmpState;
+  const shouldUseRemoteGmmp = preserveExistingRemoteGmmpMode || hasMatchingRemoteGmmpState;
 
   if (shouldUseRemoteGmmp) {
     return applyRemoteGmmpStateToDevice(device, remoteGmmpState);
@@ -1504,11 +1504,11 @@ function syncDeviceControlMode(device, session, gmmpState, videoState = null, re
 }
 
 function preserveLocalGmmpDeviceState(state, gmmpState) {
-  if (!gmmpState.hasCurrentTrack) return false;
+  if (!gmmpState?.hasCurrentTrack) return false;
 
-  var preserved = false;
-  state.devices.forEach(function((device) {
-    var isMatch = device.controlMode === "gmmp" && isMatchingGmmpTrack(device, gmmpState);
+  let preserved = false;
+  state.devices.forEach((device) => {
+    const isMatch = device.controlMode === "gmmp" && isMatchingGmmpTrack(device, gmmpState);
     if (!isMatch) return;
     preserved = applyGmmpStateToDevice(device, gmmpState) || preserved;
   });
@@ -1517,11 +1517,11 @@ function preserveLocalGmmpDeviceState(state, gmmpState) {
 }
 
 function preserveLocalVideoDeviceState(state, videoState) {
-  if (!videoState.hasActiveVideo) return false;
+  if (!videoState?.hasActiveVideo) return false;
 
-  var preserved = false;
-  state.devices.forEach(function((device) {
-    var isMatch = device.controlMode === "local-video" && isMatchingLocalVideoItem(device, videoState);
+  let preserved = false;
+  state.devices.forEach((device) => {
+    const isMatch = device.controlMode === "local-video" && isMatchingLocalVideoItem(device, videoState);
     if (!isMatch) return;
     preserved = applyLocalVideoStateToDevice(device, videoState) || preserved;
   });
@@ -1532,11 +1532,11 @@ function preserveLocalVideoDeviceState(state, videoState) {
 function preserveRemoteGmmpDeviceState(state, remoteGmmpStateMap) {
   if (!(remoteGmmpStateMap instanceof Map) || remoteGmmpStateMap.size === 0) return false;
 
-  var preserved = false;
-  state.devices.forEach(function((device) {
-    var remoteState = getRemoteGmmpStateForDevice(device, remoteGmmpStateMap);
+  let preserved = false;
+  state.devices.forEach((device) => {
+    const remoteState = getRemoteGmmpStateForDevice(device, remoteGmmpStateMap);
     if (!remoteState) return;
-    var isMatch = device.controlMode === "gmmp-remote" && isMatchingRemoteGmmpTrack(device, remoteState);
+    const isMatch = device.controlMode === "gmmp-remote" && isMatchingRemoteGmmpTrack(device, remoteState);
     if (!isMatch) return;
     preserved = applyRemoteGmmpStateToDevice(device, remoteState) || preserved;
   });
@@ -1556,50 +1556,50 @@ function preserveKnownDeviceStates(state, {
   );
 }
 
-function setGmmpPausedState(paused) {
-  var bridge = getGmmpBridge();
-  if (!bridge.setPaused) {
-    throw new Error("Controle GMMP não está pronto");
+async function setGmmpPausedState(paused) {
+  const bridge = await getGmmpBridge();
+  if (!bridge?.setPaused) {
+    throw new Error("GMMP kontrolu hazir degil");
   }
   return bridge.setPaused(paused);
 }
 
-function setGmmpMutedState(muted) {
-  var bridge = getGmmpBridge();
-  if (!bridge.setMuted) {
-    throw new Error("Controle GMMP não está pronto");
+async function setGmmpMutedState(muted) {
+  const bridge = await getGmmpBridge();
+  if (!bridge?.setMuted) {
+    throw new Error("GMMP kontrolu hazir degil");
   }
   return bridge.setMuted(muted);
 }
 
-function setGmmpVolumeLevel(volumeLevel) {
-  var bridge = getGmmpBridge();
-  if (!bridge.setVolume) {
-    throw new Error("Controle GMMP não está pronto");
+async function setGmmpVolumeLevel(volumeLevel) {
+  const bridge = await getGmmpBridge();
+  if (!bridge?.setVolume) {
+    throw new Error("GMMP kontrolu hazir degil");
   }
   return bridge.setVolume(volumeLevel);
 }
 
-function setLocalVideoPausedState(paused) {
-  var bridge = getLocalVideoBridge();
-  if (!bridge.setPaused) {
-    throw new Error("Controle de vídeo não está pronto");
+async function setLocalVideoPausedState(paused) {
+  const bridge = getLocalVideoBridge();
+  if (!bridge?.setPaused) {
+    throw new Error("Video kontrolu hazir degil");
   }
   return bridge.setPaused(paused);
 }
 
 function setLocalVideoMutedState(muted) {
-  var bridge = getLocalVideoBridge();
-  if (!bridge.setMuted) {
-    throw new Error("Controle de vídeo não está pronto");
+  const bridge = getLocalVideoBridge();
+  if (!bridge?.setMuted) {
+    throw new Error("Video kontrolu hazir degil");
   }
   return bridge.setMuted(muted);
 }
 
 function setLocalVideoVolumeLevel(volumeLevel) {
-  var bridge = getLocalVideoBridge();
-  if (!bridge.setVolume) {
-    throw new Error("Controle de vídeo não está pronto");
+  const bridge = getLocalVideoBridge();
+  if (!bridge?.setVolume) {
+    throw new Error("Video kontrolu hazir degil");
   }
   return bridge.setVolume(volumeLevel);
 }
@@ -1623,7 +1623,7 @@ function ensureCastModalCss() {
     return Promise.resolve();
   }
 
-  var existing = document.getElementById(CAST_MODAL_CSS_ID);
+  const existing = document.getElementById(CAST_MODAL_CSS_ID);
   if (existing) {
     return Promise.resolve();
   }
@@ -1632,8 +1632,8 @@ function ensureCastModalCss() {
     return castModalCssPromise;
   }
 
-  castModalCssPromise = new Promisefunction((resolve) {
-    var link = document.createElement("link");
+  castModalCssPromise = new Promise((resolve) => {
+    const link = document.createElement("link");
     link.id = CAST_MODAL_CSS_ID;
     link.rel = "stylesheet";
     link.href = resolveSliderAssetHref("/slider/src/castmodal.css");
@@ -1641,107 +1641,107 @@ function ensureCastModalCss() {
       link.fetchPriority = "high";
     } catch {}
     link.setAttribute("fetchpriority", "high");
-    link.onload = function() resolve();
-    link.onerror = function() resolve();
+    link.onload = () => resolve();
+    link.onerror = () => resolve();
     document.head.appendChild(link);
   });
 
   return castModalCssPromise;
 }
 
-function fetchSessionsForCurrentUser({ signal } = {}) {
-  var { userId } = getSessionInfo();
-  var sessions = makeApiRequest("/Sessions?userId=" + (encodeURIComponent(userId)), { signal });
+async function fetchSessionsForCurrentUser({ signal } = {}) {
+  const { userId } = getSessionInfo();
+  const sessions = await makeApiRequest(`/Sessions?userId=${encodeURIComponent(userId)}`, { signal });
   return Array.isArray(sessions) ? sessions : [];
 }
 
-function fetchVisiblePlaybackSessions({ signal } = {}) {
-  var access = getCastAccess();
-  if (access.canAccessModule !== true) {
+async function fetchVisiblePlaybackSessions({ signal } = {}) {
+  const access = await getCastAccess();
+  if (access?.canAccessModule !== true) {
     return [];
   }
 
   try {
-    var response = makeCastApiRequest("/Plugins/NexusPobreFlix/cast/sessions", {
+    const response = await makeCastApiRequest("/Plugins/NexusPobreFlix/cast/sessions", {
       signal,
       __quiet: true
     });
-    var sessions = Array.isArray(response.items)
+    const sessions = Array.isArray(response?.items)
       ? response.items
       : (Array.isArray(response) ? response : []);
-    return sessions.filterfunction((session)
-      playable(session) && (getSessionNowPlayingItemId(session) || String(session.NowPlayingItemName || "").trim())
+    return sessions.filter((session) =>
+      playable(session) && (getSessionNowPlayingItemId(session) || String(session?.NowPlayingItemName || "").trim())
     );
   } catch {
-    var sessions = fetchSessionsForCurrentUser({ signal }).catchfunction(() []);
-    return sessions.filterfunction((session)
-      playable(session) && (getSessionNowPlayingItemId(session) || String(session.NowPlayingItem.Name || "").trim())
+    const sessions = await fetchSessionsForCurrentUser({ signal }).catch(() => []);
+    return sessions.filter((session) =>
+      playable(session) && (getSessionNowPlayingItemId(session) || String(session?.NowPlayingItem?.Name || "").trim())
     );
   }
 }
 
 function getSessionSignature(sessions = []) {
   return sessions
-    .mapfunction((session) (session.Id) + ":" + (getSessionNowPlayingItemId(session)))
+    .map((session) => `${session.Id}:${getSessionNowPlayingItemId(session)}`)
     .sort()
     .join("|");
 }
 
 function renderIcon(iconClass) {
-  return "<i class=\"fa-solid " + (iconClass) + "\"></i>";
+  return `<i class="fa-solid ${iconClass}"></i>`;
 }
 
 function renderButtonLabel(iconClass, label, extraClass = "") {
-  return (renderIcon(iconClass)) + "<span${extraClass ? " class="${extraClass}"" : \"\"}>" + (escapeHtml(label)) + "</span>";
+  return `${renderIcon(iconClass)}<span${extraClass ? ` class="${extraClass}"` : ""}>${escapeHtml(label)}</span>`;
 }
 
 function getPlaybackButtonContent(device) {
   return device.isPaused
-    ? renderButtonLabel("fa-play", t("devamet", "Retomar"))
-    : renderButtonLabel("fa-pause", t("duraklat", "Pausar"));
+    ? renderButtonLabel("fa-play", t("devamet", "Devam Ettir"))
+    : renderButtonLabel("fa-pause", t("duraklat", "Duraklat"));
 }
 
 function getMuteButtonContent(device) {
   return isEffectivelyMuted(device)
-    ? renderButtonLabel("fa-volume-high", t("sesac", "Ativar Som"))
-    : renderButtonLabel("fa-volume-xmark", t("seskapat", "Mudar"));
+    ? renderButtonLabel("fa-volume-high", t("sesac", "Ses Aç"))
+    : renderButtonLabel("fa-volume-xmark", t("seskapat", "Sesi Kapat"));
 }
 
 function getFavoriteButtonContent(device) {
-  var label = getWatchlistButtonText(device.itemDetails || device.item, !!device.isFavorite);
+  const label = getWatchlistButtonText(device.itemDetails || device.item, !!device.isFavorite);
   return renderButtonLabel("fa-heart", label);
 }
 
 function getMediaTypeText(item) {
-  return item.Type || item.ItemType || "";
+  return item?.Type || item?.ItemType || "";
 }
 
 function getItemId(item) {
-  return String(item.Id || item.ItemId || item.id || "").trim();
+  return String(item?.Id || item?.ItemId || item?.id || "").trim();
 }
 
 function getSessionNowPlayingItemId(session) {
-  return getItemId(session.NowPlayingItem) || String(session.NowPlayingItemId || "").trim();
+  return getItemId(session?.NowPlayingItem) || String(session?.NowPlayingItemId || "").trim();
 }
 
 function normalizeNowPlayingItem(rawItem, session = null, fallbackItem = null) {
-  var source = rawItem && typeof rawItem === "object" ? rawItem : {};
-  var fallback = fallbackItem && typeof fallbackItem === "object" ? fallbackItem : {};
-  var itemId = getItemId(source) || getItemId(fallback) || String(session.NowPlayingItemId || "").trim();
-  var itemType = String(
-    source.Type ||
-    source.ItemType ||
-    fallback.Type ||
-    fallback.ItemType ||
-    session.NowPlayingItemType ||
+  const source = rawItem && typeof rawItem === "object" ? rawItem : {};
+  const fallback = fallbackItem && typeof fallbackItem === "object" ? fallbackItem : {};
+  const itemId = getItemId(source) || getItemId(fallback) || String(session?.NowPlayingItemId || "").trim();
+  const itemType = String(
+    source?.Type ||
+    source?.ItemType ||
+    fallback?.Type ||
+    fallback?.ItemType ||
+    session?.NowPlayingItemType ||
     ""
   ).trim();
-  var itemName = String(
-    source.Name ||
-    source.Title ||
-    fallback.Name ||
-    fallback.Title ||
-    session.NowPlayingItemName ||
+  const itemName = String(
+    source?.Name ||
+    source?.Title ||
+    fallback?.Name ||
+    fallback?.Title ||
+    session?.NowPlayingItemName ||
     ""
   ).trim();
 
@@ -1749,21 +1749,21 @@ function normalizeNowPlayingItem(rawItem, session = null, fallbackItem = null) {
     ...fallback,
     ...source,
     Id: itemId,
-    ItemId: itemId || String(source.ItemId || fallback.ItemId || "").trim(),
+    ItemId: itemId || String(source?.ItemId || fallback?.ItemId || "").trim(),
     Name: itemName,
     Type: itemType,
-    ItemType: String(source.ItemType || fallback.ItemType || itemType).trim(),
-    ImageTags: (source.ImageTags && typeof source.ImageTags === "object")
+    ItemType: String(source?.ItemType || fallback?.ItemType || itemType).trim(),
+    ImageTags: (source?.ImageTags && typeof source.ImageTags === "object")
       ? source.ImageTags
-      : ((fallback.ImageTags && typeof fallback.ImageTags === "object") ? fallback.ImageTags : {}),
-    ProviderIds: (source.ProviderIds && typeof source.ProviderIds === "object")
+      : ((fallback?.ImageTags && typeof fallback.ImageTags === "object") ? fallback.ImageTags : {}),
+    ProviderIds: (source?.ProviderIds && typeof source.ProviderIds === "object")
       ? source.ProviderIds
-      : ((fallback.ProviderIds && typeof fallback.ProviderIds === "object") ? fallback.ProviderIds : {})
+      : ((fallback?.ProviderIds && typeof fallback.ProviderIds === "object") ? fallback.ProviderIds : {})
   };
 }
 
 function getHighResImageUrls(item) {
-  var itemId = getItemId(item);
+  const itemId = getItemId(item);
   if (!itemId) {
     return {
       posterUrl: "",
@@ -1771,71 +1771,71 @@ function getHighResImageUrls(item) {
       placeholderUrl: ""
     };
   }
-  var imageTag = item.ImageTags.Primary || item.PrimaryImageTag || "";
-  var backdropTag =
-    item.ImageTags.Backdrop.[0] ||
-    item.BackdropImageTags.[0] ||
-    item.ParentBackdropImageTags.[0] ||
+  const imageTag = item?.ImageTags?.Primary || item?.PrimaryImageTag || "";
+  const backdropTag =
+    item?.ImageTags?.Backdrop?.[0] ||
+    item?.BackdropImageTags?.[0] ||
+    item?.ParentBackdropImageTags?.[0] ||
     "";
-  var backdropItemId = String(item.ParentBackdropItemId || itemId).trim() || itemId;
-  var pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
-  var posterHeight = Math.min(Math.round(420 * pixelRatio), 640);
-  var backdropWidth = Math.min(Math.round((window.innerWidth || 1280) * pixelRatio), 1600);
-  var formatParam = supportsWebP() ? "&format=webp" : "";
+  const backdropItemId = String(item?.ParentBackdropItemId || itemId).trim() || itemId;
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+  const posterHeight = Math.min(Math.round(420 * pixelRatio), 640);
+  const backdropWidth = Math.min(Math.round((window.innerWidth || 1280) * pixelRatio), 1600);
+  const formatParam = supportsWebP() ? "&format=webp" : "";
 
-  var primaryPath = "/Items/" + (encodeURIComponent(itemId)) + "/Images/Primary?tag=" + (encodeURIComponent(imageTag)) + "&quality=85&maxHeight=" + (posterHeight) + (formatParam);
-  var fallbackBackdropPath = "/Items/" + (encodeURIComponent(itemId)) + "/Images/Primary?tag=" + (encodeURIComponent(imageTag)) + "&quality=75&maxHeight=900" + (formatParam);
-  var backdropPath = backdropTag
-    ? "/Items/" + (encodeURIComponent(backdropItemId)) + "/Images/Backdrop/0?tag=" + (encodeURIComponent(backdropTag)) + "&quality=80&maxWidth=" + (backdropWidth) + (formatParam)
+  const primaryPath = `/Items/${encodeURIComponent(itemId)}/Images/Primary?tag=${encodeURIComponent(imageTag)}&quality=85&maxHeight=${posterHeight}${formatParam}`;
+  const fallbackBackdropPath = `/Items/${encodeURIComponent(itemId)}/Images/Primary?tag=${encodeURIComponent(imageTag)}&quality=75&maxHeight=900${formatParam}`;
+  const backdropPath = backdropTag
+    ? `/Items/${encodeURIComponent(backdropItemId)}/Images/Backdrop/0?tag=${encodeURIComponent(backdropTag)}&quality=80&maxWidth=${backdropWidth}${formatParam}`
     : fallbackBackdropPath;
 
   return {
     posterUrl: withServer(primaryPath),
     backdropUrl: withServer(backdropPath),
-    placeholderUrl: withServer("/Items/" + (encodeURIComponent(itemId)) + "/Images/Primary?tag=" + (encodeURIComponent(imageTag)) + "&maxHeight=80&blur=12")
+    placeholderUrl: withServer(`/Items/${encodeURIComponent(itemId)}/Images/Primary?tag=${encodeURIComponent(imageTag)}&maxHeight=80&blur=12`)
   };
 }
 
 function buildInfoCards(device) {
-  var cards = [
-    { label: t("kullanici", "Usuário"), value: device.user },
-    { label: t("cihaz", "Dispositivo"), value: device.deviceName },
-    { label: t("istemci", "Cliente"), value: device.client },
-    { label: t("year", "Ano"), value: device.year },
-    { label: t("yonetmen", "Diretor"), value: device.directors },
-    { label: t("sortArtist", "Artista"), value: device.artists },
-    { label: t("sortAlbum", "Álbum"), value: device.album },
-    { label: t("sortAlbumArtist", "Artista do Álbum"), value: device.albumArtist },
-    { label: t("tracknumber", "Número da Faixa"), value: device.trackNumber }
+  const cards = [
+    { label: t("kullanici", "Kullanıcı"), value: device.user },
+    { label: t("cihaz", "Cihaz"), value: device.deviceName },
+    { label: t("istemci", "İstemci"), value: device.client },
+    { label: t("year", "Yıl"), value: device.year },
+    { label: t("yonetmen", "Yönetmen"), value: device.directors },
+    { label: t("sortArtist", "Sanatçı"), value: device.artists },
+    { label: t("sortAlbum", "Albüm"), value: device.album },
+    { label: t("sortAlbumArtist", "Albüm Sanatçısı"), value: device.albumArtist },
+    { label: t("tracknumber", "Parça Numarası"), value: device.trackNumber }
   ];
 
-  return cards.filterfunction((card) String(card.value || "").trim());
+  return cards.filter((card) => String(card.value || "").trim());
 }
 
 function buildTagGroups(device) {
-  var groups = [
-    { title: t("etiketler", "Gêneros"), value: device.genres },
-    { title: t("ses", "Áudio"), value: device.audioLanguages },
-    { title: t("altyazi", "Legenda"), value: device.subtitleLanguages }
+  const groups = [
+    { title: t("etiketler", "Türler"), value: device.genres },
+    { title: t("ses", "Ses"), value: device.audioLanguages },
+    { title: t("altyazi", "Altyazı"), value: device.subtitleLanguages }
   ];
 
-  return groups.filterfunction((group) String(group.value || "").trim());
+  return groups.filter((group) => String(group.value || "").trim());
 }
 
 function buildLinkButtons(device) {
-  var links = [];
+  const links = [];
 
   if (device.itemPageUrl) {
     links.push({
       href: device.itemPageUrl,
-      label: t("yenisekme", "Abrir em nova aba"),
+      label: t("yenisekme", "Yeni sekmede aç"),
       icon: "fa-up-right-from-square"
     });
   }
 
   if (device.tmdbId) {
     links.push({
-      href: "https://www.themoviedb.org/" + (device.item.Type === "Episode" || device.item.Type === "Series" ? "tv" : "movie") + "/" + (encodeURIComponent(device.tmdbId)),
+      href: `https://www.themoviedb.org/${device.item.Type === "Episode" || device.item.Type === "Series" ? "tv" : "movie"}/${encodeURIComponent(device.tmdbId)}`,
       label: "TMDB",
       icon: "fa-film"
     });
@@ -1843,7 +1843,7 @@ function buildLinkButtons(device) {
 
   if (device.imdbId) {
     links.push({
-      href: "https://www.imdb.com/title/" + (encodeURIComponent(device.imdbId)),
+      href: `https://www.imdb.com/title/${encodeURIComponent(device.imdbId)}`,
       label: "IMDb",
       icon: "fa-star"
     });
@@ -1853,44 +1853,47 @@ function buildLinkButtons(device) {
 }
 
 function buildDeviceModel(session, itemDetails, access = null) {
-  var item = normalizeNowPlayingItem(session.NowPlayingItem, session);
-  var details = itemDetails
+  const item = normalizeNowPlayingItem(session.NowPlayingItem, session);
+  const details = itemDetails
     ? normalizeNowPlayingItem(itemDetails, session, item)
     : item;
-  var imageSource = getItemId(details) ? details : item;
-  var { posterUrl, backdropUrl, placeholderUrl } = getHighResImageUrls(imageSource);
-  var positionTicks = session.PlayState.PositionTicks || 0;
-  var runtimeTicks = details.RunTimeTicks || item.RunTimeTicks || 0;
-  var volumeLevel = clamp(session.PlayState.VolumeLevel || 50, 0, 100);
-  var isMuted = !!session.PlayState.IsMuted;
-  var clientLabel = resolveFriendlySessionClient(session);
-  var deviceLabel = resolveFriendlySessionDeviceName(session);
-  var itemId = getItemId(details) || getItemId(item);
+  const imageSource = getItemId(details) ? details : item;
+  const { posterUrl, backdropUrl, placeholderUrl } = getHighResImageUrls(imageSource);
+  const positionTicks = session.PlayState?.PositionTicks || 0;
+  const runtimeTicks = details.RunTimeTicks || item.RunTimeTicks || 0;
+  const volumeLevel = clamp(session.PlayState?.VolumeLevel ?? 50, 0, 100);
+  const isMuted = !!session.PlayState?.IsMuted;
+  const clientLabel = resolveFriendlySessionClient(session);
+  const deviceLabel = resolveFriendlySessionDeviceName(session);
+  const itemId = getItemId(details) || getItemId(item);
 
-  var device = {
+  const device = {
     sessionId: session.Id,
-    deviceId: String(session.DeviceId || "").trim(),
+    deviceId: String(session?.DeviceId || "").trim(),
     itemId,
     session,
     item,
     itemDetails: details,
-    title: details.Name || item.Name || t("castoynatiliyor", "Reproduzindo agora"),
+    title: details.Name || item.Name || t("castoynatiliyor", "Şu an oynatılıyor"),
     mediaIconClass: getMediaIconClass(details),
     mediaTypeText: getMediaTypeText(details),
     posterUrl,
     backdropUrl,
     placeholderUrl,
-    user: session.UserName || t("belirsizkullanici", "Usuário desconhecido"),
+    user: session.UserName || t("belirsizkullanici", "Bilinmeyen kullanıcı"),
     client: clientLabel,
     deviceName: deviceLabel,
     year: details.ProductionYear || "",
-    directors: joinNonEmptyfunction(details.People.filter((person) person.Type.toLowerCase() === "director").mapfunction((person) person.Name) || []
+    directors: joinNonEmpty(
+      details.People?.filter((person) => person.Type?.toLowerCase() === "director").map((person) => person.Name) || []
     ),
     overview: details.Overview || "",
     genres: joinNonEmpty(details.Genres || []),
-    audioLanguages: joinNonEmptyfunction(details.MediaStreams.filter((stream) stream.Type === "Audio").mapfunction((stream) stream.Language) || []
+    audioLanguages: joinNonEmpty(
+      details.MediaStreams?.filter((stream) => stream.Type === "Audio").map((stream) => stream.Language) || []
     ),
-    subtitleLanguages: joinNonEmptyfunction(details.MediaStreams.filter((stream) stream.Type === "Subtitle").mapfunction((stream) stream.Language) || []
+    subtitleLanguages: joinNonEmpty(
+      details.MediaStreams?.filter((stream) => stream.Type === "Subtitle").map((stream) => stream.Language) || []
     ),
     artists: joinNonEmpty(details.Artists || []),
     album: details.Album || "",
@@ -1898,45 +1901,46 @@ function buildDeviceModel(session, itemDetails, access = null) {
     trackNumber: details.IndexNumber || "",
     communityRating: details.CommunityRating ? details.CommunityRating.toFixed(1) : "",
     officialRating: details.OfficialRating || "",
-    tmdbId: details.ProviderIds.Tmdb || "",
-    imdbId: details.ProviderIds.Imdb || "",
+    tmdbId: details.ProviderIds?.Tmdb || "",
+    imdbId: details.ProviderIds?.Imdb || "",
     itemPageUrl: itemId ? getDetailsUrl(itemId) : "",
-    isPaused: !!session.PlayState.IsPaused,
-    confirmedIsPaused: !!session.PlayState.IsPaused,
+    isPaused: !!session.PlayState?.IsPaused,
+    confirmedIsPaused: !!session.PlayState?.IsPaused,
     isMuted,
     confirmedIsMuted: isMuted,
     volumeLevel,
     confirmedVolumeLevel: volumeLevel,
     lastNonZeroVolume: volumeLevel > 0 ? volumeLevel : 50,
     controlMode: "session",
-    isFavorite: !!details.UserData.IsFavorite,
+    isFavorite: !!details.UserData?.IsFavorite,
     positionTicks,
     runtimeTicks,
     lastSyncedAt: Date.now(),
-    canControl: access.canControl === true
+    canControl: access?.canControl === true
   };
 
   return device;
 }
 
-function buildDeviceModels(sessions = [], access = null) {
-  var detailPromises = new Map();
-  var gmmpState = getGmmpPlaybackSnapshot();
-  var videoState = getLocalVideoPlaybackSnapshot();
-  var remoteGmmpStateMap = fetchRemoteGmmpStateMap();
-  var localSessionId = resolveCurrentBrowserSessionId(sessions, gmmpState);
-  var getDetails = function(itemId) {
+async function buildDeviceModels(sessions = [], access = null) {
+  const detailPromises = new Map();
+  const gmmpState = await getGmmpPlaybackSnapshot();
+  const videoState = getLocalVideoPlaybackSnapshot();
+  const remoteGmmpStateMap = await fetchRemoteGmmpStateMap();
+  const localSessionId = resolveCurrentBrowserSessionId(sessions, gmmpState);
+  const getDetails = (itemId) => {
     if (!itemId) return Promise.resolve(null);
     if (!detailPromises.has(itemId)) {
-      detailPromises.set(itemId, fetchItemDetails(itemId).catchfunction(() null));
+      detailPromises.set(itemId, fetchItemDetails(itemId).catch(() => null));
     }
     return detailPromises.get(itemId);
   };
 
-  return Promise.allfunction(sessions.map((session) {
-      var details = getDetails(getSessionNowPlayingItemId(session));
-      var device = buildDeviceModel(session, details, access);
-      var remoteGmmpState = getRemoteGmmpStateForDevice(session, remoteGmmpStateMap);
+  return Promise.all(
+    sessions.map(async (session) => {
+      const details = await getDetails(getSessionNowPlayingItemId(session));
+      const device = buildDeviceModel(session, details, access);
+      const remoteGmmpState = getRemoteGmmpStateForDevice(session, remoteGmmpStateMap);
       syncDeviceControlMode(device, session, gmmpState, videoState, remoteGmmpState, localSessionId);
       return device;
     })
@@ -1944,22 +1948,37 @@ function buildDeviceModels(sessions = [], access = null) {
 }
 
 function renderMetricChips(device) {
-  var chips = [];
+  const chips = [];
 
   if (device.mediaTypeText) {
-    chips.push("\n      <span class=\"jms-cast-chip jms-cast-chip--ghost\">\n        " + (renderIcon(device.mediaIconClass)) + "\n        <span>" + (escapeHtml(device.mediaTypeText)) + "</span>\n      </span>\n    ");
+    chips.push(`
+      <span class="jms-cast-chip jms-cast-chip--ghost">
+        ${renderIcon(device.mediaIconClass)}
+        <span>${escapeHtml(device.mediaTypeText)}</span>
+      </span>
+    `);
   }
 
   if (device.year) {
-    chips.push("<span class=\"jms-cast-chip\">" + (escapeHtml(device.year)) + "</span>");
+    chips.push(`<span class="jms-cast-chip">${escapeHtml(device.year)}</span>`);
   }
 
   if (device.communityRating) {
-    chips.push("\n      <span class=\"jms-cast-chip jms-cast-chip--rating\">\n        " + (renderIcon("fa-star")) + "\n        <span>" + (escapeHtml(device.communityRating)) + "</span>\n      </span>\n    ");
+    chips.push(`
+      <span class="jms-cast-chip jms-cast-chip--rating">
+        ${renderIcon("fa-star")}
+        <span>${escapeHtml(device.communityRating)}</span>
+      </span>
+    `);
   }
 
   if (device.officialRating) {
-    chips.push("\n      <span class=\"jms-cast-chip jms-cast-chip--ghost\">\n        " + (renderIcon("fa-certificate")) + "\n        <span>" + (escapeHtml(device.officialRating)) + "</span>\n      </span>\n    ");
+    chips.push(`
+      <span class="jms-cast-chip jms-cast-chip--ghost">
+        ${renderIcon("fa-certificate")}
+        <span>${escapeHtml(device.officialRating)}</span>
+      </span>
+    `);
   }
 
   return chips.join("");
@@ -1967,27 +1986,45 @@ function renderMetricChips(device) {
 
 function renderInfoCardsHtml(device) {
   return buildInfoCards(device)
-    .mapfunction((card) "\n        <div class=\"jms-cast-info-card\">\n          <span class=\"jms-cast-info-card__label\">" + (escapeHtml(card.label)) + "</span>\n          <strong class=\"jms-cast-info-card__value\">" + (escapeHtml(card.value)) + "</strong>\n        </div>\n      "
+    .map(
+      (card) => `
+        <div class="jms-cast-info-card">
+          <span class="jms-cast-info-card__label">${escapeHtml(card.label)}</span>
+          <strong class="jms-cast-info-card__value">${escapeHtml(card.value)}</strong>
+        </div>
+      `
     )
     .join("");
 }
 
 function renderTagGroupsHtml(device) {
   return buildTagGroups(device)
-    .mapfunction((group) "\n        <div class=\"jms-cast-tag-group\">\n          <span class=\"jms-cast-tag-group__title\">" + (escapeHtml(group.title)) + "</span>\n          <div class=\"jms-cast-tag-group__body\">" + (escapeHtml(group.value)) + "</div>\n        </div>\n      "
+    .map(
+      (group) => `
+        <div class="jms-cast-tag-group">
+          <span class="jms-cast-tag-group__title">${escapeHtml(group.title)}</span>
+          <div class="jms-cast-tag-group__body">${escapeHtml(group.value)}</div>
+        </div>
+      `
     )
     .join("");
 }
 
 function renderLinkButtonsHtml(device) {
   return buildLinkButtons(device)
-    .mapfunction((link) "\n        <a class=\"jms-cast-link-button\" href=\"" + (escapeHtml(link.href)) + "\" target=\"_blank\" rel=\"noopener noreferrer\">\n          " + (renderIcon(link.icon)) + "\n          <span>" + (escapeHtml(link.label)) + "</span>\n        </a>\n      "
+    .map(
+      (link) => `
+        <a class="jms-cast-link-button" href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer">
+          ${renderIcon(link.icon)}
+          <span>${escapeHtml(link.label)}</span>
+        </a>
+      `
     )
     .join("");
 }
 
 function isReadOnlyDevice(device) {
-  return device.canControl !== true;
+  return device?.canControl !== true;
 }
 
 function renderDisabledAttr(disabled) {
@@ -1996,58 +2033,151 @@ function renderDisabledAttr(disabled) {
 
 function renderViewerBadge(userName) {
   if (!String(userName || "").trim()) return "";
-  return "<span class=\"jms-cast-viewer-badge\">" + (escapeHtml(userName)) + "</span>";
+  return `<span class="jms-cast-viewer-badge">${escapeHtml(userName)}</span>`;
 }
 
 function renderPosterMarkup(device) {
   if (device.posterUrl) {
-    return "\n      <img\n        class=\"jms-cast-slide__poster\"\n        src=\"" + (escapeHtml(device.posterUrl)) + "\"\n        alt=\"" + (escapeHtml(device.title)) + "\"\n        loading=\"lazy\"\n        decoding=\"async\"\n      />\n    ";
+    return `
+      <img
+        class="jms-cast-slide__poster"
+        src="${escapeHtml(device.posterUrl)}"
+        alt="${escapeHtml(device.title)}"
+        loading="lazy"
+        decoding="async"
+      />
+    `;
   }
 
-  return "\n    <div class=\"jms-cast-slide__poster jms-cast-slide__poster--placeholder\" aria-hidden=\"true\">\n      " + (renderIcon(device.mediaIconClass)) + "\n    </div>\n  ";
+  return `
+    <div class="jms-cast-slide__poster jms-cast-slide__poster--placeholder" aria-hidden="true">
+      ${renderIcon(device.mediaIconClass)}
+    </div>
+  `;
 }
 
 function renderVolumeControl(device) {
-  var volume = clamp(device.volumeLevel, 0, 100);
-  var disabled = isReadOnlyDevice(device);
-  return "\n    <div class=\"jms-cast-volume\" data-session-id=\"" + (escapeHtml(device.sessionId)) + "\">\n      <div class=\"jms-cast-volume__row\">\n        <button\n          type=\"button\"\n          class=\"jms-cast-action jms-cast-action--secondary\"\n          data-action=\"mute\"\n          data-session-id=\"" + (escapeHtml(device.sessionId)) + "\"\n          " + (renderDisabledAttr(disabled)) + "\n        >\n          " + (getMuteButtonContent(device)) + "\n        </button>\n        <span class=\"jms-cast-volume__value\" data-role=\"volume-value\">" + (volume) + "%</span>\n      </div>\n      <input\n        class=\"jms-cast-volume__slider\"\n        type=\"range\"\n        min=\"0\"\n        max=\"100\"\n        value=\"" + (volume) + "\"\n        data-session-id=\"" + (escapeHtml(device.sessionId)) + "\"\n        aria-label=\"" + (escapeHtml(t("ses", "Ses"))) + "\"\n        " + (renderDisabledAttr(disabled)) + "\n      />\n    </div>\n  ";
+  const volume = clamp(device.volumeLevel, 0, 100);
+  const disabled = isReadOnlyDevice(device);
+  return `
+    <div class="jms-cast-volume" data-session-id="${escapeHtml(device.sessionId)}">
+      <div class="jms-cast-volume__row">
+        <button
+          type="button"
+          class="jms-cast-action jms-cast-action--secondary"
+          data-action="mute"
+          data-session-id="${escapeHtml(device.sessionId)}"
+          ${renderDisabledAttr(disabled)}
+        >
+          ${getMuteButtonContent(device)}
+        </button>
+        <span class="jms-cast-volume__value" data-role="volume-value">${volume}%</span>
+      </div>
+      <input
+        class="jms-cast-volume__slider"
+        type="range"
+        min="0"
+        max="100"
+        value="${volume}"
+        data-session-id="${escapeHtml(device.sessionId)}"
+        aria-label="${escapeHtml(t("ses", "Ses"))}"
+        ${renderDisabledAttr(disabled)}
+      />
+    </div>
+  `;
 }
 
 function renderServerSection() {
-  return "\n    <section class=\"jms-cast-server\">\n      <button\n        type=\"button\"\n        class=\"jms-cast-server__toggle\"\n        data-action=\"server-toggle\"\n        aria-expanded=\"false\"\n      >\n        <span class=\"jms-cast-server__toggle-label\">\n          " + (renderIcon("fa-server")) + "\n          <span>" + (escapeHtml(t("sunucubilgi", "Info do Servidor"))) + "</span>\n        </span>\n        " + (renderIcon("fa-chevron-down")) + "\n      </button>\n      <div class=\"jms-cast-server__panel\" data-role=\"server-panel\" hidden></div>\n    </section>\n  ";
+  return `
+    <section class="jms-cast-server">
+      <button
+        type="button"
+        class="jms-cast-server__toggle"
+        data-action="server-toggle"
+        aria-expanded="false"
+      >
+        <span class="jms-cast-server__toggle-label">
+          ${renderIcon("fa-server")}
+          <span>${escapeHtml(t("sunucubilgi", "Sunucu Bilgisi"))}</span>
+        </span>
+        ${renderIcon("fa-chevron-down")}
+      </button>
+      <div class="jms-cast-server__panel" data-role="server-panel" hidden></div>
+    </section>
+  `;
 }
 
 function renderSlide(device, index, options = {}) {
-  var compact = options.compact === true;
-  var clickableHero = options.clickableHero === true;
-  var progressPercent = device.runtimeTicks > 0
+  const compact = options.compact === true;
+  const clickableHero = options.clickableHero === true;
+  const progressPercent = device.runtimeTicks > 0
     ? clamp((device.positionTicks / device.runtimeTicks) * 100, 0, 100)
     : 0;
-  var disabled = isReadOnlyDevice(device);
-  var compactMeta = [device.mediaTypeText, device.client, device.deviceName].filter(Boolean).join(" • ");
-  var heroAttrs = [
-    "class=\"jms-cast-slide__hero" + (clickableHero ? " is-clickable" : "") + "\""
+  const disabled = isReadOnlyDevice(device);
+  const compactMeta = [device.mediaTypeText, device.client, device.deviceName].filter(Boolean).join(" • ");
+  const heroAttrs = [
+    `class="jms-cast-slide__hero${clickableHero ? " is-clickable" : ""}"`
   ];
 
   if (clickableHero) {
-    heroAttrs.push("data-action=\"open-modal\"");
-    heroAttrs.push("role=\"button\"");
-    heroAttrs.push("tabindex=\"0\"");
-    heroAttrs.push("aria-label=\"${escapeHtml("${device.title} - ${device.user}")}\"");
+    heroAttrs.push(`data-action="open-modal"`);
+    heroAttrs.push(`role="button"`);
+    heroAttrs.push(`tabindex="0"`);
+    heroAttrs.push(`aria-label="${escapeHtml(`${device.title} - ${device.user}`)}"`);
   }
 
-  return "\n    <section\n      class=\"jms-cast-slide\"\n      data-session-id=\"" + (escapeHtml(device.sessionId)) + "\"\n      data-item-id=\"" + (escapeHtml(device.itemId)) + "\"\n      data-index=\"" + (index) + "\"\n      data-read-only=\"" + (disabled ? "true" : "false") + "\"\n    >\n      <div class=\"jms-cast-slide__body\">\n        <div " + (heroAttrs.join(" ")) + ">\n          <div class=\"jms-cast-slide__poster-wrap\">\n            " + (renderPosterMarkup(device)) + "\n          </div>\n\n          <div class=\"jms-cast-slide__header\">\n            <div class=\"jms-cast-slide__eyebrow-row\">\n              <span class=\"jms-cast-slide__eyebrow\">" + (escapeHtml(t("castoynatiliyor", "Reproduzindo agora"))) + "</span>\n              " + (renderViewerBadge(device.user)) + "\n            </div>\n            <h2 class=\"jms-cast-slide__title\">\n              " + (renderIcon(device.mediaIconClass)) + "\n              <span>" + (escapeHtml(device.title)) + "</span>\n            </h2>\n            ${compact\n              ? "
-                ${compactMeta ? "<p class=\"jms-cast-slide__summary\">" + (escapeHtml(compactMeta)) + "</p>" : ""}
+  return `
+    <section
+      class="jms-cast-slide"
+      data-session-id="${escapeHtml(device.sessionId)}"
+      data-item-id="${escapeHtml(device.itemId)}"
+      data-index="${index}"
+      data-read-only="${disabled ? "true" : "false"}"
+    >
+      <div class="jms-cast-slide__body">
+        <div ${heroAttrs.join(" ")}>
+          <div class="jms-cast-slide__poster-wrap">
+            ${renderPosterMarkup(device)}
+          </div>
+
+          <div class="jms-cast-slide__header">
+            <div class="jms-cast-slide__eyebrow-row">
+              <span class="jms-cast-slide__eyebrow">${escapeHtml(t("castoynatiliyor", "Şu an oynatılıyor"))}</span>
+              ${renderViewerBadge(device.user)}
+            </div>
+            <h2 class="jms-cast-slide__title">
+              ${renderIcon(device.mediaIconClass)}
+              <span>${escapeHtml(device.title)}</span>
+            </h2>
+            ${compact
+              ? `
+                ${compactMeta ? `<p class="jms-cast-slide__summary">${escapeHtml(compactMeta)}</p>` : ""}
                 <div class="jms-cast-slide__chips">
                   ${renderMetricChips(device)}
                 </div>
-                ${device.overview ? "<p class=\"jms-cast-slide__overview\">" + (escapeHtml(device.overview)) + "</p>" : ""}
-              "\n              : "
+                ${device.overview ? `<p class="jms-cast-slide__overview">${escapeHtml(device.overview)}</p>` : ""}
+              `
+              : `
                 <div class="jms-cast-slide__chips">
                   ${renderMetricChips(device)}
                 </div>
-                ${device.overview ? "<p class=\"jms-cast-slide__overview\">" + (escapeHtml(device.overview)) + "</p>" : ""}
-              "\n            }\n          </div>\n        </div>\n\n        <div class=\"jms-cast-progress\">\n          <div class=\"jms-cast-progress__rail\">\n            <span class=\"jms-cast-progress__fill\" data-role=\"progress-fill\" style=\"width:" + (progressPercent) + "%\"></span>\n          </div>\n          <div class=\"jms-cast-progress__times\">\n            <span data-role=\"duration\">${escapeHtml("${formatTime(device.positionTicks)} / ${formatTime(device.runtimeTicks)}")}</span>\n            <span data-role=\"remaining\">" + (escapeHtml(formatRemainingTime(device.positionTicks, device.runtimeTicks))) + "</span>\n          </div>\n        </div>\n\n        ${compact ? \"\" : "
+                ${device.overview ? `<p class="jms-cast-slide__overview">${escapeHtml(device.overview)}</p>` : ""}
+              `
+            }
+          </div>
+        </div>
+
+        <div class="jms-cast-progress">
+          <div class="jms-cast-progress__rail">
+            <span class="jms-cast-progress__fill" data-role="progress-fill" style="width:${progressPercent}%"></span>
+          </div>
+          <div class="jms-cast-progress__times">
+            <span data-role="duration">${escapeHtml(`${formatTime(device.positionTicks)} / ${formatTime(device.runtimeTicks)}`)}</span>
+            <span data-role="remaining">${escapeHtml(formatRemainingTime(device.positionTicks, device.runtimeTicks))}</span>
+          </div>
+        </div>
+
+        ${compact ? "" : `
           <div class="jms-cast-controls">
             <button
               type="button"
@@ -2083,58 +2213,72 @@ function renderSlide(device, index, options = {}) {
           </div>
 
           ${renderServerSection()}
-        "}\n      </div>\n    </section>\n  ";
+        `}
+      </div>
+    </section>
+  `;
 }
 
 function renderDots(devices, activeIndex) {
   return devices
-    .mapfunction((device, index) "\n        <button\n          type=\"button\"\n          class=\"jms-cast-dot " + (index === activeIndex ? "is-active" : "") + "\"\n          data-action=\"jump\"\n          data-index=\"" + (index) + "\"\n          aria-label=\"${escapeHtml("${device.deviceName} - ${device.title}")}\"\n        ></button>\n      "
+    .map(
+      (device, index) => `
+        <button
+          type="button"
+          class="jms-cast-dot ${index === activeIndex ? "is-active" : ""}"
+          data-action="jump"
+          data-index="${index}"
+          aria-label="${escapeHtml(`${device.deviceName} - ${device.title}`)}"
+        ></button>
+      `
     )
     .join("");
 }
 
 function renderModalShell(content, { className = "", labelledBy = "" } = {}) {
-  var shellClassName = ["jms-cast-modal__shell", className].filter(Boolean).join(" ");
-  var shellAttributes = [
-    "class=\"" + (shellClassName) + "\"",
+  const shellClassName = ["jms-cast-modal__shell", className].filter(Boolean).join(" ");
+  const shellAttributes = [
+    `class="${shellClassName}"`,
     'data-role="shell"',
     'role="dialog"',
     'aria-modal="true"',
-    labelledBy ? "aria-labelledby=\"" + (escapeHtml(labelledBy)) + "\"" : ""
+    labelledBy ? `aria-labelledby="${escapeHtml(labelledBy)}"` : ""
   ]
     .filter(Boolean)
     .join(" ");
 
-  return "<section " + (shellAttributes) + ">" + (content) + "</section>";
+  return `<section ${shellAttributes}>${content}</section>`;
 }
 
 function renderModalMarkup(devices, activeIndex) {
-  var activeDevice = devices[activeIndex] || devices[0];
-  var headerTitle = activeDevice.deviceName || t("castcihaz", "Dispositivo desconhecido");
-  var subtitleParts = [activeDevice.title, activeDevice.client].filter(Boolean).join(" • ");
+  const activeDevice = devices[activeIndex] || devices[0];
+  const headerTitle = activeDevice?.deviceName || t("castcihaz", "Bilinmeyen cihaz");
+  const subtitleParts = [activeDevice?.title, activeDevice?.client].filter(Boolean).join(" • ");
 
-  return "\n    <div class=\"jms-cast-modal__scrim\" data-action=\"close\"></div>\n    ${renderModalShell("
+  return `
+    <div class="jms-cast-modal__scrim" data-action="close"></div>
+    ${renderModalShell(`
       <header class="jms-cast-modal__header">
         <div class="jms-cast-modal__headline">
           <div class="jms-cast-modal__eyebrow-row">
-            <span class="jms-cast-modal__eyebrow">${escapeHtml(t("castoynatiliyor", "Reproduzindo agora"))}</span>
-            ${renderViewerBadge(activeDevice.user)}
+            <span class="jms-cast-modal__eyebrow">${escapeHtml(t("castoynatiliyor", "Şu an oynatılıyor"))}</span>
+            ${renderViewerBadge(activeDevice?.user)}
           </div>
           <h2 id="jms-cast-modal-title" data-role="active-title">${escapeHtml(headerTitle)}</h2>
           <p data-role="active-subtitle">${escapeHtml(subtitleParts)}</p>
         </div>
         <div class="jms-cast-modal__toolbar">
           <button type="button" class="jms-cast-toolbar-btn" data-action="refresh">
-            ${renderButtonLabel("fa-rotate-right", t("yenile", "Atualizar"), "jms-cast-toolbar-btn__label")}
+            ${renderButtonLabel("fa-rotate-right", t("yenile", "Yenile"), "jms-cast-toolbar-btn__label")}
           </button>
-          <button type="button" class="jms-cast-toolbar-btn jms-cast-toolbar-btn--close" data-action="close" aria-label="${escapeHtml(t("kapat", "Fechar"))}">
+          <button type="button" class="jms-cast-toolbar-btn jms-cast-toolbar-btn--close" data-action="close" aria-label="${escapeHtml(t("kapat", "Kapat"))}">
             ${renderIcon("fa-xmark")}
           </button>
         </div>
       </header>
 
       <div class="jms-cast-modal__viewport" data-role="viewport">
-        ${devices.mapfunction((device, index) renderSlide(device, index)).join("")}
+        ${devices.map((device, index) => renderSlide(device, index)).join("")}
       </div>
 
       <footer class="jms-cast-modal__footer">
@@ -2142,16 +2286,20 @@ function renderModalMarkup(devices, activeIndex) {
           ${renderDots(devices, activeIndex)}
         </div>
       </footer>
-    ", { labelledBy: \"jms-cast-modal-title\" })}\n  ";
+    `, { labelledBy: "jms-cast-modal-title" })}
+  `;
 }
 
 function createLoadingMarkup() {
-  return "\n    <div class=\"jms-cast-modal__scrim\" data-action=\"close\"></div>\n    ${renderModalShell("
+  return `
+    <div class="jms-cast-modal__scrim" data-action="close"></div>
+    ${renderModalShell(`
       <div class="jms-cast-modal__loading">
         <div class="jms-cast-modal__spinner"></div>
-        <p>${escapeHtml(t("castyukleniyor", "Procurando dispositivos..."))}</p>
+        <p>${escapeHtml(t("castyukleniyor", "Cihazlar aranıyor..."))}</p>
       </div>
-    ", { className: \"jms-cast-modal__shell--loading\" })}\n  ";
+    `, { className: "jms-cast-modal__shell--loading" })}
+  `;
 }
 
 function cacheSlideRefs(state) {
@@ -2162,8 +2310,8 @@ function cacheSlideRefs(state) {
   state.dotsHost = state.root.querySelector('[data-role="dots"]');
   state.slideRefs = new Map();
 
-  state.root.querySelectorAll(".jms-cast-slide").forEach(function((slide) {
-    var sessionId = slide.dataset.sessionId;
+  state.root.querySelectorAll(".jms-cast-slide").forEach((slide) => {
+    const sessionId = slide.dataset.sessionId;
     if (!sessionId) return;
 
     state.slideRefs.set(sessionId, {
@@ -2183,7 +2331,7 @@ function cacheSlideRefs(state) {
 }
 
 function updateHeaderForActiveDevice(state) {
-  var activeDevice = state.devices[state.activeIndex];
+  const activeDevice = state.devices[state.activeIndex];
   if (!activeDevice) return;
 
   if (state.title) {
@@ -2194,35 +2342,38 @@ function updateHeaderForActiveDevice(state) {
     state.subtitle.textContent = [activeDevice.title, activeDevice.client].filter(Boolean).join(" • ");
   }
 
-  var eyebrowRow = state.root.querySelector(".jms-cast-modal__eyebrow-row");
+  const eyebrowRow = state.root?.querySelector(".jms-cast-modal__eyebrow-row");
   if (eyebrowRow) {
-    eyebrowRow.innerHTML = "\n      <span class=\"jms-cast-modal__eyebrow\">" + (escapeHtml(t("castoynatiliyor", "Şu an oynatılıyor"))) + "</span>\n      " + (renderViewerBadge(activeDevice.user)) + "\n    ";
+    eyebrowRow.innerHTML = `
+      <span class="jms-cast-modal__eyebrow">${escapeHtml(t("castoynatiliyor", "Şu an oynatılıyor"))}</span>
+      ${renderViewerBadge(activeDevice.user)}
+    `;
   }
 
-  state.root.querySelectorAll(".jms-cast-dot").forEach(function((dot, index) {
+  state.root.querySelectorAll(".jms-cast-dot").forEach((dot, index) => {
     dot.classList.toggle("is-active", index === state.activeIndex);
   });
 }
 
 function applyDeviceProgressToDom(state, device) {
-  var refs = state.slideRefs.get(device.sessionId);
+  const refs = state.slideRefs.get(device.sessionId);
   if (!refs) return;
 
-  var durationText = (formatTime(device.positionTicks)) + " / " + (formatTime(device.runtimeTicks));
-  var remainingText = formatRemainingTime(device.positionTicks, device.runtimeTicks);
-  var progressPercent = device.runtimeTicks > 0
+  const durationText = `${formatTime(device.positionTicks)} / ${formatTime(device.runtimeTicks)}`;
+  const remainingText = formatRemainingTime(device.positionTicks, device.runtimeTicks);
+  const progressPercent = device.runtimeTicks > 0
     ? clamp((device.positionTicks / device.runtimeTicks) * 100, 0, 100)
     : 0;
 
   if (refs.duration) refs.duration.textContent = durationText;
   if (refs.remaining) refs.remaining.textContent = remainingText;
-  if (refs.progressFill) refs.progressFill.style.width = (progressPercent) + "%";
+  if (refs.progressFill) refs.progressFill.style.width = `${progressPercent}%`;
 }
 
 function applyDeviceStateToDom(state, device) {
-  var refs = state.slideRefs.get(device.sessionId);
+  const refs = state.slideRefs.get(device.sessionId);
   if (!refs) return;
-  var volume = clamp(device.volumeLevel, 0, 100);
+  const volume = clamp(device.volumeLevel, 0, 100);
 
   if (refs.playButton) refs.playButton.innerHTML = getPlaybackButtonContent(device);
   if (refs.favoriteButton) {
@@ -2231,7 +2382,7 @@ function applyDeviceStateToDom(state, device) {
   }
   if (refs.muteButton) refs.muteButton.innerHTML = getMuteButtonContent(device);
   if (refs.volumeSlider) refs.volumeSlider.value = String(volume);
-  if (refs.volumeValue) refs.volumeValue.textContent = (volume) + "%";
+  if (refs.volumeValue) refs.volumeValue.textContent = `${volume}%`;
 
   refs.slide.dataset.paused = device.isPaused ? "true" : "false";
   refs.slide.dataset.muted = isEffectivelyMuted(device) ? "true" : "false";
@@ -2239,18 +2390,18 @@ function applyDeviceStateToDom(state, device) {
 }
 
 function applyAllDevicesToDom(state) {
-  state.devices.forEach(function((device) applyDeviceStateToDom(state, device));
+  state.devices.forEach((device) => applyDeviceStateToDom(state, device));
   updateHeaderForActiveDevice(state);
 }
 
 function getViewportWidth(state) {
-  var viewportRectWidth = state.viewport.getBoundingClientRect.().width;
+  const viewportRectWidth = state.viewport?.getBoundingClientRect?.().width;
   if (viewportRectWidth) return viewportRectWidth;
 
-  var shellRectWidth = state.shell.getBoundingClientRect.().width;
+  const shellRectWidth = state.shell?.getBoundingClientRect?.().width;
   if (shellRectWidth) return shellRectWidth;
 
-  return state.viewport.clientWidth || state.shell.clientWidth || 0;
+  return state.viewport?.clientWidth || state.shell?.clientWidth || 0;
 }
 
 function bindViewport(state) {
@@ -2261,15 +2412,15 @@ function bindViewport(state) {
 
   if (!state.viewport) return;
 
-  var onScroll = function() {
+  const onScroll = () => {
     if (state.scrollTimer) {
       clearTimeout(state.scrollTimer);
     }
 
-    state.scrollTimer = window.setTimeoutfunction(() {
+    state.scrollTimer = window.setTimeout(() => {
       if (!isActiveModalState(state) || !state.viewport) return;
-      var nextIndex = Math.round(state.viewport.scrollLeft / Math.max(1, getViewportWidth(state)));
-      var boundedIndex = clamp(nextIndex, 0, Math.max(0, state.devices.length - 1));
+      const nextIndex = Math.round(state.viewport.scrollLeft / Math.max(1, getViewportWidth(state)));
+      const boundedIndex = clamp(nextIndex, 0, Math.max(0, state.devices.length - 1));
       if (boundedIndex !== state.activeIndex) {
         state.activeIndex = boundedIndex;
         updateHeaderForActiveDevice(state);
@@ -2278,8 +2429,8 @@ function bindViewport(state) {
   };
 
   state.viewport.addEventListener("scroll", onScroll, { passive: true });
-  state.viewportCleanup = function() {
-    state.viewport.removeEventListener("scroll", onScroll);
+  state.viewportCleanup = () => {
+    state.viewport?.removeEventListener("scroll", onScroll);
     if (state.scrollTimer) {
       clearTimeout(state.scrollTimer);
       state.scrollTimer = 0;
@@ -2290,8 +2441,8 @@ function bindViewport(state) {
 function scrollToSlide(state, index, behavior = "smooth") {
   if (!state.viewport) return;
 
-  var boundedIndex = clamp(index, 0, Math.max(0, state.devices.length - 1));
-  var viewportWidth = getViewportWidth(state);
+  const boundedIndex = clamp(index, 0, Math.max(0, state.devices.length - 1));
+  const viewportWidth = getViewportWidth(state);
   state.activeIndex = boundedIndex;
   updateHeaderForActiveDevice(state);
   state.viewport.scrollTo({
@@ -2323,14 +2474,14 @@ function cleanupModalState(state) {
     state.scrollTimer = 0;
   }
 
-  state.volumeTimers.forEach(function((timerId) clearTimeout(timerId));
-  state.volumeTimers.clear();
-  state.pendingVolumeValues.clear();
-  state.pendingSessionActions.clear();
-  state.pendingItemActions.clear();
-  state.viewportCleanup.();
-  state.rootCleanup.();
-  state.abortController.abort();
+  state.volumeTimers?.forEach((timerId) => clearTimeout(timerId));
+  state.volumeTimers?.clear();
+  state.pendingVolumeValues?.clear();
+  state.pendingSessionActions?.clear();
+  state.pendingItemActions?.clear();
+  state.viewportCleanup?.();
+  state.rootCleanup?.();
+  state.abortController?.abort();
 
   if (state.onKeyDown) {
     document.removeEventListener("keydown", state.onKeyDown);
@@ -2338,12 +2489,12 @@ function cleanupModalState(state) {
 }
 
 function closeCastModal() {
-  var state = castModalState;
+  const state = castModalState;
   if (!state) return;
 
   castModalState = null;
   cleanupModalState(state);
-  state.root.remove();
+  state.root?.remove();
 }
 
 function queueModalSync(state, delay = 0) {
@@ -2353,32 +2504,32 @@ function queueModalSync(state, delay = 0) {
     clearTimeout(state.pendingSyncTimer);
   }
 
-  state.pendingSyncTimer = window.setTimeoutfunction(() {
+  state.pendingSyncTimer = window.setTimeout(() => {
     state.pendingSyncTimer = 0;
     void syncCastModalState(state);
   }, Math.max(0, delay));
 }
 
 function updateDeviceFromSession(device, session, state, gmmpState = null, videoState = null, remoteGmmpState = null, localSessionId = "") {
-  var volumePending = state.pendingVolumeValues.has(device.sessionId);
-  var sessionActionPending = state.pendingSessionActions.has(device.sessionId);
+  const volumePending = state.pendingVolumeValues.has(device.sessionId);
+  const sessionActionPending = state.pendingSessionActions.has(device.sessionId);
 
   device.session = session;
-  device.deviceId = String(session.DeviceId || device.deviceId || "").trim();
+  device.deviceId = String(session?.DeviceId || device.deviceId || "").trim();
   device.item = session.NowPlayingItem || device.item;
-  device.runtimeTicks = session.NowPlayingItem.RunTimeTicks || device.runtimeTicks;
-  device.positionTicks = session.PlayState.PositionTicks || device.positionTicks;
+  device.runtimeTicks = session.NowPlayingItem?.RunTimeTicks || device.runtimeTicks;
+  device.positionTicks = session.PlayState?.PositionTicks ?? device.positionTicks;
   device.lastSyncedAt = Date.now();
 
   if (!sessionActionPending) {
-    device.isPaused = !!session.PlayState.IsPaused;
-    device.confirmedIsPaused = !!session.PlayState.IsPaused;
-    device.isMuted = !!session.PlayState.IsMuted;
-    device.confirmedIsMuted = !!session.PlayState.IsMuted;
+    device.isPaused = !!session.PlayState?.IsPaused;
+    device.confirmedIsPaused = !!session.PlayState?.IsPaused;
+    device.isMuted = !!session.PlayState?.IsMuted;
+    device.confirmedIsMuted = !!session.PlayState?.IsMuted;
   }
 
   if (!volumePending) {
-    device.volumeLevel = clamp(session.PlayState.VolumeLevel || device.volumeLevel, 0, 100);
+    device.volumeLevel = clamp(session.PlayState?.VolumeLevel ?? device.volumeLevel, 0, 100);
     device.confirmedVolumeLevel = device.volumeLevel;
     if (device.volumeLevel > 0) {
       device.lastNonZeroVolume = device.volumeLevel;
@@ -2388,12 +2539,12 @@ function updateDeviceFromSession(device, session, state, gmmpState = null, video
   syncDeviceControlMode(device, session, gmmpState, videoState, remoteGmmpState, localSessionId);
 }
 
-function hydrateCastModal(state, { preferredSessionId = "" } = {}) {
-  var gmmpState = getGmmpPlaybackSnapshot();
-  var videoState = getLocalVideoPlaybackSnapshot();
-  var remoteGmmpStateMap = fetchRemoteGmmpStateMap({ signal: state.abortController.signal });
-  var sessions = sanitizeVisiblePlaybackSessions(
-    fetchVisiblePlaybackSessions({ signal: state.abortController.signal }),
+async function hydrateCastModal(state, { preferredSessionId = "" } = {}) {
+  const gmmpState = await getGmmpPlaybackSnapshot();
+  const videoState = getLocalVideoPlaybackSnapshot();
+  const remoteGmmpStateMap = await fetchRemoteGmmpStateMap({ signal: state.abortController.signal });
+  const sessions = sanitizeVisiblePlaybackSessions(
+    await fetchVisiblePlaybackSessions({ signal: state.abortController.signal }),
     { gmmpState, videoState, remoteGmmpStateMap }
   );
   if (!isActiveModalState(state)) return;
@@ -2407,21 +2558,22 @@ function hydrateCastModal(state, { preferredSessionId = "" } = {}) {
 
   if (sessions.length === 0) {
     closeCastModal();
-    showNotification(t("castbulunamadi", "Nenhum dispositivo encontrado"), "error");
+    showNotification(t("castbulunamadi", "Aygıt bulunamadı"), "error");
     return;
   }
 
-  var devices = buildDeviceModels(sessions, state.access);
+  const devices = await buildDeviceModels(sessions, state.access);
   if (!isActiveModalState(state)) return;
 
   state.signature = getSessionSignature(sessions);
   state.devices = devices;
-  state.deviceMap = new Mapfunction(devices.map((device) [device.sessionId, device]));
+  state.deviceMap = new Map(devices.map((device) => [device.sessionId, device]));
   state.root.innerHTML = renderModalMarkup(devices, 0);
   cacheSlideRefs(state);
 
-  var targetIndex = Math.maxfunction(0,
-    devices.findIndex((device) device.sessionId === preferredSessionId)
+  const targetIndex = Math.max(
+    0,
+    devices.findIndex((device) => device.sessionId === preferredSessionId)
   );
 
   state.activeIndex = targetIndex >= 0 ? targetIndex : 0;
@@ -2433,31 +2585,31 @@ function hydrateCastModal(state, { preferredSessionId = "" } = {}) {
   }
 
   if (!state.syncInterval) {
-    state.syncInterval = window.setIntervalfunction(() {
+    state.syncInterval = window.setInterval(() => {
       void syncCastModalState(state);
     }, CAST_MODAL_SYNC_MS);
   }
 
   if (!state.tickInterval) {
-    state.tickInterval = window.setIntervalfunction(() {
+    state.tickInterval = window.setInterval(() => {
       tickCastModalState(state);
     }, CAST_MODAL_TICK_MS);
   }
 }
 
-function syncCastModalState(state) {
+async function syncCastModalState(state) {
   if (!isActiveModalState(state) || state.isSyncing) return;
 
   state.isSyncing = true;
   try {
-    var gmmpState = getGmmpPlaybackSnapshot();
-    var videoState = getLocalVideoPlaybackSnapshot();
-    var remoteGmmpStateMap = fetchRemoteGmmpStateMap({ signal: state.abortController.signal });
-    var sessions = sanitizeVisiblePlaybackSessions(
-      fetchVisiblePlaybackSessions({ signal: state.abortController.signal }),
+    const gmmpState = await getGmmpPlaybackSnapshot();
+    const videoState = getLocalVideoPlaybackSnapshot();
+    const remoteGmmpStateMap = await fetchRemoteGmmpStateMap({ signal: state.abortController.signal });
+    const sessions = sanitizeVisiblePlaybackSessions(
+      await fetchVisiblePlaybackSessions({ signal: state.abortController.signal }),
       { gmmpState, videoState, remoteGmmpStateMap }
     );
-    var localSessionId = resolveCurrentBrowserSessionId(sessions, gmmpState);
+    const localSessionId = resolveCurrentBrowserSessionId(sessions, gmmpState);
     if (!isActiveModalState(state)) return;
 
     if (sessions.length === 0) {
@@ -2469,25 +2621,25 @@ function syncCastModalState(state) {
       return;
     }
 
-    var signature = getSessionSignature(sessions);
+    const signature = getSessionSignature(sessions);
     if (signature !== state.signature) {
-      var activeSessionId = state.devices[state.activeIndex].sessionId || "";
-      hydrateCastModal(state, { preferredSessionId: activeSessionId });
+      const activeSessionId = state.devices[state.activeIndex]?.sessionId || "";
+      await hydrateCastModal(state, { preferredSessionId: activeSessionId });
       return;
     }
 
-    var sessionsById = new Mapfunction(sessions.map((session) [session.Id, session]));
-    state.devices.forEach(function((device) {
-      var freshSession = sessionsById.get(device.sessionId);
+    const sessionsById = new Map(sessions.map((session) => [session.Id, session]));
+    state.devices.forEach((device) => {
+      const freshSession = sessionsById.get(device.sessionId);
       if (!freshSession) return;
-      var remoteGmmpState = getRemoteGmmpStateForDevice(device, remoteGmmpStateMap);
+      const remoteGmmpState = getRemoteGmmpStateForDevice(device, remoteGmmpStateMap);
       updateDeviceFromSession(device, freshSession, state, gmmpState, videoState, remoteGmmpState, localSessionId);
     });
 
     applyAllDevicesToDom(state);
   } catch (error) {
-    if (!error.isAbort) {
-      console.error("Erro de sincronização do modal de transmissão:", error);
+    if (!error?.isAbort) {
+      console.error("Cast modal senkronizasyon hatası:", error);
     }
   } finally {
     state.isSyncing = false;
@@ -2497,8 +2649,8 @@ function syncCastModalState(state) {
 function tickCastModalState(state) {
   if (!isActiveModalState(state)) return;
 
-  var videoState = getLocalVideoPlaybackSnapshot();
-  state.devices.forEach(function((device) {
+  const videoState = getLocalVideoPlaybackSnapshot();
+  state.devices.forEach((device) => {
     if (device.controlMode === "local-video" && isMatchingLocalVideoItem(device, videoState)) {
       applyLocalVideoStateToDevice(device, videoState);
       applyDeviceStateToDom(state, device);
@@ -2507,20 +2659,20 @@ function tickCastModalState(state) {
 
     if (device.isPaused || !device.runtimeTicks) return;
 
-    var nextTicks = Math.min(device.runtimeTicks, device.positionTicks + 10_000_000);
+    const nextTicks = Math.min(device.runtimeTicks, device.positionTicks + 10_000_000);
     if (nextTicks !== device.positionTicks) {
       device.positionTicks = nextTicks;
       applyDeviceProgressToDom(state, device);
     }
   });
 
-  state.root.querySelectorAll(".jms-cast-server__local-time").forEach(function((element) {
+  state.root.querySelectorAll(".jms-cast-server__local-time").forEach((element) => {
     element.textContent = new Date().toLocaleString();
   });
 }
 
-function sendSessionCommand(sessionId, name, args = undefined, { signal } = {}) {
-  var body = {
+async function sendSessionCommand(sessionId, name, args = undefined, { signal } = {}) {
+  const body = {
     Name: name,
     ControllingUserId: getSessionInfo().userId
   };
@@ -2529,7 +2681,7 @@ function sendSessionCommand(sessionId, name, args = undefined, { signal } = {}) 
     body.Arguments = args;
   }
 
-  return makeApiRequest("/Sessions/" + (encodeURIComponent(sessionId)) + "/Command", {
+  return makeApiRequest(`/Sessions/${encodeURIComponent(sessionId)}/Command`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -2537,35 +2689,35 @@ function sendSessionCommand(sessionId, name, args = undefined, { signal } = {}) 
   });
 }
 
-function sendRemoteGmmpCommand(target, name, args = undefined, { signal, bindToCurrentTrack = true } = {}) {
-  var sessionId = String(
-    target.sessionId ||
-    target.SessionId ||
-    target.Id ||
+async function sendRemoteGmmpCommand(target, name, args = undefined, { signal, bindToCurrentTrack = true } = {}) {
+  const sessionId = String(
+    target?.sessionId ||
+    target?.SessionId ||
+    target?.Id ||
     ""
   ).trim();
-  var deviceId = String(
-    target.deviceId ||
-    target.DeviceId ||
-    target.session.DeviceId ||
+  const deviceId = String(
+    target?.deviceId ||
+    target?.DeviceId ||
+    target?.session?.DeviceId ||
     ""
   ).trim();
-  var payload = {
+  const payload = {
     sessionId,
     deviceId,
     name,
-    arguments: Object.entries(args || {}).reducefunction((acc, [key, value]) {
+    arguments: Object.entries(args || {}).reduce((acc, [key, value]) => {
       acc[key] = value == null ? "" : String(value);
       return acc;
     }, {})
   };
-  var itemId = String(
-    target.remoteGmmpState.trackId ||
-    target.remoteGmmpState.itemId ||
-    target.itemId ||
-    target.item.Id ||
-    target.itemDetails.Id ||
-    target.NowPlayingItem.Id ||
+  const itemId = String(
+    target?.remoteGmmpState?.trackId ||
+    target?.remoteGmmpState?.itemId ||
+    target?.itemId ||
+    target?.item?.Id ||
+    target?.itemDetails?.Id ||
+    target?.NowPlayingItem?.Id ||
     ""
   ).trim();
 
@@ -2592,10 +2744,10 @@ function sendRemoteGmmpCommand(target, name, args = undefined, { signal, bindToC
 }
 
 function setSessionPending(state, sessionId, pending) {
-  var refs = state.slideRefs.get(sessionId);
+  const refs = state.slideRefs.get(sessionId);
   if (!refs) return;
 
-  [refs.playButton, refs.muteButton, refs.volumeSlider].forEach(function((button) {
+  [refs.playButton, refs.muteButton, refs.volumeSlider].forEach((button) => {
     if (!button) return;
     button.disabled = pending;
     button.classList.toggle("is-busy", pending);
@@ -2603,23 +2755,23 @@ function setSessionPending(state, sessionId, pending) {
 }
 
 function setItemPending(state, itemId, pending) {
-  state.root.querySelectorAll("[data-item-id=\"" + (escapeSelectorValue(itemId)) + "\"]").forEach(function((button) {
+  state.root.querySelectorAll(`[data-item-id="${escapeSelectorValue(itemId)}"]`).forEach((button) => {
     button.disabled = pending;
     button.classList.toggle("is-busy", pending);
   });
 }
 
-function handlePlaybackToggle(state, sessionId) {
+async function handlePlaybackToggle(state, sessionId) {
   if (!isActiveModalState(state) || state.pendingSessionActions.has(sessionId)) return;
 
-  var device = state.deviceMap.get(sessionId);
+  const device = state.deviceMap.get(sessionId);
   if (!device) return;
 
-  var controlSnapshot = refreshDeviceControlMode(device, { signal: state.abortController.signal });
-  var shouldSendRemoteGmmp =
+  const controlSnapshot = await refreshDeviceControlMode(device, { signal: state.abortController.signal });
+  const shouldSendRemoteGmmp =
     device.controlMode === "gmmp-remote" ||
-    (!!controlSnapshot.remoteGmmpState.hasCurrentTrack && controlSnapshot.isLocalSession !== true);
-  var shouldAttemptRemoteGmmp = shouldSendRemoteGmmp || isPotentialRemoteGmmpTarget(device, controlSnapshot);
+    (!!controlSnapshot?.remoteGmmpState?.hasCurrentTrack && controlSnapshot?.isLocalSession !== true);
+  const shouldAttemptRemoteGmmp = shouldSendRemoteGmmp || isPotentialRemoteGmmpTarget(device, controlSnapshot);
   try {
     console.warn("[GMMP remote] route", {
       action: "playback",
@@ -2630,8 +2782,8 @@ function handlePlaybackToggle(state, sessionId) {
     });
   } catch {}
 
-  var nextPaused = !device.isPaused;
-  var previousPaused = device.isPaused;
+  const nextPaused = !device.isPaused;
+  const previousPaused = device.isPaused;
   device.isPaused = nextPaused;
   state.pendingSessionActions.add(sessionId);
   setSessionPending(state, sessionId, true);
@@ -2639,10 +2791,10 @@ function handlePlaybackToggle(state, sessionId) {
 
   try {
     if (device.controlMode === "gmmp") {
-      var gmmpState = setGmmpPausedState(nextPaused);
+      const gmmpState = await setGmmpPausedState(nextPaused);
       applyGmmpStateToDevice(device, gmmpState);
     } else if (shouldAttemptRemoteGmmp || device.controlMode === "gmmp-remote") {
-      sendRemoteGmmpCommand(
+      await sendRemoteGmmpCommand(
         device,
         nextPaused ? "Pause" : "Unpause",
         undefined,
@@ -2653,11 +2805,11 @@ function handlePlaybackToggle(state, sessionId) {
       );
       device.confirmedIsPaused = nextPaused;
     } else if (device.controlMode === "local-video") {
-      var videoState = setLocalVideoPausedState(nextPaused);
+      const videoState = await setLocalVideoPausedState(nextPaused);
       applyLocalVideoStateToDevice(device, videoState);
     } else {
-      makeApiRequest(
-        "/Sessions/" + (encodeURIComponent(sessionId)) + "/Playing/" + (nextPaused ? "Pause" : "Unpause"),
+      await makeApiRequest(
+        `/Sessions/${encodeURIComponent(sessionId)}/Playing/${nextPaused ? "Pause" : "Unpause"}`,
         {
           method: "POST",
           signal: state.abortController.signal
@@ -2668,13 +2820,13 @@ function handlePlaybackToggle(state, sessionId) {
     }
 
     showNotification(
-      nextPaused ? t("duraklatildi", "Pausado") : t("devamettirildi", "Retomado"),
+      nextPaused ? t("duraklatildi", "Duraklatıldı") : t("devamettirildi", "Devam ettirildi"),
       "success"
     );
     queueModalSync(state, 350);
   } catch (error) {
     device.isPaused = previousPaused;
-    showNotification((t("islemhatasi", "Erro de operação")) + ": " + (error.message), "error");
+    showNotification(`${t("islemhatasi", "İşlem hatası")}: ${error.message}`, "error");
   } finally {
     state.pendingSessionActions.delete(sessionId);
     setSessionPending(state, sessionId, false);
@@ -2682,17 +2834,17 @@ function handlePlaybackToggle(state, sessionId) {
   }
 }
 
-function handleMuteToggle(state, sessionId) {
+async function handleMuteToggle(state, sessionId) {
   if (!isActiveModalState(state) || state.pendingSessionActions.has(sessionId)) return;
 
-  var device = state.deviceMap.get(sessionId);
+  const device = state.deviceMap.get(sessionId);
   if (!device) return;
 
-  var controlSnapshot = refreshDeviceControlMode(device, { signal: state.abortController.signal });
-  var shouldSendRemoteGmmp =
+  const controlSnapshot = await refreshDeviceControlMode(device, { signal: state.abortController.signal });
+  const shouldSendRemoteGmmp =
     device.controlMode === "gmmp-remote" ||
-    (!!controlSnapshot.remoteGmmpState.hasCurrentTrack && controlSnapshot.isLocalSession !== true);
-  var shouldAttemptRemoteGmmp = shouldSendRemoteGmmp || isPotentialRemoteGmmpTarget(device, controlSnapshot);
+    (!!controlSnapshot?.remoteGmmpState?.hasCurrentTrack && controlSnapshot?.isLocalSession !== true);
+  const shouldAttemptRemoteGmmp = shouldSendRemoteGmmp || isPotentialRemoteGmmpTarget(device, controlSnapshot);
   try {
     console.warn("[GMMP remote] route", {
       action: "mute",
@@ -2703,9 +2855,9 @@ function handleMuteToggle(state, sessionId) {
     });
   } catch {}
 
-  var previousMuted = device.isMuted;
-  var previousVolume = device.volumeLevel;
-  var nextMuted = !device.isMuted;
+  const previousMuted = device.isMuted;
+  const previousVolume = device.volumeLevel;
+  const nextMuted = !device.isMuted;
 
   if (!nextMuted && device.lastNonZeroVolume > 0) {
     device.volumeLevel = device.lastNonZeroVolume;
@@ -2724,12 +2876,12 @@ function handleMuteToggle(state, sessionId) {
 
   try {
     if (device.controlMode === "gmmp") {
-      var gmmpState = nextMuted
-        ? setGmmpMutedState(true)
-        : setGmmpVolumeLevel(device.lastNonZeroVolume > 0 ? device.lastNonZeroVolume : Math.max(previousVolume, 1));
+      const gmmpState = nextMuted
+        ? await setGmmpMutedState(true)
+        : await setGmmpVolumeLevel(device.lastNonZeroVolume > 0 ? device.lastNonZeroVolume : Math.max(previousVolume, 1));
       applyGmmpStateToDevice(device, gmmpState);
     } else if (shouldAttemptRemoteGmmp || device.controlMode === "gmmp-remote") {
-      sendRemoteGmmpCommand(
+      await sendRemoteGmmpCommand(
         device,
         nextMuted ? "Mute" : "Unmute",
         undefined,
@@ -2743,12 +2895,12 @@ function handleMuteToggle(state, sessionId) {
         device.confirmedVolumeLevel = device.volumeLevel;
       }
     } else if (device.controlMode === "local-video") {
-      var videoState = nextMuted
+      const videoState = nextMuted
         ? setLocalVideoMutedState(true)
         : setLocalVideoVolumeLevel(device.lastNonZeroVolume > 0 ? device.lastNonZeroVolume : Math.max(previousVolume, 1));
       applyLocalVideoStateToDevice(device, videoState);
     } else {
-      sendSessionCommand(
+      await sendSessionCommand(
         sessionId,
         nextMuted ? "Mute" : "Unmute",
         undefined,
@@ -2762,14 +2914,14 @@ function handleMuteToggle(state, sessionId) {
     }
 
     showNotification(
-      nextMuted ? t("volOff", "Mudo ativado") : t("volOn", "Mudo desativado"),
+      nextMuted ? t("volOff", "Ses kapatıldı") : t("volOn", "Ses açıldı"),
       "success"
     );
     queueModalSync(state, 350);
   } catch (error) {
     device.isMuted = previousMuted;
     device.volumeLevel = previousVolume;
-    showNotification((t("seshata", "Erro de volume")) + ": " + (error.message), "error");
+    showNotification(`${t("seshata", "Ses hatası")}: ${error.message}`, "error");
   } finally {
     state.pendingSessionActions.delete(sessionId);
     setSessionPending(state, sessionId, false);
@@ -2792,7 +2944,7 @@ function scheduleVolumeCommit(state, sessionId, volume, immediate = false) {
     return;
   }
 
-  var timerId = window.setTimeoutfunction(() {
+  const timerId = window.setTimeout(() => {
     state.volumeTimers.delete(sessionId);
     void commitVolume(state, sessionId);
   }, VOLUME_COMMIT_DELAY_MS);
@@ -2800,17 +2952,17 @@ function scheduleVolumeCommit(state, sessionId, volume, immediate = false) {
   state.volumeTimers.set(sessionId, timerId);
 }
 
-function commitVolume(state, sessionId) {
+async function commitVolume(state, sessionId) {
   if (!isActiveModalState(state)) return;
 
-  var device = state.deviceMap.get(sessionId);
+  const device = state.deviceMap.get(sessionId);
   if (!device) return;
 
-  var controlSnapshot = refreshDeviceControlMode(device, { signal: state.abortController.signal });
-  var shouldSendRemoteGmmp =
+  const controlSnapshot = await refreshDeviceControlMode(device, { signal: state.abortController.signal });
+  const shouldSendRemoteGmmp =
     device.controlMode === "gmmp-remote" ||
-    (!!controlSnapshot.remoteGmmpState.hasCurrentTrack && controlSnapshot.isLocalSession !== true);
-  var shouldAttemptRemoteGmmp = shouldSendRemoteGmmp || isPotentialRemoteGmmpTarget(device, controlSnapshot);
+    (!!controlSnapshot?.remoteGmmpState?.hasCurrentTrack && controlSnapshot?.isLocalSession !== true);
+  const shouldAttemptRemoteGmmp = shouldSendRemoteGmmp || isPotentialRemoteGmmpTarget(device, controlSnapshot);
   try {
     console.warn("[GMMP remote] route", {
       action: "volume",
@@ -2818,19 +2970,19 @@ function commitVolume(state, sessionId) {
       controlMode: device.controlMode,
       shouldSendRemoteGmmp,
       shouldAttemptRemoteGmmp,
-      targetVolume: clamp(state.pendingVolumeValues.get(sessionId) || device.volumeLevel, 0, 100)
+      targetVolume: clamp(state.pendingVolumeValues.get(sessionId) ?? device.volumeLevel, 0, 100)
     });
   } catch {}
 
-  var targetVolume = clamp(state.pendingVolumeValues.get(sessionId) || device.volumeLevel, 0, 100);
+  const targetVolume = clamp(state.pendingVolumeValues.get(sessionId) ?? device.volumeLevel, 0, 100);
   state.pendingVolumeValues.delete(sessionId);
 
   try {
     if (device.controlMode === "gmmp") {
-      var gmmpState = setGmmpVolumeLevel(targetVolume);
+      const gmmpState = await setGmmpVolumeLevel(targetVolume);
       applyGmmpStateToDevice(device, gmmpState);
     } else if (shouldAttemptRemoteGmmp || device.controlMode === "gmmp-remote") {
-      sendRemoteGmmpCommand(
+      await sendRemoteGmmpCommand(
         device,
         "SetVolume",
         { Volume: targetVolume },
@@ -2850,16 +3002,16 @@ function commitVolume(state, sessionId) {
         device.confirmedIsMuted = true;
       }
     } else if (device.controlMode === "local-video") {
-      var videoState = setLocalVideoVolumeLevel(targetVolume);
+      const videoState = setLocalVideoVolumeLevel(targetVolume);
       applyLocalVideoStateToDevice(device, videoState);
     } else {
       if (device.confirmedIsMuted && targetVolume > 0) {
-        sendSessionCommand(sessionId, "Unmute", undefined, { signal: state.abortController.signal });
+        await sendSessionCommand(sessionId, "Unmute", undefined, { signal: state.abortController.signal });
         device.isMuted = false;
         device.confirmedIsMuted = false;
       }
 
-      sendSessionCommand(
+      await sendSessionCommand(
         sessionId,
         "SetVolume",
         { Volume: targetVolume },
@@ -2881,34 +3033,34 @@ function commitVolume(state, sessionId) {
     device.volumeLevel = device.confirmedVolumeLevel;
     device.isMuted = device.confirmedIsMuted;
     applyDeviceStateToDom(state, device);
-    showNotification((t("seshata", "Erro de volume")) + ": " + (error.message), "error");
+    showNotification(`${t("seshata", "Ses hatası")}: ${error.message}`, "error");
   }
 }
 
-function handleFavoriteToggle(state, itemId) {
+async function handleFavoriteToggle(state, itemId) {
   if (!isActiveModalState(state) || state.pendingItemActions.has(itemId)) return;
 
-  var devices = state.devices.filterfunction((device) device.itemId === itemId);
-  var sample = devices[0];
+  const devices = state.devices.filter((device) => device.itemId === itemId);
+  const sample = devices[0];
   if (!sample) return;
 
-  var makeFavorite = !sample.isFavorite;
-  var previousValue = sample.isFavorite;
+  const makeFavorite = !sample.isFavorite;
+  const previousValue = sample.isFavorite;
   state.pendingItemActions.add(itemId);
   setItemPending(state, itemId, true);
 
-  devices.forEach(function((device) {
+  devices.forEach((device) => {
     device.isFavorite = makeFavorite;
     applyDeviceStateToDom(state, device);
   });
 
   try {
-    var itemDetails = sample.itemDetails || sample.item;
-    updateFavoriteStatus(itemId, makeFavorite, {
-      item: itemDetails || { Id: itemId, Type: itemDetails.Type }
+    const itemDetails = sample.itemDetails || sample.item;
+    await updateFavoriteStatus(itemId, makeFavorite, {
+      item: itemDetails || { Id: itemId, Type: itemDetails?.Type }
     });
 
-    devices.forEach(function((device) {
+    devices.forEach((device) => {
       device.isFavorite = makeFavorite;
       if (!device.itemDetails.UserData) {
         device.itemDetails.UserData = {};
@@ -2919,11 +3071,11 @@ function handleFavoriteToggle(state, itemId) {
 
     showNotification(getWatchlistToast(sample.itemDetails || sample.item, makeFavorite), "success");
   } catch (error) {
-    devices.forEach(function((device) {
+    devices.forEach((device) => {
       device.isFavorite = previousValue;
       applyDeviceStateToDom(state, device);
     });
-    showNotification((t("favorihata", "Erro ao atualizar favorito")) + ": " + (error.message), "error");
+    showNotification(`${t("favorihata", "Favori işlem hatası")}: ${error.message}`, "error");
   } finally {
     state.pendingItemActions.delete(itemId);
     setItemPending(state, itemId, false);
@@ -2931,36 +3083,44 @@ function handleFavoriteToggle(state, itemId) {
 }
 
 function renderServerInfoMarkup(info = {}) {
-  var rows = [
-    { label: t("servername", "Nome do Servidor"), value: info.ServerName },
-    { label: t("surumu", "Versão"), value: info.Version },
-    { label: t("productname", "Produto"), value: info.ProductName },
-    { label: t("isletimsistemi", "Sistema Operacional"), value: info.OperatingSystemDisplayName || info.OperatingSystem },
-    { label: t("systemarch", "Arquitetura"), value: info.SystemArchitecture },
-    { label: t("localaddress", "Endereço Local"), value: info.LocalAddress },
-    { label: t("websocketport", "Porta WebSocket"), value: info.WebSocketPortNumber },
+  const rows = [
+    { label: t("servername", "Sunucu Adı"), value: info.ServerName },
+    { label: t("surumu", "Sürüm"), value: info.Version },
+    { label: t("productname", "Ürün"), value: info.ProductName },
+    { label: t("isletimsistemi", "İşletim Sistemi"), value: info.OperatingSystemDisplayName || info.OperatingSystem },
+    { label: t("systemarch", "Mimari"), value: info.SystemArchitecture },
+    { label: t("localaddress", "Yerel Adres"), value: info.LocalAddress },
+    { label: t("websocketport", "WebSocket Port"), value: info.WebSocketPortNumber },
     { label: t("encoderlocation", "Encoder"), value: info.EncoderLocation },
-    { label: t("pendingrestart", "Reinicialização Pendente"), value: info.HasPendingRestart ? t("evet", "Sim") : t("hayir", "Não") },
-    { label: t("updateavailable", "Atualização"), value: info.HasUpdateAvailable ? t("evet", "Sim") : t("hayir", "Não") },
-    { label: t("librarymonitor", "Monitor de Biblioteca"), value: info.SupportsLibraryMonitor ? t("destekleniyor", "Suportado") : t("desteklenmiyor", "Não suportado") },
-    { label: t("castreceiverapps", "Apps Cast Receptor"), value: Array.isArray(info.CastReceiverApplications) ? String(info.CastReceiverApplications.length) : "0" },
-    { label: t("localTime", "Hora Local"), value: "<span class=\"jms-cast-server__local-time\">" + (escapeHtml(new Date().toLocaleString())) + "</span>", isHtml: true }
-  ].filterfunction((row) row.value !== undefined && row.value !== null && row.value !== "");
+    { label: t("pendingrestart", "Bekleyen Yeniden Başlatma"), value: info.HasPendingRestart ? t("evet", "Evet") : t("hayir", "Hayır") },
+    { label: t("updateavailable", "Güncelleme"), value: info.HasUpdateAvailable ? t("evet", "Evet") : t("hayir", "Hayır") },
+    { label: t("librarymonitor", "Kütüphane İzleme"), value: info.SupportsLibraryMonitor ? t("destekleniyor", "Destekleniyor") : t("desteklenmiyor", "Desteklenmiyor") },
+    { label: t("castreceiverapps", "Cast Receiver Apps"), value: Array.isArray(info.CastReceiverApplications) ? String(info.CastReceiverApplications.length) : "0" },
+    { label: t("localTime", "Yerel Zaman"), value: `<span class="jms-cast-server__local-time">${escapeHtml(new Date().toLocaleString())}</span>`, isHtml: true }
+  ].filter((row) => row.value !== undefined && row.value !== null && row.value !== "");
 
-  return "\n    <div class=\"jms-cast-server__grid\">\n      ${rows\n        .mapfunction((row) "
+  return `
+    <div class="jms-cast-server__grid">
+      ${rows
+        .map(
+          (row) => `
             <div class="jms-cast-server__item">
               <span class="jms-cast-server__label">${escapeHtml(row.label)}</span>
               <strong class="jms-cast-server__value">${row.isHtml ? row.value : escapeHtml(row.value)}</strong>
             </div>
-          "\n        )\n        .join(\"\")}\n    </div>\n  ";
+          `
+        )
+        .join("")}
+    </div>
+  `;
 }
 
-function getServerInfoOnce({ signal } = {}) {
+async function getServerInfoOnce({ signal } = {}) {
   if (!serverInfoPromise) {
     serverInfoPromise = makeApiRequest("/System/Info", { signal })
-      .thenfunction((info) info || {})
-      .catchfunction((error) {
-        if (error.isAbort) {
+      .then((info) => info || {})
+      .catch((error) => {
+        if (error?.isAbort) {
           serverInfoPromise = null;
           throw error;
         }
@@ -2971,40 +3131,40 @@ function getServerInfoOnce({ signal } = {}) {
   return serverInfoPromise;
 }
 
-function toggleServerPanel(state, toggleButton) {
-  var slide = toggleButton.closest(".jms-cast-slide");
-  var sessionId = slide.dataset.sessionId;
+async function toggleServerPanel(state, toggleButton) {
+  const slide = toggleButton.closest(".jms-cast-slide");
+  const sessionId = slide?.dataset.sessionId;
   if (!sessionId) return;
 
-  var refs = state.slideRefs.get(sessionId);
-  if (!refs.serverPanel) return;
+  const refs = state.slideRefs.get(sessionId);
+  if (!refs?.serverPanel) return;
 
-  var willExpand = refs.serverPanel.hidden;
+  const willExpand = refs.serverPanel.hidden;
   refs.serverPanel.hidden = !willExpand;
   toggleButton.setAttribute("aria-expanded", willExpand ? "true" : "false");
-  refs.serverToggle.classList.toggle("is-open", willExpand);
+  refs.serverToggle?.classList.toggle("is-open", willExpand);
 
   if (!willExpand || refs.serverPanel.dataset.loaded === "true") {
     return;
   }
 
   refs.serverPanel.dataset.loading = "true";
-  refs.serverPanel.innerHTML = "<div class=\"jms-cast-server__loading\">" + (escapeHtml(t("castyukleniyor", "Carregando..."))) + "</div>";
+  refs.serverPanel.innerHTML = `<div class="jms-cast-server__loading">${escapeHtml(t("castyukleniyor", "Yükleniyor..."))}</div>`;
 
   try {
-    var info = getServerInfoOnce({ signal: state.abortController.signal });
+    const info = await getServerInfoOnce({ signal: state.abortController.signal });
     if (!isActiveModalState(state)) return;
     refs.serverPanel.innerHTML = renderServerInfoMarkup(info || {});
     refs.serverPanel.dataset.loaded = "true";
   } catch (error) {
-    refs.serverPanel.innerHTML = "<div class=\"jms-cast-server__error\">${escapeHtml("${t("sunucubilgihata", "Não foi possível obter informações do servidor")}: ${error.message}")}</div>";
+    refs.serverPanel.innerHTML = `<div class="jms-cast-server__error">${escapeHtml(`${t("sunucubilgihata", "Sunucu bilgisi alınamadı")}: ${error.message}`)}</div>`;
   } finally {
     delete refs.serverPanel.dataset.loading;
   }
 }
 
 function bindModalEvents(state) {
-  state.onKeyDown = function(event) {
+  state.onKeyDown = (event) => {
     if (!isActiveModalState(state)) return;
 
     if (event.key === "Escape") {
@@ -3024,13 +3184,13 @@ function bindModalEvents(state) {
 
   document.addEventListener("keydown", state.onKeyDown);
 
-  state.root.addEventListenerfunction("click", (event) {
+  state.root.addEventListener("click", async (event) => {
     if (!isActiveModalState(state)) return;
 
-    var actionEl = event.target.closest("[data-action]");
+    const actionEl = event.target.closest("[data-action]");
     if (!actionEl || !state.root.contains(actionEl)) return;
 
-    var { action } = actionEl.dataset;
+    const { action } = actionEl.dataset;
     if (!action) return;
 
     event.preventDefault();
@@ -3055,37 +3215,37 @@ function bindModalEvents(state) {
     }
 
     if (action === "playback") {
-      handlePlaybackToggle(state, actionEl.dataset.sessionId || "");
+      await handlePlaybackToggle(state, actionEl.dataset.sessionId || "");
       return;
     }
 
     if (action === "favorite") {
-      handleFavoriteToggle(state, actionEl.dataset.itemId || "");
+      await handleFavoriteToggle(state, actionEl.dataset.itemId || "");
       return;
     }
 
     if (action === "mute") {
-      handleMuteToggle(state, actionEl.dataset.sessionId || "");
+      await handleMuteToggle(state, actionEl.dataset.sessionId || "");
       return;
     }
 
     if (action === "server-toggle") {
-      toggleServerPanel(state, actionEl);
+      await toggleServerPanel(state, actionEl);
     }
   });
 
-  state.root.addEventListenerfunction("input", (event) {
+  state.root.addEventListener("input", (event) => {
     if (!isActiveModalState(state)) return;
     if (state.canControl !== true) return;
 
-    var slider = event.target.closest(".jms-cast-volume__slider");
+    const slider = event.target.closest(".jms-cast-volume__slider");
     if (!slider) return;
 
-    var sessionId = slider.dataset.sessionId || "";
-    var device = state.deviceMap.get(sessionId);
+    const sessionId = slider.dataset.sessionId || "";
+    const device = state.deviceMap.get(sessionId);
     if (!device) return;
 
-    var volume = clamp(slider.value, 0, 100);
+    const volume = clamp(slider.value, 0, 100);
     device.volumeLevel = volume;
     if (volume > 0) {
       device.lastNonZeroVolume = volume;
@@ -3096,41 +3256,56 @@ function bindModalEvents(state) {
     scheduleVolumeCommit(state, sessionId, volume, false);
   });
 
-  state.root.addEventListenerfunction("change", (event) {
+  state.root.addEventListener("change", (event) => {
     if (!isActiveModalState(state)) return;
     if (state.canControl !== true) return;
 
-    var slider = event.target.closest(".jms-cast-volume__slider");
+    const slider = event.target.closest(".jms-cast-volume__slider");
     if (!slider) return;
 
-    var sessionId = slider.dataset.sessionId || "";
-    var volume = clamp(slider.value, 0, 100);
+    const sessionId = slider.dataset.sessionId || "";
+    const volume = clamp(slider.value, 0, 100);
     scheduleVolumeCommit(state, sessionId, volume, true);
   });
 }
 
 function renderEmbeddedPanelMarkup(state) {
-  var isNotificationVariant = state.variant === "notification";
+  const isNotificationVariant = state.variant === "notification";
   if (!state.devices.length) {
-    return "\n      <div class=\"jms-cast-embed" + (isNotificationVariant ? " jms-cast-embed--notification" : "") + "\">\n        <div class=\"jms-cast-embed__empty\">\n          " + (escapeHtml(t("castbulunamadi", "Nenhum dispositivo encontrado"))) + "\n        </div>\n      </div>\n    ";
+    return `
+      <div class="jms-cast-embed${isNotificationVariant ? " jms-cast-embed--notification" : ""}">
+        <div class="jms-cast-embed__empty">
+          ${escapeHtml(t("castbulunamadi", "Aygıt bulunamadı"))}
+        </div>
+      </div>
+    `;
   }
 
-  var readOnlyNotice = isNotificationVariant || state.canControl === true
+  const readOnlyNotice = isNotificationVariant || state.canControl === true
     ? ""
-    : "\n      <div class=\"jms-cast-embed__notice\">\n        " + (escapeHtml(t("castreadonly", "Apenas informações de reproducção podem ser exibidas aqui."))) + "\n      </div>\n    ";
+    : `
+      <div class="jms-cast-embed__notice">
+        ${escapeHtml(t("castreadonly", "Bu alanda sadece izleme bilgisi görüntülenebilir."))}
+      </div>
+    `;
 
-  return "\n    <div class=\"jms-cast-embed" + (isNotificationVariant ? " jms-cast-embed--notification" : "") + "\">\n      " + (readOnlyNotice) + "\n      " + (state.devices.mapfunction((device, index) renderSlide(device, index, {
+  return `
+    <div class="jms-cast-embed${isNotificationVariant ? " jms-cast-embed--notification" : ""}">
+      ${readOnlyNotice}
+      ${state.devices.map((device, index) => renderSlide(device, index, {
         compact: isNotificationVariant,
         clickableHero: isNotificationVariant
-      ) + ")).join(\"\")}\n    </div>\n  ";
+      })).join("")}
+    </div>
+  `;
 }
 
-function hydrateEmbeddedCastPanel(state) {
-  var gmmpState = getGmmpPlaybackSnapshot();
-  var videoState = getLocalVideoPlaybackSnapshot();
-  var remoteGmmpStateMap = fetchRemoteGmmpStateMap({ signal: state.abortController.signal });
-  var sessions = sanitizeVisiblePlaybackSessions(
-    fetchVisiblePlaybackSessions({ signal: state.abortController.signal }),
+async function hydrateEmbeddedCastPanel(state) {
+  const gmmpState = await getGmmpPlaybackSnapshot();
+  const videoState = getLocalVideoPlaybackSnapshot();
+  const remoteGmmpStateMap = await fetchRemoteGmmpStateMap({ signal: state.abortController.signal });
+  const sessions = sanitizeVisiblePlaybackSessions(
+    await fetchVisiblePlaybackSessions({ signal: state.abortController.signal }),
     { gmmpState, videoState, remoteGmmpStateMap }
   );
   if (!isActiveEmbeddedState(state)) return;
@@ -3144,25 +3319,25 @@ function hydrateEmbeddedCastPanel(state) {
 
   state.signature = getSessionSignature(sessions);
   state.devices = sessions.length
-    ? buildDeviceModels(sessions, state.access)
+    ? await buildDeviceModels(sessions, state.access)
     : [];
   if (!isActiveEmbeddedState(state)) return;
 
-  state.deviceMap = new Mapfunction(state.devices.map((device) [device.sessionId, device]));
+  state.deviceMap = new Map(state.devices.map((device) => [device.sessionId, device]));
   state.activeIndex = 0;
   state.root.innerHTML = renderEmbeddedPanelMarkup(state);
   cacheSlideRefs(state);
   applyAllDevicesToDom(state);
 }
 
-function syncEmbeddedCastPanelState(state) {
+async function syncEmbeddedCastPanelState(state) {
   if (!isActiveEmbeddedState(state) || state.isSyncing) return;
 
   state.isSyncing = true;
   try {
-    hydrateEmbeddedCastPanel(state);
+    await hydrateEmbeddedCastPanel(state);
   } catch (error) {
-    if (!error.isAbort) {
+    if (!error?.isAbort) {
       console.error("Cast panel senkronizasyon hatası:", error);
     }
   } finally {
@@ -3173,8 +3348,8 @@ function syncEmbeddedCastPanelState(state) {
 function tickEmbeddedCastPanelState(state) {
   if (!isActiveEmbeddedState(state)) return;
 
-  var videoState = getLocalVideoPlaybackSnapshot();
-  state.devices.forEach(function((device) {
+  const videoState = getLocalVideoPlaybackSnapshot();
+  state.devices.forEach((device) => {
     if (device.controlMode === "local-video" && isMatchingLocalVideoItem(device, videoState)) {
       applyLocalVideoStateToDevice(device, videoState);
       applyDeviceStateToDom(state, device);
@@ -3183,36 +3358,36 @@ function tickEmbeddedCastPanelState(state) {
 
     if (device.isPaused || !device.runtimeTicks) return;
 
-    var nextTicks = Math.min(device.runtimeTicks, device.positionTicks + 10_000_000);
+    const nextTicks = Math.min(device.runtimeTicks, device.positionTicks + 10_000_000);
     if (nextTicks !== device.positionTicks) {
       device.positionTicks = nextTicks;
       applyDeviceProgressToDom(state, device);
     }
   });
 
-  state.root.querySelectorAll(".jms-cast-server__local-time").forEach(function((element) {
+  state.root.querySelectorAll(".jms-cast-server__local-time").forEach((element) => {
     element.textContent = new Date().toLocaleString();
   });
 }
 
 function bindEmbeddedEvents(state) {
-  var onClick = function(event) {
+  const onClick = async (event) => {
     if (!isActiveEmbeddedState(state)) return;
 
-    var actionEl = event.target.closest("[data-action]");
+    const actionEl = event.target.closest("[data-action]");
     if (!actionEl || !state.root.contains(actionEl)) return;
 
-    var { action } = actionEl.dataset;
+    const { action } = actionEl.dataset;
     if (!action) return;
 
     event.preventDefault();
 
     if (action === "open-modal") {
-      var slide = actionEl.closest(".jms-cast-slide");
-      var sessionId = slide.dataset.sessionId || "";
-      var device = state.deviceMap.get(sessionId);
+      const slide = actionEl.closest(".jms-cast-slide");
+      const sessionId = slide?.dataset.sessionId || "";
+      const device = state.deviceMap.get(sessionId);
       if (!device) return;
-      showNowPlayingModal(device.itemDetails || device.item, device.session || null);
+      await showNowPlayingModal(device.itemDetails || device.item, device.session || null);
       return;
     }
 
@@ -3221,47 +3396,47 @@ function bindEmbeddedEvents(state) {
     }
 
     if (action === "playback") {
-      handlePlaybackToggle(state, actionEl.dataset.sessionId || "");
+      await handlePlaybackToggle(state, actionEl.dataset.sessionId || "");
       return;
     }
 
     if (action === "favorite") {
-      handleFavoriteToggle(state, actionEl.dataset.itemId || "");
+      await handleFavoriteToggle(state, actionEl.dataset.itemId || "");
       return;
     }
 
     if (action === "mute") {
-      handleMuteToggle(state, actionEl.dataset.sessionId || "");
+      await handleMuteToggle(state, actionEl.dataset.sessionId || "");
       return;
     }
 
     if (action === "server-toggle") {
-      toggleServerPanel(state, actionEl);
+      await toggleServerPanel(state, actionEl);
     }
   };
 
-  var onKeyDown = function(event) {
+  const onKeyDown = (event) => {
     if (!isActiveEmbeddedState(state)) return;
     if (event.key !== "Enter" && event.key !== " ") return;
 
-    var actionEl = event.target.closest('[data-action="open-modal"]');
+    const actionEl = event.target.closest('[data-action="open-modal"]');
     if (!actionEl || !state.root.contains(actionEl)) return;
 
     event.preventDefault();
     actionEl.click();
   };
 
-  var onInput = function(event) {
+  const onInput = (event) => {
     if (!isActiveEmbeddedState(state) || state.canControl !== true) return;
 
-    var slider = event.target.closest(".jms-cast-volume__slider");
+    const slider = event.target.closest(".jms-cast-volume__slider");
     if (!slider) return;
 
-    var sessionId = slider.dataset.sessionId || "";
-    var device = state.deviceMap.get(sessionId);
+    const sessionId = slider.dataset.sessionId || "";
+    const device = state.deviceMap.get(sessionId);
     if (!device) return;
 
-    var volume = clamp(slider.value, 0, 100);
+    const volume = clamp(slider.value, 0, 100);
     device.volumeLevel = volume;
     if (volume > 0) {
       device.lastNonZeroVolume = volume;
@@ -3272,14 +3447,14 @@ function bindEmbeddedEvents(state) {
     scheduleVolumeCommit(state, sessionId, volume, false);
   };
 
-  var onChange = function(event) {
+  const onChange = (event) => {
     if (!isActiveEmbeddedState(state) || state.canControl !== true) return;
 
-    var slider = event.target.closest(".jms-cast-volume__slider");
+    const slider = event.target.closest(".jms-cast-volume__slider");
     if (!slider) return;
 
-    var sessionId = slider.dataset.sessionId || "";
-    var volume = clamp(slider.value, 0, 100);
+    const sessionId = slider.dataset.sessionId || "";
+    const volume = clamp(slider.value, 0, 100);
     scheduleVolumeCommit(state, sessionId, volume, true);
   };
 
@@ -3287,23 +3462,23 @@ function bindEmbeddedEvents(state) {
   state.root.addEventListener("keydown", onKeyDown);
   state.root.addEventListener("input", onInput);
   state.root.addEventListener("change", onChange);
-  state.rootCleanup = function() {
-    state.root.removeEventListener("click", onClick);
-    state.root.removeEventListener("keydown", onKeyDown);
-    state.root.removeEventListener("input", onInput);
-    state.root.removeEventListener("change", onChange);
+  state.rootCleanup = () => {
+    state.root?.removeEventListener("click", onClick);
+    state.root?.removeEventListener("keydown", onKeyDown);
+    state.root?.removeEventListener("input", onInput);
+    state.root?.removeEventListener("change", onChange);
   };
 }
 
-export function mountCastViewerPanel(container, { refreshMs = CAST_MODAL_SYNC_MS, variant = "default" } = {}) {
+export async function mountCastViewerPanel(container, { refreshMs = CAST_MODAL_SYNC_MS, variant = "default" } = {}) {
   if (!container) {
     return { destroy() {} };
   }
 
-  ensureCastModalCss();
-  var access = getCastAccess();
+  await ensureCastModalCss();
+  const access = await getCastAccess();
 
-  var state = {
+  const state = {
     kind: "embedded",
     root: container,
     devices: [],
@@ -3327,23 +3502,27 @@ export function mountCastViewerPanel(container, { refreshMs = CAST_MODAL_SYNC_MS
     variant
   };
 
-  container.classList.add("jms-cast-embed-host", "jms-cast-embed-host--" + (variant));
+  container.classList.add("jms-cast-embed-host", `jms-cast-embed-host--${variant}`);
   bindEmbeddedEvents(state);
 
   try {
-    hydrateEmbeddedCastPanel(state);
+    await hydrateEmbeddedCastPanel(state);
   } catch (error) {
-    if (!error.isAbort) {
+    if (!error?.isAbort) {
       console.error("Cast panel yükleme hatası:", error);
-      container.innerHTML = "\n        <div class=\"jms-cast-embed\">\n          <div class=\"jms-cast-embed__empty\">${escapeHtml("${t("casthata", "Hata")}: ${error.message}")}</div>\n        </div>\n      ";
+      container.innerHTML = `
+        <div class="jms-cast-embed">
+          <div class="jms-cast-embed__empty">${escapeHtml(`${t("casthata", "Hata")}: ${error.message}`)}</div>
+        </div>
+      `;
     }
   }
 
-  state.syncInterval = window.setIntervalfunction(() {
+  state.syncInterval = window.setInterval(() => {
     void syncEmbeddedCastPanelState(state);
   }, Math.max(1500, refreshMs));
 
-  state.tickInterval = window.setIntervalfunction(() {
+  state.tickInterval = window.setInterval(() => {
     tickEmbeddedCastPanelState(state);
   }, CAST_MODAL_TICK_MS);
 
@@ -3352,29 +3531,29 @@ export function mountCastViewerPanel(container, { refreshMs = CAST_MODAL_SYNC_MS
       cleanupModalState(state);
       try {
         container.classList.remove("jms-cast-embed-host");
-        container.classList.remove("jms-cast-embed-host--" + (variant));
+        container.classList.remove(`jms-cast-embed-host--${variant}`);
         container.innerHTML = "";
       } catch {}
     }
   };
 }
 
-function showNowPlayingModal(nowPlayingItem, device) {
+async function showNowPlayingModal(nowPlayingItem, device) {
   closeCastModal();
-  ensureCastModalCss();
-  var access = getCastAccess();
+  await ensureCastModalCss();
+  const access = await getCastAccess();
 
-  if (access.canAccessModule !== true) {
+  if (access?.canAccessModule !== true) {
     showNotification(t("castbulunamadi", "Aygıt bulunamadı"), "error");
     return;
   }
 
-  var root = document.createElement("div");
+  const root = document.createElement("div");
   root.className = "jms-cast-modal";
   root.innerHTML = createLoadingMarkup();
   document.body.appendChild(root);
 
-  var state = {
+  const state = {
     root,
     devices: [],
     deviceMap: new Map(),
@@ -3402,107 +3581,125 @@ function showNowPlayingModal(nowPlayingItem, device) {
   bindModalEvents(state);
 
   try {
-    hydrateCastModal(state, { preferredSessionId: device.Id || "" });
+    await hydrateCastModal(state, { preferredSessionId: device?.Id || "" });
   } catch (error) {
-    if (!error.isAbort) {
+    if (!error?.isAbort) {
       console.error("Cast modal hatası:", error);
       closeCastModal();
-      showNotification((t("icerikhata", "İçerik hatası")) + ": " + (error.message), "error");
+      showNotification(`${t("icerikhata", "İçerik hatası")}: ${error.message}`, "error");
     }
   }
 }
 
-export function loadAvailableDevices(itemId, dropdown) {
-  dropdown.innerHTML = "<div class=\"monwui-loading-text\">" + (escapeHtml(t("castyukleniyor", "Cihazlar aranıyor..."))) + "</div>";
+export async function loadAvailableDevices(itemId, dropdown) {
+  dropdown.innerHTML = `<div class="monwui-loading-text">${escapeHtml(t("castyukleniyor", "Cihazlar aranıyor..."))}</div>`;
 
   try {
-    var access = getCastAccess();
-    if (access.canAccessModule !== true) {
-      dropdown.innerHTML = "<div class=\"monwui-no-devices\">" + (escapeHtml(t("castbulunamadi", "Aygıt bulunamadı"))) + "</div>";
+    const access = await getCastAccess();
+    if (access?.canAccessModule !== true) {
+      dropdown.innerHTML = `<div class="monwui-no-devices">${escapeHtml(t("castbulunamadi", "Aygıt bulunamadı"))}</div>`;
       return;
     }
 
-    var [sessions, rawVisibleSessions, gmmpState, remoteGmmpStateMap] = Promise.all([
+    const [sessions, rawVisibleSessions, gmmpState, remoteGmmpStateMap] = await Promise.all([
       fetchSessionsForCurrentUser(),
       fetchVisiblePlaybackSessions(),
       getGmmpPlaybackSnapshot(),
       fetchRemoteGmmpStateMap()
     ]);
-    var videoState = getLocalVideoPlaybackSnapshot();
-    var visibleSessions = sanitizeVisiblePlaybackSessions(rawVisibleSessions, {
+    const videoState = getLocalVideoPlaybackSnapshot();
+    const visibleSessions = sanitizeVisiblePlaybackSessions(rawVisibleSessions, {
       gmmpState,
       videoState,
       remoteGmmpStateMap
     });
 
-    var videoDevices = sessions.filterfunction((session) playable(session) || ["android", "ios", "iphone", "ipad"].somefunction((term) session.Client.toLowerCase().includes(term))
+    const videoDevices = sessions.filter(
+      (session) => playable(session) || ["android", "ios", "iphone", "ipad"].some((term) => session.Client?.toLowerCase().includes(term))
     );
 
     if (videoDevices.length === 0 && visibleSessions.length === 0) {
-      dropdown.innerHTML = "<div class=\"monwui-no-devices\">" + (escapeHtml(t("castbulunamadi", "Aygıt bulunamadı"))) + "</div>";
+      dropdown.innerHTML = `<div class="monwui-no-devices">${escapeHtml(t("castbulunamadi", "Aygıt bulunamadı"))}</div>`;
       return;
     }
 
-    var uniqueDevices = new Map();
-    videoDevices.forEach(function((device) {
-      var key = (device.DeviceId || device.DeviceName) + "-" + (device.Client);
+    const uniqueDevices = new Map();
+    videoDevices.forEach((device) => {
+      const key = `${device.DeviceId || device.DeviceName}-${device.Client}`;
       if (!uniqueDevices.has(key)) {
         uniqueDevices.set(key, device);
       }
     });
 
-    var sortedDevices = Array.from(uniqueDevices.values()).sortfunction((a, b) Number(!!b.NowPlayingItem) - Number(!!a.NowPlayingItem));
+    const sortedDevices = Array.from(uniqueDevices.values()).sort((a, b) => Number(!!b.NowPlayingItem) - Number(!!a.NowPlayingItem));
     dropdown.innerHTML = "";
 
-    var nowPlayingDevice =
-      visibleSessions.findfunction((entry) getSessionNowPlayingItemId(entry)) ||
-      visibleSessions.findfunction((entry) entry.NowPlayingItem) ||
-      sortedDevices.findfunction((entry) getSessionNowPlayingItemId(entry)) ||
-      sortedDevices.findfunction((entry) entry.NowPlayingItem);
+    const nowPlayingDevice =
+      visibleSessions.find((entry) => getSessionNowPlayingItemId(entry)) ||
+      visibleSessions.find((entry) => entry.NowPlayingItem) ||
+      sortedDevices.find((entry) => getSessionNowPlayingItemId(entry)) ||
+      sortedDevices.find((entry) => entry.NowPlayingItem);
     if (nowPlayingDevice) {
-      var nowPlayingDeviceName = resolveFriendlySessionDeviceName(nowPlayingDevice);
-      var nowPlayingItem = normalizeNowPlayingItem(nowPlayingDevice.NowPlayingItem, nowPlayingDevice);
-      var { posterUrl, backdropUrl, placeholderUrl } = getHighResImageUrls(nowPlayingItem);
-      var bannerPosterUrl = posterUrl || placeholderUrl || "";
+      const nowPlayingDeviceName = resolveFriendlySessionDeviceName(nowPlayingDevice);
+      const nowPlayingItem = normalizeNowPlayingItem(nowPlayingDevice.NowPlayingItem, nowPlayingDevice);
+      const { posterUrl, backdropUrl, placeholderUrl } = getHighResImageUrls(nowPlayingItem);
+      const bannerPosterUrl = posterUrl || placeholderUrl || "";
 
-      var topBanner = document.createElement("div");
+      const topBanner = document.createElement("div");
       topBanner.className = "monwui-now-playing-banner";
       if (backdropUrl) {
-        topBanner.style.backgroundImage = "url('" + (backdropUrl) + "')";
+        topBanner.style.backgroundImage = `url('${backdropUrl}')`;
       } else {
         topBanner.style.removeProperty("background-image");
       }
-      topBanner.innerHTML = "\n        <div class=\"overlay\"></div>\n        ${bannerPosterUrl ? "<img class="monwui-now-playing-poster" src="${escapeHtml(bannerPosterUrl)}" alt="Poster">" : \"\"}\n        <div class=\"monwui-now-playing-details\">\n          <div class=\"monwui-now-playing-title\">" + (renderIcon(getMediaIconClass(nowPlayingItem))) + " " + (escapeHtml(nowPlayingItem.Name || t("castoynatiliyor", "Şu an oynatılıyor"))) + "</div>\n          <div class=\"monwui-now-playing-device\">" + (escapeHtml(nowPlayingDeviceName)) + "</div>\n          <div class=\"monwui-now-playing-device\">" + (escapeHtml(nowPlayingDevice.UserName || "")) + "</div>\n        </div>\n      ";
+      topBanner.innerHTML = `
+        <div class="overlay"></div>
+        ${bannerPosterUrl ? `<img class="monwui-now-playing-poster" src="${escapeHtml(bannerPosterUrl)}" alt="Poster">` : ""}
+        <div class="monwui-now-playing-details">
+          <div class="monwui-now-playing-title">${renderIcon(getMediaIconClass(nowPlayingItem))} ${escapeHtml(nowPlayingItem.Name || t("castoynatiliyor", "Şu an oynatılıyor"))}</div>
+          <div class="monwui-now-playing-device">${escapeHtml(nowPlayingDeviceName)}</div>
+          <div class="monwui-now-playing-device">${escapeHtml(nowPlayingDevice.UserName || "")}</div>
+        </div>
+      `;
 
-      topBanner.addEventListenerfunction("click", () {
+      topBanner.addEventListener("click", () => {
         void showNowPlayingModal(nowPlayingItem, nowPlayingDevice);
       });
 
       dropdown.appendChild(topBanner);
 
-      var divider = document.createElement("hr");
+      const divider = document.createElement("hr");
       divider.className = "monwui-cast-divider";
       dropdown.appendChild(divider);
     }
 
     if (sortedDevices.length === 0) {
-      var emptyState = document.createElement("div");
+      const emptyState = document.createElement("div");
       emptyState.className = "monwui-no-devices";
       emptyState.textContent = t("castcihazyok", "Kullanilabilir hedef cihaz bulunamadı");
       dropdown.appendChild(emptyState);
       return;
     }
 
-    sortedDevices.forEach(function((device) {
-      var deviceClientName = resolveFriendlySessionClient(device);
-      var deviceName = resolveFriendlySessionDeviceName(device);
-      var deviceElement = document.createElement("div");
+    sortedDevices.forEach((device) => {
+      const deviceClientName = resolveFriendlySessionClient(device);
+      const deviceName = resolveFriendlySessionDeviceName(device);
+      const deviceElement = document.createElement("div");
       deviceElement.className = "monwui-device-item";
-      deviceElement.innerHTML = "\n        <div class=\"monwui-device-icon-container\">\n          " + (getDeviceIcon(deviceClientName)) + "\n        </div>\n        <div class=\"monwui-device-info\">\n          <div class=\"monwui-device-name\">" + (escapeHtml(deviceName)) + "</div>\n          <div class=\"monwui-device-client\">" + (escapeHtml(deviceClientName)) + "</div>\n          ${device.NowPlayingItem ? "<div class="monwui-now-playing">${renderIcon(getMediaIconClass(device.NowPlayingItem))} ${escapeHtml(t("castoynatiliyor", "Şu an oynatılıyor"))}</div>" : \"\"}\n        </div>\n      ";
+      deviceElement.innerHTML = `
+        <div class="monwui-device-icon-container">
+          ${getDeviceIcon(deviceClientName)}
+        </div>
+        <div class="monwui-device-info">
+          <div class="monwui-device-name">${escapeHtml(deviceName)}</div>
+          <div class="monwui-device-client">${escapeHtml(deviceClientName)}</div>
+          ${device.NowPlayingItem ? `<div class="monwui-now-playing">${renderIcon(getMediaIconClass(device.NowPlayingItem))} ${escapeHtml(t("castoynatiliyor", "Şu an oynatılıyor"))}</div>` : ""}
+        </div>
+      `;
 
-      deviceElement.addEventListenerfunction("click", (event) {
+      deviceElement.addEventListener("click", async (event) => {
         event.stopPropagation();
-        var success = startPlayback(itemId, device.Id);
+        const success = await startPlayback(itemId, device.Id);
         if (success) {
           dropdown.classList.add("hide");
         }
@@ -3512,43 +3709,43 @@ export function loadAvailableDevices(itemId, dropdown) {
     });
   } catch (error) {
     console.error("Cihazlar yüklenirken hata:", error);
-    dropdown.innerHTML = "<div class=\"monwui-error-message\">${escapeHtml("${t("casthata", "Hata")}: ${error.message}")}</div>";
+    dropdown.innerHTML = `<div class="monwui-error-message">${escapeHtml(`${t("casthata", "Hata")}: ${error.message}`)}</div>`;
   }
 }
 
 export function getDeviceIcon(clientType) {
-  var client = clientType.toLowerCase() || "";
-  var icons = {
-    android: "<i class=\"fa-brands fa-android\" style=\"color:#a4c639;\"></i>",
-    ios: "<i class=\"fa-brands fa-apple\" style=\"color:#ffffff;\"></i>",
-    iphone: "<i class=\"fa-brands fa-apple\" style=\"color:#ffffff;\"></i>",
-    ipad: "<i class=\"fa-brands fa-apple\" style=\"color:#ffffff;\"></i>",
-    chromecast: "<i class=\"fa-solid fa-chromecast\" style=\"color:#ffffff;\"></i>",
-    chrome: "<i class=\"fa-brands fa-chrome\" style=\"color:#ffffff;\"></i>",
-    firefox: "<i class=\"fa-brands fa-firefox-browser\" style=\"color:#ffffff;\"></i>",
-    edge: "<i class=\"fa-brands fa-edge\" style=\"color:#ffffff;\"></i>",
-    safari: "<i class=\"fa-brands fa-safari\" style=\"color:#ffffff;\"></i>",
-    opera: "<i class=\"fa-brands fa-opera\" style=\"color:#ffffff;\"></i>",
-    samsung: "<i class=\"fa-brands fa-android\" style=\"color:#ffffff;\"></i>",
-    smarttv: "<i class=\"fa-solid fa-tv\" style=\"color:#ffffff;\"></i>",
-    dlna: "<i class=\"fa-solid fa-network-wired\" style=\"color:#ffffff;\"></i>",
-    kodi: "<i class=\"fa-solid fa-tv\" style=\"color:#ffffff;\"></i>",
-    roku: "<i class=\"fa-solid fa-tv\" style=\"color:#ffffff;\"></i>"
+  const client = clientType?.toLowerCase() || "";
+  const icons = {
+    android: `<i class="fa-brands fa-android" style="color:#a4c639;"></i>`,
+    ios: `<i class="fa-brands fa-apple" style="color:#ffffff;"></i>`,
+    iphone: `<i class="fa-brands fa-apple" style="color:#ffffff;"></i>`,
+    ipad: `<i class="fa-brands fa-apple" style="color:#ffffff;"></i>`,
+    chromecast: `<i class="fa-solid fa-chromecast" style="color:#ffffff;"></i>`,
+    chrome: `<i class="fa-brands fa-chrome" style="color:#ffffff;"></i>`,
+    firefox: `<i class="fa-brands fa-firefox-browser" style="color:#ffffff;"></i>`,
+    edge: `<i class="fa-brands fa-edge" style="color:#ffffff;"></i>`,
+    safari: `<i class="fa-brands fa-safari" style="color:#ffffff;"></i>`,
+    opera: `<i class="fa-brands fa-opera" style="color:#ffffff;"></i>`,
+    samsung: `<i class="fa-brands fa-android" style="color:#ffffff;"></i>`,
+    smarttv: `<i class="fa-solid fa-tv" style="color:#ffffff;"></i>`,
+    dlna: `<i class="fa-solid fa-network-wired" style="color:#ffffff;"></i>`,
+    kodi: `<i class="fa-solid fa-tv" style="color:#ffffff;"></i>`,
+    roku: `<i class="fa-solid fa-tv" style="color:#ffffff;"></i>`
   };
 
-  for (var [key, icon] of Object.entries(icons)) {
+  for (const [key, icon] of Object.entries(icons)) {
     if (client.includes(key)) {
       return icon;
     }
   }
 
-  return "<i class=\"fa-solid fa-display\" style=\"color:#ffffff;\"></i>";
+  return `<i class="fa-solid fa-display" style="color:#ffffff;"></i>`;
 }
 
-export function startPlayback(itemId, sessionId) {
+export async function startPlayback(itemId, sessionId) {
   try {
-    makeApiRequest(
-      "/Sessions/" + (encodeURIComponent(sessionId)) + "/Playing?playCommand=PlayNow&itemIds=" + (encodeURIComponent(itemId)),
+    await makeApiRequest(
+      `/Sessions/${encodeURIComponent(sessionId)}/Playing?playCommand=PlayNow&itemIds=${encodeURIComponent(itemId)}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" }
@@ -3559,42 +3756,47 @@ export function startPlayback(itemId, sessionId) {
     return true;
   } catch (error) {
     console.error("Oynatma hatası:", error);
-    showNotification((t("castoynatmahata", "Oynatma hatası")) + ": " + (error.message), "error");
+    showNotification(`${t("castoynatmahata", "Oynatma hatası")}: ${error.message}`, "error");
     return false;
   }
 }
 
 export function showNotification(message, type = "info", duration = 3000) {
-  var existingNotification = document.querySelector(".playback-notification");
+  const existingNotification = document.querySelector(".playback-notification");
   if (existingNotification) {
     existingNotification.remove();
   }
 
-  var notification = document.createElement("div");
-  notification.className = "playback-notification " + (type);
-  notification.innerHTML = "\n    <div class=\"notification-content\">\n      <i class=\"fa-solid " + (type === "success" ? "fa-check-circle" : type === "error" ? "fa-times-circle" : "fa-info-circle") + "\"></i>\n      <span>" + (escapeHtml(message)) + "</span>\n    </div>\n  ";
+  const notification = document.createElement("div");
+  notification.className = `playback-notification ${type}`;
+  notification.innerHTML = `
+    <div class="notification-content">
+      <i class="fa-solid ${type === "success" ? "fa-check-circle" : type === "error" ? "fa-times-circle" : "fa-info-circle"}"></i>
+      <span>${escapeHtml(message)}</span>
+    </div>
+  `;
 
   document.body.appendChild(notification);
-  window.setTimeoutfunction(() notification.classList.add("show"), 10);
-  window.setTimeoutfunction(() {
+  window.setTimeout(() => notification.classList.add("show"), 10);
+  window.setTimeout(() => {
     notification.classList.remove("show");
-    window.setTimeoutfunction(() notification.remove(), 300);
+    window.setTimeout(() => notification.remove(), 300);
   }, duration);
 }
 
 export function hideNotification() {
-  var notification = document.querySelector(".playback-notification");
+  const notification = document.querySelector(".playback-notification");
   if (notification) {
     notification.classList.add("fade-out");
-    window.setTimeoutfunction(() notification.remove(), 500);
+    window.setTimeout(() => notification.remove(), 500);
   }
 }
 
 export function getMediaIconClass(media) {
-  var itemType = (media.ItemType || "").toLowerCase();
-  var type = (media.Type || "").toLowerCase();
+  const itemType = (media.ItemType || "").toLowerCase();
+  const type = (media.Type || "").toLowerCase();
 
-  var icons = {
+  const icons = {
     audio: "fa-music",
     music: "fa-headphones",
     musicalbum: "fa-compact-disc",

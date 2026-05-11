@@ -8,47 +8,42 @@ import { updatePlaylistModal } from "../ui/playlistModal.js";
 import { makeApiRequest } from "../../../../Plugins/NexusPobreFlix/runtime/api.js";
 import { isRadioTrack } from "./radio.js";
 
-var config = new Proxy({}, {
-  get(target, prop) {
-    return getConfig()[prop];
-  }
-});
+const config = getConfig();
+const BATCH_SIZE = config.gruplimit;
+const EXCLUDED_LISTS_HISTORY = config.historylimit;
 
-var excludedTrackHistory = new Set();
-var currentRefreshCtrl = null;
+let excludedTrackHistory = new Set();
+let currentRefreshCtrl = null;
 
-export function refreshPlaylist() {
-  var BATCH_SIZE = config.limiteLote || 100;
-  var EXCLUDED_LISTS_HISTORY = config.limiteHistorico || 10;
-
+export async function refreshPlaylist() {
   if (currentRefreshCtrl) {
     try { currentRefreshCtrl.abort(); } catch {}
   }
   currentRefreshCtrl = new AbortController();
-  var { signal } = currentRefreshCtrl;
+  const { signal } = currentRefreshCtrl;
 
   try {
     resetShuffle();
     if (musicPlayerState.modernTitleEl) musicPlayerState.modernTitleEl.textContent = config.languageLabels.loading;
     if (musicPlayerState.modernArtistEl) musicPlayerState.modernArtistEl.textContent = "";
 
-    var token = getAuthToken();
+    const token = getAuthToken();
     if (!token) throw new Error(config.languageLabels.noApiToken);
 
-    var genres = musicPlayerState.selectedGenres || [];
-    var items = [];
+    const genres = musicPlayerState.selectedGenres || [];
+    let items = [];
 
-    var headers = { "X-Emby-Token": token };
-    var baseQuery = "IncludeItemTypes=Audio&Recursive=true&SortBy=Random&Fields=RunTimeTicks,ImageTags,Album,AlbumArtist,ArtistItems,MediaStreams,MediaSources,UserData";
+    const headers = { "X-Emby-Token": token };
+    const baseQuery = "IncludeItemTypes=Audio&Recursive=true&SortBy=Random&Fields=RunTimeTicks,ImageTags,Album,AlbumArtist,ArtistItems,MediaStreams,MediaSources,UserData";
 
-    var totalItems = 0;
+    let totalItems = 0;
     try {
-      var countResponse = fetch(
-        apiUrl("/Items?" + (baseQuery) + "${genres.length > 0 ? "&Genres=${genres.map(encodeURIComponent).join(",")}" : \"\"}&Limit=1"),
+      const countResponse = await fetch(
+        apiUrl(`/Items?${baseQuery}${genres.length > 0 ? `&Genres=${genres.map(encodeURIComponent).join(",")}` : ""}&Limit=1`),
         { headers, signal }
       );
       if (countResponse.ok) {
-        var countData = countResponse.json();
+        const countData = await countResponse.json();
         totalItems = countData.TotalRecordCount || 0;
       }
     } catch (e) {
@@ -56,92 +51,92 @@ export function refreshPlaylist() {
       console.error("Toplam parça sayısı alınırken hata:", e);
     }
 
-    var effectiveLimit = totalItems > 0
-      ? Math.min(config.limiteMusica || 30, Math.max(0, totalItems - excludedTrackHistory.size))
-      : config.limiteMusica || 30;
+    const effectiveLimit = totalItems > 0
+      ? Math.min(config.muziklimit, Math.max(0, totalItems - excludedTrackHistory.size))
+      : config.muziklimit;
 
     if (effectiveLimit <= 0) {
       showNotification(
-        "<i class=\"fas fa-info-circle\"></i> " + (config.languageLabels.noTracksAvailable),
+        `<i class="fas fa-info-circle"></i> ${config.languageLabels.noTracksAvailable}`,
         2000,
         "info"
       );
       return;
     }
 
-    var chunkArray = function(array, chunkSize) {
-      var chunks = [];
-      for (var i = 0; i < array.length; i += chunkSize) chunks.push(array.slice(i, i + chunkSize));
+    const chunkArray = (array, chunkSize) => {
+      const chunks = [];
+      for (let i = 0; i < array.length; i += chunkSize) chunks.push(array.slice(i, i + chunkSize));
       return chunks;
     };
 
-    var excludedIds = Array.from(excludedTrackHistory);
-    var excludedIdChunks = chunkArray(excludedIds, config.maxExcludeIdsForUri || 100);
+    const excludedIds = Array.from(excludedTrackHistory);
+    const excludedIdChunks = chunkArray(excludedIds, config.maxExcludeIdsForUri || 100);
 
     if (genres.length > 0) {
-      var perGenreLimit = Math.floor(effectiveLimit / genres.length) || 1;
-      var initialFetches = genres.flatMapfunction((genre) {
+      const perGenreLimit = Math.floor(effectiveLimit / genres.length) || 1;
+      const initialFetches = genres.flatMap((genre) => {
         if (excludedIdChunks.length === 0) {
           return fetch(
-            apiUrl("/Items?" + (baseQuery) + "&Limit=" + (perGenreLimit) + "&Genres=" + (encodeURIComponent(genre))),
+            apiUrl(`/Items?${baseQuery}&Limit=${perGenreLimit}&Genres=${encodeURIComponent(genre)}`),
             { headers, signal }
           )
-            .thenfunction((r) {
+            .then((r) => {
               if (!r.ok) throw new Error(config.languageLabels.unauthorizedRequest);
               return r.json();
             })
-            .thenfunction((d) d.Items || [])
-            .catchfunction((e) {
+            .then((d) => d.Items || [])
+            .catch((e) => {
               if (e.name === "AbortError") return [];
               return [];
             });
         }
-        return excludedIdChunks.mapfunction((chunk) {
-          var excludeIdsParam = "&ExcludeItemIds=" + (chunk.join(","));
+        return excludedIdChunks.map((chunk) => {
+          const excludeIdsParam = `&ExcludeItemIds=${chunk.join(",")}`;
           return fetch(
-            apiUrl("/Items?" + (baseQuery) + "&Limit=" + (Math.ceil(perGenreLimit / excludedIdChunks.length)) + "&Genres=" + (encodeURIComponent(genre)) + (excludeIdsParam)),
+            apiUrl(`/Items?${baseQuery}&Limit=${Math.ceil(perGenreLimit / excludedIdChunks.length)}&Genres=${encodeURIComponent(genre)}${excludeIdsParam}`),
             { headers, signal }
           )
-            .thenfunction((r) {
+            .then((r) => {
               if (!r.ok) throw new Error(config.languageLabels.unauthorizedRequest);
               return r.json();
             })
-            .thenfunction((d) d.Items || [])
-            .catchfunction((e) {
+            .then((d) => d.Items || [])
+            .catch((e) => {
               if (e.name === "AbortError") return [];
               return [];
             });
         });
       });
 
-      var initialResults = Promise.all(initialFetches);
+      const initialResults = await Promise.all(initialFetches);
       items = initialResults.flat();
-      var seenIds = new Set();
-      items = items.filterfunction((it) {
+      const seenIds = new Set();
+      items = items.filter((it) => {
         if (seenIds.has(it.Id) || excludedTrackHistory.has(it.Id)) return false;
         seenIds.add(it.Id);
         return true;
       });
-      var remainder = effectiveLimit - items.length;
+      let remainder = effectiveLimit - items.length;
       while (remainder > 0) {
-        var added = false;
-        for (var genre of genres) {
+        let added = false;
+        for (const genre of genres) {
           if (remainder <= 0) break;
 
-          var currentExcludeIds = Array.from(new Set([...seenIds, ...excludedTrackHistory]));
-          var currentExcludeChunks = chunkArray(currentExcludeIds, config.maxExcludeIdsForUri || 100);
+          const currentExcludeIds = Array.from(new Set([...seenIds, ...excludedTrackHistory]));
+          const currentExcludeChunks = chunkArray(currentExcludeIds, config.maxExcludeIdsForUri || 100);
 
-          for (var chunk of currentExcludeChunks) {
+          for (const chunk of currentExcludeChunks) {
             if (remainder <= 0) break;
 
-            var excludeParam = chunk.length > 0 ? "&ExcludeItemIds=" + (chunk.join(",")) : "";
-            var url = "/Items?" + (baseQuery) + "&Limit=1&Genres=" + (encodeURIComponent(genre)) + (excludeParam);
+            const excludeParam = chunk.length > 0 ? `&ExcludeItemIds=${chunk.join(",")}` : "";
+            const url = `/Items?${baseQuery}&Limit=1&Genres=${encodeURIComponent(genre)}${excludeParam}`;
 
             try {
-              var resp = fetch(apiUrl(url), { headers, signal });
+              const resp = await fetch(apiUrl(url), { headers, signal });
               if (!resp.ok) continue;
-              var { Items = [] } = resp.json();
-              var [track] = Items;
+              const { Items = [] } = await resp.json();
+              const [track] = Items;
               if (track && !seenIds.has(track.Id) && !excludedTrackHistory.has(track.Id)) {
                 items.push(track);
                 seenIds.add(track.Id);
@@ -159,38 +154,38 @@ export function refreshPlaylist() {
       items = items.slice(0, effectiveLimit);
 
       showNotification(
-        "<i class=\"fas fa-masks-theater\"></i> " + (genres.length) + " " + (config.languageLabels.genresApplied) + " " + (items.length) + "/" + (effectiveLimit) + " " + (config.languageLabels.tracks),
+        `<i class="fas fa-masks-theater"></i> ${genres.length} ${config.languageLabels.genresApplied} ${items.length}/${effectiveLimit} ${config.languageLabels.tracks}`,
         2000,
         "tur"
       );
     } else {
       if (excludedIdChunks.length === 0) {
-        var resp = fetch(apiUrl("/Items?" + (baseQuery) + "&Limit=" + (effectiveLimit)), { headers, signal });
+        const resp = await fetch(apiUrl(`/Items?${baseQuery}&Limit=${effectiveLimit}`), { headers, signal });
         if (!resp.ok) throw new Error(config.languageLabels.unauthorizedRequest);
-        var data = resp.json();
+        const data = await resp.json();
         items = data.Items || [];
       } else {
-        var limitPerChunk = Math.ceil(effectiveLimit / excludedIdChunks.length);
-        var chunkRequests = excludedIdChunks.mapfunction((chunk) {
-          var excludeIdsParam = "&ExcludeItemIds=" + (chunk.join(","));
-          return fetch(apiUrl("/Items?" + (baseQuery) + "&Limit=" + (limitPerChunk) + (excludeIdsParam)), { headers, signal })
-            .thenfunction((r) {
+        const limitPerChunk = Math.ceil(effectiveLimit / excludedIdChunks.length);
+        const chunkRequests = excludedIdChunks.map((chunk) => {
+          const excludeIdsParam = `&ExcludeItemIds=${chunk.join(",")}`;
+          return fetch(apiUrl(`/Items?${baseQuery}&Limit=${limitPerChunk}${excludeIdsParam}`), { headers, signal })
+            .then((r) => {
               if (!r.ok) throw new Error(config.languageLabels.unauthorizedRequest);
               return r.json();
             })
-            .thenfunction((d) d.Items || [])
-            .catchfunction((e) {
+            .then((d) => d.Items || [])
+            .catch((e) => {
               if (e.name === "AbortError") return [];
               return [];
             });
         });
 
-        var chunkResults = Promise.all(chunkRequests);
+        const chunkResults = await Promise.all(chunkRequests);
         items = chunkResults.flat().slice(0, effectiveLimit);
       }
     }
 
-    var newTrackIds = items.mapfunction((track) track.Id);
+    const newTrackIds = items.map((track) => track.Id);
     updateExcludedTrackHistory(newTrackIds);
     musicPlayerState.playlist = items;
     musicPlayerState.originalPlaylist = [...items];
@@ -201,9 +196,9 @@ export function refreshPlaylist() {
       playTrack(0);
     } else {
       showNotification(
-        "<i class=\"fas fa-info-circle\"></i> " + (
+        `<i class="fas fa-info-circle"></i> ${
           genres.length ? config.languageLabels.noTracksForSelectedGenres : config.languageLabels.noTracks
-        ),
+        }`,
         2000,
         "info"
       );
@@ -215,14 +210,14 @@ export function refreshPlaylist() {
     console.error("Liste yenilenirken hata:", err);
     if (musicPlayerState.modernTitleEl) musicPlayerState.modernTitleEl.textContent = config.languageLabels.errorOccurred;
     if (musicPlayerState.modernArtistEl) {
-      musicPlayerState.modernArtistEl.textContent = err.message.includes("abort")
+      musicPlayerState.modernArtistEl.textContent = err.message?.includes("abort")
         ? config.languageLabels.requestTimeout
         : config.languageLabels.tryRefreshing;
     }
     showNotification(
-      "<i class=\"fas fa-exclamation-triangle\"></i> " + (
+      `<i class="fas fa-exclamation-triangle"></i> ${
         config.languageLabels.refreshError || "Liste yenilenirken hata oluştu"
-      ),
+      }`,
       3000,
       "error"
     );
@@ -234,24 +229,24 @@ export function refreshPlaylist() {
 }
 
 function updateExcludedTrackHistory(newTrackIds) {
-  newTrackIds.forEach(function((id) excludedTrackHistory.add(id));
+  newTrackIds.forEach((id) => excludedTrackHistory.add(id));
 
-  var maxExcludedTracks = EXCLUDED_LISTS_HISTORY * config.muziklimit;
+  const maxExcludedTracks = EXCLUDED_LISTS_HISTORY * config.muziklimit;
 
   if (excludedTrackHistory.size > maxExcludedTracks) {
-    var allIds = Array.from(excludedTrackHistory);
-    var idsToKeep = allIds.slice(allIds.length - maxExcludedTracks);
+    const allIds = Array.from(excludedTrackHistory);
+    const idsToKeep = allIds.slice(allIds.length - maxExcludedTracks);
     excludedTrackHistory = new Set(idsToKeep);
   }
 }
 
-function addItemsToPlaylist(playlistId, itemIds, userId) {
-  var token = getAuthToken();
-  var idsQueryParam = itemIds.join(",");
+async function addItemsToPlaylist(playlistId, itemIds, userId) {
+  const token = getAuthToken();
+  const idsQueryParam = itemIds.join(",");
 
   try {
-    var response = fetch(
-      apiUrl("/Playlists/" + (playlistId) + "/Items?ids=" + (idsQueryParam) + "&userId=" + (userId)),
+    const response = await fetch(
+      apiUrl(`/Playlists/${playlistId}/Items?ids=${idsQueryParam}&userId=${userId}`),
       {
         method: "POST",
         headers: {
@@ -280,12 +275,12 @@ function addItemsToPlaylist(playlistId, itemIds, userId) {
   }
 }
 
-export function removeItemsFromPlaylist(playlistId, itemIds) {
-  var token = getAuthToken();
-  var idsParam = itemIds.join(",");
-  var url = "/Playlists/" + (playlistId) + "/Items?entryIds=" + (idsParam);
+export async function removeItemsFromPlaylist(playlistId, itemIds) {
+  const token = getAuthToken();
+  const idsParam = itemIds.join(",");
+  const url = `/Playlists/${playlistId}/Items?entryIds=${idsParam}`;
 
-  var res = fetch(apiUrl(url), {
+  const res = await fetch(apiUrl(url), {
     method: "DELETE",
     headers: {
       "X-Emby-Token": token,
@@ -294,17 +289,17 @@ export function removeItemsFromPlaylist(playlistId, itemIds) {
   });
 
   if (!res.ok) {
-    var details = res.text().catchfunction(() "");
+    const details = await res.text().catch(() => "");
     console.error("removeItemsFromPlaylist hata detayı:", details);
-    throw new Error("Silme işlemi başarısız: HTTP " + (res.status) + "${details ? " – ${details}" : \"\"}");
+    throw new Error(`Silme işlemi başarısız: HTTP ${res.status}${details ? ` – ${details}` : ""}`);
   }
 
   return { success: true };
 }
 
-function getPlaylistItems(playlistId) {
-  var token = getAuthToken();
-  var response = fetch(apiUrl("/Playlists/" + (playlistId) + "/Items"), {
+async function getPlaylistItems(playlistId) {
+  const token = getAuthToken();
+  const response = await fetch(apiUrl(`/Playlists/${playlistId}/Items`), {
     headers: {
       "X-Emby-Token": token,
       "Content-Type": "application/json",
@@ -315,21 +310,21 @@ function getPlaylistItems(playlistId) {
     throw new Error("Çalma listesi öğeleri alınamadı");
   }
 
-  var data = response.json();
+  const data = await response.json();
   return data.Items || [];
 }
 
-export function saveCurrentPlaylistToJellyfin(
+export async function saveCurrentPlaylistToJellyfin(
   playlistName,
   makePublic = false,
   tracksToSave = [],
   isNew = true,
   existingPlaylistId = null
 ) {
-  var token = getAuthToken();
+  const token = getAuthToken();
   if (!token) {
     showNotification(
-      "<i class=\"fas fa-lock\"></i> " + (config.languageLabels.noApiToken),
+      `<i class="fas fa-lock"></i> ${config.languageLabels.noApiToken}`,
       3000,
       "error"
     );
@@ -338,85 +333,85 @@ export function saveCurrentPlaylistToJellyfin(
 
   if (!Array.isArray(tracksToSave) || tracksToSave.length === 0) {
     showNotification(
-      "<i class=\"fas fa-info-circle\"></i> " + (config.languageLabels.noTracksToSave),
+      `<i class="fas fa-info-circle"></i> ${config.languageLabels.noTracksToSave}`,
       2000,
       "addlist"
     );
     return;
   }
 
-  var playableTracks = tracksToSave.filterfunction((track) !isRadioTrack(track));
+  const playableTracks = tracksToSave.filter((track) => !isRadioTrack(track));
   if (!playableTracks.length) {
     showNotification(
-      "<i class=\"fas fa-info-circle\"></i> " + (config.languageLabels.radioSaveNotSupported || "Radyo istasyonlari Jellyfin oynatma listesine kaydedilemez"),
+      `<i class="fas fa-info-circle"></i> ${config.languageLabels.radioSaveNotSupported || "Radyo istasyonlari Jellyfin oynatma listesine kaydedilemez"}`,
       2500,
       "addlist"
     );
     return;
   }
 
-  var itemIds = playableTracks.mapfunction((track) track.Id);
-  var userId = window.ApiClient.getCurrentUserId();
+  const itemIds = playableTracks.map((track) => track.Id);
+  const userId = window.ApiClient.getCurrentUserId();
 
   try {
     if (!isNew && existingPlaylistId) {
-      var existingItems = getPlaylistItems(existingPlaylistId);
-      var existingItemIds = new Setfunction(existingItems.map((item) item.Id));
+      const existingItems = await getPlaylistItems(existingPlaylistId);
+      const existingItemIds = new Set(existingItems.map((item) => item.Id));
 
-      var alreadyInPlaylist = playableTracks.filterfunction((track) existingItemIds.has(track.Id));
-      var tracksToActuallyAdd = playableTracks.filterfunction((track) !existingItemIds.has(track.Id));
+      const alreadyInPlaylist = playableTracks.filter((track) => existingItemIds.has(track.Id));
+      const tracksToActuallyAdd = playableTracks.filter((track) => !existingItemIds.has(track.Id));
 
       if (alreadyInPlaylist.length > 0) {
-        var names = alreadyInPlaylist.mapfunction((track) track.Name);
-        var displayNames = "";
+        const names = alreadyInPlaylist.map((track) => track.Name);
+        let displayNames = "";
 
         if (names.length > 5) {
-          var firstThree = names.slice(0, 3).join(", ");
-          var remainingCount = names.length - 3;
-          displayNames = (firstThree) + " " + (config.languageLabels.ayrica) + " " + (remainingCount) + " " + (config.languageLabels.moreTracks);
+          const firstThree = names.slice(0, 3).join(", ");
+          const remainingCount = names.length - 3;
+          displayNames = `${firstThree} ${config.languageLabels.ayrica} ${remainingCount} ${config.languageLabels.moreTracks}`;
         } else {
           displayNames = names.join(", ");
         }
 
         showNotification(
-          "<i class=\"fas fa-info-circle\"></i> " + (
+          `<i class="fas fa-info-circle"></i> ${
             config.languageLabels.alreadyInPlaylist
-          ) + " (" + (alreadyInPlaylist.length) + "): " + (displayNames),
+          } (${alreadyInPlaylist.length}): ${displayNames}`,
           4000,
           "addlist"
         );
       }
 
       if (tracksToActuallyAdd.length > 0) {
-        var idsToAdd = tracksToActuallyAdd.mapfunction((track) track.Id);
+        const idsToAdd = tracksToActuallyAdd.map((track) => track.Id);
 
-        for (var i = 0; i < idsToAdd.length; i += BATCH_SIZE) {
-          var batch = idsToAdd.slice(i, i + BATCH_SIZE);
-          addItemsToPlaylist(existingPlaylistId, batch, userId);
+        for (let i = 0; i < idsToAdd.length; i += BATCH_SIZE) {
+          const batch = idsToAdd.slice(i, i + BATCH_SIZE);
+          await addItemsToPlaylist(existingPlaylistId, batch, userId);
         }
 
         showNotification(
-          "<i class=\"fas fa-check-circle\"></i> " + (config.languageLabels.addingsuccessful),
+          `<i class="fas fa-check-circle"></i> ${config.languageLabels.addingsuccessful}`,
           2000,
           "addlist"
         );
       } else {
         showNotification(
-          "<i class=\"fas fa-info-circle\"></i> " + (config.languageLabels.noTracksToSave),
+          `<i class="fas fa-info-circle"></i> ${config.languageLabels.noTracksToSave}`,
           2000,
           "addlist"
         );
       }
       return { success: true };
     } else {
-      var createResponse = fetch(apiUrl("/Playlists"), {
+      const createResponse = await fetch(apiUrl("/Playlists"), {
         method: "POST",
         headers: {
           "X-Emby-Token": token,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          Name: playlistName || "Yeni Çalma Listesi " + (new Date().toLocaleString()),
+          Name: playlistName || `Yeni Çalma Listesi ${new Date().toLocaleString()}`,
           Ids: itemIds,
           UserId: userId,
           IsPublic: makePublic,
@@ -424,12 +419,12 @@ export function saveCurrentPlaylistToJellyfin(
       });
 
       if (!createResponse.ok) {
-        var error = createResponse.json().catchfunction(() ({}));
+        const error = await createResponse.json().catch(() => ({}));
         throw new Error(error.Message || config.languageLabels.playlistCreateFailed);
       }
-      var result = createResponse.json();
+      const result = await createResponse.json();
       showNotification(
-        "<i class=\"fas fa-check-circle\"></i> " + (config.languageLabels.playlistCreatedSuccessfully),
+        `<i class="fas fa-check-circle"></i> ${config.languageLabels.playlistCreatedSuccessfully}`,
         2000,
         "addlist"
       );
@@ -438,7 +433,7 @@ export function saveCurrentPlaylistToJellyfin(
   } catch (err) {
     console.error("Çalma listesi işlemi başarısız:", err);
     showNotification(
-      "<i class=\"fas fa-exclamation-triangle\"></i> " + (err.message) + " " + (config.languageLabels.playlistSaveError),
+      `<i class="fas fa-exclamation-triangle"></i> ${err.message} ${config.languageLabels.playlistSaveError}`,
       3000,
       "error"
     );
@@ -446,26 +441,26 @@ export function saveCurrentPlaylistToJellyfin(
   }
 }
 
-function ensureGmmpReady() {
-  var gmmp = (typeof window !== "undefined" && window.__GMMP) ? window.__GMMP : null;
-  if (gmmp.ensureInit) {
-    gmmp.ensureInit({ show: true }).catchfunction(() false);
+async function ensureGmmpReady() {
+  const gmmp = (typeof window !== "undefined" && window.__GMMP) ? window.__GMMP : null;
+  if (gmmp?.ensureInit) {
+    await gmmp.ensureInit({ show: true }).catch(() => false);
   }
   return !!musicPlayerState.modernPlayer;
 }
 
 function isAudioItem(it) {
-  var t = String(it.Type || "");
-  return t === "Audio" || t === "MusicVideo" || String(it.MediaType || "") === "Audio";
+  const t = String(it?.Type || "");
+  return t === "Audio" || t === "MusicVideo" || String(it?.MediaType || "") === "Audio";
 }
 
-export function playTrackById(itemId, { revealPlayer = true } = {}) {
+export async function playTrackById(itemId, { revealPlayer = true } = {}) {
   if (!itemId) return false;
 
-  var ok = ensureGmmpReady();
+  const ok = await ensureGmmpReady();
   if (!ok) return false;
 
-  var it = makeApiRequest("/Items/" + (encodeURIComponent(String(itemId).trim())) + "?Fields=Name,Artists,Album,RunTimeTicks,ImageTags,MediaStreams,UserData").catchfunction(() null);
+  const it = await makeApiRequest(`/Items/${encodeURIComponent(String(itemId).trim())}?Fields=Name,Artists,Album,RunTimeTicks,ImageTags,MediaStreams,UserData`).catch(() => null);
   if (!it || !isAudioItem(it)) return false;
 
   musicPlayerState.playlist = [it];
@@ -476,8 +471,8 @@ export function playTrackById(itemId, { revealPlayer = true } = {}) {
   if (revealPlayer) {
     try {
       musicPlayerState.isPlayerVisible = true;
-      musicPlayerState.modernPlayer.classList.add("visible");
-      musicPlayerState.modernPlayer.removeAttribute.("aria-hidden");
+      musicPlayerState.modernPlayer?.classList?.add("visible");
+      musicPlayerState.modernPlayer?.removeAttribute?.("aria-hidden");
       musicPlayerState.modernPlayer && (musicPlayerState.modernPlayer.inert = false);
     } catch {}
   }
@@ -487,24 +482,24 @@ export function playTrackById(itemId, { revealPlayer = true } = {}) {
 }
 
 function isTrackItem(it) {
-  var t = String(it.Type || "");
-  return t === "Audio" || t === "MusicVideo" || String(it.MediaType || "") === "Audio";
+  const t = String(it?.Type || "");
+  return t === "Audio" || t === "MusicVideo" || String(it?.MediaType || "") === "Audio";
 }
 
-export function playAlbumById(albumId, { revealPlayer = true, limit = 2000 } = {}) {
+export async function playAlbumById(albumId, { revealPlayer = true, limit = 2000 } = {}) {
   if (!albumId) return false;
 
-  var ok = ensureGmmpReady();
+  const ok = await ensureGmmpReady();
   if (!ok) return false;
 
-  var resp = makeApiRequest(
-    "/Items?ParentId=" + (encodeURIComponent(String(albumId).trim())) +
-    "&IncludeItemTypes=Audio&Recursive=true&SortBy=IndexNumber,SortName&Limit=" + (encodeURIComponent(String(limit))) +
-    "&Fields=Name,Artists,Album,RunTimeTicks,ImageTags,MediaStreams,UserData"
-  ).catchfunction(() null);
+  const resp = await makeApiRequest(
+    `/Items?ParentId=${encodeURIComponent(String(albumId).trim())}` +
+    `&IncludeItemTypes=Audio&Recursive=true&SortBy=IndexNumber,SortName&Limit=${encodeURIComponent(String(limit))}` +
+    `&Fields=Name,Artists,Album,RunTimeTicks,ImageTags,MediaStreams,UserData`
+  ).catch(() => null);
 
-  var items = Array.isArray(resp.Items) ? resp.Items : [];
-  var tracks = items.filter(isTrackItem);
+  const items = Array.isArray(resp?.Items) ? resp.Items : [];
+  const tracks = items.filter(isTrackItem);
   if (!tracks.length) return false;
 
   musicPlayerState.playlist = tracks;
@@ -515,8 +510,8 @@ export function playAlbumById(albumId, { revealPlayer = true, limit = 2000 } = {
   if (revealPlayer) {
     try {
       musicPlayerState.isPlayerVisible = true;
-      musicPlayerState.modernPlayer.classList.add("visible");
-      musicPlayerState.modernPlayer.removeAttribute.("aria-hidden");
+      musicPlayerState.modernPlayer?.classList?.add("visible");
+      musicPlayerState.modernPlayer?.removeAttribute?.("aria-hidden");
       musicPlayerState.modernPlayer && (musicPlayerState.modernPlayer.inert = false);
     } catch {}
   }
