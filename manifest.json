@@ -41,14 +41,6 @@
         "timestamp": "2026-05-10T02:00:00Z"
       },
       {
-        "version": "1.0.0.10",
-        "changelog": "# Nexus PobreFlix v1.0.0.10 — ESTABILIDADE E PURGA FINAL 💎\n\n- **Fim do Erro de Sintaxe**: Eliminada a causa raiz do erro 'Unexpected token' no painel de configurações através da purga de funções obsoletas e mal formadas.\n- **Correção de Roteamento Web**: Restaurado o mapeamento correto de módulos (/slider/modules/), resolvendo falhas de carregamento no Jellyfin Web UI.\n- **Localização Industrial PT-BR**: Conclusão da tradução do Seletor de Perfil e limpeza de classes legadas, garantindo uma interface 100% Nexus.\n- **Refatoração de Metadados**: Atualização das referências de repositório e limpeza de logs para máxima performance industrial.",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.10/NexusPobreFlix-1.0.0.10.zip",
-        "checksum": "30e5cea9101f8ce5b2b77eaf713b4dc1",
-        "timestamp": "2026-05-08T20:20:00Z"
-      },
-      {
         "version": "1.0.0.9",
         "changelog": "# Nexus PobreFlix v1.0.0.9 — INDUSTRIALIZAÇÃO E POLLING DINÂMICO ⚙️\n\n- **Configuração Viva**: Refatoração completa dos motores de Playlist, ArtistModal e ID3Reader para usar polling dinâmico de configuração.\n- **Cache ID3 Inteligente**: Otimização do sistema de cache ID3 com limites industriais configuráveis.\n- **Auditoria Zero-Turco**: Conclusão da purga de termos legados e normalização industrial PT-BR em 100% da base de código do Slider.",
         "targetAbi": "10.11.0.0",
