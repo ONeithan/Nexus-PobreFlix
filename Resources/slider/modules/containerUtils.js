@@ -157,7 +157,7 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
       Movie: { text: config.languageLabels.film, icon: '<i class="fas fa-film "></i>' }
     };
     const typeInfo = typeTranslations[itemType] || { text: itemType, icon: "" };
-    let typeText = typeInfo.text;
+    let typeText = typeInfo.text || itemType;
     if (itemType === "Series" && ChildCount) {
       typeText += ` (${ChildCount} ${config.languageLabels.season || "Temporadas"})`;
     }
