@@ -660,13 +660,13 @@ function updateHintText() {
   const info = getRadioPersistenceInfo();
 
   if (info.mode === "NexusPobreFlix") {
-    modalState.hint.textContent = labelsMap.radioSharedHint || "Kaydedilen istasyonlar herkes tarafindan kullanilabilir";
+    modalState.hint.textContent = labelsMap.radioSharedHint || "Estações salvas estão disponíveis para todos";
     return;
   }
 
   modalState.hint.textContent =
     labelsMap.radioManualModeHint ||
-    "Manuel kurulum modu: eklenen istasyonlar bu tarayicida saklanir. Ortak liste icin radio-stations.json dosyasi kullanilir.";
+    "Modo de instalação manual: as estações adicionadas são armazenadas neste navegador. Para a lista comum, é utilizado o arquivo radio-stations.json.";
 }
 
 function sameStation(a, b) {
@@ -702,7 +702,7 @@ function maybeLoadMoreSearchResults() {
 
 async function shareStation(station) {
   const labelsMap = labels();
-  setStatus(labelsMap.radioAdding || "Istasyon kaydediliyor...");
+  setStatus(labelsMap.radioAdding || "Salvando estação...");
 
   try {
     const merged = await saveSharedRadioStation(station);
@@ -711,7 +711,7 @@ async function shareStation(station) {
     updateHintText();
     setStatus(labelsMap.radioReady || "Hazir");
     showNotification(
-      `<i class="fas fa-check-circle"></i> ${info.supportsServerWrite ? (labelsMap.radioSharedSaved || "Istasyon paylasilan listeye eklendi") : (labelsMap.radioLocalSaved || "Istasyon bu tarayiciya kaydedildi")}`,
+      `<i class="fas fa-check-circle"></i> ${info.supportsServerWrite ? (labelsMap.radioSharedSaved || "Estação adicionada à lista compartilhada") : (labelsMap.radioLocalSaved || "Estação salva neste navegador")}`,
       2200,
       "success"
     );
@@ -720,17 +720,17 @@ async function shareStation(station) {
   } catch (error) {
     console.error("[radio] Paylasilan kayit hatasi:", error);
     showNotification(
-      `<i class="fas fa-exclamation-circle"></i> ${labelsMap.radioSharedSaveError || "Istasyon paylasilan listeye eklenemedi"}`,
+      `<i class="fas fa-exclamation-circle"></i> ${labelsMap.radioSharedSaveError || "Não foi possível adicionar a estação à lista compartilhada"}`,
       3000,
       "error"
     );
-    setStatus(labelsMap.radioSharedSaveError || "Istasyon paylasilan listeye eklenemedi");
+    setStatus(labelsMap.radioSharedSaveError || "Não foi possível adicionar a estação à lista compartilhada");
   }
 }
 
 async function unshareStation(station) {
   const labelsMap = labels();
-  setStatus(labelsMap.radioRemoving || "Istasyon kaldiriliyor...");
+  setStatus(labelsMap.radioRemoving || "Removendo estação...");
 
   try {
     const merged = await removeSharedRadioStation(station);
@@ -738,7 +738,7 @@ async function unshareStation(station) {
     updateHintText();
     setStatus(labelsMap.radioReady || "Hazir");
     showNotification(
-      `<i class="fas fa-check-circle"></i> ${labelsMap.radioRemoved || "Istasyon paylasilan listeden kaldirildi"}`,
+      `<i class="fas fa-check-circle"></i> ${labelsMap.radioRemoved || "Estação removida da lista compartilhada"}`,
       2200,
       "success"
     );
@@ -746,11 +746,11 @@ async function unshareStation(station) {
   } catch (error) {
     console.error("[radio] silme hatasi:", error);
     showNotification(
-      `<i class="fas fa-exclamation-circle"></i> ${labelsMap.radioRemoveError || "Istasyon kaldirilamadi"}`,
+      `<i class="fas fa-exclamation-circle"></i> ${labelsMap.radioRemoveError || "Não foi possível remover a estação"}`,
       3000,
       "error"
     );
-    setStatus(labelsMap.radioRemoveError || "Istasyon kaldirilamadi");
+    setStatus(labelsMap.radioRemoveError || "Não foi possível remover a estação");
   }
 }
 
@@ -791,7 +791,7 @@ async function loadStationArt(art, station) {
 function getStationContributorText(station) {
   const addedBy = text(station?.addedBy || station?.AddedBy);
   if (!addedBy) return "";
-  return `${labels().radioAddedBy || "Ekleyen"}: ${addedBy}`;
+  return `${labels().radioAddedBy || "Adicionado por"}: ${addedBy}`;
 }
 
 function renderStationCard(station, stations, index, { shared = false, onPlay = null } = {}) {

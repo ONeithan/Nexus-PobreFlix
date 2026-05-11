@@ -268,11 +268,12 @@ function safePosterImageSrc(it, maxWidth = 80, quality = 80) {
 
 function upsertUpdateNotification({ latest, url }) {
   const id = UPDATE_LIST_ID(latest);
+  const liveLabels = getLiveLabels();
   notifState.list = notifState.list.filter(n => n.id !== id);
   notifState.list.unshift({
     id,
     itemId: null,
-    title: `${config.languageLabels?.updateAvailable || "Nova versão disponível"}: ${latest}`,
+    title: `${liveLabels.updateAvailable || "Nova versão disponível"}: ${latest}`,
     timestamp: Date.now(),
     status: "update",
     url,
@@ -294,7 +295,8 @@ function posterImageSrc(it, maxWidth = 80, quality = 80) {
 }
 
 function moreItemsLabel(n) {
-  const tail = (config.languageLabels.moreItems || "mais itens");
+  const liveLabels = getLiveLabels();
+  const tail = (liveLabels.moreItems || "mais itens");
   return `${n} ${tail}`;
 }
 
@@ -652,34 +654,34 @@ function ensureUI() {
       <div class="jf-notif-backdrop" data-close></div>
       <div class="jf-notif-panel">
         <div class="jf-notif-head">
-          <div class="jf-notif-title">${liveConfig.languageLabels.recentNotifications}</div>
+          <div class="jf-notif-title">${liveConfig.languageLabels.recentNotifications || "Notificações"}</div>
           <div class="jf-notif-actions">
-            <button id="jfNotifModeToggle" class="jf-notif-theme-toggle" title="${(liveConfig.languageLabels?.switchToDark)||'Mudar para tema escuro'}">
+            <button id="jfNotifModeToggle" class="jf-notif-theme-toggle" title="${(liveConfig.languageLabels?.switchToDark)||'Escuro'}">
               ${faIconHtml("moon", "jf-notif-icon")}
             </button>
-            <button id="jfNotifMarkAllRead" class="jf-notif-markallread" title="${liveConfig.languageLabels.markAllRead || 'Marcar todas como lidas'}">
+            <button id="jfNotifMarkAllRead" class="jf-notif-markallread" title="${liveConfig.languageLabels.markAllRead || 'Lidos'}">
               <i class="fa-solid fa-eye"></i>
             </button>
-            <button id="jfNotifThemeToggle" class="jf-notif-theme-toggle" title="${liveConfig.languageLabels.themeToggleTooltip}">
+            <button id="jfNotifThemeToggle" class="jf-notif-theme-toggle" title="${liveConfig.languageLabels.themeToggleTooltip || 'Tema'}">
               <i class="fa-solid fa-paintbrush"></i>
             </button>
-            <button id="jfNotifClearAll" class="jf-notif-clearall">${liveConfig.languageLabels.clearAll || "Limpar Tudo"}</button>
+            <button id="jfNotifClearAll" class="jf-notif-clearall">${liveConfig.languageLabels.clearAll || "Limpar"}</button>
             <button class="jf-notif-close" data-close aria-label="${liveConfig.languageLabels.close || "Fechar"}">✕</button>
           </div>
         </div>
         <div class="jf-notif-tabs">
-          <button class="jf-notif-tab active" data-tab="new">${liveConfig.languageLabels.newAddedTab || "Novos Adicionados"}</button>
-          ${notifState._systemAllowed ? `<button class="jf-notif-tab" data-tab="system">${liveConfig.languageLabels.systemNotifications || "Notificações do Sistema"}</button>` : ""}
+          <button class="jf-notif-tab active" data-tab="new">${liveConfig.languageLabels.newAddedTab || "Novidades"}</button>
+          ${notifState._systemAllowed ? `<button class="jf-notif-tab" data-tab="system">${liveConfig.languageLabels.systemNotifications || "Sistema"}</button>` : ""}
         </div>
         <div class="jf-notif-content">
           <div class="jf-notif-tab-content" data-tab="new">
             <div class="jf-notif-section">
-              <div class="jf-notif-subtitle">${liveConfig.languageLabels.latestNotifications}</div>
+              <div class="jf-notif-subtitle">${liveConfig.languageLabels.latestNotifications || "Recentes"}</div>
               <ul class="jf-notif-list" id="jfNotifList"></ul>
             </div>
             ${liveConfig.enableRenderResume ? `
               <div class="jf-notif-section watching">
-                <div class="jf-notif-subtitle">${liveConfig.languageLabels.unfinishedWatching}</div>
+                <div class="jf-notif-subtitle">${liveConfig.languageLabels.unfinishedWatching || "Continuar"}</div>
                 <div class="jf-resume-list" id="jfResumeList"></div>
               </div>
             ` : ''}

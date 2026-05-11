@@ -342,10 +342,10 @@ export function createArtistModal() {
   const fetchAllMusicBtn = document.createElement("div");
   fetchAllMusicBtn.className = "modal-fetch-all-music-btn";
   fetchAllMusicBtn.innerHTML = '<i class="fa-solid fa-rectangle-list"></i>';
-  fetchAllMusicBtn.title = config.languageLabels.fetchAllMusic || "Tüm müzikleri getir";
+  fetchAllMusicBtn.title = config.languageLabels.fetchAllMusic || "Ver todas as músicas";
   fetchAllMusicBtn.onclick = (e) => {
     try {
-      currentModalArtist = { name: (config.languageLabels.allMusic || "Tüm Müzikler"), id: null };
+      currentModalArtist = { name: (config.languageLabels.allMusic || "Todas as Músicas"), id: null };
       const nameEl = document.querySelector("#artist-modal .modal-artist-name");
       if (nameEl) nameEl.textContent = currentModalArtist.name;
     } catch {}
@@ -355,23 +355,23 @@ export function createArtistModal() {
   const fetchNewMusicBtn = document.createElement("div");
   fetchNewMusicBtn.className = "modal-fetch-new-music-btn";
   fetchNewMusicBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
-  fetchNewMusicBtn.title = config.languageLabels.syncDB || "Veri tabanını senkronize et";
+  fetchNewMusicBtn.title = config.languageLabels.syncDB || "Sincronizar banco de dados";
   fetchNewMusicBtn.onclick = async (e) => {
     fetchNewMusicBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     showNotification(
-      `<i class="fas fa-database"></i> ${config.languageLabels.syncStarted || "Senkronizasyon başlatıldı..."}`,
+      `<i class="fas fa-database"></i> ${config.languageLabels.syncStarted || "Sincronização iniciada..."}`,
       3000,
       "db"
     );
     try {
       await syncDbFullscan({ force: true });
       showNotification(
-        `<i class="fas fa-check-circle"></i> ${config.languageLabels.syncCompleted || "Senkronizasyon tamamlandı"}`,
+        `<i class="fas fa-check-circle"></i> ${config.languageLabels.syncCompleted || "Sincronização concluída"}`,
         3000,
         "db"
       );
     } catch (error) {
-      if (error?.name !== "AbortError") console.error("Senkronizasyon hatası:", error);
+      if (error?.name !== "AbortError") console.error("Erro na sincronização:", error);
     } finally {
       fetchNewMusicBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
     }
@@ -380,13 +380,13 @@ export function createArtistModal() {
   const saveToPlaylistBtn = document.createElement("div");
   saveToPlaylistBtn.className = "modal-save-to-playlist-btn";
   saveToPlaylistBtn.innerHTML = '<i class="fas fa-save"></i>';
-  saveToPlaylistBtn.title = config.languageLabels.saveToPlaylist || "Playlist'e kaydet";
+  saveToPlaylistBtn.title = config.languageLabels.saveToPlaylist || "Salvar na Playlist";
   saveToPlaylistBtn.onclick = showSaveToPlaylistModal;
 
   const showStatsBtn = document.createElement("div");
   showStatsBtn.className = "modal-show-stats-btn";
   showStatsBtn.innerHTML = '<i class="fa-solid fa-chart-simple"></i>';
-  showStatsBtn.title = config.languageLabels.stats || "İstatistikleri göster";
+  showStatsBtn.title = config.languageLabels.stats || "Mostrar estatísticas";
   showStatsBtn.onclick = () => showStatsModal();
 
   const headerActions = document.createElement("div");
@@ -434,8 +434,8 @@ export function createArtistModal() {
   searchInput.className = "modal-artist-search";
   searchInput.id = "artist-modal-search";
   searchInput.name = "artist-modal-search";
-  searchInput.placeholder = config.languageLabels.placeholder;
-  searchInput.setAttribute("aria-label", config.languageLabels.placeholder || "Parçalarda ara");
+  searchInput.placeholder = config.languageLabels.placeholder || "Buscar músicas...";
+  searchInput.setAttribute("aria-label", config.languageLabels.placeholder || "Buscar músicas...");
   searchInput.addEventListener("input", (e) => {
     clearSearchTimer();
     const val = e.target.value;
@@ -526,7 +526,7 @@ export function createArtistModal() {
         showNotification(
           `<i class="fas fa-database"></i> ${
             count != null ? `${count} ` : ""
-          }${config.languageLabels.dbnewTracksAdded || "yeni şarkı eklendi"}`,
+          }${config.languageLabels.dbnewTracksAdded || "novas músicas adicionadas"}`,
           4000,
           "db"
         );
@@ -715,14 +715,14 @@ export async function syncDbFullscan({ force = false } = {}) {
 
     if (added.length) {
       showNotification(
-        `<i class="fas fa-database"></i> ${added.length} ${config.languageLabels.dbnewTracksAdded || "yeni şarkı eklendi"}`,
+        `<i class="fas fa-database"></i> ${added.length} ${config.languageLabels.dbnewTracksAdded || "novas músicas adicionadas"}`,
         4000,
         "db"
       );
     }
     if (deleted.length) {
       showNotification(
-        `<i class="fas fa-database"></i> ${deleted.length} ${config.languageLabels.dbtracksRemoved || "şarkı silindi"}`,
+        `<i class="fas fa-database"></i> ${deleted.length} ${config.languageLabels.dbtracksRemoved || "músicas removidas"}`,
         4000,
         "db"
       );
@@ -1305,7 +1305,7 @@ function createTrackElement(track, index, showPosition = true) {
   trackDateAdded.className = "modal-track-date-added";
   if (track.DateCreated) {
     const date = new Date(track.DateCreated);
-    trackDateAdded.textContent = date.toLocaleString(config.dateLocale || "tr-TR", {
+    trackDateAdded.textContent = date.toLocaleString(config.dateLocale || "pt-BR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -1905,7 +1905,7 @@ async function showSaveToPlaylistModal() {
   nameInput.setAttribute("aria-label", config.languageLabels.enterPlaylistName || "Oynatma listesi adı");
 
   const titleName = document.querySelector("#artist-modal .modal-artist-name")?.textContent || "";
-  nameInput.value = `${titleName} - ${new Date().toLocaleString(config.dateLocale || "tr-TR", {
+  nameInput.value = `${titleName} - ${new Date().toLocaleString(config.dateLocale || "pt-BR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -2100,3 +2100,4 @@ function filterArtistTracks(query) {
   displayPaginatedTracks();
   updateSelectAllLabel();
 }
+

@@ -647,7 +647,7 @@ function formatLocalCommentDate(ts) {
 
 function renderLocalCommentsHtml(comments = [], { currentUserId = "", deleteBusyId = "" } = {}) {
   if (!comments.length) {
-    return `<div style="color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;">${config.languageLabels.localCommentsEmpty || "Henüz yerel yorum yok. İlk yorumu sen yaz."}</div>`;
+    return `<div style="color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;">${labels.localCommentsEmpty || "Nenhum comentário local ainda. Seja o primeiro!"}</div>`;
   }
 
   return `
@@ -655,7 +655,7 @@ function renderLocalCommentsHtml(comments = [], { currentUserId = "", deleteBusy
       ${comments.map((comment) => {
         const commentId = safeText(comment?.Id);
         const reviewKey = `local:${commentId || Math.random().toString(36).slice(2)}`;
-        const author = escapeHtml(safeText(comment?.OwnerUserName, config.languageLabels.localCommentsUserFallback || "Kullanıcı"));
+        const author = escapeHtml(safeText(comment?.OwnerUserName, labels.localCommentsUserFallback || "Usuário"));
         const own = normalizeIdentity(comment?.OwnerUserId) === normalizeIdentity(currentUserId);
         const createdAt = Number(comment?.CreatedAtUtc || 0);
         const updatedAt = Number(comment?.UpdatedAtUtc || 0);
@@ -673,21 +673,21 @@ function renderLocalCommentsHtml(comments = [], { currentUserId = "", deleteBusy
             <div class="jmsdm-review-head">
               <div class="jmsdm-review-author">
                 ${author}
-                ${own ? `<span class="jmsdm-local-comment-badge">${config.languageLabels.localCommentsOwnBadge || "Sen"}</span>` : ""}
+                ${own ? `<span class="jmsdm-local-comment-badge">${labels.localCommentsOwnBadge || "Você"}</span>` : ""}
               </div>
               <div class="jmsdm-review-meta-row">
-                ${isEdited ? `<span class="jmsdm-local-comment-edited">${config.languageLabels.localCommentsEdited || "Düzenlendi"}</span>` : ""}
+                ${isEdited ? `<span class="jmsdm-local-comment-edited">${labels.localCommentsEdited || "Editado"}</span>` : ""}
                 <div class="jmsdm-review-date">${date}</div>
               </div>
             </div>
             <div class="jmsdm-review-body is-collapsed" data-expanded="0">${fullHtml}</div>
             ${(isLong || own) ? `
               <div class="jmsdm-local-comment-toolbar">
-                ${isLong ? `<button class="jmsdm-review-more">${config.languageLabels.more || "Devamı"}</button>` : `<span></span>`}
+                ${isLong ? `<button class="jmsdm-review-more">${labels.more || "Mais"}</button>` : `<span></span>`}
                 ${own ? `
                   <div class="jmsdm-local-comment-actions">
-                    <button class="jmsdm-comment-action jmsdm-local-comment-edit" data-comment-id="${escapeHtml(commentId)}">${config.languageLabels.localCommentsEdit || "Düzenle"}</button>
-                    <button class="jmsdm-comment-action danger jmsdm-local-comment-delete" data-comment-id="${escapeHtml(commentId)}" ${deleting ? "disabled" : ""}>${deleting ? (config.languageLabels.localCommentsDeleting || "Siliniyor...") : (config.languageLabels.localCommentsDelete || "Sil")}</button>
+                    <button class="jmsdm-comment-action jmsdm-local-comment-edit" data-comment-id="${escapeHtml(commentId)}">${labels.localCommentsEdit || "Editar"}</button>
+                    <button class="jmsdm-comment-action danger jmsdm-local-comment-delete" data-comment-id="${escapeHtml(commentId)}" ${deleting ? "disabled" : ""}>${deleting ? (labels.localCommentsDeleting || "Apagando...") : (labels.localCommentsDelete || "Apagar")}</button>
                   </div>
                 ` : ``}
               </div>
@@ -705,13 +705,13 @@ async function loadLocalCommentsInto(root, displayItem, { signal } = {}) {
 
   const itemId = safeText(displayItem?.Id);
   if (!itemId) {
-    host.innerHTML = `<div style="color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;">${config.languageLabels.localCommentsUnavailable || "Bu içerik için yorum alanı açılamadı."}</div>`;
+    host.innerHTML = `<div style="color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;">${labels.localCommentsUnavailable || "Área de comentários não disponível."}</div>`;
     return;
   }
 
   const user = getCommentsUserContext();
   if (!user.userId) {
-    host.innerHTML = `<div style="color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;">${config.languageLabels.localCommentsAuthMissing || "Yorum yazmak için aktif kullanıcı bilgisi bulunamadı."}</div>`;
+    host.innerHTML = `<div style="color:rgba(255,255,255,.72);font-size:13px;line-height:1.6;">${labels.localCommentsAuthMissing || "Faça login para comentar."}</div>`;
     return;
   }
 
@@ -760,7 +760,7 @@ async function loadLocalCommentsInto(root, displayItem, { signal } = {}) {
           body.innerHTML = st.shortHtml || "";
           body.setAttribute("data-expanded", "0");
           body.classList.add("is-collapsed");
-          btn.textContent = config.languageLabels.more || "Devamı";
+          btn.textContent = labels.more || "Mais";
         }
       });
     });
@@ -769,19 +769,19 @@ async function loadLocalCommentsInto(root, displayItem, { signal } = {}) {
   function render() {
     const editingComment = getEditingComment();
     const submitLabel = state.saving
-      ? (config.languageLabels.localCommentsSaving || "Kaydediliyor...")
+      ? (labels.localCommentsSaving || "Salvando...")
       : (editingComment
-          ? (config.languageLabels.localCommentsUpdate || "Yorumu Güncelle")
-          : (config.languageLabels.localCommentsSubmit || "Yorum Yap"));
+          ? (labels.localCommentsUpdate || "Atualizar Comentário")
+          : (labels.localCommentsSubmit || "Comentar"));
     const deleteBusyId = state.deletingCommentId;
     const hint = editingComment
-      ? (config.languageLabels.localCommentsEditHint || "Yorumunu düzenliyorsun. Kaydettiğinde mevcut yorumun güncellenir.")
+      ? (labels.localCommentsEditHint || "Você está editando seu comentário.")
       : "";
     const canSubmit = !!state.draft.trim() && !state.saving && state.draft.length <= LOCAL_COMMENT_MAX_LENGTH;
 
     host.innerHTML = `
       <div class="jmsdm-local-comments-head">
-        <div class="jmsdm-section-title">${escapeHtml(`${config.languageLabels.localCommentsTitle || "Topluluk Yorumları"} (${state.comments.length})`)}</div>
+        <div class="jmsdm-section-title">${escapeHtml(`${labels.localCommentsTitle || "Comentários da Comunidade"} (${state.comments.length})`)}</div>
       </div>
 
       <div class="jmsdm-comments-compose">
@@ -789,7 +789,7 @@ async function loadLocalCommentsInto(root, displayItem, { signal } = {}) {
           class="jmsdm-comments-textarea"
           rows="4"
           maxlength="${LOCAL_COMMENT_MAX_LENGTH}"
-          placeholder="${escapeHtml(config.languageLabels.localCommentsPlaceholder || "Bu içerik hakkında ne düşünüyorsun?")}"
+          placeholder="${escapeHtml(labels.localCommentsPlaceholder || "O que você achou deste conteúdo?")}"
           ${state.saving ? "disabled" : ""}
         >${escapeHtml(state.draft)}</textarea>
 
@@ -2096,7 +2096,7 @@ function formatDateTime(ts) {
 
   try {
     return new Intl.DateTimeFormat(
-      config?.timeLocale || config?.dateLocale || "tr-TR",
+      config?.timeLocale || config?.dateLocale || "pt-BR",
       sameDay
         ? { hour: "2-digit", minute: "2-digit" }
         : { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }
@@ -4439,3 +4439,4 @@ wireMiniCardDelegation();
   focusFirst(root);
   window.__lastModalItemId = itemId;
 }
+

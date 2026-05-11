@@ -54,21 +54,39 @@ body:not(.configPage) {
     margin-left: 10px;
 }
 
-/* Navbar Glassmorphism */
-.skinHeader {
-    background-color: rgba(0, 0, 0, 0.5) !important;
+/* Navbar Glassmorphism - Limpidez Scyfin */
+.skinHeader, .skinHeader-withBackground {
+    background: transparent !important;
+    background-color: transparent !important;
     backdrop-filter: var(--nexus-blur) !important;
     -webkit-backdrop-filter: var(--nexus-blur) !important;
     height: 64px !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
 }
 
-/* Profile Icon Adjustment */
+/* Ajuste do Header em Scroll */
+.skinHeader-withBackground.semiTransparent {
+    background-color: rgba(5, 5, 5, 0.4) !important;
+}
+
+/* Profile Icon Adjustment - Prevenindo Ícone Gigante */
 .headerButton.headerButtonWithUser .headerUserButtonInner {
     width: 32px !important;
     height: 32px !important;
-    border-radius: 6px !important;
+    border-radius: 8px !important;
     border: 1.5px solid var(--nexus-purple) !important;
+    overflow: hidden !important;
+    background-size: cover !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.headerButton.headerButtonWithUser .headerUserButtonInner img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
 }
 
 /* 3. STUDIO HUBS - TOTAL HOVER IMMERSION */

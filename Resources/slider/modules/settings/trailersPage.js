@@ -1143,7 +1143,7 @@ export function createTrailersPanel(config, labels) {
       jfBaseAutoNote.textContent = L.jfBaseAutoNote;
       adminOnlyWrap.appendChild(jfBaseAutoNote);
 
-      adminOnlyWrap.appendChild(createTextInput('PreferredLang', L.preferredLang, pickConfigValue(currentConfig, 'preferredLang', 'PreferredLang') || 'tr-TR'));
+      adminOnlyWrap.appendChild(createTextInput('PreferredLang', L.preferredLang, pickConfigValue(currentConfig, 'preferredLang', 'PreferredLang') || 'pt-BR'));
       adminOnlyWrap.appendChild(createTextInput('FallbackLang', L.fallbackLang, pickConfigValue(currentConfig, 'fallbackLang', 'FallbackLang') || 'en-US'));
       adminOnlyWrap.appendChild(createNumberInputWrap(
         'MaxConcurrentDownloads',
@@ -1345,7 +1345,7 @@ export function createTrailersPanel(config, labels) {
       runDownloader: getChk(trailerDownloaderCheckbox)?.checked || false,
       runUrlNfo: getChk(trailerUrlNfoCheckbox)?.checked || false,
       jfBase: autoJfBase,
-      preferredLang: document.getElementById('PreferredLang')?.value || pickConfigValue(currentConfig, 'preferredLang', 'PreferredLang') || 'tr-TR',
+      preferredLang: document.getElementById('PreferredLang')?.value || pickConfigValue(currentConfig, 'preferredLang', 'PreferredLang') || 'pt-BR',
       fallbackLang: document.getElementById('FallbackLang')?.value || pickConfigValue(currentConfig, 'fallbackLang', 'FallbackLang') || 'en-US',
       maxConcurrentDownloads: normalizeConcurrentDownloads(
         document.getElementById('MaxConcurrentDownloads')?.value
@@ -1391,3 +1391,4 @@ export function createTrailersPanel(config, labels) {
 
   return panel;
 }
+

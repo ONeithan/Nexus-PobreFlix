@@ -1646,7 +1646,7 @@ async function fetchShareableUsers() {
         name: text(user?.Name || user?.Username || user?.name || user?.username)
       }))
       .filter((user) => user.id && user.name && user.id !== currentUserId)
-      .sort((left, right) => left.name.localeCompare(right.name, cfg()?.dateLocale || "tr-TR"));
+      .sort((left, right) => left.name.localeCompare(right.name, cfg()?.dateLocale || "pt-BR"));
 
     return usersCache;
   })().finally(() => {
@@ -3188,7 +3188,7 @@ function formatDate(ts) {
   if (Number.isNaN(date.getTime())) return "";
 
   try {
-    return new Intl.DateTimeFormat(cfg()?.dateLocale || "tr-TR", {
+    return new Intl.DateTimeFormat(cfg()?.dateLocale || "pt-BR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric"
@@ -3201,7 +3201,7 @@ function formatDate(ts) {
 function formatCount(value) {
   const count = Math.max(0, Math.trunc(Number(value || 0)));
   try {
-    return new Intl.NumberFormat(cfg()?.timeLocale || cfg()?.dateLocale || "tr-TR").format(count);
+    return new Intl.NumberFormat(cfg()?.timeLocale || cfg()?.dateLocale || "pt-BR").format(count);
   } catch {
     return String(count);
   }
@@ -3230,7 +3230,7 @@ function formatDateTime(ts) {
   const sameDay = now.toDateString() === date.toDateString();
 
   try {
-    return new Intl.DateTimeFormat(cfg()?.timeLocale || cfg()?.dateLocale || "tr-TR", sameDay ? {
+    return new Intl.DateTimeFormat(cfg()?.timeLocale || cfg()?.dateLocale || "pt-BR", sameDay ? {
       hour: "2-digit",
       minute: "2-digit"
     } : {
@@ -3561,7 +3561,7 @@ function getContainerPreviewFields() {
 }
 
 function compareText(left, right) {
-  return text(left).localeCompare(text(right), cfg()?.dateLocale || "tr-TR", {
+  return text(left).localeCompare(text(right), cfg()?.dateLocale || "pt-BR", {
     numeric: true,
     sensitivity: "base"
   });
@@ -6911,3 +6911,4 @@ if (typeof document !== "undefined") {
     bootstrapWatchlistUi();
   }
 }
+

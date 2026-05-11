@@ -156,12 +156,12 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
       BoxSet: { text: config.languageLabels.boxset, icon: '<i class="fas fa-film "></i>' },
       Movie: { text: config.languageLabels.movie, icon: '<i class="fas fa-film "></i>' }
     };
-    const typeInfo = typeTranslations[itemType] || { text: itemType, icon: "" };
-    let typeText = typeInfo.text || itemType;
-    if (itemType === "Series" && ChildCount) {
-      typeText += ` (${ChildCount} ${config.languageLabels.season || "Temporadas"})`;
+    const typeInfo = typeTranslations[itemType] || { text: itemType || "", icon: "" };
+    let typeText = typeInfo.text || itemType || "";
+    if (itemType === "Series" && typeof ChildCount === "number" && ChildCount > 0) {
+      typeText += ` (${ChildCount} ${config.languageLabels.seasonSelect || "Temporadas"})`;
     }
-    if (itemType === "BoxSet" && ChildCount) {
+    if (itemType === "BoxSet" && typeof ChildCount === "number" && ChildCount > 0) {
       typeText += ` (${ChildCount} ${config.languageLabels.seriesPlural || "Séries"})`;
     }
     typeSpan.innerHTML = `${typeInfo.icon}${buildMetaTextSpan(typeText, "monwui-type-text")}`;
@@ -198,9 +198,11 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
     };
 
     const formatEndTimeLocalized = (ticks) => {
-      const totalMinutes = Math.floor(ticks / 600000000);
+      const t = Number(ticks || 0);
+      if (!t || t <= 0) return "";
+      const totalMinutes = Math.floor(t / 600000000);
       const end = new Date(Date.now() + totalMinutes * 60 * 1000);
-      const locale = String(config?.languageLabels?.timeLocale || "tr-TR").trim() || "tr-TR";
+      const locale = String(config?.languageLabels?.timeLocale || "pt-BR").trim() || "pt-BR";
 
       try {
         return new Intl.DateTimeFormat(locale, {
@@ -742,12 +744,11 @@ export function createPlotContainer(config, Overview, UserData, RunTimeTicks) {
     );
     bar.style.width = `${percentage.toFixed(1)}%`;
 
-    const remainingMinutes = Math.round(
-      (RunTimeTicks - UserData.PlaybackPositionTicks) / 600000000
-    );
+    const remTicks = Number(RunTimeTicks || 0) - Number(UserData?.PlaybackPositionTicks || 0);
+    const remainingMinutes = Math.max(0, Math.round(remTicks / 600000000));
     const text = document.createElement("span");
     text.className = "monwui-duration-remaining";
-    text.innerHTML = `<i class="fa-solid fa-hourglass-half"></i> ${remainingMinutes} ${config.languageLabels.minutos || "minutos"} ${config.languageLabels.restantes || "restantes"}`;
+    text.innerHTML = `<i class="fa-solid fa-hourglass-half"></i> ${remainingMinutes} ${config.languageLabels.minutesShort || "min"} ${config.languageLabels.remaining || "restantes"}`;
 
     barWrapper.appendChild(bar);
     progressContainer.appendChild(barWrapper);

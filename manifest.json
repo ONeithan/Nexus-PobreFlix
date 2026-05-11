@@ -9,8 +9,16 @@
     "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png",
     "versions": [
       {
+        "version": "1.0.0.17",
+        "changelog": "# Nexus PobreFlix v1.0.0.17 — STABILITY & CORE REFINEMENT 💎\n\n- **Aguardando implementação de novas funcionalidades...**\n- Foco em estabilidade do motor de sincronização e melhorias de performance.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.17/NexusPobreFlix-1.0.0.17.zip",
+        "checksum": "ab792155036dca966e582dca38508e37",
+        "timestamp": "2026-05-11T08:30:00Z"
+      },
+      {
         "version": "1.0.0.16",
-        "changelog": "# Nexus PobreFlix v1.0.0.16 — INDUSTRIAL PT-BR & SCYFIN PREMIUM 💎\n\n- **Zero Idiomas Estrangeiros**: Purga absoluta de chaves e termos em turco em 100% dos módulos JS (Details, Notifications, ProfileChooser, Avatars).\n- **Industrial PT-BR Overhaul**: Dicionário `por.js` refatorado com chaves universais e traduções nativas impecáveis.\n- **Scyfin v16 Premium Visual**: Novo motor visual `nexus_v16_premium.css` com estética Netflix-Style, login imersivo e pílulas de metadados arredondadas (15px).\n- **Login de Vidro (40px Blur)**: Centralização absoluta, logo industrial e efeito glassmorphism extremo na tela de entrada.\n- **Scrollbars Nexus Purple**: Navegação fluida com barras de rolagem personalizadas na cor oficial da marca.\n- **Fim do Poluimento Visual**: Remoção de artefatos cinzas nativos e branding Jellyfin em favor do Preto Absoluto (#050505).",
+        "changelog": "# Nexus PobreFlix v1.0.0.16 — INDUSTRIAL PT-BR & PURGA TURCA COMPLETA 💎\n\n- **Purga Linguística Global**: Remoção total de strings em turco/inglês em 100% dos módulos JS (Details, Notifications, Player, Radio, Artist, Playlist).\n- **Industrial PT-BR Overhaul**: Dicionário `por.js` consolidado como fonte única, garantindo zero fallbacks estrangeiros.\n- **Scyfin v16 Premium Visual**: Header translúcido, ícone de perfil normalizado (32px) e background oficial Nexus (#050505).\n- **Estabilização de Locales**: Padrão `pt-BR` forçado em todos os motores de data e hora, eliminando dependências do `tr-TR`.\n- **Fim do Poluimento Visual**: Remoção de bordas residuais e branding Jellyfin em favor da identidade visual Nexus Premium.",
         "targetAbi": "10.11.0.0",
         "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.16/NexusPobreFlix-1.0.0.16.zip",
         "checksum": "5e4dbba9b341c669db862c1b7112e5a3",
