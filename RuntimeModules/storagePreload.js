@@ -756,31 +756,47 @@ body:has(#itemDetailPage) .backdropImage {
     /* =========================================
        CABECALHO E MARCA (LOGO POBREFLIX LOCAL DIRETA)
        ========================================= */
-    /* Injeta a logo Nexus via background-image nos seletores de marca de forma proporcional */
-    .headerLogo,
-    .logoHeader,
-    .headerLogoWithText {
+    /* Blindagem absoluta do logotipo contra display:none */
+    div.skinHeader .headerLeft a.headerLogo,
+    div.skinHeader .headerLeft a.logoHeader,
+    div.skinHeader .headerLeft a.headerLogoWithText {
+        display: inline-block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
         background-image: url('/Plugins/JMSFusion/assets/LogoPng') !important;
         background-size: contain !important;
         background-repeat: no-repeat !important;
         background-position: left center !important;
-        display: inline-block !important;
         min-width: 140px !important;
         min-height: 24px !important;
+        height: 24px !important;
         vertical-align: middle !important;
+        margin-left: 10px !important;
     }
+
     /* Oculta as tags img ou svg de logo para que não dupliquem ou causem sobreposição, sem dar display:none no link pai */
-    .headerLogo img,
-    .headerLogo svg,
-    .logoHeader img,
-    .logoHeader svg,
-    .headerLogoWithText img,
-    .headerLogoWithText svg {
+    div.skinHeader .headerLeft a.headerLogo img,
+    div.skinHeader .headerLeft a.headerLogo svg,
+    div.skinHeader .headerLeft a.logoHeader img,
+    div.skinHeader .headerLeft a.logoHeader svg,
+    div.skinHeader .headerLeft a.headerLogoWithText img,
+    div.skinHeader .headerLeft a.headerLogoWithText svg {
         display: none !important;
         opacity: 0 !important;
         width: 0 !important;
         height: 0 !important;
         pointer-events: none !important;
+    }
+
+    /* Neutralização de overrides ruins de abas superiores (barra cinza fixa) */
+    .headerTabs,
+    .headerTabs.sectionTabs,
+    .emby-tabs,
+    .emby-tabs-slider {
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
     }
 
     /* =========================

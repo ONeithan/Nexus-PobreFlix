@@ -6,63 +6,15 @@
     "overview": "Motor visual premium com suporte nativo a PT-BR e identidade Nexus.",
     "owner": "ONeithan",
     "category": "General",
-    "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/Logo%20NEXUS.png",
+    "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/Nexus-PobreFlix/logo.png",
     "versions": [
       {
-        "version": "1.0.0.6",
-        "changelog": "v1.0.0.6 - Centralização do Login no Desktop e Ajuste de Visibilidade do Logotipo\n- Correção da translação do formulário de login no desktop (de -35% para -50%) para centralização horizontal exata.\n- Injeção da logo do PobreFlix nos seletores .headerLogo, .logoHeader e .headerLogoWithText simultaneamente para garantir a exibição no cabeçalho logado.",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.6/NexusPobreFlix-1.0.0.6.zip",
-        "checksum": "8724f12945666e7ca5d7545af6c98f82",
-        "timestamp": "2026-05-24T03:15:00Z"
-      },
-      {
-        "version": "1.0.0.5",
-        "changelog": "v1.0.0.5 - Correção do Design da Barra Superior, Abas e Logotipo\n- Remoção completa do CSS invasivo que esticava e mudava o posicionamento das abas superiores de forma excessiva, restaurando a interface nativa compacta do Jellyfin.\n- Ajuste cirúrgico no seletor de ocultação do logotipo antigo para agir apenas sobre as tags img e svg filhas de .headerLogoWithText, evitando o desaparecimento do link de branding que exibe o logotipo roxo do PobreFlix.\n- Restauração do alinhamento responsivo correto dos botões de busca, configurações e menu lateral (hambúrguer).",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.5/NexusPobreFlix-1.0.0.5.zip",
-        "checksum": "e497ba32465f9d7b20bc427e5b645268",
-        "timestamp": "2026-05-24T02:45:00Z"
-      },
-      {
-        "version": "1.0.0.4",
-        "changelog": "v1.0.0.4 - Correção do Cabeçalho Gigante e Estabilização de Layout\n- Remoção dos overrides de padding e posicionamento do cabeçalho (.headerTop e .skinHeader) que inflavam a barra superior de forma fixa e invasiva, restaurando o layout compacto nativo do Jellyfin.",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.4/NexusPobreFlix-1.0.0.4.zip",
-        "checksum": "6abf740b308dac8812c62116af25f164",
-        "timestamp": "2026-05-24T02:10:00Z"
-      },
-      {
-        "version": "1.0.0.3",
-        "changelog": "v1.0.0.3 - Correção Crítica de Ícones e Logos\n- Restauração de todos os ícones nativos do Jellyfin removendo dependências externas de CDN que quebravam offline.\n- Correção do posicionamento e exibição da logo aplicando-a no elemento pai .headerLogoWithText e ocultando a tag img nativa para evitar duplicidade de forma limpa.\n- Destaque rebatizado para Roxo Nexus no design system.",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.3/NexusPobreFlix-1.0.0.3.zip",
-        "checksum": "25ee51426c5292eb4d849bb234edc50a",
-        "timestamp": "2026-05-24T02:00:00Z"
-      },
-      {
-        "version": "1.0.0.2",
-        "changelog": "v1.0.0.2 - Ajustes Visuais e Corretivos\n- Correção do background, padding e bordas aplicados incorretamente ao seletor .emby-tabs-slider no CSS, eliminando a barra cinza gigante e restaurando a proporção original.\n- Correção do seletor de ocultação do .headerLogo que ocultava indevidamente o logotipo da página inicial de forma absoluta.",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.2/NexusPobreFlix-1.0.0.2.zip",
-        "checksum": "7ff72a11402df1f94cc709c8bfc10bf5",
-        "timestamp": "2026-05-24T01:30:00Z"
-      },
-      {
-        "version": "1.0.0.1",
-        "changelog": "v1.0.0.1 - Ajustes Visuais e de Login\n- Redução seletiva do HUD superior (barra cinza skinHeader) eliminando conflitos de dimensionamento e restabelecendo o visual premium sutil do Abyss CSS\n- Ocultação absoluta de botões do cabeçalho e ícones de navegação (ex. Home) quando na tela de login/logout deslogado\n- Refinamentos na integração da identidade visual do Nexus PobreFlix.",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.1/NexusPobreFlix-1.0.0.1.zip",
-        "checksum": "ed79fba396f2509f9bd179f0dd63d668",
-        "timestamp": "2026-05-23T15:00:00Z"
-      },
-      {
         "version": "1.0.0.0",
-        "changelog": "v1.0.0.0 - Nexus Edition\n\nMelhorias, Estabilização e Localização Absoluta:\n- Atenuador reativo de volume em trailers sob hover (players de YouTube e HTML5 local)\n- Controle global de Auto-Play de trailers integrado ao painel administrativo\n- Purga absoluta de todas as cores laranjas e rosas residuais nos estilos slider.css e detailsModal.css, padronizando a paleta roxa do Nexus (#7a5cff)\n- Ocultação industrial de marcas e logos do Jellyfin na barra superior e menus do cliente\n- Estabilização robusta de transição de rotas ('Ir para a Página') via AppRouter e eventos customizados do Jellyfin\n- Localização PT-BR absoluta em 100% de todas as 10 seções e abas de configurações adicionais (excluindo qualquer string em inglês/turco)",
+        "changelog": "v1.0.0.0 - Lançamento Oficial (Estável Final)\n- Interface premium roxa com a identidade oficial do Nexus PobreFlix.\n- Centralização perfeita do painel de login no desktop e no mobile.\n- Restauração de todos os ícones nativos e blindagem absoluta da marca roxa no cabeçalho interno.\n- Correção de vazamentos visuais de login e compatibilidade total offline com rotas locais.\n- Controle reativo e inteligente de auto-play e volume de trailers no hover (reduzido para 5% e atenuado a 1% sob hover).\n- Localização PT-BR cirúrgica de todas as seções e abas do painel administrativo.",
         "targetAbi": "10.11.0.0",
         "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.0/NexusPobreFlix-1.0.0.0.zip",
-        "checksum": "43c4cc65959d6e2208577cc0fa4ab76c",
-        "timestamp": "2026-05-22T17:32:00Z"
+        "checksum": "ad02dbddf0af8612e62d7d155079efd4",
+        "timestamp": "2026-05-24T03:30:00Z"
       }
     ]
   }

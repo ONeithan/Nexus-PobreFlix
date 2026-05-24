@@ -3,7 +3,7 @@
   "description": "Plugin Nexus PobreFlix — Injeta experiência visual premium no Jellyfin com tema roxo, layout Netflix e localização PT-BR completa. Fork de JMSFusion por ONeithan.",
   "name": "Nexus PobreFlix",
   "owner": "ONeithan",
-  "version": "1.0.0.6",
+  "version": "1.0.0.0",
   "status": "Active",
   "autoUpdate": true,
   "targetAbi": "10.11.0.0",
