@@ -79,11 +79,14 @@ Auditoria linguística profunda de todas as mais de 2.000 chaves de tradução. 
 ### Método 1: Adição de Repositório (Recomendado)
 Para receber atualizações automáticas do plugin diretamente no seu painel do Jellyfin:
 1. Acesse o painel de administração do seu Jellyfin.
-2. Vá em **Plugins → Repositórios** e clique em Adicionar.
-3. Insira as seguintes informações:
-   - **Nome**: Repositório Nexus PobreFlix
-   - **URL**: `https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/manifest.json`
-4. Salve e instale o plugin em **Catálogo**.
+2. Vá em **Plugins → Repositórios** e clique em **Adicionar**.
+3. Adicione o seguinte link no campo **URL**:
+
+```text
+https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/manifest.json
+```
+
+4. Defina o nome como `Repositório Nexus PobreFlix`, salve e faça a instalação do plugin em **Catálogo**.
 
 ### Método 2: Instalação Manual
 1. Baixe o arquivo ZIP da versão estável `NexusPobreFlix-1.0.0.0.zip` na aba de Releases.
