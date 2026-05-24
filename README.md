@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="logo.png" alt="Nexus PobreFlix Logo" width="500"/>
+  <img src="img/nexus-pobreflix-logo.png" alt="Nexus PobreFlix Logo" width="500"/>
 
   # Nexus PobreFlix Plugin
 

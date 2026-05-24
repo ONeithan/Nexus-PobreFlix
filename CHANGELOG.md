@@ -18,7 +18,7 @@ Esta é a primeira build estável oficial do fork **Nexus PobreFlix** para o Jel
 
 - **Arquivo**: `NexusPobreFlix-1.0.0.0.zip`
 - **Versão**: `1.0.0.0`
-- **MD5**: `ad02dbddf0af8612e62d7d155079efd4`
+- **MD5**: `b9083a113574c96fe4d0cbf3af274cff`
 - **Status**: Pronta para Publicação
 - **Data**: 24/05/2026
 

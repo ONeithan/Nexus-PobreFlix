@@ -32,6 +32,6 @@ https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/manifest.json
 5. Limpe o cache do seu navegador (Ctrl + F5) para forçar o carregamento do novo design.
 
 ---
-**Checksum MD5 da Build**: `ad02dbddf0af8612e62d7d155079efd4`
+**Checksum MD5 da Build**: `b9083a113574c96fe4d0cbf3af274cff`
 
 *Build processada e validada via Script Industrial por ONeithan e Antigravity.*

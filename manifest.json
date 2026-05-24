@@ -6,14 +6,14 @@
     "overview": "Motor visual premium com suporte nativo a PT-BR e identidade Nexus.",
     "owner": "ONeithan",
     "category": "General",
-    "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/Nexus-PobreFlix/logo.png",
+    "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png",
     "versions": [
       {
         "version": "1.0.0.0",
         "changelog": "v1.0.0.0 - Lançamento Oficial (Estável Final)\n- Interface premium roxa com a identidade oficial do Nexus PobreFlix.\n- Centralização perfeita do painel de login no desktop e no mobile.\n- Restauração de todos os ícones nativos e blindagem absoluta da marca roxa no cabeçalho interno.\n- Correção de vazamentos visuais de login e compatibilidade total offline com rotas locais.\n- Controle reativo e inteligente de auto-play e volume de trailers no hover (reduzido para 5% e atenuado a 1% sob hover).\n- Localização PT-BR cirúrgica de todas as seções e abas do painel administrativo.",
         "targetAbi": "10.11.0.0",
         "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.0/NexusPobreFlix-1.0.0.0.zip",
-        "checksum": "ad02dbddf0af8612e62d7d155079efd4",
+        "checksum": "b9083a113574c96fe4d0cbf3af274cff",
         "timestamp": "2026-05-24T03:30:00Z"
       }
     ]

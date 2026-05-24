@@ -757,9 +757,9 @@ body:has(#itemDetailPage) .backdropImage {
        CABECALHO E MARCA (LOGO POBREFLIX LOCAL DIRETA)
        ========================================= */
     /* Blindagem absoluta do logotipo contra display:none */
-    div.skinHeader .headerLeft a.headerLogo,
-    div.skinHeader .headerLeft a.logoHeader,
-    div.skinHeader .headerLeft a.headerLogoWithText {
+    html body div.skinHeader div.headerLeft a.headerLogo,
+    html body div.skinHeader div.headerLeft a.logoHeader,
+    html body div.skinHeader div.headerLeft a.headerLogoWithText {
         display: inline-block !important;
         opacity: 1 !important;
         visibility: visible !important;
@@ -767,20 +767,21 @@ body:has(#itemDetailPage) .backdropImage {
         background-size: contain !important;
         background-repeat: no-repeat !important;
         background-position: left center !important;
+        width: 140px !important;
+        height: 24px !important;
         min-width: 140px !important;
         min-height: 24px !important;
-        height: 24px !important;
         vertical-align: middle !important;
         margin-left: 10px !important;
     }
 
     /* Oculta as tags img ou svg de logo para que não dupliquem ou causem sobreposição, sem dar display:none no link pai */
-    div.skinHeader .headerLeft a.headerLogo img,
-    div.skinHeader .headerLeft a.headerLogo svg,
-    div.skinHeader .headerLeft a.logoHeader img,
-    div.skinHeader .headerLeft a.logoHeader svg,
-    div.skinHeader .headerLeft a.headerLogoWithText img,
-    div.skinHeader .headerLeft a.headerLogoWithText svg {
+    html body div.skinHeader div.headerLeft a.headerLogo img,
+    html body div.skinHeader div.headerLeft a.headerLogo svg,
+    html body div.skinHeader div.headerLeft a.logoHeader img,
+    html body div.skinHeader div.headerLeft a.logoHeader svg,
+    html body div.skinHeader div.headerLeft a.headerLogoWithText img,
+    html body div.skinHeader div.headerLeft a.headerLogoWithText svg {
         display: none !important;
         opacity: 0 !important;
         width: 0 !important;
@@ -788,7 +789,7 @@ body:has(#itemDetailPage) .backdropImage {
         pointer-events: none !important;
     }
 
-    /* Neutralização de overrides ruins de abas superiores (barra cinza fixa) */
+    /* Neutralização de overrides ruins de abas superiores (barra cinza) */
     .headerTabs,
     .headerTabs.sectionTabs,
     .emby-tabs,
@@ -797,6 +798,12 @@ body:has(#itemDetailPage) .backdropImage {
         background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
+    }
+
+    /* Forçar o cabeçalho a rolar junto com a página (não fixar no topo) */
+    html body div.skinHeader,
+    html body div.skinHeader-withBackground {
+        position: absolute !important;
     }
 
     /* =========================
