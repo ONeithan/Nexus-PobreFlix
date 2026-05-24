@@ -7,11 +7,11 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
+namespace Jellyfin.Plugin.JMSFusion.Controllers
 {
     [ApiController]
-    [Route("NexusPobreFlix/cast")]
-    [Route("Plugins/NexusPobreFlix/cast")]
+    [Route("JMSFusion/cast")]
+    [Route("Plugins/JMSFusion/cast")]
     public class CastController : ControllerBase
     {
         private readonly IUserManager _users;
@@ -52,7 +52,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return adminCheck.Result;
             }
 
-            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
 
             if (request?.EnableCastModule.HasValue == true)
@@ -89,7 +89,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return userCheck.Result;
             }
 
-            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
             var isAdmin = IsAdminUser(userCheck.User);
 
@@ -99,7 +99,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return StatusCode(403, new
                 {
                     ok = false,
-                    error = "Módulo de transmissão (Cast) desativado."
+                    error = "Cast modulu devre disi."
                 });
             }
 
@@ -149,7 +149,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 
         private object BuildAccessPayload(User? user)
         {
-            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
             var isAdmin = IsAdminUser(user);
             var moduleEnabled = cfg.EnableCastModule;
@@ -180,7 +180,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return (null, Guid.Empty, StatusCode(403, new
                 {
                     ok = false,
-                    error = "Esta operação é restrita a administradores."
+                    error = "Bu islem sadece admin kullanicilar icindir."
                 }));
             }
 
@@ -194,7 +194,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return (null, Guid.Empty, Unauthorized(new
                 {
                     ok = false,
-                    error = "X-Emby-UserId é obrigatório."
+                    error = "X-Emby-UserId gerekli."
                 }));
             }
 
@@ -204,7 +204,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return (null, Guid.Empty, Unauthorized(new
                 {
                     ok = false,
-                    error = "Usuário não encontrado."
+                    error = "Kullanici bulunamadi."
                 }));
             }
 

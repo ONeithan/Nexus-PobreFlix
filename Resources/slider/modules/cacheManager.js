@@ -1,6 +1,6 @@
-const QUALITY_CACHE_SCHEMA_VERSION = 2;
+const QUALITY_CACHE_SCHEMA_VERSION = 4;
 const QUALITY_CACHE_STORAGE_KEY = `videoQualityCache_v${QUALITY_CACHE_SCHEMA_VERSION}`;
-const LEGACY_QUALITY_CACHE_STORAGE_KEYS = ['videoQualityCache'];
+const LEGACY_QUALITY_CACHE_STORAGE_KEYS = ['videoQualityCache', 'videoQualityCache_v2', 'videoQualityCache_v3'];
 
 let inMemoryOnly = false;
 let pendingSaveId = null;

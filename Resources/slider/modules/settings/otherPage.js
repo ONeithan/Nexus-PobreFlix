@@ -460,136 +460,72 @@ export function createAboutPanel(labels) {
   const panel = document.createElement('div');
   panel.id = 'about-panel';
   panel.className = 'settings-panel';
+  panel.style.background = 'linear-gradient(135deg, rgba(88, 28, 135, 0.2) 0%, rgba(15, 23, 42, 0.4) 100%)';
+  panel.style.borderRadius = '12px';
+  panel.style.padding = '20px';
+  panel.style.border = '1px solid rgba(168, 85, 247, 0.3)';
 
-  const section = createSection('NEXUS POBREFLIX');
+  const section = createSection('SOBRE O NEXUS POBREFLIX');
 
-  const info = document.createElement('div');
-  info.className = 'ggrbz-info';
-  info.textContent = 'Sobre';
-  section.appendChild(info);
+  const container = document.createElement('div');
+  container.style.display = 'flex';
+  container.style.flexDirection = 'column';
+  container.style.gap = '15px';
 
-  const aboutContent = document.createElement('div');
-  aboutContent.className = 'about-content';
+  container.innerHTML = `
+    <div class="jms-about-logo-container" style="text-align: center; margin-bottom: 20px; padding: 15px 0;">
+      <img src="../Plugins/JMSFusion/assets/LogoPng" 
+           alt="Nexus PobreFlix Logo" 
+           style="max-width: 240px; height: auto; filter: drop-shadow(0 0 16px rgba(122, 92, 255, 0.45));" />
+    </div>
 
-  const creatorInfo = document.createElement('p');
-  creatorInfo.textContent = `Nexus PobreFlix — Motor Visual Industrial`;
-  creatorInfo.style.fontWeight = 'bold';
-  creatorInfo.style.marginBottom = '20px';
+    <div class="jms-card-head" style="border-bottom: 1px solid rgba(168, 85, 247, 0.3); padding-bottom: 12px; margin-bottom: 15px;">
+      <h3 style="margin: 0; color: #fff; font-size: 1.3em;">Sobre o Nexus PobreFlix</h3>
+      <p style="margin: 6px 0 0 0; color: #cbd5e1; font-size: 0.95em;">A experiência visual definitiva e ultra-premium para o seu ecossistema Jellyfin.</p>
+    </div>
 
-  const supportInfo = document.createElement('p');
-  supportInfo.textContent = 'Desenvolvido por ONeithan. Para suporte e atualizações acesse o repositório:';
-  supportInfo.style.marginBottom = '10px';
+    <div style="margin-bottom: 20px; line-height: 1.6; font-size: 14px; color: #cbd5e1; text-align: justify;">
+      <p style="margin: 0 0 12px 0;">
+        O <strong>Nexus PobreFlix</strong> é uma evolução estética sofisticada construída como um <strong>Fork de Alta Performance</strong> 
+        a partir do projeto original <a href="https://github.com/G-grbz/Jellyfin-Media-Slider" target="_blank" style="color: #a855f7; font-weight: 700; text-decoration: none;">Jellyfin Media Slider (JMSFusion)</a>, 
+        criado com genialidade e maestria por <strong>G-Grbz</strong>.
+      </p>
+      <p style="margin: 0 0 12px 0;">
+        Dedicamos todos os créditos fundamentais de base, arquitetura de sliders, injeção de scripts e engenharia inicial de componentes ao autor original <strong>G-Grbz</strong>. 
+        Expressamos nossa eterna admiração e profunda gratidão pelo seu incrível trabalho open-source, que serviu como a fundação estrutural para este ecossistema.
+      </p>
+      <p style="margin: 0 0 12px 0;">
+        Esta edição personalizada (Nexus Edition) foi projetada, customizada e refinada por <strong>ONeithan</strong>, introduzindo 
+        tradução absoluta para Português do Brasil, otimização de performance no carregamento, correções profundas de layout de UX, 
+        estilizações premium sob a identidade visual roxa e melhorias exclusivas de acessibilidade e controle.
+      </p>
+    </div>
 
-  const githubLink = document.createElement('a');
-  githubLink.href = 'https://github.com/ONeithan/Nexus-PobreFlix';
-  githubLink.target = '_blank';
-  githubLink.textContent = 'GitHub: ONeithan/Nexus-PobreFlix';
-  githubLink.style.display = 'block';
-  githubLink.style.marginBottom = '10px';
-  githubLink.style.color = '#7B2FBE';
+    <div class="jms-env-box" style="margin-top: 15px; border-top: 1px solid rgba(168, 85, 247, 0.3); padding-top: 20px; display: flex; flex-direction: column; gap: 12px;">
+      <div class="jms-env-item" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(168, 85, 247, 0.15); padding-bottom: 8px;">
+        <span class="jms-env-label" style="color: #94a3b8; font-size: 0.9em;">Versão do Fork</span>
+        <code style="background: rgba(168, 85, 247, 0.2); padding: 3px 8px; border-radius: 4px; color: #fff; font-size: 0.85em;">1.0.0.1 (Nexus Edition)</code>
+      </div>
+      <div class="jms-env-item" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(168, 85, 247, 0.15); padding-bottom: 8px;">
+        <span class="jms-env-label" style="color: #94a3b8; font-size: 0.9em;">Autor do Fork</span>
+        <strong style="color: #fff; font-size: 0.95em;">ONeithan</strong>
+      </div>
+      <div class="jms-env-item" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(168, 85, 247, 0.15); padding-bottom: 8px;">
+        <span class="jms-env-label" style="color: #94a3b8; font-size: 0.9em;">Autor do Projeto Base (Créditos Totais)</span>
+        <strong style="color: #fff; font-size: 0.95em;">G-Grbz (JMSFusion)</strong>
+      </div>
+      <div class="jms-env-item" style="display: flex; flex-direction: column; gap: 8px;">
+        <span class="jms-env-label" style="color: #94a3b8; font-size: 0.9em;">Links Oficiais</span>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;">
+          <a href="https://github.com/ONeithan/Nexus-PobreFlix" target="_blank" style="flex: 1; text-align: center; text-decoration: none; background: rgba(168, 85, 247, 0.3); color: #fff; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(168, 85, 247, 0.5); font-weight: bold; font-size: 0.85em; transition: background 0.2s;">Repositório do Fork (ONeithan)</a>
+          <a href="https://github.com/G-grbz/Jellyfin-Media-Slider" target="_blank" style="flex: 1; text-align: center; text-decoration: none; background: rgba(30, 41, 59, 0.5); color: #cbd5e1; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-weight: bold; font-size: 0.85em; transition: background 0.2s;">Repositório Original (G-Grbz)</a>
+        </div>
+      </div>
+    </div>
+  `;
 
-  const emailLink = document.createElement('a');
-  emailLink.href = 'https://github.com/ONeithan';
-  emailLink.target = '_blank';
-  emailLink.innerHTML = `Nexus Codex: @ONeithan`;
-  emailLink.style.display = 'block';
-  emailLink.style.color = '#7B2FBE';
-
-  const updateWrap = document.createElement('div');
-  updateWrap.className = 'update-check-wrapper';
-  updateWrap.style.marginTop = '16px';
-
-  const cfg = getConfig?.() || {};
-  const currentVersion =
-    cfg.extensionVersion || cfg.version || (typeof window !== "undefined" && window.JMS_VERSION) || "0.0.0";
-
-  const currentP = document.createElement('p');
-  currentP.className = 'current-version';
-  currentP.style.margin = '8px 0';
-  currentP.textContent = (labels.currentVersionText || 'Yüklü sürüm') + `: ${currentVersion}`;
-  updateWrap.appendChild(currentP);
-
-  const statusP = document.createElement('p');
-  statusP.className = 'update-status';
-  statusP.style.margin = '6px 0';
-  statusP.style.minHeight = '20px';
-  updateWrap.appendChild(statusP);
-
-  const checkBtn = document.createElement('button');
-  checkBtn.type = 'button';
-  checkBtn.className = 'btn check-update-btn';
-  checkBtn.title = labels.checkUpdateTitle || 'GitHub’da en son sürümü denetle';
-  checkBtn.textContent = labels.checkUpdateText || 'Güncellemeyi Denetle';
-  checkBtn.style.padding = '8px 12px';
-  checkBtn.style.borderRadius = '8px';
-  checkBtn.style.border = '1px solid var(--theme-accent, #00a8ff)';
-  checkBtn.style.cursor = 'pointer';
-  checkBtn.style.background = 'transparent';
-  checkBtn.style.color = 'var(--theme-accent, #00a8ff)';
-  checkBtn.style.fontWeight = '600';
-
-  const resultSpan = document.createElement('span');
-  resultSpan.className = 'update-result-link';
-  resultSpan.style.marginLeft = '12px';
-
-  const btnRow = document.createElement('div');
-  btnRow.style.display = 'flex';
-  btnRow.style.alignItems = 'center';
-  btnRow.append(checkBtn, resultSpan);
-
-  updateWrap.appendChild(btnRow);
-
-  let checking = false;
-  checkBtn.addEventListener('click', async () => {
-    if (checking) return;
-    checking = true;
-    const prev = checkBtn.textContent;
-    checkBtn.textContent = (labels.checkingText || 'Denetleniyor…');
-    checkBtn.disabled = true;
-    statusP.textContent = '';
-    resultSpan.textContent = '';
-
-    try {
-      const { version: latest, html_url } = await fetchLatestGitHubVersion("G-grbz", "Jellyfin-MonWUI-Plugin");
-      if (!latest) {
-        statusP.textContent = labels.updateUnknown || 'Son sürüm bilgisi alınamadı.';
-      } else {
-        const cmp = compareSemver(latest, currentVersion);
-        if (cmp > 0) {
-          statusP.textContent = (labels.updateAvailable || 'Yeni sürüm mevcut') + `: ${latest}`;
-          const a = document.createElement('a');
-          a.href = html_url;
-          a.target = '_blank';
-          a.rel = 'noopener';
-          a.textContent = labels.viewOnGithub || 'GitHub’da Gör / İndir';
-          a.style.marginLeft = '8px';
-          resultSpan.replaceChildren(a);
-        } else if (cmp === 0) {
-          statusP.textContent = labels.upToDate || 'Güncelsiniz.';
-        } else {
-          statusP.textContent = (labels.localNewer || 'Yerel sürüm daha yeni görünüyor') + ` (${currentVersion} > ${latest})`;
-          const a = document.createElement('a');
-          a.href = html_url;
-          a.target = '_blank';
-          a.rel = 'noopener';
-          a.textContent = labels.viewOnGithub || 'GitHub’da Gör';
-          a.style.marginLeft = '8px';
-          resultSpan.replaceChildren(a);
-        }
-      }
-    } catch (err) {
-      statusP.textContent = (labels.updateError || 'Denetim sırasında bir hata oluştu.');
-      if (window?.console) console.warn('Update check error:', err);
-    } finally {
-      checkBtn.textContent = prev;
-      checkBtn.disabled = false;
-      checking = false;
-    }
-  });
-
-  aboutContent.append(creatorInfo, supportInfo, githubLink, emailLink, updateWrap);
-  section.appendChild(aboutContent);
-
+  section.appendChild(container);
   panel.appendChild(section);
+
   return panel;
 }

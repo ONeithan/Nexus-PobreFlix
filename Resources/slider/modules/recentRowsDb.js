@@ -1,12 +1,17 @@
-const DB_NAME = 'monwui_recent_db';
-const DB_VER  = 1;
+import { createScopedJsonDb, prepareLegacyIndexedDbForDeletion } from "./scopedJsonCache.js";
 
-export function prepareRecentRowsDbForDeletion() {
-  try {
-    window.dispatchEvent(new CustomEvent('jms:indexeddb:release', {
-      detail: { dbName: DB_NAME }
-    }));
-  } catch {}
+const DB_NAME = "monwui_recent_db";
+const STORE_TYPE = "recentRows";
+const MAX_ITEMS = 2400;
+const MAX_META = 200;
+const ITEM_TTL_MS = 45 * 24 * 60 * 60 * 1000;
+const META_TTL_MS = 60 * 24 * 60 * 60 * 1000;
+const STABLE_IGNORE_FIELDS = ["fetchedAt", "expiresAt", "updatedAt", "UserData", "UserDataDto", "userData", "userDataDto"];
+
+export async function prepareRecentRowsDbForDeletion() {
+  try { await __recentRowsDb?.close?.(); } catch {}
+  __recentRowsDb = null;
+  return prepareLegacyIndexedDbForDeletion([DB_NAME]);
 }
 
 function idle(cb, { timeout = 1500 } = {}) {
@@ -19,23 +24,29 @@ function idle(cb, { timeout = 1500 } = {}) {
   }, 1);
 }
 
+function ensureStoreShape(data) {
+  if (!data || typeof data !== "object") return { items: {}, meta: {} };
+  if (!data.items || typeof data.items !== "object" || Array.isArray(data.items)) data.items = {};
+  if (!data.meta || typeof data.meta !== "object" || Array.isArray(data.meta)) data.meta = {};
+  return data;
+}
+
 function normalizeUserData(raw) {
   if (!raw || typeof raw !== "object") return null;
   const playedPct = Number(raw.PlayedPercentage);
   const posTicks = Number(raw.PlaybackPositionTicks);
-  const out = {
+  return {
     Played: raw.Played === true,
     PlayedPercentage: Number.isFinite(playedPct) ? playedPct : null,
     PlaybackPositionTicks: Number.isFinite(posTicks) ? posTicks : null,
     LastPlayedDate: raw.LastPlayedDate || raw.LastPlayedDateUtc || null,
   };
-  return out;
 }
 
 function normalizeCachedItem(rec) {
   if (!rec) return null;
 
-  const Id   = rec.Id   || rec.itemId || null;
+  const Id = rec.Id || rec.itemId || null;
   if (!Id) return null;
   const userData = normalizeUserData(rec.UserData || rec.UserDataDto || rec.userData || rec.userDataDto || null);
 
@@ -50,7 +61,7 @@ function normalizeCachedItem(rec) {
     ParentIndexNumber: rec.ParentIndexNumber ?? rec.parentIndexNumber ?? null,
     ProductionYear: rec.ProductionYear ?? rec.productionYear ?? null,
     OfficialRating: rec.OfficialRating || rec.officialRating || "",
-    CommunityRating: (rec.CommunityRating ?? rec.communityRating ?? null),
+    CommunityRating: rec.CommunityRating ?? rec.communityRating ?? null,
     ImageTags: rec.ImageTags || rec.imageTags || null,
     BackdropImageTags: rec.BackdropImageTags || rec.backdropImageTags || null,
     PrimaryImageAspectRatio: rec.PrimaryImageAspectRatio ?? rec.primaryImageAspectRatio ?? null,
@@ -67,314 +78,199 @@ function normalizeCachedItem(rec) {
   };
 }
 
-function promisify(req) {
-  return new Promise((resolve, reject) => {
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-function txDone(tx) {
-  return new Promise((resolve, reject) => {
-    tx.oncomplete = () => resolve(true);
-    tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error);
-  });
-}
-
-export function openDirRowsDB() {
-  const req = indexedDB.open(DB_NAME, DB_VER);
-
-  req.onupgradeneeded = () => {
-    const db = req.result;
-
-    if (!db.objectStoreNames.contains('directors')) {
-      const s = db.createObjectStore('directors', { keyPath: 'key' });
-      s.createIndex('byScope', 'scope', { unique: false });
-      s.createIndex('byName', 'name_lc', { unique: false });
-      s.createIndex('byUpdatedAt', 'updatedAt', { unique: false });
-    }
-
-    if (!db.objectStoreNames.contains('items')) {
-      const s = db.createObjectStore('items', { keyPath: 'key' });
-      s.createIndex('byScope', 'scope', { unique: false });
-      s.createIndex('byUpdatedAt', 'updatedAt', { unique: false });
-      s.createIndex('byDateCreated', 'dateCreatedTicks', { unique: false });
-    }
-
-    if (!db.objectStoreNames.contains('directorItems')) {
-      const s = db.createObjectStore('directorItems', { keyPath: 'key' });
-      s.createIndex('byDirector', ['scope', 'directorId'], { unique: false });
-      s.createIndex('byItem', ['scope', 'itemId'], { unique: false });
-      s.createIndex('byUpdatedAt', 'updatedAt', { unique: false });
-    }
-
-    if (!db.objectStoreNames.contains('meta')) {
-      db.createObjectStore('meta', { keyPath: 'key' });
-    }
-  };
-
-  return promisify(req);
-}
-
-export function makeScope({ serverId, userId }) {
-  return `${serverId || ''}|${userId || ''}`;
-}
-
-export async function upsertDirector(db, scope, director) {
-  if (!director?.Id) return;
-  const tx = db.transaction(['directors'], 'readwrite');
-  const store = tx.objectStore('directors');
-  const rec = {
-    key: `${scope}|${director.Id}`,
-    scope,
-    directorId: director.Id,
-    name: director.Name || '',
-    name_lc: String(director.Name || '').toLowerCase(),
-    countHint: Number(director.Count) || 0,
-    eligible: director.eligible !== false,
-    updatedAt: Date.now(),
-  };
-
-  store.put(rec);
-  await txDone(tx);
-}
-
-export async function getDirectorsForScope(db, scope, limit = 50) {
-  const tx = db.transaction(['directors'], 'readonly');
-  const idx = tx.objectStore('directors').index('byScope');
-
-  const out = [];
-  let cursor = await promisify(idx.openCursor(IDBKeyRange.only(scope)));
-
-  while (cursor && out.length < limit) {
-    out.push(cursor.value);
-    cursor = await new Promise((resolve) => {
-      cursor.continue();
-      idx.openCursor().onsuccess = (e) => resolve(e.target.result);
-    }).catch(() => null);
-  }
-  await txDone(tx);
-  return out;
-}
-
-async function cursorCollect(req, limit, mapFn) {
-  return new Promise((resolve, reject) => {
-    const out = [];
-    req.onerror = () => reject(req.error);
-    req.onsuccess = (e) => {
-      const cur = e.target.result;
-      if (!cur) return resolve(out);
-      out.push(mapFn ? mapFn(cur.value) : cur.value);
-      if (limit && out.length >= limit) return resolve(out);
-      cur.continue();
-    };
-  });
-}
-
-export async function listDirectors(db, scope, { limit = 50 } = {}) {
-  const tx = db.transaction(['directors'], 'readonly');
-  const idx = tx.objectStore('directors').index('byScope');
-  const req = idx.openCursor(IDBKeyRange.only(scope));
-  const rows = await cursorCollect(req, limit);
-  await txDone(tx);
-  return rows;
-}
-
-export async function upsertItem(db, scope, item) {
-  if (!item?.Id) return;
-  const tx = db.transaction(['items'], 'readwrite');
-  const store = tx.objectStore('items');
+function toItemRecord(item, now = Date.now()) {
+  if (!item?.Id) return null;
   const userData = normalizeUserData(item.UserData || item.UserDataDto || null);
 
-  const rec = {
-    key: `${scope}|${item.Id}`,
-    scope,
+  return {
     Id: item.Id,
-    Name: item.Name || '',
-    Type: item.Type || '',
+    Name: item.Name || "",
+    Type: item.Type || "",
     SeriesId: item.SeriesId || null,
-    SeriesName: item.SeriesName || '',
+    SeriesName: item.SeriesName || "",
     ParentId: item.ParentId || null,
-    IndexNumber: (Number.isFinite(item.IndexNumber) ? item.IndexNumber : item.IndexNumber) ?? null,
-    ParentIndexNumber: (Number.isFinite(item.ParentIndexNumber) ? item.ParentIndexNumber : item.ParentIndexNumber) ?? null,
+    IndexNumber: item.IndexNumber ?? null,
+    ParentIndexNumber: item.ParentIndexNumber ?? null,
     ProductionYear: item.ProductionYear || null,
-    OfficialRating: item.OfficialRating || '',
+    OfficialRating: item.OfficialRating || "",
     CommunityRating: (Number.isFinite(item.CommunityRating) ? item.CommunityRating : Number(item.CommunityRating)) || null,
     ImageTags: item.ImageTags || null,
     BackdropImageTags: item.BackdropImageTags || null,
     PrimaryImageAspectRatio: item.PrimaryImageAspectRatio || null,
-    Overview: item.Overview || '',
+    Overview: item.Overview || "",
     Genres: Array.isArray(item.Genres) ? item.Genres : [],
     RunTimeTicks: item.RunTimeTicks || null,
     CumulativeRunTimeTicks: item.CumulativeRunTimeTicks || null,
     RemoteTrailers: item.RemoteTrailers || item.RemoteTrailerItems || item.RemoteTrailerUrls || [],
     DateCreatedTicks: item.DateCreatedTicks || 0,
+    People: item.People || [],
     UserData: userData,
     UserDataDto: userData,
 
     itemId: item.Id,
-    type: item.Type || '',
-    name: item.Name || '',
+    type: item.Type || "",
+    name: item.Name || "",
     seriesId: item.SeriesId || null,
-    seriesName: item.SeriesName || '',
+    seriesName: item.SeriesName || "",
     parentId: item.ParentId || null,
     indexNumber: item.IndexNumber ?? null,
     parentIndexNumber: item.ParentIndexNumber ?? null,
     productionYear: item.ProductionYear || null,
-    officialRating: item.OfficialRating || '',
+    officialRating: item.OfficialRating || "",
     communityRating: (Number.isFinite(item.CommunityRating) ? item.CommunityRating : Number(item.CommunityRating)) || null,
     imageTags: item.ImageTags || null,
     backdropImageTags: item.BackdropImageTags || null,
     primaryImageAspectRatio: item.PrimaryImageAspectRatio || null,
-    overview: item.Overview || '',
+    overview: item.Overview || "",
     genres: Array.isArray(item.Genres) ? item.Genres : [],
     runTimeTicks: item.RunTimeTicks || null,
     cumulativeRunTimeTicks: item.CumulativeRunTimeTicks || null,
     remoteTrailers: item.RemoteTrailers || item.RemoteTrailerItems || item.RemoteTrailerUrls || [],
     dateCreatedTicks: item.DateCreatedTicks || 0,
+    people: item.People || [],
     userData,
     userDataDto: userData,
-    updatedAt: Date.now(),
+    updatedAt: now,
   };
+}
 
-  store.put(rec);
-  await txDone(tx);
+function pruneMapByAgeAndCount(map, ttlMs, maxItems) {
+  const now = Date.now();
+  const entries = Object.entries(map || {});
+
+  if (ttlMs > 0) {
+    const cutoff = now - ttlMs;
+    for (const [key, value] of entries) {
+      const updatedAt = Number(value?.updatedAt || 0);
+      if (updatedAt && updatedAt < cutoff) {
+        delete map[key];
+      }
+    }
+  }
+
+  const remaining = Object.entries(map || {});
+  if (maxItems > 0 && remaining.length > maxItems) {
+    remaining
+      .sort((a, b) => Number(a[1]?.updatedAt || 0) - Number(b[1]?.updatedAt || 0))
+      .slice(0, remaining.length - maxItems)
+      .forEach(([key]) => {
+        delete map[key];
+      });
+  }
+}
+
+function collectReferencedItemIds(store) {
+  const refs = new Set();
+  for (const rec of Object.values(store.meta || {})) {
+    const ids = Array.isArray(rec?.value?.ids) ? rec.value.ids : [];
+    for (const rawId of ids) {
+      const id = String(rawId || "").trim();
+      if (id) refs.add(id);
+    }
+  }
+  return refs;
+}
+
+function pruneStore(store) {
+  pruneMapByAgeAndCount(store.items, ITEM_TTL_MS, MAX_ITEMS);
+  pruneMapByAgeAndCount(store.meta, META_TTL_MS, MAX_META);
+
+  const refs = collectReferencedItemIds(store);
+  if (!refs.size) return;
+
+  for (const itemId of Object.keys(store.items || {})) {
+    if (!refs.has(itemId)) {
+      delete store.items[itemId];
+    }
+  }
+}
+
+function resolveMetaScope(db, key) {
+  const active = String(db?.__jmsActiveScope || "").trim();
+  if (active) return active;
+  const raw = String(key || "");
+  const pipeIndex = raw.indexOf("|");
+  return pipeIndex >= 0 ? raw.slice(pipeIndex + 1) : "";
+}
+
+let __recentRowsDb = null;
+
+export async function openDirRowsDB() {
+  if (!__recentRowsDb) {
+    __recentRowsDb = createScopedJsonDb({
+      cacheType: STORE_TYPE,
+      defaultData: () => ({ items: {}, meta: {} }),
+      saveDelayMs: 800,
+      retryDelayMs: 2200,
+      legacyDbNames: [DB_NAME],
+      stableIgnoreFields: STABLE_IGNORE_FIELDS
+    });
+  }
+  return __recentRowsDb;
+}
+
+export function makeScope({ serverId, userId }) {
+  return `${serverId || ""}|${userId || ""}`;
 }
 
 export async function upsertItemsBatch(db, scope, items) {
-  const list = Array.isArray(items) ? items.filter(x => x?.Id) : [];
+  const list = Array.isArray(items) ? items.filter((x) => x?.Id) : [];
   if (!db || !scope || !list.length) return;
 
-  const tx = db.transaction(['items'], 'readwrite');
-  const store = tx.objectStore('items');
+  await db.writeScope(scope, (data) => {
+    const store = ensureStoreShape(data);
+    const now = Date.now();
 
-  for (const item of list) {
-    const userData = normalizeUserData(item.UserData || item.UserDataDto || null);
-    const rec = {
-      key: `${scope}|${item.Id}`,
-      scope,
-      Id: item.Id,
-      Name: item.Name || '',
-      Type: item.Type || '',
-      SeriesId: item.SeriesId || null,
-      SeriesName: item.SeriesName || '',
-      ParentId: item.ParentId || null,
-      IndexNumber: item.IndexNumber ?? null,
-      ParentIndexNumber: item.ParentIndexNumber ?? null,
-      ProductionYear: item.ProductionYear || null,
-      OfficialRating: item.OfficialRating || '',
-      CommunityRating: (Number.isFinite(item.CommunityRating) ? item.CommunityRating : Number(item.CommunityRating)) || null,
-      ImageTags: item.ImageTags || null,
-      BackdropImageTags: item.BackdropImageTags || null,
-      PrimaryImageAspectRatio: item.PrimaryImageAspectRatio || null,
-      Overview: item.Overview || '',
-      Genres: Array.isArray(item.Genres) ? item.Genres : [],
-      RunTimeTicks: item.RunTimeTicks || null,
-      CumulativeRunTimeTicks: item.CumulativeRunTimeTicks || null,
-      RemoteTrailers: item.RemoteTrailers || item.RemoteTrailerItems || item.RemoteTrailerUrls || [],
-      DateCreatedTicks: item.DateCreatedTicks || 0,
-      UserData: userData,
-      UserDataDto: userData,
+    for (const item of list) {
+      const rec = toItemRecord(item, now);
+      if (rec?.Id) {
+        store.items[rec.Id] = rec;
+      }
+    }
 
-      itemId: item.Id,
-      type: item.Type || '',
-      name: item.Name || '',
-      seriesId: item.SeriesId || null,
-      seriesName: item.SeriesName || '',
-      parentId: item.ParentId || null,
-      indexNumber: item.IndexNumber ?? null,
-      parentIndexNumber: item.ParentIndexNumber ?? null,
-      productionYear: item.ProductionYear || null,
-      officialRating: item.OfficialRating || '',
-      communityRating: (Number.isFinite(item.CommunityRating) ? item.CommunityRating : Number(item.CommunityRating)) || null,
-      imageTags: item.ImageTags || null,
-      backdropImageTags: item.BackdropImageTags || null,
-      primaryImageAspectRatio: item.PrimaryImageAspectRatio || null,
-      overview: item.Overview || '',
-      genres: Array.isArray(item.Genres) ? item.Genres : [],
-      runTimeTicks: item.RunTimeTicks || null,
-      cumulativeRunTimeTicks: item.CumulativeRunTimeTicks || null,
-      remoteTrailers: item.RemoteTrailers || item.RemoteTrailerItems || item.RemoteTrailerUrls || [],
-      dateCreatedTicks: item.DateCreatedTicks || 0,
-      userData,
-      userDataDto: userData,
-      updatedAt: Date.now(),
-    };
-    store.put(rec);
-  }
-
-  await txDone(tx);
+    pruneStore(store);
+  }, { flush: true });
 }
 
 export async function getItemsByIds(db, scope, ids) {
-  const list = Array.isArray(ids) ? ids.map(x => String(x||"").trim()).filter(Boolean) : [];
+  const list = Array.isArray(ids) ? ids.map((x) => String(x || "").trim()).filter(Boolean) : [];
   if (!db || !scope || !list.length) return [];
 
-  const tx = db.transaction(['items'], 'readonly');
-  const store = tx.objectStore('items');
-
-  const out = [];
-  for (const id of list) {
-    try {
-      const rec = await promisify(store.get(`${scope}|${id}`));
-      const norm = normalizeCachedItem(rec);
+  return db.readScope(scope, (data) => {
+    const store = ensureStoreShape(data);
+    const out = [];
+    for (const id of list) {
+      const norm = normalizeCachedItem(store.items[id]);
       if (norm?.Id) out.push(norm);
-    } catch {}
-  }
-
-  await txDone(tx);
-  return out;
+    }
+    return out;
+  });
 }
 
 export function upsertItemsBatchIdle(db, scope, items, opts) {
-  return idle(() => { try { upsertItemsBatch(db, scope, items); } catch {} }, opts);
-}
-
-export async function linkDirectorItem(db, scope, directorId, itemId) {
-  if (!directorId || !itemId) return;
-  const tx = db.transaction(['directorItems'], 'readwrite');
-  const store = tx.objectStore('directorItems');
-
-  store.put({
-    key: `${scope}|${directorId}|${itemId}`,
-    scope,
-    directorId,
-    itemId,
-    updatedAt: Date.now(),
-  });
-
-  await txDone(tx);
-}
-
-export async function getItemsForDirector(db, scope, directorId, limit = 20) {
-  const tx = db.transaction(['directorItems', 'items'], 'readonly');
-  const relIdx = tx.objectStore('directorItems').index('byDirector');
-  const scanLimit = Math.max(limit * 4, limit);
-  const relReq = relIdx.openCursor(IDBKeyRange.only([scope, directorId]));
-  const rels = await cursorCollect(relReq, scanLimit, (v) => v.itemId);
-  const itemStore = tx.objectStore('items');
-  const items = [];
-
-  for (const itemId of rels) {
-    if (items.length >= limit) break;
-    const rec = await promisify(itemStore.get(`${scope}|${itemId}`));
-    const norm = normalizeCachedItem(rec);
-    if (norm) items.push(norm);
-  }
-  await txDone(tx);
-  return items;
+  return idle(() => { void upsertItemsBatch(db, scope, items); }, opts);
 }
 
 export async function getMeta(db, key) {
-  const tx = db.transaction(['meta'], 'readonly');
-  const val = await promisify(tx.objectStore('meta').get(key));
-  await txDone(tx);
-  return val?.value ?? null;
+  const scope = resolveMetaScope(db, key);
+  if (!db || !scope || !key) return null;
+
+  return db.readScope(scope, (data) => {
+    const store = ensureStoreShape(data);
+    return store.meta[key]?.value ?? null;
+  });
 }
 
 export async function setMeta(db, key, value) {
-  const tx = db.transaction(['meta'], 'readwrite');
-  tx.objectStore('meta').put({ key, value, updatedAt: Date.now() });
-  await txDone(tx);
+  const scope = resolveMetaScope(db, key);
+  if (!db || !scope || !key) return;
+
+  await db.writeScope(scope, (data) => {
+    const store = ensureStoreShape(data);
+    store.meta[key] = {
+      value,
+      updatedAt: Date.now(),
+    };
+    pruneStore(store);
+  }, { flush: true });
 }

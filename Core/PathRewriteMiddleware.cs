@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
-namespace Jellyfin.Plugin.NexusPobreFlix.Core
+namespace Jellyfin.Plugin.JMSFusion.Core
 {
     public sealed class PathRewriteMiddleware
     {

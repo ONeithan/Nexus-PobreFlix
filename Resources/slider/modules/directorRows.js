@@ -1,6 +1,6 @@
 //directorRows.js
 
-import { getSessionInfo, makeApiRequest, getCachedUserTopGenres } from "../../Plugins/NexusPobreFlix/runtime/api.js";
+import { getSessionInfo, makeApiRequest, getCachedUserTopGenres } from "../../Plugins/JMSFusion/runtime/api.js";
 import { getConfig, getHomeSectionsRuntimeConfig } from "./config.js";
 import { getLanguageLabels } from "../language/index.js";
 import { attachMiniPosterHover } from "./studioHubsUtils.js";
@@ -41,6 +41,7 @@ import {
   listDirectors,
   getItemsForDirector,
   deleteItemsAndRelationsByIds,
+  compactDirectorRowsDb,
   getMeta,
   setMeta
 } from "./dirRowsDb.js";
@@ -48,6 +49,24 @@ import {
 const config = getConfig();
 const labels = getLanguageLabels?.() || {};
 const IS_MOBILE = (navigator.maxTouchPoints > 0) || (window.innerWidth <= 820);
+
+function isMobileWebViewRuntime() {
+  try {
+    const ua = String((typeof navigator !== "undefined" && navigator.userAgent) || "");
+    const uaMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    if (!uaMobile) return false;
+
+    const standalone = window.navigator?.standalone === true
+      || window.matchMedia?.("(display-mode: standalone)")?.matches === true;
+    const isWV = /\bwv\b|Crosswalk/i.test(ua);
+    const hasBridge = !!(window.cordova || window.Capacitor || window.ReactNativeWebView);
+    return !!(standalone || isWV || hasBridge);
+  } catch {
+    return false;
+  }
+}
+
+const IS_MOBILE_WEBVIEW = isMobileWebViewRuntime();
 const UNIFIED_ROW_ITEM_LIMIT = 20;
 
 const PLACEHOLDER_URL = resolveSliderAssetHref(
@@ -64,10 +83,10 @@ const DIRECTOR_MOBILE_CARD_DELAY_MS = 90;
 const HOME_DEBUG_STORAGE_KEY = "jms:debug:home-sections";
 const HOME_TRACE_STORAGE_KEY = "jms:trace:home-sections";
 const DIRECTOR_ROWS_RELEASE_ROOT_MARGIN = IS_MOBILE
-  ? "0px 0px 60% 0px"
+  ? (IS_MOBILE_WEBVIEW ? "0px 0px 78% 0px" : "0px 0px 60% 0px")
   : "0px 0px 22% 0px";
 const DIRECTOR_ROWS_ARROW_OBSERVER_ROOT_MARGIN = IS_MOBILE
-  ? "0px 0px 66% 0px"
+  ? (IS_MOBILE_WEBVIEW ? "0px 0px 84% 0px" : "0px 0px 66% 0px")
   : "0px 0px 26% 0px";
 const DIRECTOR_ROWS_ARROW_OBSERVER_THRESHOLD = IS_MOBILE ? 0.01 : 0.2;
 
@@ -421,6 +440,7 @@ async function ensureDirectorRowsSession({ userId, serverId }) {
   }
 
   const db = await openDirRowsDB();
+  db.__jmsActiveScope = scope;
   STATE._db = db;
   STATE._scope = scope;
   return { db, scope };
@@ -1613,6 +1633,7 @@ function persistDirectorItemsToDbLater(dir, items) {
       Count: dir.Count || 0,
       eligible: true,
     });
+    await compactDirectorRowsDb(db, scope);
   }, "directorRows: DB write-through failed:", 600);
 }
 
@@ -1760,40 +1781,24 @@ async function loadDirectorsFromDbOrApi(userId) {
 
         if (validated.length < WANT && unknownPool.length) {
           shuffle(unknownPool);
-          const toCheck = unknownPool.slice(0, Math.min(unknownPool.length, Math.max(WANT * 3, rowCount * 8)));
-          const checks = await pMapLimited(toCheck, 3, async (d) => {
-            const total = await getDirectorContentCount(userId, d.Id);
-            return {
-              d,
-              total,
-              ok: Number.isFinite(total) && total >= minContents,
-            };
-          });
-
-          for (const x of checks) {
-            if (Number.isFinite(x.total)) {
-              await upsertDirector(db, scope, {
-                Id: x.d.Id,
-                Name: x.d.Name,
-                Count: x.d.Count || 0,
-                eligible: x.ok,
-                countActual: x.total,
-                qualifiedMinItems: minContents,
-              });
-            }
-            if (!x.ok || seen.has(x.d.Id)) continue;
-            seen.add(x.d.Id);
-            validated.push({ ...x.d, countActual: x.total, qualifiedMinItems: minContents });
+          for (const d of unknownPool) {
+            if (seen.has(d.Id)) continue;
+            let cachedItems = [];
+            try {
+              cachedItems = await getItemsForDirector(db, scope, d.Id, minContents);
+            } catch {}
+            if ((cachedItems?.length || 0) < minContents) continue;
+            seen.add(d.Id);
+            validated.push({
+              ...d,
+              countActual: cachedItems.length,
+              qualifiedMinItems: minContents
+            });
             if (validated.length >= WANT) break;
           }
         }
 
         if (validated.length) {
-          refreshCachedDirectorEligibility(userId, cached, {
-            db,
-            scope,
-            limit: Math.min(cached.length, Math.max(WANT * 2, rowCount * 6)),
-          });
           return { directors: validated.slice(0, WANT), fromCache: true };
         }
       }
@@ -1829,6 +1834,7 @@ async function loadDirectorsFromDbOrApi(userId) {
           qualifiedMinItems: minContents,
         });
       }
+      try { await db.flush?.(scope); } catch {}
     } catch {}
   }
 
@@ -1912,6 +1918,7 @@ async function ensureDirectorItemsCachedForWarmup(dir, minItems = getDirectorPri
     Count: dir.Count || 0,
     eligible: true
   });
+  await compactDirectorRowsDb(db, scope);
 }
 
 function startDirectorItemsPrime(directors, { force = false } = {}) {
@@ -2935,39 +2942,6 @@ async function fillRowWhenReady(row, dir, heroHost){
         );
       } catch (e) {
         dirRowsWarn("directorRows: getItemsForDirector failed:", e);
-      }
-    }
-
-    if ((items?.length || 0) > 0 && STATE.userId) {
-      try {
-        const hydrateIds = (items || []).map(it => it?.Id).filter(Boolean).slice(0, NEED);
-        const cachedById = new Map((items || []).filter(it => it?.Id).map(it => [it.Id, it]));
-        const resolved = await fetchItemsByIdsDetailed(STATE.userId, hydrateIds, COMMON_FIELDS);
-
-        if (resolved.items?.length) {
-          persistItemsToDbLater(resolved.items);
-        }
-        if (resolved.missingIds?.length) {
-          pruneDeletedDirectorItemsLater(resolved.missingIds);
-        }
-
-        if (resolved.items?.length || resolved.missingIds?.length) {
-          const liveById = new Map((resolved.items || []).filter(it => it?.Id).map(it => [it.Id, it]));
-          const failedSet = new Set((resolved.failedIds || []).filter(Boolean));
-          const reconciled = [];
-          const seen = new Set();
-
-          for (const id of hydrateIds) {
-            const it = liveById.get(id) || (failedSet.has(id) ? cachedById.get(id) : null);
-            if (!it?.Id || seen.has(it.Id)) continue;
-            seen.add(it.Id);
-            reconciled.push(it);
-          }
-
-          items = reconciled;
-        }
-      } catch (e) {
-        dirRowsWarn("directorRows: cached items hydration failed:", e);
       }
     }
 

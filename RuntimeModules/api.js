@@ -1,4 +1,4 @@
-import { getConfig, getServerAddress, isParentalPinModuleEnabled } from "../../../slider/modules/config.js";
+import { getConfig, getServerAddress, isCinemaPreRollModuleEnabled, isParentalPinModuleEnabled } from "../../../slider/modules/config.js";
 import { clearCredentials, getWebClientHints, getStoredServerBase } from "./auth.js";
 import { withServer, withServerSrcset, invalidateServerBaseCache, resolveServerBase } from "../../../slider/modules/jfUrl.js";
 
@@ -72,6 +72,36 @@ function showPlayNowSuccessNotification(duration = 3000) {
 }
 
 let __parentalPinRuntimePromise = null;
+let __cinemaPreRollRuntimePromise = null;
+
+function isCinemaPreRollRuntimeNeeded(source = null) {
+  const liveConfig = source || (typeof getConfig === "function" ? getConfig() : null) || config || {};
+  return isCinemaPreRollModuleEnabled(liveConfig) && liveConfig?.cinemaPreRollEnabled === true;
+}
+
+function warmCinemaPreRollRuntimeIfEnabled() {
+  try {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const liveConfig = (typeof getConfig === "function" ? getConfig() : null) || config || {};
+    if (!isCinemaPreRollRuntimeNeeded(liveConfig)) {
+      return;
+    }
+
+    if (!__cinemaPreRollRuntimePromise) {
+      __cinemaPreRollRuntimePromise = import("../../../slider/modules/cinemaPreRoll.js");
+    }
+
+    __cinemaPreRollRuntimePromise.catch((error) => {
+      console.warn("CinemaPreRoll runtime preload failed:", error);
+      __cinemaPreRollRuntimePromise = null;
+    });
+  } catch (error) {
+    console.warn("CinemaPreRoll runtime preload error:", error);
+  }
+}
 
 function warmParentalPinRuntimeIfEnabled() {
   try {
@@ -120,6 +150,65 @@ async function maybeEnsureParentalPinBeforePlayback(item, options = {}) {
 }
 
 warmParentalPinRuntimeIfEnabled();
+warmCinemaPreRollRuntimeIfEnabled();
+
+async function maybePlayCinemaPreRollSessionIfEnabled({ item } = {}) {
+  try {
+    const liveConfig = (typeof getConfig === "function" ? getConfig() : null) || config || {};
+    if (!isCinemaPreRollRuntimeNeeded(liveConfig)) {
+      return {
+        played: false,
+        reason: "disabled",
+        config: {
+          enableCinemaPreRollModule: liveConfig?.enableCinemaPreRollModule !== false,
+          cinemaPreRollEnabled: liveConfig?.cinemaPreRollEnabled === true
+        }
+      };
+    }
+
+    if (!__cinemaPreRollRuntimePromise) {
+      __cinemaPreRollRuntimePromise = import("../../../slider/modules/cinemaPreRoll.js");
+    }
+
+    const mod = await __cinemaPreRollRuntimePromise;
+    if (typeof mod?.maybePlayCinemaPreRollSession !== "function") {
+      return { played: false, reason: "unavailable" };
+    }
+
+    return await mod.maybePlayCinemaPreRollSession({ item });
+  } catch (error) {
+    console.warn("[JMSFusion] Cinema pre-roll runtime yuklenemedi:", error);
+    __cinemaPreRollRuntimePromise = null;
+    return {
+      played: false,
+      reason: "load-error",
+      error: String(error?.message || error || "")
+    };
+  }
+}
+
+async function armCinemaPreRollNativePlaybackBypassIfEnabled({ itemId = "", itemIds = [], delayMs = 45_000 } = {}) {
+  try {
+    const liveConfig = (typeof getConfig === "function" ? getConfig() : null) || config || {};
+    if (!isCinemaPreRollRuntimeNeeded(liveConfig)) {
+      return false;
+    }
+
+    if (!__cinemaPreRollRuntimePromise) {
+      __cinemaPreRollRuntimePromise = import("../../../slider/modules/cinemaPreRoll.js");
+    }
+
+    const mod = await __cinemaPreRollRuntimePromise;
+    if (typeof mod?.armCinemaPreRollNativePlaybackBypass !== "function") {
+      return false;
+    }
+
+    return !!mod.armCinemaPreRollNativePlaybackBypass({ itemId, itemIds, delayMs });
+  } catch (error) {
+    console.warn("[JMSFusion] Cinema pre-roll native bypass kurulamadı:", error);
+    return false;
+  }
+}
 
 async function __getGmmp() {
   try {
@@ -158,6 +247,46 @@ async function __destroyGmmpBeforeVideoPlayNow() {
     console.warn("playNow(video): GMMP kapatilamadi", err);
     return false;
   }
+}
+
+async function startResolvedVideoPlayback({ itemId, item, requesterUserId, persistDebug }) {
+  const normalizedItemId = String(itemId || "");
+  const resumeTicks = Math.max(0, Math.floor(Number(item?.UserData?.PlaybackPositionTicks) || 0));
+
+  const localKick = await tryLocalPlaybackStart(normalizedItemId, {
+    startPositionTicks: resumeTicks,
+    item
+  }).catch(() => ({ tried: false, started: false, attempts: [] }));
+
+  if (localKick?.started) {
+    window.currentPlayingItemId = itemId;
+    setLastPlayNowBlockReason("");
+    persistDebug({
+      at: Date.now(),
+      stage: "success",
+      itemId,
+      requesterUserId,
+      method: "local-direct"
+    });
+    showPlayNowSuccessNotification();
+    return true;
+  }
+
+  persistDebug({
+    at: Date.now(),
+    stage: "local-failed",
+    itemId,
+    requesterUserId,
+    localTried: !!localKick?.tried,
+    localAttempts: Array.isArray(localKick?.attempts)
+      ? localKick.attempts.slice(0, 8)
+      : []
+  });
+
+  if (localKick?.tried) {
+    throw new Error("Yerel oynatıcı başlatılamadı. Sayfayı yenileyip tekrar deneyin.");
+  }
+  throw new Error("Yerel oynatıcı bulunamadı. Sayfayı yenileyip tekrar deneyin.");
 }
 
 let __lastAuthSnapshot = null;
@@ -671,21 +800,22 @@ function isCompletedUserData(userData = {}) {
   return Number.isFinite(playedPercentage) && playedPercentage >= 100;
 }
 
+function buildPlayedUserDataSnapshot(played) {
+  return {
+    Played: played === true,
+    PlayedPercentage: played === true ? 100 : 0,
+    PlaybackPositionTicks: 0,
+    LastPlayedDate: new Date().toISOString(),
+  };
+}
+
 function applyLocalPlayedSnapshot(itemId, played) {
   const id = String(itemId || "").trim();
-  if (!id || !itemCache.has(id)) return;
+  const nextUserData = buildPlayedUserDataSnapshot(played);
+  if (!id || !itemCache.has(id)) return nextUserData;
 
   const cached = itemCache.get(id);
-  if (!cached || !cached.data || typeof cached.data !== "object") return;
-
-  const nextUserData = {
-    ...(cached.data.UserData && typeof cached.data.UserData === "object" ? cached.data.UserData : {})
-  };
-
-  nextUserData.Played = played === true;
-  nextUserData.PlayedPercentage = played === true ? 100 : 0;
-  nextUserData.PlaybackPositionTicks = 0;
-  nextUserData.LastPlayedDate = new Date().toISOString();
+  if (!cached || !cached.data || typeof cached.data !== "object") return nextUserData;
 
   itemCache.set(id, {
     ...cached,
@@ -695,18 +825,24 @@ function applyLocalPlayedSnapshot(itemId, played) {
       UserData: nextUserData
     }
   });
+
+  return nextUserData;
 }
 
-async function invalidatePersistentSliderCaches(itemId, { clearQueries = false } = {}) {
+async function patchPersistentSliderCaches(itemId, userDataPatch = {}, options = {}) {
   const id = String(itemId || "").trim();
   if (!id) return;
 
   try {
     const cacheModule = await import("../../../slider/modules/sliderCache.js");
-    await cacheModule?.cacheDeleteItem?.(id);
-    if (clearQueries) {
-      await cacheModule?.cacheClearQueries?.();
-    }
+    const itemData =
+      options?.itemData ||
+      itemCache.get(id)?.data ||
+      null;
+    await cacheModule?.cachePatchItemUserData?.(id, userDataPatch, {
+      itemData,
+      queryFreshTtlMs: Math.max(60_000, Number(options?.queryFreshTtlMs) || 0),
+    });
   } catch {}
 }
 
@@ -943,7 +1079,7 @@ async function safeFetch(url, opts = {}) {
   let token = "";
   try { token = getSessionInfo()?.accessToken || ""; } catch {}
   if (!token && requiresAuth(url)) {
-    const e = new Error("Sessão não iniciada: token de acesso ausente.");
+    const e = new Error("Giriş yapılmadı: access token yok.");
     e.status = 401;
     throw e;
   }
@@ -974,7 +1110,7 @@ async function safeFetch(url, opts = {}) {
     try {
       clearPersistedIdentity();
     } catch {}
-    const err = new Error("Sessão inválida (401) – identidade limpa, novo login necessário.");
+    const err = new Error("Oturum geçersiz (401) – kimlik temizlendi, tekrar giriş gerekli.");
     err.status = 401;
     throw err;
   }
@@ -1364,7 +1500,7 @@ async function makeApiRequest(url, options = {}) {
     let token = "";
     try { token = getSessionInfo()?.accessToken || ""; } catch {}
     if (!token && requiresAuth(url)) {
-      const e = new Error("Sessão não iniciada: token de acesso ausente.");
+      const e = new Error("Giriş yapılmadı: access token yok.");
       e.status = 401;
       throw e;
     }
@@ -1442,7 +1578,7 @@ async function makeApiRequest(url, options = {}) {
       throw err;
     }
     if (response.status === 403) {
-      const err = new Error(`Sem autorização (403): ${fullUrl}`);
+      const err = new Error(`Yetki yok (403): ${fullUrl}`);
       err.status = 403;
       throw err;
     }
@@ -1516,8 +1652,45 @@ export function getDetailsUrl(itemId) {
 }
 
 export function goToDetailsPage(itemId) {
-  const url = getDetailsUrl(itemId);
-  window.location.href = url;
+  if (!itemId) return;
+  const cleanId = String(itemId).trim();
+
+  // 1. Tentar showItemDetailsPage
+  if (typeof window.showItemDetailsPage === "function") {
+    try {
+      window.showItemDetailsPage(cleanId);
+      return;
+    } catch (e) {
+      console.warn("showItemDetailsPage error:", e);
+    }
+  }
+
+  // 2. Tentar AppRouter.showItem ou appRouter.showItem
+  const r = window.AppRouter || window.appRouter || window.router;
+  if (r && typeof r.showItem === "function") {
+    try {
+      r.showItem(cleanId);
+      return;
+    } catch (e) {
+      console.warn("AppRouter.showItem error:", e);
+    }
+  }
+
+  // 3. Tentar evento customizado do Jellyfin
+  try {
+    const event = new CustomEvent("showItemDetails", { detail: { Id: cleanId } });
+    window.dispatchEvent(event);
+  } catch (e) {
+    console.warn("dispatch showItemDetails error:", e);
+  }
+
+  // 4. Fallback de URL de Hash
+  const url = getDetailsUrl(cleanId);
+  try {
+    window.location.hash = url.replace(/^#/, "");
+  } catch {
+    window.location.href = url;
+  }
 }
 
 const ITEM_FULL_FIELDS = [
@@ -1632,7 +1805,7 @@ async function setJellyfinFavoriteStatus(itemId, isFavorite, { signal } = {}) {
 
   const cleanItemId = String(itemId || "").trim();
   if (!cleanItemId) {
-    throw new Error("itemId obrigatório");
+    throw new Error("itemId gerekli");
   }
 
   return makeApiRequest(`/Users/${encodeURIComponent(userId)}/FavoriteItems/${encodeURIComponent(cleanItemId)}`, {
@@ -1645,7 +1818,7 @@ async function setJellyfinFavoriteStatus(itemId, isFavorite, { signal } = {}) {
 export async function updateFavoriteStatus(itemId, isFavorite, options = {}) {
   const watchlistModule = await import("../../../slider/modules/watchlist.js");
   const cleanItemId = String(itemId || "").trim();
-  if (!cleanItemId) throw new Error("itemId obrigatório");
+  if (!cleanItemId) throw new Error("itemId gerekli");
   const localOptions = {
     ...(options || {}),
     __skipNativeFavoriteSync: true
@@ -1683,11 +1856,15 @@ export async function updatePlayedStatus(itemId, played) {
   });
 
   try {
-    applyLocalPlayedSnapshot(itemId, played);
-    await invalidatePersistentSliderCaches(itemId, { clearQueries: true });
+    const nextUserData = applyLocalPlayedSnapshot(itemId, played);
+    await patchPersistentSliderCaches(itemId, nextUserData, {
+      queryFreshTtlMs: 5 * 60 * 1000,
+    });
     dispatchUserDataChanged({
       itemId: String(itemId || "").trim(),
-      played: played === true
+      played: played === true,
+      userData: nextUserData,
+      skipSliderRefresh: true,
     });
   } catch {}
 
@@ -1966,7 +2143,7 @@ async function tryWebpackShortcutPlaybackStart(itemId, { startPositionTicks = 0,
     const shortcutsMod = req(22832);
     const shortcuts = shortcutsMod?.Ay;
     if (!shortcuts?.onClick) {
-      attempts.push({ target: "webpack", method: "shortcut-module", ok: false, err: "itemShortcuts ausente" });
+      attempts.push({ target: "webpack", method: "shortcut-module", ok: false, err: "itemShortcuts yok" });
       return { tried: true, started: false, attempts };
     }
 
@@ -2056,7 +2233,7 @@ async function tryWebpackPlaybackManagerStart(itemId, { startPositionTicks = 0, 
     }
 
     if (!playbackManager?.play) {
-      attempts.push({ target: "webpack", method: "playbackManager", ok: false, err: "playback manager ausente" });
+      attempts.push({ target: "webpack", method: "playbackManager", ok: false, err: "playback manager yok" });
       return { tried: true, started: false, attempts };
     }
 
@@ -2361,7 +2538,7 @@ export async function playNow(itemId) {
           }
         }
       }
-      console.warn("playNow(music): GMMP handler ausente", { type });
+      console.warn("playNow(music): GMMP handler yok", { type });
       return false;
     }
     if (item.Type === "Series") {
@@ -2372,7 +2549,7 @@ export async function playNow(itemId) {
     }
     if (item.Type === "Season") {
       const best = await getBestEpisodeIdForSeason(item.Id, item.SeriesId, requesterUserId);
-      if (!best) throw new Error("Nenhum episódio nesta temporada!");
+      if (!best) throw new Error("Bu sezonda hiç bölüm yok!");
       itemId = best;
       item = await fetchItemDetails(itemId);
     }
@@ -2395,44 +2572,25 @@ export async function playNow(itemId) {
       return false;
     }
 
-    const resumeTicks = Math.max(0, Math.floor(Number(item?.UserData?.PlaybackPositionTicks) || 0));
-
     await __destroyGmmpBeforeVideoPlayNow().catch(() => false);
-
-    const localKick = await tryLocalPlaybackStart(normalizedItemId, {
-      startPositionTicks: resumeTicks,
-      item
-    }).catch(() => ({ tried: false, started: false, attempts: [] }));
-
-    if (localKick?.started) {
-      window.currentPlayingItemId = itemId;
-      setLastPlayNowBlockReason("");
-      persistDebug({
-        at: Date.now(),
-        stage: "success",
-        itemId,
-        requesterUserId,
-        method: "local-direct"
-      });
-      showPlayNowSuccessNotification();
-      return true;
-    }
-
-    persistDebug({
-      at: Date.now(),
-      stage: "local-failed",
-      itemId,
-      requesterUserId,
-      localTried: !!localKick?.tried,
-      localAttempts: Array.isArray(localKick?.attempts)
-        ? localKick.attempts.slice(0, 8)
-        : []
+    const cinemaPreRollResult = await maybePlayCinemaPreRollSessionIfEnabled({ item }).catch((error) => {
+      console.warn("[JMSFusion] Cinema pre-roll oynatimi atlandi:", error);
+      return { played: false, reason: "error" };
     });
-
-    if (localKick?.tried) {
-      throw new Error("Yerel oynatıcı başlatılamadı. Sayfayı yenileyip tekrar deneyin.");
+    if (cinemaPreRollResult?.played === true) {
+      await armCinemaPreRollNativePlaybackBypassIfEnabled({
+        itemId: normalizedItemId,
+        itemIds: [item?.Id],
+        delayMs: 45_000
+      });
     }
-    throw new Error("Yerel oynatıcı bulunamadı. Sayfayı yenileyip tekrar deneyin.");
+
+    return await startResolvedVideoPlayback({
+      itemId,
+      item,
+      requesterUserId,
+      persistDebug
+    });
   } catch (err) {
     setLastPlayNowBlockReason("");
     console.error("Oynatma hatası:", err);
@@ -2538,7 +2696,7 @@ export async function getVideoStreamUrl(
 
     if (item.Type === "Season") {
       const episodes = await makeApiRequest(`/Shows/${item.SeriesId}/Episodes?SeasonId=${itemId}&Fields=Id`);
-      if (!episodes?.Items?.length) throw new Error("Nenhum episódio nesta temporada!");
+      if (!episodes?.Items?.length) throw new Error("Bu sezonda hiç bölüm yok!");
       const episode = episodes.Items[Math.floor(Math.random() * episodes.Items.length)];
       itemId = episode.Id;
       item = await fetchItemDetails(itemId);

@@ -18,6 +18,7 @@ let localTagsCache = new Map();
 let localImagesCache = new Map();
 let cachesHydratedIntoState = false;
 let jsMediaTagsReady = null;
+let id3RuntimeGeneration = 0;
 
 function ensureCaches() {
   try {
@@ -94,7 +95,7 @@ export async function readID3Tags(trackId) {
       return;
     }
 
-    id3ReadQueue.push({ trackId, resolve });
+    id3ReadQueue.push({ trackId, resolve, generation: id3RuntimeGeneration });
     processQueue();
   });
 }
@@ -150,8 +151,12 @@ function processQueue() {
   while (activeReaders < MAX_CONCURRENT_READS && id3ReadQueue.length) {
     const job = id3ReadQueue.shift();
     if (!job) break;
+    if (job.generation !== id3RuntimeGeneration) {
+      try { job.resolve(null); } catch {}
+      continue;
+    }
     activeReaders++;
-    processSingle(job.trackId)
+    processSingle(job.trackId, job.generation)
       .then(result => job.resolve(result))
       .catch(() => job.resolve(null))
       .finally(() => {
@@ -161,9 +166,10 @@ function processQueue() {
   }
 }
 
-async function processSingle(trackId) {
+async function processSingle(trackId, generation = id3RuntimeGeneration) {
   ensureCaches();
   await loadJSMediaTagsOnce();
+  if (generation !== id3RuntimeGeneration) return null;
   const token = getAuthToken();
   let controller = new AbortController();
   let timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -193,6 +199,7 @@ async function processSingle(trackId) {
     arrayBuffer = null;
 
     if (!tags) return null;
+    if (generation !== id3RuntimeGeneration) return null;
     if (tags.picture) {
       const { data, format } = tags.picture;
       let pictureUri = null;
@@ -211,6 +218,11 @@ async function processSingle(trackId) {
 
       tags.pictureUri = pictureUri || null;
       delete tags.picture;
+
+      if (generation !== id3RuntimeGeneration) {
+        safeRevoke(tags.pictureUri);
+        return null;
+      }
 
       if (tags.pictureUri) {
         imagesCacheSet(trackId, tags.pictureUri);
@@ -328,6 +340,41 @@ function safeRevoke(uri) {
   if (typeof uri === "string" && uri.startsWith("blob:")) {
     try { URL.revokeObjectURL(uri); } catch {}
   }
+}
+
+function clearMapValues(cache, { revokeImages = false, revokeTagPictures = false } = {}) {
+  if (!cache) return;
+  const values = cache instanceof Map ? cache.values() : Object.values(cache);
+  for (const val of values) {
+    if (revokeImages) safeRevoke(val);
+    if (revokeTagPictures) safeRevoke(val?.pictureUri);
+  }
+  if (cache instanceof Map) {
+    cache.clear();
+    return;
+  }
+  for (const key of Object.keys(cache)) {
+    try { delete cache[key]; } catch {}
+  }
+}
+
+export function clearId3RuntimeCaches() {
+  id3RuntimeGeneration++;
+  while (id3ReadQueue.length) {
+    const job = id3ReadQueue.shift();
+    try { job?.resolve?.(null); } catch {}
+  }
+
+  try { clearMapValues(musicPlayerState?.id3TagsCache, { revokeTagPictures: true }); } catch {}
+  try { clearMapValues(musicPlayerState?.id3ImageCache, { revokeImages: true }); } catch {}
+  clearMapValues(localTagsCache, { revokeTagPictures: true });
+  clearMapValues(localImagesCache, { revokeImages: true });
+
+  localTagsCache = new Map();
+  localImagesCache = new Map();
+  try { musicPlayerState.id3TagsCache = new Map(); } catch {}
+  try { musicPlayerState.id3ImageCache = new Map(); } catch {}
+  cachesHydratedIntoState = false;
 }
 
 function arrayToBase64(uint8) {

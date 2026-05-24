@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace Jellyfin.Plugin.NexusPobreFlix.Controllers;
+namespace Jellyfin.Plugin.JMSFusion.Controllers;
 
 [ApiController]
-[Route("NexusPobreFlix/ping")]
-[Route("Plugins/NexusPobreFlix/ping")]
+[Route("JMSFusion/ping")]
+[Route("Plugins/JMSFusion/ping")]
 public class PingController : ControllerBase
 {
     [HttpGet]
@@ -13,7 +13,7 @@ public class PingController : ControllerBase
         Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0";
         Response.Headers["Pragma"] = "no-cache";
         Response.Headers["Expires"] = "0";
-        Response.Headers["X-NexusPobreFlix-Version"] = AssetVersioning.AssetVersion;
+        Response.Headers["X-JMSFusion-Version"] = AssetVersioning.AssetVersion;
         return NoContent();
     }
 }

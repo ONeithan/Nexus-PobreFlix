@@ -1,4 +1,4 @@
-import { makeApiRequest, getSessionInfo, fetchItemDetails, getVideoStreamUrl, playNow, isCurrentUserAdmin, fetchItemsBulk } from "../../Plugins/NexusPobreFlix/runtime/api.js";
+import { makeApiRequest, getSessionInfo, fetchItemDetails, getVideoStreamUrl, playNow, isCurrentUserAdmin, fetchItemsBulk } from "../../Plugins/JMSFusion/runtime/api.js";
 import { getConfig, getServerAddress } from "./config.js";
 import { getVideoQualityText } from "./containerUtils.js";
 import { getCurrentVersionFromEnv, compareSemver } from "./update.js";
@@ -268,12 +268,11 @@ function safePosterImageSrc(it, maxWidth = 80, quality = 80) {
 
 function upsertUpdateNotification({ latest, url }) {
   const id = UPDATE_LIST_ID(latest);
-  const liveLabels = getLiveLabels();
   notifState.list = notifState.list.filter(n => n.id !== id);
   notifState.list.unshift({
     id,
     itemId: null,
-    title: `${liveLabels.updateAvailable || "Nova versão disponível"}: ${latest}`,
+    title: `${config.languageLabels?.updateAvailable || "Yeni sürüm mevcut"}: ${latest}`,
     timestamp: Date.now(),
     status: "update",
     url,
@@ -295,8 +294,7 @@ function posterImageSrc(it, maxWidth = 80, quality = 80) {
 }
 
 function moreItemsLabel(n) {
-  const liveLabels = getLiveLabels();
-  const tail = (liveLabels.moreItems || "mais itens");
+  const tail = (config.languageLabels.moreItems || "içerik daha");
   return `${n} ${tail}`;
 }
 
@@ -502,7 +500,7 @@ async function fetchLatestAll() {
       `/Users/${userId}/Items?SortBy=DateCreated&SortOrder=Descending&IncludeItemTypes=Audio&Recursive=true&Limit=50`
     );
   } catch (e) {
-    console.error("[notif] Erro na requisição de Áudios Recentes:", e);
+    console.error("[notif] Latest(Audio) isteği hata:", e);
     latestAudioResp = {};
   }
 
@@ -654,34 +652,34 @@ function ensureUI() {
       <div class="jf-notif-backdrop" data-close></div>
       <div class="jf-notif-panel">
         <div class="jf-notif-head">
-          <div class="jf-notif-title">${liveConfig.languageLabels.recentNotifications || "Notificações"}</div>
+          <div class="jf-notif-title">${liveConfig.languageLabels.recentNotifications}</div>
           <div class="jf-notif-actions">
-            <button id="jfNotifModeToggle" class="jf-notif-theme-toggle" title="${(liveConfig.languageLabels?.switchToDark)||'Escuro'}">
+            <button id="jfNotifModeToggle" class="jf-notif-theme-toggle" title="${(liveConfig.languageLabels?.switchToDark)||'Koyu temaya geç'}">
               ${faIconHtml("moon", "jf-notif-icon")}
             </button>
-            <button id="jfNotifMarkAllRead" class="jf-notif-markallread" title="${liveConfig.languageLabels.markAllRead || 'Lidos'}">
+            <button id="jfNotifMarkAllRead" class="jf-notif-markallread" title="${liveConfig.languageLabels.markAllRead || 'Tümünü okundu say'}">
               <i class="fa-solid fa-eye"></i>
             </button>
-            <button id="jfNotifThemeToggle" class="jf-notif-theme-toggle" title="${liveConfig.languageLabels.themeToggleTooltip || 'Tema'}">
+            <button id="jfNotifThemeToggle" class="jf-notif-theme-toggle" title="${liveConfig.languageLabels.themeToggleTooltip}">
               <i class="fa-solid fa-paintbrush"></i>
             </button>
-            <button id="jfNotifClearAll" class="jf-notif-clearall">${liveConfig.languageLabels.clearAll || "Limpar"}</button>
-            <button class="jf-notif-close" data-close aria-label="${liveConfig.languageLabels.close || "Fechar"}">✕</button>
+            <button id="jfNotifClearAll" class="jf-notif-clearall">${liveConfig.languageLabels.clearAll}</button>
+            <button class="jf-notif-close" data-close>×</button>
           </div>
         </div>
         <div class="jf-notif-tabs">
-          <button class="jf-notif-tab active" data-tab="new">${liveConfig.languageLabels.newAddedTab || "Novidades"}</button>
-          ${notifState._systemAllowed ? `<button class="jf-notif-tab" data-tab="system">${liveConfig.languageLabels.systemNotifications || "Sistema"}</button>` : ""}
+          <button class="jf-notif-tab active" data-tab="new">${liveConfig.languageLabels.newAddedTab || "Yeni Eklenenler"}</button>
+          ${notifState._systemAllowed ? `<button class="jf-notif-tab" data-tab="system">${liveConfig.languageLabels.systemNotifications || "Sistem Bildirimleri"}</button>` : ""}
         </div>
         <div class="jf-notif-content">
           <div class="jf-notif-tab-content" data-tab="new">
             <div class="jf-notif-section">
-              <div class="jf-notif-subtitle">${liveConfig.languageLabels.latestNotifications || "Recentes"}</div>
+              <div class="jf-notif-subtitle">${liveConfig.languageLabels.latestNotifications}</div>
               <ul class="jf-notif-list" id="jfNotifList"></ul>
             </div>
             ${liveConfig.enableRenderResume ? `
               <div class="jf-notif-section watching">
-                <div class="jf-notif-subtitle">${liveConfig.languageLabels.unfinishedWatching || "Continuar"}</div>
+                <div class="jf-notif-subtitle">${liveConfig.languageLabels.unfinishedWatching}</div>
                 <div class="jf-resume-list" id="jfResumeList"></div>
               </div>
             ` : ''}
@@ -773,10 +771,10 @@ async function mountCastTabPanel() {
   if (!host) return;
 
   cleanupCastTabMount();
-  host.innerHTML = `<div class="jf-loading">${escapeHtml(getLiveLabels()?.loadingText || "Carregando...")}</div>`;
+  host.innerHTML = `<div class="jf-loading">${escapeHtml(getLiveLabels()?.loadingText || "Yukleniyor...")}</div>`;
   const { mountCastViewerPanel } = await getCastModule();
   __castTabMount = await mountCastViewerPanel(host, { refreshMs: 4000, variant: "notification" }).catch((error) => {
-    host.innerHTML = `<div class="jf-error">${escapeHtml(String(error?.message || getLiveLabels()?.watchlistLoadError || "Não foi possível carregar a lista."))}</div>`;
+    host.innerHTML = `<div class="jf-error">${escapeHtml(String(error?.message || getLiveLabels()?.listError || "Liste yuklenemedi."))}</div>`;
     return null;
   });
 }
@@ -1256,7 +1254,7 @@ function getDetailFor(n) {
 
   const imgSrc = safePosterImageSrc(d.ok ? d.data : null, 80, 80);
   const vStream = d.ok ? (Array.isArray(d.data?.MediaStreams) ? d.data.MediaStreams.find(s => s.Type === "Video") : null) : null;
-  const qualityHtml = vStream ? getVideoQualityText(vStream) : "";
+  const qualityHtml = vStream ? getVideoQualityText(vStream, d.data?.MediaStreams) : "";
 
   const isUnread = !n.read;
   if (isUnread) li.classList.add("unread");
@@ -1382,7 +1380,7 @@ async function renderResume() {
       const remainingSec = Math.max(totalSec - playedSec, 0);
       const d = details[idx];
       const vStream = d && Array.isArray(d.MediaStreams) ? d.MediaStreams.find(s => s.Type === "Video") : null;
-      const qualityHtml = vStream ? getVideoQualityText(vStream) : "";
+      const qualityHtml = vStream ? getVideoQualityText(vStream, d?.MediaStreams) : "";
 
       card.innerHTML = `
         ${hasPrimaryImage(it) ? `<img class="poster" src="${escapeHtml(jfUrl(safePosterImageSrc(it, 160, 80)))}" alt="">` : ""}
@@ -1589,6 +1587,12 @@ function enqueueToastGroup(items, { type = "content" } = {}) {
 }
 
 function runToastQueue() {
+  if (document.querySelector(".videoPlayerPage") || document.querySelector(".videoPlayerContainer") || (typeof window !== "undefined" && window.location?.hash?.includes("/video"))) {
+    notifState.toastQueue = [];
+    notifState.toastShowing = false;
+    return;
+  }
+
   if (notifState.toastShowing) return;
 
     while (notifState.toastQueue.length &&

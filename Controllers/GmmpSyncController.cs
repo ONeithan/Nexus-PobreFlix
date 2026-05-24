@@ -9,11 +9,11 @@ using Jellyfin.Database.Implementations.Enums;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
+namespace Jellyfin.Plugin.JMSFusion.Controllers
 {
     [ApiController]
-    [Route("NexusPobreFlix/gmmp")]
-    [Route("Plugins/NexusPobreFlix/gmmp")]
+    [Route("JMSFusion/gmmp")]
+    [Route("Plugins/JMSFusion/gmmp")]
     public class GmmpSyncController : ControllerBase
     {
         private static readonly ConcurrentDictionary<string, GmmpStateRecord> StateRecords =
@@ -133,7 +133,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return BadRequest(new
                 {
                     ok = false,
-                    error = "SessionId ou DeviceId são obrigatórios."
+                    error = "SessionId veya DeviceId gerekli."
                 });
             }
 
@@ -192,7 +192,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 
             CleanupExpiredEntries();
 
-            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
             var isAdmin = IsAdminUser(userCheck.User);
 
@@ -202,7 +202,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return StatusCode(403, new
                 {
                     ok = false,
-                    error = "Módulo de transmissão (Cast) desativado."
+                    error = "Cast modulu devre disi."
                 });
             }
 
@@ -261,7 +261,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return BadRequest(new
                 {
                     ok = false,
-                    error = "SessionId/DeviceId e Nome são obrigatórios."
+                    error = "SessionId/DeviceId ve Name gerekli."
                 });
             }
 
@@ -319,7 +319,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return BadRequest(new
                 {
                     ok = false,
-                    error = "SessionId ou DeviceId são obrigatórios."
+                    error = "SessionId veya DeviceId gerekli."
                 });
             }
 
@@ -333,7 +333,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return StatusCode(403, new
                 {
                     ok = false,
-                    error = "Sem acesso para esta sessão GMMP."
+                    error = "Bu GMMP oturumu icin erisim yok."
                 });
             }
 
@@ -522,7 +522,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return (null, Guid.Empty, StatusCode(403, new
                 {
                     ok = false,
-                    error = "Esta operação é restrita a administradores."
+                    error = "Bu islem sadece admin kullanicilar icindir."
                 }));
             }
 
@@ -536,7 +536,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return (null, Guid.Empty, Unauthorized(new
                 {
                     ok = false,
-                    error = "X-Emby-UserId é obrigatório."
+                    error = "X-Emby-UserId gerekli."
                 }));
             }
 
@@ -546,7 +546,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return (null, Guid.Empty, Unauthorized(new
                 {
                     ok = false,
-                    error = "Usuário não encontrado."
+                    error = "Kullanici bulunamadi."
                 }));
             }
 

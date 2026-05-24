@@ -1,6 +1,6 @@
 import { createSection, createCheckbox, createTextInput } from './shared.js';
 import { showNotification } from "../player/ui/notification.js";
-import { getServerBase } from "../../../Plugins/NexusPobreFlix/runtime/api.js";
+import { getServerBase } from "../../../Plugins/JMSFusion/runtime/api.js";
 
 const LS_JOB_KEY = 'jmsf_trailer_job_running';
 const TRAILER_RESOLUTION_OPTIONS = [640, 720, 1080, 1440, 2160];
@@ -753,7 +753,7 @@ export function createTrailersPanel(config, labels) {
   async function connectIfRunning({ forceOpen = false } = {}) {
     try {
       const headers = await getAuthHeaders();
-      const res = await fetch('/NexusPobreFlix/trailers/status', { method: 'GET', headers });
+      const res = await fetch('/JMSFusion/trailers/status', { method: 'GET', headers });
       const data = await res.json().catch(() => ({}));
       if (data && data.ok === true && data.running) {
         if (forceOpen || modal.overlay.style.display === 'none') openProgressUi();
@@ -768,7 +768,7 @@ export function createTrailersPanel(config, labels) {
   async function pollStatus() {
     try {
       const headers = await getAuthHeaders();
-      const res = await fetch('/NexusPobreFlix/trailers/status', { method: 'GET', headers });
+      const res = await fetch('/JMSFusion/trailers/status', { method: 'GET', headers });
       const data = await res.json().catch(() => ({}));
       if (!data || data.ok !== true) return;
 
@@ -939,7 +939,7 @@ export function createTrailersPanel(config, labels) {
       updateProgressUi({ running: true, progress: 5, currentStep: L.preparing });
 
       const headers = await getAuthHeaders();
-      const res = await fetch('/NexusPobreFlix/trailers/run', { method: 'POST', headers, body: JSON.stringify(body) });
+      const res = await fetch('/JMSFusion/trailers/run', { method: 'POST', headers, body: JSON.stringify(body) });
       const txt = await res.text();
       let data = {}; try { data = JSON.parse(txt); } catch {}
 
@@ -967,7 +967,7 @@ export function createTrailersPanel(config, labels) {
     modal.btnStop.textContent = L.stopping;
     try {
       const headers = await getAuthHeaders();
-      await fetch('/NexusPobreFlix/trailers/cancel', { method: 'POST', headers });
+      await fetch('/JMSFusion/trailers/cancel', { method: 'POST', headers });
       startPolling();
       setTimeout(() => pollStatus(), 300);
     } catch {}
@@ -1101,7 +1101,7 @@ export function createTrailersPanel(config, labels) {
 
   async function loadLatestTrailerConfig() {
     const headers = await getAuthHeaders();
-    const res = await fetch('/NexusPobreFlix/config', { method: 'GET', headers });
+    const res = await fetch('/JMSFusion/config', { method: 'GET', headers });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const latestPayload = await res.json();
@@ -1143,7 +1143,7 @@ export function createTrailersPanel(config, labels) {
       jfBaseAutoNote.textContent = L.jfBaseAutoNote;
       adminOnlyWrap.appendChild(jfBaseAutoNote);
 
-      adminOnlyWrap.appendChild(createTextInput('PreferredLang', L.preferredLang, pickConfigValue(currentConfig, 'preferredLang', 'PreferredLang') || 'pt-BR'));
+      adminOnlyWrap.appendChild(createTextInput('PreferredLang', L.preferredLang, pickConfigValue(currentConfig, 'preferredLang', 'PreferredLang') || 'tr-TR'));
       adminOnlyWrap.appendChild(createTextInput('FallbackLang', L.fallbackLang, pickConfigValue(currentConfig, 'fallbackLang', 'FallbackLang') || 'en-US'));
       adminOnlyWrap.appendChild(createNumberInputWrap(
         'MaxConcurrentDownloads',
@@ -1279,7 +1279,7 @@ export function createTrailersPanel(config, labels) {
           pushIf('ThemeLinkMode', document.getElementById('ThemeLinkMode')?.value || 'symlink');
 
           const headers = await getAuthHeaders();
-          const res = await fetch('/NexusPobreFlix/config', { method: 'POST', headers, body: JSON.stringify(payload) });
+          const res = await fetch('/JMSFusion/config', { method: 'POST', headers, body: JSON.stringify(payload) });
           const txt = await res.text();
           let data = {};
           try { data = JSON.parse(txt); } catch {}
@@ -1345,7 +1345,7 @@ export function createTrailersPanel(config, labels) {
       runDownloader: getChk(trailerDownloaderCheckbox)?.checked || false,
       runUrlNfo: getChk(trailerUrlNfoCheckbox)?.checked || false,
       jfBase: autoJfBase,
-      preferredLang: document.getElementById('PreferredLang')?.value || pickConfigValue(currentConfig, 'preferredLang', 'PreferredLang') || 'pt-BR',
+      preferredLang: document.getElementById('PreferredLang')?.value || pickConfigValue(currentConfig, 'preferredLang', 'PreferredLang') || 'tr-TR',
       fallbackLang: document.getElementById('FallbackLang')?.value || pickConfigValue(currentConfig, 'fallbackLang', 'FallbackLang') || 'en-US',
       maxConcurrentDownloads: normalizeConcurrentDownloads(
         document.getElementById('MaxConcurrentDownloads')?.value
@@ -1391,4 +1391,3 @@ export function createTrailersPanel(config, labels) {
 
   return panel;
 }
-

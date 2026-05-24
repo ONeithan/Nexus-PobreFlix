@@ -1,4 +1,4 @@
-import { getServerBase } from "../../Plugins/NexusPobreFlix/runtime/api.js";
+import { getServerBase } from "../../Plugins/JMSFusion/runtime/api.js";
 import { cleanAvatars, updateHeaderUserAvatar, clearAvatarCache } from "./userAvatar.js";
 import { getConfig } from "./config.js";
 
@@ -73,7 +73,7 @@ function sortAvatars(list) {
     if (!isNaN(na) && !isNaN(nb)) return na - nb;
     if (!isNaN(na)) return -1;
     if (!isNaN(nb)) return 1;
-    return a.localeCompare(b, "pt-BR");
+    return a.localeCompare(b, "tr");
   });
 }
 
@@ -162,10 +162,10 @@ async function openAvatarModal() {
   header.className = "jms-avatarHeader";
 
   const title = document.createElement("strong");
-  title.textContent = L("avatarSec", "Selecionar Avatar");
+  title.textContent = L("avatarSec", "Avatar Seç");
 
   const search = document.createElement("input");
-  search.placeholder = L("ara", "Pesquisar…");
+  search.placeholder = L("ara", "Ara…");
 
   const close = document.createElement("button");
   close.textContent = "✕";
@@ -200,7 +200,7 @@ async function openAvatarModal() {
             await updateHeaderUserAvatar?.();
             back.remove();
           } catch (e) {
-            alert(L("avatarYuklenemedi", "O avatar não pôde ser carregado"));
+            alert(L("avatarYuklenemedi", "Avatar yüklenemedi"));
           }
         };
         grid.appendChild(c);
@@ -219,7 +219,7 @@ export function initUserProfileAvatarPicker() {
 
     const b = document.createElement("button");
     b.className = "emby-button raised jms-avatarPickBtn";
-    b.textContent = L("resimSec", "Escolher Imagem");
+    b.textContent = L("resimSec", "Resim Seç");
     b.onclick = openAvatarModal;
     btn.insertAdjacentElement("afterend", b);
   };

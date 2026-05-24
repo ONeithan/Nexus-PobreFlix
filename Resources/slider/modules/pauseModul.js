@@ -1,4 +1,4 @@
-import { getSessionInfo, fetchItemDetails, makeApiRequest, isAuthReadyStrict } from "../../Plugins/NexusPobreFlix/runtime/api.js";
+import { getSessionInfo, fetchItemDetails, makeApiRequest, isAuthReadyStrict } from "../../Plugins/JMSFusion/runtime/api.js";
 import { getConfig, getPauseFeaturesRuntimeConfig } from "./config.js";
 import { getLanguageLabels, getDefaultLanguage } from "../language/index.js";
 import { withServer } from "./jfUrl.js";
@@ -3203,13 +3203,16 @@ function hideOverlay(opts = {}) {
     if (sap.offscreenThresholdMs != null && sap.hiddenMinutes == null) sap.hiddenMinutes = Number(sap.offscreenThresholdMs) / 60000;
 
     function minToMs(x) {
-      const n = Number(x || 0);
-      return isFinite(n) && n > 0 ? n * 60000 : 0;
+      const n = Number(x);
+      return Number.isFinite(n) && n > 0 ? n * 60000 : 0;
     }
     const blurMs = minToMs(sap.blurMinutes);
     const hidMs = minToMs(sap.hiddenMinutes);
     const idleMs = minToMs(sap.idleMinutes);
-    const useIdle = !!sap.useIdleDetection;
+    const useIdle = !!sap.useIdleDetection && idleMs > 0;
+
+    const useBlur = blurMs > 0;
+    const useHidden = hidMs > 0;
     const respectP = !!sap.respectPiP;
 
     if (!sap.enabled) return () => {};
@@ -3299,7 +3302,7 @@ function hideOverlay(opts = {}) {
        if (sap.beginAfterMs > 0 && (now - startedAt) < sap.beginAfterMs) return;
        if (sap.postPlayGuardMs > 0 && lastPlayAtMs && (now - lastPlayAtMs) < sap.postPlayGuardMs) return;
         if ((video.currentTime || 0) < 1.5) return;
-        if (hiddenAt && hidMs > 0 && now - hiddenAt >= hidMs) {
+        if (useHidden && hiddenAt && now - hiddenAt >= hidMs) {
           if (lastPauseReason !== "hidden" || now - lastPauseAt > 3000) {
             video.pause();
             lastPauseReason = "hidden";
@@ -3307,7 +3310,7 @@ function hideOverlay(opts = {}) {
             return;
           }
         }
-        if (blurAt && blurMs > 0 && now - blurAt >= blurMs) {
+        if (useBlur && blurAt && now - blurAt >= blurMs) {
           if (lastPauseReason !== "blur" || now - lastPauseAt > 3000) {
             video.pause();
             lastPauseReason = "blur";
@@ -3315,7 +3318,7 @@ function hideOverlay(opts = {}) {
             return;
           }
         }
-        if (useIdle && idleMs > 0 && now - lastActivityAt >= idleMs) {
+        if (useIdle && now - lastActivityAt >= idleMs) {
           if (lastPauseReason !== "idle" || now - lastPauseAt > 3000) {
             video.pause();
             lastPauseReason = "idle";

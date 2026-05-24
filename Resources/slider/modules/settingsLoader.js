@@ -10,11 +10,11 @@ function normalizeSettingsTab(value) {
 
 function ensureSettingsStylesheet() {
   const href = resolveSliderAssetHref("/slider/src/settings.css");
-  let link = document.querySelector('link[data-NexusPobreFlix-settings-shell-css="1"]');
+  let link = document.querySelector('link[data-jmsfusion-settings-shell-css="1"]');
   if (!link) {
     link = document.createElement("link");
     link.rel = "stylesheet";
-    link.setAttribute("data-NexusPobreFlix-settings-shell-css", "1");
+    link.setAttribute("data-jmsfusion-settings-shell-css", "1");
     document.head.appendChild(link);
   }
   if (link.href !== href) {
@@ -52,7 +52,7 @@ function shouldHandleSettingsHotkey(event) {
   if (normalizeSettingsHotkey(event.key, "") !== configuredHotkey || event.repeat) return false;
   if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return false;
   if (isEditableTarget(event.target)) return false;
-  if (document.getElementById("NexusPobreFlixConfigPage")) return false;
+  if (document.getElementById("JMSFusionConfigPage")) return false;
   return true;
 }
 

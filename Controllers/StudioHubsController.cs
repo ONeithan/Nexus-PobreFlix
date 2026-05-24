@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.NexusPobreFlix;
+using Jellyfin.Plugin.JMSFusion;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Database.Implementations.Enums;
 using MediaBrowser.Controller.Library;
@@ -12,11 +12,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using IOFile = System.IO.File;
 
-namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
+namespace Jellyfin.Plugin.JMSFusion.Controllers
 {
     [ApiController]
-    [Route("NexusPobreFlix/studio-hubs")]
-    [Route("Plugins/NexusPobreFlix/studio-hubs")]
+    [Route("JMSFusion/studio-hubs")]
+    [Route("Plugins/JMSFusion/studio-hubs")]
     public class StudioHubsController : ControllerBase
     {
         private static readonly string[] AllowedVideoExtensions = { ".mp4", ".webm", ".m4v", ".mov" };
@@ -64,7 +64,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return userCheck.Result;
             }
 
-            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
             cfg.StudioHubVisibilityEntries ??= new();
             if (SanitizeStudioHubVisibilityEntries(cfg))
@@ -102,7 +102,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return userCheck.Result;
             }
 
-            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
             cfg.StudioHubVisibilityEntries ??= new();
             var visibilitySanitized = SanitizeStudioHubVisibilityEntries(cfg);
@@ -182,10 +182,10 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var cleanName = NormalizeCollectionName(request?.Name);
             if (string.IsNullOrWhiteSpace(studioId) || string.IsNullOrWhiteSpace(cleanName))
             {
-                return BadRequest(new { ok = false, error = "StudioId e título são obrigatórios." });
+                return BadRequest(new { ok = false, error = "StudioId ve başlık gerekli." });
             }
 
-            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
             cfg.StudioHubManualEntries ??= new();
 
@@ -223,7 +223,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
         [HttpGet("collection")]
         public IActionResult GetCollections()
         {
-            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
             if (SanitizeStudioHubAssets(plugin, cfg))
             {
@@ -250,10 +250,10 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var cleanStudioId = NormalizeId(studioId);
             if (string.IsNullOrWhiteSpace(cleanStudioId))
             {
-                return BadRequest(new { ok = false, error = "StudioId é obrigatório." });
+                return BadRequest(new { ok = false, error = "StudioId gerekli." });
             }
 
-            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
             cfg.StudioHubManualEntries ??= new();
             cfg.StudioHubVideoEntries ??= new();
@@ -261,7 +261,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var existing = cfg.StudioHubManualEntries.FirstOrDefault(entry => IdEquals(entry?.StudioId, cleanStudioId));
             if (existing is null)
             {
-                return NotFound(new { ok = false, error = "Coleção manual não encontrada." });
+                return NotFound(new { ok = false, error = "Manuel koleksiyon bulunamadı." });
             }
 
             var logosDir = plugin.GetStorageDirectory("studio-hub-logos");
@@ -299,28 +299,28 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var cleanStudioId = NormalizeId(studioId);
             if (string.IsNullOrWhiteSpace(cleanStudioId))
             {
-                return BadRequest(new { ok = false, error = "StudioId é obrigatório." });
+                return BadRequest(new { ok = false, error = "StudioId gerekli." });
             }
 
             if (file is null || file.Length <= 0)
             {
-                return BadRequest(new { ok = false, error = "O arquivo de logo é obrigatório." });
+                return BadRequest(new { ok = false, error = "Yüklenecek logo gerekli." });
             }
 
             var ext = Path.GetExtension(file.FileName ?? string.Empty).ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(ext) || !AllowedLogoExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
             {
-                return BadRequest(new { ok = false, error = "Apenas logos em png, webp, svg, jpg ou jpeg são aceitos." });
+                return BadRequest(new { ok = false, error = "Sadece png, webp, svg, jpg veya jpeg logo kabul edilir." });
             }
 
-            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
             cfg.StudioHubManualEntries ??= new();
 
             var entry = cfg.StudioHubManualEntries.FirstOrDefault(item => IdEquals(item?.StudioId, cleanStudioId));
             if (entry is null)
             {
-                return NotFound(new { ok = false, error = "Adicione a coleção manual primeiro." });
+                return NotFound(new { ok = false, error = "Önce manuel koleksiyonu ekleyin." });
             }
 
             var logosDir = plugin.GetStorageDirectory("studio-hub-logos");
@@ -353,17 +353,17 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var cleanStudioId = NormalizeId(studioId);
             if (string.IsNullOrWhiteSpace(cleanStudioId))
             {
-                return BadRequest(new { ok = false, error = "StudioId é obrigatório." });
+                return BadRequest(new { ok = false, error = "StudioId gerekli." });
             }
 
-            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
             cfg.StudioHubManualEntries ??= new();
 
             var entry = cfg.StudioHubManualEntries.FirstOrDefault(item => IdEquals(item?.StudioId, cleanStudioId));
             if (entry is null)
             {
-                return NotFound(new { ok = false, error = "Coleção manual não encontrada." });
+                return NotFound(new { ok = false, error = "Manuel koleksiyon bulunamadı." });
             }
 
             DeleteLooseFile(plugin.GetStorageDirectory("studio-hub-logos"), entry.LogoFileName);
@@ -385,7 +385,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return BadRequest("Invalid file name.");
             }
 
-            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var logosDir = plugin.GetStorageDirectory("studio-hub-logos");
             var fullPath = Path.Combine(logosDir, cleanFileName);
             if (!IOFile.Exists(fullPath))
@@ -410,21 +410,21 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var cleanName = NormalizeCollectionName(name);
             if (string.IsNullOrWhiteSpace(cleanName))
             {
-                return BadRequest(new { ok = false, error = "O nome da coleção é obrigatório." });
+                return BadRequest(new { ok = false, error = "Koleksiyon adı gerekli." });
             }
 
             if (file is null || file.Length <= 0)
             {
-                return BadRequest(new { ok = false, error = "O arquivo de vídeo é obrigatório." });
+                return BadRequest(new { ok = false, error = "Yüklenecek video gerekli." });
             }
 
             var ext = Path.GetExtension(file.FileName ?? string.Empty).ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(ext) || !AllowedVideoExtensions.Contains(ext, StringComparer.OrdinalIgnoreCase))
             {
-                return BadRequest(new { ok = false, error = "Apenas vídeos em mp4, webm, m4v ou mov são aceitos." });
+                return BadRequest(new { ok = false, error = "Sadece mp4, webm, m4v veya mov videolar kabul edilir." });
             }
 
-            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
             cfg.StudioHubVideoEntries ??= new();
 
@@ -476,17 +476,17 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var cleanName = NormalizeCollectionName(name);
             if (string.IsNullOrWhiteSpace(cleanName))
             {
-                return BadRequest(new { ok = false, error = "O nome da coleção é obrigatório." });
+                return BadRequest(new { ok = false, error = "Koleksiyon adı gerekli." });
             }
 
-            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
             cfg.StudioHubVideoEntries ??= new();
 
             var existing = cfg.StudioHubVideoEntries.FirstOrDefault(entry => NameEquals(entry?.Name, cleanName));
             if (existing is null)
             {
-                return NotFound(new { ok = false, error = "Nenhum vídeo de hover encontrado para esta coleção." });
+                return NotFound(new { ok = false, error = "Bu koleksiyon için kayıtlı hover video bulunamadı." });
             }
 
             var videosDir = plugin.GetStorageDirectory("studio-hub-videos");
@@ -501,7 +501,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
         [HttpGet("video")]
         public IActionResult GetVideos()
         {
-            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var cfg = plugin.Configuration;
             if (SanitizeStudioHubAssets(plugin, cfg))
             {
@@ -526,7 +526,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 return BadRequest("Invalid file name.");
             }
 
-            var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+            var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
             var videosDir = plugin.GetStorageDirectory("studio-hub-videos");
             var fullPath = Path.Combine(videosDir, cleanFileName);
             if (!IOFile.Exists(fullPath))
@@ -548,7 +548,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 
             if (!IsAdminUser(userCheck.User))
             {
-                return (null, Guid.Empty, StatusCode(403, new { ok = false, error = "Esta operação é restrita a administradores." }));
+                return (null, Guid.Empty, StatusCode(403, new { ok = false, error = "Bu işlem sadece admin kullanıcılar içindir." }));
             }
 
             return userCheck;
@@ -558,13 +558,13 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
         {
             if (!TryGetRequestUserId(out var userId))
             {
-                return (null, Guid.Empty, Unauthorized(new { ok = false, error = "X-Emby-UserId é obrigatório." }));
+                return (null, Guid.Empty, Unauthorized(new { ok = false, error = "X-Emby-UserId gerekli." }));
             }
 
             var user = _users.GetUserById(userId);
             if (user is null)
             {
-                return (null, Guid.Empty, Unauthorized(new { ok = false, error = "Usuário não encontrado." }));
+                return (null, Guid.Empty, Unauthorized(new { ok = false, error = "Kullanıcı bulunamadı." }));
             }
 
             return (user, userId, null);
@@ -617,7 +617,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             return result;
         }
 
-        private static void RemoveCollectionNameFromVisibilityEntries(NexusPobreFlixConfiguration cfg, string? collectionName)
+        private static void RemoveCollectionNameFromVisibilityEntries(JMSFusionConfiguration cfg, string? collectionName)
         {
             cfg.StudioHubVisibilityEntries ??= new();
 
@@ -656,7 +656,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 .ToList();
         }
 
-        private static HashSet<string> BuildAllowedStudioHubNameSet(NexusPobreFlixConfiguration cfg)
+        private static HashSet<string> BuildAllowedStudioHubNameSet(JMSFusionConfiguration cfg)
         {
             var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -688,7 +688,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 .ToList();
         }
 
-        private static bool SanitizeStudioHubVisibilityEntries(NexusPobreFlixConfiguration cfg)
+        private static bool SanitizeStudioHubVisibilityEntries(JMSFusionConfiguration cfg)
         {
             cfg.StudioHubManualEntries ??= new();
             cfg.StudioHubVisibilityEntries ??= new();
@@ -808,7 +808,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             }
         }
 
-        private static bool SanitizeStudioHubAssets(NexusPobreFlixPlugin plugin, NexusPobreFlixConfiguration cfg)
+        private static bool SanitizeStudioHubAssets(JMSFusionPlugin plugin, JMSFusionConfiguration cfg)
         {
             cfg.StudioHubManualEntries ??= new();
             cfg.StudioHubVideoEntries ??= new();

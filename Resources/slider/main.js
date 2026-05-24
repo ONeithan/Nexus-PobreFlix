@@ -1,4 +1,4 @@
-import { saveCredentials, saveApiKey, getAuthToken } from "../Plugins/NexusPobreFlix/runtime/auth.js";
+import { saveCredentials, saveApiKey, getAuthToken } from "../Plugins/JMSFusion/runtime/auth.js";
 import {
   getConfig,
   getHomeSectionsRuntimeConfig,
@@ -10,17 +10,18 @@ import { getLanguageLabels, getDefaultLanguage, ensureAutoLanguageSync } from ".
 import { getCurrentIndex, setCurrentIndex } from "./modules/sliderState.js";
 import { startSlideTimer, stopSlideTimer, pauseSlideTimer, resumeSlideTimer } from "./modules/timer.js";
 import { ensureProgressBarExists, resetProgressBar, pauseProgressBar, resumeProgressBar, updateProgressBarPosition } from "./modules/progressBar.js";
-import { createSlide } from "./modules/slideCreator.js";
+import { createSlide, cleanupSlideCreatorRuntime } from "./modules/slideCreator.js";
 import { changeSlide, createDotNavigation, enablePeakNeighborActivation, getPeakDisplayOptions, initSwipeEvents, primePeakFirstPaint, syncPeakStructureNow, updatePeakClasses } from "./modules/navigation.js";
 import { attachMouseEvents } from "./modules/events.js";
-import { getSessionInfo, getAuthHeader, waitForAuthReadyStrict, isAuthReadyStrict, AUTH_PROFILE_CHANGED_EVENT, USERDATA_CHANGED_EVENT } from "../Plugins/NexusPobreFlix/runtime/api.js";
-import { cachedFetchJson, createCachedItemDetailsFetcher, startLibraryDeltaWatcher } from "./modules/sliderCache.js";
+import { getSessionInfo, getAuthHeader, waitForAuthReadyStrict, isAuthReadyStrict, AUTH_PROFILE_CHANGED_EVENT, USERDATA_CHANGED_EVENT } from "../Plugins/JMSFusion/runtime/api.js";
+import { cacheGetUserDataMap, cachePatchItemUserData, cachePutUserDataItems, cachedFetchJson, createCachedItemDetailsFetcher, releaseSliderCacheMemory, startLibraryDeltaWatcher } from "./modules/sliderCache.js";
 import { forceHomeSectionsTop, forceSkinHeaderPointerEvents } from "./modules/positionOverrides.js";
 import { initAvatarSystem } from "./modules/userAvatar.js";
 import { initializeQualityBadges, primeQualityFromItems, annotateDomWithQualityHints } from "./modules/qualityBadges.js";
 import { startUpdatePolling } from "./modules/update.js";
 import { updateSlidePosition } from "./modules/positionUtils.js";
 import { teardownAnimations, hardCleanupSlide } from "./modules/animations.js";
+import { cleanupImageResourceRefs } from "./modules/imageResourceCleanup.js";
 import { isVisible, waitForAnyVisible } from "./modules/domVisibility.js";
 import { resolveSliderAssetHref } from "./modules/assetLinks.js";
 import { withServer } from "./modules/jfUrl.js";
@@ -46,7 +47,7 @@ const CUSTOM_SPLASH_STORAGE_KEY = "enableCustomSplashScreen";
 const CUSTOM_SPLASH_TITLE_VAR = "--jms-custom-splash-title";
 const CUSTOM_SPLASH_CAPTION_VAR = "--jms-custom-splash-caption";
 const CUSTOM_SPLASH_PROGRESS_KEY = "__JMS_CUSTOM_SPLASH_PROGRESS__";
-const CUSTOM_SPLASH_PING_PATHS = ["/NexusPobreFlix/ping", "/Plugins/NexusPobreFlix/ping"];
+const CUSTOM_SPLASH_PING_PATHS = ["/JMSFusion/ping", "/Plugins/JMSFusion/ping"];
 const CUSTOM_SPLASH_PING_CACHE_MS = 15_000;
 const CUSTOM_SPLASH_TIMEOUT_MS = 12_000;
 const CUSTOM_SPLASH_CLEANUP_MS = 420;
@@ -83,7 +84,11 @@ const HOME_ITEM_DETAILS_STATIC_FIELDS = [
 const HOME_ITEM_DETAILS_USERDATA_FIELDS = ["UserData"];
 const HOME_ITEM_DETAILS_REVALIDATE_MS = 6 * 60 * 60 * 1000;
 const HOME_ITEM_DETAILS_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-const HOME_ITEM_USERDATA_CACHE_TTL_MS = 15_000;
+const HOME_ITEM_USERDATA_CACHE_TTL_MS = 5 * 60 * 1000;
+const HOME_RESUME_CACHE_TTL_MS = 5 * 60 * 1000;
+const HOME_LIBRARY_WATCH_INTERVAL_MS = 5 * 60 * 1000;
+const HOME_ITEMS_POOL_CACHE_TTL_MS = 15 * 60 * 1000;
+const FOCUSED_USERDATA_SYNC_MIN_GAP_MS = 45_000;
 let materialIconsRepairPromise = null;
 let __notificationsModulePromise = null;
 let __detailsModalLoaderPromise = null;
@@ -406,6 +411,371 @@ function scheduleSliderUserDataRefresh() {
   }, 180);
 }
 
+function escapeSelectorValue(value) {
+  const raw = String(value ?? "");
+  if (typeof CSS !== "undefined" && typeof CSS.escape === "function") {
+    return CSS.escape(raw);
+  }
+  return raw.replace(/["\\]/g, "\\$&");
+}
+
+function setHomeSliderRuntimeItems(items = []) {
+  const map = new Map();
+  for (const item of Array.isArray(items) ? items : []) {
+    const id = String(item?.Id || item?.id || "").trim();
+    if (!id) continue;
+    map.set(id, item);
+  }
+  try { window.__jmsHomeSliderItemsById = map; } catch {}
+  return map;
+}
+
+function getHomeSliderRuntimeItem(itemId) {
+  const id = String(itemId || "").trim();
+  if (!id) return null;
+  try {
+    return window.__jmsHomeSliderItemsById instanceof Map
+      ? (window.__jmsHomeSliderItemsById.get(id) || null)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function mergeLocalUserDataPatch(baseUserData = {}, userDataPatch = {}) {
+  const next = {
+    ...(baseUserData && typeof baseUserData === "object" ? baseUserData : {}),
+    ...(userDataPatch && typeof userDataPatch === "object" ? userDataPatch : {})
+  };
+
+  const ticks = Number(next.PlaybackPositionTicks || 0);
+  next.PlaybackPositionTicks = Number.isFinite(ticks) ? Math.max(0, Math.floor(ticks)) : 0;
+
+  const pct = Number(next.PlayedPercentage);
+  next.PlayedPercentage = Number.isFinite(pct) ? Math.max(0, Math.min(100, pct)) : 0;
+
+  if (next.Played === true) {
+    next.PlayedPercentage = 100;
+    next.PlaybackPositionTicks = 0;
+  }
+
+  return next;
+}
+
+function patchHomeSliderRuntimeUserData(itemId, userDataPatch = {}) {
+  const item = getHomeSliderRuntimeItem(itemId);
+  if (!item || typeof item !== "object") return null;
+
+  const merged = mergeLocalUserDataPatch(item.UserData, userDataPatch);
+  if (item.UserData && typeof item.UserData === "object") {
+    for (const key of Object.keys(item.UserData)) {
+      delete item.UserData[key];
+    }
+    Object.assign(item.UserData, merged);
+  } else {
+    item.UserData = merged;
+  }
+
+  return {
+    item,
+    userData: item.UserData
+  };
+}
+
+function getSliderPlaybackLabels() {
+  const labels = getMainConfig?.()?.languageLabels;
+  return labels && typeof labels === "object" ? labels : {};
+}
+
+function getSlideWatchButtonText({ hasPartialPlayback, labels }) {
+  if (hasPartialPlayback) return labels.devamet || "Devam et";
+  return labels.izle || "İzle";
+}
+
+function getDotPlayButtonText({ isPlayed, hasPartialPlayback, labels }) {
+  if (isPlayed && !hasPartialPlayback) return labels.izlendi || "İzlendi";
+  if (hasPartialPlayback) return labels.devamet || "Devam et";
+  return labels.izle || "İzle";
+}
+
+function buildPlaybackVisualState(item = null, userData = null) {
+  const runtimeTicks = Math.max(
+    0,
+    Math.floor(Number(item?.RunTimeTicks || item?.runTimeTicks || 0))
+  );
+  const mergedUserData = mergeLocalUserDataPatch(item?.UserData, userData);
+  const isPlayed = isCompletedUserData(mergedUserData);
+  const positionTicks = Math.max(0, Math.floor(Number(mergedUserData?.PlaybackPositionTicks || 0)));
+  const hasPartialPlayback = !isPlayed && runtimeTicks > 0 && positionTicks > 0;
+  return {
+    runtimeTicks,
+    isPlayed,
+    positionTicks,
+    hasPartialPlayback
+  };
+}
+
+function ensureSlidePlaybackProgress(slide, visualState, labels) {
+  if (!(slide instanceof Element)) return;
+  const existing = slide.querySelector(".monwui-playing-progress-container");
+  const shouldShow =
+    getMainConfig()?.showPlaybackProgress !== false &&
+    visualState.hasPartialPlayback &&
+    visualState.runtimeTicks > 0;
+
+  if (!shouldShow) {
+    existing?.remove?.();
+    return;
+  }
+
+  let container = existing;
+  let bar = existing?.querySelector(".monwui-duration-bar") || null;
+  let text = existing?.querySelector(".monwui-duration-remaining") || null;
+
+  if (!container) {
+    const plotContainer = slide.querySelector(".monwui-plot-container");
+    if (!plotContainer) return;
+    container = document.createElement("div");
+    container.className = "monwui-playing-progress-container";
+
+    const barWrapper = document.createElement("div");
+    barWrapper.className = "monwui-duration-bar-wrapper";
+
+    bar = document.createElement("div");
+    bar.className = "monwui-duration-bar";
+    barWrapper.appendChild(bar);
+
+    text = document.createElement("span");
+    text.className = "monwui-duration-remaining";
+
+    container.appendChild(barWrapper);
+    container.appendChild(text);
+    plotContainer.appendChild(container);
+  }
+
+  if (!bar || !text || !(visualState.runtimeTicks > 0)) return;
+  const percentage = Math.min((visualState.positionTicks / visualState.runtimeTicks) * 100, 100);
+  bar.style.width = `${percentage.toFixed(1)}%`;
+  const remainingMinutes = Math.max(
+    0,
+    Math.round((visualState.runtimeTicks - visualState.positionTicks) / 600000000)
+  );
+  text.innerHTML = `<i class="fa-solid fa-hourglass-half"></i> ${remainingMinutes} ${labels.dakika || "dakika"} ${labels.kaldi || "kaldı"}`;
+}
+
+function patchSlidePlaybackUi(slide, visualState, labels) {
+  if (!(slide instanceof Element)) return false;
+
+  slide.dataset.played = visualState.isPlayed ? "true" : "false";
+  slide.dataset.playbackpositionticks = String(visualState.positionTicks || 0);
+
+  const playedBtn = slide.querySelector(".monwui-played-btn");
+  if (playedBtn) {
+    playedBtn.classList.toggle("played", visualState.isPlayed);
+    const iconWrapper = playedBtn.querySelector(".monwui-icon-wrapper");
+    if (iconWrapper) {
+      iconWrapper.innerHTML = visualState.isPlayed
+        ? '<i class="fa-solid fa-check" style="color: #FFC107;"></i>'
+        : '<i class="fa-regular fa-circle-check"></i>';
+    }
+    const textSpan = playedBtn.parentElement?.querySelector(".monwui-btn-text");
+    if (textSpan) {
+      textSpan.textContent = visualState.isPlayed
+        ? (labels.izlendi || "İzlendi")
+        : (labels.izlenmedi || "İzlenmedi");
+    }
+  }
+
+  const watchBtn = slide.querySelector(".monwui-watch-btn");
+  if (watchBtn) {
+    const textSpan = watchBtn.parentElement?.querySelector(".monwui-btn-text");
+    if (textSpan) {
+      textSpan.textContent = getSlideWatchButtonText({
+        hasPartialPlayback: visualState.hasPartialPlayback,
+        labels
+      });
+    }
+  }
+
+  ensureSlidePlaybackProgress(slide, visualState, labels);
+  return true;
+}
+
+function patchDotPlaybackUi(dot, visualState, labels) {
+  if (!(dot instanceof Element)) return false;
+
+  dot.dataset.played = visualState.isPlayed ? "true" : "false";
+  const playButton = dot.querySelector(".monwui-dot-play-button");
+  if (playButton) {
+    playButton.textContent = getDotPlayButtonText({
+      isPlayed: visualState.isPlayed,
+      hasPartialPlayback: visualState.hasPartialPlayback,
+      labels
+    });
+  }
+
+  const existing = dot.querySelector(".monwui-dot-progress-container");
+  const shouldShow =
+    getMainConfig()?.showPlaybackProgress !== false &&
+    visualState.hasPartialPlayback &&
+    visualState.runtimeTicks > 0;
+
+  if (!shouldShow) {
+    existing?.remove?.();
+    return true;
+  }
+
+  let container = existing;
+  let bar = existing?.querySelector(".monwui-dot-duration-bar") || null;
+  let text = existing?.querySelector(".monwui-dot-duration-remaining") || null;
+
+  if (!container) {
+    container = document.createElement("div");
+    container.className = "monwui-dot-progress-container";
+
+    const barWrapper = document.createElement("div");
+    barWrapper.className = "monwui-dot-duration-bar-wrapper";
+
+    bar = document.createElement("div");
+    bar.className = "monwui-dot-duration-bar";
+    barWrapper.appendChild(bar);
+
+    text = document.createElement("span");
+    text.className = "monwui-dot-duration-remaining";
+
+    container.appendChild(barWrapper);
+    container.appendChild(text);
+    dot.appendChild(container);
+  }
+
+  if (!bar || !text || !(visualState.runtimeTicks > 0)) return true;
+  const percentage = Math.min((visualState.positionTicks / visualState.runtimeTicks) * 100, 100);
+  bar.style.width = `${percentage.toFixed(1)}%`;
+  const remainingMinutes = Math.max(
+    0,
+    Math.round((visualState.runtimeTicks - visualState.positionTicks) / 600000000)
+  );
+  text.innerHTML = `<i class="fa-solid fa-hourglass-half"></i> ${remainingMinutes} ${labels.dakika || "dakika"} ${labels.kaldi || "kaldı"}`;
+  return true;
+}
+
+function tryApplyLocalSliderUserDataPatch(detail = {}) {
+  const itemId = String(detail?.itemId || "").trim();
+  const userDataPatch = detail?.userData;
+  if (!itemId || !userDataPatch || typeof userDataPatch !== "object") return false;
+
+  const runtimeResult = patchHomeSliderRuntimeUserData(itemId, userDataPatch);
+  const item = runtimeResult?.item || getHomeSliderRuntimeItem(itemId) || null;
+  const mergedUserData = runtimeResult?.userData || mergeLocalUserDataPatch(item?.UserData, userDataPatch);
+  const visualState = buildPlaybackVisualState(item, mergedUserData);
+  const labels = getSliderPlaybackLabels();
+  const escapedId = escapeSelectorValue(itemId);
+
+  let patched = false;
+  document.querySelectorAll(`#monwui-slides-container .monwui-slide[data-item-id="${escapedId}"]`).forEach((slide) => {
+    patched = patchSlidePlaybackUi(slide, visualState, labels) || patched;
+  });
+  document.querySelectorAll(`.monwui-poster-dot[data-item-id="${escapedId}"]`).forEach((dot) => {
+    patched = patchDotPlaybackUi(dot, visualState, labels) || patched;
+  });
+
+  return patched || !!runtimeResult;
+}
+
+function getFocusedUserDataSyncStorageKey(userId, itemId) {
+  return `jms:focusedUserDataSync:${userId}:${itemId}`;
+}
+
+function readFocusedUserDataSyncAt(userId, itemId) {
+  try {
+    return Number(sessionStorage.getItem(getFocusedUserDataSyncStorageKey(userId, itemId)) || 0);
+  } catch {
+    return 0;
+  }
+}
+
+function markFocusedUserDataSync(userId, itemId, at = Date.now()) {
+  try {
+    window.__jmsFocusedUserDataSync = { itemId, at };
+  } catch {}
+  try {
+    sessionStorage.setItem(getFocusedUserDataSyncStorageKey(userId, itemId), String(at));
+  } catch {}
+}
+
+async function syncFocusedPlaybackUserData() {
+  if (!isHomeVisible()) return false;
+
+  const itemId = String(window.currentPlayingItemId || "").trim();
+  if (!itemId) return false;
+
+  const session = (typeof getSessionInfo === "function" ? getSessionInfo() : null) || {};
+  const userId = String(session.userId || "").trim();
+  if (!userId) return false;
+
+  const nowMs = Date.now();
+  const cachedMap = await cacheGetUserDataMap([itemId], { allowStale: false }).catch(() => null);
+  const cachedUserData = cachedMap?.get(itemId)?.UserData || null;
+  if (cachedUserData && typeof cachedUserData === "object" && Object.keys(cachedUserData).length) {
+    markFocusedUserDataSync(userId, itemId, nowMs);
+    tryApplyLocalSliderUserDataPatch({
+      itemId,
+      userData: cachedUserData,
+      skipSliderRefresh: true
+    });
+    return false;
+  }
+
+  const lastSync = window.__jmsFocusedUserDataSync || null;
+  const persistedLastSyncAt = readFocusedUserDataSyncAt(userId, itemId);
+  const lastSyncAt = Math.max(
+    lastSync?.itemId === itemId ? Number(lastSync.at || 0) : 0,
+    Number.isFinite(persistedLastSyncAt) ? persistedLastSyncAt : 0
+  );
+  if (lastSyncAt > 0 && (nowMs - lastSyncAt) < FOCUSED_USERDATA_SYNC_MIN_GAP_MS) {
+    return false;
+  }
+
+  const qs = new URLSearchParams();
+  qs.set("Ids", itemId);
+  qs.set("EnableUserData", "true");
+  qs.set("EnableTotalRecordCount", "false");
+  qs.set("Fields", HOME_ITEM_DETAILS_USERDATA_FIELDS.join(","));
+
+  const data = await fetchJsonViaSafeFetch(`/Users/${userId}/Items?${qs.toString()}`);
+  const fetchedItem = Array.isArray(data?.Items) ? data.Items[0] : null;
+  if (!fetchedItem?.Id || !fetchedItem?.UserData) return false;
+
+  markFocusedUserDataSync(userId, itemId, nowMs);
+
+  await cachePatchItemUserData(itemId, fetchedItem.UserData, {
+    itemData: getHomeSliderRuntimeItem(itemId) || fetchedItem,
+    queryFreshTtlMs: HOME_RESUME_CACHE_TTL_MS
+  });
+
+  tryApplyLocalSliderUserDataPatch({
+    itemId,
+    userData: fetchedItem.UserData,
+    skipSliderRefresh: true
+  });
+
+  return true;
+}
+
+function scheduleFocusedPlaybackUserDataSync(delayMs = 900) {
+  if (typeof window === "undefined") return;
+  if (window.__jmsFocusedUserDataSyncTimer) {
+    clearTimeout(window.__jmsFocusedUserDataSyncTimer);
+  }
+  window.__jmsFocusedUserDataSyncTimer = window.setTimeout(() => {
+    window.__jmsFocusedUserDataSyncTimer = 0;
+    if (!isHomeVisible()) return;
+    void syncFocusedPlaybackUserData().catch((error) => {
+      console.debug("[JMS] focused playback userData sync skipped:", error);
+    });
+  }, Math.max(150, Number(delayMs) || 0));
+}
+
 async function ensureMaterialIconsUtf8Integrity() {
   if (materialIconsRepairPromise) return materialIconsRepairPromise;
 
@@ -559,41 +929,41 @@ function syncCustomSplashProgress(patch = {}) {
   const poolCount = Math.max(0, Number(state.poolCount) || 0);
 
   let progress = 0.06;
-  let stage = splashLabel("customSplashStageLock", "BLOQUEIO");
-  let detail = splashLabel("customSplashDetailLock", "Fixando camada de interface");
+  let stage = splashLabel("customSplashStageLock", "KILIT");
+  let detail = splashLabel("customSplashDetailLock", "Kabuk katmanı sabitleniyor");
 
   if (document.readyState !== "loading") {
     progress = Math.max(progress, 0.12);
-    stage = splashLabel("customSplashStageStructure", "ESTRUTURA");
-    detail = splashLabel("customSplashDetailStructure", "Estrutura da interface sincronizada");
+    stage = splashLabel("customSplashStageStructure", "OMURGA");
+    detail = splashLabel("customSplashDetailStructure", "Arayüz omurgası senkrona girdi");
   }
 
   if (state.authReady) {
     progress = Math.max(progress, 0.24);
-    stage = splashLabel("customSplashStageAuth", "AUTENTICAÇÃO");
-    detail = splashLabel("customSplashDetailAuth", "Chave de sessão verificada");
+    stage = splashLabel("customSplashStageAuth", "YETKI");
+    detail = splashLabel("customSplashDetailAuth", "Oturum anahtarı doğrulandı");
   }
 
   if (state.dataPoolReady) {
     progress = Math.max(progress, 0.38);
-    stage = splashLabel("customSplashStagePool", "POOL");
+    stage = splashLabel("customSplashStagePool", "HAVUZ");
     detail = poolCount > 0
-      ? splashLabel("customSplashDetailPool", "{count} itens indexados no pool", { count: poolCount })
-      : splashLabel("customSplashDetailPoolEmpty", "Pool de conteúdo conectado");
+      ? splashLabel("customSplashDetailPool", "{count} içerik havuza alındı", { count: poolCount })
+      : splashLabel("customSplashDetailPoolEmpty", "İçerik havuzu bağlandı");
   }
 
   if (state.selectionReady) {
     progress = Math.max(progress, 0.48);
-    stage = splashLabel("customSplashStageCompose", "COMPOSIÇÃO");
+    stage = splashLabel("customSplashStageCompose", "KURGU");
     detail = totalSlides > 0
-      ? splashLabel("customSplashDetailSelection", "{count} cenas enfileiradas", { count: totalSlides })
-      : splashLabel("customSplashDetailSelectionEmpty", "Fluxo de cenas preparado");
+      ? splashLabel("customSplashDetailSelection", "{count} sahne sıraya alındı", { count: totalSlides })
+      : splashLabel("customSplashDetailSelectionEmpty", "Sahne akışı hazırlandı");
   }
 
   if (totalSlides > 0) {
     progress = Math.max(progress, 0.48 + (createdSlides / totalSlides) * 0.34);
-    stage = splashLabel("customSplashStageRender", "RENDERIZAÇÃO");
-    detail = splashLabel("customSplashDetailRender", "Tecendo {current}/{total} camadas", {
+    stage = splashLabel("customSplashStageRender", "RENDER");
+    detail = splashLabel("customSplashDetailRender", "{current}/{total} katman örülüyor", {
       current: createdSlides,
       total: totalSlides
     });
@@ -601,25 +971,25 @@ function syncCustomSplashProgress(patch = {}) {
 
   if (state.firstSlideReady) {
     progress = Math.max(progress, 0.9);
-    stage = splashLabel("customSplashStageFrame", "QUADRO");
+    stage = splashLabel("customSplashStageFrame", "KADRAJ");
     detail = totalSlides > 0
-      ? splashLabel("customSplashDetailFrame", "{current}/{total} camadas ativas", {
+      ? splashLabel("customSplashDetailFrame", "{current}/{total} katman canlı", {
         current: createdSlides,
         total: totalSlides
       })
-      : splashLabel("customSplashDetailFrameEmpty", "Primeiro quadro renderizado");
+      : splashLabel("customSplashDetailFrameEmpty", "İlk kadraj ışığa çıktı");
   }
 
   if (state.allSlidesReady) {
     progress = Math.max(progress, 0.96);
-    stage = splashLabel("customSplashStageSurface", "SUPERFÍCIE");
-    detail = splashLabel("customSplashDetailSurface", "Alinhando camadas finais");
+    stage = splashLabel("customSplashStageSurface", "YUZEY");
+    detail = splashLabel("customSplashDetailSurface", "Son katmanlar hizalanıyor");
   }
 
   if (state.uiReady) {
     progress = 1;
-    stage = splashLabel("customSplashStageReady", "PRONTO");
-    detail = splashLabel("customSplashDetailReady", "Nexus PobreFlix Online");
+    stage = splashLabel("customSplashStageReady", "HAZIR");
+    detail = splashLabel("customSplashDetailReady", "MonWui çevrimiçi");
   }
 
   return setCustomSplashProgress(progress, {
@@ -696,12 +1066,6 @@ function getCustomSplashGreetingFallback(lang = "tur", part = "Morning") {
       Afternoon: "Добрый день",
       Evening: "Добрый вечер",
       Night: "Здравствуйте"
-    },
-    por: {
-      Morning: "Bom dia",
-      Afternoon: "Boa tarde",
-      Evening: "Boa noite",
-      Night: "Olá"
     }
   };
 
@@ -736,7 +1100,7 @@ function getCurrentCustomSplashUserName() {
 }
 
 function getCustomSplashLoadingFallback(title) {
-  const safeTitle = String(title || "Nexus PobreFlix").trim() || "Nexus PobreFlix";
+  const safeTitle = String(title || "MonWui").trim() || "MonWui";
   const lang = (typeof getDefaultLanguage === "function" ? getDefaultLanguage() : null) || "eng";
 
   switch (lang) {
@@ -752,15 +1116,13 @@ function getCustomSplashLoadingFallback(title) {
       return `${safeTitle} подготавливается`;
     case "tur":
       return `${safeTitle} hazırlanıyor`;
-    case "por":
-      return `${safeTitle} está iniciando`;
     default:
       return `${safeTitle} is starting`;
   }
 }
 
 function resolveCustomSplashDefaults(labels = {}) {
-  const defaultTitle = String(labels.customSplashTitle || "Nexus PobreFlix").trim() || "Nexus PobreFlix";
+  const defaultTitle = String(labels.customSplashTitle || "MonWui").trim() || "MonWui";
   const fallbackCaption = getCustomSplashLoadingFallback(defaultTitle);
   const defaultCaption = String(labels.customSplashLoadingText || fallbackCaption).trim()
     || fallbackCaption;
@@ -778,8 +1140,8 @@ function buildCustomSplashCaption(title, labels = {}) {
   return defaultCaption;
 }
 
-function buildCustomSplashDisplayTitle(title, labels = {}, lang = "por") {
-  const safeTitle = splashTextValue(title, "Nexus PobreFlix");
+function buildCustomSplashDisplayTitle(title, labels = {}, lang = "tur") {
+  const safeTitle = splashTextValue(title, "MonWui");
   const userName = getCurrentCustomSplashUserName();
   if (!userName) return safeTitle;
 
@@ -1170,10 +1532,10 @@ function hideCustomSplash(reason = "ready") {
     return true;
   }
 
-  const readyStage = splashLabel("customSplashStageReady", "PRONTO");
+  const readyStage = splashLabel("customSplashStageReady", "HAZIR");
   const closingDetail = reason === "timeout"
-    ? splashLabel("customSplashDetailForcedExit", "Ativando transição forçada")
-    : splashLabel("customSplashDetailReady", "Nexus PobreFlix Online");
+    ? splashLabel("customSplashDetailForcedExit", "Zorunlu geçiş devreye alınıyor")
+    : splashLabel("customSplashDetailReady", "MonWui çevrimiçi");
 
   syncCustomSplashProgress({
     uiReady: true,
@@ -2059,6 +2421,7 @@ window.__jmsMusicSchedulerBooted = window.__jmsMusicSchedulerBooted || false;
 window.__jmsSliderBootToken = Number(window.__jmsSliderBootToken || 0);
 window.__jmsSlidesInitToken = Number(window.__jmsSlidesInitToken || 0);
 window.__jmsSliderResetToken = Number(window.__jmsSliderResetToken || 0);
+window.__jmsHomeInitPending = window.__jmsHomeInitPending || false;
 window.__jmsStartWhenAllReadyHandler = window.__jmsStartWhenAllReadyHandler || null;
 window.__jmsSliderIdleHandles = window.__jmsSliderIdleHandles || new Set();
 
@@ -2307,8 +2670,19 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
     return {};
   }
 
+  function normalizeCssVariant(value) {
+    const variant = String(value || '').trim().toLowerCase();
+    if (!variant) return 'normalslider';
+    if (variant.includes('aurora')) return 'auroraslider';
+    if (variant.includes('peak')) return 'peakslider';
+    if (variant.includes('full')) return 'normalslider';
+    if (variant.includes('normal')) return 'normalslider';
+    if (variant.includes('slider')) return 'slider';
+    return 'normalslider';
+  }
+
   function getCssVariant(cfg = getLiveConfig()) {
-    return cfg.cssVariant || 'normalslider';
+    return normalizeCssVariant(cfg?.cssVariant);
   }
 
   function matchesAny(selectors = []) {
@@ -2537,7 +2911,6 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
 
   const vmap = {
     peakslider: '/slider/src/peakslider.css',
-    fullslider: '/slider/src/fullslider.css',
     normalslider: '/slider/src/normalslider.css',
     slider: '/slider/src/slider.css',
     auroraslider: '/slider/src/auroraSlider.css'
@@ -2611,7 +2984,6 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
     if (!sliderCssEnabled) {
       removeCssByHref([
         'slider/src/peakslider.css',
-        'slider/src/fullslider.css',
         'slider/src/normalslider.css',
         'slider/src/slider.css',
         'slider/src/auroraSlider.css'
@@ -3675,6 +4047,9 @@ function placeSlidesContainerAtTop(indexPage, container) {
   const anchorTop = resolveSlidesContainerTopAnchor(indexPage);
 
   if (anchorTop) {
+    if (container.parentElement === indexPage && container.nextElementSibling === anchorTop) {
+      return container;
+    }
     indexPage.insertBefore(container, anchorTop);
   } else if (indexPage.firstElementChild !== container) {
     if (indexPage.firstElementChild) {
@@ -4097,6 +4472,17 @@ function shouldRepairVisibleSliderOnRestore({ forcePrime = false } = {}) {
 }
 
 function scheduleVisibleSliderRestoreRepair(options = {}) {
+  if (window.__jmsHomeInitPending || window.__slidesInitRunning || window.sliderResetInProgress) return;
+
+  const totalSlides = Math.max(0, Number(window.__totalSlidesPlanned) || 0);
+  const createdSlides = Math.max(0, Number(window.__slidesCreated) || 0);
+  if (totalSlides > 0 && createdSlides < totalSlides) return;
+
+  const peakContainer = document.querySelector(
+    "#indexPage:not(.hide) #monwui-slides-container, #homePage:not(.hide) #monwui-slides-container"
+  );
+  if (getConfig()?.peakSlider && peakContainer && !peakContainer.classList.contains("peak-ready")) return;
+
   if (!shouldRepairVisibleSliderOnRestore(options)) return;
   scheduleVisibleSliderRepair(options);
 }
@@ -4166,6 +4552,64 @@ function watchActiveSlideChanges() {
   };
 }
 
+function cleanupSliderRuntimeBindings() {
+  const cleanup = window.__jmsSliderRuntimeBindingsCleanup;
+  if (typeof cleanup === "function") {
+    try { cleanup(); } catch {}
+  }
+  window.__jmsSliderRuntimeBindingsCleanup = null;
+}
+
+function setSliderRuntimeBindingsCleanup(cleanup) {
+  cleanupSliderRuntimeBindings();
+  window.__jmsSliderRuntimeBindingsCleanup = typeof cleanup === "function" ? cleanup : null;
+}
+
+function cleanupSlidesContainerDeep(sliderContainer) {
+  if (!sliderContainer) return;
+
+  try { sliderContainer.__jmsSlidesScrollPerfCleanup?.(); } catch {}
+  try { sliderContainer.__cleanupMO?.disconnect?.(); } catch {}
+  try { sliderContainer.__cleanupMO = null; } catch {}
+  try {
+    if (sliderContainer.__jmsHoverPauseEnter) {
+      sliderContainer.removeEventListener("mouseenter", sliderContainer.__jmsHoverPauseEnter, { passive: true });
+    }
+    if (sliderContainer.__jmsHoverPauseLeave) {
+      sliderContainer.removeEventListener("mouseleave", sliderContainer.__jmsHoverPauseLeave, { passive: true });
+    }
+    sliderContainer.__jmsHoverPauseBound = false;
+    sliderContainer.__jmsHoverPauseEnter = null;
+    sliderContainer.__jmsHoverPauseLeave = null;
+  } catch {}
+
+  try {
+    sliderContainer
+      .querySelectorAll(".monwui-dot-scroll-wrapper")
+      .forEach((node) => {
+        try { node.__dotRO?.disconnect?.(); } catch {}
+        try { node.__cleanupScrollControls?.(); } catch {}
+        try { node.__dotRO = null; } catch {}
+      });
+  } catch {}
+
+  try {
+    sliderContainer
+      .querySelectorAll(".monwui-slide")
+      .forEach((slideEl) => {
+        try { slideEl.dispatchEvent(new Event("jms:cleanup")); } catch {}
+        try { slideEl.__cleanupSlide?.(); } catch {}
+        try { hardCleanupSlide(slideEl); } catch {}
+        try { cleanupImageResourceRefs(slideEl, { revokeDetachedBlobs: true }); } catch {}
+        try { slideEl.__cleanupSlide = null; } catch {}
+        try { slideEl.__backdropImg = null; } catch {}
+        try { slideEl.__backdropContainer = null; } catch {}
+      });
+  } catch {}
+
+  try { cleanupImageResourceRefs(sliderContainer, { revokeDetachedBlobs: true }); } catch {}
+}
+
 function warmUpcomingBackdrops(count = 3) {
   try {
     const indexPage =
@@ -4215,6 +4659,7 @@ export async function slidesInit() {
   const isBootActive = ({ requireHomeVisible = true, requireContainer = false } = {}) =>
     isSliderBootTokenCurrent(bootToken, { requireHomeVisible, requireContainer });
   window.__slidesInitRunning = true;
+  setHomeSliderRuntimeItems([]);
   try {
     await waitAuthWarmupFallback(5000);
   } catch {}
@@ -4364,26 +4809,32 @@ export async function slidesInit() {
       const cleanIds = dedupeItemIds(ids);
       if (!cleanIds.length) return new Map();
 
-      const out = new Map();
+      const out = await cacheGetUserDataMap(cleanIds, { allowStale: false });
+      const missingIds = cleanIds.filter((id) => !out.has(id));
+      if (!missingIds.length) return out;
 
-      for (let start = 0; start < cleanIds.length; start += bulkBatchSize) {
-        const chunk = cleanIds.slice(start, start + bulkBatchSize);
+      for (let start = 0; start < missingIds.length; start += bulkBatchSize) {
+        const chunk = missingIds.slice(start, start + bulkBatchSize);
         const qs = new URLSearchParams();
         qs.set("Ids", chunk.join(","));
         qs.set("EnableUserData", "true");
         qs.set("EnableTotalRecordCount", "false");
         qs.set("Fields", HOME_ITEM_DETAILS_USERDATA_FIELDS.join(","));
 
-        const data = await cachedFetchJson({
-          keyParts: ["homeItemUserData", userId, [...chunk].sort().join(",")],
-          url: `/Users/${userId}/Items?${qs.toString()}`,
-          opts: { headers: getAuthHeaders() },
-          fetchJson: fetchJsonViaSafeFetch,
-          ttlMs: itemUserDataMaxAgeMs,
-          allowStaleOnError: true,
-        });
+        let data = null;
+        try {
+          data = await fetchJsonViaSafeFetch(`/Users/${userId}/Items?${qs.toString()}`, {
+            headers: getAuthHeaders()
+          });
+        } catch (error) {
+          const staleMap = await cacheGetUserDataMap(chunk, { allowStale: true }).catch(() => new Map());
+          for (const [id, item] of staleMap.entries()) out.set(id, item);
+          if (staleMap.size) continue;
+          throw error;
+        }
 
         const items = Array.isArray(data?.Items) ? data.Items : (Array.isArray(data) ? data : []);
+        await cachePutUserDataItems(items, { ttlMs: itemUserDataMaxAgeMs });
         for (const item of items) {
           const id = item?.Id || item?.id;
           if (id) out.set(id, item);
@@ -4409,6 +4860,7 @@ export async function slidesInit() {
 
     try {
       window.__stopJmsLibraryWatcher?.();
+      const libraryWatchIntervalMs = Number(config?.libraryWatchIntervalMs) || HOME_LIBRARY_WATCH_INTERVAL_MS;
       window.__stopJmsLibraryWatcher = startLibraryDeltaWatcher({
         userId,
         fetchJson: fetchJsonViaSafeFetch,
@@ -4421,7 +4873,8 @@ export async function slidesInit() {
           };
         },
         fetchItemDetailsCached,
-        intervalMs: Number(config?.libraryWatchIntervalMs) || 60_000,
+        intervalMs: libraryWatchIntervalMs,
+        initialDelayMs: Number(config?.libraryWatchInitialDelayMs) || libraryWatchIntervalMs,
         limit: Number(config?.libraryWatchLimit) || 50,
       });
     } catch {}
@@ -4438,6 +4891,7 @@ export async function slidesInit() {
 
     let items = [];
     let backgroundWarmIds = [];
+    let backgroundWarmPoolIds = [];
 
     try {
       let listItems = null;
@@ -4492,7 +4946,11 @@ export async function slidesInit() {
             url: `/Users/${userId}/Items?Filters=IsResumable&MediaTypes=Video&Recursive=true&EnableUserData=true&Fields=${encodeURIComponent("Type,UserData,ImageTags,BackdropImageTags,PrimaryImageAspectRatio,Series,SeriesId,CollectionIds,MediaStreams")}&SortBy=DatePlayed,DateCreated&SortOrder=Descending&Limit=${Math.max(10, playingLimit * 3)}`,
             opts: { headers: authHeaders },
             fetchJson: fetchJsonViaSafeFetch,
-            ttlMs: Number(config?.resumeCacheTtlMs) || 10_000,
+            ttlMs: Number(config?.resumeCacheTtlMs) || HOME_RESUME_CACHE_TTL_MS,
+            entryMeta: {
+              kind: "resume",
+              userId,
+            },
             allowStaleOnError: true,
           });
             let fetchedItems = Array.isArray(data?.Items) ? data.Items : [];
@@ -4514,7 +4972,12 @@ export async function slidesInit() {
         url: `/Users/${userId}/Items?${queryString}&Limit=${maxShufflingLimit}&EnableTotalRecordCount=false`,
         opts: { headers: authHeaders },
         fetchJson: fetchJsonViaSafeFetch,
-        ttlMs: Number(config?.itemsPoolCacheTtlMs) || 120_000,
+        ttlMs: normalizeDurationMs(config?.itemsPoolCacheTtlMs, HOME_ITEMS_POOL_CACHE_TTL_MS),
+        entryMeta: {
+          kind: "itemsPool",
+          userId,
+          queryString,
+        },
         allowStaleOnError: true,
       });
         let allItems = data.Items || [];
@@ -4589,11 +5052,13 @@ export async function slidesInit() {
           allItems.length
         );
 
-        backgroundWarmIds = Array.from(new Set(
-          [...playingItems, ...allItems]
-            .map((item) => item?.Id)
-            .filter(Boolean)
-        ));
+        const configuredWarmMax = Number(config?.detailsWarmMaxItems);
+        const extraWarmLimit = Number.isFinite(configuredWarmMax)
+          ? Math.max(0, Math.min(1000, Math.floor(configuredWarmMax)))
+          : 0;
+        backgroundWarmPoolIds = extraWarmLimit > 0
+          ? allItems.slice(0, extraWarmLimit).map((item) => item?.Id).filter(Boolean)
+          : [];
 
         let selectedItems = [];
         selectedItems = [...playingItems.slice(0, playingLimit)];
@@ -4704,12 +5169,16 @@ export async function slidesInit() {
           savedLimit
         );
 
+        backgroundWarmIds = Array.from(new Set(backgroundWarmPoolIds.filter(Boolean)));
+
         const selectedById = new Map(
           selectedItems
             .filter((it) => it?.Id)
             .map((it) => [it.Id, it])
         );
-        const detailed = await fetchItemDetailsCached.many(selectedItems.map(i => i.Id));
+        const detailed = await fetchItemDetailsCached.many(selectedItems.map(i => i.Id), {
+          persistFetched: false
+        });
         const userDataById = await fetchHomeItemUserDataMap(selectedItems.map((item) => item?.Id));
         items = detailed
           .map((detail, idx) => {
@@ -4745,6 +5214,7 @@ export async function slidesInit() {
         console.debug("[JMS][cache] background warmup skipped:", error);
       });
     }
+    setHomeSliderRuntimeItems(items);
     try { primeQualityFromItems(items); } catch {}
     if (!items.length) {
     console.warn("Hiçbir slayt verisi elde edilemedi.");
@@ -4904,6 +5374,7 @@ export async function slidesInit() {
     }
     window.sliderResetInProgress = false;
     window.__slidesInitRunning = false;
+    window.__jmsHomeInitPending = false;
   }
 }
 
@@ -5025,25 +5496,29 @@ if (window.__totalSlidesPlanned > 0 && window.__slidesCreated >= window.__totalS
     if (firstImg && !firstImg.complete && firstImg.decode) {
       firstImg.decode().catch(() => {}).finally(() => {});
     }
+    cleanupSliderRuntimeBindings();
+    const runtimeCleanups = [];
+    const addRuntimeListener = (target, type, handler, options) => {
+      if (!target || typeof target.addEventListener !== "function") return;
+      target.addEventListener(type, handler, options);
+      runtimeCleanups.push(() => {
+        try { target.removeEventListener(type, handler, options); } catch {}
+      });
+    };
+
     slides.forEach((slideEl) => {
-      slideEl.addEventListener(
-        "focus",
-        () => {
-          focusedSlide = slideEl;
-          slidesContainer?.classList.remove("disable-interaction");
-        },
-        true
-      );
-      slideEl.addEventListener(
-        "blur",
-        () => {
-          if (focusedSlide === slideEl) focusedSlide = null;
-        },
-        true
-      );
+      const onFocus = () => {
+        focusedSlide = slideEl;
+        slidesContainer?.classList.remove("disable-interaction");
+      };
+      const onBlur = () => {
+        if (focusedSlide === slideEl) focusedSlide = null;
+      };
+      addRuntimeListener(slideEl, "focus", onFocus, true);
+      addRuntimeListener(slideEl, "blur", onBlur, true);
     });
 
-    indexPage.addEventListener("keydown", async (e) => {
+    const onIndexKeydown = async (e) => {
       if (!keyboardActive) return;
       if (e.keyCode === 37) {
         changeSlide(-1);
@@ -5068,38 +5543,50 @@ if (window.__totalSlidesPlanned > 0 && window.__slidesCreated >= window.__totalS
           console.warn("openDetailsModal failed (slider keyboard):", err);
         }
       }
-    });
+    };
 
-    indexPage.addEventListener("focusin", (e) => {
-      if (e.target.closest("#monwui-slides-container")) {
+    const onIndexFocusIn = (e) => {
+      if (e.target?.closest?.("#monwui-slides-container")) {
         keyboardActive = true;
         slidesContainer?.classList.remove("disable-interaction");
       }
-    });
-    indexPage.addEventListener("focusout", (e) => {
-      if (!e.target.closest("#monwui-slides-container")) {
+    };
+    const onIndexFocusOut = (e) => {
+      if (!e.target?.closest?.("#monwui-slides-container")) {
         keyboardActive = false;
         slidesContainer?.classList.add("disable-interaction");
       }
-    });
+    };
     try {
       window.__cleanupActiveWatch?.();
     } catch {}
     window.__cleanupActiveWatch = watchActiveSlideChanges();
-    document.addEventListener("jms:per-slide-complete", (ev) => {
-  try {
-    const active = document.querySelector("#indexPage:not(.hide) .monwui-slide.active, #homePage:not(.hide) .monwui-slide.active");
-    const idx = getSlideIndex(active);
+    const onPerSlideComplete = (ev) => {
+      try {
+        const active = document.querySelector("#indexPage:not(.hide) .monwui-slide.active, #homePage:not(.hide) .monwui-slide.active");
+        const idx = getSlideIndex(active);
 
-    if (window.__cycleExpired && isPlannedLastIndex(idx)) {
-      ev.preventDefault();
-      window.__cycleExpired = false;
-      scheduleSliderRebuild("cycle-expired-and-last-finished");
-    }
-  } catch (e) {
-    console.warn("per-slide-complete handler hata:", e);
-  }
-}, true);
+        if (window.__cycleExpired && isPlannedLastIndex(idx)) {
+          ev.preventDefault();
+          window.__cycleExpired = false;
+          scheduleSliderRebuild("cycle-expired-and-last-finished");
+        }
+      } catch (e) {
+        console.warn("per-slide-complete handler hata:", e);
+      }
+    };
+
+    addRuntimeListener(indexPage, "keydown", onIndexKeydown);
+    addRuntimeListener(indexPage, "focusin", onIndexFocusIn);
+    addRuntimeListener(indexPage, "focusout", onIndexFocusOut);
+    addRuntimeListener(document, "jms:per-slide-complete", onPerSlideComplete, true);
+    setSliderRuntimeBindingsCleanup(() => {
+      for (const cleanup of runtimeCleanups.splice(0)) {
+        try { cleanup(); } catch {}
+      }
+      focusedSlide = null;
+      keyboardActive = false;
+    });
 } catch (e) {
     console.error("initializeSlider hata:", e);
   } finally {
@@ -5386,139 +5873,158 @@ function queueHomeSectionsBoot({
 
 function initializeSliderOnHome({ forceManagedSectionsBoot = false } = {}) {
   const start = async () => {
-    try { window.__jmsHomeTabPaused = false; } catch {}
-    homeSectionLog("initializeSliderOnHome:start", {
-      forceManagedSectionsBoot,
-    });
-    homeSectionTrace("initializeSliderOnHome:start", {
-      forceManagedSectionsBoot,
-      stack: new Error().stack?.split("\n").slice(0, 6).join("\n") || "",
-    });
-
-    await waitForManagedHomeSectionCleanup({ timeoutMs: 2500 });
-
-    if (!isSliderEnabled()) {
-      try {
-        cleanupSlider({
-          preserveHomeSections: true,
-          reason: "initializeSliderOnHome:slider-disabled",
-        });
-      } catch {}
-      try { stopSlideTimer?.(); } catch {}
-      try { clearCycleArm(); } catch {}
-      homeSectionWarn("initializeSliderOnHome:slider-disabled", {
-        forceManagedSectionsBoot,
-      });
-
-      queueHomeSectionsBoot({
-        delayMs: 500,
-        requireSliderDisabled: true,
-        forceManagedSections: false
-      });
-      scheduleManagedHomeSectionRecovery();
-
-      return;
-    }
-
-    const hasContainer = !!document.querySelector('#indexPage:not(.hide) #monwui-slides-container, #homePage:not(.hide) #monwui-slides-container');
-    const willEarlyReturn = (window.__initOnHomeOnce && hasContainer);
-
-    function bootPersonalRecsWires() {
-      if (window.__recsWiresBooted) return;
-      window.__recsWiresBooted = true;
-
-      const indexPage =
-        document.querySelector("#indexPage:not(.hide)") ||
-        document.querySelector("#homePage:not(.hide)");
-      if (!indexPage) return;
-
-      let __recsBooted = false;
-      const onAllReady = () => {
-        if (__recsBooted) return;
-        __recsBooted = true;
-        const cfg = (typeof getConfig === 'function' ? getConfig() : {}) || {};
-
-        try {
-          bootHomeSections(cfg);
-        } catch (e) {
-          console.warn("bootPersonalRecsWires onAllReady hata:", e);
-        }
-      };
-
-      document.addEventListener("jms:all-slides-ready", onAllReady, { once: true });
-      if (window.__totalSlidesPlanned > 0 && window.__slidesCreated >= window.__totalSlidesPlanned) {
-        onAllReady();
-      }
-      setTimeout(() => { if (!__recsBooted) onAllReady(); }, 5000);
-      document.addEventListener("jms:slide-enter", () => { onAllReady(); }, { once: true });
-      if (window.__jmsFirstSlideReady) {
-        idle(() => onAllReady());
-      } else {
-        document.addEventListener("jms:first-slide-ready", () => {
-          idle(() => onAllReady());
-        }, { once: true });
-      }
-    }
-
-    if (willEarlyReturn) {
-      homeSectionLog("initializeSliderOnHome:early-return", {
-        forceManagedSectionsBoot,
-        hasContainer,
-      });
-      bootPersonalRecsWires();
-      queueHomeSectionsBoot({
-        delayMs: 600,
-        forceManagedSections: true
-      });
-      scheduleManagedHomeSectionRecovery();
-      return;
-    }
-    window.__initOnHomeOnce = true;
-    const indexPage = document.querySelector("#indexPage:not(.hide)") || document.querySelector("#homePage:not(.hide)");
-    if (!indexPage) {
-      homeSectionWarn("initializeSliderOnHome:no-visible-index-page", {
-        forceManagedSectionsBoot,
-      });
-      return;
-    }
-
-    fullSliderReset({ reason: "initializeSliderOnHome:slider-enabled" });
-    bootPersonalRecsWires();
-    upsertSlidesContainerAtTop(indexPage);
-    const sc = indexPage.querySelector('#monwui-slides-container');
-    if (config.peakSlider && sc) {
-      sc.scrollLeft = 0;
-      sc.classList.remove('peak-ready');
-      sc.classList.add('peak-init');
-      try { delete sc.dataset.peakPrimed; } catch {}
-    }
-    forceHomeSectionsTop();
-    forceSkinHeaderPointerEvents();
     try {
-      updateSlidePosition();
-    } catch {}
-    ensureProgressBarExists();
-    const pb = document.querySelector(".monwui-slide-progress-bar");
-    if (pb) {
-      pb.style.opacity = "0";
-      pb.style.width = "0%";
-    }
-    (async () => {
-      try {
-        await waitAuthWarmupFallback(1000);
-      } catch {}
-      slidesInit();
-    })();
+      try { window.__jmsHomeTabPaused = false; } catch {}
+      homeSectionLog("initializeSliderOnHome:start", {
+        forceManagedSectionsBoot,
+      });
+      homeSectionTrace("initializeSliderOnHome:start", {
+        forceManagedSectionsBoot,
+        stack: new Error().stack?.split("\n").slice(0, 6).join("\n") || "",
+      });
 
-    queueHomeSectionsBoot({
-      delayMs: 1800,
-      forceManagedSections: forceManagedSectionsBoot
-    });
-    scheduleManagedHomeSectionRecovery();
-    homeSectionLog("initializeSliderOnHome:booted", {
-      forceManagedSectionsBoot,
-      indexPageId: indexPage.id,
-    });
+      await waitForManagedHomeSectionCleanup({ timeoutMs: 2500 });
+
+      if (window.__jmsHomeInitPending) {
+        homeSectionLog("initializeSliderOnHome:skip:pending", {
+          forceManagedSectionsBoot,
+          slidesInitRunning: !!window.__slidesInitRunning,
+          sliderResetInProgress: !!window.sliderResetInProgress,
+        });
+        return;
+      }
+
+      window.__jmsHomeInitPending = true;
+
+      if (!isSliderEnabled()) {
+        window.__jmsHomeInitPending = false;
+        try {
+          cleanupSlider({
+            preserveHomeSections: true,
+            reason: "initializeSliderOnHome:slider-disabled",
+          });
+        } catch {}
+        try { stopSlideTimer?.(); } catch {}
+        try { clearCycleArm(); } catch {}
+        homeSectionWarn("initializeSliderOnHome:slider-disabled", {
+          forceManagedSectionsBoot,
+        });
+
+        queueHomeSectionsBoot({
+          delayMs: 500,
+          requireSliderDisabled: true,
+          forceManagedSections: false
+        });
+        scheduleManagedHomeSectionRecovery();
+
+        return;
+      }
+
+      const hasContainer = !!document.querySelector('#indexPage:not(.hide) #monwui-slides-container, #homePage:not(.hide) #monwui-slides-container');
+      const willEarlyReturn = (window.__initOnHomeOnce && hasContainer);
+
+      function bootPersonalRecsWires() {
+        if (window.__recsWiresBooted) return;
+        window.__recsWiresBooted = true;
+
+        const indexPage =
+          document.querySelector("#indexPage:not(.hide)") ||
+          document.querySelector("#homePage:not(.hide)");
+        if (!indexPage) return;
+
+        let __recsBooted = false;
+        const onAllReady = () => {
+          if (__recsBooted) return;
+          __recsBooted = true;
+          const cfg = (typeof getConfig === 'function' ? getConfig() : {}) || {};
+
+          try {
+            bootHomeSections(cfg);
+          } catch (e) {
+            console.warn("bootPersonalRecsWires onAllReady hata:", e);
+          }
+        };
+
+        document.addEventListener("jms:all-slides-ready", onAllReady, { once: true });
+        if (window.__totalSlidesPlanned > 0 && window.__slidesCreated >= window.__totalSlidesPlanned) {
+          onAllReady();
+        }
+        setTimeout(() => { if (!__recsBooted) onAllReady(); }, 5000);
+        document.addEventListener("jms:slide-enter", () => { onAllReady(); }, { once: true });
+        if (window.__jmsFirstSlideReady) {
+          idle(() => onAllReady());
+        } else {
+          document.addEventListener("jms:first-slide-ready", () => {
+            idle(() => onAllReady());
+          }, { once: true });
+        }
+      }
+
+      if (willEarlyReturn) {
+        window.__jmsHomeInitPending = false;
+        homeSectionLog("initializeSliderOnHome:early-return", {
+          forceManagedSectionsBoot,
+          hasContainer,
+        });
+        bootPersonalRecsWires();
+        queueHomeSectionsBoot({
+          delayMs: 600,
+          forceManagedSections: true
+        });
+        scheduleManagedHomeSectionRecovery();
+        return;
+      }
+      window.__initOnHomeOnce = true;
+      const indexPage = document.querySelector("#indexPage:not(.hide)") || document.querySelector("#homePage:not(.hide)");
+      if (!indexPage) {
+        window.__jmsHomeInitPending = false;
+        homeSectionWarn("initializeSliderOnHome:no-visible-index-page", {
+          forceManagedSectionsBoot,
+        });
+        return;
+      }
+
+      fullSliderReset({ reason: "initializeSliderOnHome:slider-enabled" });
+      bootPersonalRecsWires();
+      upsertSlidesContainerAtTop(indexPage);
+      const sc = indexPage.querySelector('#monwui-slides-container');
+      if (config.peakSlider && sc) {
+        sc.scrollLeft = 0;
+        sc.classList.remove('peak-ready');
+        sc.classList.add('peak-init');
+        try { delete sc.dataset.peakPrimed; } catch {}
+      }
+      forceHomeSectionsTop();
+      forceSkinHeaderPointerEvents();
+      try {
+        updateSlidePosition();
+      } catch {}
+      ensureProgressBarExists();
+      const pb = document.querySelector(".monwui-slide-progress-bar");
+      if (pb) {
+        pb.style.opacity = "0";
+        pb.style.width = "0%";
+      }
+      (async () => {
+        try {
+          await waitAuthWarmupFallback(1000);
+        } catch {}
+        void slidesInit();
+      })();
+
+      queueHomeSectionsBoot({
+        delayMs: 1800,
+        forceManagedSections: forceManagedSectionsBoot
+      });
+      scheduleManagedHomeSectionRecovery();
+      homeSectionLog("initializeSliderOnHome:booted", {
+        forceManagedSectionsBoot,
+        indexPageId: indexPage.id,
+      });
+    } catch (error) {
+      window.__jmsHomeInitPending = false;
+      console.warn("initializeSliderOnHome hata:", error);
+    }
   };
 
   void start();
@@ -5539,6 +6045,24 @@ function cleanupSlider({ preserveHomeSections = false, invalidateBoot = true, re
   const shouldPreserveManagedHomeSectionBoot =
     preserveHomeSections && isHomeRouteActive();
   try { teardownAnimations(); } catch {}
+  try { stopSlideTimer(); } catch {}
+  try { window.__cleanupActiveWatch?.(); } catch {}
+  window.__cleanupActiveWatch = null;
+  cleanupSliderRuntimeBindings();
+  cancelPendingSliderRepair();
+  clearPendingSliderIdleTasks();
+  try { cleanupSlideCreatorRuntime({ clearWarmQueue: true }); } catch {}
+  try { window.__stopJmsLibraryWatcher?.(); } catch {}
+  window.__stopJmsLibraryWatcher = null;
+  try { window.__jmsFetchItemDetailsCached?.stopWarmup?.(); } catch {}
+  window.__jmsFetchItemDetailsCached = null;
+  window.__jmsFetchItemDetailsCachedUserId = null;
+  setHomeSliderRuntimeItems([]);
+  void releaseSliderCacheMemory({
+    closeDb: !preserveHomeSections && !isHomeRouteActive(),
+    stopWarmups: true
+  }).catch(() => {});
+
   if (invalidateBoot) {
     invalidateSliderBootSession();
   }
@@ -5588,18 +6112,28 @@ function cleanupSlider({ preserveHomeSections = false, invalidateBoot = true, re
     document.querySelector("#indexPage:not(.hide)") ||
     document.querySelector("#homePage:not(.hide)");
 
-  if (host) {
-    const sliderContainer = host.querySelector("#monwui-slides-container");
-    if (sliderContainer) {
-      try {
-        sliderContainer.scrollLeft = 0;
-        sliderContainer.classList.remove('peak-ready');
-        sliderContainer.classList.remove('peak-diagonal');
-        sliderContainer.classList.remove('peak-init');
-        delete sliderContainer.dataset.peakPrimed;
-      } catch {}
-      sliderContainer.remove();
-    }
+  const sliderContainers = new Set();
+  try {
+    document
+      .querySelectorAll("#monwui-slides-container")
+      .forEach((node) => sliderContainers.add(node));
+  } catch {}
+  try {
+    const activeContainer = host?.querySelector?.("#monwui-slides-container");
+    if (activeContainer) sliderContainers.add(activeContainer);
+  } catch {}
+
+  for (const sliderContainer of sliderContainers) {
+    if (!sliderContainer) continue;
+    try {
+      sliderContainer.scrollLeft = 0;
+      sliderContainer.classList.remove('peak-ready');
+      sliderContainer.classList.remove('peak-diagonal');
+      sliderContainer.classList.remove('peak-init');
+      delete sliderContainer.dataset.peakPrimed;
+    } catch {}
+    cleanupSlidesContainerDeep(sliderContainer);
+    sliderContainer.remove();
   }
 }
 
@@ -5696,8 +6230,30 @@ function installAuthContextRecovery() {
     scheduleAuthContextRecovery(event?.detail || {});
   }, true);
 
-  document.addEventListener(USERDATA_CHANGED_EVENT, () => {
+  document.addEventListener(USERDATA_CHANGED_EVENT, (event) => {
+    const detail = event?.detail || {};
+    if (tryApplyLocalSliderUserDataPatch(detail)) return;
+    if (detail?.skipSliderRefresh === true) return;
     scheduleSliderUserDataRefresh();
+  }, true);
+}
+
+function installFocusedPlaybackUserDataSync() {
+  if (window.__jmsFocusedPlaybackUserDataSyncInstalled) return;
+  window.__jmsFocusedPlaybackUserDataSyncInstalled = true;
+
+  window.addEventListener("focus", () => {
+    scheduleFocusedPlaybackUserDataSync(900);
+  }, { passive: true });
+
+  window.addEventListener("pageshow", () => {
+    scheduleFocusedPlaybackUserDataSync(700);
+  }, { passive: true });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      scheduleFocusedPlaybackUserDataSync(900);
+    }
   }, true);
 }
 
@@ -6018,6 +6574,7 @@ function observeWhenHomeReady(cb, maxMs = 20000) {
 
     setupNavigationObserver();
     installAuthContextRecovery();
+    installFocusedPlaybackUserDataSync();
     installHomeTabSliderOnlyGate();
     idle(() => {
       if (shouldRenderStudioHubsUi(getMainConfig())) {

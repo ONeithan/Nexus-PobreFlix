@@ -5,7 +5,7 @@ import {
   updateFavoriteStatus,
   getDetailsUrl,
   isCurrentUserAdmin
-} from "../../Plugins/NexusPobreFlix/runtime/api.js";
+} from "../../Plugins/JMSFusion/runtime/api.js";
 import { getConfig } from "./config.js";
 import { withServer } from "./jfUrl.js";
 import { getWatchlistButtonText, getWatchlistToast } from "./watchlist.js";
@@ -252,7 +252,7 @@ export async function getCastAccess({ force = false } = {}) {
 
   castAccessPromise = (async () => {
     try {
-      const response = await makeCastApiRequest("/Plugins/NexusPobreFlix/cast/access", { __quiet: true });
+      const response = await makeCastApiRequest("/Plugins/JMSFusion/cast/access", { __quiet: true });
       const normalized = {
         ...getLocalCastAccessFallback(),
         ...(response && typeof response === "object" ? response : {})
@@ -1052,7 +1052,7 @@ function isRemoteGmmpStateFresh(remoteState) {
 
 async function fetchRemoteGmmpStateMap({ signal } = {}) {
   try {
-    const response = await makeCastApiRequest("/Plugins/NexusPobreFlix/gmmp/states", {
+    const response = await makeCastApiRequest("/Plugins/JMSFusion/gmmp/states", {
       signal,
       __quiet: true
     });
@@ -1662,7 +1662,7 @@ async function fetchVisiblePlaybackSessions({ signal } = {}) {
   }
 
   try {
-    const response = await makeCastApiRequest("/Plugins/NexusPobreFlix/cast/sessions", {
+    const response = await makeCastApiRequest("/Plugins/JMSFusion/cast/sessions", {
       signal,
       __quiet: true
     });
@@ -2734,7 +2734,7 @@ async function sendRemoteGmmpCommand(target, name, args = undefined, { signal, b
     });
   } catch {}
 
-  return makeCastApiRequest("/Plugins/NexusPobreFlix/gmmp/commands", {
+  return makeCastApiRequest("/Plugins/JMSFusion/gmmp/commands", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

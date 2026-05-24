@@ -20,7 +20,7 @@ import { loadCSS, isMobileDevice } from "../../playerStyles.js";
 import { makeCleanupBag, addEvent, trackTimeout, trackObserver } from "../utils/cleanup.js";
 import { withServer, withParams } from "../../jfUrl.js";
 import { showRadioModal } from "./radioModal.js";
-import { updateFavoriteStatus } from "../../../../Plugins/NexusPobreFlix/runtime/api.js";
+import { updateFavoriteStatus } from "../../../../Plugins/JMSFusion/runtime/api.js";
 import { getCachedWatchlistMembership, getWatchlistButtonTitle, getWatchlistToast } from "../../watchlist.js";
 import {
   getRadioPersistenceInfo,
@@ -115,8 +115,8 @@ export function updateFavoriteButtonState(track = musicPlayerState.playlist?.[mu
     favoriteBtn.classList.remove("hidden");
     favoriteBtn.innerHTML = getFavoriteIconHtml(isShared);
     favoriteBtn.title = isShared
-      ? (config.languageLabels.radioAlreadyShared || "Estação já está nas rádios compartilhadas")
-      : (config.languageLabels.radioShare || "Adicionar às rádios compartilhadas");
+      ? (config.languageLabels.radioAlreadyShared || "İstasyon zaten paylaşılan radyolarda")
+      : (config.languageLabels.radioShare || "Paylaşılan radyolara ekle");
     return;
   }
 
@@ -152,11 +152,11 @@ export function createModernPlayerUI() {
 
   if (config.nextTracksSource === 'playlist') {
     nextTracksName.textContent = musicPlayerState.userSettings.shuffle
-      ? config.languageLabels.rastgele || "Aleatório"
-      : config.languageLabels.sirada || "Próximas";
+      ? config.languageLabels.rastgele || "Rastgele"
+      : config.languageLabels.sirada || "Sıradakiler";
   } else {
     nextTracksName.textContent = getSourceLabel(config.nextTracksSource);
-    nextTracksName.title = config.languageLabels.changeSource || "Clique para mudar a fonte";
+    nextTracksName.title = config.languageLabels.changeSource || "Kaynağı değiştirmek için tıklayın";
     nextTracksName.onclick = async (e) => {
       e.stopPropagation();
       const cfg = getConfig();
@@ -189,22 +189,22 @@ export function createModernPlayerUI() {
     {
       className: "theme-toggle-btn",
       iconClass: config.playerTheme === 'light' ? "fas fa-moon" : "fas fa-sun",
-      title: config.playerTheme === 'light' ? config.languageLabels.darkTheme || 'Tema Escuro' : config.languageLabels.lightTheme || 'Tema Claro',
+      title: config.playerTheme === 'light' ? config.languageLabels.darkTheme || 'Karanlık Tema' : config.languageLabels.lightTheme || 'Aydınlık Tema',
       onClick: toggleTheme
     },
     { className: "playlist-btn", iconClass: "fas fa-list", title: config.languageLabels.playlist, onClick: togglePlaylistModal },
-    { className: "jplaylist-btn", iconClass: "fa-solid fa-list-ol", title: config.languageLabels.jellyfinPlaylists || "Playlists do Jellyfin", onClick: showJellyfinPlaylistsModal },
-    { className: "radio-btn", iconClass: "fas fa-broadcast-tower", title: config.languageLabels.radioStations || "Rádios", onClick: showRadioModal },
+    { className: "jplaylist-btn", iconClass: "fa-solid fa-list-ol", title: config.languageLabels.jellyfinPlaylists || "Jellyfin Oynatma Listesi", onClick: showJellyfinPlaylistsModal },
+    { className: "radio-btn", iconClass: "fas fa-broadcast-tower", title: config.languageLabels.radioStations || "Radyolar", onClick: showRadioModal },
     {
       className: "settingsLink",
       iconClass: "fas fa-cog",
-      title: config.languageLabels.ayarlar || "Configurações",
+      title: config.languageLabels.ayarlar || "Ayarlar",
       onClick: async (e) => {
         e.preventDefault();
         await openSettings("music");
       }
     },
-    { className: "kapat-btn", iconClass: "fas fa-times", title: config.languageLabels.close || "Fechar", onClick: togglePlayerVisibility },
+    { className: "kapat-btn", iconClass: "fas fa-times", title: config.languageLabels.close || "Close", onClick: togglePlayerVisibility },
   ];
 
   buttonsTop.forEach(btnInfo => {
@@ -223,8 +223,8 @@ export function createModernPlayerUI() {
       themeBtn.innerHTML = `<i class="fas fa-${theme === 'light' ? 'moon' : 'sun'}"></i>`;
       const cfgNow = getConfig();
       themeBtn.title = theme === 'light'
-        ? (cfgNow.languageLabels.darkTheme || 'Tema Escuro')
-        : (cfgNow.languageLabels.lightTheme || 'Tema Claro');
+        ? (cfgNow.languageLabels.darkTheme || 'Karanlık Tema')
+        : (cfgNow.languageLabels.lightTheme || 'Aydınlık Tema');
     }
     updatePlayerBackground();
     initializePlayerStyle();
@@ -307,20 +307,20 @@ export function createModernPlayerUI() {
   const topTracksBtn = createButton({
     className: "top-tracks-btn",
     iconClass: "fas fa-chart-line",
-    title: config.languageLabels.myMusic || "Mais Ouvidas",
+    title: config.languageLabels.myMusic || "En Çok Dinlenenler",
     onClick: () => { showTopTracksModal(); },
   });
 
   trackInfo.append(titleContainer, artist);
 
   const repeatBtn = createButton({ className: "repeat-btn", iconClass: "fas fa-repeat", title: config.languageLabels.repeatModOff, onClick: toggleRepeatMode });
-  const shuffleBtn = createButton({ iconClass: "fas fa-random", title: `${config.languageLabels.shuffle}: ${config.languageLabels.shuffleOff || "Desativado"}`, onClick: toggleShuffle });
+  const shuffleBtn = createButton({ iconClass: "fas fa-random", title: `${config.languageLabels.shuffle}: ${config.languageLabels.shuffleOff}`, onClick: toggleShuffle });
   const removeOnPlayBtn = createButton({
     className: "remove-on-play-btn",
     iconClass: "fa-solid fa-trash",
     title: musicPlayerState.userSettings.removeOnPlay
-      ? config.languageLabels.removeOnPlayOn || "Remover após tocar: Ativado"
-      : config.languageLabels.removeOnPlayOff || "Remover após tocar: Desativado",
+      ? config.languageLabels.removeOnPlayOn || "Çaldıktan sonra sil: Açık"
+      : config.languageLabels.removeOnPlayOff || "Çaldıktan sonra sil: Kapalı",
     onClick: toggleRemoveOnPlayMode
   });
 
@@ -332,7 +332,7 @@ export function createModernPlayerUI() {
   const genreFilterBtn = createButton({
     className: "genre-filter-btn",
     iconClass: "fas fa-filter",
-    title: config.languageLabels.filterByGenre || "Filtrar por Gênero",
+    title: config.languageLabels.filterByGenre || "Türe göre filtrele",
     onClick: showGenreFilterModal
   });
   const prevBtn = createButton({ iconClass: "fas fa-step-backward", title: config.languageLabels.previousTrack, onClick: playPrevious });
@@ -360,7 +360,7 @@ export function createModernPlayerUI() {
     value: "1",
     title: config.languageLabels.volumeLevel,
   });
-  volumeSlider.setAttribute("aria-label", config.languageLabels.volumeLevel || config.languageLabels.volume || "Volume");
+  volumeSlider.setAttribute("aria-label", config.languageLabels.volumeLevel || config.languageLabels.volume || "Ses seviyesi");
 
   volumeSlider.addEventListener('input', e => {
     const volume = parseFloat(e.target.value);
@@ -389,13 +389,13 @@ export function createModernPlayerUI() {
     topTracksBtn, volumeBtn, createButton({
       className: "fullscreen-btn",
       iconClass: "fa-solid fa-maximize",
-      title: config.languageLabels.fullscreen || "Tela Cheia",
+      title: config.languageLabels.fullscreen || "Tam Ekran",
       onClick: toggleFullscreenMode
     }),
     createButton({
       className: "style-toggle-btn",
       iconClass: "fa-solid fa-up-down",
-      title: config.playerStyle === 'player' ? config.languageLabels.dikeyStil || 'Estilo Vertical' : config.languageLabels.yatayStil || 'Estilo Horizontal',
+      title: config.playerStyle === 'player' ? config.languageLabels.dikeyStil || 'Dikey Stil' : config.languageLabels.yatayStil || 'Yatay Stil',
       onClick: togglePlayerStyle
     }),
   ];
@@ -569,8 +569,8 @@ export async function updateNextTracks() {
   if (config.nextTracksSource === 'playlist') {
     uiElements.name.style.cursor = 'pointer';
     uiElements.name.textContent = userSettings.shuffle
-      ? config.languageLabels.rastgele || "Aleatório"
-      : config.languageLabels.sirada || "Próximas";
+      ? config.languageLabels.rastgele || "Rastgele"
+      : config.languageLabels.sirada || "Sıradakiler";
   } else {
     return showTopTracksInMainView(config.nextTracksSource);
   }
@@ -680,7 +680,7 @@ async function toggleFavorite() {
     if (isSharedRadioTrack(track)) {
       updateFavoriteButtonState(track);
       showNotification(
-        `<i class="fas fa-info-circle"></i> ${config.languageLabels.radioAlreadyShared || "Esta rádio já foi adicionada"}`,
+        `<i class="fas fa-info-circle"></i> ${config.languageLabels.radioAlreadyShared || "Istasyon zaten paylasilan radyolarda"}`,
         2200,
         "info"
       );
@@ -709,17 +709,17 @@ async function toggleFavorite() {
       updateFavoriteButtonState(track);
       showNotification(
         `<i class="fas fa-check-circle"></i> ${info.supportsServerWrite
-          ? (config.languageLabels.radioSharedSaved || "Rádio adicionada à lista compartilhada")
-          : (config.languageLabels.radioLocalSaved || "Rádio salva localmente")}`,
+          ? (config.languageLabels.radioSharedSaved || "Istasyon paylasilan listeye eklendi")
+          : (config.languageLabels.radioLocalSaved || "Istasyon bu tarayiciya kaydedildi")}`,
         2200,
         "success"
       );
       submitStationToDirectory(track).catch(() => {});
     } catch (error) {
-      console.error("Erro na operação de rádio:", error);
+      console.error("Radyo paylasim islemi hatasi:", error);
       showNotification(
         `<i class="fas fa-exclamation-circle"></i> ${
-          config.languageLabels.radioSharedSaveError || "Erro ao salvar rádio compartilhada"
+          config.languageLabels.radioSharedSaveError || "Istasyon paylasilan listeye eklenemedi"
         }`,
         3000,
         "error"
@@ -744,10 +744,10 @@ async function toggleFavorite() {
       'kontrol'
     );
   } catch (error) {
-    console.error("Erro na operação de favorito:", error);
+    console.error("Favori işlemi hatası:", error);
     showNotification(
       `<i class="fas fa-exclamation-circle"></i> ${
-        config.languageLabels.favoriteError || "Erro ao processar favorito"
+        config.languageLabels.favoriteError || "Favori işlemi sırasında hata"
       }`,
       3000,
       'error'
@@ -796,7 +796,7 @@ function toggleTheme() {
   const themeBtn = document.querySelector('.theme-toggle-btn');
   if (themeBtn) {
     themeBtn.innerHTML = `<i class="fas fa-${newTheme === 'light' ? 'moon' : 'sun'}"></i>`;
-    themeBtn.title = newTheme === 'light' ? config.languageLabels.darkTheme || 'Tema Escuro' : config.languageLabels.lightTheme || 'Tema Claro';
+    themeBtn.title = newTheme === 'light' ? config.languageLabels.darkTheme || 'Karanlık Tema' : config.languageLabels.lightTheme || 'Aydınlık Tema';
   }
   loadCSS();
 
@@ -844,6 +844,7 @@ export function updatePlayerBackground() {
   const bgLayer = document.querySelector('#modern-music-player .player-bg-layer');
   const track = musicPlayerState.playlist?.[musicPlayerState.currentIndex];
   const requestId = ++__playerBackgroundRequestId;
+  if (!bgLayer) return;
 
   const applyLayerStyles = (imageCss) => {
     if (!bgLayer || requestId !== __playerBackgroundRequestId) return;

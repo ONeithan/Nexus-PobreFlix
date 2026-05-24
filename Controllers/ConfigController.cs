@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Jellyfin.Plugin.NexusPobreFlix.Controllers;
+namespace Jellyfin.Plugin.JMSFusion.Controllers;
 
 public class ConfigUpdateDto
 {
@@ -31,8 +31,8 @@ public class ConfigUpdateDto
 }
 
 [ApiController]
-[Route("NexusPobreFlix/config")]
-[Route("Plugins/NexusPobreFlix/config")]
+[Route("JMSFusion/config")]
+[Route("Plugins/JMSFusion/config")]
 public class ConfigController : ControllerBase
 {
     private const int MinTrailerResolution = 640;
@@ -43,7 +43,7 @@ public class ConfigController : ControllerBase
     [HttpGet]
     public IActionResult Get()
     {
-        var cfg = NexusPobreFlixPlugin.Instance?.Configuration
+        var cfg = JMSFusionPlugin.Instance?.Configuration
                   ?? throw new InvalidOperationException("Config not available.");
         Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0";
         Response.Headers["Pragma"] = "no-cache";
@@ -54,7 +54,7 @@ public class ConfigController : ControllerBase
     [HttpPost]
     public IActionResult Update([FromBody] ConfigUpdateDto incoming)
     {
-        var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+        var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
         var cfg = plugin.Configuration;
         if (incoming.AllowScriptExecution.HasValue)    cfg.AllowScriptExecution    = incoming.AllowScriptExecution.Value;
         if (incoming.EnableTrailerDownloader.HasValue) cfg.EnableTrailerDownloader = incoming.EnableTrailerDownloader.Value;

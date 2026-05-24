@@ -1,4 +1,4 @@
-import { getSessionInfo, getAuthHeader } from "../../Plugins/NexusPobreFlix/runtime/api.js";
+import { getSessionInfo, getAuthHeader } from "../../Plugins/JMSFusion/runtime/api.js";
 import { getConfig, getPauseFeaturesRuntimeConfig } from "./config.js";
 import { getTomatoIconHtml } from "./customIcons.js";
 import { withServer } from "./jfUrl.js";
@@ -9,6 +9,7 @@ const ITEM_DETAILS_CACHE_TTL_MS = 2_500;
 const LEGACY_LOGO_SELECTOR = '[data-jms-osd-legacy-logo="1"]';
 const HOST_BRAND_SELECTOR = '[data-jms-osd-header-brand="1"]';
 const HOST_RATINGS_SELECTOR = '[data-jms-osd-header-ratings="1"]';
+const HOST_CLOCK_SELECTOR = '[data-jms-osd-header-clock="1"]';
 const LEGACY_HEADER_TITLE_SELECTORS = [
   ".pageTitle",
   ".headerTitle",
@@ -25,6 +26,7 @@ const MUI_PLAYBACK_ACTION_STRONG_SELECTOR = [
 ].join(", ");
 const MUI_PLAYBACK_ACTION_WEAK_SELECTOR = "#jellyfinPlayerToggle";
 const MUI_BACK_LABEL_TOKENS = ["geri", "back", "zuruck", "zurück", "retour", "volver", "назад"];
+const HEADER_CLOCK_FORMATTER_CACHE = new Map();
 
 function buildAuthHeaders() {
   const s =
@@ -45,6 +47,75 @@ function getCurrentUserId() {
   } catch {
     return null;
   }
+}
+
+function formatHeaderClockValue(date = new Date(), preference = "auto") {
+  try {
+    const formatted = getHeaderClockFormatter(preference).format(date);
+    if (formatted) return formatted;
+  } catch {}
+
+  const normalizedPreference = normalizeHeaderClockFormat(preference);
+  const hours = Number(date?.getHours?.() ?? 0);
+  const minutes = String(date?.getMinutes?.() ?? 0).padStart(2, "0");
+  if (normalizedPreference === "12h") {
+    const suffix = hours >= 12 ? "PM" : "AM";
+    const h12 = hours % 12 || 12;
+    return `${String(h12).padStart(2, "0")}:${minutes} ${suffix}`;
+  }
+  return `${String(hours).padStart(2, "0")}:${minutes}`;
+}
+
+function normalizeHeaderClockFormat(value) {
+  const raw = String(value || "").trim().toLowerCase();
+  if (raw === "24" || raw === "24h" || raw === "h23" || raw === "hour24") return "24h";
+  if (raw === "12" || raw === "12h" || raw === "h12" || raw === "ampm") return "12h";
+  return "auto";
+}
+
+function getHeaderClockFormatPreference(cfg = {}) {
+  const pauseCfg = cfg?.pauseOverlay || {};
+  if (Object.prototype.hasOwnProperty.call(pauseCfg, "osdHeaderClockFormat")) {
+    return normalizeHeaderClockFormat(pauseCfg.osdHeaderClockFormat);
+  }
+  return normalizeHeaderClockFormat(cfg?.osdHeaderClockFormat);
+}
+
+function getHeaderClockFormatter(preference = "auto") {
+  const normalizedPreference = normalizeHeaderClockFormat(preference);
+  const cached = HEADER_CLOCK_FORMATTER_CACHE.get(normalizedPreference);
+  if (cached) return cached;
+
+  try {
+    const options = {
+      hour: "2-digit",
+      minute: "2-digit",
+    };
+    if (normalizedPreference === "24h") {
+      options.hour12 = false;
+    } else if (normalizedPreference === "12h") {
+      options.hour12 = true;
+    }
+    const formatter = new Intl.DateTimeFormat(undefined, options);
+    HEADER_CLOCK_FORMATTER_CACHE.set(normalizedPreference, formatter);
+    return formatter;
+  } catch {}
+
+  const fallbackFormatter = {
+    format(nextDate = new Date()) {
+      const hours = Number(nextDate?.getHours?.() ?? 0);
+      const minutes = String(nextDate?.getMinutes?.() ?? 0).padStart(2, "0");
+
+      if (normalizedPreference === "12h") {
+        const suffix = hours >= 12 ? "PM" : "AM";
+        const h12 = hours % 12 || 12;
+        return `${String(h12).padStart(2, "0")}:${minutes} ${suffix}`;
+      }
+      return `${String(hours).padStart(2, "0")}:${minutes}`;
+    }
+  };
+  HEADER_CLOCK_FORMATTER_CACHE.set(normalizedPreference, fallbackFormatter);
+  return fallbackFormatter;
 }
 
 function getCommunityRatingValue(communityRating) {
@@ -77,7 +148,11 @@ function getOsdHeaderRatingsState(cfg = {}) {
       : cfg?.showCriticRating !== false,
     showOfficial: hasPauseKey("showOsdHeaderOfficialRating")
       ? pauseCfg.showOsdHeaderOfficialRating !== false
-      : !!cfg?.showOfficialRating
+      : !!cfg?.showOfficialRating,
+    showClock: hasPauseKey("showOsdHeaderClock")
+      ? pauseCfg.showOsdHeaderClock !== false
+      : cfg?.showOsdHeaderClock !== false,
+    clockFormat: getHeaderClockFormatPreference(cfg)
   };
 }
 
@@ -87,7 +162,8 @@ function shouldRenderRatings(cfg = {}) {
   return (
     ratingsState.showCommunity ||
     ratingsState.showCritic ||
-    ratingsState.showOfficial
+    ratingsState.showOfficial ||
+    ratingsState.showClock
   );
 }
 
@@ -329,7 +405,7 @@ function getHostMode(host) {
 }
 
 function getHostVisibleDisplay(mode) {
-  return mode === "mui" ? "flex" : "inline-flex";
+  return "flex";
 }
 
 function getHostBrandEl(host) {
@@ -340,8 +416,14 @@ function getHostRatingsEl(host) {
   return host?.querySelector?.(HOST_RATINGS_SELECTOR) || null;
 }
 
+function getHostClockEl(host) {
+  return host?.querySelector?.(HOST_CLOCK_SELECTOR) || null;
+}
+
 function ensureHostStructure(host) {
-  if (!(host instanceof HTMLElement)) return { brandEl: null, ratingsEl: null };
+  if (!(host instanceof HTMLElement)) {
+    return { brandEl: null, ratingsEl: null, clockEl: null };
+  }
 
   let brandEl = getHostBrandEl(host);
   if (!brandEl) {
@@ -357,7 +439,14 @@ function ensureHostStructure(host) {
     host.appendChild(ratingsEl);
   }
 
-  return { brandEl, ratingsEl };
+  let clockEl = getHostClockEl(host);
+  if (!clockEl) {
+    clockEl = document.createElement("div");
+    clockEl.setAttribute("data-jms-osd-header-clock", "1");
+    host.appendChild(clockEl);
+  }
+
+  return { brandEl, ratingsEl, clockEl };
 }
 
 function applyHostModeStyles(host, mode) {
@@ -366,14 +455,15 @@ function applyHostModeStyles(host, mode) {
   if (prevMode === "legacy" && mode !== "legacy") {
     clearLegacyBrand(host);
   }
-  const { brandEl, ratingsEl } = ensureHostStructure(host);
+  const { brandEl, ratingsEl, clockEl } = ensureHostStructure(host);
   const display = host.style.display === "none" ? "none" : getHostVisibleDisplay(mode);
 
   host.setAttribute("data-jms-osd-header-kind", mode || "legacy");
   Object.assign(host.style, {
     display,
     alignItems: "center",
-    gap: mode === "mui" ? "12px" : "10px",
+    justifyContent: "flex-start",
+    gap: mode === "mui" ? "10px" : "8px",
     whiteSpace: "nowrap",
     pointerEvents: "none",
     userSelect: "none",
@@ -387,8 +477,10 @@ function applyHostModeStyles(host, mode) {
     willChange: "opacity, transform",
     padding: mode === "mui" ? "2px 8px" : "4px 6px",
     margin: mode === "mui" ? "6px" : "0 0 0 .3em",
-    minWidth: mode === "mui" ? "0" : "",
-    overflow: mode === "mui" ? "hidden" : "visible",
+    flex: "1 1 auto",
+    minWidth: "0",
+    maxWidth: "100%",
+    overflow: "hidden",
   });
 
   if (brandEl) {
@@ -405,11 +497,37 @@ function applyHostModeStyles(host, mode) {
     Object.assign(ratingsEl.style, {
       display: "inline-flex",
       alignItems: "center",
-      gap: "10px",
+      gap: "8px",
       lineHeight: "1",
       color: "#fff",
       marginLeft: "0",
+      flex: "0 1 auto",
+      minWidth: "0",
+      overflow: "hidden",
+    });
+  }
+
+  if (clockEl) {
+    Object.assign(clockEl.style, {
+      display: String(clockEl.textContent || "").trim() ? "inline-flex" : "none",
+      alignItems: "center",
+      justifyContent: "center",
       flex: "0 0 auto",
+      minWidth: "0",
+      lineHeight: "1",
+      color: "#ffffff",
+      fontWeight: "700",
+      fontSize: mode === "mui"
+        ? "clamp(18px, 1.25em, 20px)"
+        : "clamp(9px, 1.19em, 18px)",
+      letterSpacing: "0.03em",
+      fontVariantNumeric: "tabular-nums",
+      textShadow: "0 1px 2px rgba(0,0,0,0.75)",
+      opacity: mode === "mui" ? "0.94" : "0.88",
+      marginLeft: "auto",
+      paddingLeft: mode === "mui" ? "8px" : "6px",
+      maxWidth: "100%",
+      whiteSpace: "nowrap",
     });
   }
 }
@@ -656,13 +774,19 @@ function hasHostVisibleContent(host) {
   if (!(host instanceof HTMLElement)) return false;
   const brandEl = getHostBrandEl(host);
   const ratingsEl = getHostRatingsEl(host);
+  const clockEl = getHostClockEl(host);
   const brandVisible = !!(
     brandEl &&
     brandEl.style.display !== "none" &&
     (brandEl.querySelector("img") || String(brandEl.textContent || "").trim())
   );
   const ratingsVisible = !!String(ratingsEl?.innerHTML || "").trim();
-  return brandVisible || ratingsVisible;
+  const clockVisible = !!(
+    clockEl &&
+    clockEl.style.display !== "none" &&
+    String(clockEl.textContent || "").trim()
+  );
+  return brandVisible || ratingsVisible || clockVisible;
 }
 
 function renderBrand(host, item) {
@@ -989,6 +1113,38 @@ function buildOfficialHtml(officialRating) {
   `.trim();
 }
 
+function clearClock(host) {
+  const clockEl = getHostClockEl(host);
+  if (!clockEl) return false;
+  if (clockEl.textContent) {
+    clockEl.textContent = "";
+  }
+  clockEl.removeAttribute("data-clock-value");
+  clockEl.removeAttribute("data-clock-format");
+  clockEl.style.display = "none";
+  return false;
+}
+
+function renderClock(host, cfg = {}) {
+  const clockEl = getHostClockEl(host);
+  if (!clockEl) return false;
+
+  const clockFormat = getHeaderClockFormatPreference(cfg);
+  const nextValue = formatHeaderClockValue(
+    new Date(),
+    clockFormat
+  );
+  const prevValue = String(clockEl.getAttribute("data-clock-value") || "");
+  const prevFormat = String(clockEl.getAttribute("data-clock-format") || "");
+  if (prevValue !== nextValue || prevFormat !== clockFormat || clockEl.textContent !== nextValue) {
+    clockEl.textContent = nextValue;
+    clockEl.setAttribute("data-clock-value", nextValue);
+    clockEl.setAttribute("data-clock-format", clockFormat);
+  }
+  clockEl.style.display = "inline-flex";
+  return true;
+}
+
 function applyModernStyles(host) {
   if (!host) return;
   const ratingsEl = getHostRatingsEl(host) || host;
@@ -997,10 +1153,13 @@ function applyModernStyles(host) {
   Object.assign(ratingsEl.style, {
     display: "inline-flex",
     alignItems: "center",
-    gap: "10px",
+    gap: "8px",
     lineHeight: "1",
     color: "#fff",
     marginLeft: "0",
+    flex: "0 1 auto",
+    minWidth: "0",
+    overflow: "hidden",
   });
 
   host.querySelectorAll(".jms-rating-container, .jms-tomato-container, .jms-official-container").forEach((container) => {
@@ -1171,6 +1330,7 @@ function render(host, item, cfg) {
 
   if (!item) {
     clearBrand(host);
+    clearClock(host);
     ratingsEl.innerHTML = "";
     animateHost(host, false);
     return;
@@ -1179,6 +1339,7 @@ function render(host, item, cfg) {
   const ratingsState = getOsdHeaderRatingsState(cfg);
   if (!ratingsState.enabled) {
     clearBrand(host);
+    clearClock(host);
     ratingsEl.innerHTML = "";
     animateHost(host, false);
     return;
@@ -1190,6 +1351,7 @@ function render(host, item, cfg) {
 
   const html = [communityHtml, tomatoHtml, officialHtml].filter(Boolean).join("");
   const hasBrand = renderBrand(host, item);
+  const hasClock = ratingsState.showClock ? renderClock(host, cfg) : clearClock(host);
 
   if (ratingsEl.innerHTML !== html) {
     ratingsEl.innerHTML = html;
@@ -1197,7 +1359,7 @@ function render(host, item, cfg) {
 
   applyModernStyles(host);
 
-  if (html || hasBrand) {
+  if (html || hasBrand || hasClock) {
     animateHost(host, true);
   } else {
     animateHost(host, false);
@@ -1331,7 +1493,12 @@ export function initOsdHeaderRatings() {
 
       const key = buildItemRenderKey(host, item);
       const hostHasContent = hasHostVisibleContent(host);
-      if (key && key === lastKey && hostHasContent) return;
+      if (key && key === lastKey && hostHasContent) {
+        if (getOsdHeaderRatingsState(cfg).showClock) {
+          renderClock(host, cfg);
+        }
+        return;
+      }
       lastKey = key;
 
       render(host, item, cfg);

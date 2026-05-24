@@ -3,16 +3,16 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using Jellyfin.Database.Implementations.Enums;
 using Jellyfin.Database.Implementations.Entities;
+using Jellyfin.Database.Implementations.Enums;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Jellyfin.Plugin.NexusPobreFlix.Controllers;
+namespace Jellyfin.Plugin.JMSFusion.Controllers;
 
 [ApiController]
-[Route("NexusPobreFlix/parental-pin")]
-[Route("Plugins/NexusPobreFlix/parental-pin")]
+[Route("JMSFusion/parental-pin")]
+[Route("Plugins/JMSFusion/parental-pin")]
 public class ParentalPinController : ControllerBase
 {
     private const int DefaultMaxAttempts = 5;
@@ -107,7 +107,7 @@ public class ParentalPinController : ControllerBase
             return adminCheck.Result;
         }
 
-        var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+        var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
         var cfg = plugin.Configuration;
         var users = GetKnownUsers();
         var sanitizedRules = SanitizeRules(cfg.ParentalPinRules, users, out var rulesChanged);
@@ -131,7 +131,7 @@ public class ParentalPinController : ControllerBase
             return adminCheck.Result;
         }
 
-        var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+        var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
         var cfg = plugin.Configuration;
         var users = GetKnownUsers();
         NormalizeSecuritySettings(cfg);
@@ -220,7 +220,7 @@ public class ParentalPinController : ControllerBase
             return adminCheck.Result;
         }
 
-        var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+        var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
         var cfg = plugin.Configuration;
         var users = GetKnownUsers();
         var sanitizedRules = SanitizeRules(cfg.ParentalPinRules, users, out var rulesChanged);
@@ -266,7 +266,7 @@ public class ParentalPinController : ControllerBase
             return userCheck.Result;
         }
 
-        var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+        var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
         var cfg = plugin.Configuration;
         var users = GetKnownUsers();
         var sanitizedRules = SanitizeRules(cfg.ParentalPinRules, users, out var rulesChanged);
@@ -317,7 +317,7 @@ public class ParentalPinController : ControllerBase
             return userCheck.Result;
         }
 
-        var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+        var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
         var cfg = plugin.Configuration;
         var users = GetKnownUsers();
         var sanitizedRules = SanitizeRules(cfg.ParentalPinRules, users, out var rulesChanged);
@@ -497,7 +497,7 @@ public class ParentalPinController : ControllerBase
         };
 
     private object BuildSettingsResponse(
-        NexusPobreFlixConfiguration cfg,
+        JMSFusionConfiguration cfg,
         IReadOnlyDictionary<string, User> users,
         IReadOnlyList<ParentalPinRuleEntry> rules,
         string? unlockedUserId = null)
@@ -650,7 +650,7 @@ public class ParentalPinController : ControllerBase
     private static int NormalizeThreshold(int value)
         => AllowedThresholds.Contains(value) ? value : 0;
 
-    private static bool NormalizeSecuritySettings(NexusPobreFlixConfiguration cfg)
+    private static bool NormalizeSecuritySettings(JMSFusionConfiguration cfg)
     {
         var maxAttempts = NormalizeMaxAttempts(cfg.ParentalPinMaxAttempts);
         var lockoutMinutes = NormalizeLockoutMinutes(cfg.ParentalPinLockoutMinutes);
@@ -737,7 +737,7 @@ public class ParentalPinController : ControllerBase
         return PinRegex.IsMatch(pin) ? pin : null;
     }
 
-    private static bool HasConfiguredPin(NexusPobreFlixConfiguration cfg)
+    private static bool HasConfiguredPin(JMSFusionConfiguration cfg)
         => !string.IsNullOrWhiteSpace(cfg.ParentalPinHash)
             && !string.IsNullOrWhiteSpace(cfg.ParentalPinSalt);
 

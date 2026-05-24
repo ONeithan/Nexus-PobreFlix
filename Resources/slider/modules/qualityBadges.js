@@ -5,13 +5,12 @@ import {
   getQualitySnapshot
 } from './cacheManager.js';
 
-import { fetchItemDetails, fetchItemsBulk } from '../../Plugins/NexusPobreFlix/runtime/api.js';
-import { getVideoQualityText } from "./containerUtils.js";
+import { fetchItemDetails, fetchItemsBulk } from '../../Plugins/JMSFusion/runtime/api.js';
+import { ensureVideoQualityBadgeStyles, getVideoQualityText } from "./containerUtils.js";
 import { getConfig } from "./config.js";
-import { withServer } from "./jfUrl.js";
 
 const config = getConfig();
-const QB_VER = '4';
+const QB_VER = '6';
 const STICKY_MODE = true;
 const BATCH_SIZE = 24;
 const MAX_CONCURRENCY = 24;
@@ -25,26 +24,6 @@ const EAGER_INITIAL_HOSTS = 36;
 function idle(fn) {
   if (HAS_RIC) return requestIdleCallback(fn, { timeout: 250 });
   return setTimeout(() => fn({ timeRemaining: () => 0, didTimeout: true }), 0);
-}
-
-function isAbs(u) {
-  return typeof u === 'string' && /^https?:\/\//i.test(u);
-}
-
-function normalizeIconSrc(src) {
-  const s = String(src || '').trim();
-  if (!s) return '';
-  if (isAbs(s)) return s;
-  if (s.startsWith('./slider/src/images/quality/')) {
-    return withServer(s.replace(/^\.\//, '/web/'));
-  }
-  if (s.startsWith('/slider/src/images/quality/')) {
-    return withServer('/web' + s);
-  }
-  if (s.startsWith('/web/slider/src/images/quality/')) {
-    return withServer(s);
-  }
-  return s;
 }
 
 let snapshotMap = null;
@@ -216,7 +195,7 @@ export function primeQualityFromItems(items = []) {
       const vs = it.MediaStreams?.find(s => s.Type === 'Video');
       if (!vs) continue;
 
-      const q = getVideoQualityText(vs);
+      const q = getVideoQualityText(vs, it.MediaStreams);
       if (!q) continue;
 
       memoryQualityHints.set(it.Id, q);
@@ -259,7 +238,11 @@ export function annotateDomWithQualityHints(root = document) {
 }
 
 export function addQualityBadge(card, itemId = null) {
-  return; // Desativado para design clean Nexus
+  const host = getBadgeHost(card);
+  if (!host || !host.isConnected) return;
+
+  const kind = getCardKind(host);
+  if (kind === 'nonvideo') return;
 
   itemId = itemId || getItemIdFromCard(host);
   if (!itemId) return;
@@ -335,14 +318,16 @@ export function clearQualityBadgesCacheAndRefresh() {
 }
 
 function ensureBadgeStyle() {
+  ensureVideoQualityBadgeStyles();
   if (document.getElementById('quality-badge-style')) return;
   const style = document.createElement('style');
   style.id = 'quality-badge-style';
   style.textContent = `
     .quality-badge {
       position: absolute;
-      top: 0;
-      left: 0;
+      bottom: 40px;
+      right: 0;
+      padding: 4px;
       color: white;
       display: inline-flex;
       flex-direction: column;
@@ -353,25 +338,11 @@ function ensureBadgeStyle() {
       text-shadow: 0 1px 2px rgba(0,0,0,.6);
     }
     .quality-badge .quality-text {
-      border-radius: 6px;
-      padding: 3px 6px;
-      line-height: 1;
-      font-size: 12px;
-      letter-spacing: .2px;
+      display: inline-flex;
+      flex-direction: column;
       gap: 2px;
-      display: flex;
-      flex-direction: row;
-    }
-    .quality-badge img.quality-icon,
-    .quality-badge img.range-icon,
-    .quality-badge img.codec-icon {
-      width: clamp(20px, 1.8vw, 40px) !important;
-      height: clamp(14px, 1.5vw, 30px) !important;
-      background: rgba(28,28,46,.9);
-      border-radius: 4px;
-      padding: 1px;
-      display: inline-block;
-      margin-top: 2px;
+      line-height: 1;
+      align-items: flex-end;
     }
   `;
   document.head.appendChild(style);
@@ -383,31 +354,46 @@ function decodeEntities(str = '') {
   return txt.value;
 }
 
+function getAllowedQualityPart(value = '') {
+  const part = String(value || '').trim().toLowerCase();
+  return ['level', 'range', 'codec', 'bitdepth', 'audio', 'audio-layout'].includes(part) ? part : '';
+}
+
 function injectQualityMarkupSafely(container, html) {
   const tmp = document.createElement('div');
   tmp.innerHTML = html;
 
-  const imgs = tmp.querySelectorAll('img');
-  imgs.forEach(img => {
-    const src = String(img.getAttribute('src') || '');
-    const cls = String(img.getAttribute('class') || '');
-    const classOk = /(quality-icon|range-icon|codec-icon)/.test(cls);
-    const srcOk =
-      src.startsWith('./slider/src/images/quality/') ||
-      src.startsWith('/slider/src/images/quality/') ||
-      src.startsWith('/web/slider/src/images/quality/');
+  const pushSafeGroup = (sourceGroup) => {
+    const safeGroup = document.createElement('span');
+    safeGroup.className = 'monwui-quality-group';
 
-    if (classOk && srcOk) {
-      const safeImg = document.createElement('img');
-      safeImg.className = cls;
-      safeImg.alt = img.getAttribute('alt') || '';
-      safeImg.src = normalizeIconSrc(src);
-      container.appendChild(safeImg);
+    const segments = sourceGroup.querySelectorAll('.monwui-quality-segment');
+    segments.forEach(segment => {
+      const part =
+        getAllowedQualityPart(segment.getAttribute('data-quality-part')) ||
+        getAllowedQualityPart(
+          Array.from(segment.classList || []).find(cls => cls.startsWith('monwui-quality-segment--'))?.replace('monwui-quality-segment--', '')
+        );
+      const label = String(segment.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 8);
+      if (!part || !label) return;
+
+      const safeSegment = document.createElement('span');
+      safeSegment.className = `monwui-quality-segment monwui-quality-segment--${part}`;
+      safeSegment.setAttribute('data-quality-part', part);
+      safeSegment.textContent = label;
+      safeGroup.appendChild(safeSegment);
+    });
+
+    if (safeGroup.childNodes.length) {
+      container.appendChild(safeGroup);
     }
-  });
+  };
+
+  const groups = tmp.querySelectorAll('.monwui-quality-group');
+  groups.forEach(pushSafeGroup);
 
   if (!container.childNodes.length) {
-    container.textContent = html.replace(/<[^>]+>/g, '');
+    container.textContent = String(html || '').replace(/<[^>]+>/g, '').trim();
   }
 }
 
@@ -427,13 +413,8 @@ function createBadge(card, qualityText) {
   const span = document.createElement('span');
   span.className = 'quality-text';
 
-  const hasImgMarkup = /<\s*img/i.test(qualityText) || /&lt;\s*img/i.test(qualityText);
-  if (hasImgMarkup) {
-    const decoded = decodeEntities(qualityText);
-    injectQualityMarkupSafely(span, decoded);
-  } else {
-    span.textContent = String(qualityText || '');
-  }
+  const decoded = decodeEntities(String(qualityText || ''));
+  injectQualityMarkupSafely(span, decoded);
 
   badge.appendChild(span);
 
@@ -455,7 +436,7 @@ async function fetchAndCacheQualitySingle(itemId, ctrl = new AbortController()) 
       const videoStream = itemDetails.MediaStreams?.find(s => s.Type === "Video");
       if (!videoStream) return null;
 
-      const quality = getVideoQualityText(videoStream);
+      const quality = getVideoQualityText(videoStream, itemDetails.MediaStreams);
       if (!quality) return null;
 
       await setCachedQuality(itemId, quality, itemDetails.Type);

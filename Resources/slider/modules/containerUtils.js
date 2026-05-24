@@ -1,16 +1,16 @@
 import { getConfig } from "./config.js";
 import { applyContainerStyles } from "./positionUtils.js";
-import { fetchItemDetails } from "../../Plugins/NexusPobreFlix/runtime/api.js";
+import { fetchItemDetails } from "../../Plugins/JMSFusion/runtime/api.js";
 import { calculateMatchPercentage } from "./hoverTrailerModal.js";
 import { withServer } from "./jfUrl.js";
 import { getTomatoIconHtml } from "./customIcons.js";
 
 const config = getConfig();
-const QUALITY_SVG_BY_LEVEL = {
-  sd: "./slider/src/images/quality/sd.svg",
-  hd: "./slider/src/images/quality/hd.svg",
-  fhd: "./slider/src/images/quality/fhd.svg",
-  "4k": "./slider/src/images/quality/4k.svg"
+const QUALITY_LABEL_BY_LEVEL = {
+  sd: "SD",
+  hd: "HD",
+  fhd: "FHD",
+  "4k": "4K"
 };
 
 function escapeMetaHtml(value) {
@@ -27,7 +27,7 @@ function buildMetaTextSpan(text, ...classNames) {
   return `<span class="${className}">${escapeMetaHtml(text)}</span>`;
 }
 
-function stringToVibrantColor(str) {
+export function getMetaVibrantColor(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -63,7 +63,7 @@ function applyMetaIconColors(container, itemSeed = "") {
     const seed =
       `${itemSeed}-${icon.closest("span")?.className || ""}-${cls}-${index}`;
 
-    icon.style.color = stringToVibrantColor(seed);
+    icon.style.color = getMetaVibrantColor(seed);
   });
 }
 
@@ -112,8 +112,199 @@ function getVideoQualityInfo(videoStream) {
 
   return {
     baseQuality,
-    qualitySvg: QUALITY_SVG_BY_LEVEL[baseQuality] || QUALITY_SVG_BY_LEVEL.sd
+    qualityLabel: QUALITY_LABEL_BY_LEVEL[baseQuality] || QUALITY_LABEL_BY_LEVEL.sd
   };
+}
+
+function getVideoRangeLabel(videoStream) {
+  const range = String(videoStream?.VideoRangeType || "").toUpperCase();
+  if (!range) return "SDR";
+  if (range.includes("DOLBY") || range.includes("DOVI")) return "DV";
+  if (range.includes("HLG")) return "HLG";
+  if (range.includes("HDR")) return "HDR";
+  return "SDR";
+}
+
+function getVideoCodecLabel(videoStream) {
+  const codec = String(videoStream?.Codec || "").toLowerCase().trim();
+  if (!codec) return "";
+
+  if (codec.includes("av1")) return "AV1";
+  if (codec.includes("h265") || codec.includes("hevc") || codec.includes("x265")) return "HEVC";
+  if (codec.includes("h264") || codec.includes("avc") || codec.includes("x264")) return "AVC";
+  if (codec.includes("vp9")) return "VP9";
+  if (codec.startsWith("mpeg") || codec.includes("mpeg4")) return "MPEG";
+
+  return codec.replace(/[^a-z0-9]+/g, "").toUpperCase().slice(0, 5);
+}
+
+function getVideoBitDepthLabel(videoStream) {
+  const depth = Number(videoStream?.BitDepth || 0);
+  if (!Number.isFinite(depth) || depth <= 8) return "";
+  return `${Math.round(depth)}BIT`;
+}
+
+function getPrimaryAudioStream(mediaStreams = []) {
+  const audioStreams = Array.isArray(mediaStreams)
+    ? mediaStreams.filter(stream => stream?.Type === "Audio")
+    : [];
+
+  if (!audioStreams.length) return null;
+
+  return (
+    audioStreams.find(stream => stream?.IsDefault) ||
+    audioStreams.find(stream => Number(stream?.Index) >= 0) ||
+    audioStreams[0]
+  );
+}
+
+function getAudioCodecLabel(audioStream) {
+  if (!audioStream) return "";
+
+  const raw = [
+    audioStream.Codec,
+    audioStream.DisplayTitle,
+    audioStream.Title,
+    audioStream.Profile,
+    audioStream.CodecTag
+  ].filter(Boolean).join(" ").toLowerCase();
+
+  if (!raw) return "";
+  if (raw.includes("atmos")) return "ATMOS";
+  if (raw.includes("truehd")) return "TRUEHD";
+  if (raw.includes("eac3") || raw.includes("dd+")) return "DDP";
+  if (raw.includes("ac3") || raw.includes("dolby digital")) return "DD";
+  if (raw.includes("dts-hd") || raw.includes("dtshd")) return "DTS-HD";
+  if (raw.includes("dts")) return "DTS";
+  if (raw.includes("flac")) return "FLAC";
+  if (raw.includes("aac")) return "AAC";
+  if (raw.includes("opus")) return "OPUS";
+  if (raw.includes("mp3")) return "MP3";
+  if (raw.includes("pcm") || raw.includes("lpcm")) return "PCM";
+
+  const codec = String(audioStream?.Codec || "").replace(/[^a-z0-9]+/gi, "").toUpperCase();
+  return codec.slice(0, 7);
+}
+
+function getAudioLayoutLabel(audioStream) {
+  if (!audioStream) return "";
+
+  const channels = Number(audioStream?.Channels || 0);
+  if (Number.isFinite(channels) && channels > 0) {
+    if (channels === 1) return "1.0";
+    if (channels === 2) return "2.0";
+    if (channels === 6) return "5.1";
+    if (channels === 8) return "7.1";
+    return `${channels}CH`;
+  }
+
+  const layout = String(audioStream?.ChannelLayout || "").toUpperCase().trim();
+  if (layout.includes("7.1")) return "7.1";
+  if (layout.includes("5.1")) return "5.1";
+  if (layout.includes("2.0")) return "2.0";
+  return "";
+}
+
+function buildQualitySegment(label, part) {
+  const safeLabel = escapeMetaHtml(String(label || "").trim());
+  if (!safeLabel) return "";
+  const safePart = escapeMetaHtml(part);
+  return `
+    <span class="monwui-quality-segment monwui-quality-segment--${safePart}" data-quality-part="${safePart}">
+      ${safeLabel}
+    </span>
+  `.trim();
+}
+
+export function ensureVideoQualityBadgeStyles() {
+  if (typeof document === "undefined") return;
+  if (document.getElementById("monwui-video-quality-style")) return;
+
+  const style = document.createElement("style");
+  style.id = "monwui-video-quality-style";
+  style.textContent = `
+    .monwui-quality-group {
+      --monwui-quality-size: 24px;
+      --monwui-quality-gap: 2px;
+      --monwui-quality-direction: row;
+      --monwui-quality-wrap: wrap;
+      align-items: flex-start;
+      display: inline-flex;
+      flex-direction: var(--monwui-quality-direction);
+      flex-wrap: var(--monwui-quality-wrap);
+      gap: var(--monwui-quality-gap);
+      justify-content: flex-start;
+      max-width: 100%;
+    }
+    .monwui-quality-segment {
+      align-items: center;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 6px;
+      box-sizing: border-box;
+      color: #fff;
+      display: inline-flex;
+      font-family: var(--mwui-font-head, "Roboto Condensed", sans-serif);
+      font-size: 10px;
+      font-weight: 700;
+      height: var(--monwui-quality-size);
+      justify-content: center;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      min-width: var(--monwui-quality-size);
+      padding: 0 4px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .monwui-quality-segment--level {
+      background: rgba(37, 99, 235, 0.92);
+    }
+    .monwui-quality-segment--range {
+      background: rgba(234, 88, 12, 0.92);
+    }
+    .monwui-quality-segment--codec {
+      background: rgba(71, 85, 105, 0.92);
+    }
+    .monwui-quality-segment--bitdepth {
+      background: rgba(79, 70, 229, 0.92);
+    }
+    .monwui-quality-segment--audio {
+      background: rgba(5, 150, 105, 0.92);
+    }
+    .monwui-quality-segment--audio-layout {
+      background: rgba(8, 145, 178, 0.92);
+    }
+    .monwui-dot-quality-badge,
+    .mini-quality-inline,
+    .monwui-meta-container .video-quality,
+    .quality-badge .quality-text,
+    .jf-notif-item .quality,
+    .jf-resume-card .quality {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .quality-badge,
+    .monwui-dot-quality-badge {
+      --monwui-quality-direction: column;
+      --monwui-quality-wrap: nowrap;
+    }
+    .quality-badge .quality-text {
+      align-items: flex-start;
+      background: none;
+      border-radius: 0;
+      padding: 0;
+    }
+    .quality-badge .monwui-quality-group,
+    .monwui-dot-quality-badge .monwui-quality-group {
+      align-items: flex-start;
+    }
+    .jf-resume-card .quality {
+      justify-content: center;
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 export function createSlidesContainer(indexPage) {
@@ -150,19 +341,19 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
     const typeSpan = document.createElement("span");
     typeSpan.className = "type";
     const typeTranslations = {
-      Series: { text: config.languageLabels.series, icon: '<i class="fas fa-tv "></i>' },
+      Series: { text: config.languageLabels.dizi, icon: '<i class="fas fa-tv "></i>' },
       Season: { text: config.languageLabels.season, icon: '<i class="fas fa-tv "></i>' },
       Episode: { text: config.languageLabels.episode, icon: '<i class="fas fa-tv "></i>' },
       BoxSet: { text: config.languageLabels.boxset, icon: '<i class="fas fa-film "></i>' },
-      Movie: { text: config.languageLabels.movie, icon: '<i class="fas fa-film "></i>' }
+      Movie: { text: config.languageLabels.film, icon: '<i class="fas fa-film "></i>' }
     };
-    const typeInfo = typeTranslations[itemType] || { text: itemType || "", icon: "" };
-    let typeText = typeInfo.text || itemType || "";
-    if (itemType === "Series" && typeof ChildCount === "number" && ChildCount > 0) {
-      typeText += ` (${ChildCount} ${config.languageLabels.seasonSelect || "Temporadas"})`;
+    const typeInfo = typeTranslations[itemType] || { text: itemType, icon: "" };
+    let typeText = typeInfo.text;
+    if (itemType === "Series" && ChildCount) {
+      typeText += ` (${ChildCount} ${config.languageLabels.sezon})`;
     }
-    if (itemType === "BoxSet" && typeof ChildCount === "number" && ChildCount > 0) {
-      typeText += ` (${ChildCount} ${config.languageLabels.seriesPlural || "Séries"})`;
+    if (itemType === "BoxSet" && ChildCount) {
+      typeText += ` (${ChildCount} ${config.languageLabels.seri})`;
     }
     typeSpan.innerHTML = `${typeInfo.icon}${buildMetaTextSpan(typeText, "monwui-type-text")}`;
     statusContainer.appendChild(typeSpan);
@@ -175,8 +366,8 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
       ? `<i class="fa-regular fa-circle-check"></i>`
       : `<i class="fa-regular fa-circle-xmark"></i>`;
     let watchedText = UserData.Played
-      ? config.languageLabels.watched
-      : config.languageLabels.unwatched;
+      ? config.languageLabels.izlendi
+      : config.languageLabels.izlenmedi;
     if (UserData.Played && UserData.PlayCount > 0) {
       watchedText += ` (${UserData.PlayCount})`;
     }
@@ -193,16 +384,14 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
       const hours = Math.floor(totalMinutes / 60);
       const minutes = totalMinutes % 60;
       return hours > 0
-        ? `${hours}${config.languageLabels.hoursShort || "h"} ${minutes}${config.languageLabels.minutesShort || "min"}`
-        : `${minutes}${config.languageLabels.minutesShort || "min"}`;
+        ? `${hours}${config.languageLabels.sa} ${minutes}${config.languageLabels.dk}`
+        : `${minutes}${config.languageLabels.dk}`;
     };
 
     const formatEndTimeLocalized = (ticks) => {
-      const t = Number(ticks || 0);
-      if (!t || t <= 0) return "";
-      const totalMinutes = Math.floor(t / 600000000);
+      const totalMinutes = Math.floor(ticks / 600000000);
       const end = new Date(Date.now() + totalMinutes * 60 * 1000);
-      const locale = String(config?.languageLabels?.timeLocale || "pt-BR").trim() || "pt-BR";
+      const locale = String(config?.languageLabels?.timeLocale || "tr-TR").trim() || "tr-TR";
 
       try {
         return new Intl.DateTimeFormat(locale, {
@@ -245,36 +434,13 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
 
   const videoStream = MediaStreams ? MediaStreams.find(s => s.Type === "Video") : null;
   if (videoStream && config.showQualityInfo) {
-    const qualitySpan = document.createElement("span");
-    qualitySpan.className = "video-quality";
-    const { qualitySvg } = getVideoQualityInfo(videoStream);
-
-    let rangeSvg = `./slider/src/images/quality/sdr.svg`;
-    if (videoStream.VideoRangeType && videoStream.VideoRangeType.toUpperCase().includes("HDR")) {
-      rangeSvg = `./slider/src/images/quality/hdr.svg`;
+    const qualityHtml = getVideoQualityText(videoStream, MediaStreams);
+    if (qualityHtml) {
+      const qualitySpan = document.createElement("span");
+      qualitySpan.className = "video-quality";
+      qualitySpan.innerHTML = qualityHtml;
+      statusContainer.appendChild(qualitySpan);
     }
-
-    let codecSvg = "";
-    if (videoStream.Codec) {
-      const codec = videoStream.Codec.toLowerCase();
-      if (codec.includes("h264")) {
-        codecSvg = `<img src="./slider/src/images/quality/h264.svg" alt="H.264" style="width:24px;height:24px;vertical-align:middle;margin-right:2px;">`;
-      } else if (codec.includes("h265") || codec.includes("hevc")) {
-        codecSvg = `<img src="./slider/src/images/quality/h265.svg" alt="H.265" style="width:24px;height:24px;vertical-align:middle;margin-right:2px;">`;
-      } else if (codec.includes("vp9")) {
-        codecSvg = `<img src="./slider/src/images/quality/vp9.svg" alt="VP9" style="width:24px;height:24px;vertical-align:middle;margin-right:2px;">`;
-      } else if (codec.startsWith("mpeg") || codec.includes("mpeg4")) {
-        codecSvg = `<img src="./slider/src/images/quality/mpeg.svg" alt="MPEG" style="width:24px;height:24px;vertical-align:middle;margin-right:2px;">`;
-      }
-    }
-
-    qualitySpan.innerHTML = `
-      <img src="${rangeSvg}" alt="" style="width:24px;height:24px;vertical-align:middle;margin-right:2px;">
-      <img src="${qualitySvg}" alt="" style="width:24px;height:24px;vertical-align:middle;margin-right:2px;">
-      ${codecSvg}
-    `.trim();
-
-    statusContainer.appendChild(qualitySpan);
   }
 
   return statusContainer;
@@ -300,7 +466,7 @@ export async function createActorSlider(People, config, item) {
         actualPeople = parent.People;
       }
     } catch (e) {
-      console.warn("Não foi possível obter informações da série:", e);
+      console.warn("Ana dizi bilgileri alınamadı:", e);
     }
   }
 
@@ -314,23 +480,124 @@ export async function createActorSlider(People, config, item) {
   }
 
   const sliderWrapper = document.createElement("div");
-  sliderWrapper.className = "monwui-slider-wrapper";
-  applyContainerStyles(sliderWrapper, 'slider');
+  sliderWrapper.className = "monwui-slider-wrapper monwui-artist-menu";
+  if (!config.showActorImg) {
+    sliderWrapper.classList.add("monwui-artist-menu--no-images");
+  }
+
+  const actorToggle = document.createElement("button");
+  actorToggle.type = "button";
+  actorToggle.className = "monwui-artist-toggle";
+  actorToggle.setAttribute("aria-expanded", "false");
+  actorToggle.setAttribute(
+    "aria-label",
+    `${config.languageLabels?.showActorInfo || "Actors"} (${actorsForSlide.length})`
+  );
+  actorToggle.innerHTML = `
+    <i class="fa-solid fa-users"></i>
+    <span class="monwui-artist-count">${actorsForSlide.length}</span>
+  `.trim();
+
+  const actorPanel = document.createElement("div");
+  actorPanel.className = "monwui-artist-popover";
+  const panelIdSeed = `${item?.Id || "unknown"}-${Math.random().toString(36).slice(2, 8)}`;
+  actorPanel.id = `monwui-artist-popover-${panelIdSeed.replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  actorPanel.setAttribute("role", "region");
+  actorPanel.setAttribute("aria-label", config.languageLabels?.showActorInfo || "Actors");
+  actorToggle.setAttribute("aria-controls", actorPanel.id);
+
+  const actorPanelBody = document.createElement("div");
+  actorPanelBody.className = "monwui-artist-popover-body";
 
   const actorContainer = document.createElement("div");
   actorContainer.className = "monwui-artist-container";
 
   const leftArrow = document.createElement("button");
+  leftArrow.type = "button";
   leftArrow.className = "monwui-slider-arrow left hidden";
+  leftArrow.setAttribute("aria-label", "Previous actors");
   leftArrow.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
 
   const rightArrow = document.createElement("button");
+  rightArrow.type = "button";
   rightArrow.className = "monwui-slider-arrow right hidden";
+  rightArrow.setAttribute("aria-label", "Next actors");
   rightArrow.innerHTML = `<i class="fa-solid fa-chevron-right"></i>`;
 
-  sliderWrapper.appendChild(leftArrow);
-  sliderWrapper.appendChild(actorContainer);
-  sliderWrapper.appendChild(rightArrow);
+  actorPanelBody.appendChild(leftArrow);
+  actorPanelBody.appendChild(actorContainer);
+  actorPanelBody.appendChild(rightArrow);
+  actorPanel.appendChild(actorPanelBody);
+  sliderWrapper.appendChild(actorToggle);
+  sliderWrapper.appendChild(actorPanel);
+
+  let hoverCloseTimer = 0;
+  const clearHoverCloseTimer = () => {
+    if (!hoverCloseTimer) return;
+    clearTimeout(hoverCloseTimer);
+    hoverCloseTimer = 0;
+  };
+  const setExpanded = (expanded) => {
+    actorToggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+  };
+  const blurFocusedArrow = () => {
+    const activeElement = document.activeElement;
+    if (
+      activeElement &&
+      sliderWrapper.contains(activeElement) &&
+      activeElement.classList?.contains("monwui-slider-arrow")
+    ) {
+      activeElement.blur();
+    }
+  };
+  [leftArrow, rightArrow].forEach((arrow) => {
+    arrow.addEventListener("mousedown", (event) => {
+      event.preventDefault();
+    });
+    arrow.addEventListener("click", () => {
+      setTimeout(() => {
+        if (!sliderWrapper.matches(":hover")) {
+          arrow.blur();
+          setExpanded(false);
+        }
+      }, 0);
+    });
+  });
+  sliderWrapper.addEventListener("mouseenter", () => {
+    clearHoverCloseTimer();
+    setExpanded(true);
+  });
+  sliderWrapper.addEventListener("mouseleave", () => {
+    if (sliderWrapper.classList.contains("is-open")) return;
+    blurFocusedArrow();
+    clearHoverCloseTimer();
+    hoverCloseTimer = setTimeout(() => {
+      hoverCloseTimer = 0;
+      if (!sliderWrapper.matches(":hover") && !sliderWrapper.matches(":focus-within")) {
+        setExpanded(false);
+      }
+    }, 180);
+  });
+  sliderWrapper.addEventListener("focusin", () => {
+    clearHoverCloseTimer();
+    setExpanded(true);
+  });
+  sliderWrapper.addEventListener("focusout", () => {
+    setTimeout(() => {
+      if (!sliderWrapper.matches(":focus-within")) {
+        sliderWrapper.classList.remove("is-open");
+        setExpanded(false);
+      }
+    }, 0);
+  });
+  actorToggle.addEventListener("click", (event) => {
+    event.preventDefault();
+    clearHoverCloseTimer();
+    const nextOpen = !sliderWrapper.classList.contains("is-open");
+    sliderWrapper.classList.toggle("is-open", nextOpen);
+    setExpanded(nextOpen);
+    if (!nextOpen) actorToggle.blur();
+  });
 
   actorsForSlide.forEach(actor => {
     const actorDiv = document.createElement("div");
@@ -359,19 +626,18 @@ export async function createActorSlider(People, config, item) {
         actorImg.src = "./slider/src/images/nofoto.png";
       };
       actorLink.appendChild(actorImg);
+      actorContent.appendChild(actorLink);
     }
-
-    actorContent.appendChild(actorLink);
-
-    const roleSpan = document.createElement("span");
-    roleSpan.className = "monwui-actor-role";
-    roleSpan.textContent = config.showActorRole ? actor.Role || "" : "";
-    actorContent.appendChild(roleSpan);
 
     const nameSpan = document.createElement("span");
     nameSpan.className = "monwui-actor-name";
     nameSpan.textContent = config.showActorInfo ? actor.Name || "" : "";
     actorContent.appendChild(nameSpan);
+
+    const roleSpan = document.createElement("span");
+    roleSpan.className = "monwui-actor-role";
+    roleSpan.textContent = config.showActorRole ? actor.Role || "" : "";
+    actorContent.appendChild(roleSpan);
 
     actorDiv.appendChild(actorContent);
     actorContainer.appendChild(actorDiv);
@@ -474,8 +740,8 @@ export async function createDirectorContainer({ config, People, item }) {
       if (directors.length) {
         const directorNames = directors.map(d => d.Name).join(", ");
         const directorSpan = document.createElement("span");
-        directorSpan.className = "monwui-director";
-        directorSpan.textContent = `${config.languageLabels.director}: ${directorNames}`;
+        directorSpan.className = "monwui-yonetmen";
+        directorSpan.textContent = `${config.languageLabels.yonetmen}: ${directorNames}`;
         container.appendChild(directorSpan);
       }
     }
@@ -492,7 +758,7 @@ export async function createDirectorContainer({ config, People, item }) {
         const writerNames = matchingWriters.map(w => w.Name).join(", ");
         const writerSpan = document.createElement("span");
         writerSpan.className = "writer";
-        writerSpan.textContent = `${writerNames} ${config.languageLabels.writer} ...`;
+        writerSpan.textContent = `${writerNames} ${config.languageLabels.yazar} ...`;
         container.appendChild(writerSpan);
       }
     }
@@ -744,11 +1010,12 @@ export function createPlotContainer(config, Overview, UserData, RunTimeTicks) {
     );
     bar.style.width = `${percentage.toFixed(1)}%`;
 
-    const remTicks = Number(RunTimeTicks || 0) - Number(UserData?.PlaybackPositionTicks || 0);
-    const remainingMinutes = Math.max(0, Math.round(remTicks / 600000000));
+    const remainingMinutes = Math.round(
+      (RunTimeTicks - UserData.PlaybackPositionTicks) / 600000000
+    );
     const text = document.createElement("span");
     text.className = "monwui-duration-remaining";
-    text.innerHTML = `<i class="fa-solid fa-hourglass-half"></i> ${remainingMinutes} ${config.languageLabels.minutesShort || "min"} ${config.languageLabels.remaining || "restantes"}`;
+    text.innerHTML = `<i class="fa-solid fa-hourglass-half"></i> ${remainingMinutes} ${config.languageLabels.dakika} ${config.languageLabels.kaldi}`;
 
     barWrapper.appendChild(bar);
     progressContainer.appendChild(barWrapper);
@@ -768,12 +1035,10 @@ export function createTitleContainer({ config, Taglines, title, OriginalTitle, T
     const titleSpan = document.createElement("span");
     titleSpan.className = "monwui-baslik";
 
-    if (Type === "Episode") {
-      const s = String(ParentIndexNumber || "0").padStart(2, '0');
-      const e = String(IndexNumber || "0").padStart(2, '0');
-      titleSpan.textContent = `S${s} E${e}: ${title || ""}`;
+    if (Type === "Episode" && typeof ParentIndexNumber === "number" && typeof IndexNumber === "number") {
+      titleSpan.textContent = `S${ParentIndexNumber} B${IndexNumber}: ${title}`;
     } else {
-      titleSpan.textContent = title || "";
+      titleSpan.textContent = title;
     }
 
     container.appendChild(titleSpan);
@@ -800,35 +1065,45 @@ export function createTitleContainer({ config, Taglines, title, OriginalTitle, T
   return container;
 }
 
-export function getVideoQualityText(videoStream) {
+export function getVideoQualityText(videoStream, mediaStreams = null) {
   if (!videoStream) return "";
+  ensureVideoQualityBadgeStyles();
 
-  const { baseQuality, qualitySvg } = getVideoQualityInfo(videoStream);
+  const { qualityLabel } = getVideoQualityInfo(videoStream);
+  const rangeLabel = getVideoRangeLabel(videoStream);
+  const codecLabel = getVideoCodecLabel(videoStream);
+  const bitDepthLabel = getVideoBitDepthLabel(videoStream);
 
-  let iconSvg;
-  if (videoStream.VideoRangeType && videoStream.VideoRangeType.toUpperCase().includes("HDR")) {
-    iconSvg = `./slider/src/images/quality/hdr.svg`;
-  } else {
-    iconSvg = `./slider/src/images/quality/sdr.svg`;
+  const videoParts = [
+    buildQualitySegment(qualityLabel, "level"),
+    buildQualitySegment(rangeLabel, "range"),
+    buildQualitySegment(codecLabel, "codec"),
+    buildQualitySegment(bitDepthLabel, "bitdepth")
+  ].filter(Boolean);
+
+  const audioStream = getPrimaryAudioStream(mediaStreams);
+  const audioParts = [
+    buildQualitySegment(getAudioCodecLabel(audioStream), "audio"),
+    buildQualitySegment(getAudioLayoutLabel(audioStream), "audio-layout")
+  ].filter(Boolean);
+
+  const groups = [];
+  if (videoParts.length) {
+    groups.push(`
+      <span class="monwui-quality-group" data-quality-group="video">
+        ${videoParts.join("")}
+      </span>
+    `.trim());
+  }
+  if (audioParts.length) {
+    groups.push(`
+      <span class="monwui-quality-group" data-quality-group="audio">
+        ${audioParts.join("")}
+      </span>
+    `.trim());
   }
 
-  let codecSvg = "";
-  if (videoStream.Codec) {
-    const codec = videoStream.Codec.toLowerCase();
-    if (codec.includes("h264")) {
-      codecSvg = `./slider/src/images/quality/h264.svg`;
-    } else if (codec.includes("h265") || codec.includes("hevc")) {
-      codecSvg = `./slider/src/images/quality/h265.svg`;
-    } else if (codec.includes("vp9")) {
-      codecSvg = `./slider/src/images/quality/vp9.svg`;
-    } else if (codec.startsWith("mpeg") || codec.includes("mpeg4")) {
-      codecSvg = `./slider/src/images/quality/mpeg.svg`;
-    }
-  }
+  if (!groups.length) return "";
 
-  return `
-    <img src="${qualitySvg}" alt="${baseQuality.toUpperCase()}" class="quality-icon">
-    <img src="${iconSvg}" alt="" class="range-icon">
-    ${codecSvg ? `<img src="${codecSvg}" alt="" class="codec-icon">` : ""}
-  `.trim();
+  return groups.join("");
 }

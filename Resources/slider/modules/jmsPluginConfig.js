@@ -1,4 +1,4 @@
-const CONFIG_URL = "/NexusPobreFlix/config";
+const CONFIG_URL = "/JMSFusion/config";
 const CONFIG_CACHE_MS = 30_000;
 
 let __pluginConfigCache = null;

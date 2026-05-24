@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <AssemblyName>Jellyfin.Plugin.JMSFusion</AssemblyName>
+    <RootNamespace>Jellyfin.Plugin.JMSFusion</RootNamespace>
+
+    <Version>1.0.0.6</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <LangVersion>latest</LangVersion>
+    <PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>NexusPobreFlix</PackageId>
+    <Authors>ONeithan</Authors>
+    <Company>Nexus</Company>
+    <Description>
+      Plugin Nexus PobreFlix — Injeta experiência visual premium no Jellyfin com tema roxo, layout Netflix e localização PT-BR completa.
+    </Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jellyfin.Controller" Version="10.11.0" />
+    <PackageReference Include="Jellyfin.Model" Version="10.11.0" />
+    <PackageReference Include="Jellyfin.Common"    Version="10.11.0" />
+    <PackageReference Include="Jellyfin.Data"      Version="10.11.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Web/**/*" />
+    <EmbeddedResource Include="Resources/**/*" />
+    <EmbeddedResource Include="RuntimeModules/**/*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="meta.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

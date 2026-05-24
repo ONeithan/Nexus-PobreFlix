@@ -6,10 +6,10 @@ import {
   waitForAuthReadyStrict,
   persistAuthSnapshotFromApiClient,
   getAuthHeader,
-} from "../../Plugins/NexusPobreFlix/runtime/api.js";
+} from "../../Plugins/JMSFusion/runtime/api.js";
 import { getRandomAvatarUrl } from "./avatarPicker.js";
 import { createConfiguredUserAvatar } from "./userAvatar.js";
-import { saveCredentials, saveApiKey, clearCredentials } from "../../Plugins/NexusPobreFlix/runtime/auth.js";
+import { saveCredentials, saveApiKey, clearCredentials } from "../../Plugins/JMSFusion/runtime/auth.js";
 import { enhanceFormAccessibility } from "./accessibility.js";
 import { findHeaderMountTarget, getHeaderMountWaitSelector } from "./headerCompat.js";
 
@@ -238,13 +238,17 @@ function writeTokenStore(obj) {
   bumpTokenStoreRev();
 }
 
-function rememberUserToken({ userId, name, accessToken, primaryImageTag }) {
+function rememberUserToken(tokenInfo = {}) {
+  const { userId, name, accessToken, primaryImageTag } = tokenInfo;
   if (!userId || !accessToken) return;
   const store = readTokenStore();
+  const hasPrimaryImageTag = Object.prototype.hasOwnProperty.call(tokenInfo, "primaryImageTag");
   store[userId] = {
     accessToken,
     name: name || store[userId]?.name || "",
-    primaryImageTag: primaryImageTag || store[userId]?.primaryImageTag || "",
+    primaryImageTag: hasPrimaryImageTag
+      ? getUserPrimaryImageTag({ PrimaryImageTag: primaryImageTag })
+      : (store[userId]?.primaryImageTag || ""),
     ts: Date.now(),
   };
   writeTokenStore(store);
@@ -274,6 +278,26 @@ function forgetRememberedToken(userId) {
       writeTokenStore(store);
       return true;
     }
+  } catch {}
+  return false;
+}
+
+function clearRememberedPrimaryImageTag(userId, failedTag = "") {
+  if (!userId) return false;
+  try {
+    const store = readTokenStore();
+    const rec = store?.[userId] || null;
+    if (!rec) return false;
+
+    const currentTag = String(rec.primaryImageTag || "").trim();
+    const staleTag = String(failedTag || "").trim();
+    if (!currentTag || (staleTag && currentTag !== staleTag)) return false;
+
+    rec.primaryImageTag = "";
+    rec.ts = Date.now();
+    store[userId] = rec;
+    writeTokenStore(store);
+    return true;
   } catch {}
   return false;
 }
@@ -527,17 +551,27 @@ function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 }
 
+function getUserPrimaryImageTag(user) {
+  return String(
+    user?.PrimaryImageTag ??
+    user?.primaryImageTag ??
+    user?.ImageTags?.Primary ??
+    user?.imageTags?.Primary ??
+    ""
+  ).trim();
+}
+
 function userAvatarUrl({ Id, PrimaryImageTag }, size = 220) {
   const id = Id;
   if (!id) return "";
+  const tag = getUserPrimaryImageTag({ PrimaryImageTag });
+  if (!tag) return "";
 
   const qs = new URLSearchParams();
   qs.set("quality", "90");
   qs.set("maxHeight", String(size));
   qs.set("maxWidth", String(size));
-
-  const tag = PrimaryImageTag || "";
-  if (tag) qs.set("tag", tag);
+  qs.set("tag", tag);
   try {
     const token = String(getSessionInfo?.()?.accessToken || "").trim();
     if (token) qs.set("api_key", token);
@@ -703,7 +737,10 @@ function renderProfileAvatarSlot(slot, user, { size = 220, eager = false, big = 
   setAvatarFallback(slot, user, { requestId, big });
 
   const userId = String(user?.Id || "").trim();
-  const tag = String(primaryImageTag ?? user?.PrimaryImageTag ?? "").trim();
+  const tag = getUserPrimaryImageTag({
+    ...user,
+    PrimaryImageTag: primaryImageTag ?? user?.PrimaryImageTag,
+  });
   if (!userId) {
     assignPreferredFallbackAvatarToSlot(slot, user, { requestId, size, eager, big }).catch(() => {});
     return;
@@ -719,6 +756,7 @@ function renderProfileAvatarSlot(slot, user, { size = 220, eager = false, big = 
     requestId,
     eager,
     onError: () => {
+      clearRememberedPrimaryImageTag(userId, tag);
       assignPreferredFallbackAvatarToSlot(slot, user, { requestId, size, eager, big }).catch(() => {
         setAvatarFallback(slot, user, { requestId, big });
       });
@@ -731,12 +769,12 @@ function buildOverlayDom(L) {
   overlay.id = OVERLAY_ID;
   overlay.className = "jf-profile-overlay";
   overlay.innerHTML = `
-    <div class="jf-profile-shell" role="dialog" aria-modal="true" aria-label="${escapeHtml(L("profileChooserAriaLabel", "Seleção de Perfil"))}">
-      <button class="jf-profile-close" type="button" aria-label="${escapeHtml(L("close", "Fechar"))}">✕</button>
-      <button class="jf-profile-settings" type="button" aria-label="${escapeHtml(L("settings", "Configurações"))}">⚙</button>
+    <div class="jf-profile-shell" role="dialog" aria-modal="true" aria-label="${escapeHtml(L("profileChooserAriaLabel", "Profil seçimi"))}">
+      <button class="jf-profile-close" type="button" aria-label="${escapeHtml(L("kapat", "Kapat"))}">✕</button>
+      <button class="jf-profile-settings" type="button" aria-label="${escapeHtml(L("ayarlar", "Ayarlar"))}">⚙</button>
 
-      <div class="jf-profile-title">${escapeHtml(L("whoIsWatching", "Quem está assistindo?"))}</div>
-      <div class="jf-profile-subtitle">${escapeHtml(L("selectProfileSubtitle", "Escolha um perfil para continuar."))}</div>
+      <div class="jf-profile-title">${escapeHtml(L("kimIzliyor", "Kim izliyor?"))}</div>
+      <div class="jf-profile-subtitle">${escapeHtml(L("profilSecAlt", "Devam etmek için profil seç."))}</div>
 
       <div class="jf-profile-grid" role="list"></div>
 
@@ -745,12 +783,12 @@ function buildOverlayDom(L) {
           <div class="jf-profile-login-avatar"></div>
           <div class="jf-profile-login-name"></div>
 
-          <label class="jf-profile-login-label">${escapeHtml(L("password", "Senha"))}</label>
+          <label class="jf-profile-login-label">${escapeHtml(L("sifre", "Şifre"))}</label>
           <input class="jf-profile-login-input" type="password" autocomplete="current-password" />
 
           <div class="jf-profile-login-actions">
-            <button class="jf-profile-btn secondary" type="button" data-action="back">${escapeHtml(L("back", "Voltar"))}</button>
-            <button class="jf-profile-btn primary" type="button" data-action="login">${escapeHtml(L("continue", "Continuar"))}</button>
+            <button class="jf-profile-btn secondary" type="button" data-action="back">${escapeHtml(L("geri", "Geri"))}</button>
+            <button class="jf-profile-btn primary" type="button" data-action="login">${escapeHtml(L("devam", "Devam"))}</button>
           </div>
 
           <div class="jf-profile-login-hint"></div>
@@ -758,7 +796,7 @@ function buildOverlayDom(L) {
       </div>
 
       <div class="jf-profile-footer">
-        <button class="jf-profile-footer-btn" type="button" data-action="signout">${escapeHtml(L("signout", "Sair"))}</button>
+        <button class="jf-profile-footer-btn" type="button" data-action="signout">${escapeHtml(L("cikis", "Çıkış"))}</button>
       </div>
     </div>
   `;
@@ -808,7 +846,7 @@ function installHeaderButton(open, L, { isOverlayOpen } = {}) {
 
   function scheduleWarmupRefreshes() {
     clearWarmupRefreshes();
-    const placeholder = String(L("profil", "Perfil") || "Perfil").trim();
+    const placeholder = String(L("profil", "Profil") || "Profil").trim();
     const delays = [120, 420, 900, 1800, 3600, 7200];
 
     warmupRefreshIds = delays.map((delay) => window.setTimeout(() => {
@@ -876,12 +914,12 @@ function installHeaderButton(open, L, { isOverlayOpen } = {}) {
       const avatarSlot = btn.querySelector(".jf-profile-header-avatar");
       const nameSlot = btn.querySelector(".jf-profile-header-name");
       if (avatarSlot && !hasRenderableAvatarContent(avatarSlot)) {
-        setAvatarFallback(avatarSlot, { Name: L("profil", "Perfil") });
+        setAvatarFallback(avatarSlot, { Name: L("profil", "Profil") });
       }
       if (nameSlot && !String(nameSlot.textContent || "").trim()) {
-        nameSlot.textContent = L("profil", "Perfil");
+        nameSlot.textContent = L("profil", "Profil");
       }
-      btn.setAttribute("aria-label", L("profilDegistir", "Trocar Perfil"));
+      btn.setAttribute("aria-label", L("profilDegistir", "Profil değiştir"));
       btn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -925,7 +963,7 @@ function installHeaderButton(open, L, { isOverlayOpen } = {}) {
     const splashState = isCustomSplashBlockingProfileHeader() ? "splash" : "live";
 
     if (nameSlot) {
-      const next = userName || L("profil", "Perfil");
+      const next = userName || L("profil", "Profil");
       if (nameSlot.textContent !== next) nameSlot.textContent = next;
     }
 
@@ -1048,7 +1086,7 @@ async function authenticateByName(userName, password) {
 
   if (!res.ok) {
     const t = await res.text().catch(() => "");
-    throw new Error(`Falha no login (${res.status}) ${t}`.trim());
+    throw new Error(`Login başarısız (${res.status}) ${t}`.trim());
   }
   return await res.json();
 }
@@ -1194,8 +1232,8 @@ export function initProfileChooser(options = {}) {
       if (!uid) return;
 
       const u = await fetchUserByIdAuthed(uid).catch(() => null);
-      const newTag = String(u?.PrimaryImageTag || "").trim();
-      if (!newTag) return;
+      if (!u) return;
+      const newTag = getUserPrimaryImageTag(u);
 
       const store = readTokenStore();
       const cur = store?.[uid] || null;
@@ -1293,16 +1331,31 @@ export function initProfileChooser(options = {}) {
 
       let users = await fetchPublicUsers().catch(() => []);
 
-      if (users.length <= 1) {
-        try {
-          const ready = (typeof isAuthReadyStrict === "function" ? isAuthReadyStrict() : false);
-          if (ready) {
-            await waitForAuthReadyStrict?.(2000).catch(() => {});
-            const more = await fetchAllUsersAuthed().catch(() => []);
-            if (more.length > users.length) users = more;
+      try {
+        const ready = (typeof isAuthReadyStrict === "function" ? isAuthReadyStrict() : false);
+        if (ready) {
+          await waitForAuthReadyStrict?.(2000).catch(() => {});
+          const more = await fetchAllUsersAuthed().catch(() => []);
+          if (Array.isArray(more) && more.length) {
+            const merged = new Map();
+            for (const u of users) {
+              const id = String(u?.Id || u?.id || "").trim();
+              if (id) merged.set(id, u);
+            }
+            for (const u of more) {
+              const id = String(u?.Id || u?.id || "").trim();
+              if (!id) continue;
+              const prev = merged.get(id) || {};
+              merged.set(id, {
+                ...prev,
+                ...u,
+                PrimaryImageTag: getUserPrimaryImageTag(u) || getUserPrimaryImageTag(prev),
+              });
+            }
+            users = Array.from(merged.values());
           }
-        } catch {}
-      }
+        }
+      } catch {}
 
       currentList = users
         .filter(u => (u?.Id || u?.id) && (u?.Name || u?.name))
@@ -1310,13 +1363,13 @@ export function initProfileChooser(options = {}) {
           Id: String(u.Id || u.id),
           Name: String(u.Name || u.name),
           HasPassword: !!u.HasPassword,
-          PrimaryImageTag: u.PrimaryImageTag || "",
+          PrimaryImageTag: getUserPrimaryImageTag(u),
         }));
 
       if (!currentList.length && currentUserId) {
         currentList = [{
           Id: currentUserId,
-          Name: currentUserName || L("profil", "Perfil"),
+          Name: currentUserName || L("profil", "Profil"),
           HasPassword: false,
           PrimaryImageTag: "",
         }];
@@ -1411,8 +1464,8 @@ export function initProfileChooser(options = {}) {
               tabindex="0"
               data-action="userprofile"
               data-user-id="${escapeHtml(id)}"
-              aria-label="${escapeHtml(L("profilSayfasi", "Página de perfil"))}"
-              title="${escapeHtml(L("profilSayfasi", "Página de perfil"))}"
+              aria-label="${escapeHtml(L("profilSayfasi", "Profil sayfası"))}"
+              title="${escapeHtml(L("profilSayfasi", "Profil sayfası"))}"
             >⚙</span>
           ` : ``}
           <div class="jf-profile-avatar">${avatarFallbackHtml(name)}</div>
@@ -1423,19 +1476,19 @@ export function initProfileChooser(options = {}) {
             ${isOnline ? `
               <span class="jf-profile-badge-active jfpc-chip">
                 <span class="jf-profile-dot-online" aria-hidden="true"></span>
-                ${escapeHtml(L("online", "Online"))}
+                ${escapeHtml(L("cevrimici", "Çevrimiçi"))}
               </span>
             ` : ``}
             ${remembered ? `
-              <span class="jf-profile-badge jfpc-chip">${escapeHtml(L("rapido", "Rápido"))}</span>
+              <span class="jf-profile-badge jfpc-chip">${escapeHtml(L("hizli", "Hızlı"))}</span>
               <span
                 class="jf-profile-forget jfpc-chip"
                 role="button"
                 tabindex="0"
                 data-action="forget"
                 data-user-id="${escapeHtml(id)}"
-                aria-label="${escapeHtml(L("hizliyiKaldir", "Remover login rápido"))}"
-                title="${escapeHtml(L("hizliyiKaldir", "Remover login rápido"))}"
+                aria-label="${escapeHtml(L("hizliyiKaldir", "Hızlı girişi kaldır"))}"
+                title="${escapeHtml(L("hizliyiKaldir", "Hızlı girişi kaldır"))}"
               >✕ </span>
             ` : ``}
           </div>
@@ -1443,8 +1496,8 @@ export function initProfileChooser(options = {}) {
             <div class="jf-profile-now-playing" title="${escapeHtml(statusTitle || "")}">
               ${escapeHtml(
                 isPaused
-                  ? L("duraklatildi", "Pausado")
-                  : (isAudio ? L("dinliyor", "Ouvindo") : L("izliyor", "Assistindo"))
+                  ? L("duraklatildi", "Duraklatıldı")
+                  : (isAudio ? L("dinliyor", "Dinliyor") : L("izliyor", "İzliyor"))
               )}
               ${statusTitle ? `: ${escapeHtml(statusTitle)}` : ""}
             </div>
@@ -1466,7 +1519,7 @@ export function initProfileChooser(options = {}) {
       const slot = tile.querySelector(".jf-profile-avatar");
       if (!user || !slot) return;
 
-      const tag = store?.[id]?.primaryImageTag || user.PrimaryImageTag || "";
+      const tag = getUserPrimaryImageTag(user) || "";
       const nextKey = `${id}|${tag}`;
       const prevKey = slot.getAttribute("data-avatar-key") || "";
       if (prevKey === nextKey) return;
@@ -1503,8 +1556,7 @@ export function initProfileChooser(options = {}) {
     const hintEl = overlay.querySelector(".jf-profile-login-hint");
     const input = overlay.querySelector(".jf-profile-login-input");
 
-    const store = readTokenStore();
-    const tag = store?.[user.Id]?.primaryImageTag || user.PrimaryImageTag || "";
+    const tag = getUserPrimaryImageTag(user) || "";
     if (cardAvatar) {
       renderProfileAvatarSlot(
         cardAvatar,
@@ -1531,9 +1583,9 @@ export function initProfileChooser(options = {}) {
       const u = resp?.User || resp?.user || {};
       const userId = String(u?.Id || user.Id || "").trim();
       const userName = String(u?.Name || user.Name || "").trim();
-      const primaryImageTag = u?.PrimaryImageTag || "";
+      const primaryImageTag = getUserPrimaryImageTag(u);
 
-      if (!accessToken || !userId) throw new Error(L("loginEksikYanıt", "Resposta de login incompleta (token/userId)"));
+      if (!accessToken || !userId) throw new Error(L("loginEksikYanıt", "Login yanıtı eksik (token/userId)"));
 
       if (rememberTokens) {
         rememberUserToken({ userId, name: userName, accessToken, primaryImageTag });
@@ -1550,7 +1602,7 @@ export function initProfileChooser(options = {}) {
       close();
       try { location.reload(); } catch {}
     } catch (e) {
-      const msg = String(e?.message || L("loginBasarisiz", "Falha no login"));
+      const msg = String(e?.message || L("loginBasarisiz", "Login başarısız"));
       showLogin(user, { hint: msg });
     } finally {
       try { overlay?.classList.remove("busy"); } catch {}
@@ -1577,8 +1629,8 @@ export function initProfileChooser(options = {}) {
 
       try {
         const u = await fetchUserByIdAuthed(user.Id).catch(() => null);
-        const newTag = u?.PrimaryImageTag || "";
-        if (newTag) {
+        if (u) {
+          const newTag = getUserPrimaryImageTag(u);
           rememberUserToken({
             userId: user.Id,
             name: remembered.name || user.Name,

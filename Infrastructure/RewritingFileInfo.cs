@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using Microsoft.Extensions.FileProviders;
 
-namespace Jellyfin.Plugin.NexusPobreFlix
+namespace Jellyfin.Plugin.JMSFusion
 {
     internal sealed class RewritingFileInfo : IFileInfo
     {

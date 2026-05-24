@@ -25,6 +25,28 @@ function buildDetailsUrl({ itemId, serverId = "", detailsHref = "" } = {}) {
 }
 
 export function navigateToDetailsPage(options = {}) {
+  const itemId = String(options?.itemId || options?.item?.Id || "").trim();
+  if (itemId) {
+    if (typeof window.showItemDetailsPage === "function") {
+      try {
+        window.showItemDetailsPage(itemId);
+        return true;
+      } catch {}
+    }
+    const r = window.AppRouter || window.appRouter || window.router;
+    if (r && typeof r.showItem === "function") {
+      try {
+        r.showItem(itemId);
+        return true;
+      } catch {}
+    }
+    try {
+      const event = new CustomEvent("showItemDetails", { detail: { Id: itemId } });
+      window.dispatchEvent(event);
+      return true;
+    } catch {}
+  }
+
   const href = buildDetailsUrl(options);
   if (!href) return false;
 
@@ -45,19 +67,42 @@ function loadDetailsModalModule() {
 }
 
 export async function openDetailsModal(options = {}) {
-  if (!options?.itemId) return null;
+  const resolvedItemId = String(options?.itemId || options?.item?.Id || "").trim();
+  const resolvedDetailsHref = String(
+    options?.detailsHref ||
+    options?.item?.__detailsHref ||
+    options?.item?.__tmdbPageUrl ||
+    ""
+  ).trim();
+  if (!resolvedItemId && !options?.item) {
+    if (resolvedDetailsHref) {
+      navigateToDetailsPage({ ...options, detailsHref: resolvedDetailsHref });
+      return { navigated: true, disabled: false };
+    }
+    return null;
+  }
+
+  const normalizedOptions = resolvedItemId && !options?.itemId
+    ? { ...options, itemId: resolvedItemId }
+    : options;
 
   if (!isDetailsModalModuleEnabled()) {
-    navigateToDetailsPage(options);
+    navigateToDetailsPage({
+      ...normalizedOptions,
+      detailsHref: resolvedDetailsHref
+    });
     return { navigated: true, disabled: true };
   }
 
   try {
     const { openDetailsModal: openDetailsModalInner } = await loadDetailsModalModule();
-    return await openDetailsModalInner(options);
+    return await openDetailsModalInner(normalizedOptions);
   } catch (error) {
     console.warn("detailsModalLoader fallback navigation:", error);
-    navigateToDetailsPage(options);
+    navigateToDetailsPage({
+      ...normalizedOptions,
+      detailsHref: resolvedDetailsHref
+    });
     return { navigated: true, error };
   }
 }

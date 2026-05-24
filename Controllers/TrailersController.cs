@@ -5,15 +5,15 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.NexusPobreFlix;
-using Jellyfin.Plugin.NexusPobreFlix.Core;
+using Jellyfin.Plugin.JMSFusion;
+using Jellyfin.Plugin.JMSFusion.Core;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
+namespace Jellyfin.Plugin.JMSFusion.Controllers
 {
     [ApiController]
-    [Route("NexusPobreFlix/trailers")]
+    [Route("JMSFusion/trailers")]
     public class TrailersController : ControllerBase
     {
         private const string ApiUserHeaderRequiredCode = "trailers.api.user_header_required";
@@ -109,7 +109,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
         {
             if (!TryGetRequestUserId(out var userId))
             {
-                return ApiError(401, ApiUserHeaderRequiredCode, "Cabeçalho X-Emby-UserId é necessário.");
+                return ApiError(401, ApiUserHeaderRequiredCode, "X-Emby-UserId header gerekli.");
             }
 
             if (_jobs.TryGetValue(userId, out var job))
@@ -143,7 +143,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
         {
             if (!TryGetRequestUserId(out var userId))
             {
-                return ApiError(401, ApiUserHeaderRequiredCode, "Cabeçalho X-Emby-UserId é necessário.");
+                return ApiError(401, ApiUserHeaderRequiredCode, "X-Emby-UserId header gerekli.");
             }
 
             if (_jobs.TryGetValue(userId, out var job) && job.Running)
@@ -156,11 +156,11 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 {
                 }
 
-                SetLocalizedLastMessage(job, LastCancelRequestedCode, "Cancelamento solicitado.");
-                return ApiOkMessage(ApiCancelInProgressCode, "Cancelando tarefa...");
+                SetLocalizedLastMessage(job, LastCancelRequestedCode, "İş iptal istendi.");
+                return ApiOkMessage(ApiCancelInProgressCode, "İş iptal ediliyor...");
             }
 
-            return ApiOkMessage(ApiNoRunningJobCode, "Nenhuma tarefa em execução.");
+            return ApiOkMessage(ApiNoRunningJobCode, "Koşan iş yok.");
         }
 
         [HttpPost("run")]
@@ -168,7 +168,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
         {
             try
             {
-                var cfg = NexusPobreFlixPlugin.Instance?.Configuration;
+                var cfg = JMSFusionPlugin.Instance?.Configuration;
                 if (cfg is null)
                 {
                     return ApiError(
@@ -176,34 +176,34 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                         ApiPluginConfigUnavailableCode,
                         "Plugin configuration not available.",
                         hintCode: ApiPluginConfigHintCode,
-                        hint: "No Docker, /config/plugins e /config/plugins/configurations devem ter permissão de escrita; o plugin está realmente carregado? Verifique os logs do container.");
+                        hint: "Docker'da /config/plugins ve /config/plugins/configurations yazılabilir olmalı; plugin gerçekten yüklendi mi? Konteyner loglarına bakın.");
                 }
 
                 var token = Request.Headers["X-Emby-Token"].FirstOrDefault();
                 if (string.IsNullOrWhiteSpace(token))
                 {
-                    return ApiError(401, ApiTokenHeaderRequiredCode, "Cabeçalho X-Emby-Token é necessário.");
+                    return ApiError(401, ApiTokenHeaderRequiredCode, "X-Emby-Token header gerekli.");
                 }
 
                 if (!TryGetRequestUserId(out var userId))
                 {
-                    return ApiError(401, ApiUserHeaderRequiredCode, "O cabeçalho X-Emby-UserId é obrigatório.");
+                    return ApiError(401, ApiUserHeaderRequiredCode, "X-Emby-UserId header gerekli.");
                 }
 
                 var user = _users.GetUserById(userId);
                 if (user is null)
                 {
-                    return ApiError(401, ApiUserNotFoundCode, "Usuário não encontrado.");
+                    return ApiError(401, ApiUserNotFoundCode, "Kullanıcı bulunamadı.");
                 }
 
                 if (!IsAdminUser(user))
                 {
-                    return ApiError(403, ApiAdminRequiredCode, "Sadece admin usuários podem executar.");
+                    return ApiError(403, ApiAdminRequiredCode, "Sadece admin kullanıcılar çalıştırabilir.");
                 }
 
                 if (!cfg.AllowScriptExecution)
                 {
-                    return ApiError(403, ApiScriptExecutionDisabledCode, "Execução de scripts desativada (AllowScriptExecution=false).");
+                    return ApiError(403, ApiScriptExecutionDisabledCode, "Script çalıştırma kapalı (AllowScriptExecution=false).");
                 }
 
                 var steps = new List<string>();
@@ -219,13 +219,13 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 
                 if (steps.Count == 0)
                 {
-                    return ApiError(400, ApiNoTaskEnabledCode, "Nenhuma tarefa ativada.");
+                    return ApiError(400, ApiNoTaskEnabledCode, "Hiçbir görev etkin değil.");
                 }
 
                 if (_jobs.TryGetValue(userId, out var existing) && existing.Running)
                 {
                     var payload = CreatePayload(ok: false);
-                    AddLocalizedField(payload, "error", ApiAlreadyRunningCode, "Já existe uma tarefa em execução.");
+                    AddLocalizedField(payload, "error", ApiAlreadyRunningCode, "Zaten çalışan bir iş var.");
                     payload["running"] = true;
                     payload["startedAt"] = existing.StartedAt;
                     payload["progress01"] = Math.Round(existing.Progress01, 4);
@@ -286,7 +286,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                         SetLocalizedLastMessage(
                             job,
                             LastStepStartingCode,
-                            $"{step} iniciando...",
+                            $"{step} başlıyor...",
                             CreateArgs(("step", step)));
                         job.CurrentStepTotal = 0;
                         job.CurrentStepDone = 0;
@@ -301,18 +301,18 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                             job.AddLog($"{ts} {prefix} {line}");
                             SetRawLastMessage(job, line);
 
-                            if (line.Contains("NEXUS::TOTAL=", StringComparison.Ordinal))
+                            if (line.Contains("JMSF::TOTAL=", StringComparison.Ordinal))
                             {
-                                var num = line.Replace("NEXUS::TOTAL=", string.Empty, StringComparison.Ordinal);
+                                var num = line.Replace("JMSF::TOTAL=", string.Empty, StringComparison.Ordinal);
                                 if (int.TryParse(num, NumberStyles.Integer, CultureInfo.InvariantCulture, out var total))
                                 {
                                     job.CurrentStepTotal = total;
                                 }
                             }
 
-                            if (line.Contains("NEXUS::DONE=", StringComparison.Ordinal))
+                            if (line.Contains("JMSF::DONE=", StringComparison.Ordinal))
                             {
-                                var num = line.Replace("NEXUS::DONE=", string.Empty, StringComparison.Ordinal);
+                                var num = line.Replace("JMSF::DONE=", string.Empty, StringComparison.Ordinal);
                                 if (int.TryParse(num, NumberStyles.Integer, CultureInfo.InvariantCulture, out var done))
                                 {
                                     job.CurrentStepDone = done;
@@ -349,7 +349,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                         SetLocalizedLastMessage(
                             job,
                             LastStepFinishedCode,
-                            $"{step} concluído.",
+                            $"{step} bitti.",
                             CreateArgs(("step", step)));
                     }
 
@@ -360,14 +360,14 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 
                     if (job.Cts!.IsCancellationRequested)
                     {
-                        SetLocalizedLastMessage(job, LastCancelledCode, "Tarefa cancelada.");
+                        SetLocalizedLastMessage(job, LastCancelledCode, "İş iptal edildi.");
                     }
                     else
                     {
                         SetLocalizedLastMessage(
                             job,
                             LastFinishedCode,
-                            $"Concluído ✓ ({elapsedSeconds} s)",
+                            $"Bitti ✓ ({elapsedSeconds} sn)",
                             CreateArgs(("seconds", elapsedSeconds)));
                     }
                 });
@@ -383,7 +383,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             catch (Exception ex)
             {
                 var payload = CreatePayload(ok: false);
-                AddLocalizedField(payload, "error", ApiUnexpectedErrorCode, "Ocorreu um erro inesperado.");
+                AddLocalizedField(payload, "error", ApiUnexpectedErrorCode, "Beklenmeyen hata oluştu.");
                 payload["detail"] = ex.Message;
                 payload["stack"] = ex.ToString();
                 return StatusCode(500, payload);
@@ -393,7 +393,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
         [HttpGet("diag")]
         public IActionResult Diag()
         {
-            var cfg = NexusPobreFlixPlugin.Instance?.Configuration;
+            var cfg = JMSFusionPlugin.Instance?.Configuration;
             var hasYtDlp = _trailerService.HasCommand("yt-dlp");
             var hasDeno = _trailerService.HasCommand("deno");
             var hasFfprobe = _trailerService.HasCommand("ffprobe");
@@ -401,7 +401,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 
             try
             {
-                var probePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "nexus._probe");
+                var probePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "jmsf._probe");
                 System.IO.File.WriteAllText(probePath, "ok");
                 System.IO.File.Delete(probePath);
             }

@@ -656,6 +656,26 @@ export function stopLyricsSync() {
   }
 }
 
+export function clearLyricsRuntimeCaches() {
+  stopLyricsSync();
+  cancelOngoingFetch();
+  currentRequestKey = null;
+  requestSequence += 1;
+  lastActiveIdx = -1;
+  lastNextIdx = -1;
+  settingsInitialized = false;
+  settingsRefs = null;
+  contentContainer = null;
+  try { musicPlayerState.currentLyrics = []; } catch {}
+  try { musicPlayerState.lyricsCache = {}; } catch {}
+  try {
+    musicPlayerState.syncedLyrics = {
+      lines: [],
+      currentLine: -1
+    };
+  } catch {}
+}
+
 async function updateSingleTrackLyrics(trackId) {
   if (String(trackId || "").startsWith("radio:")) {
     setNoLyrics(config.languageLabels.radioNoLyrics || "Canli radyo yayini icin sarki sozu yok");

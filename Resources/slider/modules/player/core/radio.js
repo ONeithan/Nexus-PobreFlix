@@ -1,5 +1,5 @@
 import { getConfig } from "../../config.js";
-import { getEmbyHeaders, getSessionInfo } from "../../../../Plugins/NexusPobreFlix/runtime/api.js";
+import { getEmbyHeaders, getSessionInfo } from "../../../../Plugins/JMSFusion/runtime/api.js";
 import { musicPlayerState } from "./state.js";
 
 const RADIO_BROWSER_MIRRORS = [
@@ -218,6 +218,13 @@ export function getRadioStationArtCandidates(station) {
 const radioArtProbeCache = new Map();
 const radioArtResolveCache = new Map();
 const radioArtResolveInflight = new Map();
+
+export function clearRadioRuntimeCaches() {
+  radioArtProbeCache.clear();
+  radioArtResolveCache.clear();
+  radioArtResolveInflight.clear();
+  try { cleanupAttachedRadioStream(musicPlayerState?.audio); } catch {}
+}
 
 function getRadioArtResolveKey(station, candidates = []) {
   const stationIdentity = stationKey(station);
@@ -1554,7 +1561,7 @@ function readSharedStationsFromConfig(configData) {
 }
 
 async function fetchJmsConfig() {
-  const response = await fetch("/NexusPobreFlix/config", {
+  const response = await fetch("/JMSFusion/config", {
     method: "GET",
     cache: "no-store",
     headers: getEmbyHeaders({
@@ -1569,7 +1576,7 @@ async function fetchJmsConfig() {
     throw new Error(`HTTP ${response.status}`);
   }
 
-  setSharedBackendMode("NexusPobreFlix");
+  setSharedBackendMode("jmsfusion");
   return response.json().then((data) => {
     const unwrapped = data?.cfg;
     return unwrapped && typeof unwrapped === "object" ? unwrapped : (data || {});
@@ -1609,7 +1616,7 @@ export function getRadioPersistenceInfo() {
     mode: sharedBackendMode === "unknown" ? "auto" : sharedBackendMode,
     staticPath: STATIC_SHARED_RADIO_PATH,
     localKey: LOCAL_SHARED_RADIO_KEY,
-    supportsServerWrite: sharedBackendMode === "NexusPobreFlix"
+    supportsServerWrite: sharedBackendMode === "jmsfusion"
   };
 }
 
@@ -1632,7 +1639,7 @@ function withContributorMetadata(station) {
 async function persistSharedRadioStations(stations) {
   const sharedRecords = stations.map(toSharedRecord);
 
-  const response = await fetch("/NexusPobreFlix/config", {
+  const response = await fetch("/JMSFusion/config", {
     method: "POST",
     cache: "no-store",
     headers: getEmbyHeaders({
@@ -1657,7 +1664,7 @@ export async function fetchSharedRadioStations() {
     musicPlayerState.radioSharedStations = stations;
     return stations;
   } catch (error) {
-    if (sharedBackendMode !== "NexusPobreFlix") {
+    if (sharedBackendMode !== "jmsfusion") {
       return loadManualSharedStations();
     }
 

@@ -1,5 +1,5 @@
 import { getYoutubeEmbedUrl, getProviderUrl, isValidUrl, createTrailerIframe, debounce, getHighResImageUrls, prefetchImages, getHighestQualityBackdropIndex, createImageWarmQueue } from "./utils.js";
-import { updateFavoriteStatus, updatePlayedStatus, fetchItemDetails, getSessionInfo } from "../../Plugins/NexusPobreFlix/runtime/api.js";
+import { updateFavoriteStatus, updatePlayedStatus, fetchItemDetails, getSessionInfo } from "../../Plugins/JMSFusion/runtime/api.js";
 import { getConfig } from "./config.js";
 import { getLanguageLabels, getDefaultLanguage } from "../language/index.js";
 import { createSlidesContainer, createHorizontalGradientOverlay, createLogoContainer, createStatusContainer, createActorSlider, createInfoContainer, createDirectorContainer, createRatingContainer, createLanguageContainer, createMetaContainer, createMainContentContainer, createPlotContainer, createTitleContainer } from "./containerUtils.js";
@@ -39,6 +39,22 @@ let __bgHydrationQueue = [];
 let __bgHydrationRAF = 0;
 let __bgScrollActive = false;
 let __bgScrollIdleTimer = 0;
+
+export function cleanupSlideCreatorRuntime({ clearWarmQueue = true } = {}) {
+  if (__bgHydrationRAF) {
+    try { cancelAnimationFrame(__bgHydrationRAF); } catch {}
+    __bgHydrationRAF = 0;
+  }
+  __bgHydrationQueue = [];
+  if (__bgScrollIdleTimer) {
+    clearTimeout(__bgScrollIdleTimer);
+    __bgScrollIdleTimer = 0;
+  }
+  __bgScrollActive = false;
+  if (clearWarmQueue) {
+    try { backdropWarmQueue.clear?.({ resetSeen: true }); } catch {}
+  }
+}
 
 function bgQueueHydration(fn) {
   __bgHydrationQueue.push(fn);
@@ -393,10 +409,9 @@ async function createSlide(item, options = {}) {
   const slidesContainer = createSlidesContainer(indexPage);
   const existing = slidesContainer.querySelector(`.monwui-slide[data-item-id="${itemIdRaw}"]`);
   (function bindSlidesScrollPerf(){
-    if (window.__jmsSlidesScrollBound) return;
-    window.__jmsSlidesScrollBound = true;
-    const scroller = document.querySelector('#monwui-slides-container');
+    const scroller = slidesContainer;
     if (!scroller) return;
+    if (scroller.__jmsSlidesScrollPerfBound) return;
     const onScrollPerf = () => {
       __bgScrollActive = true;
       if (__bgScrollIdleTimer) clearTimeout(__bgScrollIdleTimer);
@@ -408,6 +423,17 @@ async function createSlide(item, options = {}) {
       }, BG_SCROLL_IDLE_MS);
     };
     scroller.addEventListener('scroll', onScrollPerf, { passive: true });
+    scroller.__jmsSlidesScrollPerfBound = true;
+    scroller.__jmsSlidesScrollPerfCleanup = () => {
+      try { scroller.removeEventListener('scroll', onScrollPerf); } catch {}
+      scroller.__jmsSlidesScrollPerfBound = false;
+      scroller.__jmsSlidesScrollPerfCleanup = null;
+      if (__bgScrollIdleTimer) {
+        clearTimeout(__bgScrollIdleTimer);
+        __bgScrollIdleTimer = 0;
+      }
+      __bgScrollActive = false;
+    };
   })();
   if (existing) {
    try { existing.__cleanupSlide?.(); } catch {}
@@ -754,16 +780,7 @@ async function createSlide(item, options = {}) {
   }
 
   function tryDisplayElement(index) {
-    if (index >= order.length) {
-      // Se chegamos ao fim da lista e nada foi exibido, forçamos a Logo Nexus PobreFlix
-      const nexusLogo = document.createElement("img");
-      nexusLogo.src = "/Resources/slider/src/images/logo_pobreflix.png";
-      nexusLogo.className = "monwui-nexus-branding-logo";
-      nexusLogo.style.maxHeight = "120px";
-      nexusLogo.style.objectFit = "contain";
-      logoContainer.appendChild(nexusLogo);
-      return;
-    }
+    if (index >= order.length) return;
     const type = order[index];
     if (type === "logo") {
       const element = createLogoElement(() => {
@@ -814,15 +831,17 @@ async function createSlide(item, options = {}) {
   const providerContainer = createProviderContainer({ config, ProviderIds, RemoteTrailers, itemId, slide, item });
   const languageContainer = createLanguageContainer({ config, MediaStreams, itemType });
 
-  const metaContainer = createMetaContainer(
+  const metaColorSeed = String(
     item?.Id || item?.Name || item?.BackdropImageTags?.[0] || Date.now()
   );
+  slide.dataset.metaColorSeed = metaColorSeed;
+  const metaContainer = createMetaContainer(metaColorSeed);
   if (statusContainer) metaContainer.appendChild(statusContainer);
   if (ratingExists) metaContainer.appendChild(ratingContainer);
   if (languageContainer) metaContainer.appendChild(languageContainer);
   const mainContentContainer = createMainContentContainer();
-  mainContentContainer.append(logoContainer, titleContainer, plotContainer, metaContainer, providerContainer);
-  slide.append(mainContentContainer, buttonContainer, actorSlider, infoContainer, directorContainer);
+  mainContentContainer.append(logoContainer, titleContainer, plotContainer, providerContainer);
+  slide.append(metaContainer, mainContentContainer, buttonContainer, actorSlider, infoContainer, directorContainer);
   const frag = document.createDocumentFragment();
   frag.appendChild(slide);
   const slideChildren = Array.from(slidesContainer.children).filter((child) => child.classList?.contains("monwui-slide"));
@@ -904,7 +923,7 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
   logoContainer.style.marginRight = "auto";
 
   const logoImg = document.createElement("img");
-  logoImg.src = itemId ? logoUrl : "/Resources/slider/src/images/logo_pobreflix.png";
+  logoImg.src = logoUrl;
   logoImg.alt = itemName;
   logoImg.style.maxHeight = "100%";
   logoImg.style.maxWidth = "100%";
@@ -912,19 +931,18 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
   logoImg.style.display = "block";
 
   logoImg.onerror = () => {
-    logoImg.src = "/Resources/slider/src/images/logo_pobreflix.png";
+    logoContainer.style.display = "none";
   };
 
   logoContainer.appendChild(logoImg);
 
   const titleElement = document.createElement("h3");
-  const itemDisplayName = itemName ? itemName : 'Conteúdo Desconhecido';
+  const itemDisplayName = itemName ? itemName : 'Bilinmeyen İçerik';
   titleElement.textContent = `${itemDisplayName} - ${config.languageLabels.fragman}`;
   titleElement.style.margin = "0";
   titleElement.style.marginLeft = "15px";
   titleElement.style.flex = "1";
   titleElement.style.textAlign = "center";
-  titleElement.style.color = "var(--monwui-primary, #7B2FBE)";
 
   const closeBtn = document.createElement("button");
   closeBtn.className = "monwui-trailer-modal-close";
@@ -997,10 +1015,10 @@ function openTrailerModal(trailerUrl, trailerName, itemName = '', itemType = '',
     try {
       iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
       iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-      iframe.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[50]}', '*');
+      iframe.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[5]}', '*');
       audioUnlocked = true;
     } catch (e) {
-      console.log("Ses açma hatası:", e);
+      console.log("Erro ao ativar áudio:", e);
     }
   };
 

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace Jellyfin.Plugin.NexusPobreFlix.Core
+namespace Jellyfin.Plugin.JMSFusion.Core
 {
     public sealed class TransformRequest
     {

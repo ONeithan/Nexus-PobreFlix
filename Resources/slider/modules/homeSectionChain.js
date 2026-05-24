@@ -3,13 +3,33 @@ import {
   getHomeSectionsRuntimeConfig,
   getManagedHomeSectionRuntimeOrder
 } from "./config.js";
+
+function isMobileWebViewRuntime() {
+  try {
+    const ua = String((typeof navigator !== "undefined" && navigator.userAgent) || "");
+    const uaMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    if (!uaMobile) return false;
+
+    const standalone = window.navigator?.standalone === true
+      || window.matchMedia?.("(display-mode: standalone)")?.matches === true;
+    const isWV = /\bwv\b|Crosswalk/i.test(ua);
+    const hasBridge = !!(window.cordova || window.Capacitor || window.ReactNativeWebView);
+    return !!(standalone || isWV || hasBridge);
+  } catch {
+    return false;
+  }
+}
+
+const HOME_IS_MOBILE_WEBVIEW = isMobileWebViewRuntime();
 const HOME_SCROLL_INTENT_EVENT = "jms:home-scroll-intent";
 const HOME_SCROLL_INTENT_TTL_MS = 30_000;
-const HOME_SCROLL_INTENT_END_PROGRESS_RATIO = 0.82;
+const HOME_SCROLL_INTENT_END_PROGRESS_RATIO = HOME_IS_MOBILE_WEBVIEW ? 0.72 : 0.82;
 const HOME_SCROLL_INTENT_MIN_PROGRESS_RATIO = 0.06;
 const HOME_SCROLL_INTENT_MIN_ADVANCE_RATIO = 0.003;
 const HOME_SECTION_TAIL_PRELOAD_RATIO = 0.28;
-const HOME_SECTION_QUEUE_ACTIVATE_ROOT_MARGIN = "0px 0px 18% 0px";
+const HOME_SECTION_QUEUE_ACTIVATE_ROOT_MARGIN = HOME_IS_MOBILE_WEBVIEW
+  ? "0px 0px 34% 0px"
+  : "0px 0px 18% 0px";
 const HOME_SECTION_QUEUE_HANDOFF_TIMEOUT_MS = 1800;
 const HOME_SECTION_QUEUE_DISCOVERY_WAIT_MS = 350;
 const HOME_SECTION_QUEUE_DISCOVERY_MAX_WAITS = 12;
@@ -350,6 +370,7 @@ function getSectionState(source = null) {
     top10SeriesRows: runtime.enableTop10SeriesRowsSection === true,
     top10MovieRows: runtime.enableTop10MovieRowsSection === true,
     tmdbTopMoviesRows: runtime.enableTmdbTopMoviesRowsSection === true,
+    tmdbTrailerRows: runtime.enableTmdbTrailerRowsSection === true,
     recentRows: runtime.enableRecentRowsSection === true,
     continueRows: runtime.enableContinueRowsSection === true,
     nextUpRows: runtime.enableNextUpRowsSection === true,
@@ -404,6 +425,7 @@ function hasSectionReady(key) {
     if (key === "top10SeriesRows") return window.__jmsTop10SeriesRowsDone === true;
     if (key === "top10MovieRows") return window.__jmsTop10MovieRowsDone === true;
     if (key === "tmdbTopMoviesRows") return window.__jmsTmdbTopMoviesRowsDone === true;
+    if (key === "tmdbTrailerRows") return window.__jmsTmdbTrailerRowsDone === true;
     if (key === "recentRows") return window.__jmsRecentRowsDone === true;
     if (key === "continueRows") return window.__jmsContinueRowsDone === true;
     if (key === "nextUpRows") return window.__jmsNextUpRowsDone === true;
@@ -422,6 +444,7 @@ function getSectionReadyEvents(key) {
   if (key === "top10SeriesRows") return ["jms:top10-series-rows-done"];
   if (key === "top10MovieRows") return ["jms:top10-movie-rows-done"];
   if (key === "tmdbTopMoviesRows") return ["jms:tmdb-top-movie-rows-done"];
+  if (key === "tmdbTrailerRows") return ["jms:tmdb-trailer-rows-done"];
   if (key === "recentRows") return ["jms:recent-rows-done"];
   if (key === "continueRows") return ["jms:continue-rows-done"];
   if (key === "nextUpRows") return ["jms:nextup-rows-done"];
@@ -490,6 +513,13 @@ function hasSectionRenderableContent(key) {
     );
   }
 
+  if (key === "tmdbTrailerRows") {
+    return hasRenderableManagedSections(
+      "tmdb-trailer-rows--",
+      ".recent-row-section .personal-recs-card:not(.skeleton), .recent-row-section .no-recommendations"
+    );
+  }
+
   if (key === "recentRows") {
     return hasRenderableManagedSections(
       "recent-rows--",
@@ -546,6 +576,7 @@ const COMPLETION_GATED_SECTION_KEYS = new Set([
   "top10SeriesRows",
   "top10MovieRows",
   "tmdbTopMoviesRows",
+  "tmdbTrailerRows",
   "recentRows",
   "continueRows",
   "nextUpRows",
@@ -567,6 +598,7 @@ function hasSectionCompleted(key) {
     if (key === "top10SeriesRows") return window.__jmsTop10SeriesRowsDone === true;
     if (key === "top10MovieRows") return window.__jmsTop10MovieRowsDone === true;
     if (key === "tmdbTopMoviesRows") return window.__jmsTmdbTopMoviesRowsDone === true;
+    if (key === "tmdbTrailerRows") return window.__jmsTmdbTrailerRowsDone === true;
     if (key === "recentRows") return window.__jmsRecentRowsDone === true;
     if (key === "continueRows") return window.__jmsContinueRowsDone === true;
     if (key === "nextUpRows") return window.__jmsNextUpRowsDone === true;
@@ -583,6 +615,7 @@ function getSectionCompletionEvents(key) {
   if (key === "top10SeriesRows") return ["jms:top10-series-rows-done"];
   if (key === "top10MovieRows") return ["jms:top10-movie-rows-done"];
   if (key === "tmdbTopMoviesRows") return ["jms:tmdb-top-movie-rows-done"];
+  if (key === "tmdbTrailerRows") return ["jms:tmdb-trailer-rows-done"];
   if (key === "recentRows") return ["jms:recent-rows-done"];
   if (key === "continueRows") return ["jms:continue-rows-done"];
   if (key === "nextUpRows") return ["jms:nextup-rows-done"];
@@ -1208,6 +1241,9 @@ function resolveAnchorElementByKey(key) {
   }
   if (key === "tmdbTopMoviesRows") {
     return getManagedSectionTail("tmdb-top-movie-rows--");
+  }
+  if (key === "tmdbTrailerRows") {
+    return getManagedSectionTail("tmdb-trailer-rows--");
   }
   if (key === "recentRows") {
     return getManagedSectionTail("recent-rows--");

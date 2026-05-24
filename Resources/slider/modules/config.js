@@ -6,12 +6,14 @@ let __globalOverride =
     : null;
 let __globalApplied = false;
 export const SETTINGS_HOTKEY_DEFAULT = "F2";
+const CINEMA_PREROLL_START_FULLSCREEN_DEFAULT = false;
 export const DEFAULT_MANAGED_HOME_SECTION_ORDER = Object.freeze([
   "studioHubs",
   "personalRecommendations",
   "top10SeriesRows",
   "top10MovieRows",
   "tmdbTopMoviesRows",
+  "tmdbTrailerRows",
   "recentRows",
   "continueRows",
   "nextUpRows",
@@ -95,6 +97,16 @@ export function normalizeManagedCardTitleDisplayMode(value) {
   }
 }
 
+function normalizeSliderCssVariant(value) {
+  const variant = String(value || "").trim().toLowerCase();
+  if (!variant) return "normalslider";
+  if (variant.includes("peak")) return "peakslider";
+  if (variant.includes("full")) return "normalslider";
+  if (variant.includes("normal")) return "normalslider";
+  if (variant.includes("slider")) return "slider";
+  return "normalslider";
+}
+
 function isRecognizedManagedHomeSectionOrderKey(value) {
   const key = String(value || "").trim();
   return !!key && (
@@ -162,6 +174,7 @@ export function normalizeManagedHomeSectionOrder(value = null, { nativeEntries }
 
   DEFAULT_MANAGED_HOME_SECTION_ORDER.forEach(push);
 
+  ensureImplicitManagedFollowerOrder(out, explicit, "tmdbTopMoviesRows", "tmdbTrailerRows");
   ensureImplicitManagedFollowerOrder(out, explicit, "recentRows", "continueRows");
   ensureImplicitManagedFollowerOrder(out, explicit, "continueRows", "nextUpRows");
 
@@ -192,6 +205,10 @@ function isTop10MovieRowsSectionEnabled(cfg = {}, masterEnabled = cfg?.enableHom
 
 function isTmdbTopMoviesRowsSectionEnabled(cfg = {}, masterEnabled = cfg?.enableHomeSectionsMaster !== false) {
   return masterEnabled && cfg?.enableRecentRows !== false && cfg?.enableTmdbTopMoviesRow !== false;
+}
+
+function isTmdbTrailerRowsSectionEnabled(cfg = {}, masterEnabled = cfg?.enableHomeSectionsMaster !== false) {
+  return masterEnabled && cfg?.enableRecentRows !== false && cfg?.enableTmdbTrailerRows !== false;
 }
 
 function isContinueRowsSectionEnabled(cfg = {}, masterEnabled = cfg?.enableHomeSectionsMaster !== false) {
@@ -237,6 +254,7 @@ function buildManagedHomeSectionEnabledMap(cfg = {}) {
     top10SeriesRows: isTop10SeriesRowsSectionEnabled(cfg, masterEnabled),
     top10MovieRows: isTop10MovieRowsSectionEnabled(cfg, masterEnabled),
     tmdbTopMoviesRows: isTmdbTopMoviesRowsSectionEnabled(cfg, masterEnabled),
+    tmdbTrailerRows: isTmdbTrailerRowsSectionEnabled(cfg, masterEnabled),
     recentRows: isRecentRowsSectionEnabled(cfg, masterEnabled),
     continueRows: isContinueRowsSectionEnabled(cfg, masterEnabled),
     nextUpRows: isNextUpRowsSectionEnabled(cfg, masterEnabled),
@@ -337,7 +355,7 @@ async function __fetchGlobalOverride(force = false) {
   }
   try {
     const profile = getDeviceProfileAuto();
-    const r = await fetch(`/Plugins/NexusPobreFlix/UserSettings?ts=${Date.now()}&profile=${profile}`, {
+    const r = await fetch(`/Plugins/JMSFusion/UserSettings?ts=${Date.now()}&profile=${profile}`, {
     });
     if (!r.ok) throw new Error();
     __globalOverride = await r.json();
@@ -440,8 +458,8 @@ export function getConfig() {
   }
 
   function readPeakSlider() {
-  const variant = (localStorage.getItem('cssVariant') || 'normalslider').toLowerCase();
-  const isPeakLike = ['peak', 'peakslider', 'peak-skin'].includes(variant);
+  const variant = normalizeSliderCssVariant(localStorage.getItem('cssVariant'));
+  const isPeakLike = variant === 'peakslider';
   if (variant) return isPeakLike;
   const explicit = localStorage.getItem('peakSlider');
   return explicit === 'true';
@@ -504,6 +522,17 @@ export function getConfig() {
   const fallbackShowOsdHeaderCommunityRating = localStorage.getItem('showCommunityRating') !== 'false';
   const fallbackShowOsdHeaderCriticRating = localStorage.getItem('showCriticRating') !== 'false';
   const fallbackShowOsdHeaderOfficialRating = localStorage.getItem('showOfficialRating') !== 'false';
+  const fallbackShowOsdHeaderClock = localStorage.getItem('showOsdHeaderClock') !== 'false';
+  const normalizeOsdHeaderClockFormat = (value) => {
+    const raw = String(value || '').trim().toLowerCase();
+    if (raw === '24' || raw === '24h' || raw === 'h23' || raw === 'hour24') return '24h';
+    if (raw === '12' || raw === '12h' || raw === 'h12' || raw === 'ampm') return '12h';
+    return 'auto';
+  };
+  const fallbackOsdHeaderClockFormat = normalizeOsdHeaderClockFormat(
+    localStorage.getItem('pauseOverlayOsdHeaderClockFormat') ||
+    localStorage.getItem('osdHeaderClockFormat')
+  );
   const normalizePauseOverlayCssVariant = (value) =>
     String(value || '').trim() === 'pauseModul2' ? 'pauseModul2' : 'pauseModul';
   const readPauseBool = (obj, key, fallback) =>
@@ -531,6 +560,8 @@ export function getConfig() {
         showOsdHeaderCommunityRating: readPauseBool(j, 'showOsdHeaderCommunityRating', fallbackShowOsdHeaderCommunityRating),
         showOsdHeaderCriticRating: readPauseBool(j, 'showOsdHeaderCriticRating', fallbackShowOsdHeaderCriticRating),
         showOsdHeaderOfficialRating: readPauseBool(j, 'showOsdHeaderOfficialRating', fallbackShowOsdHeaderOfficialRating),
+        showOsdHeaderClock: readPauseBool(j, 'showOsdHeaderClock', fallbackShowOsdHeaderClock),
+        osdHeaderClockFormat: normalizeOsdHeaderClockFormat(j.osdHeaderClockFormat),
         minVideoMinutes: safeMin,
         ageBadgeDurationMs: _num(j.ageBadgeDurationMs, 12000),
         ageBadgeLockMs: _num(j.ageBadgeLockMs, 6000),
@@ -543,12 +574,15 @@ export function getConfig() {
         'showOsdHeaderRatings',
         'showOsdHeaderCommunityRating',
         'showOsdHeaderCriticRating',
-        'showOsdHeaderOfficialRating'
+        'showOsdHeaderOfficialRating',
+        'showOsdHeaderClock',
+        'osdHeaderClockFormat'
       ].some(key => !Object.prototype.hasOwnProperty.call(j, key));
       if (
         safeMin !== mv ||
         missingOsdRatingKeys ||
-        normalizePauseOverlayCssVariant(j.cssVariant) !== String(j.cssVariant || '')
+        normalizePauseOverlayCssVariant(j.cssVariant) !== String(j.cssVariant || '') ||
+        normalizeOsdHeaderClockFormat(j.osdHeaderClockFormat) !== String(j.osdHeaderClockFormat || '')
       ) {
         try { localStorage.setItem('pauseOverlay', JSON.stringify(cfg)); } catch {}
       }
@@ -585,6 +619,8 @@ export function getConfig() {
     showOsdHeaderCommunityRating: fallbackShowOsdHeaderCommunityRating,
     showOsdHeaderCriticRating: fallbackShowOsdHeaderCriticRating,
     showOsdHeaderOfficialRating: fallbackShowOsdHeaderOfficialRating,
+    showOsdHeaderClock: fallbackShowOsdHeaderClock,
+    osdHeaderClockFormat: fallbackOsdHeaderClockFormat,
     minVideoMinutes: safeMinLegacy,
     ageBadgeDurationMs: 12000,
     ageBadgeLockMs: 6000,
@@ -634,6 +670,14 @@ export function getConfig() {
     showCommunityRating: localStorage.getItem('showCommunityRating') !== 'false',
     showCriticRating: localStorage.getItem('showCriticRating') !== 'false',
     showOfficialRating: localStorage.getItem('showOfficialRating') !== 'false',
+    showOsdHeaderClock: localStorage.getItem('showOsdHeaderClock') !== 'false',
+    osdHeaderClockFormat: (() => {
+      const raw = localStorage.getItem('osdHeaderClockFormat') || '';
+      const normalized = String(raw || '').trim().toLowerCase();
+      if (normalized === '24' || normalized === '24h' || normalized === 'h23' || normalized === 'hour24') return '24h';
+      if (normalized === '12' || normalized === '12h' || normalized === 'h12' || normalized === 'ampm') return '12h';
+      return 'auto';
+    })(),
     showStatusInfo: localStorage.getItem('showStatusInfo') !== 'false',
     showTypeInfo: localStorage.getItem('showTypeInfo') !== 'false',
     showWatchedInfo: localStorage.getItem('showWatchedInfo') !== 'false',
@@ -692,7 +736,7 @@ export function getConfig() {
     useRandomContent: localStorage.getItem('useRandomContent') !== 'false',
     fullscreenMode: localStorage.getItem('fullscreenMode') === 'true' ? true : false,
     listLimit: 20,
-    version: "v0.0.1",
+    version: "1.0.0.1 (Nexus Edition)",
     historySize: 20,
     updateInterval: 300000,
     nextTracksSource: localStorage.getItem('nextTracksSource') || 'playlist',
@@ -714,7 +758,7 @@ export function getConfig() {
     historylimit: parseInt(localStorage.getItem('historylimit'), 10) || 10,
     playerTheme: localStorage.getItem('playerTheme') || 'dark',
     playerStyle: localStorage.getItem('playerStyle') || 'player',
-    dateLocale: localStorage.getItem('dateLocale') || 'pt-BR',
+    dateLocale: localStorage.getItem('dateLocale') || 'tr-TR',
     maxExcludeIdsForUri: parseInt(localStorage.getItem('maxExcludeIdsForUri'), 10) || 100,
     nextTrack: parseInt(localStorage.getItem('nextTrack'), 10) || 100,
     topTrack: parseInt(localStorage.getItem('topTrack'), 10) || 30,
@@ -749,7 +793,85 @@ export function getConfig() {
     dotPreviewPlaybackMode: readDotPreviewMode(),
     preferTrailersInPreviewModal: localStorage.getItem('preferTrailersInPreviewModal') !== 'false',
     onlyTrailerInPreviewModal: localStorage.getItem('onlyTrailerInPreviewModal') === 'true' ? true : false,
-    hoverVolume: (v => isNaN(v) ? 80 : v)(parseInt(localStorage.getItem('hoverVolume'), 10)),
+    enableCinemaPreRollModule: (() => {
+      const storedValue = localStorage.getItem('enableCinemaPreRollModule');
+      if (storedValue === null) {
+        if (__globalOverride?.enableCinemaPreRollModule === true || __globalOverride?.enableCinemaPreRollModule === false) {
+          return __globalOverride.enableCinemaPreRollModule === true;
+        }
+        if (__globalOverride?.cinemaPreRollEnabled === true || __globalOverride?.cinemaPreRollEnabled === false) {
+          return __globalOverride.cinemaPreRollEnabled === true;
+        }
+        return localStorage.getItem('cinemaPreRollEnabled') === 'true';
+      }
+      return storedValue !== 'false';
+    })(),
+    cinemaPreRollEnabled: (() => {
+      const storedValue = localStorage.getItem('cinemaPreRollEnabled');
+      if (storedValue === null) {
+        if (__globalOverride?.cinemaPreRollEnabled === true || __globalOverride?.cinemaPreRollEnabled === false) {
+          return __globalOverride.cinemaPreRollEnabled === true;
+        }
+        return false;
+      }
+      return storedValue === 'true';
+    })(),
+    cinemaPreRollStartFullscreen: (() => {
+      const storedValue = localStorage.getItem('cinemaPreRollStartFullscreen');
+      if (storedValue === null) {
+        if (__globalOverride?.cinemaPreRollStartFullscreen === true || __globalOverride?.cinemaPreRollStartFullscreen === false) {
+          return __globalOverride.cinemaPreRollStartFullscreen === true;
+        }
+        return CINEMA_PREROLL_START_FULLSCREEN_DEFAULT;
+      }
+      return storedValue === 'true';
+    })(),
+    cinemaPreRollLanguage: (() => {
+      const storedValue = localStorage.getItem('cinemaPreRollLanguage');
+      const value = String(
+        storedValue === null || storedValue === ''
+          ? (__globalOverride?.cinemaPreRollLanguage || 'auto')
+          : storedValue
+      ).trim();
+
+      if (!value) return 'auto';
+      if (value.toLowerCase() === 'auto') return 'auto';
+      return value.replace('_', '-');
+    })(),
+    cinemaPreRollTrailerCount: (() => {
+      const storedValue = localStorage.getItem('cinemaPreRollTrailerCount');
+      const fallbackValue = __globalOverride?.cinemaPreRollTrailerCount;
+      const value = parseInt(
+        storedValue === null || storedValue === ''
+          ? fallbackValue
+          : storedValue,
+        10
+      );
+      if (!Number.isFinite(value)) return 2;
+      return Math.min(5, Math.max(1, value));
+    })(),
+    cinemaPreRollRegionMode: (() => {
+      const storedValue = localStorage.getItem('cinemaPreRollRegionMode');
+      const value = String(
+        storedValue === null || storedValue === ''
+          ? (__globalOverride?.cinemaPreRollRegionMode || 'auto')
+          : storedValue
+      ).trim().toLowerCase();
+      return value === 'global' || value === 'custom' ? value : 'auto';
+    })(),
+    cinemaPreRollCustomRegion: (() => {
+      const storedValue = localStorage.getItem('cinemaPreRollCustomRegion');
+      const value = String(
+        storedValue === null
+          ? (__globalOverride?.cinemaPreRollCustomRegion || '')
+          : storedValue
+      )
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-Z]/g, '')
+        .slice(0, 2);
+      return value.length === 2 ? value : '';
+    })(),
     enabledGmmp: localStorage.getItem('enabledGmmp') !== 'false',
     enableQualityBadges: localStorage.getItem('enableQualityBadges') !== 'false',
     enableTrailerThenVideo,
@@ -789,6 +911,11 @@ export function getConfig() {
     detailsModalLocalCommentsEnabled: localStorage.getItem('detailsModalLocalCommentsEnabled') === 'true',
     enableCustomSplashScreen: (localStorage.getItem('enableCustomSplashScreen') || 'true') !== 'false',
     customSplashTitle: (localStorage.getItem('customSplashTitle') || '').trim(),
+    hoverTrailerVolume: (() => {
+      const v = parseInt(localStorage.getItem('hoverTrailerVolume'), 10);
+      return Number.isFinite(v) ? Math.max(0, Math.min(100, v)) : 5;
+    })(),
+    autoPlayTrailers: localStorage.getItem('autoPlayTrailers') === 'true',
 
     enableDirectorRows: localStorage.getItem('enableDirectorRows') !== 'false',
     showDirectorRowsHeroCards: localStorage.getItem('showDirectorRowsHeroCards') !== 'false',
@@ -812,6 +939,7 @@ export function getConfig() {
     enableTop10MoviesRow: (localStorage.getItem('enableTop10MoviesRow') || 'true') !== 'false',
     enableTop10SeriesRow: (localStorage.getItem('enableTop10SeriesRow') || 'true') !== 'false',
     enableTmdbTopMoviesRow: localStorage.getItem('enableTmdbTopMoviesRow') === 'true',
+    enableTmdbTrailerRows: (localStorage.getItem('enableTmdbTrailerRows') || 'true') !== 'false',
 
     enableContinueMovies: (localStorage.getItem('enableContinueMovies') || 'true') !== 'false',
     showContinueMoviesHeroCards: (localStorage.getItem('showContinueMoviesHeroCards') || 'true') !== 'false',
@@ -910,12 +1038,6 @@ export function getConfig() {
     studioMiniTrailerPopover: (localStorage.getItem("studioMiniTrailerPopover") || "false") === "true",
     studioHubsMinRating: parseFloat(localStorage.getItem('studioHubsMinRating')) || 6.5,
     studioHubsCardCount: parseInt(localStorage.getItem('studioHubsCardCount'), 10) || 10,
-    studioHubsVolume: (() => {
-      const v = localStorage.getItem('studioHubsVolume');
-      if (v === 'muted' || v === '0') return 'muted';
-      const n = parseInt(v, 10);
-      return isNaN(n) ? 20 : n;
-    })(),
     personalRecsCardCount: parseInt(localStorage.getItem('personalRecsCardCount'), 10) || 9,
     studioHubsOrder: (() => {
       try {
@@ -1148,15 +1270,15 @@ export function getConfig() {
     allowedWriters: (() => {
       const defaultWriters = [
         "quentin tarantino",
-        "fernando meirelles",
-        "jose padilha",
-        "kleber mendonca filho",
+        "nuri bilge ceylan",
+        "zeki demirkubuz",
+        "yavuz turgul",
         "stephen king",
         "martin scorsese",
         "j.r.r. tolkien",
         "andrew kevin walker",
         "christopher nolan",
-        "glauber rocha",
+        "cem yılmaz",
         "thomas harris"
       ];
       let storedWriters = [];
@@ -1171,7 +1293,7 @@ export function getConfig() {
     minHighQualityWidth: parseInt(localStorage.getItem("minHighQualityWidth"), 10) || 1920,
     backdropMaxWidth: parseInt(localStorage.getItem("backdropMaxWidth"), 10) || 1920,
     minPixelCount: parseInt(localStorage.getItem("minPixelCount"), 10) || (1920 * 1080),
-    cssVariant: localStorage.getItem('cssVariant') || 'normalslider',
+    cssVariant: normalizeSliderCssVariant(localStorage.getItem('cssVariant')),
     peakSlider: readPeakSlider(),
     peakDiagonal: (() => {
       const v = localStorage.getItem('peakDiagonal');
@@ -1262,6 +1384,7 @@ export function getHomeSectionsRuntimeConfig(source = null) {
     enableTop10SeriesRowsSection: enabledMap.top10SeriesRows,
     enableTop10MovieRowsSection: enabledMap.top10MovieRows,
     enableTmdbTopMoviesRowsSection: enabledMap.tmdbTopMoviesRows,
+    enableTmdbTrailerRowsSection: enabledMap.tmdbTrailerRows,
     enableBecauseYouWatched: enabledMap.becauseYouWatched,
     enableGenreHubs: enabledMap.genreHubs,
     enableDirectorRows: enabledMap.directorRows,
@@ -1305,6 +1428,11 @@ export function isSubtitleCustomizerModuleEnabled(source = null) {
 export function isParentalPinModuleEnabled(source = null) {
   const cfg = source || getConfig();
   return cfg?.enableParentalPinModule !== false;
+}
+
+export function isCinemaPreRollModuleEnabled(source = null) {
+  const cfg = source || getConfig();
+  return cfg?.enableCinemaPreRollModule !== false;
 }
 
 export function isDetailsModalModuleEnabled(source = null) {
@@ -1356,7 +1484,7 @@ export async function publishAdminSnapshotIfForced() {
     }
 
     const targetProfile = getAdminTargetProfile();
-    const r = await fetch(`/Plugins/NexusPobreFlix/UserSettings?ts=${Date.now()}&profile=${targetProfile}`, {
+    const r = await fetch(`/Plugins/JMSFusion/UserSettings?ts=${Date.now()}&profile=${targetProfile}`, {
       cache: "no-store"
     });
     const j = r.ok ? await r.json() : null;
@@ -1371,11 +1499,11 @@ export async function publishAdminSnapshotIfForced() {
       "";
 
     if (!token) {
-      console.warn("[NexusPobreFlix] Auto publish skipped (no token).");
+      console.warn("[JMSFusion] Auto publish skipped (no token).");
       return { attempted: true, forced: true, ok: false, reason: "no-token", profile: targetProfile };
     }
 
-    const pr = await fetch(`/Plugins/NexusPobreFlix/UserSettings/Publish?ts=${Date.now()}&profile=${targetProfile}`, {
+    const pr = await fetch(`/Plugins/JMSFusion/UserSettings/Publish?ts=${Date.now()}&profile=${targetProfile}`, {
       method: "POST",
       cache: "no-store",
       headers: {
@@ -1386,14 +1514,14 @@ export async function publishAdminSnapshotIfForced() {
     });
 
     if (!pr.ok) {
-      console.warn("[NexusPobreFlix] Auto publish failed:", pr.status);
+      console.warn("[JMSFusion] Auto publish failed:", pr.status);
       return { attempted: true, forced: true, ok: false, reason: "http-error", status: pr.status, profile: targetProfile };
     }
 
-    console.log("[NexusPobreFlix] Auto publish success.");
+    console.log("[JMSFusion] Auto publish success.");
     return { attempted: true, forced: true, ok: true, profile: targetProfile };
   } catch (e) {
-    console.warn("[NexusPobreFlix] Auto publish error:", e);
+    console.warn("[JMSFusion] Auto publish error:", e);
     return {
       attempted: true,
       forced: true,
@@ -1454,7 +1582,7 @@ export function buildJfUrl(pathOrUrl) {
 
     if (!data?.forceGlobal) {
       if (!managedStorageActive && _restoreBackupIfAny()) {
-        console.log("[NexusPobreFlix] Restored user settings (global off).");
+        console.log("[JMSFusion] Restored user settings (global off).");
       }
       return;
     }
@@ -1463,7 +1591,7 @@ export function buildJfUrl(pathOrUrl) {
       window.ApiClient?._currentUser?.Policy?.IsAdministrator === true;
 
     if (isAdmin) {
-      console.log("[NexusPobreFlix] Admin user – skipping forced global apply.");
+      console.log("[JMSFusion] Admin user – skipping forced global apply.");
       return;
     }
 
@@ -1478,6 +1606,6 @@ export function buildJfUrl(pathOrUrl) {
     }
 
     __globalApplied = true;
-    console.log("[NexusPobreFlix] Global user settings applied (forced).");
+    console.log("[JMSFusion] Global user settings applied (forced).");
   } catch {}
 })();

@@ -59,8 +59,8 @@ export function createSliderPanel(config, labels) {
   const effective = getDefaultLanguage();
 
   const languages = [
-    { value: 'auto', label: labels.optionAuto || '🌐 Automático (Navegador)' },
-    { value: 'por',  label: labels.optionPortuguese || '🇧🇷 Português Brasil' },
+    { value: 'auto', label: labels.optionAuto || '🌐 Otomatik (Tarayıcı dili)' },
+    { value: 'por',  label: labels.optionPortuguese || '🇧🇷 Português (Brasil)' },
     { value: 'tur',  label: labels.optionTurkish || '🇹🇷 Türkçe' },
     { value: 'eng',  label: labels.optionEnglish || '🇬🇧 English' },
     { value: 'spa',  label: labels.optionEspanol || '🇪🇸 Español' },
@@ -130,17 +130,17 @@ export function createSliderPanel(config, labels) {
 
   const tmdbLangSelect = createSelectSimple(
     'tmdbReviewsLang',
-    labels.tmdbReviewsLang || 'Idioma das Resenhas',
+    labels.tmdbReviewsLang || 'Yorum Dili',
     lsGet(LS_TMDB_LANG, 'pt-BR'),
     [
       { value: 'pt-BR', label: '🇧🇷 Português (pt-BR)' },
-      { value: 'pt-BR', label: '🇹🇷 Türkçe (pt-BR)' },
+      { value: 'tr-TR', label: '🇹🇷 Türkçe (tr-TR)' },
       { value: 'en-US', label: '🇺🇸 English (en-US)' },
       { value: 'es-ES', label: '🇪🇸 Español (es-ES)' },
       { value: 'de-DE', label: '🇩🇪 Deutsch (de-DE)' },
       { value: 'fr-FR', label: '🇫🇷 Français (fr-FR)' },
       { value: 'ru-RU', label: '🇷🇺 Русский (ru-RU)' },
-      { value: '', label: labels.optionAuto || '🌐 Automático' },
+      { value: '', label: labels.noParam || '🌐 Otomatik (parametresiz)' },
     ]
   );
   tmdbLangSelect.sel.addEventListener('change', () => lsSet(LS_TMDB_LANG, tmdbLangSelect.sel.value));
@@ -160,23 +160,31 @@ export function createSliderPanel(config, labels) {
   cssLabel.textContent = labels.gorunum || 'CSS Varyantı:';
   const cssSelect = document.createElement('select');
   cssSelect.name = 'cssVariant';
+  const activeCssVariant = (() => {
+    const variant = String(config.cssVariant || '').trim().toLowerCase();
+    if (!variant) return 'normalslider';
+    if (variant.includes('peak')) return 'peakslider';
+    if (variant.includes('full')) return 'normalslider';
+    if (variant.includes('normal')) return 'normalslider';
+    if (variant.includes('slider')) return 'slider';
+    return 'normalslider';
+  })();
 
   const variants = [
     { value: 'slider', label: labels.kompaktslider || 'Kompakt' },
     { value: 'normalslider' ,label: labels.normalslider || 'Normal' },
-    { value: 'fullslider', label: labels.tamslider || 'Tam Ekran' },
     { value: 'peakslider', label: (labels.peakslider || 'Peak') },
   ];
 
   const enableSliderCheckbox = createCheckbox(
     'enableSlider',
-    labels.enableSlider || 'Ativar Banner (Slider)',
+    labels.enableSlider || 'Slider’ı Etkinleştir',
     (config.enableSlider !== false)
   );
 
   const onlyShowSliderOnHomeTabCheckbox = createCheckbox(
     'onlyShowSliderOnHomeTab',
-    labels.onlyShowSliderOnHomeTab || 'Apenas na Página Inicial',
+    labels.onlyShowSliderOnHomeTab || 'Sadece AnaSayfa Sekmesinde Göster',
     (config.onlyShowSliderOnHomeTab !== false)
   );
 
@@ -184,7 +192,7 @@ export function createSliderPanel(config, labels) {
     const option = document.createElement('option');
     option.value = variant.value;
     option.textContent = variant.label;
-    if (variant.value === config.cssVariant) {
+    if (variant.value === activeCssVariant) {
       option.selected = true;
     }
     cssSelect.appendChild(option);
@@ -193,7 +201,7 @@ export function createSliderPanel(config, labels) {
   const peakDiagonalCheckbox = createCheckbox(
     'peakDiagonal',
     labels.peakDiagonal || 'Diagonal Görünüm',
-    (config.cssVariant === 'peakslider') && !!config.peakDiagonal
+    (activeCssVariant === 'peakslider') && !!config.peakDiagonal
   );
 
   function updatePeakDiagonalVisibility() {
@@ -224,10 +232,11 @@ export function createSliderPanel(config, labels) {
   cssDesc.className = 'description-text';
   const baseDesc =
     labels.cssDescriptionBase ||
-    '• O Modo Tela Cheia foi otimizado para Desktop com Dot de Poster ativado.';
+    labels.cssDescription ||
+    "• Poster boyutlu dot kullanıyorsanız, ana sayfanızı 'Konumlandırma Ayarları' sekmesinden düzenlemelisiniz.";
   const mobileNote =
     labels.cssMobileNote ||
-    '• O modo Showcase ainda não está otimizado para dispositivos móveis.';
+    '• Vitrin görünüm henüz mobil için hazır değil.';
   cssDesc.innerHTML = `${baseDesc}<br><br>${mobileNote}`;
 
   cssLabel.htmlFor = 'cssVariantSelect';
@@ -302,7 +311,7 @@ export function createSliderPanel(config, labels) {
   const sliderDiv = document.createElement('div');
   sliderDiv.className = 'fsetting-item';
   const sliderLabel = document.createElement('h3');
-  sliderLabel.textContent = labels.sliderDuration || 'Duração do Slider (ms):';
+  sliderLabel.textContent = labels.sliderDuration || 'Slider Süresi (ms):';
   const sliderInput = document.createElement('input');
   sliderInput.type = 'number';
   sliderInput.value = config.sliderDuration || 15000;
@@ -313,7 +322,7 @@ export function createSliderPanel(config, labels) {
   sliderInput.id = 'sliderDurationInput';
   const sliderDesc = document.createElement('div');
   sliderDesc.className = 'description-text';
-  sliderDesc.textContent = labels.sliderDurationDescription || 'Este valor deve ser em milissegundos.';
+  sliderDesc.textContent = labels.sliderDurationDescription || 'Bu ayar, ms cinsinden olmalıdır.';
   sliderDiv.append(sliderLabel, sliderDesc, sliderInput);
 
   const showSecondsCheckbox = createCheckbox(
@@ -333,25 +342,25 @@ export function createSliderPanel(config, labels) {
   const playbackCheckboxesDiv = document.createElement('div');
   const trailerPlaybackCheckbox = createCheckbox(
     'enableTrailerPlayback',
-    labels.enableTrailerPlayback || 'Permitir Reprodução de Trailers',
+    labels.enableTrailerPlayback || 'Yerleşik Fragman Oynatımına İzin Ver',
     config.enableTrailerPlayback
   );
 
   const videoPlaybackCheckbox = createCheckbox(
     'enableVideoPlayback',
-    labels.enableVideoPlayback || 'Permitir Reprodução de Vídeos',
+    labels.enableVideoPlayback || 'Yerleşik Video Oynatımına İzin Ver',
     config.enableVideoPlayback
   );
 
   const trailerThenVideoCheckbox = createCheckbox(
     'enableTrailerThenVideo',
-    labels.enableTrailerThenVideo || 'Trailer primeiro, se não houver, Vídeo',
+    labels.enableTrailerThenVideo || 'Önce Fragman, Yoksa Video',
     config.enableTrailerThenVideo
   );
 
   const disableAllPlaybackCheckbox = createCheckbox(
     'disableAllPlayback',
-    labels.selectNone || 'Nenhum',
+    labels.selectNone || 'Hiçbiri',
     config.disableAllPlayback || false
   );
 
@@ -454,7 +463,7 @@ export function createSliderPanel(config, labels) {
   const delayDiv = document.createElement('div');
   delayDiv.className = 'fsetting-item trailer-delay-container';
   const delayLabel = document.createElement('label');
-  delayLabel.textContent = labels.gecikmeInput || 'Atraso na Reprodução (ms):';
+  delayLabel.textContent = labels.gecikmeInput || 'Yerleşik Fragman Gecikme Süresi (ms):';
   const delayInput = document.createElement('input');
   delayInput.type = 'number';
   delayInput.value = config.gecikmeSure || 500;
@@ -471,25 +480,25 @@ export function createSliderPanel(config, labels) {
   backgroundOptionsDiv.className = 'fsetting-item';
 
   const backgroundTitle = document.createElement('h3');
-  backgroundTitle.textContent = labels.backgroundOptions || 'Configurações de Imagem do Slider';
+  backgroundTitle.textContent = labels.backgroundOptions || 'Slider Görsel Gösterim Ayarları';
   backgroundOptionsDiv.appendChild(backgroundTitle);
   sliderDiv.appendChild(backgroundOptionsDiv);
 
   const indexZeroDesc = document.createElement('div');
   indexZeroDesc.className = 'description-text';
-  indexZeroDesc.textContent = labels.indexZeroDescription || 'Sempre seleciona a imagem de índice 0 (ignora filtros de qualidade).';
+  indexZeroDesc.textContent = labels.indexZeroDescription || 'Aktif olduğunda her zaman 0 indeksli görsel seçilir (diğer kalite filtrelerini devre dışı bırakır).';
   sliderDiv.appendChild(indexZeroDesc);
 
   const indexZeroCheckbox = createCheckbox(
     'indexZeroSelection',
-    labels.indexZeroSelection || 'Sempre selecionar imagem de índice 0',
+    labels.indexZeroSelection || 'Her zaman 0 indeksli görseli seç',
     config.indexZeroSelection
   );
   sliderDiv.appendChild(indexZeroCheckbox);
 
   const manualBackdropCheckbox = createCheckbox(
     'manualBackdropSelection',
-    labels.manualBackdropSelection || 'Alterar Fundo do Slide Manualmente',
+    labels.manualBackdropSelection || 'Slide Arkaplanı Değiştir',
     config.manualBackdropSelection
   );
   sliderDiv.appendChild(manualBackdropCheckbox);
@@ -497,7 +506,7 @@ export function createSliderPanel(config, labels) {
   const backdropDiv = document.createElement('div');
   backdropDiv.className = 'fsetting-item backdrop-container';
   const backdropLabel = document.createElement('label');
-  backdropLabel.textContent = labels.slideBackgroundImageType || 'Tipo de Imagem de Fundo do Slider:';
+  backdropLabel.textContent = labels.slideBackgroundImageType || 'Slider Arka Plan Görsel Türü:';
   const backdropSelect = createImageTypeSelect('backdropImageType', config.backdropImageType || 'backdropUrl', true);
   backdropLabel.htmlFor = 'backdropSelect';
   backdropSelect.id = 'backdropSelect';
@@ -507,7 +516,7 @@ export function createSliderPanel(config, labels) {
   const minQualityDiv = document.createElement('div');
   minQualityDiv.className = 'fsetting-item min-quality-container';
   const minQualityLabel = document.createElement('label');
-  minQualityLabel.textContent = labels.minHighQualityWidthInput || 'Largura Mínima (px):';
+  minQualityLabel.textContent = labels.minHighQualityWidthInput || 'Minimum Genişlik (px):';
 
   const minQualityInput = document.createElement('input');
   minQualityInput.type = 'number';
@@ -518,7 +527,7 @@ export function createSliderPanel(config, labels) {
   const minQualityDesc = document.createElement('div');
   minQualityDesc.className = 'description-text';
   minQualityDesc.textContent = labels.minHighQualitydescriptiontext ||
-    'Largura mínima para considerar uma imagem como de alta qualidade.';
+    'Bu ayar, arkaplan olarak atanacak görselin minimum genişliğini belirler.("Slide Arkaplanı Değiştir" aktif ise çalışmaz. Eğer belirlenen genişlikte görsel yok ise en kalitelisi seçilecektir.)';
 
   minQualityLabel.htmlFor = 'minHighQualityWidthInput';
   minQualityInput.id = 'minHighQualityWidthInput';
@@ -531,7 +540,7 @@ export function createSliderPanel(config, labels) {
   const backdropMaxWidthDiv = document.createElement('div');
   backdropMaxWidthDiv.className = 'fsetting-item min-quality-container';
   const backdropMaxWidthLabel = document.createElement('label');
-  backdropMaxWidthLabel.textContent = labels.backdropMaxWidthInput || 'Escala Máxima (px):';
+  backdropMaxWidthLabel.textContent = labels.backdropMaxWidthInput || 'Maksimum Ölçek (px):';
 
   const backdropMaxWidthInput = document.createElement('input');
   backdropMaxWidthInput.type = 'number';
@@ -542,7 +551,7 @@ export function createSliderPanel(config, labels) {
   const backdropMaxWidthDesc = document.createElement('div');
   backdropMaxWidthDesc.className = 'description-text';
   backdropMaxWidthDesc.textContent = labels.backdropMaxWidthLabel ||
-    'A imagem de fundo será redimensionada para este valor máximo se for maior.';
+    'Arkaplan olarak atanacak görsel girilen değer boyutunda ölçeklenir.("Slide Arkaplanı Değiştir" aktif ise çalışmaz. Görsel, belirlenen değerden küçük ise ölçeklendirmez)';
 
   backdropMaxWidthLabel.htmlFor = 'backdropMaxWidthInput';
   backdropMaxWidthInput.id = 'backdropMaxWidthInput';
@@ -552,7 +561,7 @@ export function createSliderPanel(config, labels) {
   const minPixelDiv = document.createElement('div');
   minPixelDiv.className = 'fsetting-item min-quality-container';
   const minPixelLabel = document.createElement('label');
-  minPixelLabel.textContent = labels.minPixelCountInput || 'Contagem Mínima de Pixels:';
+  minPixelLabel.textContent = labels.minPixelCountInput || 'Minimum Piksel Sayısı:';
 
   const minPixelInput = document.createElement('input');
   minPixelInput.type = 'number';
@@ -563,7 +572,7 @@ export function createSliderPanel(config, labels) {
   const minPixelDesc = document.createElement('div');
   minPixelDesc.className = 'description-text';
   minPixelDesc.textContent = labels.minPixelCountDescription ||
-    'Resultado da multiplicação Largura x Altura. Ex: 1920x1080 = 2073600 pixels.';
+    'Genişlik × yükseklik sonucudur. Bu değerden küçük görseller düşük kaliteli sayılır. Örn: 1920×1080 = 2073600';
 
   minPixelLabel.htmlFor = 'minPixelInput';
   minPixelInput.id = 'minPixelInput';
@@ -600,7 +609,7 @@ export function createSliderPanel(config, labels) {
 
   const minSizeDesc = document.createElement('div');
   minSizeDesc.className = 'description-text';
-  minSizeDesc.textContent = labels.minImageSizeDescription || 'Tamanho mínimo do arquivo da imagem em KB.';
+  minSizeDesc.textContent = labels.minImageSizeDescription || 'Seçilecek görselin minimum dosya boyutunu KB cinsinden belirtir.';
 
   minSizeLabel.htmlFor = 'minSizeInput';
   minSizeInput.id = 'minSizeInput';
@@ -620,7 +629,7 @@ export function createSliderPanel(config, labels) {
 
   const maxSizeDesc = document.createElement('div');
   maxSizeDesc.className = 'description-text';
-  maxSizeDesc.textContent = labels.maxImageSizeDescription || 'Tamanho máximo do arquivo da imagem em KB.';
+  maxSizeDesc.textContent = labels.maxImageSizeDescription || 'Seçilecek görselin maksimum dosya boyutunu KB cinsinden belirtir.';
 
   maxSizeLabel.htmlFor = 'maxSizeInput';
   maxSizeInput.id = 'maxSizeInput';
@@ -634,7 +643,7 @@ export function createSliderPanel(config, labels) {
   dotOptionsDiv.className = 'fsetting-item';
 
   const dotTitle = document.createElement('h3');
-  dotTitle.textContent = labels.dotOptions || 'Configurações de Navegação (Dots)';
+  dotTitle.textContent = labels.dotOptions || 'Navigasyon (Dot) Ayarları';
   dotOptionsDiv.appendChild(dotTitle);
   sliderDiv.appendChild(dotOptionsDiv);
 
@@ -650,7 +659,7 @@ export function createSliderPanel(config, labels) {
 
   const posterDotsDesc = document.createElement('div');
   posterDotsDesc.className = 'description-text';
-  posterDotsDesc.textContent = labels.posterDotsDescription || 'Ajusta os pontos de navegação para miniaturas em formato Poster.';
+  posterDotsDesc.textContent = labels.posterDotsDescription || 'Dot navigasyonu poster boyutuna getirir ( Slider Alanınıda konumlandırma gerektirir )';
   sliderDiv.appendChild(posterDotsDesc);
 
   const posterDotsCheckbox = createCheckbox(
@@ -677,7 +686,7 @@ export function createSliderPanel(config, labels) {
 
   const dotVisibleCountDesc = document.createElement('div');
   dotVisibleCountDesc.className = 'description-text';
-  dotVisibleCountDesc.textContent = labels.dotVisibleCountDescription || '0 = todos os pontos visíveis.';
+  dotVisibleCountDesc.textContent = labels.dotVisibleCountDescription || '0 = tüm dotlar görünür. Daha düşük değerlerde uzaktaki dotlar hidden sınıfı alır.';
 
   dotVisibleCountDiv.append(dotVisibleCountLabel, dotVisibleCountDesc, dotVisibleCountInput);
   sliderDiv.appendChild(dotVisibleCountDiv);
@@ -842,4 +851,3 @@ function updateTrailerRelatedFields() {
   }
 }
 document.addEventListener('DOMContentLoaded', updateTrailerRelatedFields);
-

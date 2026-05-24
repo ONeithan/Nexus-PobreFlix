@@ -34,7 +34,7 @@ export function normalizeLanguageCode(lang) {
 
 export function getLanguageLabels(lang) {
   const effective = normalizeLanguageCode(
-    lang || getEffectiveLanguage?.() || detectBrowserLanguage?.() || 'por'
+    lang || getEffectiveLanguage?.() || detectBrowserLanguage?.() || 'eng'
   );
 
   switch (effective) {
@@ -43,8 +43,8 @@ export function getLanguageLabels(lang) {
     case 'fre': return fraLabels;
     case 'rus': return rusLabels;
     case 'spa': return spaLabels;
-    case 'tur': return turLabels;
     case 'por': return porLabels;
+    case 'tur': return turLabels;
     default:    return porLabels;
   }
 }
@@ -73,7 +73,7 @@ export function getStoredLanguagePreference() {
 
 export function getEffectiveLanguage() {
   const pref = getStoredLanguagePreference();
-  if (!pref || pref === 'auto') return detectBrowserLanguage();
+  if (!pref || pref === 'auto') return 'por';
   return normalizeLanguageCode(pref);
 }
 

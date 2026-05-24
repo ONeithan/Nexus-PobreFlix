@@ -1,6 +1,6 @@
 import { getConfig } from './config.js';
 import { getLanguageLabels, getDefaultLanguage } from '../language/index.js';
-import { playNow, getVideoStreamUrl, fetchItemDetails, fetchPlayableItemDetails, updateFavoriteStatus, goToDetailsPage, fetchLocalTrailers, pickBestLocalTrailer, getCachedUserTopGenres } from '../../Plugins/NexusPobreFlix/runtime/api.js';
+import { playNow, getVideoStreamUrl, fetchItemDetails, fetchPlayableItemDetails, updateFavoriteStatus, goToDetailsPage, fetchLocalTrailers, pickBestLocalTrailer, getCachedUserTopGenres } from '../../Plugins/JMSFusion/runtime/api.js';
 import { getYoutubeEmbedUrl, isValidUrl } from './utils.js';
 import { getVideoQualityText } from './containerUtils.js';
 import { attachMiniPosterHover, openMiniPopoverFor } from "./studioHubsUtils.js";
@@ -233,7 +233,15 @@ export async function updateModalContent(item, videoUrl) {
     modalState.modalButtonsContainer.classList.remove('preview-buttons--hidden');
   }
 
-  if (onlyTrailer) {
+  const autoPlay = cfg.autoPlayTrailers !== false;
+  if (!autoPlay) {
+    hideTrailerIframe(modal);
+    if (modalState.modalVideo) {
+      try { modalState.modalVideo.pause(); } catch {}
+      modalState.modalVideo.style.display = 'none';
+      modalState.modalVideo.src = '';
+    }
+  } else if (onlyTrailer) {
     if (isLocal) {
       hideTrailerIframe(modal);
       if (modalState.modalVideo) {
@@ -343,7 +351,7 @@ export async function updateModalContent(item, videoUrl) {
   });
   const isFavorite = item.UserData?.IsFavorite || false;
   const videoStream = item.MediaStreams ? item.MediaStreams.find(s => s.Type === "Video") : null;
-  const qualityText = videoStream ? getVideoQualityText(videoStream) : '';
+  const qualityText = videoStream ? getVideoQualityText(videoStream, item.MediaStreams) : '';
 
   modalState.modalMeta.innerHTML = [
     qualityText,
@@ -642,7 +650,7 @@ export function createVideoModal({ showButtons = true, context = 'monwui-dot' } 
         const isMuted = typeof player.isMuted === 'function' ? player.isMuted() : (player.getVolume?.() === 0);
         if (isMuted) {
           player.unMute?.();
-          player.setVolume?.(100);
+          player.setVolume?.(5);
           player.playVideo?.();
           volumeButton.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
         } else {
@@ -650,15 +658,16 @@ export function createVideoModal({ showButtons = true, context = 'monwui-dot' } 
           volumeButton.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
         }
       } catch (err) {
-        console.error('Player ses kontrol hatası:', err);
+        console.error('Erro no controle de áudio do player:', err);
         toggleYouTubeVolumeManual(trailerIframe, volumeButton);
       }
       return;
     }
 
     if (modalState.modalVideo) {
+      const vol = getConfig().hoverTrailerVolume ?? 5;
       modalState.modalVideo.muted = !modalState.modalVideo.muted;
-      modalState.modalVideo.volume = modalState.modalVideo.muted ? 0 : 1.0;
+      modalState.modalVideo.volume = modalState.modalVideo.muted ? 0 : (vol / 100);
       volumeButton.innerHTML = modalState.modalVideo.muted
         ? '<i class="fa-solid fa-volume-xmark"></i>'
         : '<i class="fa-solid fa-volume-high"></i>';
@@ -697,8 +706,9 @@ export function createVideoModal({ showButtons = true, context = 'monwui-dot' } 
     if (trailerVisible) {
       volumeButton?.click();
     } else if (modalState.modalVideo) {
+      const vol = getConfig().hoverTrailerVolume ?? 5;
       modalState.modalVideo.muted = !modalState.modalVideo.muted;
-      modalState.modalVideo.volume = modalState.modalVideo.muted ? 0 : 1.0;
+      modalState.modalVideo.volume = modalState.modalVideo.muted ? 0 : (vol / 100);
       volumeButton.innerHTML = modalState.modalVideo.muted
         ? '<i class="fa-solid fa-volume-xmark"></i>'
         : '<i class="fa-solid fa-volume-high"></i>';
@@ -1236,15 +1246,48 @@ function mountTrailerBadge(card, text = 'Fragman') {
   const getId = (host) =>
     host?.dataset?.itemId || host?.dataset?.id || host?.closest?.('[data-id]')?.dataset?.id || null;
 
-  const openFromBadge = (evt) => {
+  let lastBadgeOpenAt = 0;
+  const openFromBadge = async (evt) => {
     if (evt.cancelable) evt.preventDefault();
     evt.stopImmediatePropagation();
     evt.stopPropagation();
+
+    const now = Date.now();
+    if (now - lastBadgeOpenAt < 700) return;
+    lastBadgeOpenAt = now;
+
     try { navigator.vibrate?.(8); } catch {}
     const itemId = getId(card);
     if (!itemId) return;
-    modalState.__suppressOpenUntil = 0;
-   openPreviewModalForItem(itemId, card, { bypass: true });
+    suppressHoverOpens(1600);
+
+    try {
+      await ensureOverlaysClosed();
+    } catch {}
+
+    if (typeof openDetailsModal === 'function') {
+      try {
+        await openDetailsModal({ itemId, originEl: card });
+        return;
+      } catch (err) {
+        console.warn('openDetailsModal failed (trailer badge):', err);
+      }
+    }
+
+    try {
+      if (window.showItemDetailsPage) {
+        window.showItemDetailsPage(itemId);
+        return;
+      }
+      const dialog = document.querySelector('.dialogContainer');
+      if (dialog) {
+        const event = new CustomEvent('showItemDetails', { detail: { Id: itemId } });
+        document.dispatchEvent(event);
+        return;
+      }
+    } catch {}
+
+    goToDetailsPageSafe(itemId);
   };
 
   el.addEventListener('click', openFromBadge, { passive: false });
@@ -1356,7 +1399,7 @@ function getYTPlayerForIframe(iframe) {
      } else {
        if (modalState._soundOn) {
          if (typeof ev.target.unMute === 'function') ev.target.unMute();
-         if (typeof ev.target.setVolume === 'function') ev.target.setVolume(100);
+         if (typeof ev.target.setVolume === 'function') ev.target.setVolume(getConfig().hoverTrailerVolume ?? 5);
        } else {
          if (typeof ev.target.mute === 'function') ev.target.mute();
        }
@@ -1777,10 +1820,9 @@ function installYTPlayer(iframe) {
     const handler = () => {
       try {
         const player = _ytPlayers.get(iframe);
+        const vol = getConfig().hoverTrailerVolume ?? 5;
         player?.unMute?.();
-        const currentHoverVolume = parseInt(localStorage.getItem('hoverVolume'), 10);
-        const prefVolume = (!isNaN(currentHoverVolume)) ? currentHoverVolume : 80;
-        player?.setVolume?.(prefVolume);
+        player?.setVolume?.(vol);
         player?.playVideo?.();
         if (btn) btn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
       } catch {}
@@ -1811,10 +1853,9 @@ function installYTPlayer(iframe) {
             }
 
             if ((isMobileAppEnv() || !isTouchRuntime()) && modalState._soundOn) {
+              const vol = getConfig().hoverTrailerVolume ?? 5;
               ev.target.unMute?.();
-              const currentHoverVolume = parseInt(localStorage.getItem('hoverVolume'), 10);
-              const prefVolume = (!isNaN(currentHoverVolume)) ? currentHoverVolume : 80;
-              ev.target.setVolume?.(prefVolume);
+              ev.target.setVolume?.(vol);
               try { ev.target.playVideo?.(); } catch {}
               setTimeout(() => {
                 try {
@@ -1845,9 +1886,7 @@ function installYTPlayer(iframe) {
             try {
      if (isMobileAppEnv() && modalState._soundOn) {
        event.target.unMute?.();
-       const currentHoverVolume = parseInt(localStorage.getItem('hoverVolume'), 10);
-       const prefVolume = (!isNaN(currentHoverVolume)) ? currentHoverVolume : 80;
-       event.target.setVolume?.(prefVolume);
+       event.target.setVolume?.(getConfig().hoverTrailerVolume ?? 5);
      }
    } catch {}
           }
@@ -1888,7 +1927,7 @@ function ensureYTAPI() {
         modalState._ytApiLoading = false;
         resolve();
       } else {
-        console.warn('YouTube API zaman aşımına uğradı, API olmadan devam ediyor');
+        console.warn('YouTube API expirou o tempo limite, continuando sem a API');
         modalState._ytApiReady = false;
         modalState._ytApiLoading = false;
         resolve();
@@ -1918,10 +1957,9 @@ export function applyVolumePreference(modal = modalState.videoModal) {
     return;
   }
   if (modalState.modalVideo) {
-    const currentHoverVolume = parseInt(localStorage.getItem('hoverVolume'), 10);
-    const prefVolume = (!isNaN(currentHoverVolume)) ? (currentHoverVolume / 100) : 0.8;
+    const vol = getConfig().hoverTrailerVolume ?? 5;
     modalState.modalVideo.muted = !modalState._soundOn;
-    modalState.modalVideo.volume = modalState._soundOn ? prefVolume : 0.0;
+    modalState.modalVideo.volume = modalState._soundOn ? (vol / 100) : 0.0;
   }
   if (volumeButton) {
     volumeButton.innerHTML = modalState._soundOn
@@ -1942,7 +1980,7 @@ function injectOrUpdateModalStyle() {
       background: rgba(28, 28, 46, 0.97);
       border-radius: 20px;
       box-shadow:
-        0 8px 32px 0 rgba(123, 47, 190, 0.35),
+        0 8px 32px 0 rgba(31, 38, 135, 0.38),
         0 1.5px 4px rgba(0, 0, 0, 0.09);
       z-index: 1000;
       display: none;
@@ -2133,14 +2171,26 @@ function injectOrUpdateModalStyle() {
       margin: 0 0 -6px 0;
     }
 
-    .video-preview-modal img.range-icon,
-    .video-preview-modal img.codec-icon,
-    .video-preview-modal img.quality-icon {
-      width: 24px;
-      height: 18px;
-      background: rgba(30, 30, 40, 0.7);
+    .video-preview-modal .preview-meta .monwui-quality-group {
+      align-items: center;
+      display: inline-flex !important;
+      flex-direction: row !important;
+      flex-wrap: nowrap !important;
+      flex-shrink: 0;
+      gap: 2px;
+      justify-content: flex-start;
+    }
+
+    .video-preview-modal .preview-meta .monwui-quality-segment {
+      align-items: center;
+      display: inline-flex !important;
+      flex-direction: row !important;
+      justify-content: center;
+      white-space: nowrap;
       border-radius: 4px;
-      padding: 1px;
+      background: rgba(56, 60, 90, 0.76);
+      color: #fff;
+      border: 1px solid rgba(194, 194, 255, 0.17);
     }
 
     .video-preview-modal .preview-genres {
@@ -2251,9 +2301,9 @@ function injectOrUpdateModalStyle() {
     }
 
     .video-preview-modal .preview-favorite-button.favorited {
-      background: linear-gradient(80deg, #9D58E2 65%, #7B2FBE 100%);
+      background: linear-gradient(80deg, #3fc37d 65%, #158654 100%);
       color: #fff;
-      border: 1px solid #7B2FBE;
+      border: 1px solid #25e098;
     }
 
     .video-preview-modal .preview-match-button {
@@ -2988,15 +3038,49 @@ export function bindModalEvents(modal) {
   modal.addEventListener('mouseenter', () => {
     modalState.isMouseInModal = true;
     clearTimeout(modalState.modalHideTimeout);
+    
+    // Atenua o trailer do YouTube proporcionalmente para 20% do volume original configurado
+    const vol = getConfig().hoverTrailerVolume ?? 5;
+    const attenuatedVol = Math.max(1, Math.round(vol * 0.2));
+    const iframe = modal.querySelector('.preview-trailer-iframe');
+    if (iframe && iframe.style.display !== 'none') {
+      try {
+        const player = _ytPlayers.get(iframe);
+        if (player && typeof player.setVolume === 'function') {
+          player.setVolume(attenuatedVol);
+        }
+      } catch {}
+    }
+    // Atenua o player de vídeo local proporcionalmente para 20% do volume original configurado
+    if (modalState.modalVideo && !modalState.modalVideo.muted && modalState._soundOn) {
+      modalState.modalVideo.volume = (vol * 0.2) / 100;
+    }
   });
-  modal.addEventListener('mouseleave', () => {
+
+  const restoreAndClose = () => {
     modalState.isMouseInModal = false;
+    
+    // Restaura o trailer do YouTube para o volume original configurado
+    const vol = getConfig().hoverTrailerVolume ?? 5;
+    const iframe = modal.querySelector('.preview-trailer-iframe');
+    if (iframe && iframe.style.display !== 'none') {
+      try {
+        const player = _ytPlayers.get(iframe);
+        if (player && typeof player.setVolume === 'function') {
+          player.setVolume(vol);
+        }
+      } catch {}
+    }
+    // Restaura o player de vídeo local para o volume original configurado
+    if (modalState.modalVideo && !modalState.modalVideo.muted && modalState._soundOn) {
+      modalState.modalVideo.volume = vol / 100;
+    }
+    
     closeVideoModal();
-  });
-  modal.addEventListener('pointerleave', () => {
-    modalState.isMouseInModal = false;
-    closeVideoModal();
-  });
+  };
+
+  modal.addEventListener('mouseleave', restoreAndClose);
+  modal.addEventListener('pointerleave', restoreAndClose);
 }
 
 async function closeMiniPopoverSafely() {

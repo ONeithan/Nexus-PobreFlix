@@ -1,5 +1,9 @@
 import { getConfig } from "./config.js";
 
+const USER_ALLOWED_KEYS = new Set([
+  "playerTheme"
+]);
+
 export function isLocalStorageAvailable() {
   try {
     const testKey = "test";
@@ -11,19 +15,16 @@ export function isLocalStorageAvailable() {
   }
 }
 
-export function updateConfig(updatedConfig) {
+export function updateConfig(updatedConfig, options = {}) {
   const cfg = getConfig();
+  const bypassGlobalLock = options?.bypassGlobalLock === true;
 
-  if (cfg?.forceGlobalUserSettings && !cfg?.currentUserIsAdmin) {
-    const allowedKeys = new Set([
-      "playerTheme"
-    ]);
-
+  if (cfg?.forceGlobalUserSettings && !cfg?.currentUserIsAdmin && !bypassGlobalLock) {
     const onlyAllowed =
-      Object.keys(updatedConfig || {}).every((key) => allowedKeys.has(key));
+      Object.keys(updatedConfig || {}).every((key) => USER_ALLOWED_KEYS.has(key));
 
     if (!onlyAllowed) {
-      console.warn("[NexusPobreFlix] Global settings forced - update blocked (non-admin).");
+      console.warn("[JMSFusion] Global settings forced - update blocked (non-admin).");
       return;
     }
   }

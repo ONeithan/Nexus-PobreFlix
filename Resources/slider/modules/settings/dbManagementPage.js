@@ -1,17 +1,11 @@
 import { createSection } from "./shared.js";
 import { showNotification } from "../player/ui/notification.js";
+import { getSessionInfo } from "../../../Plugins/JMSFusion/runtime/api.js";
 
-const RELEASE_WAIT_MS = 120;
-const DELETE_TIMEOUT_MS = 5000;
-const PROBE_DELETE_TIMEOUT_MS = 2500;
-const BACKUP_FORMAT = "jms-indexeddb-backup";
+const API_BASE = "/Plugins/JMSFusion/ScopedCache";
+const BACKUP_FORMAT = "jms-scoped-cache-backup";
 const BACKUP_FILE_VERSION = 1;
-
-function wait(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
+const SCOPED_CACHE_ROOT_HINT = "/plugins/configurations/JMSFusion/scoped-cache";
 
 function setStatus(node, message) {
   node.textContent = message || "";
@@ -25,21 +19,6 @@ function formatLabel(template, values = {}) {
   });
 }
 
-function requestToPromise(req) {
-  return new Promise((resolve, reject) => {
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error || new Error("IndexedDB isteği başarısız oldu."));
-  });
-}
-
-function transactionDone(tx) {
-  return new Promise((resolve, reject) => {
-    tx.oncomplete = () => resolve(true);
-    tx.onabort = () => reject(tx.error || new Error("IndexedDB işlemi iptal edildi."));
-    tx.onerror = () => reject(tx.error || new Error("IndexedDB işlemi başarısız oldu."));
-  });
-}
-
 function readFileAsText(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -49,12 +28,6 @@ function readFileAsText(file) {
   });
 }
 
-function countBackupRecords(backup) {
-  return (backup?.stores || []).reduce((total, store) => {
-    return total + (Array.isArray(store?.records) ? store.records.length : 0);
-  }, 0);
-}
-
 function sanitizeFileNamePart(value) {
   const normalized = String(value || "")
     .trim()
@@ -62,7 +35,7 @@ function sanitizeFileNamePart(value) {
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
 
-  return normalized || "database";
+  return normalized || "cache";
 }
 
 function buildBackupFileName(entry, exportedAt) {
@@ -70,7 +43,7 @@ function buildBackupFileName(entry, exportedAt) {
     .replace(/\.\d+Z$/, "Z")
     .replace(/:/g, "-");
 
-  return `${sanitizeFileNamePart(entry?.dbName || entry?.key)}-backup-${timestamp}.json`;
+  return `${sanitizeFileNamePart(entry?.cacheType || entry?.key)}-backup-${timestamp}.json`;
 }
 
 function downloadJsonFile(filename, payload) {
@@ -94,397 +67,220 @@ function downloadJsonFile(filename, payload) {
   }, 100);
 }
 
-function deleteIndexedDatabase(dbName, { timeoutMs = DELETE_TIMEOUT_MS } = {}) {
-  return new Promise((resolve, reject) => {
-    if (!dbName) {
-      reject(new Error("Silinecek veritabanı adı bulunamadı."));
-      return;
-    }
-
-    if (typeof indexedDB === "undefined") {
-      reject(new Error("Bu tarayıcı IndexedDB desteklemiyor."));
-      return;
-    }
-
-    let blocked = false;
-    let settled = false;
-    let timer = 0;
-
-    const finish = (callback) => {
-      if (settled) return;
-      settled = true;
-      if (timer) {
-        clearTimeout(timer);
-      }
-      callback();
-    };
-
-    try {
-      const req = indexedDB.deleteDatabase(dbName);
-
-      req.onblocked = () => {
-        blocked = true;
-      };
-
-      req.onerror = () => {
-        finish(() => {
-          reject(req.error || new Error(`${dbName} silinemedi.`));
-        });
-      };
-
-      req.onsuccess = () => {
-        finish(() => resolve({ blocked }));
-      };
-
-      timer = setTimeout(() => {
-        finish(() => {
-          reject(new Error(
-            blocked
-              ? "Veritabanı şu anda başka bir sekme veya açık bağlantı tarafından kullanılıyor. Sayfayı yenileyip tekrar deneyin."
-              : "Veritabanı silme işlemi zaman aşımına uğradı."
-          ));
-        });
-      }, Math.max(1500, Number(timeoutMs) || DELETE_TIMEOUT_MS));
-    } catch (error) {
-      reject(error);
-    }
-  });
-}
-
-async function openExistingIndexedDatabase(dbName) {
-  if (!dbName) {
-    throw new Error("Veritabanı adı bulunamadı.");
-  }
-
-  if (typeof indexedDB === "undefined") {
-    throw new Error("Bu tarayıcı IndexedDB desteklemiyor.");
-  }
-
-  if (typeof indexedDB.databases === "function") {
-    try {
-      const list = await indexedDB.databases();
-      if (Array.isArray(list) && !list.some((entry) => entry?.name === dbName)) {
-        return null;
-      }
-    } catch {}
-  }
-
-  return new Promise((resolve, reject) => {
-    let createdDuringProbe = false;
-
-    try {
-      const req = indexedDB.open(dbName);
-
-      req.onupgradeneeded = () => {
-        createdDuringProbe = true;
-      };
-
-      req.onerror = () => {
-        reject(req.error || new Error(`${dbName} açılamadı.`));
-      };
-
-      req.onsuccess = async () => {
-        const db = req.result;
-        const storeCount = Number(db?.objectStoreNames?.length || 0);
-
-        if (createdDuringProbe && storeCount === 0) {
-          try {
-            db.close();
-          } catch {}
-
-          try {
-            await deleteIndexedDatabase(dbName, { timeoutMs: PROBE_DELETE_TIMEOUT_MS });
-          } catch {}
-
-          resolve(null);
-          return;
-        }
-
-        resolve(db);
-      };
-    } catch (error) {
-      reject(error);
-    }
-  });
-}
-
-async function exportIndexedDatabase(dbName) {
-  const db = await openExistingIndexedDatabase(dbName);
-  if (!db) return null;
-
+function safeStorageGet(storage, key) {
   try {
-    const storeNames = Array.from(db.objectStoreNames || []);
-    if (!storeNames.length) return null;
-
-    const stores = [];
-
-    for (const storeName of storeNames) {
-      const tx = db.transaction(storeName, "readonly");
-      const store = tx.objectStore(storeName);
-      const indexes = Array.from(store.indexNames || []).map((indexName) => {
-        const index = store.index(indexName);
-        return {
-          name: index.name,
-          keyPath: index.keyPath ?? null,
-          unique: index.unique === true,
-          multiEntry: index.multiEntry === true
-        };
-      });
-      const records = await requestToPromise(store.getAll());
-      await transactionDone(tx);
-
-      stores.push({
-        name: store.name,
-        keyPath: store.keyPath ?? null,
-        autoIncrement: store.autoIncrement === true,
-        indexes,
-        records: Array.isArray(records) ? records : []
-      });
-    }
-
-    return {
-      format: BACKUP_FORMAT,
-      backupVersion: BACKUP_FILE_VERSION,
-      exportedAt: new Date().toISOString(),
-      dbName: db.name || dbName,
-      dbVersion: Math.max(1, Number(db.version) || 1),
-      stores,
-      metadata: {
-        totalStores: stores.length,
-        totalRecords: stores.reduce((total, store) => total + store.records.length, 0)
-      }
-    };
-  } finally {
-    try {
-      db.close();
-    } catch {}
+    return String(storage?.getItem?.(key) || "").trim();
+  } catch {
+    return "";
   }
 }
 
-function normalizeStoreDefinition(rawStore) {
-  const name = String(rawStore?.name || "").trim();
-  if (!name) return null;
+function pickFirstString(...values) {
+  for (const value of values) {
+    const out = String(value || "").trim();
+    if (out) return out;
+  }
+  return "";
+}
 
-  const seenIndexes = new Set();
-  const indexes = Array.isArray(rawStore?.indexes)
-    ? rawStore.indexes
-        .map((rawIndex) => {
-          const indexName = String(rawIndex?.name || "").trim();
-          if (!indexName || seenIndexes.has(indexName)) return null;
-          seenIndexes.add(indexName);
+function resolveScopedCacheScope() {
+  let session = null;
+  try {
+    session = typeof getSessionInfo === "function" ? getSessionInfo() : null;
+  } catch {
+    session = null;
+  }
 
-          return {
-            name: indexName,
-            keyPath: rawIndex?.keyPath ?? null,
-            unique: rawIndex?.unique === true,
-            multiEntry: rawIndex?.multiEntry === true
-          };
-        })
-        .filter(Boolean)
-    : [];
+  const serverId = pickFirstString(
+    session?.serverId,
+    safeStorageGet(globalThis.localStorage, "persist_server_id"),
+    safeStorageGet(globalThis.localStorage, "serverId"),
+    safeStorageGet(globalThis.sessionStorage, "serverId"),
+    "global"
+  );
+
+  const userId = pickFirstString(
+    session?.userId,
+    safeStorageGet(globalThis.localStorage, "persist_user_id"),
+    safeStorageGet(globalThis.localStorage, "jf_userId"),
+    safeStorageGet(globalThis.localStorage, "userId"),
+    "anon"
+  );
+
+  return `${serverId}|${userId}`;
+}
+
+function buildUrl(cacheType, scope) {
+  return `${API_BASE}/${encodeURIComponent(String(cacheType || "").trim())}/${encodeURIComponent(String(scope || "").trim())}?ts=${Date.now()}`;
+}
+
+async function readScopedCache(cacheType, scope) {
+  const response = await fetch(buildUrl(cacheType, scope), {
+    method: "GET",
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { Accept: "application/json" }
+  });
+
+  if (!response.ok) {
+    const raw = await response.text().catch(() => "");
+    throw new Error(raw || `${cacheType} cache read failed (${response.status})`);
+  }
+
+  const payload = await response.json().catch(() => ({}));
+  return payload && typeof payload === "object" && !Array.isArray(payload) ? payload : {};
+}
+
+async function writeScopedCache(cacheType, scope, payload) {
+  const response = await fetch(buildUrl(cacheType, scope), {
+    method: "POST",
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload && typeof payload === "object" && !Array.isArray(payload) ? payload : {})
+  });
+
+  if (!response.ok) {
+    const raw = await response.text().catch(() => "");
+    throw new Error(raw || `${cacheType} cache write failed (${response.status})`);
+  }
+
+  return response.json().catch(() => ({}));
+}
+
+async function deleteScopedCache(cacheType, scope) {
+  const response = await fetch(buildUrl(cacheType, scope), {
+    method: "DELETE",
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { Accept: "application/json" }
+  });
+
+  if (!response.ok) {
+    const raw = await response.text().catch(() => "");
+    throw new Error(raw || `${cacheType} cache delete failed (${response.status})`);
+  }
+
+  return response.json().catch(() => ({}));
+}
+
+function countRecordsInValue(value) {
+  if (Array.isArray(value)) return value.length;
+  if (value && typeof value === "object") return Object.keys(value).length;
+  return value == null ? 0 : 1;
+}
+
+function countTopLevelSections(payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return 0;
+  return Object.keys(payload).filter((key) => key !== "meta" && key !== "metadata").length;
+}
+
+function countCacheRecords(payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return 0;
+  return Object.entries(payload).reduce((total, [key, value]) => {
+    if (key === "meta" || key === "metadata") return total;
+    return total + countRecordsInValue(value);
+  }, 0);
+}
+
+function getPayloadSizeBytes(payload) {
+  try {
+    return new TextEncoder().encode(JSON.stringify(payload || {})).length;
+  } catch {
+    return 0;
+  }
+}
+
+function mapArrayByKey(records, keyName) {
+  const out = {};
+  for (const record of Array.isArray(records) ? records : []) {
+    const key = String(record?.[keyName] || "").trim();
+    if (key) out[key] = record;
+  }
+  return out;
+}
+
+function convertLegacyGmmpBackup(rawBackup) {
+  if (!rawBackup || typeof rawBackup !== "object" || !Array.isArray(rawBackup.tracks)) {
+    return null;
+  }
 
   return {
-    name,
-    keyPath: rawStore?.keyPath ?? null,
-    autoIncrement: rawStore?.autoIncrement === true,
-    indexes,
-    records: Array.isArray(rawStore?.records) ? rawStore.records : []
+    tracks: mapArrayByKey(rawBackup.tracks, "Id"),
+    deletedTracks: Array.isArray(rawBackup.deletedTracks) ? rawBackup.deletedTracks : [],
+    lyrics: mapArrayByKey(rawBackup.lyrics, "trackId"),
+    meta: {
+      restoredFromLegacyGmmpBackupAt: new Date().toISOString(),
+      legacyCreatedAt: rawBackup?.metadata?.createdAt || null
+    }
   };
 }
 
-function convertLegacyMusicBackup(rawBackup, entry) {
-  if (entry?.dbName !== "GMMP-MusicDB") return null;
-  if (!rawBackup || !Array.isArray(rawBackup.tracks)) return null;
+function normalizeRestorePayload(rawBackup, entry, labels) {
+  if (rawBackup?.format === BACKUP_FORMAT) {
+    const cacheType = String(rawBackup?.cacheType || "").trim();
+    if (cacheType && cacheType !== entry.cacheType) {
+      throw new Error(
+        formatLabel(
+          labels?.dbRestoreWrongDatabase ||
+            "Seçilen yedek {name} cache alanına ait değil.",
+          { name: entry.title }
+        )
+      );
+    }
 
+    const data = rawBackup?.data;
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      throw new Error(labels?.dbRestoreInvalidFile || "Geçersiz cache yedek dosyası.");
+    }
+
+    return data;
+  }
+
+  if (entry.cacheType === "gmmpMusic") {
+    const converted = convertLegacyGmmpBackup(rawBackup);
+    if (converted) return converted;
+  }
+
+  if (rawBackup && typeof rawBackup === "object" && !Array.isArray(rawBackup)) {
+    return rawBackup;
+  }
+
+  throw new Error(labels?.dbRestoreInvalidFile || "Geçersiz cache yedek dosyası.");
+}
+
+function buildScopedCacheBackup(entry, scope, data) {
+  const exportedAt = new Date().toISOString();
   return {
     format: BACKUP_FORMAT,
     backupVersion: BACKUP_FILE_VERSION,
-    exportedAt: rawBackup?.metadata?.createdAt || new Date().toISOString(),
-    dbName: entry.dbName,
-    dbVersion: 2,
-    sourceFormat: "gmmp-legacy-v1",
-    stores: [
-      {
-        name: "tracks",
-        keyPath: "Id",
-        autoIncrement: false,
-        indexes: [
-          { name: "Artists", keyPath: "Artists", unique: false, multiEntry: true },
-          { name: "ArtistIds", keyPath: "ArtistIds", unique: false, multiEntry: true },
-          { name: "Album", keyPath: "Album", unique: false, multiEntry: false },
-          { name: "AlbumArtist", keyPath: "AlbumArtist", unique: false, multiEntry: false },
-          { name: "DateCreated", keyPath: "DateCreated", unique: false, multiEntry: false },
-          { name: "LastUpdated", keyPath: "LastUpdated", unique: false, multiEntry: false }
-        ],
-        records: Array.isArray(rawBackup.tracks) ? rawBackup.tracks : []
-      },
-      {
-        name: "deletedTracks",
-        keyPath: "id",
-        autoIncrement: true,
-        indexes: [
-          { name: "trackId", keyPath: "trackId", unique: false, multiEntry: false },
-          { name: "deletedAt", keyPath: "deletedAt", unique: false, multiEntry: false }
-        ],
-        records: Array.isArray(rawBackup.deletedTracks) ? rawBackup.deletedTracks : []
-      },
-      {
-        name: "lyrics",
-        keyPath: "trackId",
-        autoIncrement: false,
-        indexes: [],
-        records: Array.isArray(rawBackup.lyrics) ? rawBackup.lyrics : []
-      }
-    ]
+    exportedAt,
+    cacheType: entry.cacheType,
+    cacheKey: entry.key,
+    title: entry.title,
+    scope,
+    data,
+    metadata: {
+      sectionCount: countTopLevelSections(data),
+      recordCount: countCacheRecords(data),
+      sizeBytes: getPayloadSizeBytes(data),
+      storageRoot: `${SCOPED_CACHE_ROOT_HINT}/${entry.cacheType}`
+    }
   };
 }
 
-function normalizeIndexedDatabaseBackup(rawBackup, entry, labels) {
-  const genericBackup =
-    rawBackup?.format === BACKUP_FORMAT && Array.isArray(rawBackup?.stores)
-      ? rawBackup
-      : convertLegacyMusicBackup(rawBackup, entry);
-
-  if (!genericBackup) {
-    throw new Error(labels?.dbRestoreInvalidFile || labels?.invalidBackupFile || "Geçersiz yedek dosyası.");
-  }
-
-  const dbName = String(genericBackup?.dbName || "").trim();
-  if (!dbName) {
-    throw new Error(labels?.dbRestoreInvalidFile || labels?.invalidBackupFile || "Geçersiz yedek dosyası.");
-  }
-
-  const seenStores = new Set();
-  const stores = (genericBackup.stores || [])
-    .map((store) => normalizeStoreDefinition(store))
-    .filter((store) => {
-      if (!store || seenStores.has(store.name)) return false;
-      seenStores.add(store.name);
-      return true;
-    });
-
-  if (!stores.length) {
-    throw new Error(labels?.dbRestoreInvalidFile || labels?.invalidBackupFile || "Geçersiz yedek dosyası.");
-  }
-
-  return {
-    format: BACKUP_FORMAT,
-    backupVersion: Math.max(1, Number(genericBackup?.backupVersion) || BACKUP_FILE_VERSION),
-    exportedAt: genericBackup?.exportedAt || new Date().toISOString(),
-    dbName,
-    dbVersion: Math.max(1, Number(genericBackup?.dbVersion) || 1),
-    stores
-  };
-}
-
-function createObjectStoreFromDefinition(db, storeDefinition) {
-  const options = {};
-
-  if (storeDefinition.keyPath != null) {
-    options.keyPath = storeDefinition.keyPath;
-  }
-
-  if (storeDefinition.autoIncrement) {
-    options.autoIncrement = true;
-  }
-
-  return Object.keys(options).length
-    ? db.createObjectStore(storeDefinition.name, options)
-    : db.createObjectStore(storeDefinition.name);
-}
-
-function ensureStoreIndexes(store, storeDefinition) {
-  const existingIndexNames = new Set(Array.from(store.indexNames || []));
-
-  for (const indexDefinition of storeDefinition.indexes || []) {
-    if (!indexDefinition?.name || existingIndexNames.has(indexDefinition.name)) continue;
-
-    store.createIndex(indexDefinition.name, indexDefinition.keyPath, {
-      unique: indexDefinition.unique === true,
-      multiEntry: indexDefinition.multiEntry === true
-    });
-  }
-}
-
-async function restoreIndexedDatabaseBackup(backup, { onStatus } = {}) {
-  const stores = Array.isArray(backup?.stores) ? backup.stores : [];
-  if (!backup?.dbName || !stores.length) {
-    throw new Error("Geri yüklenecek geçerli veritabanı bilgisi bulunamadı.");
-  }
-
-  onStatus?.("Veritabanı şeması oluşturuluyor...");
-
-  const db = await new Promise((resolve, reject) => {
-    try {
-      const req = indexedDB.open(backup.dbName, Math.max(1, Number(backup.dbVersion) || 1));
-
-      req.onupgradeneeded = (event) => {
-        const upgradeDb = req.result;
-        const upgradeTx = event?.target?.transaction;
-
-        for (const storeDefinition of stores) {
-          let store;
-
-          if (upgradeDb.objectStoreNames.contains(storeDefinition.name)) {
-            store = upgradeTx?.objectStore(storeDefinition.name);
-          } else {
-            store = createObjectStoreFromDefinition(upgradeDb, storeDefinition);
-          }
-
-          if (store) {
-            ensureStoreIndexes(store, storeDefinition);
-          }
-        }
-      };
-
-      req.onblocked = () => {
-        reject(new Error("Veritabanı başka bir sekme veya açık bağlantı tarafından kullanılıyor."));
-      };
-
-      req.onerror = () => {
-        reject(req.error || new Error(`${backup.dbName} oluşturulamadı.`));
-      };
-
-      req.onsuccess = () => resolve(req.result);
-    } catch (error) {
-      reject(error);
-    }
-  });
-
-  try {
-    for (let index = 0; index < stores.length; index++) {
-      const storeDefinition = stores[index];
-      const recordCount = Array.isArray(storeDefinition.records) ? storeDefinition.records.length : 0;
-
-      onStatus?.(
-        `"${storeDefinition.name}" geri yükleniyor (${index + 1}/${stores.length}, ${recordCount} kayıt)`
-      );
-
-      const tx = db.transaction(storeDefinition.name, "readwrite");
-      const store = tx.objectStore(storeDefinition.name);
-
-      for (const record of storeDefinition.records || []) {
-        store.put(record);
-      }
-
-      await transactionDone(tx);
-    }
-  } finally {
-    try {
-      db.close();
-    } catch {}
-  }
-}
-
-function getDatabaseEntries(labels) {
+function getCacheEntries(labels) {
   return [
     {
       key: "slider-cache",
-      dbName: "jms-slider-cache",
-      title: labels?.sliderCacheDbTitle || "Slider genel önbellek DB",
+      cacheType: "sliderCache",
+      title: labels?.sliderCacheDbTitle || "Slider genel cache",
       description:
         labels?.sliderCacheDbDescription ||
-        "Genel slider içerik detayları, sorgu sonuçları ve kısa süreli API önbellek kayıtları burada tutulur.",
+        "Genel slider içerik detayları, sorgu sonuçları ve kısa süreli API cache kayıtları burada tutulur.",
       prepare: async () => {
         const mod = await import("../sliderCache.js");
         await mod.prepareSliderCacheDbForDeletion?.();
@@ -492,11 +288,11 @@ function getDatabaseEntries(labels) {
     },
     {
       key: "recent-rows",
-      dbName: "monwui_recent_db",
-      title: labels?.recentRowsDbTitle || "Son eklenen ve devam et kartları DB",
+      cacheType: "recentRows",
+      title: labels?.recentRowsDbTitle || "Son eklenen ve devam et kartları cache",
       description:
         labels?.recentRowsDbDescription ||
-        "Son eklenenler, son bölümler, müzik satırları ve izlemeye devam kartlarında kullanılan önbellek verileri burada tutulur.",
+        "Son eklenenler, son bölümler, müzik satırları ve izlemeye devam kartlarında kullanılan cache verileri burada tutulur.",
       prepare: async () => {
         const mod = await import("../recentRowsDb.js");
         await mod.prepareRecentRowsDbForDeletion?.();
@@ -504,8 +300,8 @@ function getDatabaseEntries(labels) {
     },
     {
       key: "director-rows",
-      dbName: "jms_dirrows_db",
-      title: labels?.directorRowsDbTitle || "Yönetmen kartları DB",
+      cacheType: "directorRows",
+      title: labels?.directorRowsDbTitle || "Yönetmen kartları cache",
       description:
         labels?.directorRowsDbDescription ||
         "Yönetmen koleksiyon satırlarında kullanılan yönetmen ve içerik eşleşme verileri burada saklanır.",
@@ -516,11 +312,11 @@ function getDatabaseEntries(labels) {
     },
     {
       key: "personal-recommendations",
-      dbName: "jms_prc_db",
-      title: labels?.personalRecommendationsDbTitle || "Kişisel öneriler DB",
+      cacheType: "personalRecommendations",
+      title: labels?.personalRecommendationsDbTitle || "Kişisel öneriler cache",
       description:
         labels?.personalRecommendationsDbDescription ||
-        "\"Sana Özel Öneriler\" ve benzeri kişiselleştirilmiş öneri satırlarında kullanılan önbellek verileri burada tutulur.",
+        "\"Sana Özel Öneriler\" ve benzeri kişiselleştirilmiş öneri satırlarında kullanılan cache verileri burada tutulur.",
       prepare: async () => {
         const mod = await import("../prcDb.js");
         await mod.preparePrcDbForDeletion?.();
@@ -528,11 +324,11 @@ function getDatabaseEntries(labels) {
     },
     {
       key: "collection-cache",
-      dbName: "jms_collection_cache",
-      title: labels?.collectionCacheDbTitle || "Koleksiyon kartları DB",
+      cacheType: "collectionCache",
+      title: labels?.collectionCacheDbTitle || "Koleksiyon kartları cache",
       description:
         labels?.collectionCacheDbDescription ||
-        "Boxset ve koleksiyon kartları ile bu koleksiyonların içerik listeleri için tutulan önbellek burada saklanır.",
+        "Boxset ve koleksiyon kartları ile bu koleksiyonların içerik listeleri için tutulan cache burada saklanır.",
       prepare: async () => {
         const mod = await import("../collectionCacheDb.js");
         await mod.prepareCollectionCacheDbForDeletion?.();
@@ -540,11 +336,11 @@ function getDatabaseEntries(labels) {
     },
     {
       key: "gmmp-music",
-      dbName: "GMMP-MusicDB",
-      title: labels?.gmmpMusicDbTitle || "GMMP müzik DB",
+      cacheType: "gmmpMusic",
+      title: labels?.gmmpMusicDbTitle || "GMMP müzik cache",
       description:
         labels?.gmmpMusicDbDescription ||
-        "GMMP tarafındaki parça arşivi, silinen kayıt geçmişi ve şarkı sözleri bu veritabanında tutulur.",
+        "GMMP tarafındaki parça arşivi, silinen kayıt geçmişi ve şarkı sözleri bu JSON cache içinde tutulur.",
       prepare: async () => {
         const mod = await import("../player/utils/db.js");
         await mod.prepareMusicDbForDeletion?.();
@@ -553,7 +349,7 @@ function getDatabaseEntries(labels) {
   ];
 }
 
-function createDatabaseAction(entry, labels) {
+function createCacheAction(entry, labels, scope) {
   const row = document.createElement("div");
   row.className = "db-management-item";
 
@@ -569,10 +365,15 @@ function createDatabaseAction(entry, labels) {
   description.style.marginTop = "4px";
   description.textContent = entry.description;
 
-  const dbName = document.createElement("div");
-  dbName.className = "description-text2";
-  dbName.style.marginTop = "4px";
-  dbName.textContent = `DB: ${entry.dbName}`;
+  const cacheName = document.createElement("div");
+  cacheName.className = "description-text2";
+  cacheName.style.marginTop = "4px";
+  cacheName.textContent = `Cache: ${entry.cacheType}`;
+
+  const scopeName = document.createElement("div");
+  scopeName.className = "description-text2";
+  scopeName.style.marginTop = "2px";
+  scopeName.textContent = `Scope: ${scope}`;
 
   const status = document.createElement("div");
   status.className = "description-text2";
@@ -605,7 +406,7 @@ function createDatabaseAction(entry, labels) {
   function resetButtonLabels() {
     backupButton.textContent = labels?.dbBackupButton || labels?.backupDatabase || "Yedeği İndir";
     restoreButton.textContent = labels?.dbRestoreButton || labels?.restoreDatabase || "Yedeği Geri Yükle";
-    deleteButton.textContent = labels?.dbDeleteButton || "Tarayıcıdan Sil";
+    deleteButton.textContent = labels?.dbDeleteButton || "Cache Dosyasını Sil";
   }
 
   function setRowBusy(active) {
@@ -636,26 +437,20 @@ function createDatabaseAction(entry, labels) {
       backupButton,
       labels?.dbBackingUpButton || labels?.backupInProgress || "İndiriliyor...",
       async () => {
-        setStatus(status, labels?.dbBackupInProgress || "Veritabanı yedeği hazırlanıyor...");
+        setStatus(status, labels?.dbBackupInProgress || "Cache yedeği hazırlanıyor...");
 
         try {
-          const backup = await exportIndexedDatabase(entry.dbName);
-          if (!backup) {
-            throw new Error(
-              labels?.dbBackupMissingDatabase ||
-              "Yedeklenecek bir veritabanı bulunamadı. İlgili modülü önce en az bir kez kullanın."
-            );
-          }
-
+          const payload = await readScopedCache(entry.cacheType, scope);
+          const backup = buildScopedCacheBackup(entry, scope, payload);
           downloadJsonFile(buildBackupFileName(entry, backup.exportedAt), backup);
 
           const successText =
             formatLabel(
               labels?.dbBackupSuccessMessage ||
-                "Yedek indirildi. {storeCount} depo ve {recordCount} kayıt dışa aktarıldı.",
+                "Yedek indirildi. {storeCount} bölüm ve {recordCount} kayıt dışa aktarıldı.",
               {
-                storeCount: backup.stores.length,
-                recordCount: countBackupRecords(backup)
+                storeCount: backup.metadata.sectionCount,
+                recordCount: backup.metadata.recordCount
               }
             );
 
@@ -669,7 +464,7 @@ function createDatabaseAction(entry, labels) {
           const errorText =
             String(error?.message || "").trim() ||
             labels?.dbBackupFailed ||
-            "Veritabanı yedeklenemedi.";
+            "Cache yedeklenemedi.";
 
           setStatus(status, errorText);
           showNotification(
@@ -694,12 +489,13 @@ function createDatabaseAction(entry, labels) {
     const confirmMessage = [
       formatLabel(
         labels?.dbRestoreConfirmQuestion ||
-          "Seçilen yedekten {name} veritabanını geri yüklemek istiyor musun?",
+          "Seçilen yedekten {name} cache alanını geri yüklemek istiyor musun?",
         { name: entry.title }
       ),
-      `${labels?.dbDeleteConfirmDbLabel || "DB"}: ${entry.dbName}`,
+      `Cache: ${entry.cacheType}`,
+      `Scope: ${scope}`,
       labels?.dbRestoreConfirmOverwriteNote ||
-        "Mevcut tarayıcı verisi silinip yedek içeriği ile değiştirilecek."
+        "Mevcut JSON cache dosyası yedek içeriği ile değiştirilecek."
     ].join("\n\n");
 
     const confirmed = window.confirm(confirmMessage);
@@ -715,42 +511,24 @@ function createDatabaseAction(entry, labels) {
         try {
           const fileContent = await readFileAsText(file);
           const rawBackup = JSON.parse(fileContent);
-          const backup = normalizeIndexedDatabaseBackup(rawBackup, entry, labels);
-
-          if (backup.dbName !== entry.dbName) {
-            throw new Error(
-              formatLabel(
-                labels?.dbRestoreWrongDatabase ||
-                  "Seçilen yedek {name} veritabanına ait değil.",
-                { name: entry.title }
-              )
-            );
-          }
+          const payload = normalizeRestorePayload(rawBackup, entry, labels);
 
           setStatus(
             status,
             labels?.dbRestorePrepareInProgress ||
-              "Açık bağlantılar kapatılıyor ve veritabanı geri yüklemeye hazırlanıyor..."
+              "Cache bağlantıları kapatılıyor ve geri yüklemeye hazırlanıyor..."
           );
 
           await entry.prepare?.();
-          await wait(RELEASE_WAIT_MS);
-          await deleteIndexedDatabase(entry.dbName);
-          await wait(RELEASE_WAIT_MS);
-
-          await restoreIndexedDatabaseBackup(backup, {
-            onStatus: (message) => {
-              setStatus(status, message || labels?.dbRestoreInProgress || "Yedek geri yükleniyor...");
-            }
-          });
+          await writeScopedCache(entry.cacheType, scope, payload);
 
           const successText =
             formatLabel(
               labels?.dbRestoreSuccessMessage ||
-                "Geri yükleme tamamlandı. {storeCount} depo ve {recordCount} kayıt içeri aktarıldı.",
+                "Geri yükleme tamamlandı. {storeCount} bölüm ve {recordCount} kayıt içeri aktarıldı.",
               {
-                storeCount: backup.stores.length,
-                recordCount: countBackupRecords(backup)
+                storeCount: countTopLevelSections(payload),
+                recordCount: countCacheRecords(payload)
               }
             );
 
@@ -764,7 +542,7 @@ function createDatabaseAction(entry, labels) {
           const errorText =
             String(error?.message || "").trim() ||
             labels?.dbRestoreFailed ||
-            "Veritabanı geri yüklenemedi.";
+            "Cache geri yüklenemedi.";
 
           setStatus(status, errorText);
           showNotification(
@@ -782,11 +560,12 @@ function createDatabaseAction(entry, labels) {
   deleteButton.addEventListener("click", async () => {
     const confirmMessage = [
       formatLabel(
-        labels?.dbDeleteConfirmQuestion || "Do you want to delete the {name} database?",
+        labels?.dbDeleteConfirmQuestion || "{name} cache dosyasını silmek istiyor musun?",
         { name: entry.title }
       ),
-      `${labels?.dbDeleteConfirmDbLabel || "DB"}: ${entry.dbName}`,
-      labels?.dbDeleteConfirmRecreateNote || "This data will be recreated automatically when needed."
+      `Cache: ${entry.cacheType}`,
+      `Scope: ${scope}`,
+      labels?.dbDeleteConfirmRecreateNote || "Bu veri gerektiğinde otomatik olarak yeniden oluşturulur."
     ].join("\n\n");
 
     const confirmed = window.confirm(confirmMessage);
@@ -798,17 +577,16 @@ function createDatabaseAction(entry, labels) {
       async () => {
         setStatus(
           status,
-          labels?.dbDeleteInProgress || "Açık bağlantılar kapatılıyor ve veritabanı siliniyor..."
+          labels?.dbDeleteInProgress || "Cache bağlantıları kapatılıyor ve JSON dosyası siliniyor..."
         );
 
         try {
           await entry.prepare?.();
-          await wait(RELEASE_WAIT_MS);
-          await deleteIndexedDatabase(entry.dbName);
+          await deleteScopedCache(entry.cacheType, scope);
 
           const successText =
             labels?.dbDeleteSuccessMessage ||
-            "Silme tamamlandı. İlgili modül bu veritabanını ihtiyaç olduğunda yeniden oluşturur.";
+            "Silme tamamlandı. İlgili modül bu cache dosyasını ihtiyaç olduğunda yeniden oluşturur.";
           setStatus(status, successText);
 
           showNotification(
@@ -820,7 +598,7 @@ function createDatabaseAction(entry, labels) {
           const errorText =
             String(error?.message || "").trim() ||
             labels?.dbDeleteFailed ||
-            "Veritabanı silinemedi.";
+            "Cache silinemedi.";
 
           setStatus(status, errorText);
           showNotification(
@@ -835,7 +613,7 @@ function createDatabaseAction(entry, labels) {
 
   resetButtonLabels();
 
-  info.append(title, description, dbName, status);
+  info.append(title, description, cacheName, scopeName, status);
   actions.append(backupButton, restoreButton, deleteButton, restoreInput);
   row.append(info, actions);
   return row;
@@ -846,26 +624,27 @@ export function createDbManagementPanel(config, labels) {
   panel.id = "db-management-panel";
   panel.className = "settings-panel";
 
+  const scope = resolveScopedCacheScope();
   const introSection = createSection(labels?.dbManagementTab || "DB Yönetimi");
 
   const introText = document.createElement("div");
   introText.className = "description-text";
   introText.textContent =
     labels?.dbManagementDescription ||
-    "Buradan tarayıcıdaki IndexedDB veritabanlarını yedekleyebilir, geri yükleyebilir veya silebilirsiniz.";
+    "Buradan sunucudaki scoped JSON cache dosyalarını yedekleyebilir, geri yükleyebilir veya silebilirsiniz.";
 
   const blockedHint = document.createElement("div");
   blockedHint.className = "description-text2";
   blockedHint.style.marginTop = "8px";
   blockedHint.textContent =
     labels?.dbManagementBlockedHint ||
-    "İşlem açık bir sekme veya aktif bağlantı yüzünden engellenirse sayfayı yenileyip tekrar deneyin.";
+    `${SCOPED_CACHE_ROOT_HINT} altındaki dosyalar aktif sunucu ve kullanıcı scope'una göre yönetilir.`;
 
   introSection.append(introText, blockedHint);
 
-  const listSection = createSection(labels?.dbManagementListTitle || "Yönetilebilir Veritabanları");
-  getDatabaseEntries(labels).forEach((entry) => {
-    listSection.appendChild(createDatabaseAction(entry, labels));
+  const listSection = createSection(labels?.dbManagementListTitle || "Yönetilebilir Cache Dosyaları");
+  getCacheEntries(labels).forEach((entry) => {
+    listSection.appendChild(createCacheAction(entry, labels, scope));
   });
 
   panel.append(introSection, listSection);

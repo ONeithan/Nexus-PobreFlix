@@ -27,7 +27,7 @@ import {
   resolveRadioStationArtUrl,
   resolveRadioStream
 } from "../core/radio.js";
-import { getVideoStreamUrl, getAuthHeader, getEmbyHeaders, getSessionInfo } from "../../../../Plugins/NexusPobreFlix/runtime/api.js";
+import { getVideoStreamUrl, getAuthHeader, getEmbyHeaders, getSessionInfo } from "../../../../Plugins/JMSFusion/runtime/api.js";
 
 const config = getConfig();
 const SEEK_RETRY_DELAY = 0;
@@ -54,14 +54,14 @@ const updatePlaybackUI = (isPlaying) => {
 };
 
 const handlePlaybackError = (error, action = 'play') => {
-  console.error(`Erro durante a reprodução ${action}:`, error);
+  console.error(`Oynatma sırasında hata oluştu ${action}:`, error);
   const t = musicPlayerState.playlist[musicPlayerState.currentIndex];
   if (t && musicPlayerState.isPlayingReported) {
     reportPlaybackStopped(t, convertSecondsToTicks(musicPlayerState.audio?.currentTime || 0));
     musicPlayerState.isPlayingReported = false;
   }
   showNotification(
-  `<i class="fas fa-exclamation-circle"></i> ${config.languageLabels.playbackError || "Erro de Reprodução"}`,
+  `<i class="fas fa-exclamation-circle"></i> ${config.languageLabels.playbackError || "Oynatma Hatası"}`,
   3000,
   'error'
 );
@@ -184,7 +184,7 @@ function refreshLiveRadioTrackInfo(track) {
 
 
 function handlePlayError() {
-  console.error("Erro ao carregar música:", musicPlayerState.audio.src);
+  console.error("Şarkı yükleme hatası:", musicPlayerState.audio.src);
   const t = musicPlayerState.playlist[musicPlayerState.currentIndex];
   if (t && musicPlayerState.isPlayingReported) {
     reportPlaybackStopped(t, convertSecondsToTicks(musicPlayerState.audio?.currentTime || 0));
@@ -261,7 +261,7 @@ export function handleSongEnd() {
     updatePlaybackUI(false);
     if (musicPlayerState.playlistSource === "radio") {
       showNotification(
-        config.languageLabels.radioPlaybackStopped || "Transmissão de rádio encerrada",
+        config.languageLabels.radioPlaybackStopped || "Radyo yayini sonlandi",
         2000,
         'info'
       );
@@ -301,7 +301,7 @@ export function togglePlayPause() {
   const { audio } = musicPlayerState;
 
   if (!audio) {
-    console.warn('Áudio não encontrado');
+    console.warn('Ses okunamadı');
     return;
   }
 
@@ -345,7 +345,7 @@ export function playPrevious() {
     updatePlaybackUI(false);
     if (musicPlayerState.playlistSource === "radio") return;
     showNotification(
-      config.languageLabels.playlistEnded || "Playlist finalizada, atualizando...",
+      config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
       2000,
       'info'
     );
@@ -400,7 +400,7 @@ export function playNext() {
     updatePlaybackUI(false);
     if (musicPlayerState.playlistSource === "radio") return;
     showNotification(
-      config.languageLabels.playlistEnded || "Playlist finalizada, atualizando...",
+      config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
       2000,
       'info'
     );
@@ -412,7 +412,7 @@ export function playNext() {
     updatePlaybackUI(false);
     if (musicPlayerState.playlistSource === "radio") return;
     showNotification(
-      config.languageLabels.playlistEnded || "Playlist finalizada, atualizando...",
+      config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
       2000,
       'info'
     );
@@ -429,7 +429,7 @@ export function playNext() {
     if (playlist.length === 0) {
       updatePlaybackUI(false);
       showNotification(
-        config.languageLabels.playlistEnded || "Playlist finalizada, atualizando...",
+        config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
         2000,
         'info'
       );
@@ -463,7 +463,7 @@ export function playNext() {
         }
         updatePlaybackUI(false);
         showNotification(
-          config.languageLabels.playlistEnded || "Playlist finalizada, atualizando...",
+          config.languageLabels.playlistEnded || "Oynatma listesi bitti, yenileniyor...",
           2000,
           'info'
         );
@@ -556,11 +556,11 @@ async function updateTrackMeta(track) {
 
   if (isRadioTrack(track)) {
     const radioMeta = [
-      { key: 'radioLiveLabel', label: config.languageLabels.radioLiveLabel || "AO VIVO", icon: 'fas fa-broadcast-tower', text: config.languageLabels.radioLiveLabel || "AO VIVO", compact: true },
-      { key: 'country', label: config.languageLabels.country || "País", icon: 'fas fa-globe', text: track.Country || track.Language },
+      { key: 'radioLiveLabel', label: config.languageLabels.radioLiveLabel || "LIVE", icon: 'fas fa-broadcast-tower', text: config.languageLabels.radioLiveLabel || "LIVE", compact: true },
+      { key: 'country', label: config.languageLabels.country || "Ülke", icon: 'fas fa-globe', text: track.Country || track.Language },
       { key: 'codec', label: config.languageLabels.codec || "Codec", icon: 'fas fa-wave-square', text: track.Codec || "" },
       { key: 'bitrate', label: config.languageLabels.bitrate || "Bitrate", icon: 'fas fa-tachometer-alt', text: track.Bitrate > 0 ? `${track.Bitrate} kbps` : "", compact: true },
-      { key: 'tag', label: config.languageLabels.tags || "Tag", icon: 'fas fa-tags', text: track.TagsText || "" }
+      { key: 'tag', label: config.languageLabels.tags || "Etiket", icon: 'fas fa-tags', text: track.TagsText || "" }
     ];
 
     radioMeta.forEach(appendMetaItem);
@@ -654,7 +654,7 @@ async function loadAlbumArt(track) {
       cacheForOffline(track.Id, 'artwork', artwork);
     }
   } catch (err) {
-    console.error("Erro ao carregar capa do álbum:", err);
+    console.error("Albüm kapağı yükleme hatası:", err);
     if (artReqId !== _artReqId) return;
     setAlbumArt(DEFAULT_ARTWORK);
   }
@@ -682,7 +682,7 @@ async function getArtworkFromSources(track) {
 
     return DEFAULT_ARTWORK;
   } catch (error) {
-    console.error("Erro ao obter artwork:", error);
+    console.error("Artwork alınırken hata:", error);
     return DEFAULT_ARTWORK;
   }
 }
@@ -698,6 +698,21 @@ function checkImageExists(url) {
 
 function clearMarqueeTimers() {
   if (_marqueeT1) { clearTimeout(_marqueeT1); _marqueeT1 = null; }
+}
+
+export function clearPlaybackRuntimeCaches() {
+  _streamReqId += 1;
+  _metaReqId += 1;
+  _artReqId += 1;
+  try { cleanupAudioListeners(); } catch {}
+  clearMarqueeTimers();
+  if (_loadedMetaRetryT) {
+    clearTimeout(_loadedMetaRetryT);
+    _loadedMetaRetryT = null;
+  }
+  currentCanPlayHandler = null;
+  currentPlayErrorHandler = null;
+  resolvedAudioUrlCache.clear();
 }
 
 async function getEmbeddedImage(trackId) {
@@ -742,14 +757,14 @@ function syncResolvedTrackSource(trackId, url) {
 function buildDirectAudioUrl(track) {
   const trackId = getTrackId(track);
   if (!trackId) {
-    console.error("ID da música não encontrado:", track);
+    console.error("Parça Id Bulunamadı:", track);
     return null;
   }
 
   const authToken = getAuthToken();
   if (!authToken) {
     showNotification(
-    `<i class="fas fa-exclamation-circle"></i> ${config.languageLabels.authRequired || "Erro de autenticação"}`,
+    `<i class="fas fa-exclamation-circle"></i> ${config.languageLabels.authRequired || "Kimlik doğrulama hatası"}`,
     3000,
     'error'
   );

@@ -1,4 +1,4 @@
-import { getSessionInfo, makeApiRequest, getCachedUserTopGenres } from "../../Plugins/NexusPobreFlix/runtime/api.js";
+import { getSessionInfo, makeApiRequest, getCachedUserTopGenres } from "../../Plugins/JMSFusion/runtime/api.js";
 import { getConfig, getHomeSectionsRuntimeConfig, normalizeManagedCardTitleDisplayMode } from "./config.js";
 import { getLanguageLabels, getDefaultLanguage } from "../language/index.js";
 import { attachMiniPosterHover } from "./studioHubsUtils.js";
@@ -16,6 +16,7 @@ import {
   openPrcDB,
   makeScope,
   putItems,
+  getItemsByIds as getPrcItemsByIds,
   getMeta,
   setMeta,
   purgePrcDb
@@ -31,12 +32,31 @@ import {
   invalidateManagedSectionRenderKeys,
   registerManagedHomeRowAnchor,
   waitForManagedHomeRowRelease,
+  waitForManagedSectionDependencyCompletion,
   waitForSectionTailAdvance
 } from "./homeSectionChain.js";
 
 const config = getConfig();
 const labels = getLanguageLabels?.() || {};
 const IS_MOBILE = (navigator.maxTouchPoints > 0) || (window.innerWidth <= 820);
+
+function isMobileWebViewRuntime() {
+  try {
+    const ua = String((typeof navigator !== "undefined" && navigator.userAgent) || "");
+    const uaMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    if (!uaMobile) return false;
+
+    const standalone = window.navigator?.standalone === true
+      || window.matchMedia?.("(display-mode: standalone)")?.matches === true;
+    const isWV = /\bwv\b|Crosswalk/i.test(ua);
+    const hasBridge = !!(window.cordova || window.Capacitor || window.ReactNativeWebView);
+    return !!(standalone || isWV || hasBridge);
+  } catch {
+    return false;
+  }
+}
+
+const IS_MOBILE_WEBVIEW = isMobileWebViewRuntime();
 const UNIFIED_ROW_ITEM_LIMIT = 20;
 const MIN_RATING = Number.isFinite(config.studioHubsMinRating)
   ? Math.max(0, Number(config.studioHubsMinRating))
@@ -56,11 +76,11 @@ const GENRE_LAZY = true;
 const MOBILE_ROW_BATCH_SIZE = 1;
 const DESKTOP_INITIAL_GENRE_LOADS = 1;
 const GENRE_BATCH_SIZE = 1;
-const GENRE_ROOT_MARGIN = '500px 0px';
+const GENRE_ROOT_MARGIN = IS_MOBILE_WEBVIEW ? "720px 0px" : "500px 0px";
 const MANAGED_ROW_RELEASE_ROOT_MARGIN = IS_MOBILE
-  ? "0px 0px 60% 0px"
+  ? (IS_MOBILE_WEBVIEW ? "0px 0px 78% 0px" : "0px 0px 60% 0px")
   : "0px 0px 22% 0px";
-const GENRE_FIRST_SCROLL_PX = Number(getConfig()?.genreRowsFirstBatchScrollPx) || 200;
+const GENRE_FIRST_SCROLL_PX = Number(getConfig()?.genreRowsFirstBatchScrollPx) || (IS_MOBILE_WEBVIEW ? 320 : 200);
 const MIN_GENRE_VISIBLE_CARD_COUNT = 3;
 const PRC_LOCK_DOWN_SCROLL = (getConfig()?.prcLockDownScrollDuringLoad === true);
 
@@ -185,6 +205,59 @@ const PRC_DB_STATE = {
 const PRC_SESSION_PERSONAL_CACHE = new Map();
 const PRC_SESSION_BYW_SEEDS_CACHE = new Map();
 const PRC_SESSION_BYW_ITEMS_CACHE = new Map();
+const PRC_LAST_SHOWN_MEMORY = new Map();
+const PRC_LAST_SHOWN_STORAGE_PREFIX = "jms:prc:lastShown:";
+
+function normalizePrcIdList(ids) {
+  if (!Array.isArray(ids)) return [];
+  return ids
+    .map(id => String(id || "").trim())
+    .filter(Boolean);
+}
+
+function isFreshLastShownPayload(payload, ttlMs) {
+  const ts = Number(payload?.ts || 0);
+  if (!ts) return false;
+  return (Date.now() - ts) <= Math.max(60_000, Number(ttlMs) || 60_000);
+}
+
+function readLastShownIds(key, ttlMs) {
+  const cleanKey = String(key || "").trim();
+  if (!cleanKey) return [];
+
+  const mem = PRC_LAST_SHOWN_MEMORY.get(cleanKey);
+  if (isFreshLastShownPayload(mem, ttlMs)) {
+    return normalizePrcIdList(mem.ids);
+  }
+
+  try {
+    const storageKey = `${PRC_LAST_SHOWN_STORAGE_PREFIX}${cleanKey}`;
+    const raw = sessionStorage.getItem(storageKey);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!isFreshLastShownPayload(parsed, ttlMs)) {
+      try { sessionStorage.removeItem(storageKey); } catch {}
+      return [];
+    }
+    const ids = normalizePrcIdList(parsed.ids);
+    PRC_LAST_SHOWN_MEMORY.set(cleanKey, { ids, ts: Number(parsed.ts || Date.now()) });
+    return ids;
+  } catch {
+    return [];
+  }
+}
+
+function writeLastShownIds(key, ids) {
+  const cleanKey = String(key || "").trim();
+  const cleanIds = normalizePrcIdList(ids);
+  if (!cleanKey || !cleanIds.length) return;
+
+  const payload = { ids: cleanIds, ts: Date.now() };
+  PRC_LAST_SHOWN_MEMORY.set(cleanKey, payload);
+  try {
+    sessionStorage.setItem(`${PRC_LAST_SHOWN_STORAGE_PREFIX}${cleanKey}`, JSON.stringify(payload));
+  } catch {}
+}
 
 function getPrcSessionScope(userId, serverId) {
   return makeScope({ userId, serverId });
@@ -245,7 +318,7 @@ function __prcCfg() {
     personalTtlMs: Number.isFinite(cfg.prcDbPersonalTtlMs) ? Math.max(60_000, cfg.prcDbPersonalTtlMs|0) : 6 * 60 * 60 * 1000,
     genreTtlMs:    Number.isFinite(cfg.prcDbGenreTtlMs)    ? Math.max(60_000, cfg.prcDbGenreTtlMs|0)    : 12 * 60 * 60 * 1000,
     bywTtlMs:      Number.isFinite(cfg.prcDbBywTtlMs)      ? Math.max(60_000, cfg.prcDbBywTtlMs|0)      : 4 * 60 * 60 * 1000,
-    validateUserData: (cfg.prcDbValidateUserData !== false),
+    validateUserData: (cfg.prcDbValidateUserData === true),
     maxCacheIds: Number.isFinite(cfg.prcDbMaxIds) ? Math.max(20, cfg.prcDbMaxIds|0) : 140,
   };
 }
@@ -269,6 +342,7 @@ function __metaKeyGenre(scope, genre){
 }
 function __metaKeyByw(scope){ return `prc:byw:${scope}`; }
 function __metaKeyBywSeed(scope){ return `prc:byw:seed:${scope}`; }
+function __metaKeyBywSeeds(scope){ return `prc:byw:seeds:${scope}`; }
 function __metaKeyBywLast(scope){ return `prc:byw:lastShown:${scope}`; }
 function __metaKeyBywScoped(scope, seedKey){ return `prc:byw:${seedKey}:${scope}`; }
 function __metaKeyBywLastScoped(scope, seedKey){ return `prc:byw:lastShown:${seedKey}:${scope}`; }
@@ -334,6 +408,7 @@ async function ensurePrcDb(userId, serverId) {
     PRC_DB_STATE.scope = scope;
     PRC_DB_STATE.userId = userId;
     PRC_DB_STATE.serverId = serverId;
+    PRC_DB_STATE.db.__jmsActiveScope = scope;
     PRC_DB_STATE.failed = false;
     try { await maybePurgePrcDb(PRC_DB_STATE); } catch {}
     return PRC_DB_STATE;
@@ -346,72 +421,10 @@ async function ensurePrcDb(userId, serverId) {
   }
 }
 
-function normalizeCachedItemLocal(rec) {
-  if (!rec) return null;
-  const Id = rec.Id || rec.itemId || null;
-  if (!Id) return null;
-  return {
-    Id,
-    Name: rec.Name || rec.name || "",
-    Type: rec.Type || rec.type || "",
-    ProductionYear: rec.ProductionYear ?? rec.productionYear ?? null,
-    OfficialRating: rec.OfficialRating || rec.officialRating || "",
-    CommunityRating: (rec.CommunityRating ?? rec.communityRating ?? null),
-    ImageTags: rec.ImageTags || rec.imageTags || null,
-    BackdropImageTags: rec.BackdropImageTags || rec.backdropImageTags || null,
-    PrimaryImageAspectRatio: rec.PrimaryImageAspectRatio ?? rec.primaryImageAspectRatio ?? null,
-    Overview: rec.Overview || rec.overview || "",
-    Genres: rec.Genres || rec.genres || [],
-    RunTimeTicks: rec.RunTimeTicks ?? rec.runTimeTicks ?? null,
-    CumulativeRunTimeTicks: rec.CumulativeRunTimeTicks ?? rec.cumulativeRunTimeTicks ?? null,
-    RemoteTrailers: rec.RemoteTrailers || rec.remoteTrailers || [],
-    DateCreatedTicks: rec.DateCreatedTicks ?? rec.dateCreatedTicks ?? 0,
-    People: rec.People || rec.people || [],
-    PrimaryImageTag: rec.PrimaryImageTag || rec.primaryImageTag || null,
-    __preferTaglessImages: true,
-  };
-}
-
 async function dbGetItemsByIds(db, scope, ids) {
   const clean = (ids || []).filter(Boolean);
   if (!db || !scope || !clean.length) return [];
-
-  return new Promise((resolve) => {
-    const out = [];
-    let pending = 0;
-    let aborted = false;
-
-    let tx = null;
-    try {
-      tx = db.transaction(["items"], "readonly");
-    } catch {
-      resolve([]);
-      return;
-    }
-    const store = tx.objectStore("items");
-
-    tx.onabort = () => { aborted = true; resolve(out); };
-    tx.onerror = () => { aborted = true; resolve(out); };
-    tx.oncomplete = () => resolve(out);
-
-    for (const id of clean) {
-      pending++;
-      let req;
-      try {
-        req = store.get(`${scope}|${id}`);
-      } catch {
-        pending--;
-        continue;
-      }
-      req.onsuccess = () => {
-        if (aborted) return;
-        const norm = normalizeCachedItemLocal(req.result);
-        if (norm) out.push(norm);
-        pending--;
-      };
-      req.onerror = () => { pending--; };
-    }
-  });
+  return getPrcItemsByIds(db, scope, clean);
 }
 
 async function dbWriteThroughItems(db, scope, items) {
@@ -421,6 +434,40 @@ async function dbWriteThroughItems(db, scope, items) {
   } catch (e) {
     console.warn("PRC DB write-through failed:", e);
   }
+}
+
+async function readCachedBywSeeds(st, rowCount) {
+  if (!st?.db || !st?.scope) return [];
+
+  try {
+    const cfg = __prcCfg();
+    const cache = await getMeta(st.db, __metaKeyBywSeeds(st.scope));
+    const ts = Number(cache?.ts || 0);
+    const ids = Array.isArray(cache?.ids)
+      ? cache.ids.map((id) => String(id || "").trim()).filter(Boolean)
+      : [];
+    const fresh = ts && (Date.now() - ts) <= cfg.bywTtlMs;
+    if (!fresh || !ids.length) return [];
+
+    const items = await dbGetItemsByIds(st.db, st.scope, ids.slice(0, Math.max(rowCount * 2, rowCount)));
+    const byId = new Map((items || []).filter((item) => item?.Id).map((item) => [String(item.Id), item]));
+    return ids.map((id) => byId.get(String(id))).filter(Boolean).slice(0, rowCount);
+  } catch {
+    return [];
+  }
+}
+
+async function writeCachedBywSeeds(st, seeds) {
+  const cleanSeeds = Array.isArray(seeds) ? seeds.filter((item) => item?.Id) : [];
+  if (!st?.db || !st?.scope || !cleanSeeds.length) return;
+
+  try {
+    await dbWriteThroughItems(st.db, st.scope, cleanSeeds);
+    await setMeta(st.db, __metaKeyBywSeeds(st.scope), {
+      ids: cleanSeeds.map((item) => item.Id).filter(Boolean),
+      ts: Date.now()
+    });
+  } catch {}
 }
 
 async function filterOutPlayedIds(userId, ids) {
@@ -744,6 +791,15 @@ function scheduleDeferredGenreHubsRender({ force = false, seq = __deferredHomeSe
       if (seq !== __deferredHomeSectionSeq) return false;
       if (!hasActivePersonalRecsHomeSections()) {
         prcWarn("GENRE:abort:no-home-sections", { force, seq });
+        return false;
+      }
+      try {
+        await waitForManagedSectionDependencyCompletion("genreHubs", {
+          timeoutMs: 25000,
+          requireCompletion: true,
+        });
+      } catch {}
+      if (seq !== __deferredHomeSectionSeq || !hasActivePersonalRecsHomeSections()) {
         return false;
       }
       await renderGenreHubs(currentIndexPage());
@@ -1132,6 +1188,8 @@ function schedulePrunePlayedAfterPaint(rowEl, userId, delayMs = 380) {
 }
 
 async function applyResumeLabelsToCards(cardEls, userId) {
+  if (!__prcCfg().validateUserData) return;
+
   const ids = cardEls
     .map(el => el?.dataset?.itemId)
     .filter(Boolean);
@@ -2344,11 +2402,8 @@ async function fetchBecauseYouWatched(userId, targetCount, minRating, seedKey, o
       const fresh = ts && (Date.now() - ts) <= cfg.bywTtlMs;
 
       if (fresh && ids.length && cacheSeed === String(seedId)) {
-        let lastShownIds = [];
-        try {
-          const last = await getMeta(st.db, __metaKeyBywLastScoped(st.scope, seedId));
-          lastShownIds = Array.isArray(last?.ids) ? last.ids : [];
-        } catch {}
+        const lastShownKey = __metaKeyBywLastScoped(st.scope, seedId);
+        const lastShownIds = readLastShownIds(lastShownKey, cfg.bywTtlMs);
         const lastSet = new Set(lastShownIds);
 
         let candidates = ids.filter(id => id && !lastSet.has(id));
@@ -2362,7 +2417,7 @@ async function fetchBecauseYouWatched(userId, targetCount, minRating, seedKey, o
         const picked = filterAndTrimByRating(itemsFromDb, minRating, targetCount);
         if (picked.length >= targetCount) {
           PRC_SESSION_BYW_ITEMS_CACHE.set(bywSessionKey, picked.slice(0, targetCount));
-          try { await setMeta(st.db, __metaKeyBywLastScoped(st.scope, seedId), { ids: picked.map(x=>x.Id).filter(Boolean), ts: Date.now() }); } catch {}
+          writeLastShownIds(lastShownKey, picked.map(x=>x.Id).filter(Boolean));
           return { seedId, items: picked.slice(0, targetCount) };
         }
       }
@@ -2384,10 +2439,7 @@ async function fetchBecauseYouWatched(userId, targetCount, minRating, seedKey, o
     if (st?.db && st?.scope && uniq.length) {
       await dbWriteThroughItems(st.db, st.scope, uniq);
       await setMeta(st.db, __metaKeyBywScoped(st.scope, seedId), { seedId, ids: uniq.map(x=>x.Id).filter(Boolean), ts: Date.now() });
-      await setMeta(st.db, __metaKeyBywLastScoped(st.scope, seedId), {
-        ids: uniq.slice(0, targetCount).map(x=>x.Id).filter(Boolean),
-        ts: Date.now()
-      });
+      writeLastShownIds(__metaKeyBywLastScoped(st.scope, seedId), uniq.slice(0, targetCount).map(x=>x.Id).filter(Boolean));
     }
   } catch {}
 
@@ -2422,19 +2474,24 @@ async function renderBecauseYouWatchedAuto(indexPage, options = {}) {
   const bywCardCount = getBywCardCount();
   const { userId, serverId } = getSessionInfo();
   const sessionScope = getPrcSessionScope(userId, serverId);
+  const st = await ensurePrcDb(userId, serverId).catch(() => null);
   let seeds = (!force ? PRC_SESSION_BYW_SEEDS_CACHE.get(sessionScope) : null) || null;
 
   if (!Array.isArray(seeds) || seeds.length < bywRowCount) {
-    const seedsRaw = await fetchLastPlayedSeedItems(userId, Math.max(1, bywRowCount * 2));
-    shuffleCrypto(seedsRaw);
-    const seen = new Set();
-    seeds = [];
-    for (const it of seedsRaw) {
-      const id = it?.Id;
-      if (!id || seen.has(id)) continue;
-      seen.add(id);
-      seeds.push(it);
-      if (seeds.length >= bywRowCount) break;
+    seeds = !force ? await readCachedBywSeeds(st, bywRowCount) : [];
+    if (!Array.isArray(seeds) || seeds.length < bywRowCount) {
+      const seedsRaw = await fetchLastPlayedSeedItems(userId, Math.max(1, bywRowCount * 2));
+      shuffleCrypto(seedsRaw);
+      const seen = new Set();
+      seeds = [];
+      for (const it of seedsRaw) {
+        const id = it?.Id;
+        if (!id || seen.has(id)) continue;
+        seen.add(id);
+        seeds.push(it);
+        if (seeds.length >= bywRowCount) break;
+      }
+      await writeCachedBywSeeds(st, seeds);
     }
     PRC_SESSION_BYW_SEEDS_CACHE.set(sessionScope, seeds.slice());
   }
@@ -2683,11 +2740,8 @@ async function fetchPersonalRecommendations(userId, targetCount = null, minRatin
       const fresh = ts && (Date.now() - ts) <= cfg.personalTtlMs;
 
       if (fresh && ids.length) {
-        let lastShownIds = [];
-        try {
-          const last = await getMeta(st.db, __metaKeyPersonalLast(st.scope));
-          lastShownIds = Array.isArray(last?.ids) ? last.ids : [];
-        } catch {}
+        const lastShownKey = __metaKeyPersonalLast(st.scope);
+        const lastShownIds = readLastShownIds(lastShownKey, cfg.personalTtlMs);
 
         const lastSet = new Set(lastShownIds);
 
@@ -2707,12 +2761,7 @@ async function fetchPersonalRecommendations(userId, targetCount = null, minRatin
         const picked = filterAndTrimByRating(itemsFromDb, minRating, effectiveTargetCount);
         if (picked.length >= effectiveTargetCount) {
           PRC_SESSION_PERSONAL_CACHE.set(sessionScope, picked.slice(0, effectiveTargetCount));
-          try {
-            await setMeta(st.db, __metaKeyPersonalLast(st.scope), {
-              ids: picked.map(x => x.Id).filter(Boolean),
-              ts: Date.now()
-            });
-          } catch {}
+          writeLastShownIds(lastShownKey, picked.map(x => x.Id).filter(Boolean));
           return picked.slice(0, effectiveTargetCount);
         }
       }
@@ -2770,11 +2819,13 @@ async function fetchPersonalRecommendations(userId, targetCount = null, minRatin
 
   try {
     const st = await ensurePrcDb(userId, serverId);
-    if (st?.db && st?.scope && final?.length) {
-      await setMeta(st.db, __metaKeyPersonalLast(st.scope), {
-        ids: final.map(x => x.Id).filter(Boolean),
+    if (st?.db && st?.scope && uniq?.length) {
+      await dbWriteThroughItems(st.db, st.scope, uniq);
+      await setMeta(st.db, __metaKeyPersonal(st.scope), {
+        ids: uniq.map(x => x.Id).filter(Boolean),
         ts: Date.now()
       });
+      writeLastShownIds(__metaKeyPersonalLast(st.scope), final.map(x => x.Id).filter(Boolean));
     }
   } catch {}
 
@@ -4635,6 +4686,7 @@ export function releasePrcDbConnection() {
   try { PRC_SESSION_PERSONAL_CACHE.clear(); } catch {}
   try { PRC_SESSION_BYW_SEEDS_CACHE.clear(); } catch {}
   try { PRC_SESSION_BYW_ITEMS_CACHE.clear(); } catch {}
+  try { PRC_LAST_SHOWN_MEMORY.clear(); } catch {}
 }
 
 (function bindPrcDbReleaseOnce() {

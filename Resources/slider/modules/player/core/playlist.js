@@ -5,7 +5,7 @@ import { shuffleArray } from "../utils/domUtils.js";
 import { showNotification } from "../ui/notification.js";
 import { updateModernTrackInfo, playTrack } from "../player/playback.js";
 import { updatePlaylistModal } from "../ui/playlistModal.js";
-import { makeApiRequest } from "../../../../Plugins/NexusPobreFlix/runtime/api.js";
+import { makeApiRequest } from "../../../../Plugins/JMSFusion/runtime/api.js";
 import { isRadioTrack } from "./radio.js";
 
 const config = getConfig();
@@ -14,6 +14,13 @@ const EXCLUDED_LISTS_HISTORY = config.historylimit;
 
 let excludedTrackHistory = new Set();
 let currentRefreshCtrl = null;
+
+export function cleanupPlaylistRuntimeState() {
+  try { currentRefreshCtrl?.abort?.(); } catch {}
+  currentRefreshCtrl = null;
+  try { excludedTrackHistory.clear(); } catch {}
+  excludedTrackHistory = new Set();
+}
 
 export async function refreshPlaylist() {
   if (currentRefreshCtrl) {

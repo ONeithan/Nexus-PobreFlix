@@ -146,12 +146,12 @@ export function createPausePanel(_config, labels) {
 
   const osdHeaderRatingsHeader = document.createElement('h3');
   osdHeaderRatingsHeader.className = 'settings-subheader';
-  osdHeaderRatingsHeader.textContent = labels.osdHeaderRatingsHeader || 'OSD Başlık Puanları';
+  osdHeaderRatingsHeader.textContent = labels.osdHeaderRatingsHeader || 'OSD Başlık Öğeleri';
   section.appendChild(osdHeaderRatingsHeader);
 
   const showOsdHeaderRatingsCheckbox = createCheckbox(
     'pauseOverlayShowOsdHeaderRatings',
-    labels.showOsdHeaderRatings || 'OSD başlığındaki puanları göster',
+    labels.showOsdHeaderRatings || 'OSD başlığındaki puan rozetlerini göster',
     config.pauseOverlay?.showOsdHeaderRatings !== false
   );
   section.appendChild(showOsdHeaderRatingsCheckbox);
@@ -173,16 +173,40 @@ export function createPausePanel(_config, labels) {
     labels.showOfficialRating || 'Sertifikasyon',
     config.pauseOverlay?.showOsdHeaderOfficialRating !== false
   ));
+
+  const showOsdHeaderClockCheckbox = createCheckbox(
+    'pauseOverlayShowOsdHeaderClock',
+    labels.showOsdHeaderClock || 'OSD başlığındaki saati göster',
+    config.pauseOverlay?.showOsdHeaderClock !== false
+  );
+  osdHeaderRatingsSubOptions.appendChild(showOsdHeaderClockCheckbox);
+
+  const osdHeaderClockFormatWrap = document.createElement('div');
+  osdHeaderClockFormatWrap.className = 'sub-options pause-osd-header-clock-options';
+
+  const osdHeaderClockFormatRow = addSelectRow({
+    name: 'pauseOverlayOsdHeaderClockFormat',
+    label: labels.osdHeaderClockFormat || 'Saat biçimi',
+    value: String(config.pauseOverlay?.osdHeaderClockFormat || 'auto').trim().toLowerCase(),
+    options: [
+      ['auto', labels.osdHeaderClockFormat_auto || 'Otomatik (bölgeye göre)'],
+      ['24h', labels.osdHeaderClockFormat_24h || '24 saat'],
+      ['12h', labels.osdHeaderClockFormat_12h || '12 saat (ÖÖ/ÖS)']
+    ]
+  });
+  osdHeaderClockFormatWrap.appendChild(osdHeaderClockFormatRow);
+  osdHeaderRatingsSubOptions.appendChild(osdHeaderClockFormatWrap);
   section.appendChild(osdHeaderRatingsSubOptions);
 
   const osdHeaderRatingsDesc = document.createElement('div');
   osdHeaderRatingsDesc.className = 'description-text';
   osdHeaderRatingsDesc.textContent =
     labels.osdHeaderRatingsDescription ||
-    'Oynatma ekranındaki üst başlıkta, içerik adının yanında görünen puanları kontrol eder.';
+    'Oynatma ekranındaki üst başlıkta, içerik adının yanında gösterilen puan rozetlerini ve saati kontrol eder.';
   section.appendChild(osdHeaderRatingsDesc);
 
   bindCheckboxKontrol('#pauseOverlayShowOsdHeaderRatings', '.pause-osd-header-rating-sub-options');
+  bindCheckboxKontrol('#pauseOverlayShowOsdHeaderClock', '.pause-osd-header-clock-options');
 
   const ageBadgeHeader = document.createElement('h3');
   ageBadgeHeader.className = 'settings-subheader';
@@ -270,7 +294,7 @@ export function createPausePanel(_config, labels) {
   sapDesc.className = 'description-text';
   sapDesc.textContent =
     labels.smartAutoPauseDescription ||
-    'Odak kaybı, sekmenin gizlenmesi/minimize ve kullanıcı etkinliği yokluğunda videoyu belirtilen dakikalar sonra durdurur. Ondalıklı değerleri (örn. 0.2 dk) destekler.';
+    'Pencere odağı kaybedildiğinde, sekme gizlendiğinde/minimize edildiğinde veya kullanıcı etkinliği algılanmadığında video otomatik durdurulur. İlgili alan için 0 değeri girilirse o koşul tamamen devre dışı kalır.';
   sapSec.appendChild(sapDesc);
 
   function addNumberRow({name, label, value, min=0.1, max=1000, step=0.1, suffix=labels.dk})  {
@@ -301,14 +325,42 @@ export function createPausePanel(_config, labels) {
   return wrap;
 }
 
+  function addSelectRow({ name, label, value, options = [] }) {
+  const wrap = document.createElement('div');
+  wrap.className = 'fsetting-item';
+
+  const lab = document.createElement('label');
+  lab.textContent = label;
+  lab.className = 'settings-label';
+  lab.htmlFor = name;
+
+  const select = document.createElement('select');
+  select.name = name;
+  select.id = name;
+  select.className = 'settings-select';
+
+  const normalizedValue = String(value || 'auto').trim().toLowerCase();
+  options.forEach(([optionValue, optionLabel]) => {
+    const option = document.createElement('option');
+    option.value = optionValue;
+    option.textContent = optionLabel;
+    option.selected = optionValue === normalizedValue;
+    select.appendChild(option);
+  });
+
+  wrap.appendChild(lab);
+  wrap.appendChild(select);
+  return wrap;
+}
+
   const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 
   sapSec.appendChild(
     addNumberRow({
       name: 'sapBlurMs',
       label: (labels.smartUnfocusedThreshold || 'Odak dışı bekleme') + ' (ms)',
-      value: Math.round(sap.blurMinutes * 60000),
-      min: 100,
+      value: Math.max(0, Math.round(Number(sap.blurMinutes || 0) * 60000)),
+      min: 0,
       max: TWO_HOURS_MS,
       step: 100,
       suffix: labels.ms || 'ms'
@@ -319,8 +371,8 @@ export function createPausePanel(_config, labels) {
     addNumberRow({
       name: 'sapHiddenMs',
       label: (labels.smartOffscreenThreshold || 'Sekme gizli/minimize bekleme') + ' (ms)',
-      value: Math.round(sap.hiddenMinutes * 60000),
-      min: 100,
+      value: Math.max(0, Math.round(Number(sap.hiddenMinutes || 0) * 60000)),
+      min: 0,
       max: TWO_HOURS_MS,
       step: 100,
       suffix: labels.ms || 'ms'
@@ -331,8 +383,8 @@ export function createPausePanel(_config, labels) {
     addNumberRow({
       name: 'sapIdleMinutes',
       label: labels.smartIdleThreshold || 'Etkinlik yok bekleme',
-      value: sap.idleMinutes,
-      min: 1,
+      value: Math.max(0, Number(sap.idleMinutes || 0)),
+      min: 0,
       max: 1000,
       step: 1,
       suffix: labels.dk || 'dk'

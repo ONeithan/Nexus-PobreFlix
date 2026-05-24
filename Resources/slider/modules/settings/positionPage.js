@@ -362,7 +362,7 @@ export function createPositionEditor(config, labels, section) {
    } else {
     const selector = containerType
       ? (containerType === 'button' ? '.monwui-main-button-container'
-        : containerType === 'slider' ? '.monwui-slider-wrapper'
+        : containerType === 'slider' ? '.monwui-slider-wrapper:not(.monwui-artist-menu)'
         : containerType === 'existingDot' ? '.monwui-dot-navigation-container'
         : containerType === 'progress' ? '.monwui-slide-progress-bar'
         : containerType === 'progressSeconds' ? '.monwui-slide-progress-seconds'
@@ -378,7 +378,7 @@ export function createPositionEditor(config, labels, section) {
   function updateFlexStyle(containerType, flexProperty, newValue) {
   const selector =
     containerType === 'button' ? '.monwui-main-button-container' :
-    containerType === 'slider' ? '.monwui-slider-wrapper' :
+    containerType === 'slider' ? '.monwui-slider-wrapper:not(.monwui-artist-menu)' :
     containerType === 'existingDot' ? '.monwui-dot-navigation-container' :
     containerType === 'progress' ? '.monwui-slide-progress-bar' :
     containerType === 'progressSeconds' ? '.monwui-slide-progress-seconds' :

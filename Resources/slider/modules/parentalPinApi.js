@@ -1,4 +1,4 @@
-const API_ROOT = "/NexusPobreFlix/parental-pin";
+const API_ROOT = "/JMSFusion/parental-pin";
 const POLICY_CACHE_MS = 15_000;
 const DEFAULT_MAX_ATTEMPTS = 5;
 const DEFAULT_LOCKOUT_MINUTES = 15;

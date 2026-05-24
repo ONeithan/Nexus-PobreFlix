@@ -28,6 +28,7 @@ export function createSettingsModal() {
     const effective = getDefaultLanguage();
     const languages = [
         { value: 'auto', label: labels.optionAuto || '🌐 Otomatik (Tarayıcı dili)' },
+        { value: 'por', label: labels.optionPortuguese || '🇧🇷 Português (Brasil)' },
         { value: 'tur', label: '🇹🇷 Türkçe' },
         { value: 'eng', label: '🇬🇧 English' },
         { value: 'spa', label: labels.optionEspanol || '🇪🇸 Español' },

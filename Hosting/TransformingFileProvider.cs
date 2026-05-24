@@ -6,7 +6,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Extensions.Logging;
 
-namespace Jellyfin.Plugin.NexusPobreFlix
+namespace Jellyfin.Plugin.JMSFusion
 {
     public sealed class TransformingFileProvider : IFileProvider
     {
@@ -39,7 +39,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix
 
             try
             {
-                _logger.LogDebug("[NexusPobreFlix][DIAG] TransformingFileProvider hit: {Subpath}", subpath);
+                _logger.LogDebug("[JMSFusion][DIAG] TransformingFileProvider hit: {Subpath}", subpath);
 
                 using var src = info.CreateReadStream();
                 var isGzip = lower.EndsWith(".gz");
@@ -66,14 +66,14 @@ namespace Jellyfin.Plugin.NexusPobreFlix
 
                 if (html.IndexOf("<!-- SL-INJECT BEGIN -->", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    _logger.LogDebug("[NexusPobreFlix][DIAG] Already contains snippet, returning original.");
+                    _logger.LogDebug("[JMSFusion][DIAG] Already contains snippet, returning original.");
                     return info;
                 }
 
-                var snippet = NexusPobreFlixPlugin.Instance?.BuildScriptsHtml("") ?? "";
+                var snippet = JMSFusionPlugin.Instance?.BuildScriptsHtml("") ?? "";
                 if (string.IsNullOrEmpty(snippet))
                 {
-                    _logger.LogWarning("[NexusPobreFlix][DIAG] BuildScriptsHtml returned empty snippet; returning original.");
+                    _logger.LogWarning("[JMSFusion][DIAG] BuildScriptsHtml returned empty snippet; returning original.");
                     return info;
                 }
 
@@ -101,12 +101,12 @@ namespace Jellyfin.Plugin.NexusPobreFlix
                     payload = Encoding.UTF8.GetBytes(html);
                 }
 
-                _logger.LogInformation("[NexusPobreFlix][DIAG] In-memory rewritten: {Path} (bytes={Len})", subpath, payload.Length);
+                _logger.LogInformation("[JMSFusion][DIAG] In-memory rewritten: {Path} (bytes={Len})", subpath, payload.Length);
                 return new RewritingFileInfo(info, payload);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[NexusPobreFlix][DIAG] In-memory rewrite failed for {Path}; serving original.", subpath);
+                _logger.LogWarning(ex, "[JMSFusion][DIAG] In-memory rewrite failed for {Path}; serving original.", subpath);
                 return info;
             }
         }

@@ -299,16 +299,15 @@ export function createSelect(key, label, options, selectedValue) {
   return container;
 }
 
-export function createRangeInput(key, label, value, min = 0, max = 100, step = 1, unit = "") {
+export function createRangeInput(key, label, value, min = 0, max = 100, step = 1) {
   const container = document.createElement("div");
-  container.className = "input-container";
+  container.className = "input-container range-container";
 
-  const labelWrap = document.createElement("div");
-  labelWrap.className = "range-label-wrap";
-  labelWrap.style.display = "flex";
-  labelWrap.style.justifyContent = "space-between";
-  labelWrap.style.alignItems = "center";
-  labelWrap.style.marginBottom = "6px";
+  const labelContainer = document.createElement("div");
+  labelContainer.style.display = "flex";
+  labelContainer.style.justifyContent = "space-between";
+  labelContainer.style.alignItems = "center";
+  labelContainer.style.marginBottom = "4px";
 
   const labelElement = document.createElement("label");
   labelElement.textContent = label;
@@ -316,12 +315,13 @@ export function createRangeInput(key, label, value, min = 0, max = 100, step = 1
 
   const valueDisplay = document.createElement("span");
   valueDisplay.className = "range-value-display";
-  valueDisplay.textContent = `${value}${unit}`;
+  valueDisplay.textContent = `${value}%`;
   valueDisplay.style.fontWeight = "bold";
-  valueDisplay.style.color = "var(--jms-primary-color, #7B2FBE)";
+  valueDisplay.style.color = "#7a5cff";
 
-  labelWrap.append(labelElement, valueDisplay);
-  container.appendChild(labelWrap);
+  labelContainer.appendChild(labelElement);
+  labelContainer.appendChild(valueDisplay);
+  container.appendChild(labelContainer);
 
   const input = document.createElement("input");
   input.type = "range";
@@ -335,15 +335,14 @@ export function createRangeInput(key, label, value, min = 0, max = 100, step = 1
   input.style.cursor = "pointer";
 
   input.addEventListener("input", (e) => {
-    const v = e.target.value;
-    valueDisplay.textContent = `${v}${unit}`;
+    valueDisplay.textContent = `${e.target.value}%`;
   });
 
   input.addEventListener("change", (e) => {
-    const v = e.target.value;
-    localStorage.setItem(key, v);
+    localStorage.setItem(key, e.target.value);
   });
 
   container.appendChild(input);
   return container;
 }
+

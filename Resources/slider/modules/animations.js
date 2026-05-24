@@ -79,9 +79,17 @@ export function teardownAnimations() {
   __globalTimers.clear();
   for (const id of __globalRafs) { cancelAnimationFrame(id); }
   __globalRafs.clear();
+  __rafId = null;
+  for (const sub of __rafSubscribers) {
+    try { __io?.unobserve?.(sub.el); } catch {}
+    sub.tick = null;
+    sub.el = null;
+  }
+  __rafSubscribers.clear();
   try { __io?.disconnect?.(); } catch {}
   __io = null;
   try { __mo?.disconnect?.(); } catch {}
+  __mo = null;
 }
 if (typeof window !== 'undefined') {
   window.addEventListener('pagehide', teardownAnimations, { once: true });
@@ -99,14 +107,22 @@ if (typeof window !== 'undefined') {
 }
 
 const __removedSentinel = new WeakSet();
-const __mo = new MutationObserver((muts) => {
-  for (const m of muts) {
-    m.removedNodes && m.removedNodes.forEach(node => {
-      if (node.nodeType === 1) cleanupTree(node);
-    });
-  }
-});
-__mo.observe(document.body || document.documentElement, { childList: true, subtree: true });
+let __mo = null;
+
+function ensureRemovalObserver() {
+  if (__mo || typeof MutationObserver === 'undefined') return;
+  const root = document.body || document.documentElement;
+  if (!root) return;
+  __mo = new MutationObserver((muts) => {
+    for (const m of muts) {
+      m.removedNodes && m.removedNodes.forEach(node => {
+        if (node.nodeType === 1) cleanupTree(node);
+      });
+    }
+  });
+  __mo.observe(root, { childList: true, subtree: true });
+}
+ensureRemovalObserver();
 
 function cleanupTree(root) {
   if (root.nodeType !== 1) return;
@@ -275,6 +291,7 @@ function stopLoop(sub) {
 
 export function applySlideAnimation(currentSlide, newSlide, direction) {
   if (!currentSlide || !newSlide) return;
+  ensureRemovalObserver();
   if (currentSlide.__animating) hardCleanupSlide(currentSlide);
   if (newSlide.__animating)     hardCleanupSlide(newSlide);
 

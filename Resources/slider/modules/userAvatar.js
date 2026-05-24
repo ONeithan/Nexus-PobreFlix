@@ -1,4 +1,4 @@
-import { makeApiRequest, getSessionInfo, waitForAuthReadyStrict } from "../../Plugins/NexusPobreFlix/runtime/api.js";
+import { makeApiRequest, getSessionInfo, waitForAuthReadyStrict } from "../../Plugins/JMSFusion/runtime/api.js";
 import { getServerAddress, getConfig } from "./config.js";
 import { addStyleSpecificParams } from "./dicebearSpecificParams.js";
 
@@ -175,10 +175,21 @@ export async function updateHeaderUserAvatar() {
       return { status: 'pending', headerButton: !!headerButton, user: !!user };
     }
 
-    if (hasJellyfinAvatar(headerButton)) {
+    const hasNativeAvatar = user.PrimaryImageTag || user.HasPrimaryImage || hasJellyfinAvatar(headerButton);
+    if (hasNativeAvatar) {
       if (customAvatarAdded) {
-        cleanAvatars();
+        cleanAvatars(headerButton);
         customAvatarAdded = false;
+      }
+      if (user.PrimaryImageTag || user.HasPrimaryImage) {
+        const serverAddr = getServerAddress() || window.location.origin;
+        const imageUrl = `${serverAddr}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag || ''}`;
+        headerButton.style.backgroundImage = `url('${imageUrl}')`;
+        headerButton.style.backgroundSize = "cover";
+        headerButton.style.backgroundPosition = "center";
+        headerButton.style.borderRadius = "50%";
+        const personIcon = headerButton.querySelector('.material-icons.person');
+        if (personIcon) personIcon.remove();
       }
       _updatingAvatar = false;
       return { status: 'native' };
@@ -192,7 +203,7 @@ export async function updateHeaderUserAvatar() {
 
     cleanAvatars(headerButton);
     avatarElement.classList.add("custom-user-avatar");
-    const label = (user?.Name || config.languageLabels.unknownUser || "Usuário") + " avatar";
+    const label = (user?.Name || "User") + " avatar";
     avatarElement.setAttribute('role','img');
     avatarElement.setAttribute('aria-label', label);
     headerButton.appendChild(avatarElement);
@@ -203,7 +214,7 @@ export async function updateHeaderUserAvatar() {
     setupAvatarProtection(headerButton, user);
     return { status: 'custom' };
   } catch (err) {
-    console.error("Erro ao atualizar avatar:", err);
+    console.error("Avatar güncelleme hatası:", err);
     return { status: 'error', error: err };
     } finally {
     _updatingAvatar = false;
@@ -303,7 +314,7 @@ async function createDicebearAvatar(user, options = {}) {
     svgElement.style.position = fixedPosition ? 'fixed' : 'relative';
     svgElement.style.pointerEvents = 'none';
     svgElement.setAttribute('role','img');
-    svgElement.setAttribute('aria-label', (user?.Name || config.languageLabels.unknownUser || 'Usuário') + ' avatar');
+    svgElement.setAttribute('aria-label', (user?.Name || 'User') + ' avatar');
 
     if (config.dicebearBackgroundEnabled && config.dicebearBackgroundColor && config.dicebearBackgroundColor !== 'transparent') {
       const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -316,7 +327,7 @@ async function createDicebearAvatar(user, options = {}) {
     }
     return svgElement;
   } catch (error) {
-    console.error('Erro ao criar avatar DiceBear, criando avatar com iniciais:', error);
+    console.error('DiceBear avatar oluşturma hatası, baş harflerle avatar oluşturuluyor:', error);
     return createInitialsAvatar(user, options);
   }
 }
@@ -327,7 +338,7 @@ function createInitialsAvatar(user, options = {}) {
   initialsDiv.textContent = initials;
   initialsDiv.dataset.userId = user.Id;
   initialsDiv.setAttribute('role','img');
-  initialsDiv.setAttribute('aria-label', (user?.Name || config.languageLabels.unknownUser || 'Usuário') + ' avatar');
+  initialsDiv.setAttribute('aria-label', (user?.Name || 'User') + ' avatar');
 
   const { config, widthCss, heightCss, scale, fontSize, animate } = resolveAvatarRenderOptions(options);
   const avatarColor = getAvatarColor(user.Id);
@@ -678,7 +689,7 @@ function startAvatarRotation(interval = 60000) {
       clearAvatarCache();
       await updateHeaderUserAvatar();
     } catch (error) {
-      console.error('Erro na rotação automática de avatar:', error);
+      console.error('Otomatik avatar rotasyonu hatası:', error);
     }
   }, interval);
 }

@@ -1,4 +1,4 @@
-import { fetchItemDetailsFull, fetchItemsBulk, getEmbyHeaders, getLastPlayNowBlockReason, getSessionInfo, makeApiRequest, playNow, updateFavoriteStatus } from "../../Plugins/NexusPobreFlix/runtime/api.js";
+import { fetchItemDetailsFull, fetchItemsBulk, getEmbyHeaders, getLastPlayNowBlockReason, getSessionInfo, makeApiRequest, playNow, updateFavoriteStatus } from "../../Plugins/JMSFusion/runtime/api.js";
 import { CollectionCacheDB } from "./collectionCacheDb.js";
 import { getConfig } from "./config.js";
 import { withServer } from "./jfUrl.js";
@@ -6,7 +6,7 @@ import { ensureStudioHubLogoFromTmdb, ensureStudioHubManualEntry, JMS_STUDIO_HUB
 import { showNotification } from "./player/ui/notification.js";
 import { closeDetailsModalIfLoaded } from "./detailsModalLoader.js";
 
-const WATCHLIST_ENDPOINT = "/Plugins/NexusPobreFlix/watchlist";
+const WATCHLIST_ENDPOINT = "/Plugins/jmsFusion/watchlist";
 export const WATCHLIST_MODAL_ID = "monwui-watchlist-modal-root";
 const WATCHLIST_STYLE_ID = "monwui-watchlist-modal-style";
 const WATCHLIST_NAV_BUTTON_CLASS = "monwui-watchlist-nav-button";
@@ -18,6 +18,9 @@ const WATCHLIST_ICON_DATA_URI = `data:image/svg+xml;utf8,${encodeURIComponent(
 )}`;
 const DASHBOARD_TTL_MS = 30_000;
 const GENERAL_STATS_TTL_MS = 60_000;
+const WATCHLIST_SMART_FILL_STORAGE_KEY = "monwui:watchlist:smart-fill-count";
+const WATCHLIST_SMART_FILL_DEFAULT_COUNT = 4;
+const WATCHLIST_SMART_FILL_COUNT_OPTIONS = [2, 4, 6, 8, 10, 12];
 
 let dashboardCache = null;
 let dashboardPromise = null;
@@ -221,6 +224,135 @@ function createEmptyWatchlistModel() {
 function getWatchlistTabLabel(tabKey) {
   const tab = WATCHLIST_TABS.find((entry) => entry.key === normalizeWatchlistTabKey(tabKey));
   return L(tab?.labelKey || "watchlistMovieTab", tab?.fallback || "Filmler");
+}
+
+function getSmartFillIdleLabel() {
+  return L("watchlistSmartFill", "Akıllı Liste Oluştur");
+}
+
+function getSmartFillLoadingLabel() {
+  return L("watchlistSmartFillLoading", "Akıllı liste hazırlanıyor...");
+}
+
+function getSmartFillCountLabel() {
+  return L("watchlistSmartFillCount", "Tür başına");
+}
+
+function normalizeSmartFillCount(value) {
+  const parsed = Math.trunc(Number(value));
+  return WATCHLIST_SMART_FILL_COUNT_OPTIONS.includes(parsed)
+    ? parsed
+    : WATCHLIST_SMART_FILL_DEFAULT_COUNT;
+}
+
+function readSmartFillCountPreference() {
+  try {
+    return normalizeSmartFillCount(localStorage.getItem(WATCHLIST_SMART_FILL_STORAGE_KEY));
+  } catch {
+    return WATCHLIST_SMART_FILL_DEFAULT_COUNT;
+  }
+}
+
+function writeSmartFillCountPreference(value) {
+  const normalized = normalizeSmartFillCount(value);
+  try {
+    localStorage.setItem(WATCHLIST_SMART_FILL_STORAGE_KEY, String(normalized));
+  } catch {}
+  return normalized;
+}
+
+function getSmartFillSelectedCount(root) {
+  const rawCurrent = Number(root?.__smartFillCount);
+  if (WATCHLIST_SMART_FILL_COUNT_OPTIONS.includes(rawCurrent)) {
+    return rawCurrent;
+  }
+
+  const preferred = readSmartFillCountPreference();
+  if (root) root.__smartFillCount = preferred;
+  return preferred;
+}
+
+function setSmartFillSelectedCount(root, value) {
+  const normalized = writeSmartFillCountPreference(value);
+  if (!root) return normalized;
+
+  root.__smartFillCount = normalized;
+  const select = root.querySelector?.("[data-monwuiwl-smart-fill-count='1']");
+  if (select) {
+    select.value = String(normalized);
+  }
+  return normalized;
+}
+
+function renderSmartFillCountMarkup() {
+  const selected = readSmartFillCountPreference();
+  const label = getSmartFillCountLabel();
+  return `
+    <label class="monwuiwl-smart-fill-count-wrap">
+      <span>${escapeHtml(label)}</span>
+      <select class="monwuiwl-smart-fill-count" data-monwuiwl-smart-fill-count="1" aria-label="${escapeHtml(label)}">
+        ${WATCHLIST_SMART_FILL_COUNT_OPTIONS.map((count) => `
+          <option value="${count}"${count === selected ? " selected" : ""}>${count}</option>
+        `).join("")}
+      </select>
+    </label>
+  `;
+}
+
+function renderSmartFillButtonInner(isLoading = false) {
+  const iconClass = isLoading ? "fa-spinner fa-spin" : "fa-wand-magic-sparkles";
+  const label = isLoading ? getSmartFillLoadingLabel() : getSmartFillIdleLabel();
+  return `<i class="fas ${escapeHtml(iconClass)}" aria-hidden="true"></i><span>${escapeHtml(label)}</span>`;
+}
+
+function renderSmartFillButtonMarkup() {
+  return `
+    <button class="monwuiwl-btn monwuiwl-smart-fill" data-monwuiwl-smart-fill="1" type="button">
+      ${renderSmartFillButtonInner(false)}
+    </button>
+  `;
+}
+
+function syncSmartFillButtonState(root) {
+  const button = root?.querySelector?.("[data-monwuiwl-smart-fill='1']");
+  const isPending = root?.__smartFillPending === true;
+  const select = root?.querySelector?.("[data-monwuiwl-smart-fill-count='1']");
+  const selectedCount = getSmartFillSelectedCount(root);
+
+  if (select) {
+    select.disabled = isPending;
+    select.value = String(selectedCount);
+  }
+
+  if (!button) return;
+  button.disabled = isPending;
+  button.classList.toggle("is-loading", isPending);
+  button.setAttribute("aria-busy", isPending ? "true" : "false");
+  button.innerHTML = renderSmartFillButtonInner(isPending);
+}
+
+function setSmartFillPending(root, isPending) {
+  if (!root) return;
+  root.__smartFillPending = isPending === true;
+  syncSmartFillButtonState(root);
+}
+
+function buildSmartFillSuccessMessage(counts = {}, usedCommunityFallback = false) {
+  const parts = ["movies", "series", "music"]
+    .map((key) => {
+      const count = Math.max(0, Number(counts?.[key] || 0));
+      if (!count) return "";
+      return `${formatCount(count)} ${getWatchlistTabLabel(key)}`;
+    })
+    .filter(Boolean);
+
+  if (!parts.length) {
+    return L("watchlistSmartFillEmpty", "Akıllı liste için uygun yeni içerik bulunamadı.");
+  }
+
+  const base = `${L("watchlistSmartFillSuccess", "Akıllı öneriler listene eklendi")}: ${parts.join(" • ")}`;
+  if (!usedCommunityFallback) return base;
+  return `${base} ${L("watchlistSmartFillCommunity", "Yeterli geçmiş olmadığı için diğer kullanıcıların izleme alışkanlıkları da kullanıldı.")}`;
 }
 
 function getWatchlistTabButtonText(model, tabKey) {
@@ -875,7 +1007,7 @@ function buildWatchlistHeaders(extra = {}) {
   });
 
   if (userId) headers["X-Emby-UserId"] = userId;
-  if (userName) headers["X-NexusPobreFlix-UserName"] = userName;
+  if (userName) headers["X-jmsFusion-UserName"] = userName;
 
   return headers;
 }
@@ -896,6 +1028,102 @@ async function requestWatchlist(path = "", options = {}) {
 
   if (response.status === 204) return null;
   return response.json().catch(() => ({}));
+}
+
+async function requestSmartWatchlistRecommendations(payload = {}) {
+  return requestWatchlist("/smart-fill", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload && typeof payload === "object" ? payload : {})
+  });
+}
+
+async function runSmartWatchlistFill(root) {
+  if (!root || root.__smartFillPending) return;
+
+  const targetCount = getSmartFillSelectedCount(root);
+  setSmartFillPending(root, true);
+  root.__suspendExternalRefresh = true;
+  root.__suspendExternalRefreshDirty = false;
+
+  try {
+    const response = await requestSmartWatchlistRecommendations({
+      movies: targetCount,
+      series: targetCount,
+      music: targetCount,
+      albums: 0
+    });
+    const suggestions = Array.isArray(response?.items) ? response.items : [];
+    if (!suggestions.length) {
+      window.showMessage?.(
+        text(response?.message, L("watchlistSmartFillEmpty", "Akıllı liste için uygun yeni içerik bulunamadı.")),
+        "info"
+      );
+      return;
+    }
+
+    const addedCounts = {
+      movies: 0,
+      series: 0,
+      music: 0
+    };
+    const errors = [];
+
+    for (const suggestion of suggestions) {
+      const itemId = text(suggestion?.Id);
+      if (!itemId || getCachedWatchlistMembership(itemId, false)) continue;
+
+      try {
+        await addToWatchlist(itemId, { item: suggestion });
+        const bucketKey = normalizeWatchlistTabKey(suggestion?.Bucket);
+        if (Object.prototype.hasOwnProperty.call(addedCounts, bucketKey)) {
+          addedCounts[bucketKey] += 1;
+        }
+      } catch (error) {
+        const message = text(error?.message);
+        if (message) errors.push(message);
+      }
+    }
+
+    const addedTotal = Object.values(addedCounts).reduce((sum, value) => sum + Number(value || 0), 0);
+    if (addedTotal > 0) {
+      window.showMessage?.(
+        buildSmartFillSuccessMessage(addedCounts, response?.usedCommunityFallback === true),
+        "success"
+      );
+    } else if (errors.length) {
+      window.showMessage?.(
+        errors[0] || L("watchlistSmartFillError", "Akıllı liste oluşturulamadı."),
+        "error"
+      );
+    } else {
+      window.showMessage?.(
+        text(response?.message, L("watchlistSmartFillEmpty", "Akıllı liste için uygun yeni içerik bulunamadı.")),
+        "info"
+      );
+    }
+  } catch (error) {
+    window.showMessage?.(
+      error?.message || L("watchlistSmartFillError", "Akıllı liste oluşturulamadı."),
+      "error"
+    );
+  } finally {
+    root.__suspendExternalRefresh = false;
+    const shouldRefresh = root.__suspendExternalRefreshDirty === true;
+    root.__suspendExternalRefreshDirty = false;
+
+    if (root.classList.contains("visible")) {
+      if (shouldRefresh) {
+        await renderWatchlistModal(root, root.__state || {});
+      } else {
+        syncSmartFillButtonState(root);
+      }
+    }
+
+    setSmartFillPending(root, false);
+  }
 }
 
 function normalizeDashboard(raw) {
@@ -1646,7 +1874,7 @@ async function fetchShareableUsers() {
         name: text(user?.Name || user?.Username || user?.name || user?.username)
       }))
       .filter((user) => user.id && user.name && user.id !== currentUserId)
-      .sort((left, right) => left.name.localeCompare(right.name, cfg()?.dateLocale || "pt-BR"));
+      .sort((left, right) => left.name.localeCompare(right.name, cfg()?.dateLocale || "tr-TR"));
 
     return usersCache;
   })().finally(() => {
@@ -1703,7 +1931,8 @@ function ensureStyles() {
       gap: 18px;
       padding: 24px 24px 14px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+      flex-wrap: wrap
     }
     #${WATCHLIST_MODAL_ID} .monwuiwl-title {
       font-size: 28px;
@@ -1746,6 +1975,60 @@ function ensureStyles() {
     #${WATCHLIST_MODAL_ID} .monwuiwl-share-submit:hover,
     #${WATCHLIST_MODAL_ID} .monwuiwl-share-cancel:hover {
       transform: translateY(-1px);
+    }
+    #${WATCHLIST_MODAL_ID} .monwuiwl-smart-fill {
+      min-height: 44px;
+      padding: 0 16px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: #fff;
+      background:
+        linear-gradient(135deg, rgba(255,183,3,0.28), rgba(56,189,248,0.22)),
+        rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+    #${WATCHLIST_MODAL_ID} .monwuiwl-smart-fill i {
+      font-size: 12px;
+      line-height: 1;
+    }
+    #${WATCHLIST_MODAL_ID} .monwuiwl-smart-fill[disabled] {
+      cursor: progress;
+      opacity: 0.72;
+      transform: none;
+    }
+    #${WATCHLIST_MODAL_ID} .monwuiwl-smart-fill-count-wrap {
+      display: flex;
+      gap: 4px;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    #${WATCHLIST_MODAL_ID} .monwuiwl-smart-fill-count {
+      min-width: 78px;
+      height: 44px;
+      padding: 0 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      outline: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    #${WATCHLIST_MODAL_ID} .monwuiwl-smart-fill-count[disabled] {
+      cursor: progress;
+      opacity: 0.72;
     }
     .emby-tabs-slider .${WATCHLIST_NAV_BUTTON_CLASS},
     .${WATCHLIST_MUI_NAV_LINK_CLASS}.${WATCHLIST_NAV_BUTTON_CLASS} {
@@ -1849,7 +2132,7 @@ function ensureStyles() {
       touch-action: pan-y;
     }
     #${WATCHLIST_MODAL_ID} .monwuiwl-layout.is-stats-tab .monwuiwl-main {
-      padding-right: 0;
+      padding: 6px;
     }
     #${WATCHLIST_MODAL_ID} .monwuiwl-stats-shell {
       display: flex;
@@ -3159,6 +3442,10 @@ function ensureModalRoot() {
 
   window.addEventListener("monwui:watchlist-changed", (event) => {
     if (!root.classList.contains("visible")) return;
+    if (root.__suspendExternalRefresh === true) {
+      root.__suspendExternalRefreshDirty = true;
+      return;
+    }
     const detail = event?.detail || {};
 
     void applyWatchlistChangeToOpenModal(root, detail)
@@ -3188,7 +3475,7 @@ function formatDate(ts) {
   if (Number.isNaN(date.getTime())) return "";
 
   try {
-    return new Intl.DateTimeFormat(cfg()?.dateLocale || "pt-BR", {
+    return new Intl.DateTimeFormat(cfg()?.dateLocale || "tr-TR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric"
@@ -3201,7 +3488,7 @@ function formatDate(ts) {
 function formatCount(value) {
   const count = Math.max(0, Math.trunc(Number(value || 0)));
   try {
-    return new Intl.NumberFormat(cfg()?.timeLocale || cfg()?.dateLocale || "pt-BR").format(count);
+    return new Intl.NumberFormat(cfg()?.timeLocale || cfg()?.dateLocale || "tr-TR").format(count);
   } catch {
     return String(count);
   }
@@ -3230,7 +3517,7 @@ function formatDateTime(ts) {
   const sameDay = now.toDateString() === date.toDateString();
 
   try {
-    return new Intl.DateTimeFormat(cfg()?.timeLocale || cfg()?.dateLocale || "pt-BR", sameDay ? {
+    return new Intl.DateTimeFormat(cfg()?.timeLocale || cfg()?.dateLocale || "tr-TR", sameDay ? {
       hour: "2-digit",
       minute: "2-digit"
     } : {
@@ -3561,7 +3848,7 @@ function getContainerPreviewFields() {
 }
 
 function compareText(left, right) {
-  return text(left).localeCompare(text(right), cfg()?.dateLocale || "pt-BR", {
+  return text(left).localeCompare(text(right), cfg()?.dateLocale || "tr-TR", {
     numeric: true,
     sensitivity: "base"
   });
@@ -5675,6 +5962,8 @@ function renderModalShell(model, activeTab) {
             <p class="monwuiwl-subtitle">${escapeHtml(L("watchlistModalSubtitle", "Öğeler cihazdan bağımsız sunucu tarafında tutulur. İstersen diğer kullanıcılarla not ekleyerek paylaşabilirsin."))}</p>
           </div>
           <div class="monwuiwl-header-actions">
+            ${renderSmartFillCountMarkup()}
+            ${renderSmartFillButtonMarkup()}
             <button class="monwuiwl-close" data-monwuiwl-close="1" aria-label="${escapeHtml(L("closeButton", "Kapat"))}">✕</button>
           </div>
         </div>
@@ -6190,6 +6479,7 @@ function renderWatchlistShellFromModel(root, model) {
   root.__focusItemApplied = "";
   root.__previewActiveCard = null;
   root.innerHTML = renderModalShell(model, root.__state?.activeTab);
+  syncSmartFillButtonState(root);
   if (!isWatchlistStatsTab(root.__state?.activeTab)) {
     scheduleProgressiveWatchlistSections(root, model, root.__state?.activeTab);
   }
@@ -6332,6 +6622,13 @@ function bindModalInteractions(root) {
     }
   });
 
+  root.addEventListener("change", (event) => {
+    const countSelect = event.target?.closest?.("[data-monwuiwl-smart-fill-count='1']");
+    if (!countSelect || !root.contains(countSelect)) return;
+    setSmartFillSelectedCount(root, countSelect.value);
+    syncSmartFillButtonState(root);
+  });
+
   root.addEventListener("click", async (event) => {
     if (event.target?.closest?.("[data-monwuiwl-close='1']")) return;
 
@@ -6365,6 +6662,14 @@ function bindModalInteractions(root) {
       } else {
         renderWatchlistModal(root, root.__state).catch(() => {});
       }
+      return;
+    }
+
+    const smartFillButton = event.target?.closest?.("[data-monwuiwl-smart-fill='1']");
+    if (smartFillButton && root.contains(smartFillButton)) {
+      event.preventDefault();
+      event.stopPropagation();
+      await runSmartWatchlistFill(root);
       return;
     }
 
@@ -6911,4 +7216,3 @@ if (typeof document !== "undefined") {
     bootstrapWatchlistUi();
   }
 }
-

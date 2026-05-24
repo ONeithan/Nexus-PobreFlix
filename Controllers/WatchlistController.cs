@@ -1,19 +1,39 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Jellyfin.Data.Enums;
+using Jellyfin.Database.Implementations.Entities;
+using Jellyfin.Database.Implementations.Enums;
+using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.Audio;
+using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
+namespace Jellyfin.Plugin.JMSFusion.Controllers
 {
     [ApiController]
-    [Route("NexusPobreFlix/watchlist")]
-    [Route("Plugins/NexusPobreFlix/watchlist")]
+    [Route("JMSFusion/watchlist")]
+    [Route("Plugins/JMSFusion/watchlist")]
     public class WatchlistController : ControllerBase
     {
         private static readonly object SyncRoot = new();
         private const int MaxItemsPerUser = 500;
         private const int MaxSharesPerOwner = 2000;
         private const int MaxNoteLength = 600;
+        private const int SmartDefaultMovieCount = 4;
+        private const int SmartDefaultSeriesCount = 4;
+        private const int SmartDefaultMusicCount = 5;
+        private const int SmartDefaultAlbumCount = 0;
+        private const int SmartMaxPerBucket = 12;
+        private const int SmartHistoryLimit = 30;
+        private const int SmartCommunityPerUserLimit = 10;
+        private const int SmartCommunityUserLimit = 10;
+        private const int SmartCandidateLimit = 180;
+        private const int SmartBroadCandidateLimit = 260;
+        private readonly IUserManager _users;
+        private readonly ILibraryManager _libraryManager;
+        private readonly IUserDataManager _userDataManager;
 
         public sealed class AddItemRequest
         {
@@ -44,10 +64,52 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             public string? UserName { get; set; }
         }
 
+        public sealed class SmartFillRequest
+        {
+            public int? Movies { get; set; }
+            public int? Series { get; set; }
+            public int? Music { get; set; }
+            public int? Albums { get; set; }
+            public bool? ForceCommunityFallback { get; set; }
+        }
+
         private sealed class UserContext
         {
             public string UserId { get; init; } = "";
             public string UserName { get; init; } = "";
+        }
+
+        private enum SmartBucket
+        {
+            Movies,
+            Series,
+            Music,
+            Albums
+        }
+
+        private sealed class SmartProfile
+        {
+            public Dictionary<string, double> Genres { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, double> Studios { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, double> Artists { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public int SeedCount { get; set; }
+            public bool HasSignal => Genres.Count > 0 || Studios.Count > 0 || Artists.Count > 0;
+        }
+
+        private sealed class SmartBucketResult
+        {
+            public SmartBucket Bucket { get; init; }
+            public string Source { get; set; } = "none";
+            public int SeedCount { get; set; }
+            public int CandidateCount { get; set; }
+            public List<BaseItem> Items { get; } = new();
+        }
+
+        public WatchlistController(IUserManager users, ILibraryManager libraryManager, IUserDataManager userDataManager)
+        {
+            _users = users;
+            _libraryManager = libraryManager;
+            _userDataManager = userDataManager;
         }
 
         [HttpGet]
@@ -61,7 +123,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 
             lock (SyncRoot)
             {
-                var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+                var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
                 var cfg = plugin.Configuration;
                 var changed = NormalizeConfig(cfg);
                 if (changed)
@@ -149,7 +211,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 
             lock (SyncRoot)
             {
-                var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+                var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
                 var cfg = plugin.Configuration;
                 var changed = NormalizeConfig(cfg);
                 var created = false;
@@ -214,7 +276,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 
             lock (SyncRoot)
             {
-                var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+                var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
                 var cfg = plugin.Configuration;
                 var changed = NormalizeConfig(cfg);
                 var removedAfterPlayed = IsTrue(Request.Query["played"].FirstOrDefault()) || IsTrue(Request.Query["completed"].FirstOrDefault());
@@ -297,7 +359,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
 
             lock (SyncRoot)
             {
-                var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+                var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
                 var cfg = plugin.Configuration;
                 var changed = NormalizeConfig(cfg);
 
@@ -380,12 +442,12 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             var cleanShareId = Clean(shareId);
             if (string.IsNullOrWhiteSpace(cleanShareId))
             {
-                return BadRequest(new { ok = false, error = "shareId obrigatório" });
+                return BadRequest(new { ok = false, error = "shareId gerekli" });
             }
 
             lock (SyncRoot)
             {
-                var plugin = NexusPobreFlixPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+                var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
                 var cfg = plugin.Configuration;
                 var changed = NormalizeConfig(cfg);
 
@@ -415,6 +477,67 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                     revision = cfg.WatchlistRevision
                 });
             }
+        }
+
+        [HttpPost("smart-fill")]
+        public IActionResult GetSmartFill([FromBody] SmartFillRequest? request)
+        {
+            var userCheck = TryGetRequestUserEntity();
+            if (userCheck.Result is not null)
+            {
+                return userCheck.Result;
+            }
+
+            var currentUser = userCheck.User ?? throw new InvalidOperationException("User not available.");
+            var currentUserContext = userCheck.Context ?? throw new InvalidOperationException("User context not available.");
+            var useCommunityFallback = request?.ForceCommunityFallback == true;
+            var blockedItemIds = GetSmartBlockedItemIds(currentUserContext.UserId);
+            var targets = new Dictionary<SmartBucket, int>
+            {
+                [SmartBucket.Movies] = ClampSmartTargetCount(request?.Movies, SmartDefaultMovieCount),
+                [SmartBucket.Series] = ClampSmartTargetCount(request?.Series, SmartDefaultSeriesCount),
+                [SmartBucket.Music] = ClampSmartTargetCount(request?.Music, SmartDefaultMusicCount),
+                [SmartBucket.Albums] = ClampSmartTargetCount(request?.Albums, SmartDefaultAlbumCount)
+            };
+
+            var results = targets
+                .Where(entry => entry.Value > 0)
+                .Select(entry => BuildSmartBucketResult(currentUser, entry.Key, entry.Value, blockedItemIds, useCommunityFallback))
+                .ToList();
+
+            var responseItems = results
+                .SelectMany(result => result.Items.Select(item => ToSmartResponseItem(result.Bucket, item)))
+                .ToList();
+
+            var hasAnySignal = results.Any(result => result.SeedCount > 0 && !Same(result.Source, "none"));
+            var message = responseItems.Count > 0
+                ? string.Empty
+                : hasAnySignal
+                    ? "İzlenmemiş veya dinlenmemiş uygun içerik bulunamadı."
+                    : "Akıllı öneri üretmek için yeterli izleme geçmişi bulunamadı.";
+
+            NoCache();
+            return Ok(new
+            {
+                ok = true,
+                usedCommunityFallback = results.Any(result => Same(result.Source, "community")),
+                breakdown = new
+                {
+                    movies = results.FirstOrDefault(result => result.Bucket == SmartBucket.Movies)?.Items.Count ?? 0,
+                    series = results.FirstOrDefault(result => result.Bucket == SmartBucket.Series)?.Items.Count ?? 0,
+                    music = results.FirstOrDefault(result => result.Bucket == SmartBucket.Music)?.Items.Count ?? 0,
+                    albums = results.FirstOrDefault(result => result.Bucket == SmartBucket.Albums)?.Items.Count ?? 0
+                },
+                sources = new
+                {
+                    movies = results.FirstOrDefault(result => result.Bucket == SmartBucket.Movies)?.Source ?? "none",
+                    series = results.FirstOrDefault(result => result.Bucket == SmartBucket.Series)?.Source ?? "none",
+                    music = results.FirstOrDefault(result => result.Bucket == SmartBucket.Music)?.Source ?? "none",
+                    albums = results.FirstOrDefault(result => result.Bucket == SmartBucket.Albums)?.Source ?? "none"
+                },
+                items = responseItems,
+                message
+            });
         }
 
         private static object? ResolveSharedEntry(
@@ -517,7 +640,647 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             return changed;
         }
 
-        private static bool TrimOwnerItems(NexusPobreFlixConfiguration cfg, string ownerUserId)
+        private SmartBucketResult BuildSmartBucketResult(
+            User currentUser,
+            SmartBucket bucket,
+            int targetCount,
+            IReadOnlyCollection<string> blockedItemIds,
+            bool forceCommunityFallback)
+        {
+            var historyItems = QuerySmartHistoryItems(currentUser, bucket, SmartHistoryLimit);
+            var historyExcludeIds = GetSmartHistoryExcludeIds(historyItems, bucket);
+            var personalProfile = BuildSmartProfile(currentUser, historyItems, bucket);
+            var profile = personalProfile;
+            var source = personalProfile.HasSignal && !forceCommunityFallback ? "personal" : "none";
+
+            if (forceCommunityFallback || !personalProfile.HasSignal)
+            {
+                var communityProfile = BuildSmartCommunityProfile(currentUser.Id, bucket);
+                if (communityProfile.HasSignal)
+                {
+                    profile = communityProfile;
+                    source = "community";
+                }
+                else if (personalProfile.HasSignal)
+                {
+                    profile = personalProfile;
+                    source = "personal";
+                }
+            }
+
+            var result = new SmartBucketResult
+            {
+                Bucket = bucket,
+                Source = source,
+                SeedCount = profile.SeedCount
+            };
+
+            if (!profile.HasSignal || targetCount <= 0)
+            {
+                return result;
+            }
+
+            var exclusions = new HashSet<string>(blockedItemIds ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+            foreach (var id in historyExcludeIds)
+            {
+                exclusions.Add(id);
+            }
+
+            var candidates = CollectSmartCandidatePool(currentUser, bucket, profile, exclusions, targetCount);
+            result.CandidateCount = candidates.Count;
+            result.Items.AddRange(RankSmartCandidates(bucket, candidates, profile, exclusions, targetCount));
+            return result;
+        }
+
+        private IReadOnlyList<BaseItem> QuerySmartHistoryItems(User user, SmartBucket bucket, int limit)
+        {
+            try
+            {
+                var query = new InternalItemsQuery
+                {
+                    User = user,
+                    Recursive = true,
+                    IncludeItemTypes = GetSmartHistoryKinds(bucket),
+                    IsPlayed = true,
+                    Limit = Math.Max(1, limit),
+                    EnableTotalRecordCount = false,
+                    OrderBy = new[]
+                    {
+                        (ItemSortBy.DatePlayed, SortOrder.Descending),
+                        (ItemSortBy.PlayCount, SortOrder.Descending),
+                        (ItemSortBy.DateCreated, SortOrder.Descending)
+                    }
+                };
+
+                return _libraryManager.GetItemList(query) ?? Array.Empty<BaseItem>();
+            }
+            catch
+            {
+                return Array.Empty<BaseItem>();
+            }
+        }
+
+        private SmartProfile BuildSmartCommunityProfile(Guid currentUserId, SmartBucket bucket)
+        {
+            var merged = new SmartProfile();
+
+            foreach (var otherUser in (_users.Users ?? Array.Empty<User>())
+                .Where(user => user is not null && user.Id != Guid.Empty && user.Id != currentUserId)
+                .OrderByDescending(user => user.LastActivityDate ?? DateTime.MinValue)
+                .ThenBy(user => user.Username ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                .Take(SmartCommunityUserLimit))
+            {
+                var historyItems = QuerySmartHistoryItems(otherUser, bucket, SmartCommunityPerUserLimit);
+                var profile = BuildSmartProfile(otherUser, historyItems, bucket);
+                if (!profile.HasSignal) continue;
+
+                MergeSmartProfile(merged, profile, 0.72);
+            }
+
+            return merged;
+        }
+
+        private SmartProfile BuildSmartProfile(User user, IReadOnlyList<BaseItem> historyItems, SmartBucket bucket)
+        {
+            var profile = new SmartProfile();
+            var seenSignalIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var rank = 0;
+
+            foreach (var historyItem in historyItems ?? Array.Empty<BaseItem>())
+            {
+                if (historyItem is null) continue;
+
+                var signalItem = GetSmartProfileSourceItem(bucket, historyItem) ?? historyItem;
+                var signalId = NormalizeItemId(signalItem);
+                if (string.IsNullOrWhiteSpace(signalId) || !seenSignalIds.Add(signalId)) continue;
+
+                var userData = SafeGetUserData(user, historyItem);
+                var weight = ComputeSmartHistoryWeight(userData, rank);
+                rank += 1;
+
+                if (weight <= 0) continue;
+
+                profile.SeedCount += 1;
+                AddWeightedValues(profile.Genres, signalItem.Genres, weight * 2.15);
+                AddWeightedValues(profile.Studios, signalItem.Studios, weight * ((bucket == SmartBucket.Music || bucket == SmartBucket.Albums) ? 0.35 : 1.2));
+                AddWeightedValues(profile.Artists, GetSmartArtists(signalItem), weight * ((bucket == SmartBucket.Music || bucket == SmartBucket.Albums) ? 2.65 : 0.45));
+            }
+
+            return profile;
+        }
+
+        private IReadOnlyList<BaseItem> CollectSmartCandidatePool(
+            User currentUser,
+            SmartBucket bucket,
+            SmartProfile profile,
+            HashSet<string> exclusions,
+            int targetCount)
+        {
+            var merged = new List<BaseItem>();
+            var seenItemIds = new HashSet<string>(exclusions ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase), StringComparer.OrdinalIgnoreCase);
+            var primaryGenres = GetTopWeightedKeys(profile.Genres, bucket == SmartBucket.Music || bucket == SmartBucket.Albums ? 4 : 3);
+
+            if (primaryGenres.Count > 0)
+            {
+                AddSmartCandidates(
+                    merged,
+                    seenItemIds,
+                    QuerySmartCandidateItems(currentUser, bucket, Math.Max(SmartCandidateLimit, targetCount * 18), primaryGenres.Take(3).ToArray()));
+
+                if (primaryGenres.Count > 3)
+                {
+                    AddSmartCandidates(
+                        merged,
+                        seenItemIds,
+                        QuerySmartCandidateItems(currentUser, bucket, Math.Max(SmartCandidateLimit, targetCount * 18), primaryGenres.Take(6).ToArray()));
+                }
+            }
+
+            AddSmartCandidates(
+                merged,
+                seenItemIds,
+                QuerySmartCandidateItems(currentUser, bucket, Math.Max(SmartBroadCandidateLimit, targetCount * 24), null));
+
+            return merged;
+        }
+
+        private IReadOnlyList<BaseItem> QuerySmartCandidateItems(
+            User currentUser,
+            SmartBucket bucket,
+            int limit,
+            IReadOnlyList<string>? genres)
+        {
+            try
+            {
+                var query = new InternalItemsQuery
+                {
+                    User = currentUser,
+                    Recursive = true,
+                    IncludeItemTypes = GetSmartCandidateKinds(bucket),
+                    IsPlayed = false,
+                    Limit = Math.Max(1, limit),
+                    EnableTotalRecordCount = false,
+                    MinCommunityRating = bucket == SmartBucket.Movies || bucket == SmartBucket.Series ? 5.0 : null,
+                    OrderBy = new[]
+                    {
+                        (ItemSortBy.CommunityRating, SortOrder.Descending),
+                        (ItemSortBy.DateCreated, SortOrder.Descending)
+                    }
+                };
+
+                if (genres is not null && genres.Count > 0)
+                {
+                    query.Genres = genres.ToArray();
+                }
+
+                return _libraryManager.GetItemList(query) ?? Array.Empty<BaseItem>();
+            }
+            catch
+            {
+                return Array.Empty<BaseItem>();
+            }
+        }
+
+        private IReadOnlyList<BaseItem> RankSmartCandidates(
+            SmartBucket bucket,
+            IReadOnlyList<BaseItem> candidates,
+            SmartProfile profile,
+            HashSet<string> exclusions,
+            int limit)
+        {
+            return (candidates ?? Array.Empty<BaseItem>())
+                .Where(item =>
+                {
+                    var itemId = NormalizeItemId(item);
+                    return !string.IsNullOrWhiteSpace(itemId) && !exclusions.Contains(itemId);
+                })
+                .Select(item => new
+                {
+                    Item = item,
+                    Score = ScoreSmartCandidate(bucket, item, profile)
+                })
+                .Where(entry => entry.Score > 0)
+                .OrderByDescending(entry => entry.Score)
+                .ThenByDescending(entry => entry.Item.CommunityRating ?? 0)
+                .ThenByDescending(entry => entry.Item.PremiereDate ?? entry.Item.DateCreated)
+                .Take(Math.Max(1, limit))
+                .Select(entry => entry.Item)
+                .ToList();
+        }
+
+        private static double ScoreSmartCandidate(SmartBucket bucket, BaseItem item, SmartProfile profile)
+        {
+            if (item is null) return 0;
+
+            var score = 0d;
+            var matches = 0;
+
+            matches += AccumulateSignalScore(profile.Genres, item.Genres, 1.85, ref score);
+            matches += AccumulateSignalScore(profile.Studios, item.Studios, (bucket == SmartBucket.Music || bucket == SmartBucket.Albums) ? 0.2 : 1.1, ref score);
+            matches += AccumulateSignalScore(profile.Artists, GetSmartArtists(item), (bucket == SmartBucket.Music || bucket == SmartBucket.Albums) ? 2.35 : 0.4, ref score);
+
+            if (matches <= 0)
+            {
+                return 0;
+            }
+
+            if (item.CommunityRating.HasValue)
+            {
+                score += Math.Clamp(item.CommunityRating.Value, 0, 10) / 10d * ((bucket == SmartBucket.Music || bucket == SmartBucket.Albums) ? 0.55 : 0.95);
+            }
+
+            var releaseDate = item.PremiereDate ?? item.DateCreated;
+            var ageDays = Math.Max(0, (DateTime.UtcNow - releaseDate).TotalDays);
+            if (ageDays <= 3650)
+            {
+                score += Math.Max(0.05, 0.28 - ((ageDays / 3650d) * 0.18));
+            }
+
+            return score;
+        }
+
+        private static int AccumulateSignalScore(
+            IReadOnlyDictionary<string, double> weights,
+            IEnumerable<string>? values,
+            double multiplier,
+            ref double score)
+        {
+            if (weights.Count == 0 || multiplier <= 0) return 0;
+
+            var matches = 0;
+            foreach (var value in NormalizeStringList(values))
+            {
+                if (!weights.TryGetValue(value, out var weight)) continue;
+                score += weight * multiplier;
+                matches += 1;
+            }
+
+            return matches;
+        }
+
+        private static void AddSmartCandidates(
+            ICollection<BaseItem> target,
+            ISet<string> seenItemIds,
+            IEnumerable<BaseItem>? candidates)
+        {
+            foreach (var item in candidates ?? Array.Empty<BaseItem>())
+            {
+                var itemId = NormalizeItemId(item);
+                if (string.IsNullOrWhiteSpace(itemId) || !seenItemIds.Add(itemId)) continue;
+                target.Add(item);
+            }
+        }
+
+        private static SmartProfile MergeSmartProfile(SmartProfile target, SmartProfile source, double factor)
+        {
+            target.SeedCount += source.SeedCount;
+
+            foreach (var entry in source.Genres)
+            {
+                target.Genres[entry.Key] = target.Genres.TryGetValue(entry.Key, out var current)
+                    ? current + (entry.Value * factor)
+                    : entry.Value * factor;
+            }
+
+            foreach (var entry in source.Studios)
+            {
+                target.Studios[entry.Key] = target.Studios.TryGetValue(entry.Key, out var current)
+                    ? current + (entry.Value * factor)
+                    : entry.Value * factor;
+            }
+
+            foreach (var entry in source.Artists)
+            {
+                target.Artists[entry.Key] = target.Artists.TryGetValue(entry.Key, out var current)
+                    ? current + (entry.Value * factor)
+                    : entry.Value * factor;
+            }
+
+            return target;
+        }
+
+        private static void AddWeightedValues(IDictionary<string, double> target, IEnumerable<string>? values, double weight)
+        {
+            if (weight <= 0) return;
+
+            foreach (var value in NormalizeStringList(values))
+            {
+                target[value] = target.TryGetValue(value, out var existing)
+                    ? existing + weight
+                    : weight;
+            }
+        }
+
+        private static List<string> GetTopWeightedKeys(IReadOnlyDictionary<string, double> weights, int limit)
+        {
+            return weights
+                .OrderByDescending(entry => entry.Value)
+                .ThenBy(entry => entry.Key, StringComparer.OrdinalIgnoreCase)
+                .Take(Math.Max(0, limit))
+                .Select(entry => entry.Key)
+                .ToList();
+        }
+
+        private static double ComputeSmartHistoryWeight(UserItemData? userData, int rank)
+        {
+            var recencyWeight = Math.Max(0.42, 1.4 - (rank * 0.08));
+            var playCount = Math.Max(1, userData?.PlayCount ?? (userData?.Played == true ? 1 : 0));
+            var playBoost = Math.Min(1.8, 1.0 + ((playCount - 1) * 0.18));
+            var freshnessBoost = 1.0;
+
+            if (userData?.LastPlayedDate is DateTime lastPlayedDate)
+            {
+                var ageDays = Math.Max(0, (DateTime.UtcNow - lastPlayedDate).TotalDays);
+                if (ageDays <= 30) freshnessBoost = 1.22;
+                else if (ageDays <= 90) freshnessBoost = 1.12;
+                else if (ageDays <= 180) freshnessBoost = 1.0;
+                else if (ageDays <= 365) freshnessBoost = 0.92;
+                else freshnessBoost = 0.84;
+            }
+
+            return recencyWeight * playBoost * freshnessBoost;
+        }
+
+        private UserItemData? SafeGetUserData(User user, BaseItem item)
+        {
+            try
+            {
+                return _userDataManager.GetUserData(user, item);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static HashSet<string> GetSmartHistoryExcludeIds(IEnumerable<BaseItem>? historyItems, SmartBucket bucket)
+        {
+            var excludedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var item in historyItems ?? Array.Empty<BaseItem>())
+            {
+                foreach (var id in GetSmartHistoryExcludeIdsForItem(bucket, item))
+                {
+                    if (!string.IsNullOrWhiteSpace(id))
+                    {
+                        excludedIds.Add(id);
+                    }
+                }
+            }
+
+            return excludedIds;
+        }
+
+        private static IEnumerable<string> GetSmartHistoryExcludeIdsForItem(SmartBucket bucket, BaseItem item)
+        {
+            switch (bucket)
+            {
+                case SmartBucket.Series:
+                    if (item is Episode episode && episode.SeriesId != Guid.Empty)
+                    {
+                        yield return NormalizeGuidString(episode.SeriesId);
+                        yield break;
+                    }
+
+                    if (item is Season season && season.SeriesId != Guid.Empty)
+                    {
+                        yield return NormalizeGuidString(season.SeriesId);
+                        yield break;
+                    }
+
+                    yield return NormalizeItemId(item);
+                    yield break;
+
+                case SmartBucket.Albums:
+                    if (item is Audio audio && audio.AlbumEntity is not null)
+                    {
+                        yield return NormalizeItemId(audio.AlbumEntity);
+                        yield break;
+                    }
+
+                    yield return NormalizeItemId(item);
+                    yield break;
+
+                default:
+                    yield return NormalizeItemId(item);
+                    yield break;
+            }
+        }
+
+        private static BaseItemKind[] GetSmartHistoryKinds(SmartBucket bucket)
+        {
+            return bucket switch
+            {
+                SmartBucket.Movies => new[]
+                {
+                    BaseItemKind.Movie,
+                    BaseItemKind.Series,
+                    BaseItemKind.Season,
+                    BaseItemKind.Episode
+                },
+                SmartBucket.Series => new[]
+                {
+                    BaseItemKind.Movie,
+                    BaseItemKind.Series,
+                    BaseItemKind.Season,
+                    BaseItemKind.Episode
+                },
+                SmartBucket.Music => new[]
+                {
+                    BaseItemKind.Audio
+                },
+                SmartBucket.Albums => new[]
+                {
+                    BaseItemKind.Audio,
+                    BaseItemKind.MusicAlbum
+                },
+                _ => Array.Empty<BaseItemKind>()
+            };
+        }
+
+        private static BaseItemKind[] GetSmartCandidateKinds(SmartBucket bucket)
+        {
+            return bucket switch
+            {
+                SmartBucket.Movies => new[] { BaseItemKind.Movie },
+                SmartBucket.Series => new[] { BaseItemKind.Series },
+                SmartBucket.Music => new[] { BaseItemKind.Audio },
+                SmartBucket.Albums => new[] { BaseItemKind.MusicAlbum },
+                _ => Array.Empty<BaseItemKind>()
+            };
+        }
+
+        private static BaseItem GetSmartProfileSourceItem(SmartBucket bucket, BaseItem item)
+        {
+            if ((bucket == SmartBucket.Movies || bucket == SmartBucket.Series) && item is Episode episode && episode.Series is not null)
+            {
+                return episode.Series;
+            }
+
+            if ((bucket == SmartBucket.Movies || bucket == SmartBucket.Series) && item is Season season && season.Series is not null)
+            {
+                return season.Series;
+            }
+
+            if (bucket == SmartBucket.Albums && item is Audio audio && audio.AlbumEntity is not null)
+            {
+                return audio.AlbumEntity;
+            }
+
+            return item;
+        }
+
+        private static IEnumerable<string> GetSmartArtists(BaseItem item)
+        {
+            if (item is MusicAlbum album)
+            {
+                return NormalizeStringList((album.Artists ?? Array.Empty<string>())
+                    .Concat(album.AlbumArtists ?? Array.Empty<string>())
+                    .Concat(new[] { album.AlbumArtist }));
+            }
+
+            if (item is Audio audio)
+            {
+                return NormalizeStringList((audio.Artists ?? Array.Empty<string>())
+                    .Concat(audio.AlbumArtists ?? Array.Empty<string>()));
+            }
+
+            return Array.Empty<string>();
+        }
+
+        private static string GetSmartAlbumArtist(BaseItem item)
+        {
+            if (item is MusicAlbum album)
+            {
+                return Clean(album.AlbumArtist) is string direct && !string.IsNullOrWhiteSpace(direct)
+                    ? direct
+                    : Clean((album.AlbumArtists ?? Array.Empty<string>()).FirstOrDefault());
+            }
+
+            if (item is Audio audio)
+            {
+                return Clean((audio.AlbumArtists ?? Array.Empty<string>()).FirstOrDefault());
+            }
+
+            return string.Empty;
+        }
+
+        private static string GetSmartAlbumName(BaseItem item)
+        {
+            if (item is Audio audio)
+            {
+                return Clean(audio.Album);
+            }
+
+            if (item is MusicAlbum album)
+            {
+                return Clean(album.Album);
+            }
+
+            return string.Empty;
+        }
+
+        private static string GetSmartParentName(BaseItem item)
+        {
+            if (item is Audio audio)
+            {
+                return Clean(audio.Album);
+            }
+
+            if (item is Episode episode)
+            {
+                return Clean(episode.SeriesName);
+            }
+
+            if (item is Season season)
+            {
+                return Clean(season.SeriesName);
+            }
+
+            return string.Empty;
+        }
+
+        private HashSet<string> GetSmartBlockedItemIds(string ownerUserId)
+        {
+            lock (SyncRoot)
+            {
+                var plugin = JMSFusionPlugin.Instance ?? throw new InvalidOperationException("Plugin not available.");
+                var cfg = plugin.Configuration;
+                var changed = NormalizeConfig(cfg);
+                if (changed)
+                {
+                    TouchRevision(cfg);
+                    plugin.UpdateConfiguration(cfg);
+                }
+
+                var blockedIds = cfg.WatchlistEntries
+                    .Where(entry => Same(entry.OwnerUserId, ownerUserId))
+                    .Select(entry => Clean(entry.ItemId))
+                    .Where(id => !string.IsNullOrWhiteSpace(id))
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var sharedItemId in cfg.WatchlistShares
+                    .Where(share => Same(share.TargetUserId, ownerUserId))
+                    .Select(share => Clean(share.ItemId))
+                    .Where(id => !string.IsNullOrWhiteSpace(id)))
+                {
+                    blockedIds.Add(sharedItemId);
+                }
+
+                return blockedIds;
+            }
+        }
+
+        private static object ToSmartResponseItem(SmartBucket bucket, BaseItem item)
+        {
+            return new
+            {
+                Id = NormalizeItemId(item),
+                Type = item.GetType().Name,
+                Name = Clean(item.Name),
+                Overview = Clean(item.Overview),
+                ProductionYear = item.ProductionYear,
+                RunTimeTicks = item.RunTimeTicks,
+                CommunityRating = item.CommunityRating.HasValue ? Convert.ToDouble(item.CommunityRating.Value) : (double?)null,
+                OfficialRating = Clean(item.OfficialRating),
+                Genres = NormalizeStringList(item.Genres),
+                AlbumArtist = GetSmartAlbumArtist(item),
+                Artists = NormalizeStringList(GetSmartArtists(item)),
+                Album = GetSmartAlbumName(item),
+                ParentName = GetSmartParentName(item),
+                Bucket = GetSmartBucketKey(bucket)
+            };
+        }
+
+        private static string GetSmartBucketKey(SmartBucket bucket)
+        {
+            return bucket switch
+            {
+                SmartBucket.Movies => "movies",
+                SmartBucket.Series => "series",
+                SmartBucket.Music => "music",
+                SmartBucket.Albums => "albums",
+                _ => "movies"
+            };
+        }
+
+        private static string NormalizeItemId(BaseItem? item)
+        {
+            return item is null ? string.Empty : NormalizeGuidString(item.Id);
+        }
+
+        private static string NormalizeGuidString(Guid guid)
+        {
+            return guid == Guid.Empty ? string.Empty : guid.ToString("N");
+        }
+
+        private static int ClampSmartTargetCount(int? value, int fallback)
+        {
+            var normalized = value ?? fallback;
+            return Math.Max(0, Math.Min(SmartMaxPerBucket, normalized));
+        }
+
+        private static bool TrimOwnerItems(JMSFusionConfiguration cfg, string ownerUserId)
         {
             var ownerItems = cfg.WatchlistEntries
                 .Where(entry => Same(entry.OwnerUserId, ownerUserId))
@@ -539,7 +1302,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             return removed;
         }
 
-        private static bool TrimOwnerShares(NexusPobreFlixConfiguration cfg, string ownerUserId)
+        private static bool TrimOwnerShares(JMSFusionConfiguration cfg, string ownerUserId)
         {
             var shares = cfg.WatchlistShares
                 .Where(share => Same(share.OwnerUserId, ownerUserId))
@@ -559,7 +1322,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 removeIds.Contains(Clean(share.Id))) > 0;
         }
 
-        private static bool NormalizeConfig(NexusPobreFlixConfiguration cfg)
+        private static bool NormalizeConfig(JMSFusionConfiguration cfg)
         {
             var changed = false;
 
@@ -874,7 +1637,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             return changed;
         }
 
-        private static bool RegisterHistoryAdd(NexusPobreFlixConfiguration cfg, WatchlistEntry entry, UserContext user, long addedAtUtc)
+        private static bool RegisterHistoryAdd(JMSFusionConfiguration cfg, WatchlistEntry entry, UserContext user, long addedAtUtc)
         {
             var history = cfg.WatchlistHistoryEntries.FirstOrDefault(candidate =>
                 Same(candidate.OwnerUserId, user.UserId) &&
@@ -918,7 +1681,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             return true;
         }
 
-        private static bool RegisterHistoryRemoval(NexusPobreFlixConfiguration cfg, WatchlistEntry entry, UserContext user, bool removedAfterPlayed)
+        private static bool RegisterHistoryRemoval(JMSFusionConfiguration cfg, WatchlistEntry entry, UserContext user, bool removedAfterPlayed)
         {
             var history = cfg.WatchlistHistoryEntries.FirstOrDefault(candidate =>
                 Same(candidate.OwnerUserId, user.UserId) &&
@@ -1184,7 +1947,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             return clean[..MaxNoteLength];
         }
 
-        private static void TouchRevision(NexusPobreFlixConfiguration cfg)
+        private static void TouchRevision(JMSFusionConfiguration cfg)
         {
             cfg.WatchlistRevision = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         }
@@ -1197,7 +1960,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 "";
 
             var userName =
-                Request.Headers["X-NexusPobreFlix-UserName"].FirstOrDefault() ??
+                Request.Headers["X-JMSFusion-UserName"].FirstOrDefault() ??
                 Request.Headers["X-Emby-UserName"].FirstOrDefault() ??
                 "";
 
@@ -1206,6 +1969,32 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 UserId = Clean(userId),
                 UserName = Clean(userName)
             };
+        }
+
+        private (UserContext? Context, User? User, IActionResult? Result) TryGetRequestUserEntity()
+        {
+            var context = ReadUserContext();
+            if (!Guid.TryParse(context.UserId, out var userId) || userId == Guid.Empty)
+            {
+                return (null, null, Unauthorized(new { ok = false, error = "Geçerli X-Emby-UserId gerekli" }));
+            }
+
+            var user = _users.GetUserById(userId);
+            if (user is null)
+            {
+                return (null, null, Unauthorized(new { ok = false, error = "Kullanıcı bulunamadı" }));
+            }
+
+            if (string.IsNullOrWhiteSpace(context.UserName))
+            {
+                context = new UserContext
+                {
+                    UserId = context.UserId,
+                    UserName = Clean(user.Username)
+                };
+            }
+
+            return (context, user, null);
         }
 
         private void NoCache()

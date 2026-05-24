@@ -1,59 +1,54 @@
-const DB_NAME = 'jms_prc_db';
-const DB_VER  = 1;
+import { createScopedJsonDb, prepareLegacyIndexedDbForDeletion } from "./scopedJsonCache.js";
 
-export function preparePrcDbForDeletion() {
-  try {
-    window.dispatchEvent(new CustomEvent('jms:indexeddb:release', {
-      detail: { dbName: DB_NAME }
-    }));
-  } catch {}
+const DB_NAME = "jms_prc_db";
+const STORE_TYPE = "personalRecommendations";
+const STABLE_IGNORE_FIELDS = ["fetchedAt", "expiresAt", "updatedAt", "UserData", "UserDataDto", "userData", "userDataDto"];
+
+export async function preparePrcDbForDeletion() {
+  try { await __prcDb?.close?.(); } catch {}
+  __prcDb = null;
+  return prepareLegacyIndexedDbForDeletion([DB_NAME]);
 }
 
-function promisify(req) {
-  return new Promise((resolve, reject) => {
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
+function ensureStoreShape(data) {
+  if (!data || typeof data !== "object") return { items: {}, meta: {} };
+  if (!data.items || typeof data.items !== "object" || Array.isArray(data.items)) data.items = {};
+  if (!data.meta || typeof data.meta !== "object" || Array.isArray(data.meta)) data.meta = {};
+  return data;
 }
 
-function txDone(tx) {
-  return new Promise((resolve, reject) => {
-    tx.oncomplete = () => resolve(true);
-    tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error);
-  });
-}
+function normalizeCachedItem(rec) {
+  if (!rec) return null;
+  const Id = rec.Id || rec.itemId || null;
+  if (!Id) return null;
 
-export function makeScope({ serverId, userId }) {
-  return `${serverId || ''}|${userId || ''}`;
-}
-
-export function openPrcDB() {
-  const req = indexedDB.open(DB_NAME, DB_VER);
-
-  req.onupgradeneeded = () => {
-    const db = req.result;
-
-    if (!db.objectStoreNames.contains('items')) {
-      const s = db.createObjectStore('items', { keyPath: 'key' });
-      s.createIndex('byScope', 'scope', { unique: false });
-      s.createIndex('byUpdatedAt', 'updatedAt', { unique: false });
-    }
-
-    if (!db.objectStoreNames.contains('meta')) {
-      const s = db.createObjectStore('meta', { keyPath: 'key' });
-      s.createIndex('byUpdatedAt', 'updatedAt', { unique: false });
-    }
+  return {
+    Id,
+    Name: rec.Name || rec.name || "",
+    Type: rec.Type || rec.type || "",
+    ProductionYear: rec.ProductionYear ?? rec.productionYear ?? null,
+    OfficialRating: rec.OfficialRating || rec.officialRating || "",
+    CommunityRating: rec.CommunityRating ?? rec.communityRating ?? null,
+    ImageTags: rec.ImageTags || rec.imageTags || null,
+    BackdropImageTags: rec.BackdropImageTags || rec.backdropImageTags || null,
+    PrimaryImageAspectRatio: rec.PrimaryImageAspectRatio ?? rec.primaryImageAspectRatio ?? null,
+    Overview: rec.Overview || rec.overview || "",
+    Genres: rec.Genres || rec.genres || [],
+    RunTimeTicks: rec.RunTimeTicks ?? rec.runTimeTicks ?? null,
+    CumulativeRunTimeTicks: rec.CumulativeRunTimeTicks ?? rec.cumulativeRunTimeTicks ?? null,
+    RemoteTrailers: rec.RemoteTrailers || rec.remoteTrailers || [],
+    DateCreatedTicks: rec.DateCreatedTicks ?? rec.dateCreatedTicks ?? 0,
+    People: rec.People || rec.people || [],
+    PrimaryImageTag: rec.PrimaryImageTag || rec.primaryImageTag || null,
+    __preferTaglessImages: true,
   };
-
-  return promisify(req);
 }
 
-function toPrcItemRecord(scope, it, now = Date.now()) {
+function toPrcItemRecord(it, now = Date.now()) {
   const Id = it?.Id || it?.itemId || null;
   if (!Id) return null;
 
-  const communityRaw = (it?.CommunityRating ?? it?.communityRating ?? null);
+  const communityRaw = it?.CommunityRating ?? it?.communityRating ?? null;
   const CommunityRating = Number.isFinite(communityRaw)
     ? communityRaw
     : (communityRaw == null ? null : (Number(communityRaw) || null));
@@ -78,163 +73,283 @@ function toPrcItemRecord(scope, it, now = Date.now()) {
     : (Array.isArray(it?.genres) ? it.genres : []);
 
   return {
-    key: `${scope}|${Id}`,
-    scope,
     itemId: Id,
     updatedAt: now,
 
     Id,
-    Name: it?.Name || it?.name || '',
-    Type: it?.Type || it?.type || '',
-    ProductionYear: (it?.ProductionYear ?? it?.productionYear ?? null),
-    OfficialRating: it?.OfficialRating || it?.officialRating || '',
+    Name: it?.Name || it?.name || "",
+    Type: it?.Type || it?.type || "",
+    ProductionYear: it?.ProductionYear ?? it?.productionYear ?? null,
+    OfficialRating: it?.OfficialRating || it?.officialRating || "",
     CommunityRating,
 
     ImageTags,
     PrimaryImageTag,
 
     BackdropImageTags: it?.BackdropImageTags || it?.backdropImageTags || null,
-    PrimaryImageAspectRatio: (it?.PrimaryImageAspectRatio ?? it?.primaryImageAspectRatio ?? null),
-    Overview: it?.Overview || it?.overview || '',
+    PrimaryImageAspectRatio: it?.PrimaryImageAspectRatio ?? it?.primaryImageAspectRatio ?? null,
+    Overview: it?.Overview || it?.overview || "",
 
-    RunTimeTicks: (it?.RunTimeTicks ?? it?.runTimeTicks ?? null),
-    CumulativeRunTimeTicks: (it?.CumulativeRunTimeTicks ?? it?.cumulativeRunTimeTicks ?? null),
+    RunTimeTicks: it?.RunTimeTicks ?? it?.runTimeTicks ?? null,
+    CumulativeRunTimeTicks: it?.CumulativeRunTimeTicks ?? it?.cumulativeRunTimeTicks ?? null,
 
     Genres,
     RemoteTrailers,
+    DateCreatedTicks: it?.DateCreatedTicks ?? it?.dateCreatedTicks ?? 0,
+    People: it?.People || it?.people || [],
   };
+}
+
+function pruneItemsMap(store, {
+  ttlMs = 7 * 24 * 60 * 60 * 1000,
+  maxItems = 1200,
+} = {}) {
+  const now = Date.now();
+  const cutoff = now - Math.max(60_000, ttlMs | 0);
+  const items = store.items || {};
+
+  for (const [itemId, rec] of Object.entries(items)) {
+    const updatedAt = Number(rec?.updatedAt || 0);
+    if (updatedAt && updatedAt < cutoff) {
+      delete items[itemId];
+    }
+  }
+
+  const remaining = Object.entries(items);
+  if (maxItems && remaining.length > maxItems) {
+    remaining
+      .sort((a, b) => Number(a[1]?.updatedAt || 0) - Number(b[1]?.updatedAt || 0))
+      .slice(0, remaining.length - maxItems)
+      .forEach(([itemId]) => {
+        delete items[itemId];
+      });
+  }
+}
+
+function pruneMetaMap(store, {
+  ttlMs = 30 * 24 * 60 * 60 * 1000,
+  prefix = "prc:",
+  maxItems = 1200,
+} = {}) {
+  const now = Date.now();
+  const cutoff = now - Math.max(60_000, ttlMs | 0);
+  const meta = store.meta || {};
+
+  for (const [key, rec] of Object.entries(meta)) {
+    if (prefix && !String(key).startsWith(prefix)) continue;
+    const updatedAt = Number(rec?.updatedAt || 0);
+    if (updatedAt && updatedAt < cutoff) {
+      delete meta[key];
+    }
+  }
+
+  const matching = Object.entries(meta).filter(([key]) => !prefix || String(key).startsWith(prefix));
+  if (maxItems && matching.length > maxItems) {
+    matching
+      .sort((a, b) => Number(a[1]?.updatedAt || 0) - Number(b[1]?.updatedAt || 0))
+      .slice(0, matching.length - maxItems)
+      .forEach(([key]) => {
+        delete meta[key];
+      });
+  }
+}
+
+function collectReferencedItemIds(store) {
+  const refs = new Set();
+  const visit = (value, key = "") => {
+    if (!value || typeof value !== "object") return;
+    if (Array.isArray(value)) {
+      if (key === "ids") {
+        for (const rawId of value) {
+          const id = String(rawId || "").trim();
+          if (id) refs.add(id);
+        }
+      }
+      return;
+    }
+
+    for (const [childKey, childValue] of Object.entries(value)) {
+      visit(childValue, childKey);
+    }
+  };
+
+  for (const rec of Object.values(store.meta || {})) {
+    visit(rec?.value);
+  }
+
+  return refs;
+}
+
+function pruneUnreferencedItems(store) {
+  const refs = collectReferencedItemIds(store);
+  if (!refs.size) return;
+
+  for (const itemId of Object.keys(store.items || {})) {
+    if (!refs.has(itemId)) {
+      delete store.items[itemId];
+    }
+  }
+}
+
+function pruneStore(store) {
+  pruneItemsMap(store);
+  pruneMetaMap(store, { ttlMs: 45 * 24 * 60 * 60 * 1000, prefix: "", maxItems: 1600 });
+  pruneUnreferencedItems(store);
+}
+
+function resolveMetaScope(db) {
+  return String(db?.__jmsActiveScope || "").trim();
+}
+
+let __prcDb = null;
+
+export function makeScope({ serverId, userId }) {
+  return `${serverId || ""}|${userId || ""}`;
+}
+
+export async function openPrcDB() {
+  if (!__prcDb) {
+    __prcDb = createScopedJsonDb({
+      cacheType: STORE_TYPE,
+      defaultData: () => ({ items: {}, meta: {} }),
+      saveDelayMs: 800,
+      retryDelayMs: 2200,
+      legacyDbNames: [DB_NAME],
+      stableIgnoreFields: STABLE_IGNORE_FIELDS
+    });
+  }
+  return __prcDb;
 }
 
 export async function putItems(db, scope, items) {
   if (!db || !scope || !items?.length) return;
 
-  const tx = db.transaction(['items'], 'readwrite');
-  const store = tx.objectStore('items');
-  const now = Date.now();
+  await db.writeScope(scope, (data) => {
+    const store = ensureStoreShape(data);
+    const now = Date.now();
 
-  for (const it of items) {
-    const rec = toPrcItemRecord(scope, it, now);
-    if (rec) store.put(rec);
-  }
+    for (const it of items) {
+      const rec = toPrcItemRecord(it, now);
+      if (rec?.Id) {
+        store.items[rec.Id] = rec;
+      }
+    }
 
-  await txDone(tx);
+    pruneItemsMap(store);
+  });
+}
+
+export async function getItemsByIds(db, scope, ids) {
+  const list = Array.isArray(ids) ? ids.map((x) => String(x || "").trim()).filter(Boolean) : [];
+  if (!db || !scope || !list.length) return [];
+
+  return db.readScope(scope, (data) => {
+    const store = ensureStoreShape(data);
+    const out = [];
+    for (const id of list) {
+      const norm = normalizeCachedItem(store.items[id]);
+      if (norm?.Id) out.push(norm);
+    }
+    return out;
+  });
 }
 
 export async function getMeta(db, key) {
-  const tx = db.transaction(['meta'], 'readonly');
-  const val = await promisify(tx.objectStore('meta').get(key));
-  await txDone(tx);
-  return val?.value ?? null;
+  const scope = resolveMetaScope(db);
+  if (!db || !scope || !key) return null;
+
+  return db.readScope(scope, (data) => {
+    const store = ensureStoreShape(data);
+    return store.meta[key]?.value ?? null;
+  });
 }
 
 export async function setMeta(db, key, value) {
-  const tx = db.transaction(['meta'], 'readwrite');
-  tx.objectStore('meta').put({ key, value, updatedAt: Date.now() });
-  await txDone(tx);
-}
+  const scope = resolveMetaScope(db);
+  if (!db || !scope || !key) return;
 
-function cursorIter(req, onValue) {
-  return new Promise((resolve, reject) => {
-    req.onerror = () => reject(req.error);
-    req.onsuccess = async (e) => {
-      const cur = e.target.result;
-      if (!cur) return resolve(true);
-      try { await onValue(cur); }
-      catch {}
-      cur.continue();
-    };
-  });
+  await db.writeScope(scope, (data) => {
+    const store = ensureStoreShape(data);
+    store.meta[key] = { value, updatedAt: Date.now() };
+    pruneStore(store);
+  }, { flush: true });
 }
 
 export async function purgeScopeItems(db, scope, {
   ttlMs = 7 * 24 * 60 * 60 * 1000,
   maxItems = 1200,
-  maxScan = 6000,
 } = {}) {
   if (!db || !scope) return { removed: 0, scanned: 0, capped: 0 };
 
-  const now = Date.now();
-  const cutoff = now - Math.max(60_000, ttlMs | 0);
+  return db.writeScope(scope, (data) => {
+    const store = ensureStoreShape(data);
+    const beforeEntries = Object.entries(store.items || {});
+    const scanned = beforeEntries.length;
 
-  const tx = db.transaction(['items'], 'readwrite');
-  const store = tx.objectStore('items');
-  const idxScope = store.index('byScope');
+    const now = Date.now();
+    const cutoff = now - Math.max(60_000, ttlMs | 0);
+    let removed = 0;
 
-  let removed = 0;
-  let scanned = 0;
-
-  const req = idxScope.openCursor(IDBKeyRange.only(scope));
-  const touched = [];
-
-  await cursorIter(req, (cur) => {
-    const v = cur.value || {};
-    scanned++;
-    if (maxScan && scanned >= maxScan) {
+    for (const [itemId, rec] of beforeEntries) {
+      const updatedAt = Number(rec?.updatedAt || 0);
+      if (updatedAt && updatedAt < cutoff) {
+        delete store.items[itemId];
+        removed++;
+      }
     }
 
-    const key = v.key;
-    const updatedAt = Number(v.updatedAt || 0);
-
-    if (updatedAt && updatedAt < cutoff) {
-      try { cur.delete(); removed++; } catch {}
-      return;
+    let capped = 0;
+    const remaining = Object.entries(store.items || {});
+    if (maxItems && remaining.length > maxItems) {
+      remaining
+        .sort((a, b) => Number(a[1]?.updatedAt || 0) - Number(b[1]?.updatedAt || 0))
+        .slice(0, remaining.length - maxItems)
+        .forEach(([itemId]) => {
+          delete store.items[itemId];
+          capped++;
+        });
     }
 
-    if (key) touched.push({ key, updatedAt });
-  });
-
-  let capped = 0;
-  if (maxItems && touched.length > maxItems) {
-    touched.sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
-    const over = touched.length - maxItems;
-    for (let i = 0; i < over; i++) {
-      const k = touched[i]?.key;
-      if (!k) continue;
-      try { store.delete(k); capped++; } catch {}
-    }
-  }
-
-  await txDone(tx);
-  return { removed, scanned, capped };
+    pruneUnreferencedItems(store);
+    return { removed, scanned, capped };
+  }, { flush: true });
 }
 
 export async function purgePrcMeta(db, {
   ttlMs = 30 * 24 * 60 * 60 * 1000,
-  prefix = 'prc:',
+  prefix = "prc:",
   maxScan = 3000,
 } = {}) {
-  if (!db) return { removed: 0, scanned: 0 };
+  const scope = resolveMetaScope(db);
+  if (!db || !scope) return { removed: 0, scanned: 0 };
 
-  const now = Date.now();
-  const cutoff = now - Math.max(60_000, ttlMs | 0);
+  return db.writeScope(scope, (data) => {
+    const store = ensureStoreShape(data);
+    const entries = Object.entries(store.meta || {});
+    const scanned = Math.min(entries.length, Math.max(0, Number(maxScan) || 0) || entries.length);
+    const now = Date.now();
+    const cutoff = now - Math.max(60_000, ttlMs | 0);
+    let removed = 0;
 
-  const tx = db.transaction(['meta'], 'readwrite');
-  const store = tx.objectStore('meta');
-
-  let removed = 0;
-  let scanned = 0;
-
-  const req = store.openCursor();
-  await cursorIter(req, (cur) => {
-    const v = cur.value || {};
-    scanned++;
-    if (maxScan && scanned > maxScan) return;
-
-    const k = String(v.key || '');
-    if (!k.startsWith(prefix)) return;
-
-    const updatedAt = Number(v.updatedAt || 0);
-    if (updatedAt && updatedAt < cutoff) {
-      try { cur.delete(); removed++; } catch {}
+    for (const [key, rec] of entries.slice(0, scanned)) {
+      if (prefix && !String(key).startsWith(prefix)) continue;
+      const updatedAt = Number(rec?.updatedAt || 0);
+      if (updatedAt && updatedAt < cutoff) {
+        delete store.meta[key];
+        removed++;
+      }
     }
-  });
 
-  await txDone(tx);
-  return { removed, scanned };
+    pruneUnreferencedItems(store);
+    return { removed, scanned };
+  }, { flush: true });
 }
 
 export async function purgePrcDb(db, scope, opts = {}) {
+  if (db) {
+    db.__jmsActiveScope = String(scope || "").trim();
+  }
   const itemsRes = await purgeScopeItems(db, scope, opts.items || {});
-  const metaRes  = await purgePrcMeta(db, opts.meta || {});
+  const metaRes = await purgePrcMeta(db, opts.meta || {});
   return { items: itemsRes, meta: metaRes };
 }

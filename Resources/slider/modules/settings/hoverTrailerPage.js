@@ -9,22 +9,13 @@ export function createHoverTrailerPanel(config, labels) {
   panel.id = 'hover-panel';
   panel.className = 'settings-panel';
 
-  const section = createSection(labels.hoverTrailer || 'HoverTrailer');
+  const section = createSection(labels.hoverTrailer || 'HoverTrailer Ayarları');
   const allPreviewModalCheckbox = createCheckbox(
     'allPreviewModal',
-    labels.allPreviewModal || 'Aplicar modal em todo o Jellyfin',
+    labels.allPreviewModal || 'Modalı Jellyfin geneline uygula',
     config.allPreviewModal
   );
   section.appendChild(allPreviewModalCheckbox);
-
-  const hoverVolumeRange = createRangeInput(
-    'hoverVolume',
-    labels.hoverVolumeLabel || 'Volume do Hover Trailer',
-    config.hoverVolume,
-    0, 100, 1, "%"
-  );
-  hoverVolumeRange.style.marginTop = '12px';
-  section.appendChild(hoverVolumeRange);
 
   const modeWrap = document.createElement('div');
   modeWrap.className = 'field-group';
@@ -32,11 +23,11 @@ export function createHoverTrailerPanel(config, labels) {
 
   const title = document.createElement('div');
   title.className = 'field-label';
-  title.textContent = (labels.globalPreviewMode || 'Tipo de hover global');
+  title.textContent = (labels.globalPreviewMode || 'Global hover tipi');
   modeWrap.appendChild(title);
 
   const modes = [
-    { val: 'modal',      text: (labels.globalPreviewModeModal || 'HoverTrailer (Padrão)')},
+    { val: 'modal',      text: (labels.globalPreviewModeModal || 'HoverTrailer')},
     { val: 'studioMini', text: (labels.globalPreviewModeStudio || 'StudioHubs Mini') }
   ];
   const current = config.globalPreviewMode || 'modal';
@@ -63,7 +54,7 @@ export function createHoverTrailerPanel(config, labels) {
 
   const studioMiniTrailerPopover = createCheckbox(
     'studioMiniTrailerPopover',
-    (labels.studioMiniTrailerPopover || 'Ativar popover de trailer no StudioHubs'),
+    (labels.studioMiniTrailerPopover || 'Fragman popover etkin'),
     !!config.studioMiniTrailerPopover
   );
   studioMiniTrailerPopover.style.margin = '8px 0';
@@ -71,17 +62,36 @@ export function createHoverTrailerPanel(config, labels) {
 
   const preferTrailerCheckbox = createCheckbox(
     'preferTrailersInPreviewModal',
-    labels.preferTrailersInPreviewModal || 'Preferir Trailer > Vídeo no modal',
+    labels.preferTrailersInPreviewModal || 'Modalda Fragman > Video',
     config.preferTrailersInPreviewModal
   );
   section.appendChild(preferTrailerCheckbox);
 
   const onlyTrailerCheckbox = createCheckbox(
     'onlyTrailerInPreviewModal',
-    labels.onlyTrailerInPreviewModal || 'Exibir apenas trailers no modal',
+    labels.onlyTrailerInPreviewModal || 'Modalda Sadece Fragman',
     config.onlyTrailerInPreviewModal
   );
   section.appendChild(onlyTrailerCheckbox);
+
+  const autoPlayTrailersCheckbox = createCheckbox(
+    'autoPlayTrailers',
+    labels.autoPlayTrailers || 'Reproduzir trailers automaticamente (Autoplay)',
+    config.autoPlayTrailers
+  );
+  autoPlayTrailersCheckbox.style.marginTop = '8px';
+  section.appendChild(autoPlayTrailersCheckbox);
+
+  const hoverTrailerVolumeSlider = createRangeInput(
+    'hoverTrailerVolume',
+    labels.hoverTrailerVolume || 'Volume do Trailer em Hover',
+    config.hoverTrailerVolume ?? 5,
+    0,
+    100,
+    1
+  );
+  hoverTrailerVolumeSlider.style.marginTop = '12px';
+  section.appendChild(hoverTrailerVolumeSlider);
 
   panel.appendChild(section);
 

@@ -1,4 +1,4 @@
-import { getSessionInfo, makeApiRequest, playNow, waitForAuthReadyStrict, getCachedUserTopGenres } from "../../Plugins/NexusPobreFlix/runtime/api.js";
+import { getSessionInfo, makeApiRequest, playNow, waitForAuthReadyStrict, getCachedUserTopGenres } from "../../Plugins/JMSFusion/runtime/api.js";
 import { getConfig, getHomeSectionsRuntimeConfig, getManagedHomeSectionRuntimeOrder } from "./config.js";
 import { getLanguageLabels } from "../language/index.js";
 import { attachMiniPosterHover } from "./studioHubsUtils.js";
@@ -12,11 +12,15 @@ import {
   setupScroller
 } from "./personalRecommendations.js";
 import { openDetailsModal } from "./detailsModalLoader.js";
-import { openDirRowsDB, makeScope, upsertItemsBatchIdle, getMeta, setMeta, getItemsByIds, } from "./recentRowsDb.js";
+import { openDirRowsDB, makeScope, upsertItemsBatch, getMeta, setMeta, getItemsByIds, } from "./recentRowsDb.js";
 import { getGlobalTmdbApiKey } from "./jmsPluginConfig.js";
 import {
   withServer
 } from "./jfUrl.js";
+import {
+  buildCinemaPreRollCacheUrl,
+  resolveCinemaPreRollLocale
+} from "./cinemaPreRollLocale.js";
 import { faIconHtml } from "./faIcons.js";
 import { resolveSliderAssetHref } from "./assetLinks.js";
 import {
@@ -34,6 +38,24 @@ import {
 const config = getConfig();
 const labels = getLanguageLabels?.() || {};
 const IS_MOBILE = (navigator.maxTouchPoints > 0) || (window.innerWidth <= 820);
+
+function isMobileWebViewRuntime() {
+  try {
+    const ua = String((typeof navigator !== "undefined" && navigator.userAgent) || "");
+    const uaMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    if (!uaMobile) return false;
+
+    const standalone = window.navigator?.standalone === true
+      || window.matchMedia?.("(display-mode: standalone)")?.matches === true;
+    const isWV = /\bwv\b|Crosswalk/i.test(ua);
+    const hasBridge = !!(window.cordova || window.Capacitor || window.ReactNativeWebView);
+    return !!(standalone || isWV || hasBridge);
+  } catch {
+    return false;
+  }
+}
+
+const IS_MOBILE_WEBVIEW = isMobileWebViewRuntime();
 const UNIFIED_ROW_ITEM_LIMIT = 20;
 const PLACEHOLDER_URL = resolveSliderAssetHref(
   config.placeholderImage || "/slider/src/images/placeholder.png"
@@ -82,7 +104,7 @@ const HOME_TRACE_STORAGE_KEY = "jms:trace:home-sections";
 // behind the first visible ones and make them appear nondeterministic.
 const RECENT_ROWS_EAGER_RELEASE_COUNT = 1024;
 const RECENT_ROWS_RELEASE_ROOT_MARGIN = IS_MOBILE
-  ? "0px 0px 60% 0px"
+  ? (IS_MOBILE_WEBVIEW ? "0px 0px 78% 0px" : "0px 0px 60% 0px")
   : "0px 0px 22% 0px";
 
 function getLiveConfig() {
@@ -117,6 +139,7 @@ function getRecentRowsRuntimeConfig(source = getLiveConfig()) {
     enableTop10Movies: enableRecentMaster && (cfg.enableTop10MoviesRow !== false),
     enableTop10Series: enableRecentMaster && (cfg.enableTop10SeriesRow !== false),
     enableTmdbTopMovies: enableRecentMaster && (cfg.enableTmdbTopMoviesRow !== false),
+    enableTmdbTrailers: enableRecentMaster && (cfg.enableTmdbTrailerRows !== false),
     enableRecentMovies: enableRecentMaster && (cfg.enableRecentMoviesRow !== false),
     enableRecentSeries: enableRecentMaster && (cfg.enableRecentSeriesRow !== false),
     enableRecentEpisodes: enableRecentMaster && (cfg.enableRecentEpisodesRow !== false),
@@ -241,6 +264,11 @@ const RECENT_ROW_SECTION_META = Object.freeze({
     flag: "__jmsTmdbTopMoviesRowsDone",
     event: "jms:tmdb-top-movie-rows-done"
   },
+  tmdbTrailerRows: {
+    id: "tmdb-trailer-rows",
+    flag: "__jmsTmdbTrailerRowsDone",
+    event: "jms:tmdb-trailer-rows-done"
+  },
   recentRows: {
     id: "recent-rows",
     flag: "__jmsRecentRowsDone",
@@ -265,11 +293,19 @@ const TOP10_CACHE_POOL_SIZE = 20;
 const TOP_RANK_QUERY_POOL_MULTIPLIER = 4;
 const TMDB_TOP_MOVIE_POOL_SIZE = 240;
 const TMDB_TOP_RATED_PAGE_LIMIT = 8;
+const TMDB_RECENT_RELEASE_WINDOW_DAYS = 70;
+const TMDB_TRAILER_ROW_CACHE_KEY = "jms:recentRows:tmdb-trailers:v3";
+const TMDB_TOP_MOVIE_LOOKUP_MIN = 120;
+const TMDB_API_KEY_CACHE_TTL_MS = 60 * 1000;
 const TOP_RANK_PROFILE_TTL_MS = 10 * 60 * 1000;
 const TOP_RANK_GENRE_WEIGHTS = Object.freeze([1, 0.86, 0.74, 0.62, 0.5]);
 const FAMILY_FRIENDLY_RATINGS = new Set(["G", "PG", "TV-G", "TV-PG"]);
 
 const __topRankProfileCache = new Map();
+let __tmdbApiKeyCacheValue = "";
+let __tmdbApiKeyCacheAt = 0;
+let __tmdbApiKeyPromise = null;
+const __tmdbTrailerRowSelectionCache = new Map();
 
 function metaKey(kind, type){ return `rr:${kind}:${type}`; }
 function movieLibMetaSuffix(movieLibId){ return movieLibId ? `@movie:${movieLibId}` : ""; }
@@ -381,6 +417,10 @@ function hasTmdbTopMoviesRowsSectionEnabled(runtimeCfg) {
   return runtimeCfg.enableTmdbTopMovies === true;
 }
 
+function hasTmdbTrailerRowsSectionEnabled(runtimeCfg) {
+  return runtimeCfg.enableTmdbTrailers === true;
+}
+
 function hasRecentRowsSectionEnabled(runtimeCfg) {
   return !!(
     runtimeCfg.enableRecentMovies ||
@@ -409,6 +449,7 @@ function getOrderedRecentRowSectionKeys(cfg, runtimeCfg) {
   if (hasTop10SeriesRowsSectionEnabled(runtimeCfg)) enabled.add("top10SeriesRows");
   if (hasTop10MovieRowsSectionEnabled(runtimeCfg)) enabled.add("top10MovieRows");
   if (hasTmdbTopMoviesRowsSectionEnabled(runtimeCfg)) enabled.add("tmdbTopMoviesRows");
+  if (hasTmdbTrailerRowsSectionEnabled(runtimeCfg)) enabled.add("tmdbTrailerRows");
   if (hasRecentRowsSectionEnabled(runtimeCfg)) enabled.add("recentRows");
   if (hasContinueRowsSectionEnabled(runtimeCfg)) enabled.add("continueRows");
   if (hasNextUpRowsSectionEnabled(runtimeCfg)) enabled.add("nextUpRows");
@@ -425,6 +466,7 @@ async function ensureRecentDb() {
     const db = await openDirRowsDB();
     STATE.db = db;
     STATE.scope = makeScope({ serverId: STATE.serverId, userId: STATE.userId });
+    STATE.db.__jmsActiveScope = STATE.scope;
   } catch (e) {
     console.warn("recentRows: DB open error:", e);
     STATE.db = null;
@@ -433,13 +475,13 @@ async function ensureRecentDb() {
 }
 
 async function readCachedList(kind, type, ttlMs, {
-  validateIds = true
+  validateIds = false
 } = {}) {
   if (!STATE.db || !STATE.scope) return { ids: [], fresh: false };
   try {
     const rec = await getMeta(STATE.db, metaKey(kind, type) + "|" + STATE.scope);
     const ids = Array.isArray(rec?.ids) ? Array.from(new Set(rec.ids.filter(Boolean))) : [];
-    const updatedAt = Number(rec?.updatedAt) || 0;
+    const updatedAt = Number(rec?.cacheStamp ?? rec?.updatedAt) || 0;
     const fresh = (Date.now() - updatedAt) <= ttlMs;
 
     let liveIds = ids;
@@ -462,6 +504,7 @@ async function writeCachedList(kind, type, ids) {
   try {
     await setMeta(STATE.db, metaKey(kind, type) + "|" + STATE.scope, {
       ids: (ids || []).filter(Boolean),
+      cacheStamp: Date.now(),
       updatedAt: Date.now(),
     });
   } catch {}
@@ -471,7 +514,7 @@ async function loadCachedRowItems(kind, type, ttlMs, {
   limit = 0,
   afterLoad = null,
   refreshUserData = false,
-  validateIds = true,
+  validateIds = false,
   transformItems = null
 } = {}) {
   const { ids, fresh } = await readCachedList(kind, type, ttlMs, { validateIds });
@@ -507,7 +550,7 @@ function filterCachedTop10PlayableItems(items = []) {
 async function loadCachedLocalTop10Items(kind, type, ttlMs) {
   const cached = await loadCachedRowItems(kind, type, ttlMs, {
     limit: TOP10_CACHE_POOL_SIZE,
-    refreshUserData: true,
+    refreshUserData: false,
     validateIds: false,
     transformItems: filterCachedTop10PlayableItems
   });
@@ -564,6 +607,306 @@ function sameIdList(a, b) {
 (function ensurePerfCssOnce(){
   if (document.getElementById("recent-rows-perf-css")) return;
   const st = document.createElement("style");
+  st.id = "recent-rows-perf-css";
+  st.textContent = `
+    :is(#tmdb-trailer-rows,[id^="tmdb-trailer-rows--"]) .top10-card.tmdb-trailer-card .cardImageContainer::before {
+      content: none !important;
+      display: none !important;
+    }
+    :is(#tmdb-trailer-rows,[id^="tmdb-trailer-rows--"]) .top10-card.tmdb-trailer-card .cardImageContainer::after {
+      content: none !important;
+      display: none !important;
+    }
+    :is(#tmdb-trailer-rows,[id^="tmdb-trailer-rows--"]) .top10-card.tmdb-trailer-card .prc-overlay .prc-titleline {
+      text-transform: none;
+    }
+    :is(#tmdb-trailer-rows,[id^="tmdb-trailer-rows--"]) .top10-card.tmdb-trailer-card .prc-meta {
+      row-gap: 4px;
+    }
+    :is(#tmdb-trailer-rows,[id^="tmdb-trailer-rows--"]) .tmdb-trailer-ribbon {
+      position: absolute;
+      top: 18px;
+      left: -38px;
+      right: auto;
+      z-index: 8;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 150px;
+      max-width: none;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background:
+        linear-gradient(135deg, rgba(255,108,78,.96), rgba(231,62,54,.94) 48%, rgba(110,30,84,.9));
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 12px 24px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.08);
+      color: #fff8ee;
+      font-size: 10px;
+      font-weight: 850;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      transform: rotate(-38deg);
+      transform-origin: center;
+      backdrop-filter: blur(12px) saturate(125%);
+      -webkit-backdrop-filter: blur(12px) saturate(125%);
+    }
+    :is(#tmdb-trailer-rows,[id^="tmdb-trailer-rows--"]) .tmdb-trailer-ribbon .tmdb-trailer-ribbon__icon {
+      color: #ffbd8e;
+      filter: drop-shadow(0 2px 6px rgba(255,129,88,.35));
+      font-size: 12px;
+      line-height: 1;
+    }
+    :is(#tmdb-trailer-rows,[id^="tmdb-trailer-rows--"]) .tmdb-trailer-card .tmdb-trailer-status {
+      background: rgba(255,149,116,.16);
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 999px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+      color: #fff4e6;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 22px;
+      padding: 0 9px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    #tmdb-trailer-rows,
+    [id^="tmdb-trailer-rows--"] {
+      display: flex;
+      flex-direction: column;
+      gap: 1vh;
+      padding-inline: 3.2%;
+      position: relative;
+    }
+    [id^="tmdb-trailer-rows--"].top10-section .dir-row-hero-host {
+      display: none !important;
+    }
+    [id^="tmdb-trailer-rows--"].top10-section .dir-row-title-text {
+      font-size: clamp(1.12rem, 1.9vw, 1.52rem);
+      font-weight: 820;
+      letter-spacing: .01em;
+    }
+    [id^="tmdb-trailer-rows--"] .itemsContainer.personal-recs-row.top10-row {
+      gap: 18px;
+      grid-auto-columns: clamp(210px, 16.6vw, 300px);
+    }
+    [id^="tmdb-trailer-rows--"] .top10-card {
+      padding-top: 8px;
+    }
+    [id^="tmdb-trailer-rows--"] .top10-card .cardImageContainer {
+      aspect-ratio: 2 / 3;
+      background: linear-gradient(180deg, rgba(7,42,56,.96), rgba(6,10,18,.94) 30%, rgba(7,7,11,.98));
+      border: 1px solid rgba(112,237,255,.22);
+      border-radius: 22px;
+      isolation: isolate;
+    }
+    :is(#tmdb-trailer-rows,[id^="tmdb-trailer-rows--"]) .top10-card.tmdb-trailer-card .cardImageContainer {
+      background:
+        radial-gradient(circle at 82% 14%, rgba(255,163,93,.15), rgba(255,163,93,0) 30%),
+        linear-gradient(180deg, rgba(22,20,36,.97), rgba(10,11,20,.96) 34%, rgba(6,6,11,.99));
+      border-color: rgba(255,142,102,.28);
+      box-shadow: 0 18px 34px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.08);
+      overflow: hidden;
+    }
+    [id^="tmdb-trailer-rows--"] .top10-card .cardImageContainer:before {
+      background: linear-gradient(135deg, #00d4ffba, #00a6c7cf 35%, #673ab75c 70%, #002b3a);
+      clip-path: polygon(0 0, 100% 0, 64% 34%, 0 100%);
+      content: "";
+      height: 38%;
+      left: 0;
+      overflow: hidden;
+      position: absolute;
+      top: 0;
+      width: 56%;
+      z-index: 1;
+    }
+    [id^="tmdb-trailer-rows--"] .top10-card .cardImageContainer:after {
+      background: linear-gradient(180deg, #fff, hsla(0,0%,100%,.12) 35%, rgba(0,0,0,.51));
+      clip-path: polygon(0 0, 96% 0, 58% 36%, 0 100%);
+      content: "";
+      height: 34%;
+      left: 0;
+      mix-blend-mode: screen;
+      opacity: .55;
+      pointer-events: none;
+      position: absolute;
+      top: 0;
+      width: 52%;
+      z-index: 2;
+    }
+    [id^="tmdb-trailer-rows--"] .top10-card .cardImageContainer:hover {
+      transform: translateY(-4px);
+    }
+    [id^="tmdb-trailer-rows--"] .top10-card .cardImage {
+      object-position: center top;
+      z-index: 0;
+    }
+    [id^="tmdb-trailer-rows--"] .top10-rank {
+      -webkit-text-stroke: 1px #fff;
+      color: #39e5ff00;
+      font-family: IBM Plex Sans, sans-serif;
+      font-size: clamp(3rem, 4.5vw, 4.6rem);
+      font-weight: 700;
+      left: 15px;
+      letter-spacing: -.05em;
+      line-height: .86;
+      position: absolute;
+      text-shadow: 0 0 18px rgba(57,229,255,.26), 0 10px 30px rgba(0,0,0,.32);
+      top: 15px;
+      z-index: 115;
+    }
+    [id^="tmdb-trailer-rows--"] .top10-top-badges {
+      inset: 12px 14px auto auto;
+      justify-content: flex-end;
+      z-index: 5;
+    }
+    [id^="tmdb-trailer-rows--"] .top10-type-badge {
+      background: rgba(16,18,30,.72);
+      border: 1px solid hsla(0,0%,100%,.16);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      height: 24px;
+      padding: 0 9px;
+    }
+    [id^="tmdb-trailer-rows--"] .top10-fresh-badge {
+      background: hsla(0,0%,100%,.95);
+      border-radius: 0 0 6px 0;
+      box-shadow: 0 10px 20px rgba(0,0,0,.28);
+      color: #12151c;
+      font-family: var(--mwui-font-head), sans-serif;
+      font-size: clamp(1rem, 1.1vw, 1.1rem);
+      font-weight: 800;
+      left: 0;
+      padding: 4px 8px;
+      position: absolute;
+      top: 31%;
+      z-index: 5;
+    }
+    [id^="tmdb-trailer-rows--"] .top10-gradient {
+      background: linear-gradient(180deg, rgba(8,10,19,.02), rgba(8,10,19,.1) 28%, rgba(7,8,14,.72) 58%, rgba(6,6,10,.97));
+      height: 72%;
+    }
+    [id^="tmdb-trailer-rows--"] .top10-overlay {
+      align-items: center;
+      display: flex;
+      gap: 8px;
+      padding: 0 14px 16px;
+    }
+    [id^="tmdb-trailer-rows--"] .top10-overlay .prc-titleline {
+      font-size: clamp(1.05rem, 1.45vw, 1.56rem);
+      font-weight: 840;
+      letter-spacing: .005em;
+      line-height: 1.02;
+      text-transform: uppercase;
+    }
+    [id^="tmdb-trailer-rows--"] .top10-overlay .prc-subtitleline {
+      text-align: left;
+    }
+    [id^="tmdb-trailer-rows--"] .top10-overlay .prc-meta {
+      gap: 6px;
+      justify-content: flex-start;
+    }
+    [id^="tmdb-trailer-rows--"] .top10-overlay .prc-age {
+      height: 22px;
+      min-width: 28px;
+    }
+    [id^="tmdb-trailer-rows--"] .top10-overlay .prc-genres {
+      opacity: .92;
+    }
+    [id^="tmdb-trailer-rows--"] .top10-card .prc-noimg-label {
+      min-height: 100%;
+      padding: 32px 18px;
+    }
+    [id^="tmdb-trailer-rows--"] .personal-recs-scroll-wrap .hub-scroll-btn:hover {
+      background: radial-gradient(circle at 34% 28%, hsla(0,0%,100%,.24), hsla(0,0%,100%,0) 58%), linear-gradient(180deg, rgba(64,49,22,.96), rgba(34,28,16,.98));
+      border-color: rgba(255,177,90,.86);
+      box-shadow: 0 12px 24px rgba(0,0,0,.5), 0 2px 0 rgba(0,0,0,.34), inset 0 1px 0 hsla(0,0%,100%,.3), inset 0 -6px 12px rgba(0,0,0,.4);
+    }
+    [id^="tmdb-trailer-rows--"] .personal-recs-scroll-wrap .hub-scroll-btn:active {
+      transform: translateY(-50%) scale(.97);
+    }
+    @media (max-width: 1200px) {
+      [id^="tmdb-trailer-rows--"] .itemsContainer.personal-recs-row.top10-row {
+        grid-auto-columns: clamp(185px, 27vw, 250px);
+      }
+    }
+    @media (hover: none) and (pointer: coarse), (max-width: 820px) {
+      #tmdb-trailer-rows,
+      [id^="tmdb-trailer-rows--"] {
+        scroll-snap-align: none !important;
+        scroll-snap-stop: normal !important;
+      }
+    }
+    @media (max-width: 820px) {
+      #tmdb-trailer-rows,
+      [id^="tmdb-trailer-rows--"] {
+        gap: 10px;
+        padding-inline: 2.8%;
+      }
+      [id^="tmdb-trailer-rows--"] .itemsContainer.personal-recs-row.top10-row {
+        gap: 12px;
+        grid-auto-columns: minmax(166px, 186px);
+        padding-top: 4px;
+      }
+      [id^="tmdb-trailer-rows--"] .top10-card .cardImageContainer {
+        border-radius: 18px;
+      }
+      :is(#tmdb-trailer-rows,[id^="tmdb-trailer-rows--"]) .top10-card.tmdb-trailer-card .cardImageContainer {
+        border-radius: 18px;
+      }
+      [id^="tmdb-trailer-rows--"] .top10-card .cardImageContainer:before {
+        height: 34%;
+        width: 58%;
+      }
+      :is(#tmdb-trailer-rows,[id^="tmdb-trailer-rows--"]) .top10-card.tmdb-trailer-card .cardImageContainer::before {
+        height: 34%;
+        width: 56%;
+      }
+      [id^="tmdb-trailer-rows--"] .top10-card .cardImageContainer:after {
+        height: 30%;
+        width: 54%;
+      }
+      :is(#tmdb-trailer-rows,[id^="tmdb-trailer-rows--"]) .top10-card.tmdb-trailer-card .cardImageContainer::after {
+        height: 28%;
+        width: 50%;
+      }
+      :is(#tmdb-trailer-rows,[id^="tmdb-trailer-rows--"]) .tmdb-trailer-ribbon {
+        top: 15px;
+        left: -42px;
+        right: auto;
+        width: 145px;
+        padding: 6px 8px;
+        font-size: 9px;
+      }
+      :is(#tmdb-trailer-rows,[id^="tmdb-trailer-rows--"]) .tmdb-trailer-ribbon .tmdb-trailer-ribbon__icon {
+        font-size: 11px;
+      }
+      [id^="tmdb-trailer-rows--"] .top10-rank {
+        font-size: clamp(2.4rem, 14vw, 3.4rem);
+        left: 10px;
+        top: 10px;
+      }
+      [id^="tmdb-trailer-rows--"] .top10-overlay {
+        padding: 0 12px 14px;
+      }
+      [id^="tmdb-trailer-rows--"] .top10-overlay .prc-titleline {
+        font-size: .96rem;
+      }
+      [id^="tmdb-trailer-rows--"] .top10-fresh-badge {
+        font-size: 12px;
+        padding: 4px 7px;
+      }
+      [id^="tmdb-trailer-rows--"] .top10-overlay .prc-meta {
+        gap: 4px;
+      }
+    }
+  `;
+  document.head.appendChild(st);
 })();
 
 const COMMON_FIELDS = [
@@ -613,6 +956,8 @@ function getRecentRowsCardTypeBadge(itemType) {
       return { label: ll.season || labels.season || "Sezon", icon: "layerGroup" };
     case "Series":
       return { label: ll.dizi || labels.dizi || "Dizi", icon: "tv" };
+    case "Trailer":
+      return { label: ll.trailer || labels.trailer || "Fragman", icon: "clapperboard" };
     case "MusicAlbum":
       return { label: ll.album || labels.album || "Albüm", icon: "compactDisc" };
     case "Audio":
@@ -723,6 +1068,33 @@ function getPosterLikeImageCandidate(item) {
   );
 }
 
+function getExternalArtworkUrl(item, type) {
+  const target = item?.__posterSource && typeof item.__posterSource === "object"
+    ? item.__posterSource
+    : item;
+  if (!target || typeof target !== "object") return "";
+
+  if (type === "poster") {
+    return String(target.__posterExternalUrl || target.posterUrl || "").trim();
+  }
+
+  if (type === "backdrop") {
+    return String(
+      target.__backdropExternalUrl ||
+      target.backdropUrl ||
+      target.__posterExternalUrl ||
+      target.posterUrl ||
+      ""
+    ).trim();
+  }
+
+  if (type === "logo") {
+    return String(target.__logoExternalUrl || target.logoUrl || "").trim();
+  }
+
+  return "";
+}
+
 function buildCandidateImageUrl(item, candidate, height = 540, quality = 72, { omitTag = false } = {}) {
   if (!candidate?.itemId || !candidate?.imageType) return null;
   const skipTag = omitTag || shouldPreferTaglessImages(item);
@@ -747,10 +1119,12 @@ function buildPosterUrl(item, height = 540, quality = 72, { omitTag = false } = 
 }
 
 function buildPosterImageUrl(item) {
-  return buildPosterUrl(item, 540, 72) || buildPosterUrl(item, 80, 20) || null;
+  return getExternalArtworkUrl(item, "poster") || buildPosterUrl(item, 540, 72) || buildPosterUrl(item, 80, 20) || null;
 }
 
 function buildLogoUrl(item, width = 220, quality = 80) {
+  const externalUrl = getExternalArtworkUrl(item, "logo");
+  if (externalUrl) return externalUrl;
   if (!item) return null;
 
   const tag =
@@ -792,7 +1166,7 @@ function buildBackdropUrl(item, width = 1920, quality = 80) {
 }
 
 function buildBackdropImageUrl(item) {
-  return buildBackdropUrl(item, 1920, 80) || buildBackdropUrl(item, 420, 25) || buildPosterImageUrl(item) || null;
+  return getExternalArtworkUrl(item, "backdrop") || buildBackdropUrl(item, 1920, 80) || buildBackdropUrl(item, 420, 25) || buildPosterImageUrl(item) || null;
 }
 
 function formatRuntime(ticks) {
@@ -1591,7 +1965,7 @@ async function fetchTopRankedEntryPool(userId, type, poolSize, parentId, { filte
 
       try {
         if (STATE.db && STATE.scope) {
-          upsertItemsBatchIdle(STATE.db, STATE.scope, items, { timeout: 1500 });
+          await upsertItemsBatch(STATE.db, STATE.scope, items);
         }
       } catch {}
 
@@ -1757,7 +2131,7 @@ function resolveTmdbResultToLocalMovie(result, lookup) {
 }
 
 async function tmdbFetchJson(path, { signal } = {}) {
-  const apiKey = await getGlobalTmdbApiKey().catch(() => "");
+  const apiKey = await getCachedTmdbApiKey().catch(() => "");
   if (!apiKey) throw new Error("TMDb API key missing");
 
   const url = new URL(`https://api.themoviedb.org/3${path}`);
@@ -1774,8 +2148,307 @@ async function tmdbFetchJson(path, { signal } = {}) {
   return res.json();
 }
 
+async function getCachedTmdbApiKey() {
+  const now = Date.now();
+  if ((now - __tmdbApiKeyCacheAt) <= TMDB_API_KEY_CACHE_TTL_MS) {
+    return __tmdbApiKeyCacheValue;
+  }
+  if (__tmdbApiKeyPromise) {
+    return __tmdbApiKeyPromise;
+  }
+
+  __tmdbApiKeyPromise = (async () => {
+    const value = String(await getGlobalTmdbApiKey().catch(() => "")).trim();
+    __tmdbApiKeyCacheValue = value;
+    __tmdbApiKeyCacheAt = Date.now();
+    return value;
+  })();
+
+  try {
+    return await __tmdbApiKeyPromise;
+  } finally {
+    __tmdbApiKeyPromise = null;
+  }
+}
+
+function resolveTmdbRowLocale() {
+  return resolveCinemaPreRollLocale(getLiveConfig());
+}
+
+function readTmdbTrailerRowCache(cacheKey) {
+  try {
+    const raw = localStorage.getItem(TMDB_TRAILER_ROW_CACHE_KEY);
+    if (!raw) return { items: [], fresh: false };
+    const parsed = JSON.parse(raw);
+    if (parsed?.cacheKey !== cacheKey) return { items: [], fresh: false };
+    const items = Array.isArray(parsed?.items) ? parsed.items : [];
+    const fresh = Number(parsed?.expiresAt || 0) >= Date.now();
+    return { items, fresh };
+  } catch {
+    return { items: [], fresh: false };
+  }
+}
+
+function writeTmdbTrailerRowCache(cacheKey, items) {
+  try {
+    localStorage.setItem(TMDB_TRAILER_ROW_CACHE_KEY, JSON.stringify({
+      cacheKey,
+      expiresAt: Date.now() + TTL_TOP10_MS,
+      items
+    }));
+  } catch {}
+}
+
+function dedupeTmdbTrailerRowItems(items = []) {
+  const seen = new Set();
+  const out = [];
+  for (const entry of Array.isArray(items) ? items : []) {
+    const id = Number(entry?.tmdbId);
+    if (!Number.isFinite(id) || seen.has(id)) continue;
+    seen.add(id);
+    out.push(entry);
+  }
+  return out;
+}
+
+function getTmdbTrailerReleaseState(result) {
+  const explicitSource = String(result?.sourceList || result?.SourceList || "").trim().toLowerCase();
+  if (explicitSource === "upcoming") return "upcoming";
+  if (explicitSource === "now_playing" || explicitSource === "nowplaying") return "nowPlaying";
+
+  const releaseTs = toTimestamp(result?.releaseDate || result?.release_date);
+  if (!releaseTs) return "";
+  const dayDiff = Math.ceil((releaseTs - Date.now()) / 86_400_000);
+  if (dayDiff >= 0) return "upcoming";
+  if (dayDiff >= (-TMDB_RECENT_RELEASE_WINDOW_DAYS)) return "nowPlaying";
+  return "";
+}
+
+function getTmdbTrailerReleaseLabel(state) {
+  const ll = config?.languageLabels || {};
+  if (state === "upcoming") {
+    return ll.tmdbTrailerUpcomingBadge || "Yakında";
+  }
+  if (state === "nowPlaying") {
+    return ll.tmdbTrailerNowPlayingBadge || "Vizyonda";
+  }
+  return ll.trailer || "Fragman";
+}
+
+function formatTmdbReleaseDateLabel(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const ts = toTimestamp(raw);
+  if (!ts) return raw;
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    }).format(new Date(ts));
+  } catch {
+    return raw;
+  }
+}
+
+function normalizeTmdbTrailerCacheItems(payload) {
+  const source = Array.isArray(payload?.items) ? payload.items : (Array.isArray(payload?.Items) ? payload.Items : []);
+  const filterOutRegex = /[ıİğĞşŞ\u0400-\u04FF\u3040-\u30FF\u31F0-\u31FF\u4E00-\u9FFF]/i;
+
+  return source
+    .map((item) => ({
+      tmdbId: Number(item?.tmdbId ?? item?.TmdbId),
+      youtubeKey: String(item?.youtubeKey ?? item?.YoutubeKey ?? "").trim(),
+      videoName: String(item?.videoName ?? item?.VideoName ?? "").trim(),
+      title: String(item?.title ?? item?.Title ?? "").trim(),
+      overview: String(item?.overview ?? item?.Overview ?? "").trim(),
+      releaseDate: String(item?.releaseDate ?? item?.ReleaseDate ?? "").trim(),
+      backdropUrl: String(item?.backdropUrl ?? item?.BackdropUrl ?? "").trim(),
+      posterUrl: String(item?.posterUrl ?? item?.PosterUrl ?? "").trim(),
+      sourceList: String(item?.sourceList ?? item?.SourceList ?? "").trim()
+    }))
+    .filter((item) => {
+      if (!Number.isFinite(item.tmdbId) || !item.youtubeKey) return false;
+      // Filtro estrito: se o título ou sinopse contiverem caracteres que indicam turco, cirílico ou asiático, descarta!
+      if (filterOutRegex.test(item.title) || filterOutRegex.test(item.overview)) {
+        return false;
+      }
+      return true;
+    });
+}
+
+function sortTmdbTrailerCacheItems(items = []) {
+  const upcoming = [];
+  const nowPlaying = [];
+  const rest = [];
+
+  for (const item of dedupeTmdbTrailerRowItems(items)) {
+    const state = getTmdbTrailerReleaseState(item);
+    if (state === "upcoming") upcoming.push(item);
+    else if (state === "nowPlaying") nowPlaying.push(item);
+    else rest.push(item);
+  }
+
+  upcoming.sort((left, right) => toTimestamp(left?.releaseDate) - toTimestamp(right?.releaseDate));
+  nowPlaying.sort((left, right) => toTimestamp(right?.releaseDate) - toTimestamp(left?.releaseDate));
+  rest.sort((left, right) => toTimestamp(right?.releaseDate) - toTimestamp(left?.releaseDate));
+
+  return [...upcoming, ...nowPlaying, ...rest];
+}
+
+function buildTmdbTrailerPoolSignature(items = []) {
+  return dedupeTmdbTrailerRowItems(items)
+    .map((item) => `${Number(item?.tmdbId) || 0}:${String(item?.youtubeKey || "").trim()}`)
+    .filter(Boolean)
+    .join("|");
+}
+
+function sampleTmdbTrailerCacheItems(items = [], limit = TOP10_ROW_CARD_COUNT) {
+  const pool = dedupeTmdbTrailerRowItems(items).slice();
+  for (let index = pool.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    const current = pool[index];
+    pool[index] = pool[swapIndex];
+    pool[swapIndex] = current;
+  }
+  return sortTmdbTrailerCacheItems(pool.slice(0, Math.max(1, limit | 0)));
+}
+
+function getTmdbTrailerRowSelection(cacheKey, items = [], limit = TOP10_ROW_CARD_COUNT) {
+  const normalizedLimit = Math.max(1, limit | 0);
+  const signature = buildTmdbTrailerPoolSignature(items);
+  const cachedSelection = __tmdbTrailerRowSelectionCache.get(cacheKey);
+
+  if (
+    cachedSelection &&
+    cachedSelection.signature === signature &&
+    cachedSelection.limit === normalizedLimit
+  ) {
+    return cachedSelection.items.slice(0, normalizedLimit);
+  }
+
+  const selectedItems = sampleTmdbTrailerCacheItems(items, normalizedLimit)
+    .map((item) => buildTmdbTrailerRowItemFromCache(item))
+    .filter(Boolean);
+
+  __tmdbTrailerRowSelectionCache.set(cacheKey, {
+    signature,
+    limit: normalizedLimit,
+    items: selectedItems
+  });
+
+  return selectedItems.slice(0, normalizedLimit);
+}
+
+async function fetchTmdbTrailerCachePayload(locale, { signal } = {}) {
+  const url = buildCinemaPreRollCacheUrl(locale);
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    cache: "no-store",
+    headers: { Accept: "application/json" },
+    signal
+  });
+  const rawText = await response.text().catch(() => "");
+  if (!response.ok) {
+    throw new Error(`TMDb trailer cache HTTP ${response.status}`);
+  }
+  if (!rawText.trim()) return null;
+  try {
+    return JSON.parse(rawText);
+  } catch {
+    return null;
+  }
+}
+
+function buildTmdbTrailerRowItemFromCache(result) {
+  const tmdbId = Number(result?.tmdbId);
+  const youtubeKey = String(result?.youtubeKey || "").trim();
+  if (!Number.isFinite(tmdbId) || !youtubeKey) return null;
+
+  const state = getTmdbTrailerReleaseState(result);
+  const releaseDate = String(result?.releaseDate || "").trim();
+  const title = String(result?.title || "").trim() || `TMDb ${tmdbId}`;
+  const watchUrl = `https://www.youtube.com/watch?v=${encodeURIComponent(youtubeKey)}`;
+  const releaseLabel = getTmdbTrailerReleaseLabel(state);
+  const videoName = String(result?.videoName || title).trim() || title;
+
+  return {
+    Id: `tmdb-trailer-${tmdbId}`,
+    Name: title,
+    Type: "Trailer",
+    MediaType: "Video",
+    ProductionYear: releaseDate ? new Date(releaseDate).getUTCFullYear() : null,
+    PremiereDate: releaseDate || null,
+    Overview: String(result?.overview || "").trim(),
+    CommunityRating: null,
+    Genres: [],
+    OfficialRating: "",
+    UserData: {
+      IsFavorite: false,
+      PlaybackPositionTicks: 0
+    },
+    RemoteTrailers: [{
+      Name: videoName,
+      Url: watchUrl
+    }],
+    __jmsVirtualTrailer: true,
+    __tmdbId: tmdbId,
+    __tmdbTrailerState: state,
+    __tmdbReleaseLabel: releaseLabel,
+    __tmdbReleaseDateLabel: formatTmdbReleaseDateLabel(releaseDate),
+    __posterExternalUrl: String(result?.posterUrl || "").trim(),
+    __backdropExternalUrl: String(result?.backdropUrl || "").trim(),
+    __youtubeWatchUrl: watchUrl,
+    __detailsHref: `https://www.themoviedb.org/movie/${encodeURIComponent(tmdbId)}`,
+    __trailerSourceLabel: "TMDb / YouTube"
+  };
+}
+
+async function fetchTmdbTrailerShowcase(limit = TOP10_ROW_CARD_COUNT, { signal } = {}) {
+  const locale = resolveTmdbRowLocale();
+  const cached = readTmdbTrailerRowCache(locale.cacheKey);
+  if (cached.fresh && cached.items.length) {
+    return {
+      items: getTmdbTrailerRowSelection(locale.cacheKey, cached.items, limit),
+      reason: "cache"
+    };
+  }
+
+  try {
+    const payload = await fetchTmdbTrailerCachePayload(locale, { signal });
+    const pool = sortTmdbTrailerCacheItems(normalizeTmdbTrailerCacheItems(payload));
+    const items = getTmdbTrailerRowSelection(locale.cacheKey, pool, limit);
+
+    if (items.length) {
+      writeTmdbTrailerRowCache(locale.cacheKey, pool);
+      return {
+        items,
+        reason: "ok"
+      };
+    }
+
+    if (cached.items.length) {
+      return {
+        items: getTmdbTrailerRowSelection(locale.cacheKey, cached.items, limit),
+        reason: "staleCache"
+      };
+    }
+
+    return {
+      items: [],
+      reason: "empty"
+    };
+  } catch (error) {
+    console.warn("recentRows: tmdb trailer cache fetch error:", error);
+    return {
+      items: getTmdbTrailerRowSelection(locale.cacheKey, cached.items, limit),
+      reason: cached.items.length ? "staleCache" : "fetchError"
+    };
+  }
+}
+
 async function fetchTmdbTopRatedMoviesInLibraries(userId, limit, parentIds = []) {
-  const apiKey = await getGlobalTmdbApiKey().catch(() => "");
+  const apiKey = await getCachedTmdbApiKey().catch(() => "");
   if (!apiKey) {
     return {
       items: [],
@@ -1783,10 +2456,14 @@ async function fetchTmdbTopRatedMoviesInLibraries(userId, limit, parentIds = [])
     };
   }
 
+  const lookupPoolSize = Math.min(
+    TMDB_TOP_MOVIE_POOL_SIZE,
+    Math.max(limit * 12, TMDB_TOP_MOVIE_LOOKUP_MIN)
+  );
   const rankedPool = await fetchTopRankedEntryPoolAcrossParents(
     userId,
     "Movie",
-    TMDB_TOP_MOVIE_POOL_SIZE,
+    lookupPoolSize,
     parentIds
   );
   const lookup = buildTmdbMovieLookup(rankedPool.map((entry) => entry.item));
@@ -1920,8 +2597,10 @@ function createRecommendationCard(item, serverId, {
   const { itemId, itemName } = primeItemIdentity(item);
   const card = document.createElement("div");
   card.className = "card personal-recs-card";
-  const isTop10 = variant === "top10";
+  const isTrailerVariant = variant === "tmdbTrailer" || item?.__jmsVirtualTrailer === true;
+  const isTop10 = variant === "top10" || isTrailerVariant;
   if (isTop10) card.classList.add("top10-card");
+  if (isTrailerVariant) card.classList.add("tmdb-trailer-card");
   queueEnterAnimation(card);
   if (itemId) card.dataset.itemId = itemId;
   if (isTop10 && Number.isFinite(rank)) card.dataset.rank = String(rank);
@@ -1944,18 +2623,33 @@ function createRecommendationCard(item, serverId, {
   const isEpisode = item.Type === "Episode";
   const isSeason  = item.Type === "Season";
   const { label: typeLabel, icon: typeIcon } = getRecentRowsCardTypeBadge(item.Type);
-  const top10IsFresh = isTop10 && !hasPlaybackActivity(item);
+  const top10IsFresh = isTop10 && !isTrailerVariant && !hasPlaybackActivity(item);
+  const trailerReleaseLabel = String(item?.__tmdbReleaseLabel || "").trim();
+  const trailerReleaseDateLabel = String(item?.__tmdbReleaseDateLabel || "").trim();
+  const trailerTypeLabel = String(config.languageLabels.tmdbTrailerRibbon || typeLabel || config.languageLabels.trailer || "Fragman").trim();
+  const trailerRibbonLabel = trailerReleaseLabel || trailerTypeLabel;
+  const trailerScore = Number(item?.CommunityRating);
+  const trailerRibbonHtml = isTrailerVariant
+    ? `
+      <div class="tmdb-trailer-ribbon" aria-hidden="true">
+        ${faIconHtml("clapperboard", "tmdb-trailer-ribbon__icon")}
+        <span>${escapeHtml(trailerRibbonLabel)}</span>
+      </div>
+    `
+    : "";
 
   const community = Number.isFinite(posterSource.CommunityRating)
     ? `<div class="community-rating" title="${escapeHtml(config.languageLabels.communityRating || "Community Rating")}">⭐ ${posterSource.CommunityRating.toFixed(1)}</div>`
     : "";
-  const top10RankHtml = (isTop10 && Number.isFinite(rank))
+  const top10RankHtml = (isTop10 && !isTrailerVariant && Number.isFinite(rank))
     ? `<div class="top10-rank" aria-hidden="true">${Math.max(1, rank | 0)}</div>`
     : "";
   const top10FreshBadgeHtml = top10IsFresh
     ? `<div class="top10-fresh-badge">${escapeHtml(getBadgeText("new"))}</div>`
     : "";
-  const topBadgesHtml = isTop10
+  const topBadgesHtml = isTrailerVariant
+    ? ""
+    : isTop10
     ? `
       <div class="prc-top-badges top10-top-badges">
         <div class="prc-type-badge top10-type-badge">
@@ -2029,7 +2723,15 @@ function createRecommendationCard(item, serverId, {
       : fallbackTitleHtml)
     : managedTitleRender.html;
 
-  const metaHtml = isTop10
+  const metaHtml = isTrailerVariant
+    ? `
+      <div class="prc-meta">
+        ${trailerTypeLabel ? `<span class="tmdb-trailer-status">${escapeHtml(trailerTypeLabel)}</span>` : ""}
+        ${trailerReleaseDateLabel ? `${trailerTypeLabel ? `<span class="prc-dot">•</span>` : ""}<span class="prc-year">${escapeHtml(trailerReleaseDateLabel)}</span>` : ""}
+        ${Number.isFinite(trailerScore) ? `${(trailerTypeLabel || trailerReleaseDateLabel) ? `<span class="prc-dot">•</span>` : ""}<span class="prc-runtime">TMDb ${escapeHtml(trailerScore.toFixed(1))}</span>` : ""}
+      </div>
+    `
+    : isTop10
     ? `
       <div class="prc-meta">
         ${ageChip ? `<span class="prc-age">${ageChip}</span><span class="prc-dot">•</span>` : ""}
@@ -2046,9 +2748,10 @@ function createRecommendationCard(item, serverId, {
 
   card.innerHTML = `
     <div class="cardBox">
-      <a class="cardLink" href="${itemId ? getDetailsUrl(itemId, serverId) : '#'}">
+      <a class="cardLink" href="${item?.__detailsHref || (itemId ? getDetailsUrl(itemId, serverId) : '#')}">
         <div class="cardImageContainer" style="position:relative;">
           ${top10RankHtml}
+          ${trailerRibbonHtml}
           <img class="cardImage"
             alt="${escapeHtml(mainTitle)}"
             loading="${aboveFold ? "eager" : "lazy"}"
@@ -2115,6 +2818,8 @@ function createRecommendationCard(item, serverId, {
       try {
         await openDetailsModal({
           itemId,
+          item,
+          detailsHref: item?.__detailsHref || "",
           serverId,
           preferBackdropIndex: backdropIndex,
           originEl: hostEl?.querySelector?.("img.cardImage") || hostEl || card,
@@ -2148,15 +2853,17 @@ function createRecommendationCard(item, serverId, {
     ? (getConfig()?.globalPreviewMode === "studioMini" ? "studioMini" : "modal")
     : HOVER_MODE;
 
-  setTimeout(() => {
-    if (card.isConnected) attachPreviewByMode(card, { ...item, Id: itemId, Name: itemName }, mode);
-  }, 500);
+  if (!isTrailerVariant) {
+    setTimeout(() => {
+      if (card.isConnected) attachPreviewByMode(card, { ...item, Id: itemId, Name: itemName }, mode);
+    }, 500);
+  }
 
   card.addEventListener("dblclick", (e) => {
     try {
       e.preventDefault();
       e.stopPropagation();
-      if (itemId && typeof playNow === "function") playNow(itemId);
+      if (!isTrailerVariant && itemId && typeof playNow === "function") playNow(itemId);
     } catch {}
   });
 
@@ -2289,7 +2996,7 @@ async function fetchAlbumPreviewTrackId(albumId) {
       const best = Array.isArray(data?.Items) ? data.Items.find(x => x?.Id) : null;
       try {
         if (best?.Id && STATE.db && STATE.scope) {
-          upsertItemsBatchIdle(STATE.db, STATE.scope, [best], { timeout: 1500 });
+          await upsertItemsBatch(STATE.db, STATE.scope, [best]);
         }
       } catch {}
       return best?.Id || null;
@@ -2523,7 +3230,7 @@ async function fetchRecent(userId, type, limit, parentId) {
     const out = uniqById(items).slice(0, limit);
     try {
       if (STATE.db && STATE.scope) {
-        upsertItemsBatchIdle(STATE.db, STATE.scope, out, { timeout: 1500 });
+        await upsertItemsBatch(STATE.db, STATE.scope, out);
       }
     } catch {}
     return out;
@@ -2551,7 +3258,7 @@ async function fetchContinue(userId, type, limit, parentId) {
     ).slice(0, limit);
     try {
       if (STATE.db && STATE.scope) {
-        upsertItemsBatchIdle(STATE.db, STATE.scope, out, { timeout: 1500 });
+        await upsertItemsBatch(STATE.db, STATE.scope, out);
       }
     } catch {}
     return out;
@@ -2599,7 +3306,7 @@ async function fetchRecentlyPlayedTracks(userId, limit, parentId) {
 
     try {
       if (STATE.db && STATE.scope) {
-        upsertItemsBatchIdle(STATE.db, STATE.scope, out, { timeout: 1500 });
+        await upsertItemsBatch(STATE.db, STATE.scope, out);
       }
     } catch {}
 
@@ -2651,7 +3358,7 @@ async function fetchItemsByIds(ids, { refreshUserData = false } = {}) {
 
     try {
       if (fetched?.length && STATE.db && STATE.scope) {
-        upsertItemsBatchIdle(STATE.db, STATE.scope, fetched, { timeout: 1500 });
+        await upsertItemsBatch(STATE.db, STATE.scope, fetched);
       }
     } catch {}
   }
@@ -2828,7 +3535,7 @@ async function fetchRecentGeneric(userId, limit, parentId) {
     await attachSeriesPosterSourceToEpsAndSeasons(out);
     try {
       if (STATE.db && STATE.scope) {
-        upsertItemsBatchIdle(STATE.db, STATE.scope, out, { timeout: 1500 });
+        await upsertItemsBatch(STATE.db, STATE.scope, out);
       }
     } catch {}
     return out;
@@ -2857,7 +3564,7 @@ async function fetchContinueGeneric(userId, limit, parentId) {
     await attachSeriesPosterSourceToEpsAndSeasons(out);
     try {
       if (STATE.db && STATE.scope) {
-        upsertItemsBatchIdle(STATE.db, STATE.scope, out, { timeout: 1500 });
+        await upsertItemsBatch(STATE.db, STATE.scope, out);
       }
     } catch {}
     return out;
@@ -2875,20 +3582,22 @@ function buildSectionSkeleton({ titleText, badgeType, onSeeAll }) {
   title.className = "sectionTitleContainer sectionTitleContainer-cards";
 
   const seeAllText = config.languageLabels.seeAll || "Tümünü gör";
+  const showSeeAll = typeof onSeeAll === "function";
 
   title.innerHTML = `
     <h2 class="sectionTitle sectionTitle-cards dir-row-title">
-      <span class="dir-row-title-text" role="button" tabindex="0"
-        aria-label="${escapeHtml(seeAllText)}: ${escapeHtml(titleText)}">
+      <span class="dir-row-title-text"${showSeeAll ? ` role="button" tabindex="0" aria-label="${escapeHtml(seeAllText)}: ${escapeHtml(titleText)}"` : ""}>
         ${escapeHtml(titleText)}
       </span>
 
-      <div class="dir-row-see-all"
-          aria-label="${escapeHtml(seeAllText)}"
-          title="${escapeHtml(seeAllText)}">
-        ${faIconHtml("chevronRight")}
-      </div>
-      <span class="dir-row-see-all-tip">${escapeHtml(seeAllText)}</span>
+      ${showSeeAll ? `
+        <div class="dir-row-see-all"
+            aria-label="${escapeHtml(seeAllText)}"
+            title="${escapeHtml(seeAllText)}">
+          ${faIconHtml("chevronRight")}
+        </div>
+        <span class="dir-row-see-all-tip">${escapeHtml(seeAllText)}</span>
+      ` : ""}
     </h2>
   `;
 
@@ -2902,13 +3611,13 @@ function buildSectionSkeleton({ titleText, badgeType, onSeeAll }) {
     }
   };
 
-  if (titleBtn) {
+  if (showSeeAll && titleBtn) {
     titleBtn.addEventListener("click", doSeeAll, { passive: false });
     titleBtn.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") doSeeAll(e);
     });
   }
-  if (seeAllBtn) seeAllBtn.addEventListener("click", doSeeAll, { passive: false });
+  if (showSeeAll && seeAllBtn) seeAllBtn.addEventListener("click", doSeeAll, { passive: false });
 
   const heroHost = document.createElement("div");
   heroHost.className = "dir-row-hero-host";
@@ -3059,7 +3768,8 @@ function isDeferredRecentRowsSection(sectionKey) {
   return (
     sectionKey === "top10SeriesRows" ||
     sectionKey === "top10MovieRows" ||
-    sectionKey === "tmdbTopMoviesRows"
+    sectionKey === "tmdbTopMoviesRows" ||
+    sectionKey === "tmdbTrailerRows"
   );
 }
 
@@ -3759,6 +4469,7 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
       userId,
       serverId,
       tmdbEnabled: runtimeCfg.enableTmdbTopMovies === true,
+      tmdbTrailerEnabled: runtimeCfg.enableTmdbTrailers === true,
       top10SeriesEnabled: runtimeCfg.enableTop10Series === true,
       top10MovieEnabled: runtimeCfg.enableTop10Movies === true,
     });
@@ -3766,6 +4477,7 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
     const top10SeriesPlans = [];
     const top10MoviePlans  = [];
     const tmdbTopMoviePlans = [];
+    const tmdbTrailerPlans = [];
     const recentPlans      = [];
     const continuePlans    = [];
     const nextUpPlans      = [];
@@ -3853,7 +4565,7 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
       sectionClassName: "top10-section tmdb-top10-section",
       rowClassName: "top10-row tmdb-top10-row",
       cardVariant: "top10",
-      deferNetworkRender: false,
+      deferNetworkRender: true,
       fetcher: Object.assign(
         async () => {
           recentRowsTrace("tmdb:fetch:start", {
@@ -3881,14 +4593,73 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
           return items;
         },
         {
-          cachedItems: () => loadCachedRowItems("tmdb_top", tmdbMovieMetaType, TTL_TOP10_MS, {
-            limit: TOP10_ROW_CARD_COUNT,
-            refreshUserData: false,
-            validateIds: false
-          })
+          cachedItems: async () => {
+            const cached = await loadCachedRowItems("tmdb_top", tmdbMovieMetaType, TTL_TOP10_MS, {
+              limit: TOP10_ROW_CARD_COUNT,
+              refreshUserData: false,
+              validateIds: false
+            });
+            return {
+              items: Array.isArray(cached?.items) ? cached.items.slice(0, TOP10_ROW_CARD_COUNT) : [],
+              fresh: !!cached?.fresh && ((Array.isArray(cached?.items) ? cached.items.length : 0) > 0)
+            };
+          }
         }
       ),
       onSeeAll: () => openLatestPage("Movie")
+    }));
+  }
+
+  if (runtimeCfg.enableTmdbTrailers) {
+    let tmdbTrailerEmptyMessage = "";
+    pushPlan(tmdbTrailerPlans, () => buildManagedSection({
+      titleText: config.languageLabels.tmdbTrailerRowsTitle || "TMDb Vizyon Fragmanları",
+      badgeType: "trailer",
+      heroLabel: "",
+      cardCount: TOP10_ROW_CARD_COUNT,
+      showProgress: false,
+      hideHero: true,
+      allowEmptyRow: true,
+      emptyMessage: () => tmdbTrailerEmptyMessage,
+      sectionClassName: "top10-section tmdb-trailer-section",
+      rowClassName: "top10-row tmdb-trailer-row",
+      cardVariant: "tmdbTrailer",
+      deferNetworkRender: true,
+      fetcher: Object.assign(
+        async () => {
+          recentRowsTrace("tmdb:trailers:fetch:start", {
+            sectionKey,
+            limit: TOP10_ROW_CARD_COUNT,
+          });
+          const result = await fetchTmdbTrailerShowcase(TOP10_ROW_CARD_COUNT);
+          tmdbTrailerEmptyMessage =
+            config.languageLabels.tmdbTrailerRowsEmpty || "TMDb tarafinda gosterilecek vizyon fragmani bulunamadi.";
+          const items = Array.isArray(result?.items) ? result.items : [];
+          recentRowsTrace("tmdb:trailers:fetch:done", {
+            sectionKey,
+            reason: result?.reason || "",
+            itemCount: items.length,
+            emptyMessage: tmdbTrailerEmptyMessage,
+          });
+          return items;
+        },
+        {
+          cachedItems: () => {
+            const locale = resolveTmdbRowLocale();
+            const cached = readTmdbTrailerRowCache(locale.cacheKey);
+            const items = getTmdbTrailerRowSelection(
+              locale.cacheKey,
+              Array.isArray(cached?.items) ? cached.items : [],
+              TOP10_ROW_CARD_COUNT
+            );
+            return {
+              items,
+              fresh: !!cached?.fresh && (items.length > 0)
+            };
+          }
+        }
+      ),
+      onSeeAll: null
     }));
   }
 
@@ -4291,6 +5062,7 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
       sectionKey === "top10SeriesRows" ? [...top10SeriesPlans] :
       sectionKey === "top10MovieRows" ? [...top10MoviePlans] :
       sectionKey === "tmdbTopMoviesRows" ? [...tmdbTopMoviePlans] :
+      sectionKey === "tmdbTrailerRows" ? [...tmdbTrailerPlans] :
       sectionKey === "continueRows" ? [...continuePlans] :
       sectionKey === "nextUpRows" ? [...nextUpPlans] :
       [...recentPlans, ...episodePlans]

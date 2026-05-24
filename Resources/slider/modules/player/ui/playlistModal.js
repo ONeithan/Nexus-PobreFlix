@@ -36,14 +36,14 @@ export function createPlaylistModal() {
   const closeBtn = document.createElement("button");
   closeBtn.className = "playlist-close";
   closeBtn.innerHTML = '<i class="fas fa-times"></i>';
-  closeBtn.title = config.languageLabels.close || "Fechar";
-  closeBtn.setAttribute("aria-label", "Fechar playlist");
+  closeBtn.title = config.languageLabels.close || "Kapat";
+  closeBtn.setAttribute("aria-label", "Close playlist");
   closeBtn.onclick = togglePlaylistModal;
 
   const selectAllBtn = document.createElement("button");
   selectAllBtn.className = "playlist-select-all";
   selectAllBtn.innerHTML = '<i class="fa-solid fa-check-double"></i>';
-  selectAllBtn.title = config.languageLabels.selectAll || "Selecionar Tudo";
+  selectAllBtn.title = config.languageLabels.selectAll || "Tümünü Seç/Bırak";
   selectAllBtn.setAttribute("aria-label", "Select all tracks");
   selectAllBtn.onclick = (e) => {
     e.stopPropagation();
@@ -79,7 +79,7 @@ export function createPlaylistModal() {
   const removeSelectedBtn = document.createElement("button");
   removeSelectedBtn.className = "playlist-remove-selected";
   removeSelectedBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-  removeSelectedBtn.title = config.languageLabels.removeSelected || "Remover Selecionados";
+  removeSelectedBtn.title = config.languageLabels.removeSelected || "Seçilenleri Kaldır";
   removeSelectedBtn.setAttribute("aria-label", "Remove selected tracks");
   removeSelectedBtn.onclick = (e) => {
     e.stopPropagation();
@@ -126,7 +126,7 @@ function updateSelectAllBtnState() {
     selectAllBtn.title = config.languageLabels.deselectAll || "Seçimi Kaldır";
   } else {
     selectAllBtn.innerHTML = '<i class="fa-solid fa-check-double"></i>';
-    selectAllBtn.title = config.languageLabels.selectAll || "Selecionar Tudo";
+    selectAllBtn.title = config.languageLabels.selectAll || "Tümünü Seç";
   }
 }
 
@@ -167,7 +167,7 @@ async function showSaveModal() {
   nameInput.placeholder = config.languageLabels.enterPlaylistName;
   nameInput.id = "playlist-save-name-input";
   nameInput.name = "playlist-save-name-input";
-  nameInput.value = `GMMP Oynatma Listesi ${new Date().toLocaleString(config.dateLocale || 'pt-BR', {
+  nameInput.value = `GMMP Oynatma Listesi ${new Date().toLocaleString(config.dateLocale || 'tr-TR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -202,7 +202,7 @@ async function showSaveModal() {
   newPlaylistRadio.onchange = togglePlaylistSelection;
   const newPlaylistLabel = document.createElement("label");
   newPlaylistLabel.htmlFor = "playlist-save-new-playlist";
-  newPlaylistLabel.textContent = config.languageLabels.newPlaylist || "Criar nova lista";
+  newPlaylistLabel.textContent = config.languageLabels.newPlaylist || "Yeni liste oluştur";
   newPlaylistOption.appendChild(newPlaylistRadio);
   newPlaylistOption.appendChild(newPlaylistLabel);
 
@@ -216,7 +216,7 @@ async function showSaveModal() {
   existingPlaylistRadio.onchange = togglePlaylistSelection;
   const existingPlaylistLabel = document.createElement("label");
   existingPlaylistLabel.htmlFor = "playlist-save-existing-playlist";
-  existingPlaylistLabel.textContent = config.languageLabels.addToExisting || "Adicionar à lista existente";
+  existingPlaylistLabel.textContent = config.languageLabels.addToExisting || "Mevcut listeye ekle";
   existingPlaylistOption.appendChild(existingPlaylistRadio);
   existingPlaylistOption.appendChild(existingPlaylistLabel);
 
@@ -228,7 +228,7 @@ async function showSaveModal() {
   playlistSelectContainer.style.display = "none";
 
   const playlistSelectLabel = document.createElement("label");
-  playlistSelectLabel.textContent = config.languageLabels.selectPlaylist || "Selecionar lista:";
+  playlistSelectLabel.textContent = config.languageLabels.selectPlaylist || "Liste seçin:";
   playlistSelectLabel.htmlFor = "playlist-save-existing-playlist-select";
 
   const playlistSelect = document.createElement("select");
@@ -239,7 +239,7 @@ async function showSaveModal() {
 
   const loadingOption = document.createElement("option");
   loadingOption.value = "";
-  loadingOption.textContent = config.languageLabels.loadingPlaylists || "Carregando listas...";
+  loadingOption.textContent = config.languageLabels.loadingPlaylists || "Listeler yükleniyor...";
   playlistSelect.appendChild(loadingOption);
 
   playlistSelectContainer.appendChild(playlistSelectLabel);
@@ -256,7 +256,8 @@ async function showSaveModal() {
   const selectedOnlyLabel = document.createElement("label");
   selectedOnlyLabel.htmlFor = "playlist-save-selected-only";
   selectedOnlyLabel.textContent = saveSelected
-    : config.languageLabels.noSelection || "Nenhuma música selecionada";
+    ? `${config.languageLabels.saveSelected || "Seçilenleri kaydet"} (${selectedCount})`
+    : config.languageLabels.noSelection || "Hiç parça seçilmediii";
   selectedOnlyContainer.appendChild(selectedOnlyCheckbox);
   selectedOnlyContainer.appendChild(selectedOnlyLabel);
 
@@ -293,7 +294,7 @@ async function showSaveModal() {
         playlistId
       );
       showNotification(
-        `<i class="fas fa-check-circle"></i> ${config.languageLabels.playlistCreatedSuccessfully || "Lista salva com sucesso"}`,
+        `<i class="fas fa-check-circle"></i> ${config.languageLabels.playlistCreatedSuccessfully || "Liste kaydedildi"}`,
         2500,
         'addlist'
       );
@@ -301,7 +302,7 @@ async function showSaveModal() {
     } catch (err) {
       console.error(err);
       showNotification(
-        `<i class="fas fa-exclamation-circle"></i> ${config.languageLabels.playlistSaveError || "Erro ao salvar lista"}`,
+        `<i class="fas fa-exclamation-circle"></i> ${config.languageLabels.playlistSaveError || "Liste kaydedilemedi"}`,
         3000,
         'error'
       );
@@ -354,7 +355,7 @@ async function loadExistingPlaylists(selectElement) {
     if (playlists.length === 0) {
       const noPlaylistOption = document.createElement("option");
       noPlaylistOption.value = "";
-      noPlaylistOption.textContent = config.languageLabels.noPlaylists || "Nenhuma playlist encontrada";
+      noPlaylistOption.textContent = config.languageLabels.noPlaylists || "Hiç çalma listesi bulunamadı";
       selectElement.appendChild(noPlaylistOption);
       selectElement.disabled = true;
       return;
@@ -376,7 +377,7 @@ async function loadExistingPlaylists(selectElement) {
 
     const errorOption = document.createElement("option");
     errorOption.value = "";
-    errorOption.textContent = config.languageLabels.loadError || "Erro ao carregar listas";
+    errorOption.textContent = config.languageLabels.loadError || "Listeler yüklenemedi";
     selectElement.appendChild(errorOption);
     selectElement.disabled = true;
   }
@@ -530,7 +531,7 @@ export async function updatePlaylistModal() {
     const removeBtn = document.createElement('div');
     removeBtn.className = 'playlist-item-remove';
     removeBtn.innerHTML = '&times;';
-    removeBtn.title = config.languageLabels.removeTrack || 'Remover música';
+    removeBtn.title = config.languageLabels.removeTrack || 'Parçayı kaldır';
     removeBtn.setAttribute("aria-label", `Remove ${track.Name || 'unknown track'}`);
     removeBtn.onclick = (e) => {
       e.stopPropagation();
@@ -675,9 +676,9 @@ export function showRemoveConfirmModal(trackIndex, trackName) {
   const dialog = document.createElement("div");
   dialog.className = "confirm-dialog";
   dialog.innerHTML = `
-    <p><strong>${trackName}</strong> ${config.languageLabels.confirmRemove || "remover da lista?"}</p>
-    <button class="confirm-yes">${config.languageLabels.yes || "Sim"}</button>
-    <button class="confirm-no">${config.languageLabels.no || "Não"}</button>
+    <p><strong>${trackName}</strong> ${config.languageLabels.confirmRemove || "şarkı listesinden kaldırılsın mı?"}</p>
+    <button class="confirm-yes">${config.languageLabels.yes || "Evet"}</button>
+    <button class="confirm-no">${config.languageLabels.no || "Hayır"}</button>
   `;
   overlay.appendChild(dialog);
   document.body.appendChild(overlay);
@@ -697,13 +698,13 @@ export function showRemoveConfirmModal(trackIndex, trackName) {
       if (playlistId) {
         await removeItemsFromPlaylist(playlistId, [trackId]);
         showNotification(
-          `<i class="fas fa-check-circle"></i> ${config.languageLabels.trackRemoved || "Música removida"}`,
+          `<i class="fas fa-check-circle"></i> ${config.languageLabels.trackRemoved || "Parça kaldırıldı"}`,
           3000,
           'success'
         );
       } else {
         showNotification(
-          `<i class="fas fa-check-circle"></i> ${config.languageLabels.trackRemovedLocal || "Música removida da lista"}`,
+          `<i class="fas fa-check-circle"></i> ${config.languageLabels.trackRemovedLocal || "Parça listeden kaldırıldı"}`,
           3000,
           'success'
         );
@@ -750,7 +751,7 @@ export function showRemoveSelectedConfirmModal() {
   const count = selected.length;
   if (!count) {
     showNotification(
-      `<i class="fas fa-exclamation-triangle"></i> ${config.languageLabels.noSelection || "Nenhuma música selecionada"}`,
+      `<i class="fas fa-exclamation-triangle"></i> ${config.languageLabels.noSelection || "Hiç parça seçilmedi"}`,
       3000,
       'warning'
     );
@@ -762,9 +763,9 @@ export function showRemoveSelectedConfirmModal() {
   const dialog = document.createElement("div");
   dialog.className = "confirm-dialog";
   dialog.innerHTML = `
-    <p>${count} ${config.languageLabels.confirmRemoveSelected || "músicas selecionadas serão removidas. Confirmar?"}</p>
-    <button class="confirm-yes">${config.languageLabels.yes || "Sim"}</button>
-    <button class="confirm-no">${config.languageLabels.no || "Não"}</button>
+    <p>${count} ${config.languageLabels.confirmRemoveSelected || "parça kaldırılsın mı?"}</p>
+    <button class="confirm-yes">${config.languageLabels.yes || "Evet"}</button>
+    <button class="confirm-no">${config.languageLabels.no || "Hayır"}</button>
   `;
   overlay.appendChild(dialog);
   document.body.appendChild(overlay);
@@ -784,13 +785,13 @@ export function showRemoveSelectedConfirmModal() {
       if (playlistId) {
         await removeItemsFromPlaylist(playlistId, trackIds);
         showNotification(
-          `<i class="fas fa-check-circle"></i> ${count} ${config.languageLabels.tracksRemoved || "músicas removidas"}`,
+          `<i class="fas fa-check-circle"></i> ${count} ${config.languageLabels.tracksRemoved || "parça kaldırıldı"}`,
           2000,
           'success'
         );
       } else {
         showNotification(
-          `<i class="fas fa-info-circle"></i> ${count} ${config.languageLabels.tracksRemovedLocal || "músicas removidas da lista"}`,
+          `<i class="fas fa-info-circle"></i> ${count} ${config.languageLabels.tracksRemovedLocal || "parça listeden kaldırıldı"}`,
           2000,
           'info'
         );
@@ -835,4 +836,3 @@ export function showRemoveSelectedConfirmModal() {
     overlay.remove();
   });
 }
-

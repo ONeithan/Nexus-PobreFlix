@@ -1,4 +1,4 @@
-import { getSessionInfo, getEmbyHeaders, makeApiRequest, updateFavoriteStatus } from "../../Plugins/NexusPobreFlix/runtime/api.js";
+import { getSessionInfo, getEmbyHeaders, makeApiRequest, updateFavoriteStatus } from "../../Plugins/JMSFusion/runtime/api.js";
 import { getConfig, getDeviceProfileAuto, getHomeSectionsRuntimeConfig } from './config.js';
 import { getLanguageLabels } from "../language/index.js";
 import { attachMiniPosterHover } from "./studioHubsUtils.js";
@@ -332,8 +332,8 @@ function setPopoverContent(studioName, items) {
   const title = pop.querySelector('.hub-preview-title');
   const body = pop.querySelector('.hub-preview-body');
 
-  title.textContent = `${studioName} - ${(config.languageLabels.previewModalTitle || 'Mais Bem Avaliados')}`;
-  pop.querySelector('.hub-preview-close').setAttribute('aria-label', config.languageLabels.closeButton || config.languageLabels.kapat || 'Fechar');
+  title.textContent = `${studioName} - ${(config.languageLabels.previewModalTitle || 'Top Rated Movies')}`;
+  pop.querySelector('.hub-preview-close').setAttribute('aria-label', config.languageLabels.closeButton || 'Close');
 
   body.innerHTML = '';
   const { serverId } = getSessionInfo();
@@ -343,7 +343,7 @@ function setPopoverContent(studioName, items) {
     itemEl.className = 'hub-preview-item';
     const posterUrl = buildPosterUrl(item, 300, 95);
     let ratingVal = item.CommunityRating || item.CriticRating;
-    let rating = (typeof ratingVal === "number") ? ratingVal.toFixed(1) : (config.languageLabels.noRating || 'S/A');
+    let rating = (typeof ratingVal === "number") ? ratingVal.toFixed(1) : (config.languageLabels.noRating || 'N/A');
     let isFavorite = getCachedWatchlistMembership(item.Id, item.UserData?.IsFavorite);
     item.UserData = item.UserData || {};
     item.UserData.IsFavorite = isFavorite;
@@ -546,7 +546,7 @@ function showPreviewPopover(anchorEl, studioName, items) {
 function createPreviewButton(card, studioName, studioId, userId) {
   const btn = document.createElement('button');
   btn.className = 'hub-preview-btn';
-  btn.setAttribute('aria-label', `${studioName} ${(config.languageLabels.previewButtonLabel || "Pré-visualização")}`);
+  btn.setAttribute('aria-label', `${studioName} ${(config.languageLabels.previewButtonLabel || "Önizleme")}`);
   btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>';
 
   let isFetching = false;
@@ -635,16 +635,7 @@ async function setupHoverVideo(card, options = {}) {
     vidEl = document.createElement("video");
     vidEl.className = "hub-video";
     vidEl.src = playableUrl;
-    
-    const vol = config.studioHubsVolume;
-    if (vol === 'muted' || vol === 0) {
-      vidEl.muted = true;
-      vidEl.volume = 0;
-    } else {
-      vidEl.muted = false;
-      vidEl.volume = Math.max(0, Math.min(1, vol / 100));
-    }
-
+    vidEl.muted = true;
     vidEl.loop = true;
     vidEl.playsInline = true;
     vidEl.preload = "auto";

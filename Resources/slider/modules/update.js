@@ -23,7 +23,7 @@ export function compareSemver(a = "0.0.0", b = "0.0.0") {
   return 0;
 }
 
-export async function fetchLatestGitHubVersion(owner = "ONeithan", repo = "Nexus-PobreFlix") {
+export async function fetchLatestGitHubVersion(owner = "G-grbz", repo = "Jellyfin-MonWUI-Plugin") {
   try {
     const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/latest`, {
       headers: { "Accept": "application/vnd.github+json" }
@@ -80,8 +80,8 @@ export function startUpdatePolling(options = {}) {
   const {
     intervalMs = 60 * 60 * 1000,
     minGapMs   = 60 * 60 * 1000,
-    owner = "ONeithan",
-    repo  = "Nexus-PobreFlix",
+    owner = "G-grbz",
+    repo  = "Jellyfin-MonWUI-Plugin",
     storagePrefix = "JMS_UPT_",
     enabled = true,
     dedupScope = "forever",
@@ -130,7 +130,7 @@ export function startUpdatePolling(options = {}) {
         }
       }
     } catch (e) {
-      console.warn("falha na verificação de atualização", e);
+      console.warn("güncelleme denetim hatası", e);
     }
   };
 

@@ -3,10 +3,10 @@ using System.Text.Json;
 using System;
 using System.Text.Json.Serialization;
 
-namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
+namespace Jellyfin.Plugin.JMSFusion.Controllers
 {
     [ApiController]
-    [Route("Plugins/NexusPobreFlix/UserSettings")]
+    [Route("Plugins/JMSFusion/UserSettings")]
     public class UserSettingsController : ControllerBase
     {
         private void NoCache()
@@ -22,7 +22,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
             return (p == "mobile" || p == "m") ? "mobile" : "desktop";
         }
 
-        private static void EnsureMigrated(NexusPobreFlixConfiguration cfg, NexusPobreFlixPlugin plugin)
+        private static void EnsureMigrated(JMSFusionConfiguration cfg, JMSFusionPlugin plugin)
         {
             var legacy = cfg.GlobalUserSettingsJson;
             var legacyHas = !string.IsNullOrWhiteSpace(legacy) && legacy != "{}";
@@ -46,7 +46,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
         [HttpGet]
         public IActionResult Get([FromQuery] string? profile = null)
         {
-            var plugin = NexusPobreFlixPlugin.Instance;
+            var plugin = JMSFusionPlugin.Instance;
             var cfg = plugin.Configuration;
 
             EnsureMigrated(cfg, plugin);
@@ -88,7 +88,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
         [HttpPost("Publish")]
         public IActionResult Publish([FromBody] PublishReq req, [FromQuery] string? profile = null)
         {
-            var plugin = NexusPobreFlixPlugin.Instance;
+            var plugin = JMSFusionPlugin.Instance;
             var cfg = plugin.Configuration;
 
             EnsureMigrated(cfg, plugin);

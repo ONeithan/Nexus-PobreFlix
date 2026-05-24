@@ -1,195 +1,290 @@
-<div id="NexusPobreFlixConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" translate="no"
-  data-jf-no-translate="1">
+<div id="JMSFusionConfigPage"
+     data-role="page"
+     class="page type-interior pluginConfigurationPage"
+     translate="no" data-jf-no-translate="1">
 
   <div class="content-primary">
-    <section class="nexus-hero-card">
-      <div class="nexus-hero-copy">
-        <div class="nexus-eyebrow" id="heroEyebrow">Configuração do Plugin</div>
-        <h2 id="pageTitle">Painel de Controle Nexus PobreFlix</h2>
+    <section class="jms-hero-card">
+      <div class="jms-hero-copy">
+        <div class="jms-eyebrow" id="heroEyebrow">Configuração do Plugin</div>
+        <h2 id="pageTitle">Nexus PobreFlix — Central de Controle</h2>
         <p id="pageIntro">
-          Gerencie a fonte de ativos do motor <code>/slider</code>, publique configurações globais, inspecione o status
-          do sistema
-          e revise detalhes de injeção HTML e permissões em uma interface premium.
+          Gerencie a origem dos recursos <code>/slider</code>, publique configurações globais, inspecione o status de execução
+          e revise detalhes do snippet HTML e permissões web em uma interface moderna.
         </p>
       </div>
 
-      <div class="nexus-hero-meta">
-        <div class="nexus-hero-pill">
-          <span class="nexus-hero-pill__label" id="heroLangLabel">Idioma Selecionado</span>
+      <div class="jms-hero-meta">
+        <div class="jms-hero-pill">
+          <span class="jms-hero-pill__label" id="heroLangLabel">Idioma Selecionado</span>
           <strong id="heroLangValue">...</strong>
         </div>
-        <div class="nexus-hero-pill">
-          <span class="nexus-hero-pill__label" id="heroRootLabel">Raiz da Interface Web</span>
+        <div class="jms-hero-pill">
+          <span class="jms-hero-pill__label" id="heroRootLabel">Raiz da Interface Web</span>
           <strong id="heroRootValue">/web</strong>
         </div>
       </div>
     </section>
 
-    <div class="nexus-tabbar" role="tablist" aria-label="Seções de configuração">
-      <button id="tabNexusPobreFlix" type="button" class="nexus-tab is-active" role="tab" aria-selected="true"
-        aria-controls="panelNexusPobreFlix" data-tab="NexusPobreFlix">Nexus PobreFlix</button>
-      <button id="tabNexusPobreFlixSettings" type="button" class="nexus-tab" role="tab" aria-selected="false"
-        aria-controls="panelNexusPobreFlixSettings" data-tab="NexusPobreFlix-settings">Configurações do Tema</button>
-      <button id="tabStatus" type="button" class="nexus-tab" role="tab" aria-selected="false"
-        aria-controls="panelStatus" data-tab="status">Status do Sistema</button>
-      <button id="tabSnippet" type="button" class="nexus-tab" role="tab" aria-selected="false"
-        aria-controls="panelSnippet" data-tab="snippet">Injeção HTML e Permissões</button>
+    <div class="jms-tabbar" role="tablist" aria-label="Seções de configuração">
+      <button id="tabJmsfusion"
+              type="button"
+              class="jms-tab is-active"
+              role="tab"
+              aria-selected="true"
+              aria-controls="panelJmsfusion"
+              data-tab="jmsfusion">Nexus PobreFlix</button>
+      <button id="tabMonwuiSettings"
+              type="button"
+              class="jms-tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panelMonwuiSettings"
+              data-tab="monwui-settings">Configurações</button>
+      <button id="tabStatus"
+              type="button"
+              class="jms-tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panelStatus"
+              data-tab="status">Status</button>
+      <button id="tabSnippet"
+              type="button"
+              class="jms-tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panelSnippet"
+              data-tab="snippet">Sistema</button>
+      <button id="tabAbout"
+              type="button"
+              class="jms-tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panelAbout"
+              data-tab="about">Sobre</button>
     </div>
 
     <div id="msg" class="fieldDescription" style="min-height:24px;"></div>
 
-    <section id="panelNexusPobreFlix" class="nexus-panel is-active" data-panel="NexusPobreFlix" role="tabpanel"
-      aria-labelledby="tabNexusPobreFlix">
-      <div class="nexus-grid nexus-grid--split">
-        <div class="nexus-card">
-          <div class="nexus-card-head">
-            <h3 id="configCardTitle">Configurações Principais</h3>
-            <p id="configCardBody">Escolha de onde o Nexus PobreFlix carrega os ativos do slider e como o caminho do
-              player é resolvido.</p>
+    <section id="panelJmsfusion"
+             class="jms-panel is-active"
+             data-panel="jmsfusion"
+             role="tabpanel"
+             aria-labelledby="tabJmsfusion">
+      <div class="jms-grid jms-grid--split">
+        <div class="jms-card">
+          <div class="jms-card-head">
+            <h3 id="configCardTitle">Core Settings</h3>
+            <p id="configCardBody">Choose where JMSFusion serves slider assets from and how the player module path is resolved.</p>
           </div>
 
           <form id="configForm" onsubmit="return false;">
             <div class="inputContainer inputContainer--toggle">
               <label class="inputLabel inputLabel--checkbox" for="forceGlobal">
                 <input id="forceGlobal" type="checkbox">
-                <span id="forceGlobalLabel">Forçar configurações globais de usuário</span>
+                <span id="forceGlobalLabel">Force global user settings</span>
               </label>
               <div class="fieldDescription" id="forceGlobalHint">
-                Ativado: todos os usuários recebem as configurações do administrador automaticamente. Desativado:
-                usuários mantém suas próprias configurações locais.
+                Enabled: all users receive the admin snapshot automatically. Disabled: users keep their own local settings.
               </div>
             </div>
 
             <div class="inputContainer">
-              <label class="inputLabel" id="scriptDirLabel" for="scriptDir">Diretório de Scripts</label>
-              <input id="scriptDir" type="text" class="emby-input" placeholder="/home/nexus/slider">
-              <div class="fieldDescription" id="scriptDirHint">Deixe vazio para usar os ativos embutidos em
-                <code>/Resources/slider</code>.</div>
+              <label class="inputLabel" id="scriptDirLabel" for="scriptDir">Script Directory</label>
+              <input id="scriptDir" type="text" class="emby-input" placeholder="/home/gkhng/slider">
+              <div class="fieldDescription" id="scriptDirHint">Leave empty to use embedded <code>/Resources/slider</code> assets.</div>
             </div>
 
             <div class="inputContainer">
-              <label class="inputLabel" id="playerSubLabel" for="playerSub">Subdiretório do Player</label>
+              <label class="inputLabel" id="playerSubLabel" for="playerSub">Player Subdirectory</label>
               <input id="playerSub" type="text" class="emby-input" placeholder="modules/player">
             </div>
           </form>
         </div>
 
-        <div class="nexus-card">
-          <div class="nexus-card-head">
-            <h3 id="actionsCardTitle">Ações do Administrador</h3>
-            <p id="actionsCardBody">Salve as configurações do plugin ou publique as configurações atuais globalmente
-              para todos os perfis.</p>
+        <div class="jms-card">
+          <div class="jms-card-head">
+            <h3 id="actionsCardTitle">Admin Actions</h3>
+            <p id="actionsCardBody">Save plugin settings or publish the current admin snapshot globally for every user profile.</p>
           </div>
 
           <div class="buttonContainer">
-            <button id="saveBtn" type="button" class="raised button-submit">Salvar Alterações</button>
-            <button id="publishGlobalBtn" type="button" class="raised">Publicar Globalmente</button>
+            <button id="saveBtn" type="button" class="raised button-submit">Save</button>
+            <button id="publishGlobalBtn" type="button" class="raised">Publish Admin Settings Globally</button>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="panelStatus" class="nexus-panel" data-panel="status" role="tabpanel" aria-labelledby="tabStatus"
-      hidden>
-      <div class="nexus-grid nexus-grid--split">
-        <div class="nexus-card">
-          <div class="nexus-card-head">
-            <h3 id="statusCardTitle">Status de Execução</h3>
-            <p id="statusCardBody">Verificação rápida do estado da configuração, resolução de caminhos e fallback de
-              ativos.</p>
+    <section id="panelStatus"
+             class="jms-panel"
+             data-panel="status"
+             role="tabpanel"
+             aria-labelledby="tabStatus"
+             hidden>
+      <div class="jms-grid jms-grid--split">
+        <div class="jms-card">
+          <div class="jms-card-head">
+            <h3 id="statusCardTitle">Runtime Status</h3>
+            <p id="statusCardBody">Quick verification for configuration state, player path resolution, and embedded asset fallback.</p>
           </div>
-          <div id="status" class="nexus-status-list">
-            <div class="nexus-empty" id="statusPlaceholder">O status ainda não foi carregado.</div>
+          <div id="status" class="jms-status-list">
+            <div class="jms-empty" id="statusPlaceholder">Status has not been loaded yet.</div>
           </div>
         </div>
 
-        <div class="nexus-card">
-          <div class="nexus-card-head">
-            <h3 id="inmemCardTitle">Injeção em Memória</h3>
-            <p id="inmemCardBody">Verifica se o index.html está sendo reescrito em tempo de resposta sem tocar nos
-              arquivos em disco.</p>
+        <div class="jms-card">
+          <div class="jms-card-head">
+            <h3 id="inmemCardTitle">In-Memory Injection</h3>
+            <p id="inmemCardBody">Checks whether index.html is being rewritten at response time without touching files on disk.</p>
           </div>
-          <div id="inmem" class="nexus-inline-state">
-            Verificando injeção em memória...
+          <div id="inmem" class="jms-inline-state">
+            Checking in-memory injection...
           </div>
         </div>
       </div>
     </section>
 
-    <section id="panelNexusPobreFlixSettings" class="nexus-panel" data-panel="NexusPobreFlix-settings" role="tabpanel"
-      aria-labelledby="tabNexusPobreFlixSettings" hidden>
-      <div class="nexus-card">
-        <div class="nexus-card-head">
-          <h3 id="NexusPobreFlixSettingsCardTitle">Personalização do Tema</h3>
+    <section id="panelMonwuiSettings"
+             class="jms-panel"
+             data-panel="monwui-settings"
+             role="tabpanel"
+             aria-labelledby="tabMonwuiSettings"
+             hidden>
+      <div class="jms-card">
+        <div class="jms-card-head">
+          <h3 id="monwuiSettingsCardTitle">MonWUI Settings</h3>
         </div>
 
         <div class="buttonContainer buttonContainer--tight">
-          <button id="reloadNexusPobreFlixSettingsBtn" type="button" class="raised">Recarregar Configurações do
-            Tema</button>
+          <button id="reloadMonwuiSettingsBtn" type="button" class="raised">Reload MonWUI Settings</button>
         </div>
 
-        <div id="NexusPobreFlixSettingsHost" class="nexus-settings-page-host">
-          <div id="NexusPobreFlixSettingsPlaceholder" class="nexus-empty">Carregando configurações do tema...</div>
+        <div id="monwuiSettingsHost" class="jms-settings-page-host">
+          <div id="monwuiSettingsPlaceholder" class="jms-empty">MonWUI settings are loading...</div>
         </div>
       </div>
     </section>
 
-    <section id="panelSnippet" class="nexus-panel" data-panel="snippet" role="tabpanel" aria-labelledby="tabSnippet"
-      hidden>
-      <div id="snippetGrid" class="nexus-grid nexus-grid--split">
-        <div class="nexus-card">
-          <div class="nexus-card-head">
-            <h3 id="snippetCardTitle">Snippet HTML</h3>
-            <p id="snippetCardBody">O snippet exato que o Nexus PobreFlix injeta no Jellyfin Web.</p>
+    <section id="panelSnippet"
+             class="jms-panel"
+             data-panel="snippet"
+             role="tabpanel"
+             aria-labelledby="tabSnippet"
+             hidden>
+      <div id="snippetGrid" class="jms-grid jms-grid--split">
+        <div class="jms-card">
+          <div class="jms-card-head">
+            <h3 id="snippetCardTitle">HTML Snippet</h3>
+            <p id="snippetCardBody">The exact snippet JMSFusion injects into Jellyfin web.</p>
           </div>
-          <div id="snippet" class="nexus-code-shell">
-            <div class="nexus-empty" id="snippetPlaceholder">O snippet ainda não foi carregado.</div>
+          <div id="snippet" class="jms-code-shell">
+            <div class="jms-empty" id="snippetPlaceholder">Snippet has not been loaded yet.</div>
           </div>
         </div>
 
-        <div id="envCard" class="nexus-card">
-          <div class="nexus-card-head">
-            <h3 id="envCardTitle">Caminhos e Permissões</h3>
-            <p id="envCardBody">Raiz web detectada, permissões de escrita e comandos sugeridos para correção.</p>
+        <div id="envCard" class="jms-card">
+          <div class="jms-card-head">
+            <h3 id="envCardTitle">Web Path &amp; Permissions</h3>
+            <p id="envCardBody">Detected web root, file write permissions, and suggested ACL commands for patching.</p>
           </div>
 
           <div class="buttonContainer buttonContainer--tight">
-            <button id="refreshEnvBtn" type="button" class="raised">Atualizar Diagnóstico</button>
-            <button id="copyAclBtn" type="button" class="raised">Copiar Comandos ACL</button>
-            <button id="patchBtn" type="button" class="raised">Aplicar Patch (index.html)</button>
-            <button id="unpatchBtn" type="button" class="raised">Remover Patch</button>
+            <button id="refreshEnvBtn" type="button" class="raised">Refresh Web Path &amp; Permissions</button>
+            <button id="copyAclBtn" type="button" class="raised">Copy Permission Commands</button>
+            <button id="patchBtn" type="button" class="raised">Patch index.html</button>
+            <button id="unpatchBtn" type="button" class="raised">Unpatch index.html</button>
           </div>
 
-          <div id="envBox" class="nexus-env-box">
-            <div class="nexus-env-item">
-              <span class="nexus-env-label" id="envUserLabel">Usuário de execução</span>
+          <div id="envBox" class="jms-env-box">
+            <div class="jms-env-item">
+              <span class="jms-env-label" id="envUserLabel">Running user</span>
               <code id="envUser">?</code>
             </div>
 
-            <div class="nexus-env-item">
-              <span class="nexus-env-label" id="envWebRootLabel">Raiz web detectada</span>
+            <div class="jms-env-item">
+              <span class="jms-env-label" id="envWebRootLabel">Detected web root</span>
               <code id="envWebRoot">?</code>
             </div>
 
-            <div class="nexus-env-files">
-              <div class="nexus-env-label" id="envFilesLabel">Arquivos</div>
-              <div class="nexus-env-file-row">
+            <div class="jms-env-files">
+              <div class="jms-env-label" id="envFilesLabel">Files</div>
+              <div class="jms-env-file-row">
                 <code>index.html</code>
                 <span id="envIdx">?</span>
               </div>
-              <div class="nexus-env-file-row">
+              <div class="jms-env-file-row">
                 <code>index.html.gz</code>
                 <span id="envGz">?</span>
               </div>
-              <div class="nexus-env-file-row">
+              <div class="jms-env-file-row">
                 <code>index.html.br</code>
                 <span id="envBr">?</span>
               </div>
             </div>
 
-            <div class="nexus-env-acl">
-              <div class="nexus-env-label" id="envAclLabel">Comandos ACL sugeridos</div>
-              <pre id="envAcl" class="preformatted">(não calculado)</pre>
+            <div class="jms-env-acl">
+              <div class="jms-env-label" id="envAclLabel">Suggested ACL commands</div>
+              <pre id="envAcl" class="preformatted">(not computed yet)</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="panelAbout"
+             class="jms-panel"
+             data-panel="about"
+             role="tabpanel"
+             aria-labelledby="tabAbout"
+             hidden>
+      <div class="jms-card">
+        <div class="jms-about-logo-container" style="text-align: center; margin-bottom: 24px; padding: 20px 0;">
+          <img src="../Plugins/JMSFusion/assets/LogoPng" 
+               alt="Nexus PobreFlix Logo" 
+               style="max-width: 280px; height: auto; filter: drop-shadow(0 0 16px rgba(122, 92, 255, 0.45));" />
+        </div>
+
+        <div class="jms-card-head" style="border-bottom: 1px solid var(--jms-border); padding-bottom: 16px; margin-bottom: 20px;">
+          <h3>Sobre o Nexus PobreFlix</h3>
+          <p style="margin-top: 6px;">A experiência visual definitiva e ultra-premium para o seu ecossistema Jellyfin.</p>
+        </div>
+
+        <div style="margin-bottom: 24px; line-height: 1.7; font-size: 14.5px; color: var(--labelTextColor);">
+          <p>
+            O <strong>Nexus PobreFlix</strong> é uma evolução estética sofisticada construída como um <strong>Fork de Alta Performance</strong> 
+            a partir do projeto original <a href="https://github.com/G-grbz/Jellyfin-Media-Slider" target="_blank" style="color: var(--jms-accent); font-weight: 700; text-decoration: none;">Jellyfin Media Slider (JMSFusion)</a>, 
+            criado com genialidade e maestria por <strong>G-Grbz</strong>.
+          </p>
+          <p style="margin-top: 12px;">
+            Dedicamos todos os créditos fundamentais de base, arquitetura de sliders, injeção de scripts e engenharia inicial de componentes ao autor original <strong>G-Grbz</strong>. 
+            Expressamos nossa eterna admiração e profunda gratidão pelo seu incrível trabalho open-source, que serviu como a fundação estrutural para este ecossistema.
+          </p>
+          <p style="margin-top: 12px;">
+            Esta edição personalizada (Nexus Edition) foi projetada, customizada e refinada por <strong>ONeithan</strong>, introduzindo 
+            tradução absoluta para Português do Brasil, otimização de performance no carregamento, correções profundas de layout de UX, 
+            estilizações premium sob a identidade visual roxa e melhorias exclusivas de acessibilidade e controle.
+          </p>
+        </div>
+
+        <div class="jms-env-box">
+          <div class="jms-env-item">
+            <span class="jms-env-label">Versão do Fork</span>
+            <code>1.0.0.1 (Nexus Edition)</code>
+          </div>
+          <div class="jms-env-item">
+            <span class="jms-env-label">Autor do Fork</span>
+            <strong>ONeithan</strong>
+          </div>
+          <div class="jms-env-item">
+            <span class="jms-env-label">Autor do Projeto Base (Créditos Totais)</span>
+            <strong>G-Grbz (JMSFusion)</strong>
+          </div>
+          <div class="jms-env-item">
+            <span class="jms-env-label">Links Oficiais</span>
+            <div style="display:flex; gap:10px; margin-top:5px; flex-wrap: wrap;">
+              <a href="https://github.com/ONeithan/Nexus-PobreFlix" target="_blank" class="raised" style="text-decoration:none; display:flex; align-items:center; justify-content:center; padding: 10px 16px;">Repositório do Fork (ONeithan)</a>
+              <a href="https://github.com/G-grbz/Jellyfin-Media-Slider" target="_blank" class="raised" style="text-decoration:none; display:flex; align-items:center; justify-content:center; padding: 10px 16px;">Repositório Original (G-Grbz)</a>
             </div>
           </div>
         </div>
@@ -198,582 +293,563 @@
   </div>
 
   <style>
-    #NexusPobreFlixConfigPage {
-      --nexus-accent: #8A2BE2;
-      --nexus-accent-strong: #BF40BF;
-      --nexus-accent-soft: rgba(138, 43, 226, 0.15);
-      --nexus-purple-glow: rgba(191, 64, 191, 0.4);
-      --nexus-danger: #ff4d4d;
-      --nexus-danger-soft: rgba(255, 77, 77, 0.15);
-      --nexus-success: #00ff88;
-      --nexus-success-soft: rgba(0, 255, 136, 0.15);
-      --nexus-border: rgba(127, 140, 141, 0.24);
-      --nexus-shadow: 0 24px 48px rgba(7, 14, 24, 0.12);
-      --nexus-radius-xl: 24px;
-      --nexus-radius-lg: 18px;
-      --nexus-radius-md: 14px;
-    }
-
-    .theme-dark #NexusPobreFlixConfigPage {
-      --nexus-border: rgba(235, 245, 246, 0.12);
-      --nexus-shadow: 0 24px 48px rgba(0, 0, 0, 0.32);
-    }
-
-    #NexusPobreFlixConfigPage .content-primary {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 24px;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-hero-card,
-    #NexusPobreFlixConfigPage .nexus-card {
-      background: var(--cardBackgroundColor);
-      border: 1px solid var(--nexus-border);
-      border-radius: var(--nexus-radius-xl);
-      box-shadow: var(--nexus-shadow);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-hero-card {
-      display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
-      gap: 24px;
-      padding: 28px;
-      background-image:
-        radial-gradient(circle at top right, rgba(138, 43, 226, 0.2), transparent 45%),
-        radial-gradient(circle at left bottom, rgba(191, 64, 191, 0.15), transparent 45%);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--nexus-accent-strong);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-eyebrow::before {
-      content: "";
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, var(--nexus-accent-strong), var(--nexus-accent));
-      box-shadow: 0 0 10px var(--nexus-purple-glow);
-      animation: nexus-pulse 2s infinite;
-    }
-
-    @keyframes nexus-pulse {
-      0% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 var(--nexus-accent-soft);
-      }
-
-      70% {
-        transform: scale(1.1);
-        box-shadow: 0 0 0 10px transparent;
-      }
-
-      100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 transparent;
-      }
-    }
-
-    #NexusPobreFlixConfigPage #pageTitle {
-      margin: 14px 0 10px;
-      font-size: clamp(28px, 3vw, 42px);
-      line-height: 1.04;
-      color: var(--textColor);
-    }
-
-    #NexusPobreFlixConfigPage #pageIntro {
-      margin: 0;
-      max-width: 760px;
-      color: var(--labelTextColor);
-      line-height: 1.7;
-      font-size: 15px;
-    }
-
-    #NexusPobreFlixConfigPage #pageIntro code {
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: var(--nexus-accent-soft);
-      color: var(--textColor);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-hero-meta {
-      display: grid;
-      gap: 14px;
-      align-content: center;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-hero-pill {
-      padding: 16px 18px;
-      border-radius: var(--nexus-radius-lg);
-      border: 1px solid var(--nexus-border);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-hero-pill__label {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--labelTextColor);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-hero-pill strong {
-      display: block;
-      font-size: 16px;
-      color: var(--textColor);
-      word-break: break-word;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-tabbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin: 20px 0 14px;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-tab {
-      appearance: none;
-      border: 1px solid var(--nexus-border);
-      border-radius: 999px;
-      background: var(--cardBackgroundColor);
-      color: var(--textColor);
-      padding: 12px 18px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-tab:hover {
-      transform: translateY(-1px);
-      border-color: var(--nexus-accent-strong);
-      background: var(--nexus-accent-soft);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-tab.is-active {
-      color: #ffffff;
-      border-color: transparent;
-      background: linear-gradient(135deg, var(--nexus-accent), var(--nexus-accent-strong));
-      box-shadow: 0 10px 25px rgba(138, 43, 226, 0.4);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-panel {
-      margin-top: 10px;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-panel[hidden] {
-      display: none !important;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-grid {
-      display: grid;
-      gap: 18px;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-grid--split {
-      grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-grid--single {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-card {
-      padding: 22px;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-card-head {
-      margin-bottom: 18px;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-card-head h3 {
-      margin: 0 0 8px;
-      font-size: 20px;
-      color: var(--textColor);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-card-head p {
-      margin: 0;
-      color: var(--labelTextColor);
-      line-height: 1.6;
-    }
-
-    #NexusPobreFlixConfigPage .inputContainer {
-      margin-bottom: 16px;
-      padding: 18px;
-      border-radius: var(--nexus-radius-lg);
-      border: 1px solid var(--nexus-border);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
-    }
-
-    #NexusPobreFlixConfigPage .inputContainer:last-child {
-      margin-bottom: 0;
-    }
-
-    #NexusPobreFlixConfigPage .inputLabel {
-      display: block;
-      margin-bottom: 10px;
-      color: var(--textColor);
-      font-weight: 700;
-    }
-
-    #NexusPobreFlixConfigPage .inputLabel--checkbox {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 0;
-    }
-
-    #NexusPobreFlixConfigPage .inputLabel--checkbox input {
-      margin-top: 2px;
-    }
-
-    #NexusPobreFlixConfigPage .emby-input {
-      width: 100%;
-      min-height: 46px;
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid var(--nexus-border);
-      background: var(--inputBackgroundColor);
-      color: var(--textColor);
-      transition: border-color 0.18s ease, box-shadow 0.18s ease;
-    }
-
-    #NexusPobreFlixConfigPage .emby-input:focus {
-      outline: none;
-      border-color: rgba(123, 47, 190, 0.45);
-      box-shadow: 0 0 0 4px rgba(123, 47, 190, 0.14);
-    }
-
-    #NexusPobreFlixConfigPage .fieldDescription {
-      margin-top: 10px;
-      color: var(--labelTextColor);
-      line-height: 1.55;
-      font-size: 13px;
-    }
-
-    #NexusPobreFlixConfigPage #msg {
-      padding: 12px 16px;
-      border-radius: 14px;
-      border: 1px solid transparent;
-      background: var(--cardBackgroundColor);
-    }
-
-    #NexusPobreFlixConfigPage #msg.ok {
-      color: var(--nexus-success);
-      background: var(--nexus-success-soft);
-      border-color: rgba(31, 157, 104, 0.22);
-    }
-
-    #NexusPobreFlixConfigPage #msg.warn {
-      color: var(--nexus-gold);
-      background: var(--nexus-gold-soft);
-      border-color: rgba(240, 180, 41, 0.22);
-    }
-
-    #NexusPobreFlixConfigPage #msg.err {
-      color: var(--nexus-danger);
-      background: var(--nexus-danger-soft);
-      border-color: rgba(214, 69, 80, 0.22);
-    }
-
-    #NexusPobreFlixConfigPage .buttonContainer {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    #NexusPobreFlixConfigPage .buttonContainer--tight {
-      margin-bottom: 18px;
-    }
-
-    #NexusPobreFlixConfigPage .raised {
-      appearance: none;
-      border: 1px solid var(--nexus-border);
-      border-radius: 14px;
-      min-height: 46px;
-      padding: 11px 16px;
-      cursor: pointer;
-      font-weight: 700;
-      background: var(--buttonBackgroundColor);
-      color: var(--buttonTextColor);
-      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-    }
-
-    #NexusPobreFlixConfigPage .raised:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
-      border-color: rgba(123, 47, 190, 0.3);
-    }
-
-    #NexusPobreFlixConfigPage .button-submit {
-      color: #ffffff;
-      border-color: transparent;
-      background: linear-gradient(135deg, var(--nexus-accent-strong), var(--nexus-accent));
-    }
-
-    #NexusPobreFlixConfigPage .nexus-status-list {
-      display: grid;
-      gap: 12px;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-status-row {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 14px;
-      align-items: center;
-      padding: 14px 16px;
-      border-radius: 14px;
-      border: 1px solid var(--nexus-border);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-status-label {
-      color: var(--textColor);
-      font-weight: 600;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-status-value {
-      color: var(--labelTextColor);
-      text-align: right;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-status-value code {
-      word-break: break-all;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-inline-state,
-    #NexusPobreFlixConfigPage .nexus-empty {
-      padding: 16px;
-      border-radius: 14px;
-      border: 1px dashed var(--nexus-border);
-      color: var(--labelTextColor);
-      line-height: 1.6;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-inline-state.ok {
-      border-style: solid;
-      color: var(--nexus-success);
-      background: var(--nexus-success-soft);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-inline-state.warn {
-      border-style: solid;
-      color: var(--nexus-gold);
-      background: var(--nexus-gold-soft);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-inline-toggle {
-      display: grid;
-      gap: 10px;
-      margin-top: 14px;
-      padding-top: 14px;
-      border-top: 1px solid var(--nexus-border);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-inline-toggle .inputLabel--checkbox,
-    #NexusPobreFlixConfigPage .nexus-inline-toggle .fieldDescription {
-      color: inherit;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-inline-toggle .fieldDescription {
-      margin-top: 0;
-      opacity: 0.92;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-empty--error {
-      border-style: solid;
-      color: var(--nexus-danger);
-      background: var(--nexus-danger-soft);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 28px;
-      padding: 5px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-badge.is-good {
-      color: var(--nexus-success);
-      background: var(--nexus-success-soft);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-badge.is-bad {
-      color: var(--nexus-danger);
-      background: var(--nexus-danger-soft);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-badge.is-warn {
-      color: var(--nexus-gold);
-      background: var(--nexus-gold-soft);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-code-shell,
-    #NexusPobreFlixConfigPage .nexus-env-box,
-    #NexusPobreFlixConfigPage pre.preformatted {
-      border-radius: 16px;
-      border: 1px solid var(--nexus-border);
-      background: var(--inputBackgroundColor);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-code-shell {
-      overflow: hidden;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-code-shell pre,
-    #NexusPobreFlixConfigPage .nexus-code-shell code,
-    #NexusPobreFlixConfigPage pre.preformatted {
-      margin: 0;
-      padding: 16px;
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-family: Consolas, Monaco, monospace;
-      font-size: 13px;
-      line-height: 1.55;
-      color: var(--textColor);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-env-box {
-      display: grid;
-      gap: 16px;
-      padding: 18px;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-env-item {
-      display: grid;
-      gap: 8px;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-env-label {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--labelTextColor);
-      font-weight: 700;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-env-item code,
-    #NexusPobreFlixConfigPage .nexus-env-file-row code {
-      padding: 3px 6px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--textColor);
-      font-family: Consolas, Monaco, monospace;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-env-files {
-      display: grid;
-      gap: 12px;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-env-file-row {
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      gap: 12px;
-      align-items: center;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-env-file-row span {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    #NexusPobreFlixConfigPage .ok {
-      color: var(--nexus-success);
-    }
-
-    #NexusPobreFlixConfigPage .warn {
-      color: var(--nexus-gold);
-    }
-
-    #NexusPobreFlixConfigPage .nexus-settings-page-host {
-      min-height: 360px;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-settings-page-host>#settings-modal.nexus-settings-page-shell {
-      display: block !important;
-      position: relative !important;
-      inset: auto !important;
-      padding: 0 !important;
-      background: transparent !important;
-      animation: none !important;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-settings-page-host>#settings-modal.nexus-settings-page-shell .settings-modal-content {
-      width: 100% !important;
-      max-width: none !important;
-      height: min(94vh, 980px) !important;
-      max-height: min(94vh, 980px) !important;
-      box-shadow: none !important;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-settings-page-host>#settings-modal.nexus-settings-page-shell .settings-modal-content h2 {
-      display: none !important;
-    }
-
-    #NexusPobreFlixConfigPage .nexus-settings-page-host>#settings-modal.nexus-settings-page-shell form,
-    #NexusPobreFlixConfigPage .nexus-settings-page-host>#settings-modal.nexus-settings-page-shell .settings-tabs,
-    #NexusPobreFlixConfigPage .nexus-settings-page-host>#settings-modal.nexus-settings-page-shell .settings-tab-content {
-      min-height: 0 !important;
-    }
-
-    @media (max-width: 900px) {
-
-      #NexusPobreFlixConfigPage .nexus-hero-card,
-      #NexusPobreFlixConfigPage .nexus-grid--split {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 720px) {
-      #NexusPobreFlixConfigPage .content-primary {
-        padding: 14px;
-      }
-
-      #NexusPobreFlixConfigPage .nexus-hero-card,
-      #NexusPobreFlixConfigPage .nexus-card {
-        padding: 18px;
-        border-radius: 18px;
-      }
-
-      #NexusPobreFlixConfigPage .buttonContainer {
-        flex-direction: column;
-      }
-
-      #NexusPobreFlixConfigPage .raised,
-      #NexusPobreFlixConfigPage .nexus-tab {
-        width: 100%;
-      }
-
-      #NexusPobreFlixConfigPage .nexus-status-row,
-      #NexusPobreFlixConfigPage .nexus-env-file-row {
-        grid-template-columns: 1fr;
-      }
-
-      #NexusPobreFlixConfigPage .nexus-status-value {
-        text-align: left;
-      }
-
-      #NexusPobreFlixConfigPage .nexus-settings-page-host>#settings-modal.nexus-settings-page-shell .settings-modal-content {
-        height: min(86vh, 1100px) !important;
-        max-height: min(86vh, 1100px) !important;
-      }
-    }
-  </style>
-  <script src="../Plugins/NexusPobreFlix/assets/ui.js" type="text/javascript" data-jf-no-translate="1"></script>
+#JMSFusionConfigPage {
+  --jms-accent: #7a5cff;
+  --jms-accent-strong: #5b3fd4;
+  --jms-accent-soft: rgba(122, 92, 255, 0.14);
+  --jms-gold: #7a5cff;
+  --jms-gold-soft: rgba(122, 92, 255, 0.12);
+  --jms-danger: #d64550;
+  --jms-danger-soft: rgba(214, 69, 80, 0.14);
+  --jms-success: #1f9d68;
+  --jms-success-soft: rgba(31, 157, 104, 0.14);
+  --jms-border: rgba(122, 140, 255, 0.24);
+  --jms-shadow: 0 24px 48px rgba(122, 92, 255, 0.12);
+  --jms-radius-xl: 24px;
+  --jms-radius-lg: 18px;
+  --jms-radius-md: 14px;
+}
+
+.theme-dark #JMSFusionConfigPage {
+  --jms-border: rgba(235, 245, 246, 0.12);
+  --jms-shadow: 0 24px 48px rgba(0, 0, 0, 0.32);
+}
+
+#JMSFusionConfigPage .content-primary {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+#JMSFusionConfigPage .jms-hero-card,
+#JMSFusionConfigPage .jms-card {
+  background: var(--cardBackgroundColor);
+  border: 1px solid var(--jms-border);
+  border-radius: var(--jms-radius-xl);
+  box-shadow: var(--jms-shadow);
+}
+
+#JMSFusionConfigPage .jms-hero-card {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
+  gap: 24px;
+  padding: 28px;
+  background-image:
+    radial-gradient(circle at top right, rgba(122, 92, 255, 0.16), transparent 32%),
+    radial-gradient(circle at left center, rgba(122, 92, 255, 0.15), transparent 38%);
+}
+
+#JMSFusionConfigPage .jms-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--jms-accent-strong);
+}
+
+#JMSFusionConfigPage .jms-eyebrow::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--jms-gold), var(--jms-accent));
+  box-shadow: 0 0 0 6px var(--jms-accent-soft);
+}
+
+#JMSFusionConfigPage #pageTitle {
+  margin: 14px 0 10px;
+  font-size: clamp(28px, 3vw, 42px);
+  line-height: 1.04;
+  color: var(--textColor);
+}
+
+#JMSFusionConfigPage #pageIntro {
+  margin: 0;
+  max-width: 760px;
+  color: var(--labelTextColor);
+  line-height: 1.7;
+  font-size: 15px;
+}
+
+#JMSFusionConfigPage #pageIntro code {
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--jms-accent-soft);
+  color: var(--textColor);
+}
+
+#JMSFusionConfigPage .jms-hero-meta {
+  display: grid;
+  gap: 14px;
+  align-content: center;
+}
+
+#JMSFusionConfigPage .jms-hero-pill {
+  padding: 16px 18px;
+  border-radius: var(--jms-radius-lg);
+  border: 1px solid var(--jms-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent);
+}
+
+#JMSFusionConfigPage .jms-hero-pill__label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--labelTextColor);
+}
+
+#JMSFusionConfigPage .jms-hero-pill strong {
+  display: block;
+  font-size: 16px;
+  color: var(--textColor);
+  word-break: break-word;
+}
+
+#JMSFusionConfigPage .jms-tabbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0 14px;
+}
+
+#JMSFusionConfigPage .jms-tab {
+  appearance: none;
+  border: 1px solid var(--jms-border);
+  border-radius: 999px;
+  background: var(--cardBackgroundColor);
+  color: var(--textColor);
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+#JMSFusionConfigPage .jms-tab:hover {
+  transform: translateY(-1px);
+  border-color: rgba(122, 92, 255, 0.35);
+}
+
+#JMSFusionConfigPage .jms-tab.is-active {
+  color: #ffffff;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--jms-accent-strong), var(--jms-accent));
+  box-shadow: 0 14px 30px rgba(122, 92, 255, 0.28);
+}
+
+#JMSFusionConfigPage .jms-panel {
+  margin-top: 10px;
+}
+
+#JMSFusionConfigPage .jms-panel[hidden] {
+  display: none !important;
+}
+
+#JMSFusionConfigPage .jms-grid {
+  display: grid;
+  gap: 18px;
+}
+
+#JMSFusionConfigPage .jms-grid--split {
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+}
+
+#JMSFusionConfigPage .jms-grid--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+#JMSFusionConfigPage .jms-card {
+  padding: 22px;
+}
+
+#JMSFusionConfigPage .jms-card-head {
+  margin-bottom: 18px;
+}
+
+#JMSFusionConfigPage .jms-card-head h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  color: var(--textColor);
+}
+
+#JMSFusionConfigPage .jms-card-head p {
+  margin: 0;
+  color: var(--labelTextColor);
+  line-height: 1.6;
+}
+
+#JMSFusionConfigPage .inputContainer {
+  margin-bottom: 16px;
+  padding: 18px;
+  border-radius: var(--jms-radius-lg);
+  border: 1px solid var(--jms-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+}
+
+#JMSFusionConfigPage .inputContainer:last-child {
+  margin-bottom: 0;
+}
+
+#JMSFusionConfigPage .inputLabel {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--textColor);
+  font-weight: 700;
+}
+
+#JMSFusionConfigPage .inputLabel--checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 0;
+}
+
+#JMSFusionConfigPage .inputLabel--checkbox input {
+  margin-top: 2px;
+}
+
+#JMSFusionConfigPage .emby-input {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--jms-border);
+  background: var(--inputBackgroundColor);
+  color: var(--textColor);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+#JMSFusionConfigPage .emby-input:focus {
+  outline: none;
+  border-color: rgba(122, 92, 255, 0.45);
+  box-shadow: 0 0 0 4px rgba(122, 92, 255, 0.14);
+}
+
+#JMSFusionConfigPage .fieldDescription {
+  margin-top: 10px;
+  color: var(--labelTextColor);
+  line-height: 1.55;
+  font-size: 13px;
+}
+
+#JMSFusionConfigPage #msg {
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background: var(--cardBackgroundColor);
+}
+
+#JMSFusionConfigPage #msg.ok {
+  color: var(--jms-success);
+  background: var(--jms-success-soft);
+  border-color: rgba(31, 157, 104, 0.22);
+}
+
+#JMSFusionConfigPage #msg.warn {
+  color: var(--jms-gold);
+  background: var(--jms-gold-soft);
+  border-color: rgba(240, 180, 41, 0.22);
+}
+
+#JMSFusionConfigPage #msg.err {
+  color: var(--jms-danger);
+  background: var(--jms-danger-soft);
+  border-color: rgba(214, 69, 80, 0.22);
+}
+
+#JMSFusionConfigPage .buttonContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+#JMSFusionConfigPage .buttonContainer--tight {
+  margin-bottom: 18px;
+}
+
+#JMSFusionConfigPage .raised {
+  appearance: none;
+  border: 1px solid var(--jms-border);
+  border-radius: 14px;
+  min-height: 46px;
+  padding: 11px 16px;
+  cursor: pointer;
+  font-weight: 700;
+  background: var(--buttonBackgroundColor);
+  color: var(--buttonTextColor);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+#JMSFusionConfigPage .raised:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(122, 92, 255, 0.12);
+  border-color: rgba(122, 92, 255, 0.3);
+}
+
+#JMSFusionConfigPage .button-submit {
+  color: #ffffff;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--jms-accent-strong), var(--jms-accent));
+}
+
+#JMSFusionConfigPage .jms-status-list {
+  display: grid;
+  gap: 12px;
+}
+
+#JMSFusionConfigPage .jms-status-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--jms-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+}
+
+#JMSFusionConfigPage .jms-status-label {
+  color: var(--textColor);
+  font-weight: 600;
+}
+
+#JMSFusionConfigPage .jms-status-value {
+  color: var(--labelTextColor);
+  text-align: right;
+}
+
+#JMSFusionConfigPage .jms-status-value code {
+  word-break: break-all;
+}
+
+#JMSFusionConfigPage .jms-inline-state,
+#JMSFusionConfigPage .jms-empty {
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px dashed var(--jms-border);
+  color: var(--labelTextColor);
+  line-height: 1.6;
+}
+
+#JMSFusionConfigPage .jms-inline-state.ok {
+  border-style: solid;
+  color: var(--jms-success);
+  background: var(--jms-success-soft);
+}
+
+#JMSFusionConfigPage .jms-inline-state.warn {
+  border-style: solid;
+  color: var(--jms-gold);
+  background: var(--jms-gold-soft);
+}
+
+#JMSFusionConfigPage .jms-inline-toggle {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--jms-border);
+}
+
+#JMSFusionConfigPage .jms-inline-toggle .inputLabel--checkbox,
+#JMSFusionConfigPage .jms-inline-toggle .fieldDescription {
+  color: inherit;
+}
+
+#JMSFusionConfigPage .jms-inline-toggle .fieldDescription {
+  margin-top: 0;
+  opacity: 0.92;
+}
+
+#JMSFusionConfigPage .jms-empty--error {
+  border-style: solid;
+  color: var(--jms-danger);
+  background: var(--jms-danger-soft);
+}
+
+#JMSFusionConfigPage .jms-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+#JMSFusionConfigPage .jms-badge.is-good {
+  color: var(--jms-success);
+  background: var(--jms-success-soft);
+}
+
+#JMSFusionConfigPage .jms-badge.is-bad {
+  color: var(--jms-danger);
+  background: var(--jms-danger-soft);
+}
+
+#JMSFusionConfigPage .jms-badge.is-warn {
+  color: var(--jms-gold);
+  background: var(--jms-gold-soft);
+}
+
+#JMSFusionConfigPage .jms-code-shell,
+#JMSFusionConfigPage .jms-env-box,
+#JMSFusionConfigPage pre.preformatted {
+  border-radius: 16px;
+  border: 1px solid var(--jms-border);
+  background: var(--inputBackgroundColor);
+}
+
+#JMSFusionConfigPage .jms-code-shell {
+  overflow: hidden;
+}
+
+#JMSFusionConfigPage .jms-code-shell pre,
+#JMSFusionConfigPage .jms-code-shell code,
+#JMSFusionConfigPage pre.preformatted {
+  margin: 0;
+  padding: 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: Consolas, Monaco, monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--textColor);
+}
+
+#JMSFusionConfigPage .jms-env-box {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+#JMSFusionConfigPage .jms-env-item {
+  display: grid;
+  gap: 8px;
+}
+
+#JMSFusionConfigPage .jms-env-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--labelTextColor);
+  font-weight: 700;
+}
+
+#JMSFusionConfigPage .jms-env-item code,
+#JMSFusionConfigPage .jms-env-file-row code {
+  padding: 3px 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--textColor);
+  font-family: Consolas, Monaco, monospace;
+}
+
+#JMSFusionConfigPage .jms-env-files {
+  display: grid;
+  gap: 12px;
+}
+
+#JMSFusionConfigPage .jms-env-file-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+#JMSFusionConfigPage .jms-env-file-row span {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#JMSFusionConfigPage .ok {
+  color: var(--jms-success);
+}
+
+#JMSFusionConfigPage .warn {
+  color: var(--jms-gold);
+}
+
+#JMSFusionConfigPage .jms-settings-page-host {
+  min-height: 360px;
+}
+
+#JMSFusionConfigPage .jms-settings-page-host > #settings-modal.jms-settings-page-shell {
+  display: block !important;
+  position: relative !important;
+  inset: auto !important;
+  padding: 0 !important;
+  background: transparent !important;
+  animation: none !important;
+}
+
+#JMSFusionConfigPage .jms-settings-page-host > #settings-modal.jms-settings-page-shell .settings-modal-content {
+  width: 100% !important;
+  max-width: none !important;
+  height: min(94vh, 980px) !important;
+  max-height: min(94vh, 980px) !important;
+  box-shadow: none !important;
+}
+
+#JMSFusionConfigPage .jms-settings-page-host > #settings-modal.jms-settings-page-shell .settings-modal-content h2 {
+  display: none !important;
+}
+
+#JMSFusionConfigPage .jms-settings-page-host > #settings-modal.jms-settings-page-shell form,
+#JMSFusionConfigPage .jms-settings-page-host > #settings-modal.jms-settings-page-shell .settings-tabs,
+#JMSFusionConfigPage .jms-settings-page-host > #settings-modal.jms-settings-page-shell .settings-tab-content {
+  min-height: 0 !important;
+}
+
+@media (max-width: 900px) {
+  #JMSFusionConfigPage .jms-hero-card,
+  #JMSFusionConfigPage .jms-grid--split {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  #JMSFusionConfigPage .content-primary {
+    padding: 14px;
+  }
+
+  #JMSFusionConfigPage .jms-hero-card,
+  #JMSFusionConfigPage .jms-card {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  #JMSFusionConfigPage .buttonContainer {
+    flex-direction: column;
+  }
+
+  #JMSFusionConfigPage .raised,
+  #JMSFusionConfigPage .jms-tab {
+    width: 100%;
+  }
+
+  #JMSFusionConfigPage .jms-status-row,
+  #JMSFusionConfigPage .jms-env-file-row {
+    grid-template-columns: 1fr;
+  }
+
+  #JMSFusionConfigPage .jms-status-value {
+    text-align: left;
+  }
+
+  #JMSFusionConfigPage .jms-settings-page-host > #settings-modal.jms-settings-page-shell .settings-modal-content {
+    height: min(86vh, 1100px) !important;
+    max-height: min(86vh, 1100px) !important;
+  }
+}
+</style>
+  <script src="../Plugins/JMSFusion/assets/UiJs" type="text/javascript" data-jf-no-translate="1"></script>
 </div>

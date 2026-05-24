@@ -1,4 +1,4 @@
-import { makeApiRequest, updateFavoriteStatus, getSessionInfo, fetchItemDetails } from "../../Plugins/NexusPobreFlix/runtime/api.js";
+import { makeApiRequest, updateFavoriteStatus, getSessionInfo, fetchItemDetails } from "../../Plugins/JMSFusion/runtime/api.js";
 import { getConfig } from "./config.js";
 import { getVideoQualityText } from "./containerUtils.js";
 import { tryOpenTrailerPopover, hideTrailerPopover } from "./studioTrailerPopover.js";
@@ -560,7 +560,7 @@ function fillMiniContent(pop, itemBase, details) {
       : null;
 
     if (videoStream) {
-      const html = getVideoQualityText(videoStream);
+      const html = getVideoQualityText(videoStream, item.MediaStreams);
       if (html && html.trim().length) {
         qualityEl.innerHTML = html;
         qualityEl.style.display = "";

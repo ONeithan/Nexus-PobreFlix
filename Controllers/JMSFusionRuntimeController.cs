@@ -4,12 +4,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
+namespace Jellyfin.Plugin.JMSFusion.Controllers
 {
     [ApiController]
-    [Route("NexusPobreFlix/runtime")]
-    [Route("Plugins/NexusPobreFlix/runtime")]
-    public class NexusPobreFlixRuntimeController : ControllerBase
+    [Route("JMSFusion/runtime")]
+    [Route("Plugins/JMSFusion/runtime")]
+    public class JMSFusionRuntimeController : ControllerBase
     {
         private static readonly IReadOnlyDictionary<string, string> ScriptResourceMap =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -19,9 +19,9 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                 ["storage-preload"] = "RuntimeModules.storagePreload.js"
             };
 
-        private readonly ILogger<NexusPobreFlixRuntimeController> _logger;
+        private readonly ILogger<JMSFusionRuntimeController> _logger;
 
-        public NexusPobreFlixRuntimeController(ILogger<NexusPobreFlixRuntimeController> logger)
+        public JMSFusionRuntimeController(ILogger<JMSFusionRuntimeController> logger)
         {
             _logger = logger;
         }
@@ -41,8 +41,8 @@ namespace Jellyfin.Plugin.NexusPobreFlix.Controllers
                     return StatusCode(304);
                 }
 
-                var asm = typeof(NexusPobreFlixPlugin).Assembly;
-                var ns = typeof(NexusPobreFlixPlugin).Namespace;
+                var asm = typeof(JMSFusionPlugin).Assembly;
+                var ns = typeof(JMSFusionPlugin).Namespace;
                 var resourceName = $"{ns}.{resourceSuffix}";
 
                 using var stream = asm.GetManifestResourceStream(resourceName);

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Net.Http.Headers;
 
-namespace Jellyfin.Plugin.NexusPobreFlix
+namespace Jellyfin.Plugin.JMSFusion
 {
     internal static class AssetVersioning
     {
@@ -35,34 +35,34 @@ namespace Jellyfin.Plugin.NexusPobreFlix
 <script>
 (function () {
   var root = document.documentElement;
-  window.__NEXUS_POBREFLIX_ASSET_VERSION__ = "{{version}}";
+  window.__JMS_ASSET_VERSION__ = "{{version}}";
   if (root) {
-    root.setAttribute("data-nexus-asset-version", "{{version}}");
+    root.setAttribute("data-jms-asset-version", "{{version}}");
   }
 
   var STORAGE_KEY = "enableCustomSplashScreen";
-  var STYLE_ID = "nexus-boot-splash-style";
-  var LAYER_ID = "nexus-boot-splash-layer";
-  var SHELL_ID = "nexus-boot-splash-shell";
-  var LOGO_ID = "nexus-boot-splash-logo";
-  var TITLE_ID = "nexus-boot-splash-title";
-  var CAPTION_ID = "nexus-boot-splash-caption-line";
-  var PROGRESS_PANEL_ID = "nexus-boot-splash-progress";
-  var PROGRESS_ECHO_ID = "nexus-boot-splash-progress-echo";
-  var PROGRESS_FILL_ID = "nexus-boot-splash-progress-fill";
-  var PROGRESS_ORB_ID = "nexus-boot-splash-progress-orb";
-  var PROGRESS_VALUE_ID = "nexus-boot-splash-progress-value";
-  var PROGRESS_STAGE_ID = "nexus-boot-splash-progress-stage";
-  var PROGRESS_DETAIL_ID = "nexus-boot-splash-progress-detail";
-  var ACTIVE_ATTR = "data-nexus-custom-splash";
-  var HIDDEN_ATTR = "data-nexus-custom-splash-hidden";
-  var TITLE_ATTR = "data-nexus-custom-splash-title";
-  var CAPTION_ATTR = "data-nexus-custom-splash-caption";
-  var REASON_ATTR = "data-nexus-custom-splash-reason";
-  var PROGRESS_API_KEY = "__NEXUS_CUSTOM_SPLASH_PROGRESS__";
+  var STYLE_ID = "jms-boot-splash-style";
+  var LAYER_ID = "jms-boot-splash-layer";
+  var SHELL_ID = "jms-boot-splash-shell";
+  var LOGO_ID = "jms-boot-splash-logo";
+  var TITLE_ID = "jms-boot-splash-title";
+  var CAPTION_ID = "jms-boot-splash-caption-line";
+  var PROGRESS_PANEL_ID = "jms-boot-splash-progress";
+  var PROGRESS_ECHO_ID = "jms-boot-splash-progress-echo";
+  var PROGRESS_FILL_ID = "jms-boot-splash-progress-fill";
+  var PROGRESS_ORB_ID = "jms-boot-splash-progress-orb";
+  var PROGRESS_VALUE_ID = "jms-boot-splash-progress-value";
+  var PROGRESS_STAGE_ID = "jms-boot-splash-progress-stage";
+  var PROGRESS_DETAIL_ID = "jms-boot-splash-progress-detail";
+  var ACTIVE_ATTR = "data-jms-custom-splash";
+  var HIDDEN_ATTR = "data-jms-custom-splash-hidden";
+  var TITLE_ATTR = "data-jms-custom-splash-title";
+  var CAPTION_ATTR = "data-jms-custom-splash-caption";
+  var REASON_ATTR = "data-jms-custom-splash-reason";
+  var PROGRESS_API_KEY = "__JMS_CUSTOM_SPLASH_PROGRESS__";
   var FALLBACK_TIMEOUT_MS = 16000;
   var FALLBACK_CLEANUP_MS = 460;
-  var PING_PATHS = ["/NexusPobreFlix/ping", "/Plugins/NexusPobreFlix/ping"];
+  var PING_PATHS = ["/JMSFusion/ping", "/Plugins/JMSFusion/ping"];
 
   function toCssContent(value) {
     return '"' + String(value || "")
@@ -121,7 +121,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix
     if (!raw) return "";
 
     var suffix = "_ts=" + Date.now();
-    var version = String(window.__NEXUS_POBREFLIX_ASSET_VERSION__ || "").trim();
+    var version = String(window.__JMS_ASSET_VERSION__ || "").trim();
     if (version) {
       suffix += "&v=" + encodeURIComponent(version);
     }
@@ -130,6 +130,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix
   }
 
   function canReachPluginPresenceSync() {
+    // Fail closed when cached bootstrap code survives after the plugin is gone.
     for (var i = 0; i < PING_PATHS.length; i += 1) {
       try {
         var xhr = new XMLHttpRequest();
@@ -170,8 +171,13 @@ namespace Jellyfin.Plugin.NexusPobreFlix
     for (var i = 0; i < candidates.length; i += 1) {
       var value = String(candidates[i] || "").toLowerCase();
       var base = value.split(/[-_]/)[0];
-      if (value === "pt-br" || value === "por" || base === "pt") return "por";
+      if (value === "por" || value === "ptb" || base === "pt") return "por";
+      if (value === "tur" || base === "tr") return "tur";
       if (value === "eng" || base === "en") return "eng";
+      if (value === "deu" || base === "de") return "deu";
+      if (value === "fre" || value === "fra" || base === "fr") return "fre";
+      if (value === "spa" || base === "es") return "spa";
+      if (value === "rus" || base === "ru") return "rus";
     }
 
     return "por";
@@ -179,6 +185,12 @@ namespace Jellyfin.Plugin.NexusPobreFlix
 
   var lang = "";
   try {
+    if (window.localStorage) {
+      var localLang = localStorage.getItem("defaultLanguage");
+      if (!localLang || localLang === "null" || localLang === "undefined") {
+        localStorage.setItem("defaultLanguage", "por");
+      }
+    }
     lang = String(
       (window.localStorage && localStorage.getItem("defaultLanguage")) ||
       root.getAttribute("lang") ||
@@ -191,34 +203,59 @@ namespace Jellyfin.Plugin.NexusPobreFlix
   function resolveLangKey(raw) {
     var value = String(raw || "").toLowerCase();
     if (!value || value === "auto") return detectBrowserLangKey();
-    if (value === "por" || value === "eng") {
+    if (value === "por" || value === "tur" || value === "eng" || value === "deu" || value === "fre" || value === "spa" || value === "rus") {
       return value;
     }
+    if (value === "fra") return "fre";
     var base = value.split(/[-_]/)[0];
     if (base === "pt") return "por";
+    if (base === "tr") return "tur";
     if (base === "en") return "eng";
+    if (base === "de") return "deu";
+    if (base === "fr") return "fre";
+    if (base === "es") return "spa";
+    if (base === "ru") return "rus";
     return detectBrowserLangKey();
   }
 
   var captions = {
     por: "Nexus PobreFlix está iniciando",
-    eng: "Nexus PobreFlix is starting"
+    tur: "Nexus PobreFlix hazırlanıyor",
+    eng: "Nexus PobreFlix is starting",
+    deu: "Nexus PobreFlix wird vorbereitet",
+    fre: "Nexus PobreFlix se prépare",
+    spa: "Nexus PobreFlix se está preparando",
+    rus: "Nexus PobreFlix подготавливается"
   };
 
   var splashLocale = {
     por: {
-      stageLock: "BLOQUEIO",
-      detailLock: "Camada shell está sendo fixada",
-      stageStructure: "NÚCLEO",
-      detailStructure: "Núcleo da interface entrando em sincronia",
-      stageTakeover: "CONTROLE",
-      detailTakeover: "Motor {title} assumindo o controle",
-      stageFlow: "FLUXO",
-      detailFlow: "Métricas de carregamento em tempo real sincronizando",
+      stageLock: "INICIANDO",
+      detailLock: "Camada de interface sendo fixada",
+      stageStructure: "ESTRUTURA",
+      detailStructure: "Sincronizando o núcleo do layout",
+      stageTakeover: "CARREGANDO",
+      detailTakeover: "O motor {title} está assumindo o controle",
+      stageFlow: "PROCESSANDO",
+      detailFlow: "Sincronizando métricas e carregamento em tempo real",
       stageFallback: "RESERVA",
-      detailFallback: "Retornando para a interface Jellyfin",
+      detailFallback: "Redirecionando para a interface Jellyfin padrão",
       stageReady: "PRONTO",
-      detailReady: "{title} online"
+      detailReady: "{title} está online e pronto!"
+    },
+    tur: {
+      stageLock: "KİLİT",
+      detailLock: "Kabuk katmanı sabitleniyor",
+      stageStructure: "OMURGA",
+      detailStructure: "Arayüz omurgası senkrona giriyor",
+      stageTakeover: "DEVRALMA",
+      detailTakeover: "{title} motoru kontrolü alıyor",
+      stageFlow: "AKIŞ",
+      detailFlow: "Gerçek zamanlı yükleme metrikleri eşleniyor",
+      stageFallback: "GEÇİŞ",
+      detailFallback: "Varsayılan Jellyfin arayüzü açılıyor",
+      stageReady: "HAZIR",
+      detailReady: "{title} çevrimiçi"
     },
     eng: {
       stageLock: "LOCK",
@@ -233,6 +270,62 @@ namespace Jellyfin.Plugin.NexusPobreFlix
       detailFallback: "Falling back to the Jellyfin interface",
       stageReady: "READY",
       detailReady: "{title} online"
+    },
+    deu: {
+      stageLock: "SPERRE",
+      detailLock: "Die Shell-Schicht verriegelt sich",
+      stageStructure: "KERN",
+      detailStructure: "Der UI-Kern geht in den Sync",
+      stageTakeover: "UEBERNAHME",
+      detailTakeover: "{title} uebernimmt die Kontrolle",
+      stageFlow: "FLUSS",
+      detailFlow: "Echtzeit-Lademetriken werden abgeglichen",
+      stageFallback: "RUECKFALL",
+      detailFallback: "Wechsel zur Jellyfin-Oberflaeche",
+      stageReady: "BEREIT",
+      detailReady: "{title} ist online"
+    },
+    fre: {
+      stageLock: "VERROU",
+      detailLock: "La couche shell se verrouille",
+      stageStructure: "NOYAU",
+      detailStructure: "Le noyau de l'interface entre en synchro",
+      stageTakeover: "PRISE",
+      detailTakeover: "Le moteur {title} prend le controle",
+      stageFlow: "FLUX",
+      detailFlow: "Les metriques de chargement en temps reel se synchronisent",
+      stageFallback: "REPLI",
+      detailFallback: "Retour a l'interface Jellyfin",
+      stageReady: "PRET",
+      detailReady: "{title} est en ligne"
+    },
+    spa: {
+      stageLock: "BLOQUEO",
+      detailLock: "La capa shell se esta fijando",
+      stageStructure: "NUCLEO",
+      detailStructure: "El nucleo de la interfaz entra en sincronizacion",
+      stageTakeover: "CONTROL",
+      detailTakeover: "El motor de {title} toma el control",
+      stageFlow: "FLUJO",
+      detailFlow: "Las metricas de carga en tiempo real se estan sincronizando",
+      stageFallback: "RESPALDO",
+      detailFallback: "Volviendo a la interfaz de Jellyfin",
+      stageReady: "LISTO",
+      detailReady: "{title} en linea"
+    },
+    rus: {
+      stageLock: "БЛОК",
+      detailLock: "Оболочка фиксируется",
+      stageStructure: "ЯДРО",
+      detailStructure: "Ядро интерфейса входит в синхронизацию",
+      stageTakeover: "ЗАХВАТ",
+      detailTakeover: "Движок {title} берёт управление",
+      stageFlow: "ПОТОК",
+      detailFlow: "Метрики загрузки в реальном времени синхронизируются",
+      stageFallback: "РЕЗЕРВ",
+      detailFallback: "Переход к интерфейсу Jellyfin",
+      stageReady: "ГОТОВО",
+      detailReady: "{title} в сети"
     }
   };
 
@@ -243,11 +336,41 @@ namespace Jellyfin.Plugin.NexusPobreFlix
       evening: "Boa noite",
       night: "Olá"
     },
+    tur: {
+      morning: "Günaydın",
+      afternoon: "Tünaydın",
+      evening: "İyi akşamlar",
+      night: "İyi geceler"
+    },
     eng: {
       morning: "Good morning",
       afternoon: "Good afternoon",
       evening: "Good evening",
       night: "Hello"
+    },
+    deu: {
+      morning: "Guten Morgen",
+      afternoon: "Guten Tag",
+      evening: "Guten Abend",
+      night: "Hallo"
+    },
+    fre: {
+      morning: "Bonjour",
+      afternoon: "Bon après-midi",
+      evening: "Bonsoir",
+      night: "Bonsoir"
+    },
+    spa: {
+      morning: "Buenos días",
+      afternoon: "Buenas tardes",
+      evening: "Buenas noches",
+      night: "Buenas noches"
+    },
+    rus: {
+      morning: "Доброе утро",
+      afternoon: "Добрый день",
+      evening: "Добрый вечер",
+      night: "Здравствуйте"
     }
   };
 
@@ -285,7 +408,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix
     var safeUserName = text(userName);
     if (!safeUserName) return customTitle;
 
-    var greetingPack = greetingLocale[resolvedLang] || greetingLocale.eng;
+    var greetingPack = greetingLocale[resolvedLang] || greetingLocale.eng || greetingLocale.tur;
     var greetingPart = resolveGreetingPartByHour(getSplashHourNow());
     var greetingText = text(greetingPack && greetingPack[greetingPart]);
     return text(greetingText ? greetingText + " " + safeUserName : safeUserName, customTitle);
@@ -371,8 +494,8 @@ namespace Jellyfin.Plugin.NexusPobreFlix
   } catch {}
 
   var resolvedLang = resolveLangKey(lang);
-  var localeCopy = splashLocale[resolvedLang] || splashLocale.por;
-  var captionTemplate = captions[resolvedLang] || captions.por || "Nexus PobreFlix está iniciando";
+  var localeCopy = splashLocale[resolvedLang] || splashLocale.eng;
+  var captionTemplate = captions[resolvedLang] || captions.eng || "Nexus PobreFlix está iniciando";
   var caption = captionTemplate.indexOf(defaultTitle) !== -1
     ? captionTemplate.replace(defaultTitle, customTitle)
     : captionTemplate;
@@ -382,8 +505,8 @@ namespace Jellyfin.Plugin.NexusPobreFlix
   root.setAttribute(ACTIVE_ATTR, "1");
   root.setAttribute(TITLE_ATTR, displayTitle);
   root.setAttribute(CAPTION_ATTR, caption);
-  root.style.setProperty("--nexus-custom-splash-title", toCssContent(displayTitle));
-  root.style.setProperty("--nexus-custom-splash-caption", toCssContent(caption));
+  root.style.setProperty("--jms-custom-splash-title", toCssContent(displayTitle));
+  root.style.setProperty("--jms-custom-splash-caption", toCssContent(caption));
 
   function ensureMountNode() {
     return document.body || root;
@@ -409,7 +532,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix
       logo.setAttribute("role", "img");
 
       var copyWrap = document.createElement("div");
-      copyWrap.className = "nexus-boot-splash-copy";
+      copyWrap.className = "jms-boot-splash-copy";
 
       var titleEl = document.createElement("div");
       titleEl.id = TITLE_ID;
@@ -424,7 +547,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix
       progressPanel.id = PROGRESS_PANEL_ID;
 
       var head = document.createElement("div");
-      head.className = "nexus-boot-splash-progress-head";
+      head.className = "jms-boot-splash-progress-head";
 
       var stageEl = document.createElement("div");
       stageEl.id = PROGRESS_STAGE_ID;
@@ -436,7 +559,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix
       head.appendChild(valueEl);
 
       var track = document.createElement("div");
-      track.className = "nexus-boot-splash-track";
+      track.className = "jms-boot-splash-track";
 
       var echo = document.createElement("div");
       echo.id = PROGRESS_ECHO_ID;
@@ -491,7 +614,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix
       ? text(nextTitle, buildSplashDisplayTitle(splashUserName))
       : buildSplashDisplayTitle(nextTitle);
     root.setAttribute(TITLE_ATTR, displayTitle);
-    root.style.setProperty("--nexus-custom-splash-title", toCssContent(displayTitle));
+    root.style.setProperty("--jms-custom-splash-title", toCssContent(displayTitle));
     ensureSplashLayer(displayTitle, caption, customTitle);
   }
 
@@ -584,8 +707,8 @@ namespace Jellyfin.Plugin.NexusPobreFlix
     root.removeAttribute(HIDDEN_ATTR);
     root.removeAttribute(TITLE_ATTR);
     root.removeAttribute(CAPTION_ATTR);
-    root.style.removeProperty("--nexus-custom-splash-title");
-    root.style.removeProperty("--nexus-custom-splash-caption");
+    root.style.removeProperty("--jms-custom-splash-title");
+    root.style.removeProperty("--jms-custom-splash-caption");
 
     var activeLayer = document.getElementById(LAYER_ID);
     if (activeLayer && activeLayer.parentNode) {
@@ -602,7 +725,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix
     if (!activeLayer) return;
 
     var pct = Math.round(clamp01(progressState.current) * 100);
-    activeLayer.style.setProperty("--nexus-splash-progress", clamp01(progressState.current).toFixed(4));
+    activeLayer.style.setProperty("--jms-splash-progress", clamp01(progressState.current).toFixed(4));
 
     var valueEl = activeLayer.querySelector("#" + PROGRESS_VALUE_ID);
     if (valueEl) {
@@ -736,7 +859,7 @@ namespace Jellyfin.Plugin.NexusPobreFlix
       customTitle = nextTitle;
       caption = nextCaption;
       root.setAttribute(CAPTION_ATTR, nextCaption);
-      root.style.setProperty("--nexus-custom-splash-caption", toCssContent(nextCaption));
+      root.style.setProperty("--jms-custom-splash-caption", toCssContent(nextCaption));
       if (nextDisplayTitle) {
         syncDisplayedTitle(nextDisplayTitle, { raw: true });
       } else {
@@ -801,24 +924,24 @@ namespace Jellyfin.Plugin.NexusPobreFlix
     var style = document.createElement("style");
     style.id = STYLE_ID;
     style.textContent = `
-html[data-nexus-custom-splash="1"] {
+html[data-jms-custom-splash="1"] {
   background: #05070b !important;
 }
-html[data-nexus-custom-splash="1"] #reactRoot {
+html[data-jms-custom-splash="1"] #reactRoot {
   transition: opacity 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-html[data-nexus-custom-splash="1"]:not([data-nexus-custom-splash-hidden="1"]) body {
+html[data-jms-custom-splash="1"]:not([data-jms-custom-splash-hidden="1"]) body {
   overflow: hidden !important;
 }
-html[data-nexus-custom-splash="1"]:not([data-nexus-custom-splash-hidden="1"]) #reactRoot,
-html[data-nexus-custom-splash="1"]:not([data-nexus-custom-splash-hidden="1"]) #reactRoot .splashLogo {
+html[data-jms-custom-splash="1"]:not([data-jms-custom-splash-hidden="1"]) #reactRoot,
+html[data-jms-custom-splash="1"]:not([data-jms-custom-splash-hidden="1"]) #reactRoot .splashLogo {
   opacity: 0 !important;
   visibility: hidden !important;
 }
-html[data-nexus-custom-splash="1"] #${LAYER_ID} {
-  --nexus-splash-progress: 0.04;
-  --nexus-splash-font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --nexus-splash-font-display: var(--nexus-splash-font-ui);
+html[data-jms-custom-splash="1"] #${LAYER_ID} {
+  --jms-splash-progress: 0.04;
+  --jms-splash-font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --jms-splash-font-display: var(--jms-splash-font-ui);
   position: fixed;
   inset: 0;
   z-index: 2147483646;
@@ -832,24 +955,24 @@ html[data-nexus-custom-splash="1"] #${LAYER_ID} {
   background: linear-gradient(155deg, rgba(4, 8, 14, 0.98) 0%, rgba(6, 10, 18, 0.94) 46%, rgba(2, 4, 6, 0.98) 100%);
   transition: opacity 420ms ease, transform 420ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 420ms;
 }
-html[data-nexus-custom-splash="1"] #${LAYER_ID}::before,
-html[data-nexus-custom-splash="1"] #${LAYER_ID}::after {
+html[data-jms-custom-splash="1"] #${LAYER_ID}::before,
+html[data-jms-custom-splash="1"] #${LAYER_ID}::after {
   position: fixed;
   inset: 0;
   content: "";
   pointer-events: none;
 }
-html[data-nexus-custom-splash="1"] #${LAYER_ID}::before {
+html[data-jms-custom-splash="1"] #${LAYER_ID}::before {
   inset: -14%;
   background:
-    radial-gradient(circle at 16% 18%, rgba(123, 47, 190, 0.34), transparent 26%),
-    radial-gradient(circle at 82% 10%, rgba(175, 82, 255, 0.18), transparent 24%),
-    radial-gradient(circle at 54% 78%, rgba(123, 47, 190, 0.18), transparent 20%),
+    radial-gradient(circle at 16% 18%, rgba(122, 92, 255, 0.36), transparent 26%),
+    radial-gradient(circle at 82% 10%, rgba(192, 132, 252, 0.22), transparent 24%),
+    radial-gradient(circle at 54% 78%, rgba(99, 102, 241, 0.2), transparent 20%),
     linear-gradient(120deg, rgba(255, 255, 255, 0.02), transparent 32%, rgba(255, 255, 255, 0.02) 68%, transparent);
   filter: blur(18px) saturate(132%);
-  animation: nexusBootSplashNebula 6200ms ease-in-out infinite;
+  animation: jmsBootSplashNebula 6200ms ease-in-out infinite;
 }
-html[data-nexus-custom-splash="1"] #${LAYER_ID}::after {
+html[data-jms-custom-splash="1"] #${LAYER_ID}::after {
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 100%),
     linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 100%);
@@ -857,7 +980,7 @@ html[data-nexus-custom-splash="1"] #${LAYER_ID}::after {
   opacity: 0.2;
   mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.92), transparent 84%);
 }
-html[data-nexus-custom-splash="1"] #${SHELL_ID} {
+html[data-jms-custom-splash="1"] #${SHELL_ID} {
   position: relative;
   z-index: 1;
   box-sizing: border-box;
@@ -869,18 +992,18 @@ html[data-nexus-custom-splash="1"] #${SHELL_ID} {
   gap: 18px;
   border-radius: 30px;
   background:
-    linear-gradient(160deg, rgba(14, 22, 36, 0.9), rgba(7, 13, 22, 0.72)),
-    radial-gradient(circle at top, rgba(123, 47, 190, 0.12), transparent 58%);
-  border: 1px solid rgba(123, 47, 190, 0.14);
+    linear-gradient(160deg, rgba(16, 12, 38, 0.94), rgba(8, 6, 20, 0.8)),
+    radial-gradient(circle at top, rgba(122, 92, 255, 0.16), transparent 58%);
+  border: 1px solid rgba(157, 133, 255, 0.18);
   box-shadow:
     0 28px 84px rgba(0, 0, 0, 0.52),
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -20px 48px rgba(6, 16, 28, 0.4);
+    inset 0 -20px 48px rgba(12, 8, 28, 0.4);
   backdrop-filter: blur(18px) saturate(140%);
   transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1), opacity 420ms ease;
-  animation: nexusBootSplashShellFloat 4200ms ease-in-out infinite;
+  animation: jmsBootSplashShellFloat 4200ms ease-in-out infinite;
 }
-html[data-nexus-custom-splash="1"] #${SHELL_ID}::before {
+html[data-jms-custom-splash="1"] #${SHELL_ID}::before {
   content: "";
   position: absolute;
   inset: 1px;
@@ -888,7 +1011,7 @@ html[data-nexus-custom-splash="1"] #${SHELL_ID}::before {
   border: 1px solid rgba(255, 255, 255, 0.04);
   pointer-events: none;
 }
-html[data-nexus-custom-splash="1"] #${LOGO_ID} {
+html[data-jms-custom-splash="1"] #${LOGO_ID} {
   position: static !important;
   inset: auto !important;
   left: auto !important;
@@ -909,16 +1032,17 @@ html[data-nexus-custom-splash="1"] #${LOGO_ID} {
   padding: 0 !important;
   opacity: 1;
   visibility: visible;
+  background-image: url("../Plugins/JMSFusion/assets/LogoPng") !important;
   background-position: center center !important;
   background-repeat: no-repeat !important;
   background-size: contain !important;
   filter:
     drop-shadow(0 20px 40px rgba(0, 0, 0, 0.46))
-    drop-shadow(0 0 32px rgba(123, 47, 190, 0.2));
+    drop-shadow(0 0 32px rgba(122, 92, 255, 0.4));
   transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1), opacity 420ms ease;
   transform: none !important;
 }
-html[data-nexus-custom-splash="1"] .nexus-boot-splash-copy {
+html[data-jms-custom-splash="1"] .jms-boot-splash-copy {
   box-sizing: border-box;
   position: relative;
   z-index: 1;
@@ -930,29 +1054,29 @@ html[data-nexus-custom-splash="1"] .nexus-boot-splash-copy {
   text-align: center;
   justify-items: center;
 }
-html[data-nexus-custom-splash="1"] #${TITLE_ID} {
-  font-family: var(--nexus-splash-font-display);
+html[data-jms-custom-splash="1"] #${TITLE_ID} {
+  font-family: var(--jms-splash-font-display);
   font-weight: 600;
   font-size: 13px;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  background: linear-gradient(135deg, rgba(175, 82, 255, 0.9), rgba(123, 47, 190, 0.7));
+  background: linear-gradient(135deg, rgba(200, 180, 255, 0.95), rgba(150, 130, 220, 0.8));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
-html[data-nexus-custom-splash="1"] #${CAPTION_ID} {
-  font-family: var(--nexus-splash-font-ui);
+html[data-jms-custom-splash="1"] #${CAPTION_ID} {
+  font-family: var(--jms-splash-font-ui);
   font-weight: 500;
   font-size: 15px;
   letter-spacing: -0.01em;
-  color: rgba(220, 235, 255, 0.95);
+  color: rgba(235, 220, 255, 0.95);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   max-width: min(100%, 400px);
   line-height: 1.4;
 }
-html[data-nexus-custom-splash="1"] #${PROGRESS_PANEL_ID} {
+html[data-jms-custom-splash="1"] #${PROGRESS_PANEL_ID} {
   box-sizing: border-box;
   width: min(100%, 420px);
   max-width: 100%;
@@ -960,37 +1084,37 @@ html[data-nexus-custom-splash="1"] #${PROGRESS_PANEL_ID} {
   display: grid;
   gap: 10px;
 }
-html[data-nexus-custom-splash="1"] .nexus-boot-splash-progress-head {
+html[data-jms-custom-splash="1"] .jms-boot-splash-progress-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   min-width: 0;
 }
-html[data-nexus-custom-splash="1"] #${PROGRESS_STAGE_ID} {
-  color: rgba(175, 82, 255, 0.86);
-  font: 700 11px/1.2 var(--nexus-splash-font-ui);
+html[data-jms-custom-splash="1"] #${PROGRESS_STAGE_ID} {
+  color: rgba(192, 176, 255, 0.92);
+  font: 700 11px/1.2 var(--jms-splash-font-ui);
   letter-spacing: 0.16em;
   min-width: 0;
   overflow-wrap: anywhere;
 }
-html[data-nexus-custom-splash="1"] #${PROGRESS_VALUE_ID} {
+html[data-jms-custom-splash="1"] #${PROGRESS_VALUE_ID} {
   box-sizing: border-box;
   flex: 0 0 auto;
   min-width: 68px;
   padding: 8px 12px;
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(11, 24, 44, 0.92), rgba(14, 44, 68, 0.72));
-  border: 1px solid rgba(123, 47, 190, 0.18);
+  background: linear-gradient(135deg, rgba(16, 10, 36, 0.94), rgba(28, 16, 68, 0.8));
+  border: 1px solid rgba(157, 133, 255, 0.24);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 12px 28px rgba(5, 14, 25, 0.36);
-  color: rgba(239, 247, 255, 0.94);
-  font: 700 11px/1 var(--nexus-splash-font-ui);
+    0 12px 28px rgba(12, 8, 28, 0.36);
+  color: rgba(243, 235, 255, 0.96);
+  font: 700 11px/1 var(--jms-splash-font-ui);
   letter-spacing: 0.14em;
   text-align: center;
 }
-html[data-nexus-custom-splash="1"] .nexus-boot-splash-track {
+html[data-jms-custom-splash="1"] .jms-boot-splash-track {
   position: relative;
   height: 18px;
   overflow: hidden;
@@ -999,12 +1123,12 @@ html[data-nexus-custom-splash="1"] .nexus-boot-splash-track {
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
     rgba(6, 11, 18, 0.92);
-  border: 1px solid rgba(123, 47, 190, 0.12);
+  border: 1px solid rgba(157, 133, 255, 0.16);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 -8px 18px rgba(0, 0, 0, 0.38);
 }
-html[data-nexus-custom-splash="1"] .nexus-boot-splash-track::before {
+html[data-jms-custom-splash="1"] .jms-boot-splash-track::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -1015,29 +1139,29 @@ html[data-nexus-custom-splash="1"] .nexus-boot-splash-track::before {
   );
   opacity: 0.34;
 }
-html[data-nexus-custom-splash="1"] #${PROGRESS_ECHO_ID},
-html[data-nexus-custom-splash="1"] #${PROGRESS_FILL_ID} {
+html[data-jms-custom-splash="1"] #${PROGRESS_ECHO_ID},
+html[data-jms-custom-splash="1"] #${PROGRESS_FILL_ID} {
   position: absolute;
   inset: 1px;
   width: calc(100% - 2px);
   transform-origin: left center;
-  transform: scaleX(var(--nexus-splash-progress));
+  transform: scaleX(var(--jms-splash-progress));
   border-radius: inherit;
 }
-html[data-nexus-custom-splash="1"] #${PROGRESS_ECHO_ID} {
-  background: linear-gradient(90deg, rgba(123, 47, 190, 0.18), rgba(175, 82, 255, 0.3), rgba(123, 47, 190, 0.16));
+html[data-jms-custom-splash="1"] #${PROGRESS_ECHO_ID} {
+  background: linear-gradient(90deg, rgba(122, 92, 255, 0.22), rgba(192, 132, 252, 0.36), rgba(99, 102, 241, 0.2));
   filter: blur(12px);
   opacity: 0.9;
 }
-html[data-nexus-custom-splash="1"] #${PROGRESS_FILL_ID} {
+html[data-jms-custom-splash="1"] #${PROGRESS_FILL_ID} {
   background:
-    linear-gradient(90deg, rgba(123, 47, 190, 0.84) 0%, rgba(175, 82, 255, 0.98) 48%, rgba(123, 47, 190, 0.9) 100%);
+    linear-gradient(90deg, rgba(122, 92, 255, 0.88) 0%, rgba(192, 132, 252, 0.98) 48%, rgba(99, 102, 241, 0.9) 100%);
   box-shadow:
-    0 0 18px rgba(175, 82, 255, 0.28),
-    0 0 34px rgba(123, 47, 190, 0.18);
-  animation: nexusBootSplashBeam 1450ms linear infinite;
+    0 0 18px rgba(122, 92, 255, 0.42),
+    0 0 34px rgba(192, 132, 252, 0.24);
+  animation: jmsBootSplashBeam 1450ms linear infinite;
 }
-html[data-nexus-custom-splash="1"] #${PROGRESS_FILL_ID}::before {
+html[data-jms-custom-splash="1"] #${PROGRESS_FILL_ID}::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -1047,92 +1171,92 @@ html[data-nexus-custom-splash="1"] #${PROGRESS_FILL_ID}::before {
   mix-blend-mode: screen;
   opacity: 0.68;
 }
-html[data-nexus-custom-splash="1"] #${PROGRESS_ORB_ID} {
+html[data-jms-custom-splash="1"] #${PROGRESS_ORB_ID} {
   position: absolute;
   top: 50%;
-  left: clamp(16px, calc(var(--nexus-splash-progress) * 100%), calc(100% - 16px));
+  left: clamp(16px, calc(var(--jms-splash-progress) * 100%), calc(100% - 16px));
   width: 34px;
   height: 34px;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   background:
-    radial-gradient(circle, rgba(255, 255, 255, 0.9) 0 18%, rgba(175, 82, 255, 0.92) 32%, rgba(123, 47, 190, 0.42) 58%, transparent 78%);
+    radial-gradient(circle, rgba(255, 255, 255, 0.95) 0 18%, rgba(216, 180, 254, 0.95) 32%, rgba(122, 92, 255, 0.46) 58%, transparent 78%);
   box-shadow:
-    0 0 20px rgba(175, 82, 255, 0.46),
-    0 0 34px rgba(123, 47, 190, 0.28);
+    0 0 20px rgba(122, 92, 255, 0.52),
+    0 0 34px rgba(192, 132, 252, 0.34);
   mix-blend-mode: screen;
-  animation: nexusBootSplashOrbPulse 1600ms ease-in-out infinite;
+  animation: jmsBootSplashOrbPulse 1600ms ease-in-out infinite;
 }
-html[data-nexus-custom-splash="1"] #${PROGRESS_DETAIL_ID} {
-  color: rgba(201, 218, 243, 0.72);
-  font: 500 11px/1.45 var(--nexus-splash-font-ui);
+html[data-jms-custom-splash="1"] #${PROGRESS_DETAIL_ID} {
+  color: rgba(220, 210, 245, 0.82);
+  font: 500 11px/1.45 var(--jms-splash-font-ui);
   letter-spacing: 0.04em;
   text-align: center;
   max-width: 100%;
   overflow-wrap: anywhere;
 }
-html[data-nexus-custom-splash="1"][data-nexus-custom-splash-hidden="1"] #${LAYER_ID} {
+html[data-jms-custom-splash="1"][data-jms-custom-splash-hidden="1"] #${LAYER_ID} {
   opacity: 0;
   visibility: hidden;
   transform: scale(1.02);
 }
-html[data-nexus-custom-splash="1"][data-nexus-custom-splash-hidden="1"] #${SHELL_ID} {
+html[data-jms-custom-splash="1"][data-jms-custom-splash-hidden="1"] #${SHELL_ID} {
   opacity: 0;
   transform: translateY(-10px) scale(0.985);
 }
-html[data-nexus-custom-splash="1"][data-nexus-custom-splash-hidden="1"] #${LOGO_ID} {
+html[data-jms-custom-splash="1"][data-jms-custom-splash-hidden="1"] #${LOGO_ID} {
   opacity: 0;
   transform: translateY(-18px) scale(0.96);
 }
-@keyframes nexusBootSplashNebula {
+@keyframes jmsBootSplashNebula {
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.78; }
   50% { transform: translate3d(0, -2%, 0) scale(1.04); opacity: 1; }
 }
-@keyframes nexusBootSplashShellFloat {
+@keyframes jmsBootSplashShellFloat {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
 }
-@keyframes nexusBootSplashBeam {
+@keyframes jmsBootSplashBeam {
   0% { filter: saturate(100%) brightness(0.96); background-position: 0% 50%; }
   50% { filter: saturate(118%) brightness(1.06); background-position: 100% 50%; }
   100% { filter: saturate(100%) brightness(0.96); background-position: 0% 50%; }
 }
-@keyframes nexusBootSplashOrbPulse {
+@keyframes jmsBootSplashOrbPulse {
   0%, 100% { transform: translate(-50%, -50%) scale(0.96); opacity: 0.82; }
   50% { transform: translate(-50%, -50%) scale(1.06); opacity: 1; }
 }
 @media (max-width: 640px) {
-  html[data-nexus-custom-splash="1"] #${SHELL_ID} {
+  html[data-jms-custom-splash="1"] #${SHELL_ID} {
     width: min(440px, calc(100vw - 16px));
     max-width: calc(100vw - 16px);
     padding: 26px 18px 20px;
     gap: 16px;
   }
-  html[data-nexus-custom-splash="1"] #${LOGO_ID} {
+  html[data-jms-custom-splash="1"] #${LOGO_ID} {
     width: min(76vw, 250px);
     min-width: 164px;
     height: min(38vw, 125px);
   }
-  html[data-nexus-custom-splash="1"] #${CAPTION_ID} {
+  html[data-jms-custom-splash="1"] #${CAPTION_ID} {
     font-size: 12px;
     letter-spacing: 0.12em;
   }
-  html[data-nexus-custom-splash="1"] #${PROGRESS_VALUE_ID} {
+  html[data-jms-custom-splash="1"] #${PROGRESS_VALUE_ID} {
     min-width: 62px;
     padding: 7px 10px;
   }
-  html[data-nexus-custom-splash="1"] .nexus-boot-splash-progress-head {
+  html[data-jms-custom-splash="1"] .jms-boot-splash-progress-head {
     gap: 10px;
   }
-  html[data-nexus-custom-splash="1"] .nexus-boot-splash-track {
+  html[data-jms-custom-splash="1"] .jms-boot-splash-track {
     height: 16px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  html[data-nexus-custom-splash="1"] #${LAYER_ID}::before,
-  html[data-nexus-custom-splash="1"] #${SHELL_ID},
-  html[data-nexus-custom-splash="1"] #${PROGRESS_FILL_ID},
-  html[data-nexus-custom-splash="1"] #${PROGRESS_ORB_ID} {
+  html[data-jms-custom-splash="1"] #${LAYER_ID}::before,
+  html[data-jms-custom-splash="1"] #${SHELL_ID},
+  html[data-jms-custom-splash="1"] #${PROGRESS_FILL_ID},
+  html[data-jms-custom-splash="1"] #${PROGRESS_ORB_ID} {
     animation: none !important;
   }
 }
@@ -1181,7 +1305,7 @@ html[data-nexus-custom-splash="1"][data-nexus-custom-splash-hidden="1"] #${LOGO_
 
         private static string BuildAssetVersion()
         {
-            var assembly = typeof(NexusPobreFlixPlugin).Assembly;
+            var assembly = typeof(JMSFusionPlugin).Assembly;
             var version = assembly.GetName().Version?.ToString() ?? "0.0.0.0";
             var mvid = assembly.ManifestModule.ModuleVersionId.ToString("N");
             return $"{version}-{mvid[..12]}";

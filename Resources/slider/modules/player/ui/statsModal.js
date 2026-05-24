@@ -64,14 +64,7 @@ async function updateLyricsDatabase() {
     let updatedCount = 0;
     const originalPlaylist = musicPlayerState.playlist;
     const originalIndex = musicPlayerState.currentIndex;
-    const db = await musicDB.openDB();
-    const tx = db.transaction(["lyrics"], "readwrite");
-    const store = tx.objectStore("lyrics");
-    await new Promise((resolve, reject) => {
-      const req = store.clear();
-      req.onsuccess = resolve;
-      req.onerror = reject;
-    });
+    await musicDB.replaceLyrics?.([]);
     for (let i = 0; i < total; i++) {
       if (lyricsCancelRequested) break;
       const track = tracks[i];
@@ -682,58 +675,14 @@ async function handleRestoreFile(event) {
     }
 
     updateProgress(80, config.languageLabels?.restoringDeletedItems || "Silinmiş öğeler geri yükleniyor...");
-    if (backupData.deletedTracks && Array.isArray(backupData.deletedTracks)) {
-      try {
-        const db = await musicDB.openDB();
-        const clearTx = db.transaction(["deletedTracks"], "readwrite");
-        const clearStore = clearTx.objectStore("deletedTracks");
-        await new Promise((resolve, reject) => {
-          const req = clearStore.clear();
-          req.onsuccess = resolve;
-          req.onerror = reject;
-        });
+    await musicDB.replaceDeletedTracks?.(
+      Array.isArray(backupData.deletedTracks) ? backupData.deletedTracks : []
+    );
 
-        const addTx = db.transaction(["deletedTracks"], "readwrite");
-        const addStore = addTx.objectStore("deletedTracks");
-        for (let i = 0; i < backupData.deletedTracks.length; i++) {
-          try {
-            addStore.add(backupData.deletedTracks[i]);
-          } catch {}
-          if (i % 10 === 0) {
-            const progress = 80 + Math.floor((i / backupData.deletedTracks.length) * 20);
-            updateProgress(progress);
-          }
-        }
-        await new Promise((resolve) => {
-          addTx.oncomplete = resolve;
-          addTx.onerror = () => resolve();
-        });
-      } catch (e) {
-        console.warn("Silinmiş öğeler geri yüklenirken hata:", e);
-        showNotification(
-          `<i class="fas fa-exclamation-triangle"></i> ${config.languageLabels?.restorePartialSuccess || "Şarkılar geri yüklendi ancak silinmiş öğeler yüklenemedi"}`,
-          4000,
-          "db"
-        );
-      }
-    }
-
-    if (backupData.lyrics && Array.isArray(backupData.lyrics)) {
-      updateProgress(95, config.languageLabels?.restoringLyrics || "Şarkı sözleri geri yükleniyor...");
-      const db = await musicDB.openDB();
-      const tx = db.transaction(["lyrics"], "readwrite");
-      const store = tx.objectStore("lyrics");
-      await new Promise((resolve, reject) => {
-        const req = store.clear();
-        req.onsuccess = resolve;
-        req.onerror = reject;
-      });
-      for (const l of backupData.lyrics) store.put(l);
-      await new Promise((resolve) => {
-        tx.oncomplete = resolve;
-        tx.onerror = () => resolve();
-      });
-    }
+    updateProgress(95, config.languageLabels?.restoringLyrics || "Şarkı sözleri geri yükleniyor...");
+    await musicDB.replaceLyrics?.(
+      Array.isArray(backupData.lyrics) ? backupData.lyrics : []
+    );
 
     updateProgress(100, config.languageLabels?.restoreComplete || "Geri yükleme tamamlandı!");
     showNotification(
@@ -776,27 +725,7 @@ async function clearDatabaseConfirmFlow() {
   if (!confirmed) return;
 
   try {
-    const db = await musicDB.openDB();
-    const tx1 = db.transaction(["tracks"], "readwrite");
-    await new Promise((resolve, reject) => {
-      const req = tx1.objectStore("tracks").clear();
-      req.onsuccess = resolve;
-      req.onerror = reject;
-    });
-
-    const tx2 = db.transaction(["deletedTracks"], "readwrite");
-    await new Promise((resolve, reject) => {
-      const req = tx2.objectStore("deletedTracks").clear();
-      req.onsuccess = resolve;
-      req.onerror = reject;
-    });
-
-    const tx3 = db.transaction(["lyrics"], "readwrite");
-    await new Promise((resolve, reject) => {
-      const req = tx3.objectStore("lyrics").clear();
-      req.onsuccess = resolve;
-      req.onerror = reject;
-    });
+    await musicDB.clearAll?.();
 
     showNotification(
       `<i class="fas fa-check-circle"></i> ${config.languageLabels?.databaseCleared || "Veritabanı başarıyla temizlendi"}`,

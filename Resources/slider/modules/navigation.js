@@ -4,9 +4,9 @@ import { getConfig, getDeviceProfileAuto } from './config.js';
 import { getLanguageLabels, getDefaultLanguage } from '../language/index.js';
 import { getCurrentIndex, setCurrentIndex, setRemainingTime } from "./sliderState.js";
 import { applyContainerStyles } from "./positionUtils.js";
-import { playNow, fetchItemDetails, getCachedUserTopGenres, getGenresForDot, goToDetailsPage } from "../../Plugins/NexusPobreFlix/runtime/api.js";
+import { playNow, fetchItemDetails, getCachedUserTopGenres, getGenresForDot, goToDetailsPage } from "../../Plugins/JMSFusion/runtime/api.js";
 import { applySlideAnimation, applyDotPosterAnimation, teardownAnimations, forceReflow, nextAnimToken, hardCleanupSlide } from "./animations.js";
-import { getVideoQualityText } from "./containerUtils.js";
+import { getMetaVibrantColor, getVideoQualityText } from "./containerUtils.js";
 import { previewPreloadCache } from "./hoverTrailerModal.js";
 import { attachMiniPosterHover, openMiniPopoverFor } from "./studioHubsUtils.js";
 import { modalState, set, get, resetModalRefs } from './modalState.js';
@@ -957,6 +957,15 @@ function applyDotStateClasses(dots, currentIndex, config, lowPower = false) {
   const maxStyledDistance = 5;
 
   const safeCurrentIndex = Math.max(0, Math.min(dotArray.length - 1, currentIndex));
+  const activeSlide = document.querySelectorAll("#monwui-slides-container .monwui-slide")[safeCurrentIndex] || null;
+  const activeDotColorSeed =
+    activeSlide?.dataset?.metaColorSeed ||
+    activeSlide?.dataset?.itemId ||
+    String(safeCurrentIndex);
+  const activeDotColor =
+    config?.metaIconColors && activeDotColorSeed
+      ? getMetaVibrantColor(`${activeDotColorSeed}-active-dot`)
+      : "";
   const { start, end } = getDotWindowBounds(
     dotArray.length,
     safeCurrentIndex,
@@ -976,11 +985,14 @@ function applyDotStateClasses(dots, currentIndex, config, lowPower = false) {
       dot.dataset.dotState = "active";
       dot.dataset.dotDirection = "current";
       dot.dataset.dotDistance = "0";
+      if (activeDotColor) dot.style.setProperty("--monwui-active-dot-bg", activeDotColor);
+      else dot.style.removeProperty("--monwui-active-dot-bg");
     } else {
       const distance = Math.abs(dotIndex - safeCurrentIndex);
       const styledDistance = Math.min(distance, maxStyledDistance);
       const direction = dotIndex < safeCurrentIndex ? "prev" : "next";
       const isHidden = dotIndex < start || dotIndex > end;
+      dot.style.removeProperty("--monwui-active-dot-bg");
 
       dot.dataset.dotState = isHidden ? "hidden" : direction;
       dot.dataset.dotDirection = direction;
@@ -1079,13 +1091,12 @@ export function createDotNavigation() {
         const mediaStreams = slide.dataset.mediaStreams ? JSON.parse(slide.dataset.mediaStreams) : [];
         const videoStream = mediaStreams.find(s => s.Type === "Video");
         if (videoStream) {
-            const qualityText = getVideoQualityText(videoStream);
+            const qualityText = getVideoQualityText(videoStream, mediaStreams);
             if (qualityText) {
                 const qualityBadge = document.createElement("div");
                 qualityBadge.className = "monwui-dot-quality-badge";
                 qualityBadge.innerHTML = `${qualityText}`;
                 dot.appendChild(qualityBadge);
-                const style = document.createElement("style");
             }
         }
     } catch (e) {
@@ -2013,21 +2024,12 @@ function ensureDotQualityBadgeCSS() {
       position: absolute;
       bottom: 24px;
       left: 2px;
-      color: white;
-      display: flex;
-      gap: 2px;
-      flex-direction: column;
+      pointer-events: none;
+      z-index: 4;
     }
-    .monwui-dot-quality-badge img.range-icon,
-    .monwui-dot-quality-badge img.codec-icon,
-    .monwui-dot-quality-badge img.quality-icon {
-      width: 20px;
-      height: 14px;
-      background: rgba(30,30,40,.7);
-      border-radius: 4px;
-      padding: 1px;
-      object-fit: contain;
-      transition: all .3s ease;
+    .monwui-dot-quality-badge .monwui-quality-group {
+      --monwui-quality-direction: column;
+      --monwui-quality-wrap: nowrap;
     }
   `;
   document.head.appendChild(style);

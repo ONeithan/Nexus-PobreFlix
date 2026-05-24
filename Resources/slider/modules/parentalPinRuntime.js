@@ -782,6 +782,18 @@ function isReservedNativeActionToken(value) {
   );
 }
 
+function isLikelyActionSheetCommandToken(value, element) {
+  if (!element || !isActionSheetElement(element)) {
+    return false;
+  }
+
+  const normalized = normalizeActionText(value).replace(/\s+/g, "");
+  if (!normalized) return false;
+  if (isReservedNativeActionToken(normalized)) return true;
+
+  return /^[a-z][a-z-]{1,40}$/i.test(normalized) && /[-g-z]/i.test(normalized);
+}
+
 function rememberNativePlayContext(itemId) {
   const normalized = String(itemId || "").trim();
   if (!normalized) return "";
@@ -915,8 +927,21 @@ function isExplicitlyNonPlayActionElement(element) {
     element.dataset?.action ||
     ""
   ).replace(/\s+/g, "");
+  const dataId = normalizeActionText(
+    element.getAttribute?.("data-id") ||
+    element.dataset?.id ||
+    ""
+  ).replace(/\s+/g, "");
 
   if (action && (NATIVE_NON_PLAY_ACTIONS.has(action) || NATIVE_MENU_ACTIONS.has(action))) {
+    return true;
+  }
+
+  if (
+    dataId &&
+    !NATIVE_PLAY_ACTIONS.has(dataId) &&
+    isLikelyActionSheetCommandToken(dataId, element)
+  ) {
     return true;
   }
 
@@ -978,14 +1003,25 @@ function isNativePlayActionElement(element) {
     element.dataset?.id ||
     ""
   );
+  const compactAction = action.replace(/\s+/g, "");
+  const compactDataId = dataId.replace(/\s+/g, "");
   const className = String(element.className || "");
   if (isMenuLauncherElement(element) || isExplicitlyNonPlayActionElement(element)) {
     return false;
   }
 
+  if (isActionSheetElement(element)) {
+    return (
+      NATIVE_PLAY_ACTIONS.has(compactAction) ||
+      NATIVE_PLAY_ACTIONS.has(compactDataId) ||
+      /\bbtnPlay\b/.test(className) ||
+      /\bbtnResume\b/.test(className)
+    );
+  }
+
   if (
-    NATIVE_PLAY_ACTIONS.has(action) ||
-    NATIVE_PLAY_ACTIONS.has(dataId) ||
+    NATIVE_PLAY_ACTIONS.has(compactAction) ||
+    NATIVE_PLAY_ACTIONS.has(compactDataId) ||
     /\bbtnPlay\b/.test(className) ||
     /\bbtnResume\b/.test(className)
   ) {
@@ -1128,9 +1164,10 @@ function extractItemIdFromElement(
   if (!element) return "";
 
   const candidates = [];
-  const pushCandidate = (value) => {
+  const pushCandidate = (value, ownerElement = null) => {
     const normalized = String(value || "").trim();
     if (!normalized || isReservedNativeActionToken(normalized)) return;
+    if (isLikelyActionSheetCommandToken(normalized, ownerElement)) return;
     candidates.push(normalized);
   };
 
@@ -1154,40 +1191,40 @@ function extractItemIdFromElement(
     ].join(", "))
     : null;
 
-  pushCandidate(element.getAttribute?.("data-id"));
-  pushCandidate(element.getAttribute?.("data-itemid"));
-  pushCandidate(element.getAttribute?.("data-item-id"));
-  pushCandidate(element.getAttribute?.("itemid"));
-  pushCandidate(element.getAttribute?.("item-id"));
-  pushCandidate(element.dataset?.id);
-  pushCandidate(element.dataset?.itemid);
-  pushCandidate(element.dataset?.itemId);
-  pushCandidate(element.itemId);
-  pushCandidate(element.__itemId);
-  pushCandidate(element.item?.Id);
-  pushCandidate(element.__data?.Id);
-  pushCandidate(nestedCarrier?.getAttribute?.("data-id"));
-  pushCandidate(nestedCarrier?.getAttribute?.("data-itemid"));
-  pushCandidate(nestedCarrier?.getAttribute?.("data-item-id"));
-  pushCandidate(nestedCarrier?.getAttribute?.("itemid"));
-  pushCandidate(nestedCarrier?.getAttribute?.("item-id"));
-  pushCandidate(parseIdFromHref(element.getAttribute?.("href")));
-  pushCandidate(parseIdFromHref(nestedCarrier?.getAttribute?.("href")));
+  pushCandidate(element.getAttribute?.("data-id"), element);
+  pushCandidate(element.getAttribute?.("data-itemid"), element);
+  pushCandidate(element.getAttribute?.("data-item-id"), element);
+  pushCandidate(element.getAttribute?.("itemid"), element);
+  pushCandidate(element.getAttribute?.("item-id"), element);
+  pushCandidate(element.dataset?.id, element);
+  pushCandidate(element.dataset?.itemid, element);
+  pushCandidate(element.dataset?.itemId, element);
+  pushCandidate(element.itemId, element);
+  pushCandidate(element.__itemId, element);
+  pushCandidate(element.item?.Id, element);
+  pushCandidate(element.__data?.Id, element);
+  pushCandidate(nestedCarrier?.getAttribute?.("data-id"), nestedCarrier);
+  pushCandidate(nestedCarrier?.getAttribute?.("data-itemid"), nestedCarrier);
+  pushCandidate(nestedCarrier?.getAttribute?.("data-item-id"), nestedCarrier);
+  pushCandidate(nestedCarrier?.getAttribute?.("itemid"), nestedCarrier);
+  pushCandidate(nestedCarrier?.getAttribute?.("item-id"), nestedCarrier);
+  pushCandidate(parseIdFromHref(element.getAttribute?.("href")), element);
+  pushCandidate(parseIdFromHref(nestedCarrier?.getAttribute?.("href")), nestedCarrier);
 
   for (const node of lineage) {
-    pushCandidate(node.getAttribute?.("data-id"));
-    pushCandidate(node.getAttribute?.("data-itemid"));
-    pushCandidate(node.getAttribute?.("data-item-id"));
-    pushCandidate(node.getAttribute?.("itemid"));
-    pushCandidate(node.getAttribute?.("item-id"));
-    pushCandidate(node.dataset?.id);
-    pushCandidate(node.dataset?.itemid);
-    pushCandidate(node.dataset?.itemId);
-    pushCandidate(node.itemId);
-    pushCandidate(node.__itemId);
-    pushCandidate(node.item?.Id);
-    pushCandidate(node.__data?.Id);
-    pushCandidate(parseIdFromHref(node.getAttribute?.("href")));
+    pushCandidate(node.getAttribute?.("data-id"), node);
+    pushCandidate(node.getAttribute?.("data-itemid"), node);
+    pushCandidate(node.getAttribute?.("data-item-id"), node);
+    pushCandidate(node.getAttribute?.("itemid"), node);
+    pushCandidate(node.getAttribute?.("item-id"), node);
+    pushCandidate(node.dataset?.id, node);
+    pushCandidate(node.dataset?.itemid, node);
+    pushCandidate(node.dataset?.itemId, node);
+    pushCandidate(node.itemId, node);
+    pushCandidate(node.__itemId, node);
+    pushCandidate(node.item?.Id, node);
+    pushCandidate(node.__data?.Id, node);
+    pushCandidate(parseIdFromHref(node.getAttribute?.("href")), node);
   }
 
   if (includeRememberedContext && isActionSheetElement(element)) {
@@ -1252,7 +1289,7 @@ function installNativePlayInterceptor() {
 
   const runPlayNow = async (itemId) => {
     try {
-      const apiModule = await import("../../Plugins/NexusPobreFlix/runtime/api.js");
+      const apiModule = await import("../../Plugins/JMSFusion/runtime/api.js");
       await apiModule?.playNow?.(itemId);
     } catch (error) {
       console.error("Native Jellyfin play interception failed:", error);

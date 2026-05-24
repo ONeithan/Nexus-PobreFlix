@@ -10,9 +10,9 @@ import {
   getCurrentNativeHomeSectionOrderItems,
   getNativeHomeSectionOrderLabel
 } from "../homeSectionNative.js";
-import { createCheckbox, createSection, createNumberInput, createSelect, createTextInput, createRangeInput } from "./shared.js";
+import { createCheckbox, createSection, createNumberInput } from "./shared.js";
 import { applySettings } from "./applySettings.js";
-import { fetchItemDetails, makeApiRequest } from "../../../Plugins/NexusPobreFlix/runtime/api.js";
+import { fetchItemDetails, makeApiRequest } from "../../../Plugins/JMSFusion/runtime/api.js";
 import {
   JMS_STUDIO_HUB_MANUAL_ENTRY_ADDED_EVENT,
   buildStudioHubLogoUrl,
@@ -325,6 +325,9 @@ function getManagedHomeSectionOrderLabel(name, config, labels) {
   }
   if (name === "tmdbTopMoviesRows") {
     return labels?.tmdbTopMovies || "TMDb En Iyi Filmler";
+  }
+  if (name === "tmdbTrailerRows") {
+    return labels?.tmdbTrailerRowsTitle || "TMDb Vizyona Yakın Fragmanlar";
   }
   if (name === "recentRows") {
     return labels?.managedRecentRowsLabel || "Son Eklenenler";
@@ -1872,20 +1875,6 @@ export function createStudioHubsPanel(config, labels) {
   );
   section.appendChild(ratingWrap);
 
-  const volumeWrap = createSelect(
-    'studioHubsVolume',
-    labels?.studioHubsVolume || 'Volume dos Trailers (Coleções)',
-    [
-      { value: 'muted', text: labels?.studioHubsMuted || 'Mudo' },
-      { value: '10', text: (labels?.studioHubsVolumeValue || '{value}%').replace('{value}', '10') },
-      { value: '20', text: (labels?.studioHubsVolumeValue || '{value}%').replace('{value}', '20') },
-      { value: '30', text: (labels?.studioHubsVolumeValue || '{value}%').replace('{value}', '30') },
-      { value: '50', text: (labels?.studioHubsVolumeValue || '{value}%').replace('{value}', '50') }
-    ],
-    config.studioHubsVolume || '20'
-  );
-  section.appendChild(volumeWrap);
-
   const personalcountWrap = createNumberInput(
     'personalRecsCardCount',
     labels?.studioHubsCardCount || 'Gösterilecek kart sayısı (Ana ekran)',
@@ -1941,6 +1930,13 @@ export function createStudioHubsPanel(config, labels) {
     config.enableTmdbTopMoviesRow !== false
   );
   recentSubWrap.appendChild(enableTmdbTopMoviesRow);
+
+  const enableTmdbTrailerRows = createCheckbox(
+    'enableTmdbTrailerRows',
+    labels?.enableTmdbTrailerRows || 'TMDb vizyon fragmanları satırı',
+    config.enableTmdbTrailerRows !== false
+  );
+  recentSubWrap.appendChild(enableTmdbTrailerRows);
 
   const enableRecentMoviesRow = createCheckbox(
     'enableRecentMoviesRow',
@@ -2105,6 +2101,7 @@ export function createStudioHubsPanel(config, labels) {
   const top10SeriesCb = getCb(enableTop10SeriesRow);
   const top10MoviesCb = getCb(enableTop10MoviesRow);
   const tmdbTopMoviesCb = getCb(enableTmdbTopMoviesRow);
+  const tmdbTrailerRowsCb = getCb(enableTmdbTrailerRows);
   const recMovCb = getCb(enableRecentMoviesRow);
   const recMovHeroCb = getCb(showRecentMoviesHeroCards);
   const recSerCb = getCb(enableRecentSeriesRow);
@@ -2131,6 +2128,7 @@ export function createStudioHubsPanel(config, labels) {
       if (top10SeriesCb) top10SeriesCb.checked = false;
       if (top10MoviesCb) top10MoviesCb.checked = false;
       if (tmdbTopMoviesCb) tmdbTopMoviesCb.checked = false;
+      if (tmdbTrailerRowsCb) tmdbTrailerRowsCb.checked = false;
       if (recMovCb) recMovCb.checked = false;
       if (recMovHeroCb) recMovHeroCb.checked = false;
       if (recSerCb) recSerCb.checked = false;
