@@ -1,8 +1,155 @@
+> [!NOTE]
+> **Versão em Português disponível no final do documento.** / **Portuguese version available at the end of this document.**
+> Para ler em português, role até o final da página ou clique [aqui](#nexus-pobreflix-plugin-jellyfin-edition-portugues).
+> 
+> *To read in Portuguese, scroll to the bottom or click [here](#nexus-pobreflix-plugin-jellyfin-edition-portugues).*
+
 <div align="center">
   <img src="https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png" alt="Nexus PobreFlix Logo" width="500"/>
 
 
   # Nexus PobreFlix Plugin (Jellyfin Edition)
+
+  **The ultimate visual and industrial experience for your Jellyfin server — 100% PT-BR and Nexus Purple Theme.**
+
+  ![Status](https://img.shields.io/badge/Status-Industrial-purple?style=for-the-badge)
+  ![Language](https://img.shields.io/badge/Language-PT--BR%20Nativo-green?style=for-the-badge)
+  ![Version](https://img.shields.io/badge/Version-1.0.0.0-blue?style=for-the-badge)
+  ![Fork Origin](https://img.shields.io/badge/Fork%20de-JMSFusion-orange?style=for-the-badge)
+</div>
+
+---
+
+## 📖 About the Project and Origin
+
+The **Nexus PobreFlix** is the official visual engine of the PobreFlix ecosystem for Jellyfin servers. 
+
+This project is a **high-performance fork of the original JMSFusion plugin**, originally developed by **G-Grbz**. The **Nexus PobreFlix** edition, maintained and extended by **ONeithan**, was rebuilt with the goal of offering a premium, cinema-level visual experience ("Netflix" style), with a complete rebrand to the purple theme, severe rendering performance optimizations, smart media controls, and absolute Brazilian Portuguese translation.
+
+---
+
+## 🎓 How does the Plugin work? (Technical Architecture)
+
+To inject modifications without breaking or degrading the Jellyfin server, the plugin operates through a hybrid architecture of C# injection (Backend) and Javascript/CSS (Frontend):
+
+```mermaid
+flowchart TD
+    A[Jellyfin Server Starts] --> B[JMSFusion C# Plugin Loads]
+    B --> C[IndexPatcher locates and modifies index.html]
+    C --> D[Bootstrap JS Injection in the HTML head]
+    D --> E[Execution of storagePreload.js before app loads]
+    E --> F[Design System CSS and Theme Variables Injection]
+    E --> G[Logo Shielding and Login Centering]
+    E --> H[Session Monitoring via MutationObserver]
+```
+
+### 1. Hybrid Injection (`IndexPatcher.cs`)
+The plugin's backend in C# monitors Jellyfin's startup and locates the physical `index.html` file of the web client. It surgically injects a script tag pointing to our local bootstrap. This ensures that the purple theme styles and custom splash screen are loaded immediately, preventing the "flash effect" of Jellyfin's original white/blue layout.
+
+### 2. Login Lifecycle (`storagePreload.js`)
+The preloading script monitors Jellyfin's authentication state reactively using an ultra-lightweight and surgical `MutationObserver` directed at the `#loginPage` element. 
+- **Logged out**: Applies the `jms-logged-out` class to the `body`, hiding the navigation bar (`.skinHeader`) and applying the centralized login layout with an immersive background.
+- **Logged in**: Removes the `jms-logged-out` class, restoring the header and displaying the shielded purple logo.
+
+### 3. Offline Autonomy
+All images (including the logo and icons) are served locally through Embedded Resources compiled inside the plugin's DLL and exposed by a local ASP.NET Core controller (`JMSFusionAssetsController.cs`). This eliminates dependencies on external CDNs, allowing the interface to function completely on local networks without internet access.
+
+---
+
+## ✨ Premium Features and Key Differentiators
+
+### 🟣 Nexus Purple Design System
+The entire administrative configuration interface of the plugin and the visual components of the web client have been redesigned. The original palette was replaced with **Nexus Purple (`#7a5cff`)**, providing a high-standard aesthetic uniformity in sliders, buttons, details modals, and progress bars.
+
+### 🔒 Shielded and Centralized Login
+The login panel has been absolutely centered on both desktop and mobile. Additionally, we created specific CSS rules so that residual floating elements of the login page disappear instantly after successful authentication.
+
+### 🛡️ PobreFlix Logo with Supreme Shielding
+To guarantee the permanent display of the PobreFlix logo, we applied a CSS rule with 6 levels of specificity on the brand selector. This neutralizes layout inhibitions (`display: none !important`) inherited from other themes installed on the client, hiding Jellyfin's native SVGs and drawing the purple logo in their place.
+
+### 📜 Free Header (Not Fixed)
+To increase immersion and free up useful screen space during navigation, the top bar (`.skinHeader`) was reconfigured with absolute positioning. When scrolling down, the header naturally scrolls up with the page, instead of remaining locked at the top of the screen.
+
+### 🔊 Smart Trailer Manager
+YouTube trailers and local HTML5 players have been attenuated:
+- **Default Volume**: Limited to **5%** to protect users' ears.
+- **Hover Attenuation**: The volume automatically drops to **1%** when hovering over the active trailer card, returning to 5% when the cursor is removed.
+
+### 🇧🇷 Absolute PT-BR Localization
+Deep linguistic audit of all 2,000+ translation keys. The avatar selection menu, the administrative database panel, and the media players are 100% translated, eliminating residual terms in Turkish and English.
+
+---
+
+## 🛠️ Installation and Deployment Instructions
+
+### Method 1: Adding the Repository (Recommended)
+To receive automatic plugin updates directly in your Jellyfin dashboard:
+1. Access your Jellyfin administration dashboard.
+2. Go to **Plugins → Repositories** and click **Add**.
+3. Add the following link to the **URL** field:
+
+```text
+https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/manifest.json
+```
+
+4. Set the name to `Nexus PobreFlix Repository`, save, and install the plugin from the **Catalog**.
+
+### Method 2: Manual Installation
+1. Download the ZIP file of the stable version `NexusPobreFlix-1.0.0.0.zip` from the Releases tab.
+2. Access your Jellyfin server folder and locate the `plugins` directory (on Windows, it is located at `%ProgramData%/Jellyfin/Server/plugins`).
+3. Create a subfolder named `NexusPobreFlix`.
+4. Extract the DLL and `meta.json` from the zip into this folder.
+5. Restart the Jellyfin server.
+6. Clear your browser cache (Ctrl + F5) on the client to view the changes.
+
+---
+
+## 📂 Code Directory Structure
+
+For development and maintenance purposes, the repository is organized as follows:
+```
+Nexus-PobreFlix/
+├── bin/Release/net9.0/      # Compiled binaries
+├── Controllers/            # API routes and local resource server
+├── Core/                   # C# logic (trailer automation and runtime hooks)
+├── img/                    # Graphic assets of the repository (logo and icon)
+├── Properties/             # Build definitions
+├── Resources/
+│   └── slider/             # Slider and player scripts and files
+│       ├── main.js         # Core JS for layout injection
+│       └── src/            # Stylesheets (CSS)
+├── RuntimeModules/         # Scripts executed during bootstrap (storagePreload.js, splash.js)
+├── Web/                    # HTML page for administrative configuration
+├── JMSFusion.csproj        # MSBuild project definition file
+├── manifest.json           # Auto-update manifest
+└── meta.json               # Plugin metadata for the catalog
+```
+
+---
+
+## 📜 Licensing and Authorship
+
+- **Base Code (JMSFusion)**: Developed by [G-Grbz](https://github.com/G-Grbz) under the MIT License.
+- **Edition and Fork (Nexus PobreFlix)**: Visual customizations, PT-BR localization, and rebranding maintained by [ONeithan](https://github.com/ONeithan).
+
+---
+
+<div align="center">
+  <br/>
+  <img src="https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png" alt="Nexus PobreFlix" width="200"/>
+  <br/>
+  <sub>Developed with 💜 for the Nexus PobreFlix community</sub>
+</div>
+
+---
+
+<div id="nexus-pobreflix-plugin-jellyfin-edition-portugues"></div>
+
+# Nexus PobreFlix Plugin (Jellyfin Edition) - Versão em Português
+
+<div align="center">
+  <img src="https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png" alt="Nexus PobreFlix Logo" width="500"/>
+
 
   **A experiência visual definitiva e industrial para seu servidor Jellyfin — 100% PT-BR e Tema Roxo Nexus.**
 
