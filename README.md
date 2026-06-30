@@ -16,6 +16,7 @@
   ![Language](https://img.shields.io/badge/Language-PT--BR%20Nativo-green?style=for-the-badge)
   ![Version](https://img.shields.io/badge/Version-1.0.0.0-blue?style=for-the-badge)
   ![Fork Origin](https://img.shields.io/badge/Fork%20de-JMSFusion-orange?style=for-the-badge)
+  [![Listed on JellyWatch Hub](https://jellywatch.app/hub/nexus-pobreflix/badge.svg)](https://jellywatch.app/hub/nexus-pobreflix)
 </div>
 
 ---
@@ -157,6 +158,7 @@ Nexus-PobreFlix/
   ![Language](https://img.shields.io/badge/Language-PT--BR%20Nativo-green?style=for-the-badge)
   ![Version](https://img.shields.io/badge/Version-1.0.0.0-blue?style=for-the-badge)
   ![Fork Origin](https://img.shields.io/badge/Fork%20de-JMSFusion-orange?style=for-the-badge)
+  [![Listed on JellyWatch Hub](https://jellywatch.app/hub/nexus-pobreflix/badge.svg)](https://jellywatch.app/hub/nexus-pobreflix)
 </div>
 
 ---
