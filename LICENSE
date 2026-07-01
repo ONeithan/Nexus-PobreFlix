@@ -1,7 +1,11 @@
-# MIT License
+# LICENSE / LICENÇA
 
-Copyright (c) 2026 G-grbz (Autor original do Plugin JMSFusion)
-Copyright (c) 2026 ONeithan (Modificações e Fork do Nexus PobreFlix)
+## English Version
+
+### 1. Base Project License (JMSFusion Plugin)
+The base code of the JMSFusion plugin is licensed under the MIT License:
+```
+Copyright (c) 2026 G-grbz
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,5 +24,36 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+```
+
+### 2. Fork Modifications License (Nexus PobreFlix Edition)
+Copyright (c) 2026 ONeithan
+
+The translations, visual assets, configurations, and layout overrides introduced in this fork are subject to the following custom open-source terms:
+* **Permission**: You are free to view, study, download, fork, and modify these additions for personal and non-commercial purposes.
+* **Non-Commercial Restriction**: You are strictly prohibited from selling or commercializing this fork's source code, theme variables, or compiled binaries in their unmodified form.
+* **Derived Works (Forks)**: If you wish to build upon these modifications, you must rename your version (cannot use "Nexus PobreFlix" branding), credit the original author (G-grbz) and ONeithan, and distribute it under your own terms. Direct commercial resale of the unmodified "Nexus PobreFlix" plugin is forbidden.
 
 ---
+
+## Versão em Português
+
+### 1. Licença do Projeto Base (JMSFusion Plugin)
+O código base do plugin JMSFusion é licenciado sob os termos da Licença MIT:
+```
+Copyright (c) 2026 G-grbz
+
+É concedida permissão, gratuitamente, a qualquer pessoa que obtenha uma cópia
+deste software e arquivos de documentação associados (o "Software"), para lidar
+no Software sem restrições, incluindo, sem limitação, os direitos de usar, copiar,
+modificar, mesclar, publicar, distribuir, sublicenciar e/ou vender cópias do Software,
+desde que o aviso de copyright original seja incluído em todas as cópias.
+```
+
+### 2. Licença de Modificações do Fork (Edição Nexus PobreFlix)
+Copyright (c) 2026 ONeithan
+
+As traduções, ativos visuais, arquivos de estilo, configurações e modificações de layout introduzidos neste fork estão sujeitos aos seguintes termos personalizados:
+* **Permissão**: Você é livre para visualizar, estudar, baixar, fazer fork e modificar estas adições para uso pessoal e não comercial.
+* **Restrição Não Comercial**: É estritamente proibido vender ou comercializar o código-fonte deste fork, suas variáveis de tema ou binários compilados em sua forma original e não modificada.
+* **Trabalhos Derivados (Forks)**: Se você desejar criar trabalhos baseados nestas modificações, você deve renomear sua versão (é proibido utilizar a marca "Nexus PobreFlix"), dar os créditos ao autor original (G-grbz) e a ONeithan, e distribuir sob seus próprios termos. A venda direta não modificada do plugin "Nexus PobreFlix" é proibida.
