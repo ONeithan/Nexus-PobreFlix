@@ -103,6 +103,11 @@ https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/manifest.json
 5. Restart the Jellyfin server.
 6. Clear your browser cache (Ctrl + F5) on the client to view the changes.
 
+### Method 3: Desktop Client (Windows PC)
+If you want to play media on a Windows PC or TV setup with native controller support and a console-like TV layout:
+1. Download the custom launcher client: [Nexus-jellyfin-desktop](https://github.com/ONeithan/Nexus-jellyfin-desktop).
+2. It launches directly in kiosk fullscreen mode, bypasses insecure local contexts to enable standard Gamepad API over HTTP, and persists your login credentials automatically inside the `perfil-pobreflix` folder.
+
 ---
 
 ## 📂 Code Directory Structure
@@ -244,6 +249,11 @@ https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/manifest.json
 4. Extraia o conteúdo da DLL e do `meta.json` do zip dentro desta pasta.
 5. Reinicie o servidor Jellyfin.
 6. Limpe o cache do seu navegador (Ctrl + F5) no cliente para visualizar as alterações.
+
+### Método 3: Cliente Desktop (PC Windows)
+Se você quer reproduzir suas mídias em um computador Windows ou TV de forma integrada com suporte a controle e layout estilo console:
+1. Baixe o reprodutor customizado dedicado: [Nexus-jellyfin-desktop](https://github.com/ONeithan/Nexus-jellyfin-desktop).
+2. Ele inicia em modo Kiosk em tela cheia sem bordas, trata o servidor HTTP local como seguro para liberar a leitura nativa do controle de Xbox e persiste seu login automaticamente na pasta `perfil-pobreflix`.
 
 ---
 

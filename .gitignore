@@ -20,3 +20,7 @@ build.log
 publish/
 *.tmp
 *.cache
+
+# Documentação local do projeto
+docs/
+

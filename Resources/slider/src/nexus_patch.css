@@ -18,29 +18,29 @@
     display: none !important;
 }
 
-/* Alinhamento Industrial das Seções da Home */
-.sectionTitleContainer {
+/* Alinhamento Industrial das Seções da Home (Apenas no Desktop/Mobile normal) */
+body:not(.layout-tv) .sectionTitleContainer {
     margin-left: 2% !important;
     padding-left: 0 !important;
 }
 
-.padded-left.padded-right.sectionTitleContainer {
+body:not(.layout-tv) .padded-left.padded-right.sectionTitleContainer {
     padding-left: 0 !important;
 }
 
-/* Estúdios (Studio Hubs) - Ocultar Texto e Focar na Logo */
-.hub-title-text,
-.studio-hub-title,
-.studio-title {
+/* Estúdios (Studio Hubs) - Ocultar Texto e Focar na Logo (Apenas no Desktop/Mobile normal) */
+body:not(.layout-tv) .hub-title-text,
+body:not(.layout-tv) .studio-hub-title,
+body:not(.layout-tv) .studio-title {
     display: none !important;
 }
 
-.studio-hub-card:hover .hub-title-text {
+body:not(.layout-tv) .studio-hub-card:hover .hub-title-text {
     display: none !important;
 }
 
-/* Ajuste de Botões no Modal Fullscreen */
-.jmsdm-actions {
+/* Ajuste de Botões no Modal Fullscreen (Apenas no Desktop/Mobile normal) */
+body:not(.layout-tv) .jmsdm-actions {
     justify-content: flex-start !important;
     padding-left: 5% !important;
 }

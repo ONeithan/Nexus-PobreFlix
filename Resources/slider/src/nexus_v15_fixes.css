@@ -1,20 +1,20 @@
 /* 
   Nexus PobreFlix - Premium Aesthetic Fixes (v1.0.0.15)
-  Focus: Scyfin Parity, Purging Branding, Clean UI
+  Focus: Scyfin Parity, Purging Branding, Clean UI (Isolated from TV layout)
 */
 
-/* 1. PURGE JELLYFIN BRANDING & LOGOS */
-.headerLogoWithText, 
-.headerLogo,
-.headerLogo img,
-.section0 .headerLogo {
+/* 1. PURGE JELLYFIN BRANDING & LOGOS (Apenas no Desktop/Mobile normal) */
+body:not(.layout-tv) .headerLogoWithText, 
+body:not(.layout-tv) .headerLogo,
+body:not(.layout-tv) .headerLogo img,
+body:not(.layout-tv) .section0 .headerLogo {
     background-image: none !important;
     content: "" !important;
 }
 
-/* Injetar Logo Nexus no Cabeçalho */
-.headerLogoWithText:after,
-.headerLogo:after {
+/* Injetar Logo Nexus no Cabeçalho (Apenas no Desktop/Mobile normal) */
+body:not(.layout-tv) .headerLogoWithText:after,
+body:not(.layout-tv) .headerLogo:after {
     content: "";
     display: block;
     width: 160px;
@@ -26,8 +26,8 @@
     margin-left: 10px;
 }
 
-/* 2. NAVBAR PREMIUM (Glassmorphism & Proper Height) */
-.skinHeader {
+/* 2. NAVBAR PREMIUM (Apenas no Desktop/Mobile normal) */
+body:not(.layout-tv) .skinHeader {
     background-color: rgba(0, 0, 0, 0.4) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
@@ -36,15 +36,15 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
 }
 
-.skinHeader-withBackground {
+body:not(.layout-tv) .skinHeader-withBackground {
     background-color: rgba(0, 0, 0, 0.85) !important;
 }
 
-/* Fix Profile Icon (Purge oversized) */
-.headerButton.headerButtonWithUser {
+/* Fix Profile Icon (Apenas no Desktop/Mobile normal) */
+body:not(.layout-tv) .headerButton.headerButtonWithUser {
     margin-right: 8px !important;
 }
-.headerButton.headerButtonWithUser .headerUserButtonInner {
+body:not(.layout-tv) .headerButton.headerButtonWithUser .headerUserButtonInner {
     width: 34px !important;
     height: 34px !important;
     border-radius: 4px !important;
@@ -52,38 +52,38 @@
     border: 1px solid rgba(255,255,255,0.1);
 }
 
-/* 3. STUDIO HUBS - CLEAN HOVER (Video Only) */
-#studio-hubs .hub-card:hover .hub-overlay {
+/* 3. STUDIO HUBS - CLEAN HOVER (Video Only) (Apenas no Desktop/Mobile normal) */
+body:not(.layout-tv) #studio-hubs .hub-card:hover .hub-overlay {
     opacity: 0 !important;
     pointer-events: none !important;
     transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-#studio-hubs .hub-card:hover .hub-title-text {
+body:not(.layout-tv) #studio-hubs .hub-card:hover .hub-title-text {
     display: none !important;
 }
 
-#studio-hubs .hub-card .hub-video {
+body:not(.layout-tv) #studio-hubs .hub-card .hub-video {
     opacity: 0;
     transition: opacity 0.5s ease;
 }
 
-#studio-hubs .hub-card:hover .hub-video {
+body:not(.layout-tv) #studio-hubs .hub-card:hover .hub-video {
     opacity: 1 !important;
 }
 
-/* 4. CONTENT DETAILS - BACKDROP IMMERSION (Scyfin Style) */
-.itemDetailPage {
+/* 4. CONTENT DETAILS - BACKDROP IMMERSION (Apenas no Desktop/Mobile normal) */
+body:not(.layout-tv) .itemDetailPage {
     padding-top: 0 !important;
     background: #050505 !important;
 }
 
-/* Ocultar poster lateral gigante e bordas cinzas */
-.detailImageContainer {
+/* Ocultar poster lateral gigante e bordas cinzas (Apenas no Desktop/Mobile normal) */
+body:not(.layout-tv) .detailImageContainer {
     display: none !important;
 }
 
-.itemBackdrop {
+body:not(.layout-tv) .itemBackdrop {
     height: 100vh !important;
     width: 100% !important;
     position: fixed !important;
@@ -95,8 +95,8 @@
     background-position: center top !important;
 }
 
-/* Overlay gradiente para legibilidade */
-.itemDetailPage:before {
+/* Overlay gradiente para legibilidade (Apenas no Desktop/Mobile normal) */
+body:not(.layout-tv) .itemDetailPage:before {
     content: "";
     position: fixed;
     top: 0;
@@ -109,7 +109,7 @@
     pointer-events: none;
 }
 
-.itemDetailsContainer {
+body:not(.layout-tv) .itemDetailsContainer {
     position: relative !important;
     z-index: 2 !important;
     margin-top: 25vh !important;
@@ -117,24 +117,26 @@
     max-width: 800px !important;
 }
 
-/* 5. EPISODE LIST & BUTTONS (Clean & Glass) */
-.paperList {
+/* 5. EPISODE LIST & BUTTONS (Apenas no Desktop/Mobile normal) */
+body:not(.layout-tv) .paperList {
     background: rgba(255,255,255,0.03) !important;
     border-radius: 12px !important;
     overflow: hidden !important;
     border: 1px solid rgba(255,255,255,0.05) !important;
 }
 
-.listItem {
+body:not(.layout-tv) .listItem {
     padding: 15px !important;
     border-bottom: 1px solid rgba(255,255,255,0.05) !important;
 }
 
-.listItem:hover {
+body:not(.layout-tv) .listItem:hover {
     background: rgba(255,255,255,0.07) !important;
 }
 
-.btnPlay, .btnResume, .button-flat {
+body:not(.layout-tv) .btnPlay, 
+body:not(.layout-tv) .btnResume, 
+body:not(.layout-tv) .button-flat {
     background-color: #7B2FBE !important; /* Nexus Purple */
     color: white !important;
     border-radius: 6px !important;
@@ -144,18 +146,18 @@
     padding: 8px 16px !important;
 }
 
-.button-flat:hover {
+body:not(.layout-tv) .button-flat:hover {
     background-color: #9d3eff !important;
 }
 
-/* 6. LOGIN PAGE - NEXUS LOGO & CLEANUP */
-#loginPage .readOnlyContent {
+/* 6. LOGIN PAGE - NEXUS LOGO & CLEANUP (Apenas no Desktop/Mobile normal) */
+body:not(.layout-tv) #loginPage .readOnlyContent {
     background-color: rgba(0, 0, 0, 0.8) !important;
     backdrop-filter: blur(20px) !important;
     border: 1px solid rgba(255,255,255,0.1) !important;
 }
 
-#loginPage .readOnlyContent:before {
+body:not(.layout-tv) #loginPage .readOnlyContent:before {
     content: "";
     display: block;
     width: 220px;
@@ -167,20 +169,20 @@
     margin: 0 auto 30px !important;
 }
 
-#loginPage h1 {
+body:not(.layout-tv) #loginPage h1 {
     display: none !important; /* Usamos o logo em vez do texto */
 }
 
-/* 7. PURGE GREY ARTIFACTS & METADATA LAYOUT */
-.detailRibbon, 
-.itemDetailsGroup,
-.cardPadder,
-.detailPageWrapperContainer {
+/* 7. PURGE GREY ARTIFACTS & METADATA LAYOUT (Apenas no Desktop/Mobile normal) */
+body:not(.layout-tv) .detailRibbon, 
+body:not(.layout-tv) .itemDetailsGroup,
+body:not(.layout-tv) .cardPadder,
+body:not(.layout-tv) .detailPageWrapperContainer {
     background: transparent !important;
     box-shadow: none !important;
 }
 
-.monwui-status-container {
+body:not(.layout-tv) .monwui-status-container {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: wrap !important;
@@ -193,7 +195,7 @@
     border: 1px solid rgba(255,255,255,0.05) !important;
 }
 
-.monwui-info-container {
+body:not(.layout-tv) .monwui-info-container {
     background: rgba(123, 47, 190, 0.1) !important;
     padding: 12px 20px !important;
     border-radius: 12px !important;
@@ -204,37 +206,75 @@
     flex-wrap: wrap !important;
 }
 
-/* 8. STUDIO HUBS - VIDEO ONLY ON HOVER */
-.hub-card {
+/* 8. STUDIO HUBS - VIDEO ONLY ON HOVER (Apenas no Desktop/Mobile normal) */
+body:not(.layout-tv) .hub-card {
     transition: transform 0.3s ease !important;
 }
 
-.hub-card:hover {
+body:not(.layout-tv) .hub-card:hover {
     transform: scale(1.05) !important;
 }
 
-.hub-card:hover .hub-title-text,
-.hub-card:hover .hub-logo-img,
-.hub-card:hover .hub-overlay,
-.hub-card:hover .monwui-hub-card-title {
+body:not(.layout-tv) .hub-card:hover .hub-title-text,
+body:not(.layout-tv) .hub-card:hover .hub-logo-img,
+body:not(.layout-tv) .hub-card:hover .hub-overlay,
+body:not(.layout-tv) .hub-card:hover .monwui-hub-card-title {
     opacity: 0 !important;
     visibility: hidden !important;
     transition: opacity 0.3s ease !important;
 }
 
-.hub-card video {
+body:not(.layout-tv) .hub-card video {
     border-radius: 12px !important;
 }
 
-/* 9. FIX "UNDEFINED" & ARTIFACTS */
-.monwui-meta-text:empty,
-.monwui-type-text:empty,
-[data-type="undefined"] {
+/* 9. FIX "UNDEFINED" & ARTIFACTS (Apenas no Desktop/Mobile normal) */
+body:not(.layout-tv) .monwui-meta-text:empty,
+body:not(.layout-tv) .monwui-type-text:empty,
+body:not(.layout-tv) [data-type="undefined"] {
     display: none !important;
 }
 
-.monwui-baslik {
+body:not(.layout-tv) .monwui-baslik {
     font-size: 2.8rem !important;
     font-weight: 800 !important;
     text-shadow: 0 4px 12px rgba(0,0,0,0.8) !important;
 }
+
+/* 10. TV LAYOUT OPTIMIZATIONS (Apenas quando o modo TV está ativo) */
+body.layout-tv #monwui-slides-container {
+    display: none !important;
+}
+
+/* Remover quaisquer margens invasivas que possam quebrar a navegação espacial nativa */
+body.layout-tv .homeSectionsContainer {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Ajustar contorno de foco nativo do TV mode para ficar elegante e proporcional */
+body.layout-tv *:focus,
+body.layout-tv .focusable:focus,
+body.layout-tv .focused {
+    outline: none !important; /* Desativar outline quadrado padrão */
+}
+
+/* Aplicar borda roxa arredondada e brilho apenas nos cards e botões focados */
+body.layout-tv .card:focus,
+body.layout-tv .card.focused,
+body.layout-tv .focusable:focus,
+body.layout-tv .focused,
+body.layout-tv .paperList:focus,
+body.layout-tv .listItem:focus,
+body.layout-tv .btnPlay:focus,
+body.layout-tv .button-flat:focus {
+    box-shadow: 0 0 0 3px #7B2FBE, 0 0 20px rgba(123, 47, 190, 0.7) !important;
+    border-radius: inherit !important;
+    outline: none !important;
+}
+
+/* Impedir que o poster lateral seja ocultado no modo TV */
+body.layout-tv .detailImageContainer {
+    display: block !important;
+}
+

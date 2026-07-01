@@ -1,3 +1,42 @@
+# 📦 Nexus PobreFlix Plugin — Build v1.0.0.1 (Industrial)
+
+Esta build oficial traz a implementação da integração portátil com a Steam, suporte nativo para Controles de Xbox / Steam Deck e melhorias importantes de privacidade e persistência de sessão.
+
+---
+
+### ⏱️ Ajustes e Atualizações Incrementais da Versão:
+
+#### 🟢 [01/07/2026 - 04:30] — Ajustes de Navegação TV, Botão B e Foco Neon
+* **Foco Neon Redondo (`box-shadow`)**: Removemos a borda de seleção (`outline`) padrão quadrada que ficava desalinhada. Adicionamos um efeito roxo neon com `box-shadow` que segue perfeitamente o arredondamento (`border-radius`) de posters, botões e listas no modo TV.
+* **Navegação D-Pad Universal**: O script do controle agora simula teclas direcionais físicas de teclado tanto no modo TV quanto no modo Desktop. Isso resolveu o problema em que o controle não conseguia navegar pelas listas "Top 10" ou no modal de detalhes da mídia.
+* **Botão B Universal (Voltar/Fechar)**: O botão B agora clica em botões de fechar ativos (como no diálogo de detalhes). Se não houver, simula `Escape` e aciona o histórico do navegador para fechar popups de forma segura.
+* **Build Final de Produção**: DLL compilada em Release e ZIP re-gerado em `dist's/NexusPobreFlix-1.0.0.1.zip` com o hash MD5 `05e97bd92d30657e432ef71d2cda2e13`.
+
+#### 🟢 [30/06/2026 - 21:00] — Lançamento Inicial do Suporte a Controles
+* **Suporte Nativo a Gamepad**: Mapeamento básico da Gamepad API para navegação direcionada no Jellyfin TV.
+* **Controles do Reprodutor**: Gatilhos LT/RT ajustam volume, bumpers LB/RB avançam/retrocedem 10s e Start alterna play/pause.
+* **CSS Xbox Buttons**: Injeção da classe `jms-gamepad-mode` para indicar atalhos com botões visuais roxos de Xbox na tela.
+
+---
+
+### 🛠️ Detalhes do Build:
+
+- **Arquivo**: `NexusPobreFlix-1.0.0.1.zip`
+- **Versão**: `1.0.0.1`
+- **MD5**: `05e97bd92d30657e432ef71d2cda2e13`
+- **Status**: Pronta para Publicação
+- **Data**: 01/07/2026
+
+---
+
+### 📄 Notas de Publicação:
+
+Todos os arquivos foram empacotados no workspace local em `dist's/NexusPobreFlix-1.0.0.1.zip`. O snapshot CSS correspondente (`PobreFlix - v1.css`) está armazenado de forma incremental na mesma pasta. Para fazer deploy no servidor Jellyfin, extraia os conteúdos do ZIP (`Jellyfin.Plugin.JMSFusion.dll`, `meta.json` e `PobreFlix - v1.css`) na pasta de plugins do seu servidor, reinicie o Jellyfin e aproveite!
+
+*Build processada e validada via Script Industrial por ONeithan e Antigravity.*
+
+---
+
 # 📦 Nexus PobreFlix Plugin — Build v1.0.0.0 (Industrial)
 
 Esta é a primeira build estável oficial do fork **Nexus PobreFlix** para o Jellyfin. Ela traz a consolidação completa do motor visual premium roxo, layout imersivo baseado no Abyss, tela de login centralizada, suporte nativo offline para todos os recursos de marca e localização 100% absoluta para o Português do Brasil.
