@@ -3370,6 +3370,32 @@ body.layout-tv .mainDrawer {
     display: block !important;
 }
 
+.mainDrawer {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    height: 100vh !important;
+    z-index: 100000 !important;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.layout-tv .mainDrawer:not(.open):not(.drawer-open):not(.mainDrawer-open):not([data-nexus-open="true"]) {
+    transform: translateX(-105%) !important;
+}
+
+.mainDrawer.open,
+.mainDrawer.drawer-open,
+.mainDrawer.mainDrawer-open,
+.mainDrawer[data-nexus-open="true"] {
+    transform: translateX(0) !important;
+    left: 0 !important;
+    visibility: visible !important;
+    display: block !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
 /* Menu Lateral (Drawer) - Estilização Premium Glassmorphism e Ergonomia Touch */
 .mainDrawer {
     background: rgba(13, 13, 24, 0.98) !important;

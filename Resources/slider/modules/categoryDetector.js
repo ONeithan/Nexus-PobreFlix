@@ -18,7 +18,8 @@ export function detectItemCategory(item, fallbackType = "Movie") {
     ? item.Tags.map(t => (typeof t === "string" ? t : t?.Name || "").toLowerCase())
     : [];
   const path = (item.Path || item.Location || "").toLowerCase();
-  const libName = (item.__libraryName || "").toLowerCase();
+  const libNameFromParent = (item?.ParentId && typeof window !== "undefined" && window.__nexusLibraryMap?.[item.ParentId]) || "";
+  const libName = (item.__libraryName || libNameFromParent || "").toLowerCase();
 
   // 1. Anime Detection
   const isAnime =

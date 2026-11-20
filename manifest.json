@@ -9,11 +9,19 @@
     "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png",
     "versions": [
       {
+        "version": "1.0.0.6",
+        "changelog": "v1.0.0.6 - Separação Exclusiva de Top 10 por Biblioteca (Animes, Desenhos, Novelas, Séries), Menu Hambúrguer TV Vetorial, Logo Ampliada e Image Shield\n- Criação de carrosséis Top 10 dedicados para cada pasta do acervo (Top 10 Animes com ⭐ Anime, Top 10 Desenhos com 📺 Desenho, Top 10 Novelas com 📺 Novela, Top 10 Séries com 📺 Série), acabando com a mistura em 'Top 10 Série'.\n- Badge do Hero Banner (Slider) corrigido para identificar Animes, Desenhos e Novelas a partir do nome da biblioteca de origem e caminho de mídia.\n- Menu Hambúrguer (3 risquinhos) forçado e visível no Modo TV com ícone vetorial SVG e animação suave ao abrir/fechar a gaveta.\n- Logo Nexus PobreFlix ampliada no cabeçalho para 56px (max 60px) para máxima legibilidade na TV e desktop.\n- Filtros por Usuário para ocultar categorias de recomendações em perfis específicos.\n- Image Shield (Bloqueio de Capas) com persistência local contra sobrescrita automática do Jellyfin.\n- Touch targets ampliados para 46px e glassmorphism escuro no menu lateral mobile.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.6/NexusPobreFlix-1.0.0.6.zip",
+        "checksum": "34b3ef0218a7db991b471bfb34b1caaa",
+        "timestamp": "2026-11-20T05:10:00Z"
+      },
+      {
         "version": "1.0.0.5",
         "changelog": "v1.0.0.5 - Menu TV Hambúrguer, Reconhecimento Inteligente de Categorias, Image Shield e Adaptabilidade Mobile\n- Menu Hambúrguer (3 risquinhos) forçado e totalmente funcional no Modo TV (.layout-tv), abrindo a gaveta de bibliotecas suavemente.\n- Aumento substancial da Logo Nexus PobreFlix no cabeçalho (desktop e mobile) para máxima nitidez e destaque visual.\n- Reconhecimento Inteligente de Categorias: Animes, Desenhos, Novelas, Séries e Filmes agora possuem badges e títulos dedicados nos carrosséis, eliminando o rótulo genérico de 'Série'.\n- Filtros de Exclusão por Usuário: Permite escolher perfis do Jellyfin e desativar recomendações de categorias específicas (ex: nunca recomendar novelas ou desenhos para determinado usuário).\n- Image Shield (Bloqueio Permanente de Capas): Proteção anti-sobrescrita do Jellyfin para fixar capas manuais (Shaun o Carneiro, Tico e Teco, etc.) com armazenamento local persistente e cache imutável.\n- Entrada oficial de menu no painel lateral do Jellyfin na seção 'Plugins'.\n- Adaptabilidade mobile completa: drawer lateral com glassmorphism escuro de alta legibilidade e área de toque ampliada (46px).",
         "targetAbi": "12.0.0.0",
         "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.5/NexusPobreFlix-1.0.0.5.zip",
-        "checksum": "49078597e4c4fee81e441fecfcad5d29",
+        "checksum": "633c08a504323bfe27c0083b6328249c",
         "timestamp": "2026-11-19T07:25:00Z"
       },
       {

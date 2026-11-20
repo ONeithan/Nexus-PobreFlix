@@ -13,7 +13,7 @@ import {
 } from "./personalRecommendations.js";
 import { openDetailsModal } from "./detailsModalLoader.js";
 import { openDirRowsDB, makeScope, upsertItemsBatch, getMeta, setMeta, getItemsByIds, } from "./recentRowsDb.js";
-import { getGlobalTmdbApiKey } from "./jmsPluginConfig.js";
+import { getGlobalTmdbApiKey, fetchJmsPluginConfig } from "./jmsPluginConfig.js";
 import {
   withServer
 } from "./jfUrl.js";
@@ -936,6 +936,8 @@ const COMMON_FIELDS = [
   "SeriesId",
   "SeriesName",
   "ParentId",
+  "Path",
+  "Tags",
   "IndexNumber",
   "ParentIndexNumber"
 ].join(",");
@@ -1517,6 +1519,19 @@ async function resolveDefaultPages(userId) {
   try {
     const data = await makeApiRequest(`/Users/${userId}/Views`);
     const items = Array.isArray(data?.Items) ? data.Items : [];
+    if (typeof window !== "undefined") {
+      window.__nexusLibraryMap = window.__nexusLibraryMap || {};
+      items.forEach(x => {
+        if (x?.Id && x?.Name) window.__nexusLibraryMap[x.Id] = x.Name;
+      });
+      try {
+        fetchJmsPluginConfig().then(pluginCfg => {
+          if (pluginCfg?.UserCategoryExclusions || pluginCfg?.userCategoryExclusions) {
+            window.__nexusUserExclusions = pluginCfg.UserCategoryExclusions || pluginCfg.userCategoryExclusions;
+          }
+        }).catch(() => {});
+      } catch {}
+    }
 
     const movieLibs = items.filter(x => (x?.CollectionType === "movies")).map(x => ({
       Id: x?.Id,
@@ -4519,30 +4534,94 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
     });
 
   if (runtimeCfg.enableTop10Series) {
-    const topSeriesParentIds = getTopSeriesParentIds();
-    const topSeriesMetaType = buildTopRowMetaType("Series", topSeriesParentIds);
-    pushPlan(top10SeriesPlans, () => buildManagedSection({
-      titleText: config.languageLabels.top10Series || "Top 10 Séries",
-      badgeType: "series",
-      heroLabel: "",
-      cardCount: TOP10_ROW_CARD_COUNT,
-      showProgress: false,
-      hideHero: true,
-      sectionClassName: "top10-section",
-      rowClassName: "top10-row",
-      cardVariant: "top10",
-      deferNetworkRender: false,
-      fetcher: Object.assign(
-        () => fetchTopRankedUnplayedFirstAcrossParents(userId, "Series", TOP10_CACHE_POOL_SIZE, topSeriesParentIds).then(async (items) => {
-          await writeCachedList("top", topSeriesMetaType, items.map((x) => x?.Id).filter(Boolean));
-          return items;
-        }),
-        {
-          cachedItems: () => loadCachedLocalTop10Items("top", topSeriesMetaType, TTL_TOP10_MS)
+    const rawTvLibs = Array.isArray(STATE.tvLibs) && STATE.tvLibs.length > 0 ? STATE.tvLibs : [];
+    const targetLibs = rawTvLibs.length > 0
+      ? rawTvLibs
+      : [{ Id: getTopSeriesParentIds()[0] || "", Name: "Séries" }];
+
+    targetLibs.forEach((lib) => {
+      const libId = lib.Id;
+      const libName = (lib.Name || "Séries").trim();
+      const lowerName = libName.toLowerCase();
+
+      let categoryId = "series";
+      let rowTitle = config.languageLabels.top10Series || `Top 10 ${libName}`;
+
+      if (lowerName.includes("anime")) {
+        categoryId = "anime";
+        rowTitle = config.languageLabels.top10Anime || "Top 10 Animes";
+      } else if (lowerName.includes("desenho") || lowerName.includes("cartoon") || lowerName.includes("infantil") || lowerName.includes("kids")) {
+        categoryId = "desenho";
+        rowTitle = config.languageLabels.top10Desenho || "Top 10 Desenhos";
+      } else if (lowerName.includes("novela") || lowerName.includes("dorama")) {
+        categoryId = "novela";
+        rowTitle = config.languageLabels.top10Novela || "Top 10 Novelas";
+      } else {
+        categoryId = "series";
+        rowTitle = (lowerName === "séries" || lowerName === "series")
+          ? (config.languageLabels.top10Series || "Top 10 Séries")
+          : `Top 10 ${libName}`;
+      }
+
+      // Check user exclusions if any configured for this userId
+      const userExclusions = (window.__nexusUserExclusions && window.__nexusUserExclusions[userId]) || [];
+      if (Array.isArray(userExclusions)) {
+        const isExcluded = userExclusions.some(ex => {
+          const e = String(ex || "").toLowerCase();
+          return e === categoryId || e === lowerName;
+        });
+        if (isExcluded) return; // user excluded this category/library
+      }
+
+      const topSeriesParentIds = libId ? [libId] : getTopSeriesParentIds();
+      const topSeriesMetaType = buildTopRowMetaType(`Series_${categoryId}_${libId || "all"}`, topSeriesParentIds);
+
+      pushPlan(top10SeriesPlans, () => buildManagedSection({
+        titleText: rowTitle,
+        badgeType: categoryId,
+        heroLabel: "",
+        cardCount: TOP10_ROW_CARD_COUNT,
+        showProgress: false,
+        hideHero: true,
+        sectionClassName: "top10-section",
+        rowClassName: "top10-row",
+        cardVariant: "top10",
+        deferNetworkRender: false,
+        fetcher: Object.assign(
+          () => fetchTopRankedUnplayedFirstAcrossParents(userId, "Series", TOP10_CACHE_POOL_SIZE, topSeriesParentIds).then(async (items) => {
+            const tagged = items.map((it) => {
+              if (it) {
+                it.__libraryName = libName;
+                it.__detectedCategory = categoryId;
+              }
+              return it;
+            });
+            await writeCachedList("top", topSeriesMetaType, tagged.map((x) => x?.Id).filter(Boolean));
+            return tagged;
+          }),
+          {
+            cachedItems: () => loadCachedLocalTop10Items("top", topSeriesMetaType, TTL_TOP10_MS).then((cached) => {
+              if (Array.isArray(cached)) {
+                cached.forEach((it) => {
+                  if (it) {
+                    it.__libraryName = libName;
+                    it.__detectedCategory = categoryId;
+                  }
+                });
+              }
+              return cached;
+            })
+          }
+        ),
+        onSeeAll: () => {
+          if (libId) {
+            window.location.hash = `#/tv?topParentId=${encodeURIComponent(libId)}&collectionType=tvshows&tab=1`;
+          } else {
+            openLatestPage("Series");
+          }
         }
-      ),
-      onSeeAll: () => openLatestPage("Series")
-    }));
+      }));
+    });
   }
 
   if (runtimeCfg.enableTop10Movies) {
