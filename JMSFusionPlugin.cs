@@ -225,7 +225,10 @@ namespace Jellyfin.Plugin.JMSFusion
                 {
                     Name = "JMSFusionConfigPage",
                     EmbeddedResourcePath = $"{ns}.Web.configuration.html",
-                    EnableInMainMenu = false
+                    EnableInMainMenu = true,
+                    MenuSection = "plugins",
+                    MenuIcon = "style",
+                    DisplayName = "Nexus PobreFlix"
                 }
             };
         }

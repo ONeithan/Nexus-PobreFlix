@@ -4,6 +4,7 @@ import { fetchItemDetails } from "../../Plugins/JMSFusion/runtime/api.js";
 import { calculateMatchPercentage } from "./hoverTrailerModal.js";
 import { withServer } from "./jfUrl.js";
 import { getTomatoIconHtml } from "./customIcons.js";
+import { detectItemCategory } from "./categoryDetector.js";
 
 const config = getConfig();
 const QUALITY_LABEL_BY_LEVEL = {
@@ -331,7 +332,7 @@ export function createLogoContainer() {
   return container;
 }
 
-export function createStatusContainer(itemType, config, UserData, ChildCount, RunTimeTicks, MediaStreams) {
+export function createStatusContainer(itemType, config, UserData, ChildCount, RunTimeTicks, MediaStreams, item = null) {
   const statusContainer = document.createElement("div");
   statusContainer.className = "monwui-status-container";
   applyContainerStyles(statusContainer, 'status');
@@ -340,22 +341,19 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
   if (itemType && config.showTypeInfo) {
     const typeSpan = document.createElement("span");
     typeSpan.className = "type";
-    const typeTranslations = {
-      Series: { text: config.languageLabels.dizi, icon: '<i class="fas fa-tv "></i>' },
-      Season: { text: config.languageLabels.season, icon: '<i class="fas fa-tv "></i>' },
-      Episode: { text: config.languageLabels.episode, icon: '<i class="fas fa-tv "></i>' },
-      BoxSet: { text: config.languageLabels.boxset, icon: '<i class="fas fa-film "></i>' },
-      Movie: { text: config.languageLabels.film, icon: '<i class="fas fa-film "></i>' }
-    };
-    const typeInfo = typeTranslations[itemType] || { text: itemType, icon: "" };
-    let typeText = typeInfo.text;
-    if (itemType === "Series" && ChildCount) {
-      typeText += ` (${ChildCount} ${config.languageLabels.sezon})`;
+    const detected = detectItemCategory(item || { Type: itemType });
+    const isSpecialCategory = ["anime", "novela", "desenho"].includes(detected.id);
+    let baseText = isSpecialCategory ? detected.label : (itemType === "Movie" ? (config.languageLabels.film || "Filme") : (config.languageLabels.dizi || "Série"));
+    if (detected.id === "boxset") baseText = config.languageLabels.boxset || "Coleção";
+    let iconClass = detected.icon === "star" ? "fa-star" : (detected.icon === "film" ? "fa-film" : "fa-tv");
+
+    let typeText = baseText;
+    if ((itemType === "Series" || isSpecialCategory) && ChildCount) {
+      typeText += ` (${ChildCount} ${config.languageLabels.sezon || "Temporadas"})`;
+    } else if (itemType === "BoxSet" && ChildCount) {
+      typeText += ` (${ChildCount} ${config.languageLabels.seri || "Coleção"})`;
     }
-    if (itemType === "BoxSet" && ChildCount) {
-      typeText += ` (${ChildCount} ${config.languageLabels.seri})`;
-    }
-    typeSpan.innerHTML = `${typeInfo.icon}${buildMetaTextSpan(typeText, "monwui-type-text")}`;
+    typeSpan.innerHTML = `<i class="fas ${iconClass} "></i>${buildMetaTextSpan(typeText, "monwui-type-text")}`;
     statusContainer.appendChild(typeSpan);
   }
 

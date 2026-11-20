@@ -17,6 +17,7 @@ import { getGlobalTmdbApiKey } from "./jmsPluginConfig.js";
 import {
   withServer
 } from "./jfUrl.js";
+import { detectItemCategory } from "./categoryDetector.js";
 import {
   buildCinemaPreRollCacheUrl,
   resolveCinemaPreRollLocale
@@ -939,36 +940,46 @@ const COMMON_FIELDS = [
   "ParentIndexNumber"
 ].join(",");
 
-function getRecentRowsCardTypeBadge(itemType) {
+function getRecentRowsCardTypeBadge(itemType, item = null) {
   const ll = config.languageLabels || {};
+  const detected = detectItemCategory(item || { Type: itemType });
+  if (detected.id === "anime") {
+    return { label: "Anime", icon: "star" };
+  }
+  if (detected.id === "novela") {
+    return { label: "Novela", icon: "tv" };
+  }
+  if (detected.id === "desenho") {
+    return { label: "Desenho", icon: "tv" };
+  }
   switch (itemType) {
     case "Photo":
-      return { label: ll.photo || labels.photo || "Fotoğraf", icon: "image" };
+      return { label: ll.photo || labels.photo || "Foto", icon: "image" };
     case "PhotoAlbum":
-      return { label: ll.photoAlbum || labels.photoAlbum || "Albüm", icon: "images" };
+      return { label: ll.photoAlbum || labels.photoAlbum || "Álbum", icon: "images" };
     case "Video":
-      return { label: ll.video || labels.video || "Video", icon: "video" };
+      return { label: ll.video || labels.video || "Vídeo", icon: "video" };
     case "Folder":
-      return { label: ll.folder || labels.folder || "Klasör", icon: "folder" };
+      return { label: ll.folder || labels.folder || "Pasta", icon: "folder" };
     case "Episode":
       return { label: ll.episode || labels.episode || "Episódio", icon: "tv" };
     case "Season":
-      return { label: ll.season || labels.season || "Sezon", icon: "layerGroup" };
+      return { label: ll.season || labels.season || "Temporada", icon: "layerGroup" };
     case "Series":
-      return { label: ll.dizi || labels.dizi || "Dizi", icon: "tv" };
+      return { label: ll.dizi || labels.dizi || "Série", icon: "tv" };
     case "Trailer":
-      return { label: ll.trailer || labels.trailer || "Fragman", icon: "clapperboard" };
+      return { label: ll.trailer || labels.trailer || "Trailer", icon: "clapperboard" };
     case "MusicAlbum":
-      return { label: ll.album || labels.album || "Albüm", icon: "compactDisc" };
+      return { label: ll.album || labels.album || "Álbum", icon: "compactDisc" };
     case "Audio":
-      return { label: ll.track || labels.track || "Parça", icon: "music" };
+      return { label: ll.track || labels.track || "Faixa", icon: "music" };
     case "BoxSet":
       return {
-        label: ll.collectionTitle || ll.boxset || labels.collectionTitle || labels.boxset || "Collection",
+        label: ll.collectionTitle || ll.boxset || labels.collectionTitle || labels.boxset || "Coleção",
         icon: "layerGroup"
       };
     default:
-      return { label: ll.film || labels.film || "Film", icon: "film" };
+      return { label: ll.film || labels.film || "Filme", icon: "film" };
   }
 }
 
@@ -1097,6 +1108,10 @@ function getExternalArtworkUrl(item, type) {
 
 function buildCandidateImageUrl(item, candidate, height = 540, quality = 72, { omitTag = false } = {}) {
   if (!candidate?.itemId || !candidate?.imageType) return null;
+  const cleanId = String(candidate.itemId).replace(/-/g, "").toLowerCase();
+  if (candidate.imageType === "Primary" && window.__nexusLockedImageIds && window.__nexusLockedImageIds.has(cleanId)) {
+    return withServer(`/Plugins/JMSFusion/Images/Serve/${cleanId}`);
+  }
   const skipTag = omitTag || shouldPreferTaglessImages(item);
 
   const parts = [];
@@ -2635,7 +2650,7 @@ function createRecommendationCard(item, serverId, {
   const genres = Array.isArray(posterSource.Genres) ? posterSource.Genres.slice(0, 2).join(", ") : "";
   const isEpisode = item.Type === "Episode";
   const isSeason  = item.Type === "Season";
-  const { label: typeLabel, icon: typeIcon } = getRecentRowsCardTypeBadge(item.Type);
+  const { label: typeLabel, icon: typeIcon } = getRecentRowsCardTypeBadge(item.Type, item);
   const top10IsFresh = isTop10 && !isTrailerVariant && !hasPlaybackActivity(item);
   const trailerReleaseLabel = String(item?.__tmdbReleaseLabel || "").trim();
   const trailerReleaseDateLabel = String(item?.__tmdbReleaseDateLabel || "").trim();
@@ -4756,15 +4771,30 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
     } else {
       for (const tvLibId of tvIds) {
         const libName = (STATE.tvLibs || []).find(x => x.Id === tvLibId)?.Name || "";
+        let sectionTitle = (config.languageLabels.recentSeries || "Séries Adicionadas Recentemente") + (libName ? ` • ${libName}` : "");
+        let heroTitle = (config.languageLabels.recentSeriesHero || "Série Recente") + (libName ? ` • ${libName}` : "");
+        const lowerLib = libName.toLowerCase();
+        if (lowerLib.includes("anime")) {
+          sectionTitle = "Animes Adicionados Recentemente";
+          heroTitle = "Anime Recente";
+        } else if (lowerLib.includes("desenho") || lowerLib.includes("cartoon")) {
+          sectionTitle = "Desenhos Adicionados Recentemente";
+          heroTitle = "Desenho Recente";
+        } else if (lowerLib.includes("novela") || lowerLib.includes("dorama")) {
+          sectionTitle = "Novelas Adicionadas Recentemente";
+          heroTitle = "Novela Recente";
+        }
+
         pushPlan(recentPlans, () => buildManagedSection({
-          titleText: (config.languageLabels.recentSeries || "Son eklenen diziler") + (libName ? ` • ${libName}` : ""),
+          titleText: sectionTitle,
           badgeType: "new",
-          heroLabel: (config.languageLabels.recentSeriesHero || "Son eklenen dizi") + (libName ? ` • ${libName}` : ""),
+          heroLabel: heroTitle,
           cardCount: runtimeCfg.effectiveRecentSeriesCount,
           showProgress: false,
           hideHero: runtimeCfg.showRecentSeriesHeroCards === false,
           fetcher: Object.assign(
             () => fetchRecent(userId, "Series", runtimeCfg.effectiveRecentSeriesCount + 1, tvLibId).then(async (items) => {
+              items.forEach(it => { if (it) it.__libraryName = libName; });
               await writeCachedList("recent", "Series" + tvLibMetaSuffix(tvLibId), items.map(x=>x?.Id).filter(Boolean));
               return items;
             }),

@@ -107,6 +107,30 @@ namespace Jellyfin.Plugin.JMSFusion
         [JsonPropertyName("watchlistRevision")]
         public long WatchlistRevision { get; set; } = 0;
 
+        [System.Xml.Serialization.XmlIgnore]
+        [JsonPropertyName("userCategoryExclusions")]
+        public Dictionary<string, List<string>> UserCategoryExclusions { get; set; } = new();
+
+        [System.Xml.Serialization.XmlElement("UserCategoryExclusionsJson")]
+        [JsonIgnore]
+        public string UserCategoryExclusionsJson
+        {
+            get => System.Text.Json.JsonSerializer.Serialize(UserCategoryExclusions);
+            set
+            {
+                try
+                {
+                    UserCategoryExclusions = string.IsNullOrWhiteSpace(value)
+                        ? new()
+                        : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, List<string>>>(value) ?? new();
+                }
+                catch
+                {
+                    UserCategoryExclusions = new();
+                }
+            }
+        }
+
         [JsonPropertyName("enablePhysicalIndexHtmlPatchFallback")]
         public bool EnablePhysicalIndexHtmlPatchFallback { get; set; } = false;
 

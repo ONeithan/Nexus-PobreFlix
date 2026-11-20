@@ -816,7 +816,7 @@ async function createSlide(item, options = {}) {
   IndexNumber: item.IndexNumber
 });
 
-  const statusContainer = createStatusContainer(itemType, config, UserData, ChildCount, RunTimeTicks, MediaStreams);
+  const statusContainer = createStatusContainer(itemType, config, UserData, ChildCount, RunTimeTicks, MediaStreams, item);
   const actorSlider = await createActorSlider(People, config, item);
   const infoContainer = createInfoContainer({ config, Genres, ProductionYear, ProductionLocations });
   const directorContainer = await createDirectorContainer({ config, People, item });

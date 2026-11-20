@@ -3975,15 +3975,46 @@ function ensureHeaderLogo() {
     const img = document.createElement("img");
     img.src = "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png";
     img.alt = "Nexus PobreFlix";
-    img.style.height = "32px";
-    img.style.maxHeight = "36px";
+    img.style.height = "46px";
+    img.style.maxHeight = "50px";
     img.style.width = "auto";
     img.style.objectFit = "contain";
     img.style.verticalAlign = "middle";
 
     logoLink.appendChild(img);
 
-    const barsBtn = headerLeft.querySelector(".headerButton-bars, .mainDrawerButton");
+    let barsBtn = headerLeft.querySelector(".headerButton-bars, .mainDrawerButton");
+    if (!barsBtn) {
+      barsBtn = document.createElement("button");
+      barsBtn.type = "button";
+      barsBtn.className = "headerButton mainDrawerButton barsMenuButton headerButtonLeft";
+      barsBtn.setAttribute("aria-label", "Menu");
+      barsBtn.title = "Menu";
+      barsBtn.innerHTML = '<span class="material-icons menu" aria-hidden="true"></span>';
+      barsBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.LibraryMenu && typeof window.LibraryMenu.onHardwareMenuButtonClick === "function") {
+          window.LibraryMenu.onHardwareMenuButtonClick();
+        } else {
+          const drawer = document.querySelector(".mainDrawer");
+          if (drawer) {
+            drawer.classList.remove("hide");
+            drawer.classList.toggle("open");
+          }
+        }
+      };
+      headerLeft.prepend(barsBtn);
+    } else {
+      barsBtn.classList.remove("hide");
+      barsBtn.style.display = "inline-flex";
+      barsBtn.style.visibility = "visible";
+      barsBtn.style.opacity = "1";
+    }
+
+    const drawer = document.querySelector(".mainDrawer");
+    if (drawer) drawer.classList.remove("hide");
+
     if (barsBtn && barsBtn.nextSibling) {
       headerLeft.insertBefore(logoLink, barsBtn.nextSibling);
     } else if (barsBtn) {

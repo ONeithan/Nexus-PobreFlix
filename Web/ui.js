@@ -317,6 +317,16 @@
         console.error("MonWUI settings load failed:", error);
       });
     }
+    if (tabName === "exclusions") {
+      loadUsersForExclusions(view).catch((error) => {
+        console.error("Exclusions load failed:", error);
+      });
+    }
+    if (tabName === "image-shield") {
+      loadLockedImagesList(view).catch((error) => {
+        console.error("Image shield load failed:", error);
+      });
+    }
   }
 
   function initTabs(view) {
@@ -330,7 +340,7 @@
     let active = "jmsfusion";
     try {
       const stored = localStorage.getItem(TAB_STORAGE_KEY);
-      if (stored && ["jmsfusion", "monwui-settings", "status", "snippet"].includes(stored)) {
+      if (stored && ["jmsfusion", "monwui-settings", "status", "snippet", "exclusions", "image-shield", "about"].includes(stored)) {
         active = stored;
       }
     } catch {}
@@ -415,6 +425,7 @@
     if (!r.ok) throw new Error("Failed to load config: " + r.status);
     const cfg = await r.json();
     view.__physicalPatchFallbackEnabled = !!cfg.enablePhysicalIndexHtmlPatchFallback;
+    view.__userCategoryExclusions = cfg.userCategoryExclusions || {};
     view.querySelector("#scriptDir").value = cfg.scriptDirectory || "";
     view.querySelector("#playerSub").value = cfg.playerSubdir || "modules/player";
     const fg = view.querySelector("#forceGlobal");
@@ -436,10 +447,140 @@
     const body = {
       scriptDirectory: view.querySelector("#scriptDir").value.trim(),
       playerSubdir: view.querySelector("#playerSub").value.trim(),
-      forceGlobalUserSettings: !!view.querySelector("#forceGlobal")?.checked
+      forceGlobalUserSettings: !!view.querySelector("#forceGlobal")?.checked,
+      userCategoryExclusions: view.__userCategoryExclusions || {}
     };
 
     await postConfiguration(body);
+  }
+
+  async function loadUsersForExclusions(view) {
+    const sel = view.querySelector("#userExclusionSelect");
+    if (!sel) return;
+    try {
+      let users = [];
+      if (window.ApiClient?.getUsers) {
+        users = await window.ApiClient.getUsers();
+      } else {
+        const res = await fetch(`${jfRoot}/Users`, { headers: authHeaders() });
+        if (res.ok) users = await res.json();
+      }
+      sel.innerHTML = "";
+      if (!Array.isArray(users) || users.length === 0) {
+        sel.innerHTML = '<option value="">Nenhum usuário encontrado</option>';
+        return;
+      }
+      users.forEach(u => {
+        const opt = document.createElement("option");
+        opt.value = u.Id;
+        opt.textContent = `${u.Name} (${u.Id.slice(0, 8)}...)`;
+        sel.appendChild(opt);
+      });
+      syncExclusionCheckboxes(view, sel.value);
+    } catch (err) {
+      console.error("Erro ao carregar usuários:", err);
+      sel.innerHTML = '<option value="">Erro ao carregar usuários</option>';
+    }
+  }
+
+  function syncExclusionCheckboxes(view, userId) {
+    if (!userId) return;
+    const exclusions = (view.__userCategoryExclusions && view.__userCategoryExclusions[userId]) || [];
+    ["novela", "desenho", "anime", "series", "movie"].forEach(cat => {
+      const cb = view.querySelector(`#excl_${cat}`);
+      if (cb) cb.checked = exclusions.includes(cat);
+    });
+  }
+
+  function saveCurrentExclusionsForSelectedUser(view) {
+    const sel = view.querySelector("#userExclusionSelect");
+    const userId = sel?.value;
+    if (!userId) return;
+    if (!view.__userCategoryExclusions) view.__userCategoryExclusions = {};
+    const selectedCats = [];
+    ["novela", "desenho", "anime", "series", "movie"].forEach(cat => {
+      const cb = view.querySelector(`#excl_${cat}`);
+      if (cb?.checked) selectedCats.push(cat);
+    });
+    view.__userCategoryExclusions[userId] = selectedCats;
+  }
+
+  async function loadLockedImagesList(view) {
+    const container = view.querySelector("#lockedImagesListContainer");
+    if (!container) return;
+    try {
+      const res = await fetch(api("Images/List"), { headers: authHeaders() });
+      if (!res.ok) throw new Error("Erro ao listar capas");
+      const data = await res.json();
+      const items = data.items || [];
+      if (items.length === 0) {
+        container.innerHTML = '<div class="jms-empty">Nenhuma capa travada no momento pelo Shield.</div>';
+        return;
+      }
+      let html = "";
+      items.forEach(it => {
+        const lockedDate = it.lockedAt ? new Date(it.lockedAt).toLocaleString() : "";
+        html += `
+          <div class="jms-status-row" style="grid-template-columns: auto minmax(0,1fr) auto; gap:16px;">
+            <img src="${jfRoot}/Plugins/JMSFusion/Images/Serve/${it.itemId}" 
+                 alt="${esc(it.itemTitle)}" 
+                 style="width:52px; height:78px; object-fit:cover; border-radius:8px; border:1px solid var(--jms-border);" />
+            <div>
+              <div style="font-weight:700; font-size:15px; color:var(--textColor);">${esc(it.itemTitle || "Item")}</div>
+              <div style="font-size:12px; color:var(--labelTextColor); margin-top:4px;">
+                <code>${esc(it.itemId)}</code> • Travado em: ${esc(lockedDate)}
+              </div>
+            </div>
+            <button type="button" class="raised btn-unlock-item" data-id="${esc(it.itemId)}" style="color:var(--jms-danger); border-color:rgba(214,69,80,0.3);">
+              🔓 Desbloquear
+            </button>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+      container.querySelectorAll(".btn-unlock-item").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id;
+          if (!id) return;
+          try {
+            const unres = await fetch(api("Images/Unlock"), {
+              method: "POST",
+              headers: { "Content-Type": "application/json", ...authHeaders() },
+              body: JSON.stringify({ itemId: id })
+            });
+            if (!unres.ok) throw new Error("Falha ao desbloquear");
+            showMessage(view, `Capa ${id} destravada com sucesso!`, "ok");
+            await loadLockedImagesList(view);
+          } catch (e) {
+            showMessage(view, e.message || String(e), "err");
+          }
+        });
+      });
+    } catch (e) {
+      container.innerHTML = `<div class="jms-empty jms-empty--error">Erro ao carregar lista de capas: ${esc(e.message)}</div>`;
+    }
+  }
+
+  async function lockImageById(view, itemId) {
+    if (!itemId) {
+      showMessage(view, "Informe o ID do item para travar a capa.", "warn");
+      return;
+    }
+    try {
+      const res = await fetch(api("Images/Lock"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ itemId: itemId.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message || "Erro ao travar capa.");
+      showMessage(view, data.message || "Capa travada com sucesso!", "ok");
+      const input = view.querySelector("#imageShieldItemId");
+      if (input) input.value = "";
+      await loadLockedImagesList(view);
+    } catch (e) {
+      showMessage(view, e.message || String(e), "err");
+    }
   }
 
   async function getStatus() {
@@ -802,6 +943,25 @@
       } catch (e) {
         showMessage(view, e.message || String(e), "err");
       }
+    });
+
+    view.querySelector("#userExclusionSelect")?.addEventListener("change", (e) => {
+      syncExclusionCheckboxes(view, e.target.value);
+    });
+
+    view.querySelector("#saveUserExclusionsBtn")?.addEventListener("click", async () => {
+      try {
+        saveCurrentExclusionsForSelectedUser(view);
+        await saveConfig(view);
+        showMessage(view, "Filtros de categoria salvos com sucesso para este usuário!", "ok");
+      } catch (e) {
+        showMessage(view, e.message || String(e), "err");
+      }
+    });
+
+    view.querySelector("#btnLockImage")?.addEventListener("click", async () => {
+      const id = view.querySelector("#imageShieldItemId")?.value;
+      await lockImageById(view, id);
     });
 
     try {

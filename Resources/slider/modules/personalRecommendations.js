@@ -10,6 +10,7 @@ import {
   withServer,
   isKnownMissingImage
 } from "./jfUrl.js";
+import { detectItemCategory } from "./categoryDetector.js";
 import { faIconHtml, findFaIcon } from "./faIcons.js";
 import { resolveSliderAssetHref } from "./assetLinks.js";
 import {
@@ -355,18 +356,28 @@ function getPrcTypeToken(itemType) {
   return "movie";
 }
 
-function getPrcCardTypeBadge(itemType) {
+function getPrcCardTypeBadge(itemType, item = null) {
   const ll = config.languageLabels || {};
-  if (itemType === "Series") {
-    return { label: ll.dizi || labels.dizi || "Dizi", icon: "tv" };
+  const detected = detectItemCategory(item || { Type: itemType });
+  if (detected.id === "anime") {
+    return { label: "Anime", icon: "star" };
   }
-  if (itemType === "BoxSet") {
+  if (detected.id === "novela") {
+    return { label: "Novela", icon: "tv" };
+  }
+  if (detected.id === "desenho") {
+    return { label: "Desenho", icon: "tv" };
+  }
+  if (itemType === "Series" || detected.id === "series") {
+    return { label: ll.dizi || labels.dizi || "Série", icon: "tv" };
+  }
+  if (itemType === "BoxSet" || detected.id === "boxset") {
     return {
-      label: ll.collectionTitle || ll.boxset || labels.collectionTitle || labels.boxset || "Collection",
+      label: ll.collectionTitle || ll.boxset || labels.collectionTitle || labels.boxset || "Coleção",
       icon: "layerGroup"
     };
   }
-  return { label: ll.film || labels.film || "Film", icon: "film" };
+  return { label: ll.film || labels.film || "Filme", icon: "film" };
 }
 
 async function maybePurgePrcDb(st) {
@@ -1485,8 +1496,54 @@ function getPosterLikeImageCandidate(item) {
   );
 }
 
+let __nexusLockedFetchPromise = null;
+function ensureNexusLockedImagesLoaded() {
+  if (window.__nexusLockedImageIds) return Promise.resolve(window.__nexusLockedImageIds);
+  if (__nexusLockedFetchPromise) return __nexusLockedFetchPromise;
+  __nexusLockedFetchPromise = fetch(withServer("/Plugins/JMSFusion/Images/List"))
+    .then(r => r.json())
+    .then(data => {
+      const set = new Set();
+      if (Array.isArray(data?.items)) {
+        data.items.forEach(x => {
+          if (x?.itemId) set.add(String(x.itemId).replace(/-/g, "").toLowerCase());
+        });
+      }
+      window.__nexusLockedImageIds = set;
+      return set;
+    })
+    .catch(() => {
+      window.__nexusLockedImageIds = new Set();
+      return window.__nexusLockedImageIds;
+    });
+  return __nexusLockedFetchPromise;
+}
+ensureNexusLockedImagesLoaded();
+
+let __nexusConfigFetchPromise = null;
+function ensureNexusConfigLoaded() {
+  if (window.__nexusUserCategoryExclusions) return Promise.resolve(window.__nexusUserCategoryExclusions);
+  if (__nexusConfigFetchPromise) return __nexusConfigFetchPromise;
+  __nexusConfigFetchPromise = fetch(withServer("/Plugins/JMSFusion/Configuration"))
+    .then(r => r.json())
+    .then(cfg => {
+      window.__nexusUserCategoryExclusions = cfg?.userCategoryExclusions || {};
+      return window.__nexusUserCategoryExclusions;
+    })
+    .catch(() => {
+      window.__nexusUserCategoryExclusions = {};
+      return window.__nexusUserCategoryExclusions;
+    });
+  return __nexusConfigFetchPromise;
+}
+ensureNexusConfigLoaded();
+
 function buildCandidateImageUrl(item, candidate, height = 540, quality = 72, { omitTag = false } = {}) {
   if (!candidate?.itemId || !candidate?.imageType) return null;
+  const cleanId = String(candidate.itemId).replace(/-/g, "").toLowerCase();
+  if (candidate.imageType === "Primary" && window.__nexusLockedImageIds && window.__nexusLockedImageIds.has(cleanId)) {
+    return withServer(`/Plugins/JMSFusion/Images/Serve/${cleanId}`);
+  }
   const skipTag = omitTag || shouldPreferTaglessImages(item);
   const parts = [];
 
@@ -2907,6 +2964,20 @@ function pickBestItemByRating(items) {
   return best || items[0] || null;
 }
 
+function isItemCategoryExcludedForCurrentUser(it) {
+  try {
+    const { userId } = getSessionInfo();
+    if (!userId) return false;
+    const exclusionsMap = window.__nexusUserCategoryExclusions || config?.userCategoryExclusions || {};
+    const userExclusions = exclusionsMap[userId] || exclusionsMap[userId.toLowerCase()] || exclusionsMap[userId.replace(/-/g, "")];
+    if (!Array.isArray(userExclusions) || userExclusions.length === 0) return false;
+    const detected = detectItemCategory(it);
+    return userExclusions.includes(detected.id);
+  } catch {
+    return false;
+  }
+}
+
 function filterAndTrimByRating(items, minRating, maxCount) {
   const seen = new Set();
   const out = [];
@@ -2914,6 +2985,7 @@ function filterAndTrimByRating(items, minRating, maxCount) {
     if (!it || !it.Id) continue;
     if (seen.has(it.Id)) continue;
     seen.add(it.Id);
+    if (isItemCategoryExcludedForCurrentUser(it)) continue;
     const score = Number(it.CommunityRating);
     if (minRating > 0 && !(Number.isFinite(score) && score >= minRating)) continue;
     out.push(it);
@@ -3437,7 +3509,7 @@ function createRecommendationCard(item, serverId, renderOptions = false) {
   const runtimeTicks = item.Type === "Series" ? item.CumulativeRunTimeTicks : item.RunTimeTicks;
   const runtime = formatRuntime(runtimeTicks);
   const genres = Array.isArray(item.Genres) ? item.Genres.slice(0, 3).join(", ") : "";
-  const { label: typeLabel, icon: typeIcon } = getPrcCardTypeBadge(item.Type);
+  const { label: typeLabel, icon: typeIcon } = getPrcCardTypeBadge(item.Type, item);
   const community = Number.isFinite(item.CommunityRating)
     ? `<div class="community-rating" title="Community Rating">⭐ ${item.CommunityRating.toFixed(1)}</div>`
     : "";

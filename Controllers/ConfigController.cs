@@ -28,6 +28,7 @@ public class ConfigUpdateDto
     public int?    MaxConcurrentDownloads { get; set; }
     public string? JFUserId     { get; set; }
     public List<SharedRadioStationEntry>? RadioStations { get; set; }
+    public Dictionary<string, List<string>>? UserCategoryExclusions { get; set; }
 }
 
 [ApiController]
@@ -102,6 +103,7 @@ public class ConfigController : ControllerBase
         if (incoming.MaxConcurrentDownloads.HasValue)          cfg.MaxConcurrentDownloads = ClampConcurrentDownloads(incoming.MaxConcurrentDownloads.Value);
         if (!string.IsNullOrWhiteSpace(incoming.JFUserId))     cfg.JFUserId     = incoming.JFUserId!;
         if (incoming.RadioStations is not null)                cfg.RadioStations = incoming.RadioStations.Take(300).ToList();
+        if (incoming.UserCategoryExclusions is not null)       cfg.UserCategoryExclusions = incoming.UserCategoryExclusions;
 
         cfg.GlobalUserSettingsRevision = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         plugin.UpdateConfiguration(cfg);

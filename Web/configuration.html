@@ -55,6 +55,20 @@
               aria-selected="false"
               aria-controls="panelSnippet"
               data-tab="snippet">Sistema</button>
+      <button id="tabExclusions"
+              type="button"
+              class="jms-tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panelExclusions"
+              data-tab="exclusions">Filtros por Usuário</button>
+      <button id="tabImageShield"
+              type="button"
+              class="jms-tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panelImageShield"
+              data-tab="image-shield">Image Shield (Capas)</button>
       <button id="tabAbout"
               type="button"
               class="jms-tab"
@@ -270,7 +284,7 @@
         <div class="jms-env-box">
           <div class="jms-env-item">
             <span class="jms-env-label">Versão do Fork</span>
-            <code>1.0.0.1 (Nexus Edition)</code>
+            <code>1.0.0.5 (Nexus Edition)</code>
           </div>
           <div class="jms-env-item">
             <span class="jms-env-label">Autor do Fork</span>
@@ -287,6 +301,97 @@
               <a href="https://github.com/G-grbz/Jellyfin-Media-Slider" target="_blank" class="raised" style="text-decoration:none; display:flex; align-items:center; justify-content:center; padding: 10px 16px;">Repositório Original (G-Grbz)</a>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="panelExclusions"
+             class="jms-panel"
+             data-panel="exclusions"
+             role="tabpanel"
+             aria-labelledby="tabExclusions"
+             hidden>
+      <div class="jms-card">
+        <div class="jms-card-head" style="border-bottom: 1px solid var(--jms-border); padding-bottom: 16px; margin-bottom: 20px;">
+          <h3>Filtros de Recomendações por Usuário</h3>
+          <p style="margin-top: 6px;">Escolha quais categorias NÃO devem aparecer nas recomendações da página inicial para cada perfil cadastrado no Jellyfin.</p>
+        </div>
+
+        <div style="display:grid; gap:20px; max-width:680px;">
+          <div class="inputContainer">
+            <label class="inputLabel" for="userExclusionSelect">Selecionar Usuário:</label>
+            <select id="userExclusionSelect" class="emby-input" style="padding:10px 14px; width:100%; border-radius:12px;">
+              <option value="">Carregando usuários...</option>
+            </select>
+          </div>
+
+          <div id="categoryCheckboxesContainer" style="display:grid; gap:14px; background: rgba(255,255,255,0.03); padding: 18px; border-radius: 14px; border: 1px solid var(--jms-border);">
+            <div style="font-weight:700; color:var(--textColor); margin-bottom:4px;">Marque as categorias que deseja OCULTAR das recomendações deste usuário:</div>
+            
+            <label class="inputLabel--checkbox" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+              <input type="checkbox" id="excl_novela" class="emby-checkbox" value="novela" />
+              <span>🚫 <strong>Novelas / Doramas</strong> (Ocultar novelas da tela inicial)</span>
+            </label>
+
+            <label class="inputLabel--checkbox" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+              <input type="checkbox" id="excl_desenho" class="emby-checkbox" value="desenho" />
+              <span>🚫 <strong>Desenhos / Animações Infantis</strong> (Ocultar desenhos infantis da tela inicial)</span>
+            </label>
+
+            <label class="inputLabel--checkbox" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+              <input type="checkbox" id="excl_anime" class="emby-checkbox" value="anime" />
+              <span>🚫 <strong>Animes</strong> (Ocultar produções de animação japonesa da tela inicial)</span>
+            </label>
+
+            <label class="inputLabel--checkbox" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+              <input type="checkbox" id="excl_series" class="emby-checkbox" value="series" />
+              <span>🚫 <strong>Séries</strong> (Ocultar séries gerais da tela inicial)</span>
+            </label>
+
+            <label class="inputLabel--checkbox" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+              <input type="checkbox" id="excl_movie" class="emby-checkbox" value="movie" />
+              <span>🚫 <strong>Filmes</strong> (Ocultar filmes da tela inicial)</span>
+            </label>
+          </div>
+
+          <div class="buttonContainer">
+            <button id="saveUserExclusionsBtn" class="raised button-submit" type="button">Salvar Filtros Deste Usuário</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="panelImageShield"
+             class="jms-panel"
+             data-panel="image-shield"
+             role="tabpanel"
+             aria-labelledby="tabImageShield"
+             hidden>
+      <div class="jms-card">
+        <div class="jms-card-head" style="border-bottom: 1px solid var(--jms-border); padding-bottom: 16px; margin-bottom: 20px;">
+          <h3>Image Shield — Bloqueio Permanente de Capas</h3>
+          <p style="margin-top: 6px;">Trava permanentemente a imagem de capa escolhida (ex: Shaun o Carneiro, Tico e Teco, Baby Looney Tunes) para que o Jellyfin NUNCA a reverta ou substitua automaticamente.</p>
+        </div>
+
+        <div style="display:grid; gap:20px; max-width:750px; margin-bottom: 28px;">
+          <div style="background: rgba(122,92,255,0.08); border: 1px solid var(--jms-border); border-radius: 14px; padding: 16px;">
+            <strong style="color:var(--jms-accent);">💡 Como funciona o Shield:</strong>
+            <p style="margin: 8px 0 0; line-height: 1.55; font-size: 13.5px; color: var(--labelTextColor);">
+              Ao travar uma capa, o plugin salva os bytes da imagem em um armazenamento seguro e isolado, trava o campo <code>MetadataField.Images</code> no banco de dados do Jellyfin e serve a imagem através de um cache imutável prioritário.
+            </p>
+          </div>
+
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <input type="text" id="imageShieldItemId" class="emby-input" placeholder="ID da Obra no Jellyfin (ex: dc814e44...)" style="flex:1; min-width:240px; padding:11px 14px; border-radius:12px;" />
+            <button id="btnLockImage" type="button" class="raised button-submit" style="white-space:nowrap;">🔒 Travar Capa Atual</button>
+          </div>
+        </div>
+
+        <div class="jms-card-head" style="margin-bottom: 14px;">
+          <h4>Capas Atualmente Travadas pelo Shield</h4>
+        </div>
+        <div id="lockedImagesListContainer" style="display:grid; gap:12px;">
+          <div class="jms-empty">Nenhuma capa travada no momento.</div>
         </div>
       </div>
     </section>

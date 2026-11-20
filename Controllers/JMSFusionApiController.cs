@@ -30,6 +30,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
             [JsonPropertyName("playerSubdir")]    public string? PlayerSubdir { get; set; }
             [JsonPropertyName("forceGlobalUserSettings")] public bool? ForceGlobalUserSettings { get; set; }
             [JsonPropertyName("enablePhysicalIndexHtmlPatchFallback")] public bool? EnablePhysicalIndexHtmlPatchFallback { get; set; }
+            [JsonPropertyName("userCategoryExclusions")] public Dictionary<string, List<string>>? UserCategoryExclusions { get; set; }
         }
 
         [HttpPost("Configuration")]
@@ -46,6 +47,8 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                     cfg.ForceGlobalUserSettings = req.ForceGlobalUserSettings.Value;
                 if (req.EnablePhysicalIndexHtmlPatchFallback.HasValue)
                     cfg.EnablePhysicalIndexHtmlPatchFallback = req.EnablePhysicalIndexHtmlPatchFallback.Value;
+                if (req.UserCategoryExclusions != null)
+                    cfg.UserCategoryExclusions = req.UserCategoryExclusions;
 
                 plugin.UpdateConfiguration(cfg);
                 _logger.LogInformation("[JMSFusion] CFG SAVED: dir='{dir}', player='{sub}'", cfg.ScriptDirectory, cfg.PlayerSubdir);
