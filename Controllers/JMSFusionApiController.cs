@@ -82,14 +82,17 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                 ? $"(embedded)/Resources/slider/{playerDir}/main.js"
                 : Path.Combine(cfg.ScriptDirectory ?? string.Empty, playerDir, "main.js");
 
+            var mainJsOk = usingEmbedded ? EmbeddedAssetHelper.Exists("Resources.slider.main.js")
+                                          : IOFile.Exists(Path.Combine(cfg.ScriptDirectory ?? "", "main.js"));
+            var playerJsOk = usingEmbedded ? EmbeddedAssetHelper.Exists($"Resources.slider.{playerDir.Replace('/', '.')}.main.js")
+                                            : IOFile.Exists(playerPath);
+
             var res = new StatusResponse
             {
-                Configured      = !string.IsNullOrWhiteSpace(cfg.ScriptDirectory),
-                DirectoryExists = !string.IsNullOrWhiteSpace(cfg.ScriptDirectory) && Directory.Exists(cfg.ScriptDirectory),
-                MainJsExists    = usingEmbedded ? EmbeddedAssetHelper.Exists("Resources.slider.main.js")
-                                                : IOFile.Exists(Path.Combine(cfg.ScriptDirectory ?? "", "main.js")),
-                PlayerJsExists  = usingEmbedded ? EmbeddedAssetHelper.Exists($"Resources.slider.{playerDir.Replace('/', '.')}.main.js")
-                                                : IOFile.Exists(playerPath),
+                Configured      = true,
+                DirectoryExists = usingEmbedded ? mainJsOk : (!string.IsNullOrWhiteSpace(cfg.ScriptDirectory) && Directory.Exists(cfg.ScriptDirectory)),
+                MainJsExists    = mainJsOk,
+                PlayerJsExists  = playerJsOk,
                 PlayerPath      = playerPath,
                 UsingEmbedded   = usingEmbedded
             };

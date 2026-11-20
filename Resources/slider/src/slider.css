@@ -3344,18 +3344,19 @@ body,
 }
 
 .nexus-header-logo img {
-    height: 46px !important;
-    max-height: 50px !important;
+    height: 64px !important;
+    max-height: 70px !important;
     width: auto !important;
     object-fit: contain !important;
 }
 
-/* Forçar exibição e interatividade do Menu Hambúrguer (3 risquinhos) no Modo TV e Desktop */
+/* Forçar exibição e interatividade do Menu Hambúrguer (3 risquinhos) no Modo TV, Mobile e Desktop */
 .layout-tv .mainDrawerButton,
 body.layout-tv .mainDrawerButton,
 .layout-tv .headerButton-bars,
 body.layout-tv .headerButton-bars,
-.mainDrawerButton {
+.mainDrawerButton,
+.headerButton-bars {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -3376,36 +3377,55 @@ body.layout-tv .mainDrawer {
     bottom: 0 !important;
     left: 0 !important;
     height: 100vh !important;
+    width: 320px !important;
+    max-width: 85vw !important;
     z-index: 100000 !important;
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    background: rgba(13, 13, 24, 0.98) !important;
+    background-color: rgba(13, 13, 24, 0.98) !important;
+    backdrop-filter: blur(25px) !important;
+    -webkit-backdrop-filter: blur(25px) !important;
+    border-right: 1px solid rgba(122, 92, 255, 0.3) !important;
+    box-shadow: 10px 0 45px rgba(0, 0, 0, 0.95) !important;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
 }
 
-.layout-tv .mainDrawer:not(.open):not(.drawer-open):not(.mainDrawer-open):not([data-nexus-open="true"]) {
+/* Esconder 100% o Drawer quando fechado (sem deixar borda/sliver exposta de 20px) */
+.mainDrawer:not(.open):not(.drawer-open):not(.mainDrawer-open):not([data-nexus-open="true"]) {
     transform: translateX(-105%) !important;
+    left: 0 !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 
+/* Abrir 100% o Drawer de forma suave e com destaque */
 .mainDrawer.open,
 .mainDrawer.drawer-open,
 .mainDrawer.mainDrawer-open,
 .mainDrawer[data-nexus-open="true"] {
     transform: translateX(0) !important;
     left: 0 !important;
-    visibility: visible !important;
+    width: 320px !important;
+    max-width: 85vw !important;
     display: block !important;
+    visibility: visible !important;
     opacity: 1 !important;
     pointer-events: auto !important;
 }
 
-/* Menu Lateral (Drawer) - Estilização Premium Glassmorphism e Ergonomia Touch */
-.mainDrawer {
-    background: rgba(13, 13, 24, 0.98) !important;
-    background-color: rgba(13, 13, 24, 0.98) !important;
-    backdrop-filter: blur(25px) !important;
-    -webkit-backdrop-filter: blur(25px) !important;
-    border-right: 1px solid rgba(122, 92, 255, 0.25) !important;
-    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.85) !important;
-    width: 290px !important;
-    max-width: 85vw !important;
+/* Backdrop escuro com blur ao abrir */
+.nexus-drawer-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.72) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    z-index: 99999 !important;
+    transition: opacity 0.25s ease !important;
+    display: none;
 }
 
 .mainDrawer .navMenuOption,
@@ -3437,7 +3457,7 @@ body.jms-gamepad-mode #jms-gamepad-footer {
 
 @media (max-width: 768px) {
     .skinHeader {
-        height: 56px !important;
+        height: 58px !important;
         padding: 0 6px !important;
     }
 
@@ -3459,7 +3479,7 @@ body.jms-gamepad-mode #jms-gamepad-footer {
     }
 
     .nexus-header-logo img {
-        height: 36px !important;
-        max-height: 40px !important;
+        height: 52px !important;
+        max-height: 56px !important;
     }
 }

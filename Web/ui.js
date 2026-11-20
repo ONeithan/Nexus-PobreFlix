@@ -340,7 +340,7 @@
     let active = "jmsfusion";
     try {
       const stored = localStorage.getItem(TAB_STORAGE_KEY);
-      if (stored && ["jmsfusion", "monwui-settings", "status", "snippet", "exclusions", "image-shield", "about"].includes(stored)) {
+      if (stored && ["jmsfusion", "monwui-settings", "status", "snippet", "exclusions", "image-shield"].includes(stored)) {
         active = stored;
       }
     } catch {}
@@ -356,10 +356,12 @@
     setText(view, "#heroRootLabel", t("webConfig.heroRootLabel", "Web UI Root"));
     setText(view, "#heroRootValue", webRootLabel());
 
-    setText(view, "#tabJmsfusion", t("webConfig.tabs.jmsfusion", "JMSFusion"));
-    setText(view, "#tabMonwuiSettings", t("webConfig.tabs.monwuiSettings", "MonWUI Settings"));
-    setText(view, "#tabStatus", t("webConfig.tabs.status", "Status"));
-    setText(view, "#tabSnippet", t("webConfig.tabs.snippet", "HTML Snippet & Web Path & Permissions"));
+    setText(view, "#tabJmsfusion", "🟣 Nexus PobreFlix");
+    setText(view, "#tabMonwuiSettings", "⚙️ Configurações");
+    setText(view, "#tabStatus", "📊 Status");
+    setText(view, "#tabSnippet", "📜 Snippet HTML");
+    setText(view, "#tabExclusions", "👥 Filtros por Usuário");
+    setText(view, "#tabImageShield", "🛡️ Image Shield (Capas)");
 
     setText(view, "#configCardTitle", t("webConfig.sections.configTitle", "Core Settings"));
     setText(view, "#configCardBody", t("webConfig.sections.configBody", "Choose where JMSFusion serves slider assets from and how the player module path is resolved."));
@@ -606,27 +608,27 @@
 
     const rows = [
       {
-        label: t("webConfig.status.configured", "Configured"),
-        value: statusBadge(yesNo(s.configured), s.configured ? "is-good" : "is-bad")
+        label: "Configurado",
+        value: statusBadge(s.configured ? "Sim (Ativo)" : "Não", s.configured ? "is-good" : "is-bad")
       },
       {
-        label: t("webConfig.status.directoryExists", "Directory exists"),
-        value: statusBadge(yesNo(s.directoryExists), s.directoryExists ? "is-good" : "is-bad")
+        label: "Recursos Disponíveis",
+        value: statusBadge(s.directoryExists ? "Sim (Prontos)" : "Não", s.directoryExists ? "is-good" : "is-bad")
       },
       {
-        label: t("webConfig.status.mainJsExists", "Main JS exists"),
-        value: statusBadge(yesNo(s.mainJsExists), s.mainJsExists ? "is-good" : "is-bad")
+        label: "JS Principal (slider.js)",
+        value: statusBadge(s.mainJsExists ? "Sim (Carregado)" : "Não", s.mainJsExists ? "is-good" : "is-bad")
       },
       {
-        label: t("webConfig.status.playerJsExists", "Player JS exists"),
-        value: statusBadge(yesNo(s.playerJsExists), s.playerJsExists ? "is-good" : "is-bad")
+        label: "Módulo Player",
+        value: statusBadge(s.playerJsExists ? "Sim (Carregado)" : "Não", s.playerJsExists ? "is-good" : "is-bad")
       },
       {
-        label: t("webConfig.status.usingEmbedded", "Using embedded assets"),
-        value: statusBadge(yesNo(s.usingEmbedded), s.usingEmbedded ? "is-warn" : "is-good")
+        label: "Recursos Incorporados",
+        value: statusBadge(s.usingEmbedded ? "Sim (Nexus Edition v1.0.0.7)" : "Não", "is-good")
       },
       {
-        label: t("webConfig.status.playerPath", "Resolved player path"),
+        label: "Caminho do Player",
         value: `<code>${esc(s.playerPath || "-")}</code>`
       }
     ];
@@ -651,6 +653,9 @@
     if (!box) return;
 
     const parsed = new DOMParser().parseFromString(html, "text/html");
+    const pre = parsed.querySelector("pre");
+    view.__snippetRawText = pre ? pre.textContent : html;
+
     box.innerHTML = parsed?.body?.innerHTML || html;
     view.__snippetLoaded = true;
   }
@@ -963,6 +968,41 @@
       const id = view.querySelector("#imageShieldItemId")?.value;
       await lockImageById(view, id);
     });
+
+    const copyBtn = view.querySelector("#btnCopySnippet");
+    if (copyBtn && !copyBtn.__bound) {
+      copyBtn.__bound = true;
+      copyBtn.addEventListener("click", async () => {
+        try {
+          let text = view.__snippetRawText || view.querySelector("#snippet pre")?.textContent || view.querySelector("#snippet")?.textContent || "";
+          if (!text || text.includes("Carregando snippet")) {
+            await showSnippet(view);
+            text = view.__snippetRawText || view.querySelector("#snippet pre")?.textContent || view.querySelector("#snippet")?.textContent || "";
+          }
+          if (!text) throw new Error("Snippet vazio ou não carregado.");
+          await navigator.clipboard.writeText(text);
+          const prev = copyBtn.innerHTML;
+          copyBtn.innerHTML = "✅ Copiado com sucesso!";
+          copyBtn.style.background = "#10b981";
+          showMessage(view, "Snippet HTML copiado com sucesso para a área de transferência!", "ok");
+          setTimeout(() => {
+            copyBtn.innerHTML = prev;
+            copyBtn.style.background = "";
+          }, 2500);
+        } catch (err) {
+          showMessage(view, "Erro ao copiar snippet: " + (err.message || String(err)), "err");
+        }
+      });
+    }
+
+    const refreshShieldBtn = view.querySelector("#btnRefreshShieldList");
+    if (refreshShieldBtn && !refreshShieldBtn.__bound) {
+      refreshShieldBtn.__bound = true;
+      refreshShieldBtn.addEventListener("click", async () => {
+        await loadLockedImagesList(view);
+        showMessage(view, "Lista de capas travadas atualizada!", "ok");
+      });
+    }
 
     try {
       await loadConfig(view);

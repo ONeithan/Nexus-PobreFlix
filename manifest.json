@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png",
     "versions": [
       {
+        "version": "1.0.0.7",
+        "changelog": "v1.0.0.7 - Image Shield Automático, Redesign Moderno das Configurações, Botão Copiar Snippet, Correção Status e Drawer Hambúrguer TV/Desktop\n- Image Shield Automático: Monitoramento em tempo real do Jellyfin (ItemUpdated) para travar capas automaticamente sempre que o usuário alterar/enviar uma capa manualmente, gravando imagem persistente e listando todas as capas travadas com foto, título e botão de destravar.\n- Redesign Completo das Configurações: Interface moderna glassmorphic em tons roxo/indigo cyberpunk com navegação por abas em pílulas, cards translúcidos, tipografia nítida e ergonomia aprimorada.\n- Remoção da aba 'Sobre' do painel de configurações para uma experiência mais limpa e direta.\n- Botão 'Copiar Snippet HTML': Cópia com 1 clique diretamente para a área de transferência com feedback visual dinâmico.\n- Correção do Status: Eliminação dos falsos 'Não' para Configurado e Recursos Disponíveis quando usando o pacote incorporado oficial.\n- Correção Definitiva do Drawer Hambúrguer (3 risquinhos): Abertura suave em tela cheia (320px) com backdrop escuro e fechamento ao clicar fora ou na opção, sem ficar travado como uma borda fina de 20px no Modo TV ou Desktop.\n- Ampliação da Logo Nexus PobreFlix: Altura ajustada para 64px no desktop e 52px no mobile para máximo destaque visual.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.7/NexusPobreFlix-1.0.0.7.zip",
+        "checksum": "972b2b37c622e6d0a731b865ae942562",
+        "timestamp": "2026-11-20T08:55:00Z"
+      },
+      {
         "version": "1.0.0.6",
         "changelog": "v1.0.0.6 - Separação Exclusiva de Top 10 por Biblioteca (Animes, Desenhos, Novelas, Séries), Menu Hambúrguer TV Vetorial, Logo Ampliada e Image Shield\n- Criação de carrosséis Top 10 dedicados para cada pasta do acervo (Top 10 Animes com ⭐ Anime, Top 10 Desenhos com 📺 Desenho, Top 10 Novelas com 📺 Novela, Top 10 Séries com 📺 Série), acabando com a mistura em 'Top 10 Série'.\n- Badge do Hero Banner (Slider) corrigido para identificar Animes, Desenhos e Novelas a partir do nome da biblioteca de origem e caminho de mídia.\n- Menu Hambúrguer (3 risquinhos) forçado e visível no Modo TV com ícone vetorial SVG e animação suave ao abrir/fechar a gaveta.\n- Logo Nexus PobreFlix ampliada no cabeçalho para 56px (max 60px) para máxima legibilidade na TV e desktop.\n- Filtros por Usuário para ocultar categorias de recomendações em perfis específicos.\n- Image Shield (Bloqueio de Capas) com persistência local contra sobrescrita automática do Jellyfin.\n- Touch targets ampliados para 46px e glassmorphism escuro no menu lateral mobile.",
         "targetAbi": "12.0.0.0",

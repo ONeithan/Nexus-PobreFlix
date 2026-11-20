@@ -9,15 +9,15 @@
         <div class="jms-eyebrow" id="heroEyebrow">Configuração do Plugin</div>
         <h2 id="pageTitle">Nexus PobreFlix — Central de Controle</h2>
         <p id="pageIntro">
-          Gerencie a origem dos recursos <code>/slider</code>, publique configurações globais, inspecione o status de execução
-          e revise detalhes do snippet HTML e permissões web em uma interface moderna.
+          Gerencie a origem dos recursos <code>/slider</code>, publique configurações globais, inspecione o status de execução,
+          gerencie o bloqueio permanente de capas e revise permissões em uma interface moderna.
         </p>
       </div>
 
       <div class="jms-hero-meta">
         <div class="jms-hero-pill">
           <span class="jms-hero-pill__label" id="heroLangLabel">Idioma Selecionado</span>
-          <strong id="heroLangValue">...</strong>
+          <strong id="heroLangValue">Português (Brasil)</strong>
         </div>
         <div class="jms-hero-pill">
           <span class="jms-hero-pill__label" id="heroRootLabel">Raiz da Interface Web</span>
@@ -33,49 +33,42 @@
               role="tab"
               aria-selected="true"
               aria-controls="panelJmsfusion"
-              data-tab="jmsfusion">Nexus PobreFlix</button>
+              data-tab="jmsfusion">🟣 Nexus PobreFlix</button>
       <button id="tabMonwuiSettings"
               type="button"
               class="jms-tab"
               role="tab"
               aria-selected="false"
               aria-controls="panelMonwuiSettings"
-              data-tab="monwui-settings">Configurações</button>
+              data-tab="monwui-settings">⚙️ Configurações</button>
       <button id="tabStatus"
               type="button"
               class="jms-tab"
               role="tab"
               aria-selected="false"
               aria-controls="panelStatus"
-              data-tab="status">Status</button>
+              data-tab="status">📊 Status</button>
       <button id="tabSnippet"
               type="button"
               class="jms-tab"
               role="tab"
               aria-selected="false"
               aria-controls="panelSnippet"
-              data-tab="snippet">Sistema</button>
+              data-tab="snippet">📜 Snippet HTML</button>
       <button id="tabExclusions"
               type="button"
               class="jms-tab"
               role="tab"
               aria-selected="false"
               aria-controls="panelExclusions"
-              data-tab="exclusions">Filtros por Usuário</button>
+              data-tab="exclusions">👥 Filtros por Usuário</button>
       <button id="tabImageShield"
               type="button"
               class="jms-tab"
               role="tab"
               aria-selected="false"
               aria-controls="panelImageShield"
-              data-tab="image-shield">Image Shield (Capas)</button>
-      <button id="tabAbout"
-              type="button"
-              class="jms-tab"
-              role="tab"
-              aria-selected="false"
-              aria-controls="panelAbout"
-              data-tab="about">Sobre</button>
+              data-tab="image-shield">🛡️ Image Shield (Capas)</button>
     </div>
 
     <div id="msg" class="fieldDescription" style="min-height:24px;"></div>
@@ -88,29 +81,29 @@
       <div class="jms-grid jms-grid--split">
         <div class="jms-card">
           <div class="jms-card-head">
-            <h3 id="configCardTitle">Core Settings</h3>
-            <p id="configCardBody">Choose where JMSFusion serves slider assets from and how the player module path is resolved.</p>
+            <h3 id="configCardTitle">Configurações Principais</h3>
+            <p id="configCardBody">Escolha de onde o Nexus PobreFlix serve os recursos do slider e como o caminho do player é resolvido.</p>
           </div>
 
           <form id="configForm" onsubmit="return false;">
             <div class="inputContainer inputContainer--toggle">
               <label class="inputLabel inputLabel--checkbox" for="forceGlobal">
                 <input id="forceGlobal" type="checkbox">
-                <span id="forceGlobalLabel">Force global user settings</span>
+                <span id="forceGlobalLabel">Forçar configurações globais para todos os usuários</span>
               </label>
               <div class="fieldDescription" id="forceGlobalHint">
-                Enabled: all users receive the admin snapshot automatically. Disabled: users keep their own local settings.
+                Ativado: todos os usuários recebem as definições do administrador automaticamente. Desativado: usuários mantêm suas próprias configurações locais.
               </div>
             </div>
 
             <div class="inputContainer">
-              <label class="inputLabel" id="scriptDirLabel" for="scriptDir">Script Directory</label>
-              <input id="scriptDir" type="text" class="emby-input" placeholder="/home/gkhng/slider">
-              <div class="fieldDescription" id="scriptDirHint">Leave empty to use embedded <code>/Resources/slider</code> assets.</div>
+              <label class="inputLabel" id="scriptDirLabel" for="scriptDir">Diretório Externo de Scripts</label>
+              <input id="scriptDir" type="text" class="emby-input" placeholder="Deixe em branco para usar recursos incorporados">
+              <div class="fieldDescription" id="scriptDirHint">Deixe em branco para usar os recursos internos incorporados no plugin (Recomendado).</div>
             </div>
 
             <div class="inputContainer">
-              <label class="inputLabel" id="playerSubLabel" for="playerSub">Player Subdirectory</label>
+              <label class="inputLabel" id="playerSubLabel" for="playerSub">Subdiretório do Player</label>
               <input id="playerSub" type="text" class="emby-input" placeholder="modules/player">
             </div>
           </form>
@@ -118,13 +111,13 @@
 
         <div class="jms-card">
           <div class="jms-card-head">
-            <h3 id="actionsCardTitle">Admin Actions</h3>
-            <p id="actionsCardBody">Save plugin settings or publish the current admin snapshot globally for every user profile.</p>
+            <h3 id="actionsCardTitle">Ações de Administrador</h3>
+            <p id="actionsCardBody">Salve as preferências do plugin ou publique o perfil administrativo globalmente para todos os usuários.</p>
           </div>
 
           <div class="buttonContainer">
-            <button id="saveBtn" type="button" class="raised button-submit">Save</button>
-            <button id="publishGlobalBtn" type="button" class="raised">Publish Admin Settings Globally</button>
+            <button id="saveBtn" type="button" class="raised button-submit">💾 Salvar Configurações</button>
+            <button id="publishGlobalBtn" type="button" class="raised">🌐 Publicar Globalmente</button>
           </div>
         </div>
       </div>
@@ -139,21 +132,21 @@
       <div class="jms-grid jms-grid--split">
         <div class="jms-card">
           <div class="jms-card-head">
-            <h3 id="statusCardTitle">Runtime Status</h3>
-            <p id="statusCardBody">Quick verification for configuration state, player path resolution, and embedded asset fallback.</p>
+            <h3 id="statusCardTitle">Status de Execução</h3>
+            <p id="statusCardBody">Diagnóstico em tempo real da injeção de recursos, caminhos e fallback do Nexus PobreFlix.</p>
           </div>
           <div id="status" class="jms-status-list">
-            <div class="jms-empty" id="statusPlaceholder">Status has not been loaded yet.</div>
+            <div class="jms-empty" id="statusPlaceholder">Carregando status...</div>
           </div>
         </div>
 
         <div class="jms-card">
           <div class="jms-card-head">
-            <h3 id="inmemCardTitle">In-Memory Injection</h3>
-            <p id="inmemCardBody">Checks whether index.html is being rewritten at response time without touching files on disk.</p>
+            <h3 id="inmemCardTitle">Injeção em Memória</h3>
+            <p id="inmemCardBody">Verifica se o index.html está sendo reescrito dinamicamente no momento da resposta pelo motor do plugin.</p>
           </div>
           <div id="inmem" class="jms-inline-state">
-            Checking in-memory injection...
+            Verificando injeção em memória...
           </div>
         </div>
       </div>
@@ -166,16 +159,18 @@
              aria-labelledby="tabMonwuiSettings"
              hidden>
       <div class="jms-card">
-        <div class="jms-card-head">
-          <h3 id="monwuiSettingsCardTitle">MonWUI Settings</h3>
+        <div class="jms-card-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div>
+            <h3 id="monwuiSettingsCardTitle" style="margin:0;">Configurações Visuais da Interface</h3>
+            <p style="margin:4px 0 0; color:var(--labelTextColor);">Personalize detalhes avançados de animação, sliders e temas.</p>
+          </div>
+          <div class="buttonContainer buttonContainer--tight" style="margin:0;">
+            <button id="reloadMonwuiSettingsBtn" type="button" class="raised">🔄 Recarregar Configurações</button>
+          </div>
         </div>
 
-        <div class="buttonContainer buttonContainer--tight">
-          <button id="reloadMonwuiSettingsBtn" type="button" class="raised">Reload MonWUI Settings</button>
-        </div>
-
-        <div id="monwuiSettingsHost" class="jms-settings-page-host">
-          <div id="monwuiSettingsPlaceholder" class="jms-empty">MonWUI settings are loading...</div>
+        <div id="monwuiSettingsHost" class="jms-settings-page-host" style="margin-top:16px;">
+          <div id="monwuiSettingsPlaceholder" class="jms-empty">Carregando painel de configurações...</div>
         </div>
       </div>
     </section>
@@ -188,41 +183,45 @@
              hidden>
       <div id="snippetGrid" class="jms-grid jms-grid--split">
         <div class="jms-card">
-          <div class="jms-card-head">
-            <h3 id="snippetCardTitle">HTML Snippet</h3>
-            <p id="snippetCardBody">The exact snippet JMSFusion injects into Jellyfin web.</p>
+          <div class="jms-card-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+              <h3 id="snippetCardTitle" style="margin:0;">Snippet HTML</h3>
+              <p id="snippetCardBody" style="margin:4px 0 0;">O código exato que o Nexus PobreFlix injeta no Jellyfin web.</p>
+            </div>
+            <button id="btnCopySnippet" type="button" class="raised button-submit" style="display:inline-flex; align-items:center; gap:8px; padding:10px 20px; font-weight:700; cursor:pointer;">
+              📋 Copiar Snippet HTML
+            </button>
           </div>
-          <div id="snippet" class="jms-code-shell">
-            <div class="jms-empty" id="snippetPlaceholder">Snippet has not been loaded yet.</div>
+          <div id="snippet" class="jms-code-shell" style="margin-top:14px;">
+            <div class="jms-empty" id="snippetPlaceholder">Carregando snippet...</div>
           </div>
         </div>
 
         <div id="envCard" class="jms-card">
           <div class="jms-card-head">
-            <h3 id="envCardTitle">Web Path &amp; Permissions</h3>
-            <p id="envCardBody">Detected web root, file write permissions, and suggested ACL commands for patching.</p>
+            <h3 id="envCardTitle">Caminhos Web &amp; Permissões</h3>
+            <p id="envCardBody">Diretório raiz detectado, permissões de gravação e comandos de ACL sugeridos.</p>
           </div>
 
           <div class="buttonContainer buttonContainer--tight">
-            <button id="refreshEnvBtn" type="button" class="raised">Refresh Web Path &amp; Permissions</button>
-            <button id="copyAclBtn" type="button" class="raised">Copy Permission Commands</button>
+            <button id="refreshEnvBtn" type="button" class="raised">🔄 Atualizar Permissões</button>
+            <button id="copyAclBtn" type="button" class="raised">📋 Copiar Comandos ACL</button>
             <button id="patchBtn" type="button" class="raised">Patch index.html</button>
             <button id="unpatchBtn" type="button" class="raised">Unpatch index.html</button>
           </div>
 
           <div id="envBox" class="jms-env-box">
             <div class="jms-env-item">
-              <span class="jms-env-label" id="envUserLabel">Running user</span>
+              <span class="jms-env-label" id="envUserLabel">Usuário em Execução</span>
               <code id="envUser">?</code>
             </div>
 
             <div class="jms-env-item">
-              <span class="jms-env-label" id="envWebRootLabel">Detected web root</span>
+              <span class="jms-env-label" id="envWebRootLabel">Raiz Web Detectada</span>
               <code id="envWebRoot">?</code>
             </div>
 
             <div class="jms-env-files">
-              <div class="jms-env-label" id="envFilesLabel">Files</div>
               <div class="jms-env-file-row">
                 <code>index.html</code>
                 <span id="envIdx">?</span>
@@ -238,67 +237,8 @@
             </div>
 
             <div class="jms-env-acl">
-              <div class="jms-env-label" id="envAclLabel">Suggested ACL commands</div>
-              <pre id="envAcl" class="preformatted">(not computed yet)</pre>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="panelAbout"
-             class="jms-panel"
-             data-panel="about"
-             role="tabpanel"
-             aria-labelledby="tabAbout"
-             hidden>
-      <div class="jms-card">
-        <div class="jms-about-logo-container" style="text-align: center; margin-bottom: 24px; padding: 20px 0;">
-          <img src="../Plugins/JMSFusion/assets/LogoPng" 
-               alt="Nexus PobreFlix Logo" 
-               style="max-width: 280px; height: auto; filter: drop-shadow(0 0 16px rgba(122, 92, 255, 0.45));" />
-        </div>
-
-        <div class="jms-card-head" style="border-bottom: 1px solid var(--jms-border); padding-bottom: 16px; margin-bottom: 20px;">
-          <h3>Sobre o Nexus PobreFlix</h3>
-          <p style="margin-top: 6px;">A experiência visual definitiva e ultra-premium para o seu ecossistema Jellyfin.</p>
-        </div>
-
-        <div style="margin-bottom: 24px; line-height: 1.7; font-size: 14.5px; color: var(--labelTextColor);">
-          <p>
-            O <strong>Nexus PobreFlix</strong> é uma evolução estética sofisticada construída como um <strong>Fork de Alta Performance</strong> 
-            a partir do projeto original <a href="https://github.com/G-grbz/Jellyfin-Media-Slider" target="_blank" style="color: var(--jms-accent); font-weight: 700; text-decoration: none;">Jellyfin Media Slider (JMSFusion)</a>, 
-            criado com genialidade e maestria por <strong>G-Grbz</strong>.
-          </p>
-          <p style="margin-top: 12px;">
-            Dedicamos todos os créditos fundamentais de base, arquitetura de sliders, injeção de scripts e engenharia inicial de componentes ao autor original <strong>G-Grbz</strong>. 
-            Expressamos nossa eterna admiração e profunda gratidão pelo seu incrível trabalho open-source, que serviu como a fundação estrutural para este ecossistema.
-          </p>
-          <p style="margin-top: 12px;">
-            Esta edição personalizada (Nexus Edition) foi projetada, customizada e refinada por <strong>ONeithan</strong>, introduzindo 
-            tradução absoluta para Português do Brasil, otimização de performance no carregamento, correções profundas de layout de UX, 
-            estilizações premium sob a identidade visual roxa e melhorias exclusivas de acessibilidade e controle.
-          </p>
-        </div>
-
-        <div class="jms-env-box">
-          <div class="jms-env-item">
-            <span class="jms-env-label">Versão do Fork</span>
-            <code>1.0.0.5 (Nexus Edition)</code>
-          </div>
-          <div class="jms-env-item">
-            <span class="jms-env-label">Autor do Fork</span>
-            <strong>ONeithan</strong>
-          </div>
-          <div class="jms-env-item">
-            <span class="jms-env-label">Autor do Projeto Base (Créditos Totais)</span>
-            <strong>G-Grbz (JMSFusion)</strong>
-          </div>
-          <div class="jms-env-item">
-            <span class="jms-env-label">Links Oficiais</span>
-            <div style="display:flex; gap:10px; margin-top:5px; flex-wrap: wrap;">
-              <a href="https://github.com/ONeithan/Nexus-PobreFlix" target="_blank" class="raised" style="text-decoration:none; display:flex; align-items:center; justify-content:center; padding: 10px 16px;">Repositório do Fork (ONeithan)</a>
-              <a href="https://github.com/G-grbz/Jellyfin-Media-Slider" target="_blank" class="raised" style="text-decoration:none; display:flex; align-items:center; justify-content:center; padding: 10px 16px;">Repositório Original (G-Grbz)</a>
+              <div class="jms-env-label" id="envAclLabel">Comandos ACL Recomendados</div>
+              <pre id="envAcl" class="preformatted">(calculando...)</pre>
             </div>
           </div>
         </div>
@@ -368,27 +308,47 @@
              aria-labelledby="tabImageShield"
              hidden>
       <div class="jms-card">
-        <div class="jms-card-head" style="border-bottom: 1px solid var(--jms-border); padding-bottom: 16px; margin-bottom: 20px;">
-          <h3>Image Shield — Bloqueio Permanente de Capas</h3>
-          <p style="margin-top: 6px;">Trava permanentemente a imagem de capa escolhida (ex: Shaun o Carneiro, Tico e Teco, Baby Looney Tunes) para que o Jellyfin NUNCA a reverta ou substitua automaticamente.</p>
+        <div class="jms-card-head" style="border-bottom: 1px solid var(--jms-border); padding-bottom: 18px; margin-bottom: 24px;">
+          <div style="display:flex; align-items:center; gap:12px; justify-content:space-between; flex-wrap:wrap;">
+            <div>
+              <h3 style="display:flex; align-items:center; gap:8px; font-size:1.4rem; margin:0;">
+                <span>🛡️</span> Image Shield — Bloqueio Permanente de Capas
+              </h3>
+              <p style="margin: 6px 0 0; font-size:0.95rem;">
+                Protege suas capas personalizadas para que o Jellyfin NUNCA as reverta ou sobrescreva automaticamente.
+              </p>
+            </div>
+            <div class="jms-badge is-good" style="display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600;">
+              <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#28d07f; box-shadow:0 0 8px #28d07f;"></span>
+              Trava Automática Ativa
+            </div>
+          </div>
         </div>
 
-        <div style="display:grid; gap:20px; max-width:750px; margin-bottom: 28px;">
-          <div style="background: rgba(122,92,255,0.08); border: 1px solid var(--jms-border); border-radius: 14px; padding: 16px;">
-            <strong style="color:var(--jms-accent);">💡 Como funciona o Shield:</strong>
-            <p style="margin: 8px 0 0; line-height: 1.55; font-size: 13.5px; color: var(--labelTextColor);">
-              Ao travar uma capa, o plugin salva os bytes da imagem em um armazenamento seguro e isolado, trava o campo <code>MetadataField.Images</code> no banco de dados do Jellyfin e serve a imagem através de um cache imutável prioritário.
+        <div style="display:grid; gap:20px; max-width:850px; margin-bottom: 28px;">
+          <div style="background: rgba(122,92,255,0.1); border: 1px solid rgba(122,92,255,0.3); border-radius: 16px; padding: 18px; backdrop-filter: blur(8px);">
+            <strong style="color:var(--jms-accent); font-size:1rem; display:flex; align-items:center; gap:6px;">
+              ⚡ Monitoramento em Tempo Real do Jellyfin:
+            </strong>
+            <p style="margin: 8px 0 0; line-height: 1.6; font-size: 14px; color: var(--labelTextColor);">
+              O Image Shield monitora as alterações de mídia do servidor. Sempre que você modificar ou subir uma imagem de capa manualmente pelo editor do Jellyfin, o Shield a captura e <strong>trava automaticamente</strong> na hora, sem você precisar digitar nada!
             </p>
           </div>
 
-          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-            <input type="text" id="imageShieldItemId" class="emby-input" placeholder="ID da Obra no Jellyfin (ex: dc814e44...)" style="flex:1; min-width:240px; padding:11px 14px; border-radius:12px;" />
-            <button id="btnLockImage" type="button" class="raised button-submit" style="white-space:nowrap;">🔒 Travar Capa Atual</button>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--jms-border); border-radius: 16px; padding: 18px;">
+            <div style="font-weight:600; margin-bottom:10px; font-size:0.95rem; color:var(--textColor);">
+              Travar Manualmente por ID (Opcional):
+            </div>
+            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+              <input type="text" id="imageShieldItemId" class="emby-input" placeholder="ID da Obra no Jellyfin (ex: dc814e44...)" style="flex:1; min-width:260px; padding:12px 16px; border-radius:12px; background:rgba(0,0,0,0.35); border:1px solid rgba(122,92,255,0.3);" />
+              <button id="btnLockImage" type="button" class="raised button-submit" style="white-space:nowrap; padding:12px 20px; font-weight:700;">🔒 Travar Capa Atual</button>
+            </div>
           </div>
         </div>
 
-        <div class="jms-card-head" style="margin-bottom: 14px;">
-          <h4>Capas Atualmente Travadas pelo Shield</h4>
+        <div class="jms-card-head" style="margin-bottom: 16px; display:flex; justify-content:space-between; align-items:center;">
+          <h4 style="font-size:1.15rem; margin:0;">Capas Atualmente Travadas pelo Shield</h4>
+          <button id="btnRefreshShieldList" type="button" class="raised" style="padding:6px 14px; font-size:0.85rem; border-radius:8px;">🔄 Atualizar Lista</button>
         </div>
         <div id="lockedImagesListContainer" style="display:grid; gap:12px;">
           <div class="jms-empty">Nenhuma capa travada no momento.</div>
@@ -400,48 +360,57 @@
   <style>
 #JMSFusionConfigPage {
   --jms-accent: #7a5cff;
-  --jms-accent-strong: #5b3fd4;
-  --jms-accent-soft: rgba(122, 92, 255, 0.14);
-  --jms-gold: #7a5cff;
-  --jms-gold-soft: rgba(122, 92, 255, 0.12);
-  --jms-danger: #d64550;
-  --jms-danger-soft: rgba(214, 69, 80, 0.14);
-  --jms-success: #1f9d68;
-  --jms-success-soft: rgba(31, 157, 104, 0.14);
-  --jms-border: rgba(122, 140, 255, 0.24);
-  --jms-shadow: 0 24px 48px rgba(122, 92, 255, 0.12);
-  --jms-radius-xl: 24px;
-  --jms-radius-lg: 18px;
-  --jms-radius-md: 14px;
-}
-
-.theme-dark #JMSFusionConfigPage {
-  --jms-border: rgba(235, 245, 246, 0.12);
-  --jms-shadow: 0 24px 48px rgba(0, 0, 0, 0.32);
+  --jms-accent-strong: #583be8;
+  --jms-accent-soft: rgba(122, 92, 255, 0.16);
+  --jms-gold: #f59e0b;
+  --jms-gold-soft: rgba(245, 158, 11, 0.15);
+  --jms-danger: #ef4444;
+  --jms-danger-soft: rgba(239, 68, 68, 0.15);
+  --jms-success: #10b981;
+  --jms-success-soft: rgba(16, 185, 129, 0.15);
+  --jms-border: rgba(122, 92, 255, 0.22);
+  --jms-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --jms-radius-xl: 20px;
+  --jms-radius-lg: 16px;
+  --jms-radius-md: 12px;
 }
 
 #JMSFusionConfigPage .content-primary {
-  max-width: 1180px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 24px;
-}
-
-#JMSFusionConfigPage .jms-hero-card,
-#JMSFusionConfigPage .jms-card {
-  background: var(--cardBackgroundColor);
-  border: 1px solid var(--jms-border);
-  border-radius: var(--jms-radius-xl);
-  box-shadow: var(--jms-shadow);
 }
 
 #JMSFusionConfigPage .jms-hero-card {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
   gap: 24px;
-  padding: 28px;
+  padding: 30px;
+  background: rgba(19, 19, 34, 0.88);
+  border: 1px solid rgba(122, 92, 255, 0.28);
+  border-radius: var(--jms-radius-xl);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(122, 92, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   background-image:
-    radial-gradient(circle at top right, rgba(122, 92, 255, 0.16), transparent 32%),
-    radial-gradient(circle at left center, rgba(122, 92, 255, 0.15), transparent 38%);
+    radial-gradient(circle at top right, rgba(122, 92, 255, 0.2), transparent 45%),
+    radial-gradient(circle at bottom left, rgba(88, 59, 232, 0.15), transparent 40%);
+}
+
+#JMSFusionConfigPage .jms-card {
+  background: rgba(19, 19, 34, 0.88);
+  border: 1px solid rgba(122, 92, 255, 0.24);
+  border-radius: var(--jms-radius-xl);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  padding: 26px;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+#JMSFusionConfigPage .jms-card:hover {
+  border-color: rgba(122, 92, 255, 0.4);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), 0 0 24px rgba(122, 92, 255, 0.12);
 }
 
 #JMSFusionConfigPage .jms-eyebrow {
@@ -452,38 +421,41 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--jms-accent-strong);
+  color: #a78bfa;
 }
 
 #JMSFusionConfigPage .jms-eyebrow::before {
   content: "";
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 999px;
-  background: linear-gradient(135deg, var(--jms-gold), var(--jms-accent));
-  box-shadow: 0 0 0 6px var(--jms-accent-soft);
+  background: var(--jms-accent);
+  box-shadow: 0 0 12px var(--jms-accent);
 }
 
 #JMSFusionConfigPage #pageTitle {
-  margin: 14px 0 10px;
-  font-size: clamp(28px, 3vw, 42px);
-  line-height: 1.04;
-  color: var(--textColor);
+  margin: 12px 0 10px;
+  font-size: clamp(26px, 3vw, 38px);
+  font-weight: 800;
+  line-height: 1.1;
+  color: #ffffff;
+  letter-spacing: -0.02em;
 }
 
 #JMSFusionConfigPage #pageIntro {
   margin: 0;
   max-width: 760px;
-  color: var(--labelTextColor);
-  line-height: 1.7;
-  font-size: 15px;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.65;
+  font-size: 14.5px;
 }
 
 #JMSFusionConfigPage #pageIntro code {
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: var(--jms-accent-soft);
-  color: var(--textColor);
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(122, 92, 255, 0.2);
+  color: #c4b5fd;
+  font-weight: 600;
 }
 
 #JMSFusionConfigPage .jms-hero-meta {
@@ -493,58 +465,64 @@
 }
 
 #JMSFusionConfigPage .jms-hero-pill {
-  padding: 16px 18px;
+  padding: 16px 20px;
   border-radius: var(--jms-radius-lg);
-  border: 1px solid var(--jms-border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent);
+  border: 1px solid rgba(122, 92, 255, 0.25);
+  background: rgba(13, 13, 24, 0.65);
+  backdrop-filter: blur(10px);
 }
 
 #JMSFusionConfigPage .jms-hero-pill__label {
   display: block;
-  margin-bottom: 6px;
-  font-size: 12px;
+  margin-bottom: 4px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--labelTextColor);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 #JMSFusionConfigPage .jms-hero-pill strong {
   display: block;
-  font-size: 16px;
-  color: var(--textColor);
-  word-break: break-word;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
 }
 
 #JMSFusionConfigPage .jms-tabbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin: 20px 0 14px;
+  gap: 8px;
+  margin: 24px 0 16px;
+  padding: 6px;
+  background: rgba(13, 13, 24, 0.75);
+  border-radius: 999px;
+  border: 1px solid rgba(122, 92, 255, 0.25);
+  width: fit-content;
 }
 
 #JMSFusionConfigPage .jms-tab {
   appearance: none;
-  border: 1px solid var(--jms-border);
+  border: 1px solid transparent;
   border-radius: 999px;
-  background: var(--cardBackgroundColor);
-  color: var(--textColor);
-  padding: 12px 18px;
-  font-size: 14px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 10px 20px;
+  font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 #JMSFusionConfigPage .jms-tab:hover {
-  transform: translateY(-1px);
-  border-color: rgba(122, 92, 255, 0.35);
+  color: #ffffff;
+  background: rgba(122, 92, 255, 0.16);
 }
 
 #JMSFusionConfigPage .jms-tab.is-active {
   color: #ffffff;
-  border-color: transparent;
-  background: linear-gradient(135deg, var(--jms-accent-strong), var(--jms-accent));
-  box-shadow: 0 14px 30px rgba(122, 92, 255, 0.28);
+  background: linear-gradient(135deg, #7a5cff, #583be8);
+  box-shadow: 0 4px 18px rgba(122, 92, 255, 0.45);
+  border-color: rgba(122, 92, 255, 0.4);
 }
 
 #JMSFusionConfigPage .jms-panel {
@@ -557,43 +535,37 @@
 
 #JMSFusionConfigPage .jms-grid {
   display: grid;
-  gap: 18px;
+  gap: 20px;
 }
 
 #JMSFusionConfigPage .jms-grid--split {
-  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-}
-
-#JMSFusionConfigPage .jms-grid--single {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-#JMSFusionConfigPage .jms-card {
-  padding: 22px;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
 }
 
 #JMSFusionConfigPage .jms-card-head {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 #JMSFusionConfigPage .jms-card-head h3 {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   font-size: 20px;
-  color: var(--textColor);
+  font-weight: 700;
+  color: #ffffff;
 }
 
 #JMSFusionConfigPage .jms-card-head p {
   margin: 0;
-  color: var(--labelTextColor);
-  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.55;
+  font-size: 14px;
 }
 
 #JMSFusionConfigPage .inputContainer {
   margin-bottom: 16px;
   padding: 18px;
   border-radius: var(--jms-radius-lg);
-  border: 1px solid var(--jms-border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+  border: 1px solid rgba(122, 92, 255, 0.18);
+  background: rgba(13, 13, 24, 0.55);
 }
 
 #JMSFusionConfigPage .inputContainer:last-child {
@@ -602,9 +574,10 @@
 
 #JMSFusionConfigPage .inputLabel {
   display: block;
-  margin-bottom: 10px;
-  color: var(--textColor);
+  margin-bottom: 8px;
+  color: #ffffff;
   font-weight: 700;
+  font-size: 14px;
 }
 
 #JMSFusionConfigPage .inputLabel--checkbox {
@@ -612,59 +585,58 @@
   align-items: flex-start;
   gap: 12px;
   margin-bottom: 0;
-}
-
-#JMSFusionConfigPage .inputLabel--checkbox input {
-  margin-top: 2px;
+  cursor: pointer;
 }
 
 #JMSFusionConfigPage .emby-input {
   width: 100%;
   min-height: 46px;
-  padding: 12px 14px;
+  padding: 12px 16px;
   border-radius: 12px;
-  border: 1px solid var(--jms-border);
-  background: var(--inputBackgroundColor);
-  color: var(--textColor);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  border: 1px solid rgba(122, 92, 255, 0.25);
+  background: rgba(10, 10, 18, 0.7);
+  color: #ffffff;
+  font-size: 14px;
+  transition: all 0.2s ease;
 }
 
 #JMSFusionConfigPage .emby-input:focus {
   outline: none;
-  border-color: rgba(122, 92, 255, 0.45);
-  box-shadow: 0 0 0 4px rgba(122, 92, 255, 0.14);
+  border-color: #7a5cff;
+  box-shadow: 0 0 0 4px rgba(122, 92, 255, 0.25);
 }
 
 #JMSFusionConfigPage .fieldDescription {
-  margin-top: 10px;
-  color: var(--labelTextColor);
-  line-height: 1.55;
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.5;
   font-size: 13px;
 }
 
 #JMSFusionConfigPage #msg {
-  padding: 12px 16px;
+  padding: 12px 18px;
   border-radius: 14px;
   border: 1px solid transparent;
-  background: var(--cardBackgroundColor);
+  font-weight: 600;
+  font-size: 14px;
 }
 
 #JMSFusionConfigPage #msg.ok {
-  color: var(--jms-success);
-  background: var(--jms-success-soft);
-  border-color: rgba(31, 157, 104, 0.22);
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
 }
 
 #JMSFusionConfigPage #msg.warn {
-  color: var(--jms-gold);
-  background: var(--jms-gold-soft);
-  border-color: rgba(240, 180, 41, 0.22);
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.3);
 }
 
 #JMSFusionConfigPage #msg.err {
-  color: var(--jms-danger);
-  background: var(--jms-danger-soft);
-  border-color: rgba(214, 69, 80, 0.22);
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 #JMSFusionConfigPage .buttonContainer {
@@ -673,33 +645,37 @@
   gap: 12px;
 }
 
-#JMSFusionConfigPage .buttonContainer--tight {
-  margin-bottom: 18px;
-}
-
 #JMSFusionConfigPage .raised {
   appearance: none;
-  border: 1px solid var(--jms-border);
-  border-radius: 14px;
-  min-height: 46px;
-  padding: 11px 16px;
+  border: 1px solid rgba(122, 92, 255, 0.28);
+  border-radius: 12px;
+  min-height: 44px;
+  padding: 10px 18px;
   cursor: pointer;
   font-weight: 700;
-  background: var(--buttonBackgroundColor);
-  color: var(--buttonTextColor);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  font-size: 13.5px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  transition: all 0.2s ease;
 }
 
 #JMSFusionConfigPage .raised:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 28px rgba(122, 92, 255, 0.12);
-  border-color: rgba(122, 92, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(122, 92, 255, 0.25);
+  border-color: #7a5cff;
+  background: rgba(122, 92, 255, 0.15);
 }
 
 #JMSFusionConfigPage .button-submit {
   color: #ffffff;
   border-color: transparent;
-  background: linear-gradient(135deg, var(--jms-accent-strong), var(--jms-accent));
+  background: linear-gradient(135deg, #7a5cff, #583be8);
+  box-shadow: 0 4px 18px rgba(122, 92, 255, 0.4);
+}
+
+#JMSFusionConfigPage .button-submit:hover {
+  box-shadow: 0 8px 28px rgba(122, 92, 255, 0.6);
+  background: linear-gradient(135deg, #8b70ff, #694bf5);
 }
 
 #JMSFusionConfigPage .jms-status-list {
@@ -712,69 +688,21 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 14px;
   align-items: center;
-  padding: 14px 16px;
+  padding: 14px 18px;
   border-radius: 14px;
-  border: 1px solid var(--jms-border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+  border: 1px solid rgba(122, 92, 255, 0.18);
+  background: rgba(13, 13, 24, 0.55);
 }
 
 #JMSFusionConfigPage .jms-status-label {
-  color: var(--textColor);
+  color: #ffffff;
   font-weight: 600;
+  font-size: 14px;
 }
 
 #JMSFusionConfigPage .jms-status-value {
-  color: var(--labelTextColor);
+  color: rgba(255, 255, 255, 0.7);
   text-align: right;
-}
-
-#JMSFusionConfigPage .jms-status-value code {
-  word-break: break-all;
-}
-
-#JMSFusionConfigPage .jms-inline-state,
-#JMSFusionConfigPage .jms-empty {
-  padding: 16px;
-  border-radius: 14px;
-  border: 1px dashed var(--jms-border);
-  color: var(--labelTextColor);
-  line-height: 1.6;
-}
-
-#JMSFusionConfigPage .jms-inline-state.ok {
-  border-style: solid;
-  color: var(--jms-success);
-  background: var(--jms-success-soft);
-}
-
-#JMSFusionConfigPage .jms-inline-state.warn {
-  border-style: solid;
-  color: var(--jms-gold);
-  background: var(--jms-gold-soft);
-}
-
-#JMSFusionConfigPage .jms-inline-toggle {
-  display: grid;
-  gap: 10px;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--jms-border);
-}
-
-#JMSFusionConfigPage .jms-inline-toggle .inputLabel--checkbox,
-#JMSFusionConfigPage .jms-inline-toggle .fieldDescription {
-  color: inherit;
-}
-
-#JMSFusionConfigPage .jms-inline-toggle .fieldDescription {
-  margin-top: 0;
-  opacity: 0.92;
-}
-
-#JMSFusionConfigPage .jms-empty--error {
-  border-style: solid;
-  color: var(--jms-danger);
-  background: var(--jms-danger-soft);
 }
 
 #JMSFusionConfigPage .jms-badge {
@@ -782,7 +710,7 @@
   align-items: center;
   justify-content: center;
   min-height: 28px;
-  padding: 5px 10px;
+  padding: 5px 12px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
@@ -790,26 +718,29 @@
 }
 
 #JMSFusionConfigPage .jms-badge.is-good {
-  color: var(--jms-success);
-  background: var(--jms-success-soft);
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.35);
 }
 
 #JMSFusionConfigPage .jms-badge.is-bad {
-  color: var(--jms-danger);
-  background: var(--jms-danger-soft);
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(239, 68, 68, 0.35);
 }
 
 #JMSFusionConfigPage .jms-badge.is-warn {
-  color: var(--jms-gold);
-  background: var(--jms-gold-soft);
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.35);
 }
 
 #JMSFusionConfigPage .jms-code-shell,
 #JMSFusionConfigPage .jms-env-box,
 #JMSFusionConfigPage pre.preformatted {
   border-radius: 16px;
-  border: 1px solid var(--jms-border);
-  background: var(--inputBackgroundColor);
+  border: 1px solid rgba(122, 92, 255, 0.22);
+  background: rgba(10, 10, 18, 0.85);
 }
 
 #JMSFusionConfigPage .jms-code-shell {
@@ -826,7 +757,7 @@
   font-family: Consolas, Monaco, monospace;
   font-size: 13px;
   line-height: 1.55;
-  color: var(--textColor);
+  color: #c4b5fd;
 }
 
 #JMSFusionConfigPage .jms-env-box {
@@ -837,23 +768,23 @@
 
 #JMSFusionConfigPage .jms-env-item {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 #JMSFusionConfigPage .jms-env-label {
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--labelTextColor);
+  color: rgba(255, 255, 255, 0.55);
   font-weight: 700;
 }
 
 #JMSFusionConfigPage .jms-env-item code,
 #JMSFusionConfigPage .jms-env-file-row code {
-  padding: 3px 6px;
-  border-radius: 10px;
+  padding: 4px 8px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.06);
-  color: var(--textColor);
+  color: #ffffff;
   font-family: Consolas, Monaco, monospace;
 }
 
@@ -873,14 +804,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-#JMSFusionConfigPage .ok {
-  color: var(--jms-success);
-}
-
-#JMSFusionConfigPage .warn {
-  color: var(--jms-gold);
 }
 
 #JMSFusionConfigPage .jms-settings-page-host {
@@ -929,15 +852,23 @@
   #JMSFusionConfigPage .jms-hero-card,
   #JMSFusionConfigPage .jms-card {
     padding: 18px;
-    border-radius: 18px;
+    border-radius: 16px;
+  }
+
+  #JMSFusionConfigPage .jms-tabbar {
+    width: 100%;
+  }
+
+  #JMSFusionConfigPage .jms-tab {
+    width: 100%;
+    text-align: center;
   }
 
   #JMSFusionConfigPage .buttonContainer {
     flex-direction: column;
   }
 
-  #JMSFusionConfigPage .raised,
-  #JMSFusionConfigPage .jms-tab {
+  #JMSFusionConfigPage .raised {
     width: 100%;
   }
 
@@ -949,12 +880,7 @@
   #JMSFusionConfigPage .jms-status-value {
     text-align: left;
   }
-
-  #JMSFusionConfigPage .jms-settings-page-host > #settings-modal.jms-settings-page-shell .settings-modal-content {
-    height: min(86vh, 1100px) !important;
-    max-height: min(86vh, 1100px) !important;
-  }
 }
-</style>
+  </style>
   <script src="../Plugins/JMSFusion/assets/UiJs" type="text/javascript" data-jf-no-translate="1"></script>
 </div>

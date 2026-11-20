@@ -64,24 +64,24 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
             _libraryManager = libraryManager;
             _appPaths = appPaths;
             _logger = logger;
-            EnsureCacheLoaded();
+            EnsureCacheLoaded(_appPaths, _logger);
         }
 
-        private string GetStorageDir()
+        public static string GetStorageDir(IApplicationPaths appPaths)
         {
-            var dir = Path.Combine(_appPaths.DataPath, "JMSFusion", "locked_images");
+            var dir = Path.Combine(appPaths.DataPath, "JMSFusion", "locked_images");
             Directory.CreateDirectory(dir);
             return dir;
         }
 
-        private string GetRegistryFile()
+        public static string GetRegistryFile(IApplicationPaths appPaths)
         {
-            var dir = Path.Combine(_appPaths.DataPath, "JMSFusion");
+            var dir = Path.Combine(appPaths.DataPath, "JMSFusion");
             Directory.CreateDirectory(dir);
             return Path.Combine(dir, "locked_images.json");
         }
 
-        private void EnsureCacheLoaded()
+        public static void EnsureCacheLoaded(IApplicationPaths appPaths, ILogger? logger = null)
         {
             if (_cacheLoaded) return;
             lock (_fileLock)
@@ -89,7 +89,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                 if (_cacheLoaded) return;
                 try
                 {
-                    var file = GetRegistryFile();
+                    var file = GetRegistryFile(appPaths);
                     if (IOFile.Exists(file))
                     {
                         var json = IOFile.ReadAllText(file);
@@ -108,7 +108,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "[Nexus PobreFlix] Erro ao carregar registry de imagens travadas: {Message}", ex.Message);
+                    logger?.LogError(ex, "[Nexus PobreFlix] Erro ao carregar registry de imagens travadas: {Message}", ex.Message);
                 }
                 finally
                 {
@@ -117,28 +117,35 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
             }
         }
 
-        private void SaveRegistry()
+        public static void SaveRegistry(IApplicationPaths appPaths, ILogger? logger = null)
         {
             lock (_fileLock)
             {
                 try
                 {
-                    var file = GetRegistryFile();
+                    var file = GetRegistryFile(appPaths);
                     var list = _lockedCache.Values.ToList();
                     var json = JsonSerializer.Serialize(list, new JsonSerializerOptions { WriteIndented = true });
                     IOFile.WriteAllText(file, json);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "[Nexus PobreFlix] Erro ao salvar registry de imagens travadas: {Message}", ex.Message);
+                    logger?.LogError(ex, "[Nexus PobreFlix] Erro ao salvar registry de imagens travadas: {Message}", ex.Message);
                 }
             }
+        }
+
+        public static bool IsLocked(string cleanId)
+        {
+            if (string.IsNullOrWhiteSpace(cleanId)) return false;
+            var id = cleanId.Trim().Replace("-", "");
+            return _lockedCache.ContainsKey(id);
         }
 
         [HttpGet("List")]
         public IActionResult GetLockedList()
         {
-            EnsureCacheLoaded();
+            EnsureCacheLoaded(_appPaths, _logger);
             return Ok(new
             {
                 success = true,
@@ -150,14 +157,16 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
         [HttpGet("Serve/{itemId}")]
         public IActionResult ServeLockedImage([FromRoute] string itemId)
         {
-            EnsureCacheLoaded();
-            if (_lockedCache.TryGetValue(itemId, out var info) && IOFile.Exists(info.ImagePath))
+            EnsureCacheLoaded(_appPaths, _logger);
+            var cleanId = (itemId ?? string.Empty).Trim().Replace("-", "");
+
+            if (_lockedCache.TryGetValue(cleanId, out var info) && IOFile.Exists(info.ImagePath))
             {
                 Response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
                 return PhysicalFile(info.ImagePath, "image/jpeg");
             }
 
-            var fallbackPath = Path.Combine(GetStorageDir(), $"{itemId}.jpg");
+            var fallbackPath = Path.Combine(GetStorageDir(_appPaths), $"{cleanId}.jpg");
             if (IOFile.Exists(fallbackPath))
             {
                 Response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
@@ -165,6 +174,101 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
             }
 
             return NotFound();
+        }
+
+        public static async Task<LockedImageInfo?> LockItemInternalAsync(
+            BaseItem item,
+            ILibraryManager? libraryManager,
+            IApplicationPaths appPaths,
+            ILogger? logger)
+        {
+            try
+            {
+                EnsureCacheLoaded(appPaths, logger);
+
+                var cleanId = item.Id.ToString("N");
+                var title = item.Name ?? cleanId;
+                byte[]? imageBytes = null;
+
+                // 1. Tenta obter arquivo local da imagem primária
+                var localImgPath = item.GetImagePath(ImageType.Primary);
+                if (!string.IsNullOrWhiteSpace(localImgPath) && IOFile.Exists(localImgPath))
+                {
+                    imageBytes = await IOFile.ReadAllBytesAsync(localImgPath);
+                    logger?.LogInformation("[Nexus Image Shield] Imagem lida do caminho local: {Path}", localImgPath);
+                }
+
+                // 2. Se falhar ou estiver vazio, tenta via API local interna do Jellyfin
+                if (imageBytes == null || imageBytes.Length < 1000)
+                {
+                    try
+                    {
+                        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+                        var downloadUrl = $"http://localhost:8096/Items/{item.Id}/Images/Primary";
+                        var resp = await client.GetAsync(downloadUrl);
+                        if (resp.IsSuccessStatusCode)
+                        {
+                            var downloaded = await resp.Content.ReadAsByteArrayAsync();
+                            if (downloaded.Length > 1000)
+                            {
+                                imageBytes = downloaded;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger?.LogWarning(ex, "[Nexus Image Shield] Falha ao baixar imagem via HTTP interno: {Message}", ex.Message);
+                    }
+                }
+
+                if (imageBytes == null || imageBytes.Length < 1000)
+                {
+                    logger?.LogWarning("[Nexus Image Shield] Nenhum dado de imagem válido encontrado para o item: {Name} ({Id})", title, cleanId);
+                    return null;
+                }
+
+                var storageDir = GetStorageDir(appPaths);
+                var targetFilePath = Path.Combine(storageDir, $"{cleanId}.jpg");
+                await IOFile.WriteAllBytesAsync(targetFilePath, imageBytes);
+
+                // Também assegura poster.jpg na pasta física da obra se existir
+                try
+                {
+                    var names = Enum.GetNames<MetadataField>();
+                    logger?.LogInformation("[Nexus Image Shield] MetadataFields: {Fields}", string.Join(", ", names));
+                }
+                catch { }
+
+                try
+                {
+                    var folder = item.ContainingFolderPath;
+                    if (!string.IsNullOrWhiteSpace(folder) && Directory.Exists(folder))
+                    {
+                        var posterLocal = Path.Combine(folder, "poster.jpg");
+                        await IOFile.WriteAllBytesAsync(posterLocal, imageBytes);
+                    }
+                }
+                catch { }
+
+                var info = new LockedImageInfo
+                {
+                    ItemId = cleanId,
+                    ItemTitle = title,
+                    LockedAt = DateTime.UtcNow,
+                    ImagePath = targetFilePath
+                };
+
+                _lockedCache[cleanId] = info;
+                SaveRegistry(appPaths, logger);
+
+                logger?.LogInformation("[Nexus Image Shield] 🔒 Capa travada com sucesso para '{Title}' (ID: {Id})!", title, cleanId);
+                return info;
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "[Nexus Image Shield] Erro ao travar capa do item {Id}: {Message}", item.Id, ex.Message);
+                return null;
+            }
         }
 
         [HttpPost("Lock")]
@@ -176,103 +280,69 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
             }
 
             var cleanId = req.ItemId.Trim().Replace("-", "");
-            var storageDir = GetStorageDir();
-            var targetFilePath = Path.Combine(storageDir, $"{cleanId}.jpg");
 
-            byte[]? imageBytes = null;
-            string title = req.ItemTitle ?? cleanId;
-
-            // 1. Tenta obter a imagem original diretamente da biblioteca do Jellyfin
-            try
+            if (Guid.TryParse(req.ItemId, out var guid))
             {
-                if (Guid.TryParse(req.ItemId, out var guid))
+                var item = _libraryManager.GetItemById(guid);
+                if (item != null)
                 {
-                    var item = _libraryManager.GetItemById(guid);
-                    if (item != null)
+                    var locked = await LockItemInternalAsync(item, _libraryManager, _appPaths, _logger);
+                    if (locked != null)
                     {
-                        title = item.Name ?? title;
-                        var localImgPath = item.GetImagePath(ImageType.Primary);
-                        if (!string.IsNullOrWhiteSpace(localImgPath) && IOFile.Exists(localImgPath))
+                        return Ok(new
                         {
-                            imageBytes = await IOFile.ReadAllBytesAsync(localImgPath);
-                            _logger.LogInformation("[Nexus PobreFlix] Imagem lida diretamente do arquivo local: {Path}", localImgPath);
-                        }
-
-                        // Protege arquivo local de capa se existir pasta física da obra
-                        try
-                        {
-                            var folder = item.ContainingFolderPath;
-                            if (!string.IsNullOrWhiteSpace(folder) && Directory.Exists(folder))
-                            {
-                                var posterLocal = Path.Combine(folder, "poster.jpg");
-                                if (imageBytes != null && (!IOFile.Exists(posterLocal) || (await IOFile.ReadAllBytesAsync(posterLocal)).Length != imageBytes.Length))
-                                {
-                                    await IOFile.WriteAllBytesAsync(posterLocal, imageBytes);
-                                }
-                            }
-                        }
-                        catch { }
+                            success = true,
+                            message = $"Capa de '{locked.ItemTitle}' travada com sucesso!",
+                            item = locked
+                        });
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "[Nexus PobreFlix] Falha ao extrair imagem do item localmente: {Message}", ex.Message);
-            }
 
-            // 2. Se não conseguiu localmente, baixa via URL fornecida ou endpoint interno do Jellyfin
-            if (imageBytes == null || imageBytes.Length == 0)
+            // Fallback caso não ache o BaseItem no libraryManager mas tenha recebido via URL
+            byte[]? imageBytes = null;
+            string title = req.ItemTitle ?? cleanId;
+
+            if (!string.IsNullOrWhiteSpace(req.ImageUrl))
             {
                 try
                 {
                     using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
-                    var downloadUrl = !string.IsNullOrWhiteSpace(req.ImageUrl)
-                        ? req.ImageUrl
-                        : $"http://localhost:8096/Items/{req.ItemId}/Images/Primary";
-
-                    var resp = await client.GetAsync(downloadUrl);
+                    var resp = await client.GetAsync(req.ImageUrl);
                     if (resp.IsSuccessStatusCode)
                     {
                         var downloaded = await resp.Content.ReadAsByteArrayAsync();
-                        if (downloaded.Length > 1000)
-                        {
-                            imageBytes = downloaded;
-                        }
+                        if (downloaded.Length > 1000) imageBytes = downloaded;
                     }
                 }
-                catch (Exception ex)
+                catch { }
+            }
+
+            if (imageBytes != null && imageBytes.Length > 1000)
+            {
+                var targetFilePath = Path.Combine(GetStorageDir(_appPaths), $"{cleanId}.jpg");
+                await IOFile.WriteAllBytesAsync(targetFilePath, imageBytes);
+
+                var info = new LockedImageInfo
                 {
-                    _logger.LogWarning(ex, "[Nexus PobreFlix] Falha ao baixar imagem via HTTP: {Message}", ex.Message);
-                }
+                    ItemId = cleanId,
+                    ItemTitle = title,
+                    LockedAt = DateTime.UtcNow,
+                    ImagePath = targetFilePath
+                };
+
+                _lockedCache[cleanId] = info;
+                SaveRegistry(_appPaths, _logger);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = $"Capa de '{title}' travada com sucesso contra alterações automáticas!",
+                    item = info
+                });
             }
 
-            if (imageBytes == null || imageBytes.Length < 1000)
-            {
-                return BadRequest(new { success = false, message = "Não foi possível obter os dados da imagem para travamento." });
-            }
-
-            // Salva persistentemente no diretório protegido do plugin
-            await IOFile.WriteAllBytesAsync(targetFilePath, imageBytes);
-
-            var info = new LockedImageInfo
-            {
-                ItemId = cleanId,
-                ItemTitle = title,
-                LockedAt = DateTime.UtcNow,
-                ImagePath = targetFilePath
-            };
-
-            _lockedCache[cleanId] = info;
-            SaveRegistry();
-
-            _logger.LogInformation("[Nexus PobreFlix] 🔒 Capa travada com sucesso para '{Title}' (ID: {Id})!", title, cleanId);
-
-            return Ok(new
-            {
-                success = true,
-                message = $"Capa de '{title}' travada com sucesso contra alterações automáticas!",
-                item = info
-            });
+            return BadRequest(new { success = false, message = "Não foi possível obter os dados da imagem para travamento." });
         }
 
         [HttpPost("Unlock")]
@@ -285,7 +355,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                 return BadRequest(new { success = false, message = "ItemId obrigatório." });
             }
 
-            EnsureCacheLoaded();
+            EnsureCacheLoaded(_appPaths, _logger);
             if (_lockedCache.TryRemove(idToUnlock, out var info))
             {
                 try
@@ -297,7 +367,7 @@ namespace Jellyfin.Plugin.JMSFusion.Controllers
                 }
                 catch { }
 
-                SaveRegistry();
+                SaveRegistry(_appPaths, _logger);
                 _logger.LogInformation("[Nexus PobreFlix] 🔓 Capa destravada para ID {Id}", idToUnlock);
                 return Ok(new { success = true, message = $"Capa de '{info.ItemTitle}' destravada com sucesso!" });
             }

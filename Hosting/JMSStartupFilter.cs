@@ -30,6 +30,16 @@ namespace Jellyfin.Plugin.JMSFusion
 
                 trailerAutomation.StartBackgroundToolBootstrap();
 
+                try
+                {
+                    var imageShield = app.ApplicationServices.GetRequiredService<ImageShieldService>();
+                    imageShield.Initialize();
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "[Nexus Image Shield] Erro ao inicializar ImageShieldService: {Message}", ex.Message);
+                }
+
                 app.UseMiddleware<PathRewriteMiddleware>();
 
                 var asm = typeof(JMSStartupFilter).Assembly;
