@@ -3978,8 +3978,8 @@ function ensureHeaderLogo() {
     const img = document.createElement("img");
     img.src = "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png";
     img.alt = "Nexus PobreFlix";
-    img.style.height = "64px";
-    img.style.maxHeight = "68px";
+    img.style.height = "70px";
+    img.style.maxHeight = "72px";
     img.style.width = "auto";
     img.style.objectFit = "contain";
     img.style.verticalAlign = "middle";
@@ -3987,65 +3987,6 @@ function ensureHeaderLogo() {
     logoLink.appendChild(img);
 
     const hamburgerSvg = `<svg viewBox="0 0 24 24" style="width:28px;height:28px;fill:#ffffff;display:block;" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>`;
-
-    const openNexusDrawer = () => {
-      const drawer = document.querySelector(".mainDrawer");
-      if (!drawer) return;
-      drawer.classList.remove("hide");
-      drawer.classList.add("open", "drawer-open", "mainDrawer-open");
-      drawer.setAttribute("data-nexus-open", "true");
-      drawer.style.setProperty("display", "block", "important");
-      drawer.style.setProperty("visibility", "visible", "important");
-      drawer.style.setProperty("opacity", "1", "important");
-      drawer.style.setProperty("transform", "translateX(0)", "important");
-      drawer.style.setProperty("left", "0", "important");
-      drawer.style.setProperty("width", "320px", "important");
-      drawer.style.setProperty("z-index", "100000", "important");
-
-      let mask = document.querySelector(".nexus-drawer-backdrop");
-      if (!mask) {
-        mask = document.createElement("div");
-        mask.className = "nexus-drawer-backdrop";
-        document.body.appendChild(mask);
-        mask.onclick = closeNexusDrawer;
-      }
-      mask.style.setProperty("display", "block", "important");
-      mask.style.setProperty("opacity", "1", "important");
-    };
-
-    const closeNexusDrawer = () => {
-      const drawer = document.querySelector(".mainDrawer");
-      if (drawer) {
-        drawer.classList.remove("open", "drawer-open", "mainDrawer-open");
-        drawer.removeAttribute("data-nexus-open");
-        drawer.style.setProperty("transform", "translateX(-105%)", "important");
-        drawer.style.setProperty("visibility", "hidden", "important");
-      }
-      const mask = document.querySelector(".nexus-drawer-backdrop");
-      if (mask) {
-        mask.style.setProperty("display", "none", "important");
-        mask.style.setProperty("opacity", "0", "important");
-      }
-    };
-
-    const toggleDrawerDirect = (e) => {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      const drawer = document.querySelector(".mainDrawer");
-      if (drawer) {
-        const isOpen = drawer.classList.contains("open") ||
-                       drawer.classList.contains("drawer-open") ||
-                       drawer.classList.contains("mainDrawer-open") ||
-                       drawer.getAttribute("data-nexus-open") === "true";
-        if (isOpen) {
-          closeNexusDrawer();
-        } else {
-          openNexusDrawer();
-        }
-      }
-    };
 
     let barsBtn = headerLeft.querySelector(".headerButton-bars, .mainDrawerButton");
     if (!barsBtn) {
@@ -4055,7 +3996,28 @@ function ensureHeaderLogo() {
       barsBtn.setAttribute("aria-label", "Menu");
       barsBtn.title = "Menu";
       barsBtn.innerHTML = hamburgerSvg;
-      barsBtn.onclick = toggleDrawerDirect;
+      barsBtn.style.setProperty("display", "inline-flex", "important");
+      barsBtn.style.setProperty("visibility", "visible", "important");
+      barsBtn.style.setProperty("cursor", "pointer", "important");
+      barsBtn.onclick = (e) => {
+        try {
+          if (window.LibraryMenu && typeof window.LibraryMenu.onHardwareMenuButtonClick === "function") {
+            window.LibraryMenu.onHardwareMenuButtonClick();
+            return;
+          }
+          if (window.LibraryMenu && typeof window.LibraryMenu.open === "function") {
+            window.LibraryMenu.open();
+            return;
+          }
+          const nativeBtn = document.querySelector(".headerButton-bars, button[data-action='menu']");
+          if (nativeBtn && nativeBtn !== barsBtn) {
+            nativeBtn.click();
+            return;
+          }
+        } catch (err) {
+          console.warn("[Nexus PobreFlix] Erro ao acionar menu:", err);
+        }
+      };
       headerLeft.prepend(barsBtn);
     } else {
       barsBtn.classList.remove("hide");
@@ -4067,30 +4029,6 @@ function ensureHeaderLogo() {
       barsBtn.style.setProperty("opacity", "1", "important");
       barsBtn.style.setProperty("pointer-events", "auto", "important");
       barsBtn.style.setProperty("cursor", "pointer", "important");
-      barsBtn.onclick = toggleDrawerDirect;
-    }
-
-    const drawerEl = document.querySelector(".mainDrawer");
-    if (drawerEl) {
-      drawerEl.classList.remove("hide");
-      if (!drawerEl.__nexusClickBound) {
-        drawerEl.__nexusClickBound = true;
-        drawerEl.addEventListener("click", (evt) => {
-          if (evt.target.closest(".navMenuOption")) {
-            setTimeout(closeNexusDrawer, 120);
-          }
-        }, { passive: true });
-      }
-    }
-
-    if (!window.__nexusDrawerClickBound) {
-      window.__nexusDrawerClickBound = true;
-      document.addEventListener("click", (evt) => {
-        const d = document.querySelector(".mainDrawer.open, .mainDrawer.drawer-open, .mainDrawer.mainDrawer-open, .mainDrawer[data-nexus-open='true']");
-        if (d && !d.contains(evt.target) && !evt.target.closest(".mainDrawerButton, .barsMenuButton, .headerButton-bars")) {
-          closeNexusDrawer();
-        }
-      }, { passive: true });
     }
 
     const drawer = document.querySelector(".mainDrawer");

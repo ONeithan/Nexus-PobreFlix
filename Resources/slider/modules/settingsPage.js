@@ -164,12 +164,11 @@ export function createSettingsModal() {
     const positionTab = createTab('position', 'fa-arrows-up-down-left-right', labels.positionSettings || 'Configurações de Posicionamento');
     const dbManagementTab = createTab('db-management', 'fa-database', labels.dbManagementTab || 'DB Yönetimi');
     const exporterTab = createTab('exporter', 'fa-download', labels.backupRestore || 'Backup e Restauração');
-    const aboutTab = createTab('about', 'fa-circle-info', labels.aboutHeader || 'Hakkında');
 
     const tabs = [
         mainTab, sliderTab, queryTab, musicTab, studioTab, profileChooserTab,
         pauseTab, watchlistSettingsTab, hoverTab, cinemaPreRollTab, trailersTab, notificationsTab, detailsModalTab,
-        avatarTab, parentalPinTab, positionTab, dbManagementTab, exporterTab, aboutTab
+        avatarTab, parentalPinTab, positionTab, dbManagementTab, exporterTab
     ].filter(Boolean);
     tabContainer.append(...tabs);
 
@@ -233,7 +232,7 @@ export function createSettingsModal() {
     [
         mainPanel, sliderPanel, queryPanel, musicPanel, studioPanel, profileChooserPanel,
         pausePanel, watchlistSettingsPanel, hoverPanel, cinemaPreRollPanel, trailersPanel, notificationsPanel, detailsModalPanel,
-        avatarPanel, parentalPinPanel, positionPanel, dbManagementPanel, exporterPanel, aboutPanel
+        avatarPanel, parentalPinPanel, positionPanel, dbManagementPanel, exporterPanel
     ].filter(Boolean).forEach(panel => {
         panel.style.display = 'none';
     });
@@ -242,14 +241,14 @@ export function createSettingsModal() {
     const panels = [
         mainPanel, sliderPanel, queryPanel, musicPanel, studioPanel, profileChooserPanel,
         pausePanel, watchlistSettingsPanel, hoverPanel, cinemaPreRollPanel, trailersPanel, notificationsPanel, detailsModalPanel,
-        avatarPanel, parentalPinPanel, positionPanel, dbManagementPanel, exporterPanel, aboutPanel
+        avatarPanel, parentalPinPanel, positionPanel, dbManagementPanel, exporterPanel
     ].filter(Boolean);
     tabContent.append(...panels);
 
     const interactiveTabs = [
         mainTab, sliderTab, queryTab, musicTab, studioTab, profileChooserTab,
         pauseTab, watchlistSettingsTab, hoverTab, cinemaPreRollTab, trailersTab, notificationsTab, detailsModalTab,
-        avatarTab, parentalPinTab, positionTab, dbManagementTab, exporterTab, aboutTab
+        avatarTab, parentalPinTab, positionTab, dbManagementTab, exporterTab
     ].filter(Boolean);
     interactiveTabs.forEach(tab => {
         tab.addEventListener('click', () => {

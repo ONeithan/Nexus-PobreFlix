@@ -625,7 +625,7 @@
       },
       {
         label: "Recursos Incorporados",
-        value: statusBadge(s.usingEmbedded ? "Sim (Nexus Edition v1.0.0.7)" : "Não", "is-good")
+        value: statusBadge(s.usingEmbedded ? "Sim (Nexus Edition v1.0.0.8)" : "Não", "is-good")
       },
       {
         label: "Caminho do Player",
@@ -983,7 +983,7 @@
           await navigator.clipboard.writeText(text);
           const prev = copyBtn.innerHTML;
           copyBtn.innerHTML = "✅ Copiado com sucesso!";
-          copyBtn.style.background = "#10b981";
+          copyBtn.style.background = "#7a5cff";
           showMessage(view, "Snippet HTML copiado com sucesso para a área de transferência!", "ok");
           setTimeout(() => {
             copyBtn.innerHTML = prev;

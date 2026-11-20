@@ -266,31 +266,31 @@
           </div>
 
           <div id="categoryCheckboxesContainer" style="display:grid; gap:14px; background: rgba(255,255,255,0.03); padding: 18px; border-radius: 14px; border: 1px solid var(--jms-border);">
-            <div style="font-weight:700; color:var(--textColor); margin-bottom:4px;">Marque as categorias que deseja OCULTAR das recomendações deste usuário:</div>
+            <div style="font-weight:700; color:var(--textColor); margin-bottom:8px;">Marque as categorias que deseja OCULTAR das recomendações deste usuário:</div>
             
-            <label class="inputLabel--checkbox" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-              <input type="checkbox" id="excl_novela" class="emby-checkbox" value="novela" />
-              <span>🚫 <strong>Novelas / Doramas</strong> (Ocultar novelas da tela inicial)</span>
+            <label class="nexus-filter-item" for="excl_novela" style="display:flex; align-items:center; gap:14px; cursor:pointer; padding:12px 16px; background:rgba(255,255,255,0.04); border:1px solid rgba(122,92,255,0.22); border-radius:12px; transition:all 0.2s ease;">
+              <input type="checkbox" id="excl_novela" value="novela" style="appearance:checkbox !important; -webkit-appearance:checkbox !important; width:22px !important; height:22px !important; accent-color:#7a5cff !important; cursor:pointer !important; opacity:1 !important; display:inline-block !important; margin:0 !important; min-width:22px !important;" />
+              <span style="font-size:14.5px; color:#ffffff; user-select:none;">🚫 <strong>Novelas / Doramas</strong> (Ocultar novelas da tela inicial)</span>
             </label>
 
-            <label class="inputLabel--checkbox" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-              <input type="checkbox" id="excl_desenho" class="emby-checkbox" value="desenho" />
-              <span>🚫 <strong>Desenhos / Animações Infantis</strong> (Ocultar desenhos infantis da tela inicial)</span>
+            <label class="nexus-filter-item" for="excl_desenho" style="display:flex; align-items:center; gap:14px; cursor:pointer; padding:12px 16px; background:rgba(255,255,255,0.04); border:1px solid rgba(122,92,255,0.22); border-radius:12px; transition:all 0.2s ease;">
+              <input type="checkbox" id="excl_desenho" value="desenho" style="appearance:checkbox !important; -webkit-appearance:checkbox !important; width:22px !important; height:22px !important; accent-color:#7a5cff !important; cursor:pointer !important; opacity:1 !important; display:inline-block !important; margin:0 !important; min-width:22px !important;" />
+              <span style="font-size:14.5px; color:#ffffff; user-select:none;">🚫 <strong>Desenhos / Animações Infantis</strong> (Ocultar desenhos infantis da tela inicial)</span>
             </label>
 
-            <label class="inputLabel--checkbox" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-              <input type="checkbox" id="excl_anime" class="emby-checkbox" value="anime" />
-              <span>🚫 <strong>Animes</strong> (Ocultar produções de animação japonesa da tela inicial)</span>
+            <label class="nexus-filter-item" for="excl_anime" style="display:flex; align-items:center; gap:14px; cursor:pointer; padding:12px 16px; background:rgba(255,255,255,0.04); border:1px solid rgba(122,92,255,0.22); border-radius:12px; transition:all 0.2s ease;">
+              <input type="checkbox" id="excl_anime" value="anime" style="appearance:checkbox !important; -webkit-appearance:checkbox !important; width:22px !important; height:22px !important; accent-color:#7a5cff !important; cursor:pointer !important; opacity:1 !important; display:inline-block !important; margin:0 !important; min-width:22px !important;" />
+              <span style="font-size:14.5px; color:#ffffff; user-select:none;">🚫 <strong>Animes</strong> (Ocultar produções de animação japonesa da tela inicial)</span>
             </label>
 
-            <label class="inputLabel--checkbox" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-              <input type="checkbox" id="excl_series" class="emby-checkbox" value="series" />
-              <span>🚫 <strong>Séries</strong> (Ocultar séries gerais da tela inicial)</span>
+            <label class="nexus-filter-item" for="excl_series" style="display:flex; align-items:center; gap:14px; cursor:pointer; padding:12px 16px; background:rgba(255,255,255,0.04); border:1px solid rgba(122,92,255,0.22); border-radius:12px; transition:all 0.2s ease;">
+              <input type="checkbox" id="excl_series" value="series" style="appearance:checkbox !important; -webkit-appearance:checkbox !important; width:22px !important; height:22px !important; accent-color:#7a5cff !important; cursor:pointer !important; opacity:1 !important; display:inline-block !important; margin:0 !important; min-width:22px !important;" />
+              <span style="font-size:14.5px; color:#ffffff; user-select:none;">🚫 <strong>Séries</strong> (Ocultar séries gerais da tela inicial)</span>
             </label>
 
-            <label class="inputLabel--checkbox" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-              <input type="checkbox" id="excl_movie" class="emby-checkbox" value="movie" />
-              <span>🚫 <strong>Filmes</strong> (Ocultar filmes da tela inicial)</span>
+            <label class="nexus-filter-item" for="excl_movie" style="display:flex; align-items:center; gap:14px; cursor:pointer; padding:12px 16px; background:rgba(255,255,255,0.04); border:1px solid rgba(122,92,255,0.22); border-radius:12px; transition:all 0.2s ease;">
+              <input type="checkbox" id="excl_movie" value="movie" style="appearance:checkbox !important; -webkit-appearance:checkbox !important; width:22px !important; height:22px !important; accent-color:#7a5cff !important; cursor:pointer !important; opacity:1 !important; display:inline-block !important; margin:0 !important; min-width:22px !important;" />
+              <span style="font-size:14.5px; color:#ffffff; user-select:none;">🚫 <strong>Filmes</strong> (Ocultar filmes da tela inicial)</span>
             </label>
           </div>
 
@@ -835,6 +835,11 @@
 #JMSFusionConfigPage .jms-settings-page-host > #settings-modal.jms-settings-page-shell .settings-tabs,
 #JMSFusionConfigPage .jms-settings-page-host > #settings-modal.jms-settings-page-shell .settings-tab-content {
   min-height: 0 !important;
+}
+
+#JMSFusionConfigPage .nexus-filter-item:hover {
+  background: rgba(122, 92, 255, 0.14) !important;
+  border-color: #7a5cff !important;
 }
 
 @media (max-width: 900px) {

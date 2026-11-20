@@ -767,10 +767,10 @@ body:has(#itemDetailPage) .backdropImage {
         background-size: contain !important;
         background-repeat: no-repeat !important;
         background-position: left center !important;
-        width: 220px !important;
-        height: 46px !important;
-        min-width: 180px !important;
-        min-height: 42px !important;
+        width: 280px !important;
+        height: 64px !important;
+        min-width: 220px !important;
+        min-height: 56px !important;
         vertical-align: middle !important;
         margin-left: 10px !important;
     }

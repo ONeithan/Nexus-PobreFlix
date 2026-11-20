@@ -17,8 +17,8 @@ body:not(.layout-tv) .headerLogoWithText:after,
 body:not(.layout-tv) .headerLogo:after {
     content: "";
     display: block;
-    width: 160px;
-    height: 40px;
+    width: 280px;
+    height: 64px;
     background-image: url('https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png') !important;
     background-size: contain !important;
     background-repeat: no-repeat !important;
