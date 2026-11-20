@@ -487,10 +487,18 @@
 
   function syncExclusionCheckboxes(view, userId) {
     if (!userId) return;
-    const exclusions = (view.__userCategoryExclusions && view.__userCategoryExclusions[userId]) || [];
+    const cleanId = String(userId).replace(/-/g, "").toLowerCase();
+    const map = view.__userCategoryExclusions || {};
+    let exclusions = [];
+    for (const k of Object.keys(map)) {
+      if (String(k).replace(/-/g, "").toLowerCase() === cleanId) {
+        exclusions = map[k];
+        break;
+      }
+    }
     ["novela", "desenho", "anime", "series", "movie"].forEach(cat => {
       const cb = view.querySelector(`#excl_${cat}`);
-      if (cb) cb.checked = exclusions.includes(cat);
+      if (cb) cb.checked = Array.isArray(exclusions) && exclusions.includes(cat);
     });
   }
 
@@ -505,6 +513,8 @@
       if (cb?.checked) selectedCats.push(cat);
     });
     view.__userCategoryExclusions[userId] = selectedCats;
+    const cleanId = String(userId).replace(/-/g, "").toLowerCase();
+    view.__userCategoryExclusions[cleanId] = selectedCats;
   }
 
   async function loadLockedImagesList(view) {
@@ -625,7 +635,7 @@
       },
       {
         label: "Recursos Incorporados",
-        value: statusBadge(s.usingEmbedded ? "Sim (Nexus Edition v1.0.0.8)" : "Não", "is-good")
+        value: statusBadge(s.usingEmbedded ? "Sim (Nexus Edition v1.0.0.9)" : "Não", "is-good")
       },
       {
         label: "Caminho do Player",

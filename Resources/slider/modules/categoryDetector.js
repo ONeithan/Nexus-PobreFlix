@@ -32,14 +32,12 @@ export function detectItemCategory(item, fallbackType = "Movie") {
     return { id: "anime", label: "Anime", icon: "star" };
   }
 
-  // 2. Novela / Dorama Detection
+  // 2. Novela Detection (Apenas Novelas reais / Telenovelas - Doramas são tratados como Séries)
   const isNovela =
-    libName.includes("novela") || libName.includes("dorama") ||
+    libName.includes("novela") ||
     path.includes("/novela") || path.includes("\\novela") ||
-    path.includes("/dorama") || path.includes("\\dorama") ||
     genres.includes("novela") || genres.includes("telenovela") || genres.includes("soap") ||
-    genres.includes("dorama") || genres.includes("k-drama") || genres.includes("asian drama") ||
-    tags.includes("novela") || tags.includes("dorama");
+    tags.includes("novela");
 
   if (isNovela) {
     return { id: "novela", label: "Novela", icon: "tv" };

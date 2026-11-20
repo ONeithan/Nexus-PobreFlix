@@ -30,6 +30,7 @@ import { startBackgroundCollectionIndexer, getBackgroundCollectionIndexerStatus 
 import { initProfileChooser, syncProfileChooserHeaderButtonVisibility } from "./modules/profileChooser.js";
 import { waitForNativeHomeSectionStability, waitForVisibleHomeSections } from "./modules/homeSectionNative.js";
 import { initGamepadSupport } from "./modules/gamepadNavigation.js";
+import { detectItemCategory } from "./modules/categoryDetector.js";
 export { loadCSS } from "./modules/playerStyles.js";
 export { waitForAnyVisible };
 const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 0));
@@ -5331,6 +5332,24 @@ export async function slidesInit() {
             return mergeHomeSliderItem(base, detail, userDataById.get(id) || null);
           })
           .filter((x) => x);
+
+        if (window.__nexusUserExclusions || window.__nexusUserCategoryExclusions) {
+          const exclusionsMap = window.__nexusUserExclusions || window.__nexusUserCategoryExclusions || {};
+          const cleanId = String(userId).replace(/-/g, "").toLowerCase();
+          let userExclusions = null;
+          for (const key of Object.keys(exclusionsMap)) {
+            if (String(key).replace(/-/g, "").toLowerCase() === cleanId) {
+              userExclusions = exclusionsMap[key];
+              break;
+            }
+          }
+          if (Array.isArray(userExclusions) && userExclusions.length > 0) {
+            items = items.filter(it => {
+              const det = detectItemCategory(it);
+              return !userExclusions.includes(det.id);
+            });
+          }
+        }
       }
     } catch (err) {
       console.error("[Nexus PobreFlix] Erro ao preparar dados do slide:", err);

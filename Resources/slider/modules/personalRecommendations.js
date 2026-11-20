@@ -2968,8 +2968,16 @@ function isItemCategoryExcludedForCurrentUser(it) {
   try {
     const { userId } = getSessionInfo();
     if (!userId) return false;
-    const exclusionsMap = window.__nexusUserCategoryExclusions || config?.userCategoryExclusions || {};
-    const userExclusions = exclusionsMap[userId] || exclusionsMap[userId.toLowerCase()] || exclusionsMap[userId.replace(/-/g, "")];
+    const exclusionsMap = window.__nexusUserExclusions || window.__nexusUserCategoryExclusions || config?.userCategoryExclusions || {};
+    const cleanId = String(userId).replace(/-/g, "").toLowerCase();
+
+    let userExclusions = null;
+    for (const key of Object.keys(exclusionsMap)) {
+      if (String(key).replace(/-/g, "").toLowerCase() === cleanId) {
+        userExclusions = exclusionsMap[key];
+        break;
+      }
+    }
     if (!Array.isArray(userExclusions) || userExclusions.length === 0) return false;
     const detected = detectItemCategory(it);
     return userExclusions.includes(detected.id);

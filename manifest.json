@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/ONeithan/Nexus-PobreFlix/main/img/nexus-pobreflix-logo.png",
     "versions": [
       {
+        "version": "1.0.0.9",
+        "changelog": "v1.0.0.9 - Separação de Doramas como Séries, Ocultação Real de Novelas na Tela Inicial e Blindagem de Exclusões\n- Separação de Doramas e Novelas: Doramas (K-Drama, C-Drama, Asian Drama) agora são classificados estritamente como Séries normais e não mais misturados com Novelas. A categoria 'Novela' é exclusiva para telenovelas reais.\n- Filtro de Exclusão Efetivo na Tela Inicial: Resolução do problema onde novelas continuavam aparecendo mesmo após marcar a exclusão. O sistema agora sincroniza as exclusões de forma assíncrona antes de montar as seções, suprime as linhas de 'Novelas Adicionadas Recentemente' e 'Top 10 Novelas', filtra o carrossel Hero Slider e oculta dinamicamente qualquer bloco de Novela da tela inicial.\n- Suporte a múltiplos formatos de GUID de usuário para que as exclusões salvas funcionem de forma infalível.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/ONeithan/Nexus-PobreFlix/releases/download/v1.0.0.9/NexusPobreFlix-1.0.0.9.zip",
+        "checksum": "c8a30b7eb7f15f549aed1f8f4f8d0b9c",
+        "timestamp": "2026-11-20T12:40:00Z"
+      },
+      {
         "version": "1.0.0.8",
         "changelog": "v1.0.0.8 - Restauração Total do Menu Hambúrguer, Redesign Visual Cyberpunk das Configurações, Checkboxes dos Filtros e Logo Ampliada\n- Correção Definitiva do Menu Hambúrguer (3 risquinhos): Eliminado o bug da tela preta/escurecida. O botão agora delega perfeitamente para o motor nativo do Jellyfin e LibraryMenu em todos os dispositivos (Desktop, Celular e Modo TV), abrindo a gaveta de bibliotecas com fluidez absoluta.\n- Redesign Completo do Painel Interno de Configurações: Tema Nexus Purple Cyberpunk unificado (#7a5cff), eliminando botões e realces verdes legados, acabando com a sobreposição de textos nas abas e removendo a sub-aba redundante 'Sobre' do modal.\n- Filtros de Exclusão por Usuário Corrigidos: Checkboxes agora 100% visíveis, interativos e estilizados na identidade roxa, permitindo marcar e desmarcar categorias (Novelas, Desenhos, Animes, Séries, Filmes) com facilidade.\n- Botão 'Copiar Snippet HTML' com 1 clique e feedback dinâmico.\n- Image Shield Automático: Monitoramento em tempo real do Jellyfin (ItemUpdated) para travar capas automaticamente sempre que o usuário alterar/enviar uma capa manualmente, com listagem de capas ativas.\n- Logo Nexus PobreFlix Ampliada: Dimensões aumentadas para 68-70px para máxima imponência e nitidez no topo da interface.",
         "targetAbi": "12.0.0.0",

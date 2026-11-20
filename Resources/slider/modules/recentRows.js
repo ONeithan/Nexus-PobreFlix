@@ -1525,11 +1525,10 @@ async function resolveDefaultPages(userId) {
         if (x?.Id && x?.Name) window.__nexusLibraryMap[x.Id] = x.Name;
       });
       try {
-        fetchJmsPluginConfig().then(pluginCfg => {
-          if (pluginCfg?.UserCategoryExclusions || pluginCfg?.userCategoryExclusions) {
-            window.__nexusUserExclusions = pluginCfg.UserCategoryExclusions || pluginCfg.userCategoryExclusions;
-          }
-        }).catch(() => {});
+        const pluginCfg = await fetchJmsPluginConfig();
+        const exclusions = pluginCfg?.UserCategoryExclusions || pluginCfg?.userCategoryExclusions || {};
+        window.__nexusUserExclusions = exclusions;
+        window.__nexusUserCategoryExclusions = exclusions;
       } catch {}
     }
 
@@ -1582,6 +1581,83 @@ async function resolveDefaultPages(userId) {
   } catch (e) {
     console.warn("recentRows: resolveDefaultPages error:", e);
   }
+}
+
+function isUserCategoryExcluded(userId, categoryId, libName = "") {
+  try {
+    const map = window.__nexusUserExclusions || window.__nexusUserCategoryExclusions || {};
+    if (!userId) return false;
+    const cleanUserId = String(userId).replace(/-/g, "").toLowerCase();
+
+    let userExcl = null;
+    for (const key of Object.keys(map)) {
+      if (String(key).replace(/-/g, "").toLowerCase() === cleanUserId) {
+        userExcl = map[key];
+        break;
+      }
+    }
+    if (!Array.isArray(userExcl) || userExcl.length === 0) return false;
+
+    const cat = String(categoryId || "").toLowerCase();
+    const lib = String(libName || "").toLowerCase();
+
+    return userExcl.some(raw => {
+      const ex = String(raw || "").toLowerCase();
+      if (!ex) return false;
+      if (ex === cat) return true;
+      if (cat === "novela" && (ex === "novela" || lib.includes("novela"))) return true;
+      if (cat === "anime" && (ex === "anime" || lib.includes("anime"))) return true;
+      if (cat === "desenho" && (ex === "desenho" || lib.includes("desenho") || lib.includes("cartoon"))) return true;
+      if (cat === "series" && (ex === "series" || ex === "serie" || ex === "séries")) return true;
+      if (cat === "movie" && (ex === "movie" || ex === "filme" || ex === "filmes")) return true;
+      return false;
+    });
+  } catch {
+    return false;
+  }
+}
+
+function applyCategoryExclusionsToHomeDom(userId) {
+  try {
+    const map = window.__nexusUserExclusions || window.__nexusUserCategoryExclusions || {};
+    if (!userId) return;
+    const cleanUserId = String(userId).replace(/-/g, "").toLowerCase();
+    let userExcl = null;
+    for (const key of Object.keys(map)) {
+      if (String(key).replace(/-/g, "").toLowerCase() === cleanUserId) {
+        userExcl = map[key];
+        break;
+      }
+    }
+    if (!Array.isArray(userExcl) || userExcl.length === 0) return;
+
+    const hideMatching = () => {
+      const page = document.querySelector("#indexPage:not(.hide), #homePage:not(.hide), [data-role='page']:not(.hide)");
+      if (!page) return;
+      const sections = page.querySelectorAll(".homeSection, [data-role='section'], .verticalSection, .section0, .section1, .section2, .section3, .section4, .section5, .section6");
+      sections.forEach(sec => {
+        const titleEl = sec.querySelector(".sectionTitle, .sectionTitleText, h1, h2, h3, h4");
+        const title = (titleEl?.textContent || "").toLowerCase();
+        if (!title) return;
+        if (userExcl.includes("novela") && title.includes("novela")) {
+          sec.style.setProperty("display", "none", "important");
+        }
+        if (userExcl.includes("anime") && title.includes("anime")) {
+          sec.style.setProperty("display", "none", "important");
+        }
+        if (userExcl.includes("desenho") && (title.includes("desenho") || title.includes("cartoon"))) {
+          sec.style.setProperty("display", "none", "important");
+        }
+        if (userExcl.includes("movie") && (title.includes("filme") || title.includes("movie"))) {
+          sec.style.setProperty("display", "none", "important");
+        }
+      });
+    };
+
+    hideMatching();
+    setTimeout(hideMatching, 600);
+    setTimeout(hideMatching, 1800);
+  } catch {}
 }
 
 function readJsonArrayLs(key) {
@@ -4553,7 +4629,7 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
       } else if (lowerName.includes("desenho") || lowerName.includes("cartoon") || lowerName.includes("infantil") || lowerName.includes("kids")) {
         categoryId = "desenho";
         rowTitle = config.languageLabels.top10Desenho || "Top 10 Desenhos";
-      } else if (lowerName.includes("novela") || lowerName.includes("dorama")) {
+      } else if (lowerName.includes("novela")) {
         categoryId = "novela";
         rowTitle = config.languageLabels.top10Novela || "Top 10 Novelas";
       } else {
@@ -4564,13 +4640,8 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
       }
 
       // Check user exclusions if any configured for this userId
-      const userExclusions = (window.__nexusUserExclusions && window.__nexusUserExclusions[userId]) || [];
-      if (Array.isArray(userExclusions)) {
-        const isExcluded = userExclusions.some(ex => {
-          const e = String(ex || "").toLowerCase();
-          return e === categoryId || e === lowerName;
-        });
-        if (isExcluded) return; // user excluded this category/library
+      if (isUserCategoryExcluded(userId, categoryId, libName)) {
+        return; // user excluded this category/library
       }
 
       const topSeriesParentIds = libId ? [libId] : getTopSeriesParentIds();
@@ -4624,7 +4695,7 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
     });
   }
 
-  if (runtimeCfg.enableTop10Movies) {
+  if (runtimeCfg.enableTop10Movies && !isUserCategoryExcluded(userId, "movie", "Filmes")) {
     const topMovieParentIds = getTopMovieParentIds();
     const topMovieMetaType = buildTopRowMetaType("Movie", topMovieParentIds);
     pushPlan(top10MoviePlans, () => buildManagedSection({
@@ -4850,18 +4921,35 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
     } else {
       for (const tvLibId of tvIds) {
         const libName = (STATE.tvLibs || []).find(x => x.Id === tvLibId)?.Name || "";
+        const lowerLib = libName.toLowerCase();
+        let categoryId = "series";
+        if (lowerLib.includes("anime")) categoryId = "anime";
+        else if (lowerLib.includes("desenho") || lowerLib.includes("cartoon")) categoryId = "desenho";
+        else if (lowerLib.includes("novela")) categoryId = "novela";
+
+        if (isUserCategoryExcluded(userId, categoryId, libName)) {
+          continue;
+        }
         let sectionTitle = (config.languageLabels.recentSeries || "Séries Adicionadas Recentemente") + (libName ? ` • ${libName}` : "");
         let heroTitle = (config.languageLabels.recentSeriesHero || "Série Recente") + (libName ? ` • ${libName}` : "");
         const lowerLib = libName.toLowerCase();
+        let categoryId = "series";
         if (lowerLib.includes("anime")) {
+          categoryId = "anime";
           sectionTitle = "Animes Adicionados Recentemente";
           heroTitle = "Anime Recente";
         } else if (lowerLib.includes("desenho") || lowerLib.includes("cartoon")) {
+          categoryId = "desenho";
           sectionTitle = "Desenhos Adicionados Recentemente";
           heroTitle = "Desenho Recente";
-        } else if (lowerLib.includes("novela") || lowerLib.includes("dorama")) {
+        } else if (lowerLib.includes("novela")) {
+          categoryId = "novela";
           sectionTitle = "Novelas Adicionadas Recentemente";
           heroTitle = "Novela Recente";
+        }
+
+        if (isUserCategoryExcluded(userId, categoryId, libName)) {
+          continue;
         }
 
         pushPlan(recentPlans, () => buildManagedSection({
@@ -4918,6 +5006,15 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
     } else {
       for (const tvLibId of tvIds) {
         const libName = (STATE.tvLibs || []).find(x => x.Id === tvLibId)?.Name || "";
+        const lowerLib = libName.toLowerCase();
+        let categoryId = "series";
+        if (lowerLib.includes("anime")) categoryId = "anime";
+        else if (lowerLib.includes("desenho") || lowerLib.includes("cartoon")) categoryId = "desenho";
+        else if (lowerLib.includes("novela")) categoryId = "novela";
+
+        if (isUserCategoryExcluded(userId, categoryId, libName)) {
+          continue;
+        }
         pushPlan(recentPlans, () => buildManagedSection({
           titleText: (config.languageLabels.recentEpisodes || "Episódios Adicionados Recentemente") + (libName ? ` • ${libName}` : ""),
           badgeType: "new",
@@ -5021,6 +5118,15 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
     } else {
       for (const tvLibId of tvIds) {
         const libName = (STATE.tvLibs || []).find(x => x.Id === tvLibId)?.Name || "";
+        const lowerLib = libName.toLowerCase();
+        let categoryId = "series";
+        if (lowerLib.includes("anime")) categoryId = "anime";
+        else if (lowerLib.includes("desenho") || lowerLib.includes("cartoon")) categoryId = "desenho";
+        else if (lowerLib.includes("novela")) categoryId = "novela";
+
+        if (isUserCategoryExcluded(userId, categoryId, libName)) {
+          continue;
+        }
         pushPlan(continuePlans, () => buildManagedSection({
           titleText: (config.languageLabels.continueSeries || "Dizi izlemeye devam et") + (libName ? ` • ${libName}` : ""),
           badgeType: "continue",
@@ -5208,6 +5314,7 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
         }
       }
     }
+    applyCategoryExclusionsToHomeDom(userId);
   } finally {
     setManagedRecentRowsDone(sectionKey, true);
   }
