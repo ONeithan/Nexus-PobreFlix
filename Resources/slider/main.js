@@ -28,7 +28,7 @@ import { withServer } from "./modules/jfUrl.js";
 import { initUserProfileAvatarPicker } from "./modules/avatarPicker.js";
 import { startBackgroundCollectionIndexer, getBackgroundCollectionIndexerStatus } from "./modules/collectionIndexer.js";
 import { initProfileChooser, syncProfileChooserHeaderButtonVisibility } from "./modules/profileChooser.js";
-import { waitForNativeHomeSectionStability, waitForVisibleHomeSections } from "./modules/homeSectionNative.js";
+import { waitForNativeHomeSectionStability, waitForVisibleHomeSections, enhanceSmallLibraryTiles, filterHiddenContinueWatching } from "./modules/homeSectionNative.js";
 import { initGamepadSupport } from "./modules/gamepadNavigation.js";
 import { detectItemCategory } from "./modules/categoryDetector.js";
 export { loadCSS } from "./modules/playerStyles.js";
@@ -4200,6 +4200,10 @@ function scheduleNativeAwareSlidesPlacement(indexPage, container) {
     try {
       updateSlidePosition();
     } catch {}
+    try {
+      enhanceSmallLibraryTiles(indexPage);
+      filterHiddenContinueWatching(indexPage);
+    } catch {}
   });
 }
 
@@ -5351,6 +5355,22 @@ export async function slidesInit() {
             });
           }
         }
+
+        // Filtro estrito de itens já assistidos no Slider Principal:
+        // Filmes já assistidos são removidos.
+        // Séries com todas as temporadas assistidas (Played === true) são removidas.
+        items = items.filter(it => {
+          if (!it) return false;
+          const isMovie = it.Type === "Movie" || it.MediaType === "Video";
+          const isSeries = it.Type === "Series";
+          if (isMovie && it.UserData?.Played === true) {
+            return false;
+          }
+          if (isSeries && it.UserData?.Played === true) {
+            return false;
+          }
+          return true;
+        });
       }
     } catch (err) {
       console.error("[Nexus PobreFlix] Erro ao preparar dados do slide:", err);

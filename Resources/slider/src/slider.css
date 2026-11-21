@@ -2918,7 +2918,12 @@ span.monwui-meta-text.monwui-watched-text {
     overflow: hidden;
     text-align: center;
     text-overflow: ellipsis;
-    white-space: nowrap
+    white-space: nowrap;
+    background: transparent !important;
+    background-color: transparent !important;
+    color: inherit !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 .monwui-dot-navigation-container .monwui-dot.active {

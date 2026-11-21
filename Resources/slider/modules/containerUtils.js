@@ -25,7 +25,7 @@ function escapeMetaHtml(value) {
 
 function buildMetaTextSpan(text, ...classNames) {
   const className = ["monwui-meta-text", ...classNames.filter(Boolean)].join(" ");
-  return `<span class="${className}">${escapeMetaHtml(text)}</span>`;
+  return `<span class="${className}" style="background:transparent!important;background-color:transparent!important;color:inherit!important;border:none!important;box-shadow:none!important;padding:0!important;margin:0!important;">${escapeMetaHtml(text)}</span>`;
 }
 
 export function getMetaVibrantColor(str) {
@@ -360,12 +360,17 @@ export function createStatusContainer(itemType, config, UserData, ChildCount, Ru
   if (UserData && config.showWatchedInfo) {
     const watchedSpan = document.createElement("span");
     watchedSpan.className = "watched-status";
+    const isPlaying = !UserData.Played && (hasResumeProgress || (Number(UserData.PlaybackPositionTicks || 0) > 0));
     const watchedIcon = UserData.Played
       ? `<i class="fa-regular fa-circle-check"></i>`
+      : isPlaying
+      ? `<i class="fas fa-play" style="font-size:0.85em;"></i>`
       : `<i class="fa-regular fa-circle-xmark"></i>`;
     let watchedText = UserData.Played
-      ? config.languageLabels.izlendi
-      : config.languageLabels.izlenmedi;
+      ? (config.languageLabels.izlendi || "Assistido")
+      : isPlaying
+      ? "Assistindo"
+      : (config.languageLabels.izlenmedi || "Não assistido");
     if (UserData.Played && UserData.PlayCount > 0) {
       watchedText += ` (${UserData.PlayCount})`;
     }

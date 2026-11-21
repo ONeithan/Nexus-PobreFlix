@@ -13,8 +13,16 @@
     --nexus-blur: blur(25px);
 }
 
-body:not(.configPage) {
-    background-color: var(--nexus-bg) !important;
+html,
+body:not(.configPage),
+#indexPage,
+.page,
+.pageContainer,
+.mainAnimatedPages,
+.homeSectionsContainer,
+.backgroundContainer {
+    background: #050505 !important;
+    background-color: #050505 !important;
     color: #eee !important;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
 }
@@ -28,7 +36,7 @@ body:not(.configPage) {
 }
 
 .backgroundContainer.withBackdrop {
-    background-color: rgba(0,0,0,0.75) !important;
+    background-color: rgba(5,5,5,0.85) !important;
 }
 
 /* 2. HEADER - NEXUS LOGO & CLEANUP (Industrial) */
@@ -56,13 +64,13 @@ body:not(.configPage) {
 .mainDrawer-header .headerLogo:after {
     content: "";
     display: block;
-    width: 250px;
-    height: 65px;
+    width: 300px !important;
+    height: 76px !important;
     background-image: url('./slider/src/images/logo_pobreflix.png') !important;
     background-size: contain !important;
     background-repeat: no-repeat !important;
-    background-position: center left;
-    margin-left: 10px;
+    background-position: center left !important;
+    margin-left: 10px !important;
 }
 
 /* Navbar Glassmorphism - Limpidez Scyfin */
@@ -71,13 +79,53 @@ body:not(.configPage) {
     background-color: transparent !important;
     backdrop-filter: var(--nexus-blur) !important;
     -webkit-backdrop-filter: var(--nexus-blur) !important;
-    height: 64px !important;
+    height: 68px !important;
     border-bottom: none !important;
     box-shadow: none !important;
     top: 0 !important;
     position: absolute !important;
     width: 100% !important;
     z-index: 999 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* Centralização Perfeita dos Botões Início, Favoritos e Minha Lista */
+.skinHeader .headerTabs,
+.skinHeader .headerMiddle,
+.skinHeader .emby-tabs,
+.skinHeader .emby-tabs-slider,
+.skinHeader .MuiTabs-root,
+.skinHeader .MuiTabs-flexContainer,
+.skinHeader .headerLeft,
+.skinHeader .headerRight,
+.skinHeader .headerTop {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.skinHeader .emby-tab-button,
+.skinHeader .headerLink,
+.skinHeader a.MuiButton-root,
+.skinHeader button.MuiButtonBase-root,
+.skinHeader .monwuiwl-nav-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: auto !important;
+    align-self: center !important;
+    margin: 0 4px !important;
+    padding: 6px 14px !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
 }
 
 /* Remover Linha Cinza e Quadrado Enorme do Header */
@@ -200,38 +248,69 @@ body:not(.configPage) {
     align-items: center !important;
 }
 
+/* Metadata Line & Pills - ZERO FUNDO BRANCO */
 .monwui-meta-badge, .monwui-status-item, .monwui-status-container > span {
-    background: rgba(255,255,255,0.1) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
     padding: 4px 10px !important;
-    border-radius: 12px !important;
-    font-size: 0.65rem !important;
+    border-radius: 999px !important;
+    font-size: 0.72rem !important;
     font-weight: 700 !important;
-    color: rgba(255,255,255,0.9) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
+    color: rgba(255, 255, 255, 0.92) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 4px !important;
+    gap: 6px !important;
+    box-shadow: none !important;
 }
 
 .monwui-meta-badge.accent, .monwui-status-container > span.type {
     border-color: var(--nexus-purple) !important;
-    background: rgba(123, 47, 190, 0.25) !important;
+    background: rgba(123, 47, 190, 0.28) !important;
     color: #e0b0ff !important;
 }
 
-/* Quality Icons */
-.jmsdm-quality-pills, .video-quality {
-    display: flex !important;
-    gap: 8px !important;
-    align-items: center !important;
+/* Blindagem absoluta: todo e qualquer texto/ícone dentro de badges tem fundo 100% transparente */
+.monwui-status-container span,
+.monwui-status-container span *,
+.monwui-meta-container span,
+.monwui-meta-container span *,
+.monwui-meta-text,
+.monwui-type-text,
+.monwui-watched-text,
+.monwui-runtime-text,
+.monwui-end-time-text,
+.monwui-percentage-text,
+.monwui-rating-text,
+.prc-type-badge,
+.prc-type-badge *,
+.top10-type-badge,
+.top10-type-badge *,
+.top10-fresh-badge,
+.community-rating,
+.monwui-quality-group * {
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
 }
 
-.quality-icon, .range-icon, .codec-icon, .video-quality img {
-    height: 20px !important;
-    filter: brightness(0) invert(1) drop-shadow(0 0 2px rgba(0,0,0,0.5)) !important;
-    opacity: 1 !important;
+/* Ocultar Tags Técnicas de Qualidade (FHD, SDR, AVC, AAC, HEVC, etc.) em toda a interface por padrão */
+.monwui-quality-group,
+.monwui-quality-tags,
+.monwui-quality-segment,
+.cardMediaInfo,
+.video-quality,
+.video-quality-tag,
+.mediaSourceIndicator,
+.mediaInfoItem,
+.quality-badge,
+.jmsdm-quality-pills,
+.monwui-dot-quality-badge,
+.mini-quality-inline,
+.rr-quality-tags {
+    display: none !important;
 }
 
 /* 5. BUTTONS (Nexus Premium) */
@@ -390,7 +469,7 @@ body:not(.configPage) {
    11. MINHA MÍDIA & CONTINUAR ASSISTINDO - DESIGN PREMIUM NEXUS
    ========================================================================== */
 
-/* Seções Nativas: Espaçamento e Posicionamento */
+/* Seções Nativas: Espaçamento e Posicionamento Alinhado (3.3%) */
 .section0,
 div[data-type="smalllibrarytiles"],
 div[data-type="resume"],
@@ -399,8 +478,8 @@ div[data-type="resume"],
     margin-bottom: 34px !important;
     position: relative !important;
     z-index: 10 !important;
-    padding-left: 2% !important;
-    padding-right: 2% !important;
+    padding-left: 3.3% !important;
+    padding-right: 3.3% !important;
 }
 
 /* Títulos de Seção com Indicador Roxo Nexus */
@@ -431,14 +510,35 @@ div[data-type="resume"] .sectionTitle::before,
     box-shadow: 0 0 10px rgba(122, 92, 255, 0.6) !important;
 }
 
+/* Container de Cards de Minha Mídia */
+div[data-type="smalllibrarytiles"] .itemsContainer,
+.section0 .itemsContainer {
+    display: flex !important;
+    gap: 18px !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding: 8px 4px 18px 4px !important;
+}
+
 /* Cards de "Minha Mídia" (Bibliotecas com Glassmorphism) */
 div[data-type="smalllibrarytiles"] .card,
 .section0 .card {
     border-radius: 16px !important;
     overflow: hidden !important;
-    background: rgba(18, 16, 26, 0.72) !important;
-    border: 1px solid rgba(122, 92, 255, 0.22) !important;
+    background: rgba(18, 16, 26, 0.85) !important;
+    border: 1px solid rgba(122, 92, 255, 0.25) !important;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    transition: transform 0.28s cubic-bezier(0.165, 0.84, 0.44, 1), 
+                box-shadow 0.28s cubic-bezier(0.165, 0.84, 0.44, 1), 
+                border-color 0.28s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+    cursor: pointer !important;
+    min-width: 220px !important;
+    max-width: 280px !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+}
     backdrop-filter: blur(12px) !important;
     -webkit-backdrop-filter: blur(12px) !important;
     transition: transform 0.28s cubic-bezier(0.165, 0.84, 0.44, 1), 
@@ -555,4 +655,82 @@ div[data-type="resume"] .cardText-secondary,
 .resumeSection .cardText-secondary {
     color: rgba(255, 255, 255, 0.65) !important;
     font-size: 0.85rem !important;
+}
+
+/* 12. NAVEGAÇÃO DO SLIDER - CÁPSULA DE SETAS & MOUSE DRAG */
+.monwui-slider-arrows-capsule {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 14px !important;
+    margin-top: 10px !important;
+    z-index: 200 !important;
+    position: relative !important;
+}
+
+.monwui-slider-nav-btn {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 50% !important;
+    background: rgba(18, 16, 26, 0.78) !important;
+    border: 1px solid rgba(122, 92, 255, 0.45) !important;
+    color: #fff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.95rem !important;
+    cursor: pointer !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    transition: all 0.22s ease !important;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.45) !important;
+}
+
+.monwui-slider-nav-btn:hover,
+.monwui-slider-nav-btn:focus,
+.monwui-slider-nav-btn.focused {
+    background: var(--nexus-purple) !important;
+    border-color: #a855f7 !important;
+    box-shadow: 0 0 16px rgba(122, 92, 255, 0.8) !important;
+    transform: scale(1.1) !important;
+    outline: none !important;
+}
+
+/* 13. PADRONIZAÇÃO DE CARDS "A SEGUIR" & "RECENTES" (Padrão O Refúgio) */
+.recent-rows .card,
+.top10-section .card,
+div[data-type="nextup"] .card,
+div[data-type="latestmedia"] .card,
+.nextUpSection .card {
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    background: rgba(18, 16, 26, 0.8) !important;
+    border: 1px solid rgba(122, 92, 255, 0.2) !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45) !important;
+    transition: transform 0.26s cubic-bezier(0.165, 0.84, 0.44, 1), 
+                box-shadow 0.26s cubic-bezier(0.165, 0.84, 0.44, 1), 
+                border-color 0.26s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+}
+
+.recent-rows .card:hover,
+.top10-section .card:hover,
+div[data-type="nextup"] .card:hover,
+div[data-type="latestmedia"] .card:hover,
+.nextUpSection .card:hover {
+    transform: translateY(-4px) scale(1.025) !important;
+    border-color: rgba(168, 85, 247, 0.75) !important;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.7), 0 0 18px rgba(122, 92, 255, 0.35) !important;
+}
+
+.recent-rows .cardScalable,
+.top10-section .cardScalable,
+div[data-type="nextup"] .cardScalable,
+div[data-type="latestmedia"] .cardScalable,
+.nextUpSection .cardScalable,
+.recent-rows .cardImageContainer,
+.top10-section .cardImageContainer,
+div[data-type="nextup"] .cardImageContainer,
+div[data-type="latestmedia"] .cardImageContainer,
+.nextUpSection .cardImageContainer {
+    border-radius: 14px !important;
 }

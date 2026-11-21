@@ -14,18 +14,53 @@
 .itemExternalId, 
 .quality-badge, 
 .media-info-item,
-.itemTypeIndicator {
+.itemTypeIndicator,
+.monwui-quality-group,
+.monwui-quality-tags,
+.monwui-quality-segment,
+.cardMediaInfo,
+.video-quality,
+.video-quality-tag,
+.jmsdm-quality-pills,
+.monwui-dot-quality-badge,
+.mini-quality-inline,
+.rr-quality-tags {
     display: none !important;
 }
 
-/* Alinhamento Industrial das Seções da Home (Apenas no Desktop/Mobile normal) */
-body:not(.layout-tv) .sectionTitleContainer {
-    margin-left: 2% !important;
-    padding-left: 0 !important;
+/* Alinhamento Padronizado das Seções da Home com o padrão nativo (3.3%) */
+body:not(.layout-tv) .sectionTitleContainer,
+body:not(.layout-tv) .padded-left.padded-right.sectionTitleContainer,
+body:not(.layout-tv) div[data-type="smalllibrarytiles"],
+body:not(.layout-tv) div[data-type="resume"],
+body:not(.layout-tv) .resumeSection,
+body:not(.layout-tv) .section0 {
+    margin-left: 0 !important;
+    padding-left: 3.3% !important;
+    padding-right: 3.3% !important;
 }
 
-body:not(.layout-tv) .padded-left.padded-right.sectionTitleContainer {
-    padding-left: 0 !important;
+/* Blindagem Total contra Fundos Brancos em Badges e Textos */
+.monwui-meta-text,
+.monwui-type-text,
+.monwui-watched-text,
+.monwui-runtime-text,
+.monwui-end-time-text,
+.monwui-percentage-text,
+.monwui-rating-text,
+.monwui-status-container span,
+.monwui-status-container span *,
+.monwui-meta-container span,
+.monwui-meta-container span *,
+.prc-type-badge,
+.prc-type-badge *,
+.top10-type-badge,
+.top10-type-badge *,
+.top10-fresh-badge {
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
 }
 
 /* Estúdios (Studio Hubs) - Ocultar Texto e Focar na Logo (Apenas no Desktop/Mobile normal) */

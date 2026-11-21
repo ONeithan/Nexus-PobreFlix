@@ -504,7 +504,7 @@ export function createAboutPanel(labels) {
     <div class="jms-env-box" style="margin-top: 15px; border-top: 1px solid rgba(168, 85, 247, 0.3); padding-top: 20px; display: flex; flex-direction: column; gap: 12px;">
       <div class="jms-env-item" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(168, 85, 247, 0.15); padding-bottom: 8px;">
         <span class="jms-env-label" style="color: #94a3b8; font-size: 0.9em;">Versão do Fork</span>
-        <code style="background: rgba(168, 85, 247, 0.2); padding: 3px 8px; border-radius: 4px; color: #fff; font-size: 0.85em;">1.0.0.10 (Nexus Edition)</code>
+        <code style="background: rgba(168, 85, 247, 0.2); padding: 3px 8px; border-radius: 4px; color: #fff; font-size: 0.85em;">1.0.0.11 (Nexus Edition)</code>
       </div>
       <div class="jms-env-item" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(168, 85, 247, 0.15); padding-bottom: 8px;">
         <span class="jms-env-label" style="color: #94a3b8; font-size: 0.9em;">Autor do Fork</span>

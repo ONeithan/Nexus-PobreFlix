@@ -615,3 +615,155 @@ export async function waitForVisibleHomeSections({ timeout = 12000 } = {}) {
     check();
   });
 }
+
+export function enhanceSmallLibraryTiles(root = document) {
+  try {
+    const sections = root.querySelectorAll('div[data-type="smalllibrarytiles"], .section0');
+    sections.forEach((sec) => {
+      const cards = sec.querySelectorAll('.card');
+      cards.forEach(async (card) => {
+        if (card.dataset.nexusEnhanced) return;
+        card.dataset.nexusEnhanced = "true";
+
+        const imgContainer = card.querySelector('.cardImageContainer');
+        if (!imgContainer) return;
+
+        const computedBg = window.getComputedStyle(imgContainer).backgroundImage;
+        const hasBg = computedBg && computedBg !== 'none' && !computedBg.includes('undefined');
+        const hasImg = !!imgContainer.querySelector('img');
+
+        if (!hasBg && !hasImg) {
+          const id = card.getAttribute('data-id') || 
+                     card.getAttribute('data-itemid') || 
+                     card.querySelector('a')?.getAttribute('href')?.match(/id=([a-f0-9]+)/i)?.[1];
+          if (!id) return;
+
+          try {
+            const userId = window.ApiClient?.getCurrentUserId?.();
+            if (userId) {
+              const url = window.ApiClient.getUrl(`/Users/${userId}/Items`, {
+                ParentId: id,
+                Limit: 1,
+                Recursive: true,
+                SortBy: "DateCreated",
+                SortOrder: "Descending",
+                ImageTypeLimit: 1,
+                EnableImageTypes: "Primary,Backdrop"
+              });
+              const resp = await fetch(url, { headers: { ...window.ApiClient?.defaultHeaders } });
+              if (resp.ok) {
+                const data = await resp.json();
+                const item = data?.Items?.[0];
+                if (item) {
+                  const tag = item.ImageTags?.Primary || item.BackdropImageTags?.[0];
+                  const type = item.ImageTags?.Primary ? "Primary" : "Backdrop";
+                  if (tag) {
+                    const finalUrl = window.ApiClient.getUrl(`/Items/${item.Id}/Images/${type}`, {
+                      tag,
+                      maxWidth: 500,
+                      quality: 90
+                    });
+                    imgContainer.style.backgroundImage = `url("${finalUrl}")`;
+                    imgContainer.style.backgroundSize = "cover";
+                    imgContainer.style.backgroundPosition = "center";
+                  }
+                }
+              }
+            }
+          } catch {}
+        }
+      });
+    });
+  } catch {}
+}
+
+export function filterHiddenContinueWatching(root = document) {
+  try {
+    const raw = localStorage.getItem("nexus_hidden_continue_watching");
+    if (!raw) return;
+    const hiddenMap = JSON.parse(raw);
+    const resumeSections = root.querySelectorAll('div[data-type="resume"], .resumeSection, #resumeSection, [id*="resume"]');
+    resumeSections.forEach((sec) => {
+      sec.querySelectorAll('.card').forEach((card) => {
+        const id = card.getAttribute('data-id') || 
+                   card.getAttribute('data-itemid') || 
+                   card.querySelector('a')?.getAttribute('href')?.match(/id=([a-f0-9]+)/i)?.[1];
+        if (id && hiddenMap[id]) {
+          card.style.display = "none";
+        }
+      });
+    });
+  } catch {}
+}
+
+export function setupContinueWatchingMenuHooks() {
+  if (typeof window === "undefined" || window.__nexusMenuHooksInstalled) return;
+  window.__nexusMenuHooksInstalled = true;
+
+  let lastClickedCard = null;
+
+  document.addEventListener("click", (e) => {
+    const card = e.target.closest('.card');
+    if (card) lastClickedCard = card;
+  }, { capture: true, passive: true });
+
+  const observer = new MutationObserver(() => {
+    const actionSheet = document.querySelector('.actionSheetScroller, .actionSheet, .actionSheetContent, .actionsheetList');
+    if (!actionSheet || actionSheet.querySelector('#nexus-btn-remove-continue')) return;
+
+    if (!lastClickedCard) return;
+    const isContinueWatching = !!lastClickedCard.closest('div[data-type="resume"], .resumeSection, [id*="resume"], [id*="continue"]');
+    if (!isContinueWatching) return;
+
+    const itemId = lastClickedCard.getAttribute('data-id') || 
+                   lastClickedCard.getAttribute('data-itemid') || 
+                   lastClickedCard.querySelector('a')?.getAttribute('href')?.match(/id=([a-f0-9]+)/i)?.[1];
+    if (!itemId) return;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.id = "nexus-btn-remove-continue";
+    btn.className = "actionSheetMenuItem listItem listItem-button actionsheetListItem";
+    btn.innerHTML = `
+      <div class="listItemIcon"><i class="fas fa-eye-slash" style="color: #a855f7; font-size: 1.1rem; margin-right: 12px;"></i></div>
+      <div class="listItemBody actionsheetListItemBody">
+        <div class="listItemBodyText">Remover do Continuar Assistindo</div>
+      </div>
+    `;
+    btn.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+
+      try {
+        const raw = localStorage.getItem("nexus_hidden_continue_watching");
+        const map = raw ? JSON.parse(raw) : {};
+        map[itemId] = { hiddenAt: Date.now() };
+        localStorage.setItem("nexus_hidden_continue_watching", JSON.stringify(map));
+
+        if (lastClickedCard?.isConnected) {
+          lastClickedCard.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+          lastClickedCard.style.opacity = "0";
+          lastClickedCard.style.transform = "scale(0.85)";
+          setTimeout(() => lastClickedCard.remove(), 300);
+        }
+      } catch {}
+
+      const dialog = actionSheet.closest('.dialogContainer, .dialog, [data-role="dialog"]');
+      if (dialog) {
+        dialog.dispatchEvent(new CustomEvent("close", { bubbles: true }));
+        try { dialog.remove(); } catch {}
+      }
+    });
+
+    const list = actionSheet.querySelector('.actionsheetList, .verticalSection') || actionSheet;
+    list.appendChild(btn);
+  });
+
+  try {
+    observer.observe(document.body, { childList: true, subtree: true });
+  } catch {}
+}
+
+try {
+  setupContinueWatchingMenuHooks();
+} catch {}

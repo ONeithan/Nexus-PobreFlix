@@ -4552,6 +4552,7 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
       (mountKey && STATE.wrapEl !== mountKey);
     if (stale) {
       STATE.started = false;
+    window.__nexusTop10RenderedForThisLoad = false;
       STATE.wrapEl = null;
       STATE.hostEl = null;
       STATE.serverId = null;
@@ -4647,7 +4648,7 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
       const topSeriesParentIds = libId ? [libId] : getTopSeriesParentIds();
       const topSeriesMetaType = buildTopRowMetaType(`Series_${categoryId}_${libId || "all"}`, topSeriesParentIds);
 
-      pushPlan(top10SeriesPlans, () => buildManagedSection({
+      const seriesTopPlan = () => buildManagedSection({
         titleText: rowTitle,
         badgeType: categoryId,
         heroLabel: "",
@@ -4691,14 +4692,16 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
             openLatestPage("Series");
           }
         }
-      }));
+      });
+      seriesTopPlan.__cat = categoryId;
+      pushPlan(top10SeriesPlans, seriesTopPlan);
     });
   }
 
   if (runtimeCfg.enableTop10Movies && !isUserCategoryExcluded(userId, "movie", "Filmes")) {
     const topMovieParentIds = getTopMovieParentIds();
     const topMovieMetaType = buildTopRowMetaType("Movie", topMovieParentIds);
-    pushPlan(top10MoviePlans, () => buildManagedSection({
+    const movieTopPlan = () => buildManagedSection({
       titleText: config.languageLabels.top10Movies || "Top 10 Filmes",
       badgeType: "movie",
       heroLabel: "",
@@ -4719,7 +4722,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
         }
       ),
       onSeeAll: () => openLatestPage("Movie")
-    }));
+    });
+    movieTopPlan.__cat = "movie";
+    pushPlan(top10MoviePlans, movieTopPlan);
   }
 
   if (runtimeCfg.enableTmdbTopMovies) {
@@ -5286,9 +5291,37 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
     }));
   }
 
+    let top10Runners = [];
+    if (sectionKey === "top10SeriesRows" || sectionKey === "top10MovieRows") {
+      if (window.__nexusTop10RenderedForThisLoad) {
+        top10Runners = [];
+      } else {
+        window.__nexusTop10RenderedForThisLoad = true;
+        const moviePlan = top10MoviePlans[0] || null;
+        const animePlan = top10SeriesPlans.find(p => p.__cat === "anime") || null;
+        const seriesPlan = top10SeriesPlans.find(p => p.__cat === "series") || top10SeriesPlans[0] || null;
+
+        const rotationPool = [];
+        if (moviePlan) rotationPool.push(moviePlan);
+        if (seriesPlan) rotationPool.push(seriesPlan);
+        if (animePlan) rotationPool.push(animePlan);
+
+        if (!rotationPool.length) {
+          rotationPool.push(...top10SeriesPlans, ...top10MoviePlans);
+        }
+
+        if (rotationPool.length) {
+          let cycleIdx = Number(sessionStorage.getItem("nexus_top10_cycle") || 0);
+          if (!Number.isFinite(cycleIdx) || cycleIdx < 0) cycleIdx = 0;
+          const chosenPlan = rotationPool[cycleIdx % rotationPool.length];
+          sessionStorage.setItem("nexus_top10_cycle", String((cycleIdx + 1) % rotationPool.length));
+          top10Runners = [chosenPlan];
+        }
+      }
+    }
+
     const runners = (
-      sectionKey === "top10SeriesRows" ? [...top10SeriesPlans] :
-      sectionKey === "top10MovieRows" ? [...top10MoviePlans] :
+      (sectionKey === "top10SeriesRows" || sectionKey === "top10MovieRows") ? top10Runners :
       sectionKey === "tmdbTopMoviesRows" ? [...tmdbTopMoviePlans] :
       sectionKey === "tmdbTrailerRows" ? [...tmdbTrailerPlans] :
       sectionKey === "continueRows" ? [...continuePlans] :
@@ -5346,6 +5379,7 @@ export function cleanupRecentRows() {
     });
 
     STATE.started = false;
+    window.__nexusTop10RenderedForThisLoad = false;
     STATE.wrapEl = null;
     STATE.hostEl = null;
     STATE.serverId = null;

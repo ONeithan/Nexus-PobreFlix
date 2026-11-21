@@ -1369,6 +1369,33 @@ export function createDotNavigation() {
     dotContainer.appendChild(dot);
   });
 
+  // Navigation Arrows Capsule (prev / next) for TV and Desktop modes
+  const existingNavCapsule = dotContainer.parentElement?.querySelector(".monwui-slider-arrows-capsule");
+  if (existingNavCapsule) existingNavCapsule.remove();
+
+  const capsule = document.createElement("div");
+  capsule.className = "monwui-slider-arrows-capsule";
+  capsule.innerHTML = `
+    <button type="button" class="monwui-slider-nav-btn monwui-slider-nav-prev" aria-label="Slide anterior" title="Slide anterior">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <button type="button" class="monwui-slider-nav-btn monwui-slider-nav-next" aria-label="Próximo slide" title="Próximo slide">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  `;
+  capsule.querySelector(".monwui-slider-nav-prev")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    changeSlide(-1);
+  });
+  capsule.querySelector(".monwui-slider-nav-next")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    changeSlide(1);
+  });
+
+  dotContainer.parentElement?.appendChild(capsule);
+
   applyDotStateClasses(dotContainer.querySelectorAll(".monwui-dot"), currentDotIndex, config, lowPower);
 }
 
@@ -1470,6 +1497,38 @@ export function initSwipeEvents() {
   slidesContainer.addEventListener("touchstart", handleTouchStart, { passive: false });
   slidesContainer.addEventListener("touchmove", handleTouchMove, { passive: false });
   slidesContainer.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+  // Mouse Drag / Swipe Navigation
+  let isDragging = false;
+  let mouseStartX = 0;
+  let mouseStartY = 0;
+
+  slidesContainer.addEventListener("mousedown", (e) => {
+    if (e.button !== 0) return;
+    if (e.target.closest("button, a, input, select, textarea, .monwui-button-container, .monwui-slider-arrows-capsule, .monwui-dot")) return;
+    isDragging = true;
+    mouseStartX = e.clientX;
+    mouseStartY = e.clientY;
+  }, { passive: true });
+
+  window.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    const diffX = e.clientX - mouseStartX;
+    const diffY = e.clientY - mouseStartY;
+    if (Math.abs(diffX) > 15 && Math.abs(diffX) > Math.abs(diffY)) {
+      try { e.preventDefault(); } catch {}
+    }
+  }, { passive: false });
+
+  window.addEventListener("mouseup", (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    const deltaX = e.clientX - mouseStartX;
+    const deltaY = e.clientY - mouseStartY;
+    if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      changeSlide(deltaX > 0 ? -1 : 1);
+    }
+  }, { passive: true });
 }
 
 export function centerActiveDot({ smooth = true, force = false } = {}) {
