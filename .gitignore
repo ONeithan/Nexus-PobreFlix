@@ -23,4 +23,6 @@ publish/
 
 # Documentação local do projeto
 docs/
+RELEASE_*
+
 
