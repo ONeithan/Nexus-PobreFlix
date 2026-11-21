@@ -2944,6 +2944,7 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
     const sliderCssEnabled = isSliderCssActive(cfg);
 
     syncCSS('/slider/src/fontawesome/all.min.css', 'jms-css-fontawesome', true);
+    syncCSS('/slider/src/nexus_v16_premium.css', 'jms-css-nexus-premium', true);
     D.getElementById('jms-css-notifications')?.remove();
     syncCSS(getPauseOverlayCssHref(cfg), 'jms-css-pause', pauseFeatureCssEnabled);
     syncCSS('/slider/src/personalRecommendations.css', 'jms-css-recs', recommendationCssEnabled);

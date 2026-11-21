@@ -385,3 +385,174 @@ body:not(.configPage) {
     backdrop-filter: none !important;
     background-color: #1a1a1a !important;
 }
+
+/* ==========================================================================
+   11. MINHA MÍDIA & CONTINUAR ASSISTINDO - DESIGN PREMIUM NEXUS
+   ========================================================================== */
+
+/* Seções Nativas: Espaçamento e Posicionamento */
+.section0,
+div[data-type="smalllibrarytiles"],
+div[data-type="resume"],
+.resumeSection {
+    margin-top: 26px !important;
+    margin-bottom: 34px !important;
+    position: relative !important;
+    z-index: 10 !important;
+    padding-left: 2% !important;
+    padding-right: 2% !important;
+}
+
+/* Títulos de Seção com Indicador Roxo Nexus */
+.section0 .sectionTitle,
+div[data-type="smalllibrarytiles"] .sectionTitle,
+div[data-type="resume"] .sectionTitle,
+.resumeSection .sectionTitle {
+    font-size: 1.45rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.01em !important;
+    color: #ffffff !important;
+    margin-bottom: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.section0 .sectionTitle::before,
+div[data-type="smalllibrarytiles"] .sectionTitle::before,
+div[data-type="resume"] .sectionTitle::before,
+.resumeSection .sectionTitle::before {
+    content: "" !important;
+    display: inline-block !important;
+    width: 4px !important;
+    height: 18px !important;
+    background: linear-gradient(180deg, var(--nexus-purple) 0%, #a855f7 100%) !important;
+    border-radius: 4px !important;
+    box-shadow: 0 0 10px rgba(122, 92, 255, 0.6) !important;
+}
+
+/* Cards de "Minha Mídia" (Bibliotecas com Glassmorphism) */
+div[data-type="smalllibrarytiles"] .card,
+.section0 .card {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    background: rgba(18, 16, 26, 0.72) !important;
+    border: 1px solid rgba(122, 92, 255, 0.22) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    transition: transform 0.28s cubic-bezier(0.165, 0.84, 0.44, 1), 
+                box-shadow 0.28s cubic-bezier(0.165, 0.84, 0.44, 1), 
+                border-color 0.28s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+    cursor: pointer !important;
+}
+
+div[data-type="smalllibrarytiles"] .card:hover,
+.section0 .card:hover {
+    transform: translateY(-5px) scale(1.03) !important;
+    border-color: rgba(168, 85, 247, 0.85) !important;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.75), 0 0 22px rgba(122, 92, 255, 0.4) !important;
+}
+
+div[data-type="smalllibrarytiles"] .cardScalable,
+.section0 .cardScalable {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+}
+
+div[data-type="smalllibrarytiles"] .cardImageContainer,
+.section0 .cardImageContainer {
+    border-radius: 16px !important;
+    background-size: cover !important;
+    background-position: center !important;
+    position: relative !important;
+}
+
+/* Gradiente escuro no fundo da imagem para legibilidade estelar */
+div[data-type="smalllibrarytiles"] .cardImageContainer::after,
+.section0 .cardImageContainer::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: linear-gradient(180deg, rgba(10, 8, 18, 0.05) 0%, rgba(10, 8, 18, 0.55) 55%, rgba(10, 8, 18, 0.92) 100%) !important;
+    pointer-events: none !important;
+    border-radius: inherit !important;
+}
+
+/* Tipografia do Título da Biblioteca */
+div[data-type="smalllibrarytiles"] .cardText,
+.section0 .cardText {
+    font-size: 1.15rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.3px !important;
+    color: #ffffff !important;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9) !important;
+    padding: 8px 12px !important;
+    text-align: center !important;
+}
+
+/* Cards de "Continuar Assistindo" (Resume) */
+div[data-type="resume"] .card,
+.resumeSection .card {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    background: rgba(18, 16, 26, 0.72) !important;
+    border: 1px solid rgba(122, 92, 255, 0.22) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    transition: transform 0.28s cubic-bezier(0.165, 0.84, 0.44, 1), 
+                box-shadow 0.28s cubic-bezier(0.165, 0.84, 0.44, 1), 
+                border-color 0.28s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+    cursor: pointer !important;
+}
+
+div[data-type="resume"] .card:hover,
+.resumeSection .card:hover {
+    transform: translateY(-5px) scale(1.03) !important;
+    border-color: rgba(168, 85, 247, 0.85) !important;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.75), 0 0 22px rgba(122, 92, 255, 0.4) !important;
+}
+
+div[data-type="resume"] .cardScalable,
+.resumeSection .cardScalable {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+}
+
+div[data-type="resume"] .cardImageContainer,
+.resumeSection .cardImageContainer {
+    border-radius: 16px !important;
+    position: relative !important;
+}
+
+/* Barra de progresso roxa estilizada */
+div[data-type="resume"] .playbackProgress,
+.resumeSection .playbackProgress {
+    height: 5px !important;
+    border-radius: 4px !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    overflow: hidden !important;
+}
+
+div[data-type="resume"] .playbackProgressBar,
+.resumeSection .playbackProgressBar {
+    background: linear-gradient(90deg, #7a5cff 0%, #a855f7 100%) !important;
+    border-radius: 4px !important;
+    box-shadow: 0 0 8px rgba(122, 92, 255, 0.8) !important;
+}
+
+/* Textos do card de continuar assistindo */
+div[data-type="resume"] .cardText-first,
+.resumeSection .cardText-first {
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    color: #ffffff !important;
+    padding-top: 6px !important;
+}
+
+div[data-type="resume"] .cardText-secondary,
+.resumeSection .cardText-secondary {
+    color: rgba(255, 255, 255, 0.65) !important;
+    font-size: 0.85rem !important;
+}

@@ -97,8 +97,8 @@ function getPersonalRecsCardCount(source = null) {
 }
 
 function getBywRowCount(source = null) {
-  const cfg = source || getConfig?.() || config || {};
-  return clampConfiguredCount(cfg.becauseYouWatchedRowCount, 1, 50);
+  // Limite estrito a no máximo 1 linha de "Porque você assistiu", conforme solicitado
+  return 1;
 }
 
 function getBywCardCount(source = null) {
@@ -2551,6 +2551,11 @@ async function renderBecauseYouWatchedAuto(indexPage, options = {}) {
       await writeCachedBywSeeds(st, seeds);
     }
     PRC_SESSION_BYW_SEEDS_CACHE.set(sessionScope, seeds.slice());
+  }
+
+  // Garantir estritamente no máximo 1 linha de sementes para "Porque você assistiu"
+  if (Array.isArray(seeds) && seeds.length > 1) {
+    seeds = seeds.slice(0, 1);
   }
 
   if (!seeds.length) {

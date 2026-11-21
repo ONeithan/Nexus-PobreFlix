@@ -9,6 +9,8 @@ export const SETTINGS_HOTKEY_DEFAULT = "F2";
 const CINEMA_PREROLL_START_FULLSCREEN_DEFAULT = false;
 export const DEFAULT_MANAGED_HOME_SECTION_ORDER = Object.freeze([
   "studioHubs",
+  "native:smalllibrarytiles",
+  "native:resume",
   "personalRecommendations",
   "top10SeriesRows",
   "top10MovieRows",
@@ -173,6 +175,26 @@ export function normalizeManagedHomeSectionOrder(value = null, { nativeEntries }
   }
 
   DEFAULT_MANAGED_HOME_SECTION_ORDER.forEach(push);
+
+  // Garantir estritamente que native:smalllibrarytiles e native:resume fiquem exatamente entre studioHubs e personalRecommendations
+  const studioIdx = out.indexOf("studioHubs");
+  if (studioIdx >= 0) {
+    const sltIdx = out.indexOf("native:smalllibrarytiles");
+    if (sltIdx >= 0 && sltIdx !== studioIdx + 1) {
+      out.splice(sltIdx, 1);
+      out.splice(out.indexOf("studioHubs") + 1, 0, "native:smalllibrarytiles");
+    } else if (sltIdx < 0) {
+      out.splice(out.indexOf("studioHubs") + 1, 0, "native:smalllibrarytiles");
+    }
+    const curSltIdx = out.indexOf("native:smalllibrarytiles");
+    const resumeIdx = out.indexOf("native:resume");
+    if (resumeIdx >= 0 && resumeIdx !== curSltIdx + 1) {
+      out.splice(resumeIdx, 1);
+      out.splice(out.indexOf("native:smalllibrarytiles") + 1, 0, "native:resume");
+    } else if (resumeIdx < 0) {
+      out.splice(out.indexOf("native:smalllibrarytiles") + 1, 0, "native:resume");
+    }
+  }
 
   ensureImplicitManagedFollowerOrder(out, explicit, "tmdbTopMoviesRows", "tmdbTrailerRows");
   ensureImplicitManagedFollowerOrder(out, explicit, "recentRows", "continueRows");
@@ -1028,7 +1050,7 @@ export function getConfig() {
     })(),
 
     enableBecauseYouWatched: (localStorage.getItem('enableBecauseYouWatched') || 'true') !== 'false',
-    becauseYouWatchedRowCount: parseInt(localStorage.getItem('becauseYouWatchedRowCount'), 10) || 10,
+    becauseYouWatchedRowCount: parseInt(localStorage.getItem('becauseYouWatchedRowCount'), 10) || 1,
     becauseYouWatchedCardCount: parseInt(localStorage.getItem('becauseYouWatchedCardCount'), 10) || 10,
 
     enableProfileChooser: localStorage.getItem('enableProfileChooser') !== 'false',

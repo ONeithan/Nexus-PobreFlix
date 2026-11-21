@@ -199,11 +199,11 @@ function inferNativeHomeSectionKind(el, label) {
   const text = normalizeCompareText(blob);
 
   if (/live[\s-]*tv|canli[\s-]*tv/.test(text)) return "livetv";
-  if (/smalllibrary|librarytile|my media|benim medyam|kutuphane|kutuphaneler|libraries/.test(text)) {
+  if (/smalllibrary|librarytile|my media|minha[\s-]*midia|minhas[\s-]*midias|bibliotecas|meus[\s-]*conteudos|benim medyam|kutuphane|kutuphaneler|libraries/.test(text)) {
     return "smalllibrarytiles";
   }
   if (/next[\s-]*up|siradaki|sonraki/.test(text)) return "nextup";
-  if (/resume|continue[\s-]*watching|watching|izlemeye devam|devam ettir/.test(text)) {
+  if (/resume|continuar[\s-]*assistindo|continue[\s-]*watching|watching|continue[\s-]*assistindo|izlemeye devam|devam ettir/.test(text)) {
     return "resume";
   }
   if (/latest|recent|recently added|newly added|son eklenen|yeni eklenen/.test(text)) {
@@ -215,6 +215,12 @@ function inferNativeHomeSectionKind(el, label) {
 function buildNativeHomeSectionBaseKey(el, label) {
   const kind = inferNativeHomeSectionKind(el, label);
   const slug = slugifyNativeHomeSection(label);
+  if (kind === "smalllibrarytiles" || slug === "minha-midia" || slug === "minhas-midias" || slug === "bibliotecas") {
+    return "native:smalllibrarytiles";
+  }
+  if (kind === "resume" || slug === "continuar-assistindo") {
+    return "native:resume";
+  }
   if (kind && kind === slug) {
     return `native:${kind}`;
   }
