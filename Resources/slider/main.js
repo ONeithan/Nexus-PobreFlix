@@ -28,7 +28,14 @@ import { withServer } from "./modules/jfUrl.js";
 import { initUserProfileAvatarPicker } from "./modules/avatarPicker.js";
 import { startBackgroundCollectionIndexer, getBackgroundCollectionIndexerStatus } from "./modules/collectionIndexer.js";
 import { initProfileChooser, syncProfileChooserHeaderButtonVisibility } from "./modules/profileChooser.js";
-import { waitForNativeHomeSectionStability, waitForVisibleHomeSections, enhanceSmallLibraryTiles, filterHiddenContinueWatching } from "./modules/homeSectionNative.js";
+import {
+  waitForNativeHomeSectionStability,
+  waitForVisibleHomeSections,
+  annotateNativeHomeSections,
+  enhanceSmallLibraryTiles,
+  filterHiddenContinueWatching,
+  syncAndFilterHiddenContinueWatching
+} from "./modules/homeSectionNative.js";
 import { initGamepadSupport } from "./modules/gamepadNavigation.js";
 import { detectItemCategory } from "./modules/categoryDetector.js";
 export { loadCSS } from "./modules/playerStyles.js";
@@ -2944,7 +2951,9 @@ function whenFirstSlideReadyOrTimeout(cb, timeoutMs = 7000) {
     const sliderCssEnabled = isSliderCssActive(cfg);
 
     syncCSS('/slider/src/fontawesome/all.min.css', 'jms-css-fontawesome', true);
-    syncCSS('/slider/src/nexus_v16_premium.css', 'jms-css-nexus-premium', true);
+    removeCssByHref(['slider/src/nexus_v16_premium.css']);
+    D.getElementById('jms-css-nexus-premium')?.remove();
+    syncCSS('/slider/src/nexus_patch.css', 'jms-css-nexus-patch', true);
     D.getElementById('jms-css-notifications')?.remove();
     syncCSS(getPauseOverlayCssHref(cfg), 'jms-css-pause', pauseFeatureCssEnabled);
     syncCSS('/slider/src/personalRecommendations.css', 'jms-css-recs', recommendationCssEnabled);
@@ -4201,8 +4210,10 @@ function scheduleNativeAwareSlidesPlacement(indexPage, container) {
       updateSlidePosition();
     } catch {}
     try {
+      annotateNativeHomeSections(indexPage);
       enhanceSmallLibraryTiles(indexPage);
       filterHiddenContinueWatching(indexPage);
+      void syncAndFilterHiddenContinueWatching(indexPage);
     } catch {}
   });
 }
@@ -5358,15 +5369,13 @@ export async function slidesInit() {
 
         // Filtro estrito de itens já assistidos no Slider Principal:
         // Filmes já assistidos são removidos.
-        // Séries com todas as temporadas assistidas (Played === true) são removidas.
+        // Séries com todas as temporadas assistidas (Played === true ou PlayedPercentage >= 100) são removidas.
         items = items.filter(it => {
           if (!it) return false;
           const isMovie = it.Type === "Movie" || it.MediaType === "Video";
           const isSeries = it.Type === "Series";
-          if (isMovie && it.UserData?.Played === true) {
-            return false;
-          }
-          if (isSeries && it.UserData?.Played === true) {
+          const isFullyPlayed = it.UserData?.Played === true || Number(it.UserData?.PlayedPercentage) >= 100;
+          if ((isMovie || isSeries) && isFullyPlayed) {
             return false;
           }
           return true;

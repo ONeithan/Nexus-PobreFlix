@@ -1328,6 +1328,7 @@ export function createDotNavigation() {
     });
 
     dotContainer.append(leftArrow, scrollWrapper, rightArrow);
+    appendSliderArrowsCapsule(dotContainer);
     if (scrollWrapper.__dotRO) scrollWrapper.__dotRO.disconnect();
     scrollWrapper.__dotRO = new ResizeObserver(() => { centerActiveDot(); });
     scrollWrapper.__dotRO.observe(scrollWrapper);
@@ -1369,9 +1370,14 @@ export function createDotNavigation() {
     dotContainer.appendChild(dot);
   });
 
-  // Navigation Arrows Capsule (prev / next) for TV and Desktop modes
-  const existingNavCapsule = dotContainer.parentElement?.querySelector(".monwui-slider-arrows-capsule");
-  if (existingNavCapsule) existingNavCapsule.remove();
+  appendSliderArrowsCapsule(dotContainer);
+
+  applyDotStateClasses(dotContainer.querySelectorAll(".monwui-dot"), currentDotIndex, config, lowPower);
+}
+
+function appendSliderArrowsCapsule(dotContainer) {
+  if (!dotContainer) return;
+  dotContainer.parentElement?.querySelectorAll(".monwui-slider-arrows-capsule").forEach((el) => el.remove());
 
   const capsule = document.createElement("div");
   capsule.className = "monwui-slider-arrows-capsule";
@@ -1394,9 +1400,7 @@ export function createDotNavigation() {
     changeSlide(1);
   });
 
-  dotContainer.parentElement?.appendChild(capsule);
-
-  applyDotStateClasses(dotContainer.querySelectorAll(".monwui-dot"), currentDotIndex, config, lowPower);
+  dotContainer.appendChild(capsule);
 }
 
 async function openModalForDot(dot, itemId, signal) {
@@ -1500,13 +1504,16 @@ export function initSwipeEvents() {
 
   // Mouse Drag / Swipe Navigation
   let isDragging = false;
+  let didHorizontalDrag = false;
+  let suppressClickUntil = 0;
   let mouseStartX = 0;
   let mouseStartY = 0;
 
   slidesContainer.addEventListener("mousedown", (e) => {
     if (e.button !== 0) return;
-    if (e.target.closest("button, a, input, select, textarea, .monwui-button-container, .monwui-slider-arrows-capsule, .monwui-dot")) return;
+    if (e.target.closest("button, a, input, select, textarea, .monwui-button-container, .monwui-slider-arrows-capsule, .monwui-dot, .monwui-poster-dot, .monwui-slider-wrapper")) return;
     isDragging = true;
+    didHorizontalDrag = false;
     mouseStartX = e.clientX;
     mouseStartY = e.clientY;
   }, { passive: true });
@@ -1516,6 +1523,7 @@ export function initSwipeEvents() {
     const diffX = e.clientX - mouseStartX;
     const diffY = e.clientY - mouseStartY;
     if (Math.abs(diffX) > 15 && Math.abs(diffX) > Math.abs(diffY)) {
+      didHorizontalDrag = true;
       try { e.preventDefault(); } catch {}
     }
   }, { passive: false });
@@ -1525,10 +1533,21 @@ export function initSwipeEvents() {
     isDragging = false;
     const deltaX = e.clientX - mouseStartX;
     const deltaY = e.clientY - mouseStartY;
+    if (didHorizontalDrag || (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY))) {
+      suppressClickUntil = Date.now() + 120;
+    }
     if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY)) {
       changeSlide(deltaX > 0 ? -1 : 1);
     }
+    didHorizontalDrag = false;
   }, { passive: true });
+
+  slidesContainer.addEventListener("click", (e) => {
+    if (Date.now() < suppressClickUntil) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, { capture: true });
 }
 
 export function centerActiveDot({ smooth = true, force = false } = {}) {

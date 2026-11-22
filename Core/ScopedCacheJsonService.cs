@@ -21,7 +21,8 @@ namespace Jellyfin.Plugin.JMSFusion.Core
             "personalRecommendations",
             "collectionCache",
             "sliderCache",
-            "gmmpMusic"
+            "gmmpMusic",
+            "hiddenContinue"
         };
         private static readonly HashSet<string> VolatileCacheFields = new(StringComparer.OrdinalIgnoreCase)
         {

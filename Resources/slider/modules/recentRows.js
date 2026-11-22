@@ -28,7 +28,8 @@ import {
   getActiveHomePageEl,
   keepManagedSectionsBelowNative,
   bindManagedSectionsBelowNative,
-  waitForVisibleHomeSections
+  waitForVisibleHomeSections,
+  suppressRedundantNativeLatestMedia
 } from "./homeSectionNative.js";
 import {
   enqueueManagedSectionRender,
@@ -4553,6 +4554,8 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
     if (stale) {
       STATE.started = false;
     window.__nexusTop10RenderedForThisLoad = false;
+    window.__nexusTop10ActiveIdxForLoad = undefined;
+    window.__nexusPluginRecentRowsRendered = false;
       STATE.wrapEl = null;
       STATE.hostEl = null;
       STATE.serverId = null;
@@ -4937,8 +4940,6 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
         }
         let sectionTitle = (config.languageLabels.recentSeries || "Séries Adicionadas Recentemente") + (libName ? ` • ${libName}` : "");
         let heroTitle = (config.languageLabels.recentSeriesHero || "Série Recente") + (libName ? ` • ${libName}` : "");
-        const lowerLib = libName.toLowerCase();
-        let categoryId = "series";
         if (lowerLib.includes("anime")) {
           categoryId = "anime";
           sectionTitle = "Animes Adicionados Recentemente";
@@ -4966,13 +4967,25 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
           hideHero: runtimeCfg.showRecentSeriesHeroCards === false,
           fetcher: Object.assign(
             () => fetchRecent(userId, "Series", runtimeCfg.effectiveRecentSeriesCount + 1, tvLibId).then(async (items) => {
-              items.forEach(it => { if (it) it.__libraryName = libName; });
+              items.forEach(it => {
+                if (it) {
+                  it.__libraryName = libName;
+                  it.__detectedCategory = categoryId;
+                }
+              });
               await writeCachedList("recent", "Series" + tvLibMetaSuffix(tvLibId), items.map(x=>x?.Id).filter(Boolean));
               return items;
             }),
             {
               cachedItems: () => loadCachedRowItems("recent", "Series" + tvLibMetaSuffix(tvLibId), TTL_RECENT_MS, {
-                limit: runtimeCfg.effectiveRecentSeriesCount + 1
+                limit: runtimeCfg.effectiveRecentSeriesCount + 1,
+                afterLoad: (items) => items.map(it => {
+                  if (it) {
+                    it.__libraryName = libName;
+                    it.__detectedCategory = categoryId;
+                  }
+                  return it;
+                })
               })
             }
           ),
@@ -5299,11 +5312,14 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
         window.__nexusTop10RenderedForThisLoad = true;
         const moviePlan = top10MoviePlans[0] || null;
         const animePlan = top10SeriesPlans.find(p => p.__cat === "anime") || null;
-        const seriesPlan = top10SeriesPlans.find(p => p.__cat === "series") || top10SeriesPlans[0] || null;
+        const seriesPlan =
+          top10SeriesPlans.find(p => p.__cat === "series") ||
+          top10SeriesPlans.find(p => p !== animePlan) ||
+          null;
 
         const rotationPool = [];
-        if (moviePlan) rotationPool.push(moviePlan);
         if (seriesPlan) rotationPool.push(seriesPlan);
+        if (moviePlan) rotationPool.push(moviePlan);
         if (animePlan) rotationPool.push(animePlan);
 
         if (!rotationPool.length) {
@@ -5311,10 +5327,15 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
         }
 
         if (rotationPool.length) {
-          let cycleIdx = Number(sessionStorage.getItem("nexus_top10_cycle") || 0);
+          let cycleIdx = Number(localStorage.getItem("nexus_top10_cycle_idx") ?? sessionStorage.getItem("nexus_top10_cycle") ?? 0);
           if (!Number.isFinite(cycleIdx) || cycleIdx < 0) cycleIdx = 0;
-          const chosenPlan = rotationPool[cycleIdx % rotationPool.length];
-          sessionStorage.setItem("nexus_top10_cycle", String((cycleIdx + 1) % rotationPool.length));
+          if (!Number.isFinite(window.__nexusTop10ActiveIdxForLoad)) {
+            window.__nexusTop10ActiveIdxForLoad = cycleIdx % rotationPool.length;
+            try {
+              localStorage.setItem("nexus_top10_cycle_idx", String((window.__nexusTop10ActiveIdxForLoad + 1) % rotationPool.length));
+            } catch {}
+          }
+          const chosenPlan = rotationPool[window.__nexusTop10ActiveIdxForLoad % rotationPool.length];
           top10Runners = [chosenPlan];
         }
       }
@@ -5330,6 +5351,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
     );
 
     if (runners.length) {
+      if (sectionKey === "recentRows" && recentPlans.length > 0) {
+        window.__nexusPluginRecentRowsRendered = true;
+      }
       recentRowsTrace("init:runners", {
         sectionKey,
         runnerCount: runners.length,
@@ -5348,6 +5372,9 @@ async function initAndRender({ sectionKey = "recentRows", mountState = null } = 
       }
     }
     applyCategoryExclusionsToHomeDom(userId);
+    if (window.__nexusPluginRecentRowsRendered) {
+      suppressRedundantNativeLatestMedia();
+    }
   } finally {
     setManagedRecentRowsDone(sectionKey, true);
   }
@@ -5380,6 +5407,8 @@ export function cleanupRecentRows() {
 
     STATE.started = false;
     window.__nexusTop10RenderedForThisLoad = false;
+    window.__nexusTop10ActiveIdxForLoad = undefined;
+    window.__nexusPluginRecentRowsRendered = false;
     STATE.wrapEl = null;
     STATE.hostEl = null;
     STATE.serverId = null;

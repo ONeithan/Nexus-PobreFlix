@@ -89,6 +89,11 @@ function hasPartialPlayback(userData, runtimeTicks = 0) {
   if (!userData || typeof userData !== "object") return false;
   if (isPlaybackCompleted(userData, runtimeTicks)) return false;
 
+  const playedPercentage = Number(userData.PlayedPercentage);
+  if (Number.isFinite(playedPercentage) && playedPercentage > 0 && playedPercentage < 100) {
+    return true;
+  }
+
   const positionTicks = Number(userData.PlaybackPositionTicks || 0);
   if (!(positionTicks > 0)) return false;
 

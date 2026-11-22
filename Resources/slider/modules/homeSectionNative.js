@@ -3,6 +3,7 @@ import {
   isNativeHomeSectionOrderKey,
   normalizeManagedHomeSectionOrder
 } from "./config.js";
+import { createScopedJsonDb } from "./scopedJsonCache.js";
 
 const MANAGED_HOME_SECTION_IDS = new Set([
   "studio-hubs",
@@ -616,83 +617,330 @@ export async function waitForVisibleHomeSections({ timeout = 12000 } = {}) {
   });
 }
 
-export function enhanceSmallLibraryTiles(root = document) {
+const HIDDEN_CONTINUE_STORAGE_PREFIX = "nexus_hidden_continue_v2:";
+const HIDDEN_CONTINUE_DB = createScopedJsonDb({
+  cacheType: "hiddenContinue",
+  defaultData: () => ({ hidden: {} }),
+  saveDelayMs: 250,
+  retryDelayMs: 1500
+});
+let __lastContinueSyncAt = 0;
+
+function normalizeJfId(value) {
+  return String(value || "").replace(/-/g, "").trim().toLowerCase();
+}
+
+function getActiveUserIdSafe() {
   try {
-    const sections = root.querySelectorAll('div[data-type="smalllibrarytiles"], .section0');
+    return normalizeJfId(window.ApiClient?.getCurrentUserId?.() || "");
+  } catch {
+    return "";
+  }
+}
+
+function getHiddenContinueLsKey(userId = "") {
+  return `${HIDDEN_CONTINUE_STORAGE_PREFIX}${userId || getActiveUserIdSafe() || "anon"}`;
+}
+
+function readLocalHiddenContinueMap(userId = "") {
+  try {
+    const raw = localStorage.getItem(getHiddenContinueLsKey(userId)) || localStorage.getItem("nexus_hidden_continue_watching");
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    const map = parsed?.hidden && typeof parsed.hidden === "object" ? parsed.hidden : parsed;
+    return map && typeof map === "object" && !Array.isArray(map) ? { ...map } : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeLocalHiddenContinueMap(map, userId = "") {
+  try {
+    localStorage.setItem(getHiddenContinueLsKey(userId), JSON.stringify(map || {}));
+  } catch {}
+}
+
+function extractCardItemMeta(card) {
+  if (!card) return { rawId: "", cleanId: "", seriesId: "" };
+  const linkHref = card.querySelector?.("a")?.getAttribute("href") || "";
+  const rawId =
+    card.getAttribute("data-id") ||
+    card.getAttribute("data-itemid") ||
+    card.dataset?.id ||
+    card.dataset?.itemid ||
+    linkHref.match(/[?&]id=([a-f0-9-]+)/i)?.[1] ||
+    "";
+  const seriesId =
+    card.getAttribute("data-seriesid") ||
+    card.dataset?.seriesid ||
+    card.getAttribute("data-parentid") ||
+    "";
+  return {
+    rawId: String(rawId || "").trim(),
+    cleanId: normalizeJfId(rawId),
+    seriesId: normalizeJfId(seriesId)
+  };
+}
+
+function isContinueWatchingSectionEl(sectionEl) {
+  if (!sectionEl) return false;
+  if (sectionEl.dataset?.nexusNativeKind === "resume") return true;
+  if (sectionEl.matches?.('div[data-type="resume"], .resumeSection, #resumeSection, [id*="resume"]')) return true;
+  const label = getNativeHomeSectionLabel(sectionEl);
+  if (label && inferNativeHomeSectionKind(sectionEl, label) === "resume") return true;
+  return false;
+}
+
+export function annotateNativeHomeSections(root = document) {
+  try {
+    const scope = root && typeof root.querySelectorAll === "function" ? root : document;
+    const sections = scope.querySelectorAll('.homeSectionsContainer > *, .verticalSection, .homeSection, div[data-type]');
     sections.forEach((sec) => {
-      const cards = sec.querySelectorAll('.card');
-      cards.forEach(async (card) => {
-        if (card.dataset.nexusEnhanced) return;
-        card.dataset.nexusEnhanced = "true";
-
-        const imgContainer = card.querySelector('.cardImageContainer');
-        if (!imgContainer) return;
-
-        const computedBg = window.getComputedStyle(imgContainer).backgroundImage;
-        const hasBg = computedBg && computedBg !== 'none' && !computedBg.includes('undefined');
-        const hasImg = !!imgContainer.querySelector('img');
-
-        if (!hasBg && !hasImg) {
-          const id = card.getAttribute('data-id') || 
-                     card.getAttribute('data-itemid') || 
-                     card.querySelector('a')?.getAttribute('href')?.match(/id=([a-f0-9]+)/i)?.[1];
-          if (!id) return;
-
-          try {
-            const userId = window.ApiClient?.getCurrentUserId?.();
-            if (userId) {
-              const url = window.ApiClient.getUrl(`/Users/${userId}/Items`, {
-                ParentId: id,
-                Limit: 1,
-                Recursive: true,
-                SortBy: "DateCreated",
-                SortOrder: "Descending",
-                ImageTypeLimit: 1,
-                EnableImageTypes: "Primary,Backdrop"
-              });
-              const resp = await fetch(url, { headers: { ...window.ApiClient?.defaultHeaders } });
-              if (resp.ok) {
-                const data = await resp.json();
-                const item = data?.Items?.[0];
-                if (item) {
-                  const tag = item.ImageTags?.Primary || item.BackdropImageTags?.[0];
-                  const type = item.ImageTags?.Primary ? "Primary" : "Backdrop";
-                  if (tag) {
-                    const finalUrl = window.ApiClient.getUrl(`/Items/${item.Id}/Images/${type}`, {
-                      tag,
-                      maxWidth: 500,
-                      quality: 90
-                    });
-                    imgContainer.style.backgroundImage = `url("${finalUrl}")`;
-                    imgContainer.style.backgroundSize = "cover";
-                    imgContainer.style.backgroundPosition = "center";
-                  }
-                }
-              }
-            }
-          } catch {}
-        }
-      });
+      if (!sec || isManagedHomeSection(sec)) return;
+      if (sec.id === "studio-hubs" || sec.classList?.contains("studio-hubs-section")) return;
+      const label = getNativeHomeSectionLabel(sec);
+      const kind = inferNativeHomeSectionKind(sec, label);
+      if (kind && sec.dataset.nexusNativeKind !== kind) {
+        sec.dataset.nexusNativeKind = kind;
+      }
     });
   } catch {}
 }
 
+export function suppressRedundantNativeLatestMedia(root = document) {
+  try {
+    annotateNativeHomeSections(root);
+    const scope = root && typeof root.querySelectorAll === "function" ? root : document;
+    const latestSections = scope.querySelectorAll('[data-nexus-native-kind="latestmedia"]');
+    latestSections.forEach((sec) => {
+      if (isManagedHomeSection(sec)) return;
+      sec.style.setProperty("display", "none", "important");
+      sec.dataset.nexusSuppressedNative = "1";
+    });
+  } catch {}
+}
+
+export function enhanceSmallLibraryTiles(root = document) {
+  try {
+    annotateNativeHomeSections(root);
+    const scope = root && typeof root.querySelectorAll === "function" ? root : document;
+    const sections = scope.querySelectorAll('[data-nexus-native-kind="smalllibrarytiles"], div[data-type="smalllibrarytiles"], .section0');
+    sections.forEach((sec) => {
+      if (!isContinueWatchingSectionEl(sec) && sec.dataset.nexusNativeKind !== "latestmedia" && sec.dataset.nexusNativeKind !== "nextup") {
+        sec.querySelectorAll('.card').forEach(async (card) => {
+          const imgContainer = card.querySelector('.cardImageContainer');
+          if (!imgContainer) return;
+
+          const hasInlineBg = !!(imgContainer.style?.backgroundImage && imgContainer.style.backgroundImage !== 'none');
+          const hasLazyAttr = !!(imgContainer.getAttribute('data-src') || imgContainer.classList?.contains('lazy'));
+          const hasImg = !!imgContainer.querySelector('img');
+          if (hasInlineBg || hasImg || hasLazyAttr) return;
+
+          const computedBg = window.getComputedStyle(imgContainer).backgroundImage;
+          if (computedBg && computedBg !== 'none' && !computedBg.includes('undefined')) return;
+
+          if (card.dataset.nexusEnhanced === "pending" || card.dataset.nexusEnhanced === "done") return;
+          card.dataset.nexusEnhanced = "pending";
+
+          const { rawId } = extractCardItemMeta(card);
+          if (!rawId || !window.ApiClient?.getJSON) return;
+
+          try {
+            const userId = window.ApiClient.getCurrentUserId?.();
+            if (!userId) return;
+
+            // 1. Try library view own primary image first
+            const viewUrl = window.ApiClient.getUrl(`/Users/${userId}/Items/${rawId}`);
+            const viewItem = await window.ApiClient.getJSON(viewUrl).catch(() => null);
+            const ownTag = viewItem?.ImageTags?.Primary || viewItem?.BackdropImageTags?.[0];
+            if (ownTag) {
+              const ownImgType = viewItem?.ImageTags?.Primary ? "Primary" : "Backdrop";
+              const finalUrl = window.ApiClient.getUrl(`/Items/${rawId}/Images/${ownImgType}`, {
+                tag: ownTag,
+                maxWidth: 640,
+                quality: 90
+              });
+              imgContainer.style.backgroundImage = `url("${finalUrl}")`;
+              imgContainer.style.backgroundSize = "cover";
+              imgContainer.style.backgroundPosition = "center";
+              card.dataset.nexusEnhanced = "done";
+              return;
+            }
+
+            // 2. Fallback: pull latest item artwork from the library
+            const url = window.ApiClient.getUrl(`/Users/${userId}/Items`, {
+              ParentId: rawId,
+              Limit: 1,
+              Recursive: true,
+              SortBy: "DateCreated",
+              SortOrder: "Descending",
+              ImageTypeLimit: 1,
+              EnableImageTypes: "Primary,Backdrop"
+            });
+            const data = await window.ApiClient.getJSON(url).catch(() => null);
+            const item = data?.Items?.[0];
+            if (item) {
+              const tag = item.BackdropImageTags?.[0] || item.ImageTags?.Primary;
+              const type = item.BackdropImageTags?.[0] ? "Backdrop" : "Primary";
+              if (tag) {
+                const finalUrl = window.ApiClient.getUrl(`/Items/${item.Id}/Images/${type}`, {
+                  tag,
+                  maxWidth: 640,
+                  quality: 90
+                });
+                imgContainer.style.backgroundImage = `url("${finalUrl}")`;
+                imgContainer.style.backgroundSize = "cover";
+                imgContainer.style.backgroundPosition = "center";
+                card.dataset.nexusEnhanced = "done";
+              }
+            }
+          } catch {}
+        });
+      }
+    });
+  } catch {}
+}
+
+function getHiddenContinueMatchKey(card, hiddenMap) {
+  const { cleanId, seriesId } = extractCardItemMeta(card);
+  if (cleanId && hiddenMap[cleanId]) return cleanId;
+  if (seriesId && hiddenMap[`series:${seriesId}`]) return `series:${seriesId}`;
+  return null;
+}
+
 export function filterHiddenContinueWatching(root = document) {
   try {
-    const raw = localStorage.getItem("nexus_hidden_continue_watching");
-    if (!raw) return;
-    const hiddenMap = JSON.parse(raw);
-    const resumeSections = root.querySelectorAll('div[data-type="resume"], .resumeSection, #resumeSection, [id*="resume"]');
+    annotateNativeHomeSections(root);
+    const scope = root && typeof root.querySelectorAll === "function" ? root : document;
+    const userId = getActiveUserIdSafe();
+    const hiddenMap = readLocalHiddenContinueMap(userId);
+    const hasHidden = Object.keys(hiddenMap).length > 0;
+
+    const resumeSections = scope.querySelectorAll('[data-nexus-native-kind="resume"], div[data-type="resume"], .resumeSection, #resumeSection, [id*="resume"]');
     resumeSections.forEach((sec) => {
+      if (!isContinueWatchingSectionEl(sec)) return;
       sec.querySelectorAll('.card').forEach((card) => {
-        const id = card.getAttribute('data-id') || 
-                   card.getAttribute('data-itemid') || 
-                   card.querySelector('a')?.getAttribute('href')?.match(/id=([a-f0-9]+)/i)?.[1];
-        if (id && hiddenMap[id]) {
-          card.style.display = "none";
+        const matchKey = hasHidden ? getHiddenContinueMatchKey(card, hiddenMap) : null;
+        if (matchKey) {
+          card.style.setProperty("display", "none", "important");
+          card.dataset.nexusHiddenContinue = "1";
+        } else if (card.dataset.nexusHiddenContinue === "1") {
+          card.style.removeProperty("display");
+          delete card.dataset.nexusHiddenContinue;
         }
       });
+
+      const itemsContainer = sec.querySelector('.itemsContainer');
+      if (itemsContainer && !itemsContainer.__nexusContinueObserver) {
+        itemsContainer.__nexusContinueObserver = new MutationObserver(() => {
+          filterHiddenContinueWatching(sec);
+        });
+        itemsContainer.__nexusContinueObserver.observe(itemsContainer, { childList: true });
+      }
     });
+  } catch {}
+}
+
+export async function syncAndFilterHiddenContinueWatching(root = document, { force = false } = {}) {
+  filterHiddenContinueWatching(root);
+  const userId = getActiveUserIdSafe();
+  if (!userId || !window.ApiClient?.getJSON) return;
+
+  const now = Date.now();
+  if (!force && now - __lastContinueSyncAt < 2500) return;
+  __lastContinueSyncAt = now;
+
+  try {
+    const serverHidden = await HIDDEN_CONTINUE_DB.readScope(userId, (data) => {
+      return data?.hidden && typeof data.hidden === "object" ? { ...data.hidden } : {};
+    }).catch(() => ({}));
+
+    const localHidden = readLocalHiddenContinueMap(userId);
+    const merged = { ...serverHidden, ...localHidden };
+    const entries = Object.entries(merged);
+    if (!entries.length) {
+      filterHiddenContinueWatching(root);
+      return;
+    }
+
+    const resumeUrl = window.ApiClient.getUrl(`/Users/${userId}/Items/Resume`, {
+      Limit: 50,
+      Recursive: true,
+      Fields: "UserData"
+    });
+    const resumeData = await window.ApiClient.getJSON(resumeUrl).catch(() => null);
+    const resumeItems = Array.isArray(resumeData?.Items) ? resumeData.Items : [];
+
+    let changed = Object.keys(merged).length !== Object.keys(localHidden).length;
+    for (const [key, entry] of entries) {
+      if (!entry || typeof entry !== "object") {
+        delete merged[key];
+        changed = true;
+        continue;
+      }
+      const hiddenAt = Number(entry.hiddenAt || 0);
+      const entryItemId = normalizeJfId(entry.itemId || key.replace(/^series:/, ""));
+      const entrySeriesId = normalizeJfId(entry.seriesId || "");
+
+      const matched = resumeItems.find((it) => {
+        const itId = normalizeJfId(it?.Id);
+        const itSeries = normalizeJfId(it?.SeriesId);
+        return (entryItemId && itId === entryItemId) || (entrySeriesId && itSeries === entrySeriesId);
+      });
+
+      if (matched) {
+        const lastPlayedStr = String(matched?.UserData?.LastPlayedDate || "");
+        const lastPlayedMs = Date.parse(lastPlayedStr);
+        const posTicks = Number(matched?.UserData?.PlaybackPositionTicks || 0);
+        const sameEpisodeReplayed =
+          normalizeJfId(matched.Id) === entryItemId &&
+          Number.isFinite(lastPlayedMs) &&
+          lastPlayedMs > (hiddenAt + 2000) &&
+          (lastPlayedStr !== String(entry.lastPlayedDate || "") || posTicks !== Number(entry.playbackPositionTicks || 0));
+        const differentEpisodePlayed =
+          normalizeJfId(matched.Id) !== entryItemId &&
+          Number.isFinite(lastPlayedMs) &&
+          lastPlayedMs > (hiddenAt + 2000);
+
+        if (sameEpisodeReplayed || differentEpisodePlayed) {
+          delete merged[key];
+          if (entryItemId) delete merged[entryItemId];
+          if (entrySeriesId) delete merged[`series:${entrySeriesId}`];
+          changed = true;
+        }
+      }
+    }
+
+    writeLocalHiddenContinueMap(merged, userId);
+    if (changed || Object.keys(merged).length !== Object.keys(serverHidden).length) {
+      void HIDDEN_CONTINUE_DB.writeScope(userId, (data) => {
+        data.hidden = merged;
+      }, { flush: true });
+    }
+    filterHiddenContinueWatching(root);
+  } catch {}
+}
+
+function closeOpenActionSheet(actionSheet) {
+  try {
+    const dialog = actionSheet?.closest?.('.dialogContainer, .dialog, [data-role="dialog"]');
+    const backdrop = document.querySelector('.dialogBackdropOpened, .dialogBackdrop');
+    const cancelBtn = dialog?.querySelector?.('.btnCancel, [data-action="cancel"], .dialogHeader button');
+    if (cancelBtn) {
+      cancelBtn.click();
+      return;
+    }
+    if (backdrop) {
+      backdrop.click();
+      return;
+    }
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", keyCode: 27, bubbles: true, cancelable: true }));
+    if (dialog && dialog.isConnected) {
+      try { dialog.remove(); } catch {}
+    }
+    if (backdrop && backdrop.isConnected) {
+      try { backdrop.remove(); } catch {}
+    }
   } catch {}
 }
 
@@ -700,63 +948,127 @@ export function setupContinueWatchingMenuHooks() {
   if (typeof window === "undefined" || window.__nexusMenuHooksInstalled) return;
   window.__nexusMenuHooksInstalled = true;
 
-  let lastClickedCard = null;
+  let lastCardTarget = null;
 
-  document.addEventListener("click", (e) => {
-    const card = e.target.closest('.card');
-    if (card) lastClickedCard = card;
+  const captureCardTarget = (e) => {
+    const target = e.target;
+    if (!target || typeof target.closest !== "function") return;
+    if (target.closest("#nexus-btn-remove-continue") || target.closest(".actionSheet, .actionSheetScroller")) return;
+
+    const card = target.closest(".card");
+    if (!card) return;
+
+    annotateNativeHomeSections(document);
+    const sec = card.closest(".verticalSection, .homeSection, div[data-type]");
+    const isContinue = isContinueWatchingSectionEl(sec);
+    const meta = extractCardItemMeta(card);
+
+    lastCardTarget = {
+      card,
+      isContinue,
+      rawId: meta.rawId,
+      cleanId: meta.cleanId,
+      seriesId: meta.seriesId,
+      capturedAt: Date.now()
+    };
+  };
+
+  document.addEventListener("pointerdown", captureCardTarget, { capture: true, passive: true });
+  document.addEventListener("mousedown", captureCardTarget, { capture: true, passive: true });
+  document.addEventListener("click", captureCardTarget, { capture: true, passive: true });
+  document.addEventListener("contextmenu", captureCardTarget, { capture: true, passive: true });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " " || e.key === "ContextMenu" || e.keyCode === 93) {
+      captureCardTarget(e);
+    }
   }, { capture: true, passive: true });
 
-  const observer = new MutationObserver(() => {
-    const actionSheet = document.querySelector('.actionSheetScroller, .actionSheet, .actionSheetContent, .actionsheetList');
-    if (!actionSheet || actionSheet.querySelector('#nexus-btn-remove-continue')) return;
+  const injectMenuOption = () => {
+    const actionSheet = document.querySelector(".actionSheetScroller, .actionSheet .actionSheetContent");
+    if (!actionSheet || actionSheet.querySelector("#nexus-btn-remove-continue")) return;
+    if (!lastCardTarget || !lastCardTarget.isContinue || !lastCardTarget.cleanId) return;
+    if ((Date.now() - lastCardTarget.capturedAt) > 10000) return;
 
-    if (!lastClickedCard) return;
-    const isContinueWatching = !!lastClickedCard.closest('div[data-type="resume"], .resumeSection, [id*="resume"], [id*="continue"]');
-    if (!isContinueWatching) return;
-
-    const itemId = lastClickedCard.getAttribute('data-id') || 
-                   lastClickedCard.getAttribute('data-itemid') || 
-                   lastClickedCard.querySelector('a')?.getAttribute('href')?.match(/id=([a-f0-9]+)/i)?.[1];
-    if (!itemId) return;
+    const { card, rawId, cleanId, seriesId } = lastCardTarget;
+    const list = actionSheet.classList?.contains("actionSheetScroller")
+      ? actionSheet
+      : (actionSheet.querySelector(".actionSheetScroller, .actionsheetList, .verticalSection") || actionSheet);
 
     const btn = document.createElement("button");
     btn.type = "button";
     btn.id = "nexus-btn-remove-continue";
-    btn.className = "actionSheetMenuItem listItem listItem-button actionsheetListItem";
+    btn.setAttribute("is", "emby-button");
+    btn.className = "listItem listItem-button actionSheetMenuItem emby-button";
     btn.innerHTML = `
-      <div class="listItemIcon"><i class="fas fa-eye-slash" style="color: #a855f7; font-size: 1.1rem; margin-right: 12px;"></i></div>
+      <span class="actionsheetMenuItemIcon listItemIcon listItemIcon-transparent material-icons visibility_off" aria-hidden="true" style="color: #a855f7;"></span>
       <div class="listItemBody actionsheetListItemBody">
-        <div class="listItemBodyText">Remover do Continuar Assistindo</div>
+        <div class="listItemBodyText actionSheetItemText">Remover do Continuar Assistindo</div>
       </div>
     `;
-    btn.addEventListener("click", (ev) => {
+
+    btn.addEventListener("click", async (ev) => {
       ev.preventDefault();
       ev.stopPropagation();
 
-      try {
-        const raw = localStorage.getItem("nexus_hidden_continue_watching");
-        const map = raw ? JSON.parse(raw) : {};
-        map[itemId] = { hiddenAt: Date.now() };
-        localStorage.setItem("nexus_hidden_continue_watching", JSON.stringify(map));
+      const userId = getActiveUserIdSafe();
+      const hiddenEntry = {
+        itemId: cleanId,
+        seriesId: seriesId || "",
+        hiddenAt: Date.now(),
+        lastPlayedDate: "",
+        playbackPositionTicks: 0
+      };
 
-        if (lastClickedCard?.isConnected) {
-          lastClickedCard.style.transition = "opacity 0.3s ease, transform 0.3s ease";
-          lastClickedCard.style.opacity = "0";
-          lastClickedCard.style.transform = "scale(0.85)";
-          setTimeout(() => lastClickedCard.remove(), 300);
+      closeOpenActionSheet(actionSheet);
+
+      if (card?.isConnected) {
+        card.style.transition = "opacity 0.25s ease, transform 0.25s ease";
+        card.style.opacity = "0";
+        card.style.transform = "scale(0.9)";
+        card.dataset.nexusHiddenContinue = "1";
+        setTimeout(() => {
+          card.style.setProperty("display", "none", "important");
+          card.style.opacity = "";
+          card.style.transform = "";
+        }, 240);
+      }
+
+      try {
+        if (userId && rawId && window.ApiClient?.getJSON) {
+          const itemUrl = window.ApiClient.getUrl(`/Users/${userId}/Items/${rawId}`);
+          const fullItem = await window.ApiClient.getJSON(itemUrl).catch(() => null);
+          if (fullItem) {
+            hiddenEntry.seriesId = normalizeJfId(fullItem.SeriesId || seriesId);
+            hiddenEntry.lastPlayedDate = String(fullItem.UserData?.LastPlayedDate || "");
+            hiddenEntry.playbackPositionTicks = Number(fullItem.UserData?.PlaybackPositionTicks || 0);
+          }
         }
       } catch {}
 
-      const dialog = actionSheet.closest('.dialogContainer, .dialog, [data-role="dialog"]');
-      if (dialog) {
-        dialog.dispatchEvent(new CustomEvent("close", { bubbles: true }));
-        try { dialog.remove(); } catch {}
+      const map = readLocalHiddenContinueMap(userId);
+      map[cleanId] = hiddenEntry;
+      if (hiddenEntry.seriesId) {
+        map[`series:${hiddenEntry.seriesId}`] = hiddenEntry;
+      }
+      writeLocalHiddenContinueMap(map, userId);
+
+      if (userId) {
+        void HIDDEN_CONTINUE_DB.writeScope(userId, (data) => {
+          const existing = data?.hidden && typeof data.hidden === "object" ? data.hidden : {};
+          existing[cleanId] = hiddenEntry;
+          if (hiddenEntry.seriesId) {
+            existing[`series:${hiddenEntry.seriesId}`] = hiddenEntry;
+          }
+          data.hidden = existing;
+        }, { flush: true });
       }
     });
 
-    const list = actionSheet.querySelector('.actionsheetList, .verticalSection') || actionSheet;
     list.appendChild(btn);
+  };
+
+  const observer = new MutationObserver(() => {
+    injectMenuOption();
   });
 
   try {

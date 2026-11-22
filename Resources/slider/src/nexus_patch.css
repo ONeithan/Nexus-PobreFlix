@@ -1,81 +1,344 @@
-/* 
-    NEXUS POBREFLIX — Patch de Normalização Visual
-    Baseado em 82 auditorias de prints.
-*/
+/*
+ * NEXUS POBREFLIX — Scoped Visual Fixes (v1.0.0.12)
+ * Surgical overrides without breaking ItemDetailPage, OSD Player Header, or MainDrawer.
+ */
 
-/* Forçar Fonte Sora Global */
-* {
-    font-family: 'Sora', sans-serif !important;
+/* =========================================================
+   1. PURE BLACK HOME BACKGROUND (#050505) & NO DIVIDER LINE
+   ========================================================= */
+body:not(.configPage):has(#indexPage:not(.hide)),
+body:not(.configPage):has(#homePage:not(.hide)),
+#indexPage,
+#homePage,
+#indexPage .backgroundContainer:not(.withBackdrop),
+#homePage .backgroundContainer:not(.withBackdrop),
+#indexPage .homeSectionsContainer,
+#homePage .homeSectionsContainer {
+    background: #050505 !important;
+    background-color: #050505 !important;
 }
 
-/* Ocultar Tags de Qualidade em Todo o Jellyfin */
-.mediaSourceIndicator, 
-.mediaInfoItem, 
-.itemExternalId, 
-.quality-badge, 
-.media-info-item,
-.itemTypeIndicator,
-.monwui-quality-group,
-.monwui-quality-tags,
-.monwui-quality-segment,
-.cardMediaInfo,
-.video-quality,
-.video-quality-tag,
-.jmsdm-quality-pills,
-.monwui-dot-quality-badge,
-.mini-quality-inline,
-.rr-quality-tags {
-    display: none !important;
-}
-
-/* Alinhamento Padronizado das Seções da Home com o padrão nativo (3.3%) */
-body:not(.layout-tv) .sectionTitleContainer,
-body:not(.layout-tv) .padded-left.padded-right.sectionTitleContainer,
-body:not(.layout-tv) div[data-type="smalllibrarytiles"],
-body:not(.layout-tv) div[data-type="resume"],
-body:not(.layout-tv) .resumeSection,
-body:not(.layout-tv) .section0 {
-    margin-left: 0 !important;
-    padding-left: 3.3% !important;
-    padding-right: 3.3% !important;
-}
-
-/* Blindagem Total contra Fundos Brancos em Badges e Textos */
-.monwui-meta-text,
-.monwui-type-text,
-.monwui-watched-text,
-.monwui-runtime-text,
-.monwui-end-time-text,
-.monwui-percentage-text,
-.monwui-rating-text,
-.monwui-status-container span,
-.monwui-status-container span *,
-.monwui-meta-container span,
-.monwui-meta-container span *,
-.prc-type-badge,
-.prc-type-badge *,
-.top10-type-badge,
-.top10-type-badge *,
-.top10-fresh-badge {
+#indexPage .verticalSection,
+#homePage .verticalSection,
+#indexPage .homeSectionsContainer .section0,
+#homePage .homeSectionsContainer .section0 {
     background: transparent !important;
-    background-color: transparent !important;
+    border: none !important;
     box-shadow: none !important;
+}
+
+/* Hide horizontal scrollbar hairline beneath Minha Midia & rows */
+.homeSectionsContainer .emby-scroller,
+.homeSectionsContainer .itemsContainer,
+[data-nexus-native-kind="smalllibrarytiles"] .itemsContainer,
+[data-nexus-native-kind="resume"] .itemsContainer,
+[data-nexus-native-kind="nextup"] .itemsContainer {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
     border: none !important;
 }
 
-/* Estúdios (Studio Hubs) - Ocultar Texto e Focar na Logo (Apenas no Desktop/Mobile normal) */
-body:not(.layout-tv) .hub-title-text,
-body:not(.layout-tv) .studio-hub-title,
-body:not(.layout-tv) .studio-title {
+.homeSectionsContainer .emby-scroller::-webkit-scrollbar,
+.homeSectionsContainer .itemsContainer::-webkit-scrollbar {
     display: none !important;
+    height: 0 !important;
 }
 
-body:not(.layout-tv) .studio-hub-card:hover .hub-title-text {
-    display: none !important;
+/* =========================================================
+   2. DESKTOP & TV HEADER (NEVER TOUCH .osdHeader VIDEO PLAYER)
+   ========================================================= */
+body:has(#indexPage:not(.hide)) .skinHeader:not(.osdHeader),
+body:has(#homePage:not(.hide)) .skinHeader:not(.osdHeader) {
+    background: linear-gradient(180deg, rgba(5, 5, 5, 0.94) 0%, rgba(5, 5, 5, 0.55) 75%, transparent 100%) !important;
+    background-color: transparent !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
 
-/* Ajuste de Botões no Modal Fullscreen (Apenas no Desktop/Mobile normal) */
-body:not(.layout-tv) .jmsdm-actions {
-    justify-content: flex-start !important;
-    padding-left: 5% !important;
+/* Center ONLY Início / Favoritos / Minha Lista vertically inside Desktop header */
+@media (min-width: 75em) {
+    body.layout-desktop .skinHeader:not(.osdHeader) .headerTop {
+        min-height: 70px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 4px 16px !important;
+    }
+
+    body.layout-desktop .skinHeader:not(.osdHeader) .headerLeft {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+    }
+
+    body.layout-desktop .skinHeader:not(.osdHeader) .headerRight {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        margin-left: auto !important;
+    }
+
+    body.layout-desktop .skinHeader:not(.osdHeader) .headerTabs:not(.hide) {
+        margin-top: -68px !important;
+        height: 64px !important;
+        display: flex !important;
+        align-items: center !important;
+        align-self: center !important;
+        justify-content: center !important;
+        width: auto !important;
+        position: relative !important;
+        z-index: 2 !important;
+    }
+
+    body.layout-desktop .skinHeader:not(.osdHeader) .headerTabs:not(.hide) .emby-tabs,
+    body.layout-desktop .skinHeader:not(.osdHeader) .headerTabs:not(.hide) .emby-tabs-slider {
+        display: flex !important;
+        align-items: center !important;
+        height: 100% !important;
+    }
+
+    body.layout-desktop .skinHeader:not(.osdHeader) .headerTabs:not(.hide) .emby-tab-button {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        height: 40px !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+}
+
+/* TV Mode crisp header & logo sizing without cramping tabs */
+.layout-tv .skinHeader:not(.osdHeader) .headerTop {
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 8px 24px !important;
+}
+
+.layout-tv .skinHeader:not(.osdHeader) a.headerLogo,
+.layout-tv .skinHeader:not(.osdHeader) a.logoHeader,
+.layout-tv .skinHeader:not(.osdHeader) a.headerLogoWithText {
+    width: 220px !important;
+    height: 52px !important;
+    min-width: 180px !important;
+    min-height: 44px !important;
+}
+
+/* =========================================================
+   3. HAMBURGER DRAWER (.mainDrawer) DARK OPAQUE BLURRED
+   ========================================================= */
+.mainDrawer {
+    background: rgba(11, 11, 20, 0.96) !important;
+    background-color: rgba(11, 11, 20, 0.96) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border-right: 1px solid rgba(168, 85, 247, 0.2) !important;
+}
+
+.mainDrawer .navMenuOptionText {
+    color: #f1f5f9 !important;
+}
+
+/* =========================================================
+   4. SECTION HEADING BUTTONS (NEVER PURPLE BLOCKS)
+   ========================================================= */
+a.sectionTitleTextButton,
+button.sectionTitleTextButton,
+.sectionTitleTextButton,
+.sectionTitleTextButton:hover,
+.sectionTitleTextButton:focus-visible {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    text-transform: none !important;
+}
+
+.sectionTitleTextButton .sectionTitle {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    text-transform: none !important;
+}
+
+.sectionTitleTextButton .material-icons {
+    color: #a855f7 !important;
+}
+
+/* =========================================================
+   5. HERO SLIDER BADGES — NO WHITE BACKGROUNDS (#dedede FIX)
+   ========================================================= */
+.monwui-meta-container span,
+.monwui-meta-container .monwui-meta-text,
+.monwui-status-container span,
+.monwui-rating-container span,
+.monwui-language-container span {
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.monwui-status-container > span,
+.monwui-rating-container > span,
+.monwui-language-container > span {
+    background: rgba(15, 14, 24, 0.72) !important;
+    background-color: rgba(15, 14, 24, 0.72) !important;
+    color: #f4f8ff !important;
+    border: 1px solid rgba(168, 85, 247, 0.45) !important;
+    border-radius: 999px !important;
+    padding: 5px 12px !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    z-index: 1 !important;
+}
+
+.monwui-status-container > span span,
+.monwui-rating-container > span span,
+.monwui-language-container > span span,
+.prc-type-badge,
+.prc-type-badge *,
+.top10-type-badge,
+.top10-type-badge * {
+    color: inherit;
+    box-shadow: none !important;
+}
+
+.monwui-status-container > span span,
+.monwui-rating-container > span span,
+.monwui-language-container > span span,
+.prc-type-badge *,
+.top10-type-badge * {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    z-index: auto !important;
+}
+
+/* =========================================================
+   6. HERO SLIDER ARROWS CAPSULE — BELOW THE DOTS
+   ========================================================= */
+.monwui-dot-navigation-container {
+    overflow: visible !important;
+}
+
+.monwui-dot-navigation-container .monwui-slider-arrows-capsule {
+    position: absolute !important;
+    top: calc(100% + 10px) !important;
+    left: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    z-index: 60 !important;
+    pointer-events: auto !important;
+}
+
+html[data-css-variant="slider"] .monwui-dot-navigation-container .monwui-slider-arrows-capsule,
+html[data-css-variant="peakslider"] .monwui-dot-navigation-container .monwui-slider-arrows-capsule,
+.monwui-dot-navigation-container.dot-poster-mode .monwui-slider-arrows-capsule {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+}
+
+.monwui-slider-nav-btn {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 50% !important;
+    border: 1px solid rgba(168, 85, 247, 0.55) !important;
+    background: rgba(12, 12, 22, 0.78) !important;
+    color: #ffffff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease !important;
+}
+
+.monwui-slider-nav-btn:hover,
+.monwui-slider-nav-btn:focus-visible {
+    background: rgba(123, 47, 190, 0.85) !important;
+    border-color: #c084fc !important;
+    transform: scale(1.08) !important;
+    outline: none !important;
+}
+
+.monwui-slider-nav-btn i {
+    pointer-events: none;
+    font-size: 13px;
+}
+
+/* =========================================================
+   7. MINHA MÍDIA, CONTINUAR ASSISTINDO & A SEGUIR
+   - Preserves native .cardImageContainer positioning so images never collapse!
+   - Keeps A Seguir horizontal/landscape 16:9 with sleek rounded cards.
+   ========================================================= */
+body:not(.layout-tv) [data-nexus-native-kind="smalllibrarytiles"],
+body:not(.layout-tv) [data-nexus-native-kind="resume"],
+body:not(.layout-tv) [data-nexus-native-kind="nextup"],
+body:not(.layout-tv) .homeSectionsContainer > .section0 {
+    padding-left: 3.3% !important;
+    padding-right: 3.3% !important;
+    margin-left: 0 !important;
+}
+
+body:not(.layout-tv) [data-nexus-native-kind="smalllibrarytiles"] .padded-left,
+body:not(.layout-tv) [data-nexus-native-kind="resume"] .padded-left,
+body:not(.layout-tv) [data-nexus-native-kind="nextup"] .padded-left,
+body:not(.layout-tv) .homeSectionsContainer > .section0 .padded-left {
+    padding-left: 0 !important;
+}
+
+/* Rounded polished frames without hiding/collapsing cover images */
+[data-nexus-native-kind="smalllibrarytiles"] .cardBox,
+[data-nexus-native-kind="resume"] .cardBox,
+[data-nexus-native-kind="nextup"] .cardBox,
+.homeSectionsContainer > .section0 .cardBox {
+    border-radius: 14px !important;
+    overflow: visible !important;
+}
+
+[data-nexus-native-kind="smalllibrarytiles"] .cardScalable,
+[data-nexus-native-kind="resume"] .cardScalable,
+[data-nexus-native-kind="nextup"] .cardScalable,
+.homeSectionsContainer > .section0 .cardScalable {
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(168, 85, 247, 0.22) !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5) !important;
+    transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease !important;
+}
+
+[data-nexus-native-kind="smalllibrarytiles"] .card:hover .cardScalable,
+[data-nexus-native-kind="resume"] .card:hover .cardScalable,
+[data-nexus-native-kind="nextup"] .card:hover .cardScalable,
+.homeSectionsContainer > .section0 .card:hover .cardScalable {
+    transform: translateY(-3px) !important;
+    border-color: rgba(168, 85, 247, 0.78) !important;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.72), 0 0 18px rgba(122, 92, 255, 0.28) !important;
+}
+
+[data-nexus-native-kind="smalllibrarytiles"] .cardImageContainer,
+[data-nexus-native-kind="resume"] .cardImageContainer,
+[data-nexus-native-kind="nextup"] .cardImageContainer,
+.homeSectionsContainer > .section0 .cardImageContainer {
+    border-radius: 14px !important;
+}
+
+/* Purple progress bar on Continue Watching cards */
+[data-nexus-native-kind="resume"] .itemProgressBar,
+[data-nexus-native-kind="resume"] .playbackProgress {
+    background: rgba(255, 255, 255, 0.16) !important;
+    border-radius: 4px !important;
+}
+
+[data-nexus-native-kind="resume"] .itemProgressBarForeground,
+[data-nexus-native-kind="resume"] .playbackProgressBar {
+    background: linear-gradient(90deg, #7a5cff 0%, #a855f7 100%) !important;
+    border-radius: 4px !important;
 }

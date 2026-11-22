@@ -716,10 +716,10 @@ export function getConfig() {
     showTypeInfo: localStorage.getItem('showTypeInfo') !== 'false',
     showWatchedInfo: localStorage.getItem('showWatchedInfo') !== 'false',
     showRuntimeInfo: localStorage.getItem('showRuntimeInfo') !== 'false',
-    showQualityInfo: localStorage.getItem('showQualityInfo') !== 'false',
+    showQualityInfo: localStorage.getItem('showQualityInfo') === 'true',
     showProgressBar: false,
     showProgressAsSeconds: localStorage.getItem('showProgressAsSeconds') === 'true',
-    showQualityDetail: localStorage.getItem('showQualityDetail') !== 'false',
+    showQualityDetail: localStorage.getItem('showQualityDetail') === 'true',
     showActorInfo: localStorage.getItem('showActorInfo') === 'true',
     showActorAll: localStorage.getItem('showActorAll') !== 'false',
     showActorImg: localStorage.getItem('showActorImg') === 'true',
@@ -770,7 +770,7 @@ export function getConfig() {
     useRandomContent: localStorage.getItem('useRandomContent') !== 'false',
     fullscreenMode: localStorage.getItem('fullscreenMode') === 'true' ? true : false,
     listLimit: 20,
-    version: "1.0.0.1 (Nexus Edition)",
+    version: "1.0.0.12 (Nexus Edition)",
     historySize: 20,
     updateInterval: 300000,
     nextTracksSource: localStorage.getItem('nextTracksSource') || 'playlist',
@@ -907,7 +907,7 @@ export function getConfig() {
       return value.length === 2 ? value : '';
     })(),
     enabledGmmp: localStorage.getItem('enabledGmmp') !== 'false',
-    enableQualityBadges: localStorage.getItem('enableQualityBadges') !== 'false',
+    enableQualityBadges: localStorage.getItem('enableQualityBadges') === 'true',
     enableTrailerThenVideo,
     disableAllPlayback,
     dicebearParams: (() => {
@@ -975,11 +975,11 @@ export function getConfig() {
     enableTmdbTopMoviesRow: localStorage.getItem('enableTmdbTopMoviesRow') === 'true',
     enableTmdbTrailerRows: (localStorage.getItem('enableTmdbTrailerRows') || 'true') !== 'false',
 
-    enableContinueMovies: (localStorage.getItem('enableContinueMovies') || 'true') !== 'false',
+    enableContinueMovies: localStorage.getItem('enableContinueMovies') === 'true',
     showContinueMoviesHeroCards: (localStorage.getItem('showContinueMoviesHeroCards') || 'true') !== 'false',
     continueMoviesCardCount: parseInt(localStorage.getItem('continueMoviesCardCount'), 10) || 10,
 
-    enableContinueSeries: (localStorage.getItem('enableContinueSeries') || 'true') !== 'false',
+    enableContinueSeries: localStorage.getItem('enableContinueSeries') === 'true',
     showContinueSeriesHeroCards: (localStorage.getItem('showContinueSeriesHeroCards') || 'true') !== 'false',
     continueSeriesCardCount: parseInt(localStorage.getItem('continueSeriesCardCount'), 10) || 10,
 
@@ -1007,9 +1007,9 @@ export function getConfig() {
     enableRecentMusicTracksRow: (localStorage.getItem('enableRecentMusicTracksRow') || 'true') !== 'false',
     recentMusicCardCount: parseInt(localStorage.getItem('recentMusicCardCount'), 10) || 10,
 
-    enableRecentEpisodesRow: (localStorage.getItem('enableRecentEpisodesRow') || 'true') !== 'false',
+    enableRecentEpisodesRow: localStorage.getItem('enableRecentEpisodesRow') === 'true',
     recentEpisodesCardCount: parseInt(localStorage.getItem('recentEpisodesCardCount'), 10) || 10,
-    enableNextUpRow: (localStorage.getItem('enableNextUpRow') || 'true') !== 'false',
+    enableNextUpRow: localStorage.getItem('enableNextUpRow') === 'true',
     nextUpCardCount: parseInt(localStorage.getItem('nextUpCardCount'), 10) || 10,
 
     recentRowsSplitTvLibs: (localStorage.getItem('recentRowsSplitTvLibs') || 'true') !== 'false',
